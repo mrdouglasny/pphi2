@@ -35,7 +35,7 @@ axiom uniform_moment_bound (P : InteractionPolynomial) :
 
 /-! ## Tightness and Prokhorov -/
 
-/-- The family of measures {μ_L}_{L ∈ ℕ₊} on FieldConfigurationTorus 2 L is tight
+/-- The family of measures {μ_L}_{L ∈ ℕ₊} on FieldConfigurationCyl 2 L is tight
     in the topology of L_n^{-2κ}(v_L^{2/n}).
 
     Proof: By Proposition 6.1 the n-th moments in L_n^{-κ}(v_L^{1/n})
@@ -56,10 +56,10 @@ axiom exists_convergent_subsequence (P : InteractionPolynomial) :
 
 /-! ## The infinite volume limit -/
 
-/-- The P(Φ)₂ measure μ_L on FieldConfigurationTorus 2 L for each L.
+/-- The P(Φ)₂ measure μ_L on FieldConfigurationCyl 2 L for each L.
     This is the UV limit measure for a given cylinder circumference. -/
 def infiniteVolumeMeasure (P : InteractionPolynomial) (L : ℝ) :
-    ProbabilityMeasure (FieldConfigurationTorus 2 L) :=
+    ProbabilityMeasure (FieldConfigurationCyl 2 L) :=
   uvLimitMeasure P L
 
 end

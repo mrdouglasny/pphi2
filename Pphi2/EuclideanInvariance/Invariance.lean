@@ -20,7 +20,7 @@ On the cylinder, the natural symmetry group consists of:
 - Time translations: (t, x) ↦ (t + s, x) for s ∈ ℝ
 - Spatial translations: (t, x) ↦ (t, x + a mod L) for a ∈ ℝ/Lℤ
 
-This is the symmetry group encoded in SymmetryGroupTorus 2 L.
+This is the symmetry group encoded in SymmetryGroupCyl 2 L.
 Full rotational invariance is NOT available on the cylinder;
 it requires the infinite volume limit L → ∞.
 -/
@@ -39,7 +39,7 @@ axiom time_translation_invariance (P : InteractionPolynomial) (L : ℝ) (s : ℝ
     structure of S¹_L.
     DDJ Proposition 9.1(a), adapted. -/
 axiom spatial_translation_invariance (P : InteractionPolynomial) (L : ℝ)
-    (a : SpaceTimeTorus 2 L) :
+    (a : SpaceTimeCyl 2 L) :
     True -- μ_L is invariant under spatial translation by a
 
 /-- **Translation invariance of the P(Φ)₂ measure on the cylinder**.

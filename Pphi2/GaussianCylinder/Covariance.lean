@@ -17,11 +17,11 @@ open MeasureTheory
 /-- UV regularization operator K_{L,N} = (1 - Δ_L/N²)⁻¹ on the cylinder.
     Momentum cutoff in Fourier space. -/
 axiom uvRegularization (L : ℝ) (N : ℕ+) :
-  TestFunctionTorus 2 L →L[ℝ] TestFunctionTorus 2 L
+  TestFunctionCyl 2 L →L[ℝ] TestFunctionCyl 2 L
 
 /-- Regularized covariance G_{L,N} = K_{L,N} G_L K_{L,N}. -/
 axiom regularizedCovariance (L : ℝ) (N : ℕ+) :
-  TestFunctionTorus 2 L →L[ℝ] TestFunctionTorus 2 L
+  TestFunctionCyl 2 L →L[ℝ] TestFunctionCyl 2 L
 
 /-! ## Gaussian measure on the cylinder -/
 
@@ -29,7 +29,7 @@ axiom regularizedCovariance (L : ℝ) (N : ℕ+) :
     with covariance G_{L,N}.
     DDJ Eq. (2.2), adapted to cylinder. -/
 axiom gaussianMeasureCylinder (L : ℝ) (N : ℕ+) :
-  ProbabilityMeasure (FieldConfigurationTorus 2 L)
+  ProbabilityMeasure (FieldConfigurationCyl 2 L)
 
 /-- ν_{L,N} is concentrated on L²₁(ℝ × S¹_L) ⊂ D'(ℝ × S¹_L).
     DDJ Lemma C.1, adapted to cylinder. -/
@@ -39,19 +39,19 @@ axiom gaussianMeasure_concentrated (L : ℝ) (N : ℕ+) :
 /-! ## Free field and Wick polynomials on the cylinder -/
 
 /-- The Gaussian random variable X_L on the cylinder with covariance G_L. -/
-axiom freeField (L : ℝ) : FieldConfigurationTorus 2 L
+axiom freeField (L : ℝ) : FieldConfigurationCyl 2 L
 
 /-- The regularized free field X_{L,N} = K_{L,N} X_L. -/
-axiom regularizedFreeField (L : ℝ) (N : ℕ+) : FieldConfigurationTorus 2 L
+axiom regularizedFreeField (L : ℝ) (N : ℕ+) : FieldConfigurationCyl 2 L
 
 /-- Wick polynomial X_{L,N}^{:m:}(x) of order m on the cylinder.
     DDJ Definition 2.1, adapted to cylinder. -/
 axiom wickPower (L : ℝ) (N : ℕ+) (m : ℕ) :
-  SpaceTimeTorus 2 L → ℝ
+  SpaceTimeCyl 2 L → ℝ
 
 /-- The integrated Wick polynomial X_{L,N}^{:m:}(h) = ∫ X^{:m:}(x) h(x) dx. -/
 axiom wickPowerIntegrated (L : ℝ) (N : ℕ+) (m : ℕ) :
-  TestFunctionTorus 2 L → ℝ
+  TestFunctionCyl 2 L → ℝ
 
 /-- Y_{L,N} = Σ_{m=0}^n a_m X_{L,N}^{:m:}(1).
     The "action" random variable on the cylinder.
@@ -62,7 +62,7 @@ axiom actionRV (P : InteractionPolynomial) (L : ℝ) (N : ℕ+) : ℝ
     The modified action for auxiliary measure.
     DDJ Definition 2.1. -/
 axiom actionRV_g (P : InteractionPolynomial) (L : ℝ) (N : ℕ+)
-    (g : TestFunctionTorus 2 L) : ℝ
+    (g : TestFunctionCyl 2 L) : ℝ
 
 /-! ## Nelson hypercontractivity -/
 

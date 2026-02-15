@@ -16,12 +16,12 @@ open MeasureTheory
 /-! ## Reflection on the cylinder ℝ × S¹_L
 
 On the cylinder, time reflection is simply (t, x) ↦ (-t, x),
-which comes directly from `timeReflectionTorus` in OSforGFF.
+which comes directly from `timeReflectionCyl` in OSforGFF.
 The product structure makes RP much cleaner than on the sphere.
 -/
 
 /-- The positive half-cylinder: {(t, x) ∈ ℝ × S¹_L | t > 0}. -/
-def positiveHalfCylinder (L : ℝ) : Set (SpaceTimeTorus 2 L) :=
+def positiveHalfCylinder (L : ℝ) : Set (SpaceTimeCyl 2 L) :=
   {p | 0 < p.1}
 
 /-! ## Reflection positivity on the cylinder
@@ -58,7 +58,7 @@ axiom interaction_preserves_rp (P : InteractionPolynomial) (L : ℝ) (hL : 0 < L
 axiom finiteMeasure_rp (P : InteractionPolynomial) (L : ℝ) (hL : 0 < L) : True
 
 /-- **Reflection positivity of the P(Φ)₂ measure on the cylinder**.
-    For each L, the measure μ_L on FieldConfigurationTorus 2 L
+    For each L, the measure μ_L on FieldConfigurationCyl 2 L
     satisfies OS3 (reflection positivity).
 
     On the cylinder, this is cleaner than on the sphere because:

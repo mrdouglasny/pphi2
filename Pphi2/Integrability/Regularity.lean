@@ -41,10 +41,10 @@ axiom variational_bound {Ω : Type*} [MeasurableSpace Ω] (μ : ProbabilityMeasu
 
     DDJ Proposition 7.1, adapted to cylinder. -/
 theorem os_regularity (P : InteractionPolynomial) (L : ℝ) [Fact (0 < L)] :
-    ∃ (B : Set (TestFunctionTorus 2 L)),
+    ∃ (B : Set (TestFunctionCyl 2 L)),
       (∃ r : ℝ, 0 < r ∧ ∀ f ∈ B, True) ∧ -- B is a ball in the test function topology
       ∀ f ∈ B,
-        ∫ ω, Real.exp ((distributionPairingTorus ω f) ^ P.n)
+        ∫ ω, Real.exp ((distributionPairingCyl ω f) ^ P.n)
           ∂(infiniteVolumeMeasure P L).toMeasure ≤ 2 := by
   sorry
 

@@ -23,7 +23,7 @@ Let P(τ) be a polynomial of even degree n ≥ 4, bounded from below.
 For L > 0 let μ_L be the P(Φ)₂ measure on the cylinder ℝ × S¹_L.
 
 Then:
-1. The measure μ_L on FieldConfigurationTorus 2 L exists (UV limit).
+1. The measure μ_L on FieldConfigurationCyl 2 L exists (UV limit).
 2. μ_L is invariant under translations of ℝ × S¹_L (OS2).
 3. μ_L is reflection positive (OS3).
 4. There exists a ball B in the test function space such that

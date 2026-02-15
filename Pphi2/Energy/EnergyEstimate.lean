@@ -17,14 +17,14 @@ open MeasureTheory
 /-- The weight function v_L on the cylinder ℝ × S¹_L,
     adapted to the cylinder geometry.
     DDJ Definition 5.1, cylinder version. -/
-axiom energyWeight (L : ℝ) : SpaceTimeTorus 2 L → ℝ
+axiom energyWeight (L : ℝ) : SpaceTimeCyl 2 L → ℝ
 
 /-- v_L is integrable with ‖v_L‖_{L¹} ≤ 1. -/
 axiom energyWeight_integrable (L : ℝ) (hL : 1 ≤ L) :
     True -- v_L ∈ L¹ with norm ≤ 1
 
 /-- v_L is positive. -/
-axiom energyWeight_pos (L : ℝ) (hL : 1 ≤ L) (x : SpaceTimeTorus 2 L) :
+axiom energyWeight_pos (L : ℝ) (hL : 1 ≤ L) (x : SpaceTimeCyl 2 L) :
     0 < energyWeight L x
 
 /-! ## The main a priori bound on the cylinder -/

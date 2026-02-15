@@ -15,7 +15,7 @@ open MeasureTheory
 /-! ## OS Axioms for measures on the cylinder ℝ × S¹_L
 
 We state the Osterwalder-Schrader axioms via the generic QFTFramework
-interface. The measure lives on FieldConfigurationTorus 2 L, and the
+interface. The measure lives on FieldConfigurationCyl 2 L, and the
 axioms are parametrized by pphi2Framework L.
 -/
 

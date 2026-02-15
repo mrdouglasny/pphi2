@@ -13,11 +13,11 @@ open MeasureTheory
 
 /-! ## UV limit -/
 
-/-- The P(Φ)₂ measure μ_L on FieldConfigurationTorus 2 L,
+/-- The P(Φ)₂ measure μ_L on FieldConfigurationCyl 2 L,
     obtained as the N → ∞ limit.
     DDJ Proposition 2.4, adapted to cylinder. -/
 axiom uvLimitMeasure (P : InteractionPolynomial) (L : ℝ) :
-  ProbabilityMeasure (FieldConfigurationTorus 2 L)
+  ProbabilityMeasure (FieldConfigurationCyl 2 L)
 
 /-- The UV limit exists: μ_{L,N} → μ_L weakly as N → ∞.
     Proved via Vitali's convergence theorem.
