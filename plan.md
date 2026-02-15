@@ -1,474 +1,350 @@
-# Plan: Formal Construction of P(Phi)_2 in Lean 4
+# Plan: Formal Construction of P(Φ)₂ in Lean 4
 
 ## Goal
 
-Formalize the construction of the P(Phi)_2 Euclidean quantum field theory
-on the plane and verify the Osterwalder-Schrader axioms, following
-Duch-Dybalski-Jahandideh (arXiv:2311.04137).
+Formalize the construction of the P(Φ)₂ Euclidean quantum field theory
+on the cylinder ℝ × S¹_L and verify partial Osterwalder-Schrader axioms,
+following Duch-Dybalski-Jahandideh (arXiv:2311.04137).
 
-The main theorem to be proved:
+The main theorem (DDJ Theorem 1.1, adapted to cylinders):
 
-> The sequence of measures (j_R^* # mu_R)_{R in N_+} on S'(R^2) has a weakly
-> convergent subsequence. Every accumulation point mu is invariant under the
-> Euclidean symmetries of the plane and reflection positive. Moreover, there
-> exists a ball B in S(R^2) such that for all f in B,
-> integral exp(phi(f)^n) d mu(phi) <= 2.
+> For each L > 0, the P(Φ)₂ measure μ_L on D'(ℝ × S¹_L) exists as the
+> UV limit of regularized measures. The family {μ_L} is tight and every
+> accumulation point μ on S'(ℝ²) satisfies:
+> - (OS1) Euclidean invariance
+> - (OS3) Reflection positivity
+> - (OS5/Regularity) ∃ ball B ⊂ S(ℝ²) s.t. ∀f ∈ B, ∫ exp(φ(f)ⁿ) dμ ≤ 2
 
-This establishes OS axioms E1 (Euclidean invariance), E2 (reflection
-positivity), and E5 (regularity) for the interacting theory. Clustering (E4)
-is not proved in DDJ and is known only for small coupling.
+Clustering (OS4) is known only for small coupling and is not part of DDJ.
 
 ---
 
 ## Primary Reference
 
 **Duch, Dybalski, Jahandideh** (2311.04137):
-*Stochastic quantization of two-dimensional P(Phi) Quantum Field Theory*
+*Stochastic quantization of two-dimensional P(Φ) Quantum Field Theory*
 
-Located at: `refs/duch-dybalski-jahandideh-2311.04137/sphere.tex`
+Located at: `refs/duch-dybalski-jahandideh-2311.04137/`
 
 ### Supplementary References
 
-- Barashkov-Gubinelli (1805.10814): Variational method for Phi^4_3
-- Gubinelli-Hofmanova (1810.01700): PDE construction of Phi^4_3
-- Barashkov-Gubinelli (2112.05562): Infinite volume phi^4_2 tightness
-- Gubinelli (2025): GSSI lecture notes on fractional Phi^4_3
+- Barashkov-Gubinelli (1805.10814): Variational method for Φ⁴₃
+- Gubinelli-Hofmanova (1810.01700): PDE construction of Φ⁴₃
+- Barashkov-Gubinelli (2112.05562): Infinite volume φ⁴₂ tightness
+- Gubinelli (2025): GSSI lecture notes on fractional Φ⁴₃
 
 ---
 
-## Proof Architecture (DDJ)
+## Approach: Cylinders Instead of Spheres
 
-### Section 2: UV Limit (sphere.tex lines 166-298)
+DDJ works on spheres S_R → ℝ² via stereographic projection. We work on
+cylinders ℝ × S¹_L → ℝ² via the L → ∞ limit instead. The cylinder approach:
 
-**Input:** Polynomial P(tau) of degree n >= 4 (n even), coupling lambda > 0.
-
-**Definitions:**
-- S_R: round 2-sphere of radius R
-- G_R = (1 - Delta_R)^{-1}: free covariance on S_R
-- K_{R,N} = (1 - Delta_R/N^2)^{-1}: UV regularization operator
-- G_{R,N} = K_{R,N} G_R K_{R,N}: regularized covariance
-- nu_{R,N}: Gaussian measure on D'(S_R) with covariance G_{R,N}
-- c_{R,N} = Tr(G_{R,N}) / (4 pi R^2): counterterm (Wick ordering constant)
-- P(tau, c): Wick-ordered polynomial (Hermite polynomial form)
-- mu_{R,N}: regularized P(Phi)_2 measure = (1/Z) exp(-int P(phi, c_{R,N})) d nu_{R,N}
-- mu_{R,N}^g: auxiliary measure with extra exp(phi(g)^n/n) factor
-
-**Key results:**
-- **Lemma 2.1** (mu_measure_well_defined): mu_{R,N}^g is well-defined, measures
-  concentrate on L^1_2(S_R)
-- **Lemma 2.3** (polynomial_bound): P(tau, c) >= tau^n/(2n) - A c^{n/2}
-- **Proposition 2.4** (uv_limit): UV limit N -> infinity exists by Vitali's theorem.
-  Uses Nelson hypercontractivity (Lemma C.4) for uniform integrability.
-
-**Proof technique:** Vitali's convergence theorem. Need convergence in probability
-(from stochastic estimates in Appendix C) and uniform integrability (from Nelson
-hypercontractivity + polynomial lower bound).
-
-### Section 3: Stochastic Quantization (lines 300-438)
-
-**Key idea:** The P(Phi)_2 measure is the stationary distribution of a stochastic
-PDE (Parisi-Wu). Use the Da Prato-Debussche trick to decompose the solution.
-
-**Definitions:**
-- W_R(t): cylindrical Wiener process on L_2(S_R)
-- Q_{R,N} = (1 - Delta_R)(1 - Delta_R/N^2)^2: drift operator
-- Z_{R,N}(t): OU process (free field dynamics), stationary dist = nu_{R,N}
-- Phi_{R,N}^g(t): interacting dynamics, stationary dist = mu_{R,N}^g
-- Psi_{R,N}^g := Phi_{R,N}^g - Z_{R,N}: Da Prato-Debussche remainder
-
-**Key results:**
-- **Lemma 3.3** (Law_Z_phi): Law(Z_{R,N}(t)) = nu_{R,N} and
-  Law(Phi_{R,N}^g(t)) = mu_{R,N}^g for all t (stationarity)
-- **Eq. (3.13)** (varPsi_pde): PDE for Psi (non-singular in N -> infinity limit):
-  d_t Psi = -Q Psi - P'(Psi + Z, c) + ((Psi+Z)(g))^{n-1} g
-- **Eq. (3.17)** (varPsi_pde2): Expanded form separating Psi^{n-1} from
-  stochastic forcing terms involving Z^{:m-l:} Psi^l
-
-### Section 4: Stereographic Projection (lines 442-482)
-
-**Definitions:**
-- j_R : R^2 -> S_R \ {north pole}: stereographic parametrization
-- w_R(x) = 16R^4 / (4R^2 + |x|^2)^2: conformal weight
-- j_R^* : D'(S_R) -> S'(R^2): pullback of distributions
-
-**Key identities:**
-- Volume form: rho_R(dx) = w_R(x) dx in stereographic coordinates
-- Laplacian: j_R^* Delta_R = w_R^{-1} Delta j_R^*
-- Distribution pullback: <j_R^* phi, f> = <phi, (w_R^{-1} f) o j_R^{-1}>
-
-### Section 5: A Priori Bound / Energy Estimate (lines 488-570)
-
-**This is the core technical section.** The energy method provides bounds
-uniform in both R (infrared) and N (ultraviolet).
-
-**Definitions:**
-- v_L = (1/(4 pi L^2)) w_L^8: polynomial weight on R^2
-
-**Key results:**
-- **Proposition 5.1** (energy_method): For R >= L, N >= 1, g sufficiently small:
-
-      8 d_t ||j_R^* Psi||^2_{L_2(v_L^{1/2})}
-        + ||j_R^* Psi||^n_{L_n(v_L^{1/n})}
-        <= C sum_{k=0}^{n-1} ||j_R^* Z^{:k:}||^p_{L_p^{-kappa}(v_L^{1/p})}
-
-  This bounds the Psi norm growth by free-field stochastic terms.
-
-- **Lemma 5.2** (weights_derivatives): Integration by parts estimates (A), (B), (C)
-  for weighted Laplacian powers. Requires L sufficiently large.
-- **Remark 5.3** (L_two_interms_of_L_n): L_2 weighted norm controlled by L_n.
-
-**Proof technique:** Multiply Psi PDE by v_L * Psi, integrate over R^2.
-The nonlinear term gives coercive ||Psi||^n_{L_n}. Cross terms
-Z^{:m:} Psi^l bounded by Lemma A.5 (Young + Sobolev interpolation).
-The g-dependent term bounded by choosing ball B small enough.
-
-### Section 6: Tightness (lines 645-711)
-
-**Key results:**
-- **Proposition 6.1** (tightness): Uniform moment bound:
-  integral ||j_R^* phi||^n_{L_n^{-kappa}(v_L^{1/n})} d mu^g_{R,N} <= C
-
-- **Remark 6.2**: By compact embedding L_n^{-kappa}(v_L^{1/n}) -> L_n^{-2kappa}(v_L^{2/n})
-  and tightness criterion (Lemma B.5), the sequence (j_R^* # mu_R) is tight.
-  Prokhorov's theorem gives a weakly convergent subsequence.
-
-**Proof technique:** Use stationarity (Lemma 3.3) to convert spatial moment
-to time-averaged moment. Apply energy estimate (Prop 5.1) to bound time
-average. Use free-field moment bounds (Lemma C.6) for the RHS.
-
-### Section 7: Integrability / OS Regularity (lines 715-767)
-
-**Key results:**
-- **Proposition 7.1** (integrability): There exists ball B in S(R^2) such that
-  for all f in B: integral exp(phi(f)^n) d mu(phi) <= 2.
-
-**Proof technique:** Hairer-Steele argument. Use the auxiliary measure mu^g
-and the variational bound (Lemma 7.2, from Barashkov):
-  integral exp(F) d mu <= exp(integral F d mu^F).
-Combine with tightness bound (Prop 6.1) and Holder's inequality.
-
-### Section 8: Reflection Positivity (lines 770-909)
-
-**Key idea:** Finite-volume measure mu_R on S_R is reflection positive.
-This transfers to the infinite-volume limit.
-
-**Important subtlety:** The spectral UV cutoff K_{R,N} breaks reflection
-positivity. DDJ introduce a *local* UV cutoff hat{K}_{R,N} with kernel
-hat{K}_{R,N}(x,y) = N^2 h(N d_R(x,y)) that preserves RP.
-
-**Definitions:**
-- Theta_R: reflection x_1 -> -x_1 on S_R (and Theta on R^2)
-- S_{R,N}^+, S_{R,N}^-: half-spheres with 1/N gap
-- F_R^+, F_{R,N}^+: cylindrical functionals supported on half-spheres
-- hat{K}_{R,N}: local UV regularization operator (Def 8.3)
-- hat{X}_{R,N}, tilde{Y}_{R,N}: free field and action with local cutoff
-
-**Key results:**
-- **Lemma 8.5** (reflection_positivity): Four-step proof:
-  (A) Free field X_R on S_R is RP (cite Dimock 2004)
-  (B) hat{X}_{R,N} = hat{K}_{R,N} X_R is RP (support property of local kernel)
-  (C) exp(-tilde{Y}_{R,N}) preserves RP (half-space factorization Y = Y^+ + Y^-)
-  (D) mu_R is RP (UV limit: hat cutoff -> no cutoff via Lemma 8.4)
-
-- **Proposition 8.1** (reflection_positivity for mu): Passes RP from mu_R to
-  limit mu by weak convergence.
-
-### Section 9: Euclidean Invariance (lines 912-1070)
-
-**Key insight:** dim SO(3) = dim E(2) = 3.
-
-**Rotational invariance:** Rotations R_{R,alpha} around x_3 axis of S_R correspond
-exactly to rotations R_alpha of R^2 under stereographic projection. Since mu_R
-is SO(3)-invariant, j_R^* # mu_R is rotationally invariant, and so is the limit.
-
-**Translational invariance:** More subtle. Rotations T_{R,alpha} around x_2 axis
-map under stereographic projection to transformations S_{R,alpha} of R^2 that
-are NOT translations. But S_{R,alpha} -> T_alpha as R -> infinity.
-
-**Key results:**
-- **Remark 9.3** (translation): |partial^a S_{R,alpha}(x) - partial^a T_alpha(x)| <= C/R
-- **Proposition 9.1** (euclidean_inv_plane): mu is both rotationally and
-  translationally invariant.
-
-### Appendix A: Function Spaces (lines 1077-1228)
-
-Weighted Bessel potential spaces L^alpha_p(R^d, w), Sobolev embeddings,
-multiplication theorem, interpolation theorem, and the key estimate
-Lemma A.5 (Z_Psi_n) bounding cross-terms.
-
-### Appendix B: Mathematical Preliminaries (lines 1239-1293)
-
-Prokhorov's theorem, tightness criterion via compact embeddings,
-trace estimates for spectral sums on spheres.
-
-### Appendix C: Stochastic Estimates (lines 1295-1623)
-
-Wiener chaos, Hermite polynomials, Nelson hypercontractivity,
-moment bounds for free fields uniform in R and N. The key result
-is Lemma C.6 (stochastic_bound_infinite_volume): free field moments
-in weighted Bessel spaces are bounded uniformly in R, N.
+- **Preserves time direction:** ℝ factor is continuous time, giving natural
+  time reflection and positive-time support without stereographic subtleties.
+- **Fourier mode decomposition:** S(ℝ × S¹_L) ≅ {ℤ-indexed Schwartz families
+  with rapid decay}, making test functions concrete.
+- **Fits QFTFramework:** The cylinder has the same structure as OSforGFF
+  (spacetime, test functions, field configurations, symmetry group).
+- **Trade-off:** We lose the SO(3) ≅ E(2) trick for Euclidean invariance.
+  Translation invariance must be proved via the L → ∞ limit directly.
 
 ---
 
-## Dependency Diagram
+## Dependencies
 
-```
-                    Appendix A              Appendix B           Appendix C
-                  (Function Spaces)      (Prokhorov etc.)    (Stochastic Est.)
-                   /     |     \               |                /    |    \
-                  /      |      \              |               /     |     \
-    Sec 4        /  Sec 5: Energy \        Sec 6: Tight.  Sec 2: UV Limit
-  (Stereo.) ---/   Estimate (core) \-------->  |  <------      |
-       \       /         |          \          |           Sec 3: Stoch. Quant.
-        \     /          |           \         |              /
-         \   /           v            v        v             /
-          \ /     Sec 7: Integrability   Sec 8: RP         /
-           \             |                  |              /
-            \            v                  v             /
-             -----> Sec 9: Euclidean Invariance <--------
-                            |
-                            v
-                      MAIN THEOREM
-```
+- **OSforGFF-dimensions** (`OSforGFF/`): QFTFramework structure, OS axiom
+  definitions, nuclear space class, Minlos theorem, positive definiteness.
+- **Mathlib**: Schwartz space, seminorms, AddCircle, measure theory, weak dual.
+- **aqft2** (sibling project): Schwartz function infrastructure, Hermite
+  functions, nuclear factorization. Not a build dependency but shares patterns.
 
 ---
 
-## What Transfers from OSforGFF
+## Current State
 
-The OSforGFF project (47 files, ~31,600 lines, 0 sorries) provides:
-
-### Directly reusable:
-1. **OS axiom definitions** (`OS_Axioms.lean`): OS0-OS4 formalized for
-   measures on S'(R^4). Need to adapt to d=2 (change SpaceTime from R^4 to R^2).
-2. **Positive definiteness** (`PositiveDefinite.lean`, `SchurProduct.lean`,
-   `HadamardExp.lean`): General theory of PD functions/kernels.
-3. **Nuclear space framework** (`NuclearSpace.lean`): Definition + schwartz_nuclear axiom.
-4. **Minlos theorem** (`Minlos.lean`): Measure existence on nuclear spaces.
-   (Though DDJ doesn't use Minlos directly -- measures are constructed via limits.)
-5. **Schwartz function infrastructure** (`FunctionalAnalysis.lean`,
-   `ComplexTestFunction.lean`): Embeddings, integrability, decay.
-6. **Distribution pairing** (`Basic.lean`): WeakDual-based FieldConfiguration.
-
-### Partially reusable (needs adaptation):
-7. **Euclidean group action** (`Euclidean.lean`): Need E(2) instead of E(4).
-8. **Reflection and time translation** (`DiscreteSymmetry.lean`,
-   `TimeTranslation.lean`): Structure transfers but details differ in d=2.
-9. **Generating functionals** (`Basic.lean`): General framework applicable.
-10. **Covariance theory** (`Covariance.lean`, `CovarianceR.lean`): Free field
-    covariance. OSforGFF works in d=4 with mass; here we need d=2 on spheres.
-
-### Not reusable (must build new):
-- Everything related to spheres S_R, stereographic projection
-- Stochastic quantization / SPDE theory
-- Wick ordering on spheres
-- Weighted Bessel potential spaces with polynomial weights
-- Energy estimates
-- Nelson hypercontractivity for Wiener chaos on spheres
-- Tightness and Prokhorov machinery
-- Local UV cutoff and its RP properties
-
----
-
-## What Needs Mathlib (and likely exists)
-
-1. **Spherical harmonics and Laplace-Beltrami** -- Partial: Mathlib has some
-   manifold theory but likely not spectral theory on S^2 specifically.
-2. **Prokhorov's theorem** -- Mathlib has `MeasureTheory.Measure.tightness`
-   infrastructure but may not have the full theorem.
-3. **Sobolev embedding theorems** -- Likely not in Mathlib for weighted spaces.
-4. **Cylindrical Wiener process** -- Not in Mathlib.
-5. **Hermite polynomials** -- Mathlib has `Polynomial.hermite`.
-6. **Semigroup theory (e^{-tA})** -- Partial in Mathlib.
-7. **Weak convergence of measures** -- Mathlib has portmanteau etc.
-8. **Compact embeddings** -- Need Rellich-Kondrachov type results.
-
----
-
-## Proposed Lean File Structure
+### File Structure and Status
 
 ```
 Pphi2/
-  -- Core setup
-  Basic.lean              -- R^2 as SpaceTime, S_R definition, basic notation
-  Polynomial.lean         -- P(tau) polynomial, degree n >= 4, P bounded below
-  WickOrdering.lean       -- Wick-ordered polynomial P(tau, c), Hermite expansion
+  Basic.lean                          338 lines, 46 sorrys  ← ACTIVE
+  Polynomial.lean                      41 lines,  3 sorrys
+  OSAxioms.lean                        28 lines,  0 sorrys  (structure definition only)
+  Main.lean                            52 lines,  3 sorrys
 
-  -- Function spaces (Appendix A)
-  FunctionSpaces/
-    WeightedLp.lean       -- L_p(R^d, w) weighted spaces
-    BesselPotential.lean  -- L^alpha_p(R^d, w) weighted Bessel potential spaces
-    SobolevSphere.lean    -- L^alpha_p(S_R) Bessel potential spaces on sphere
-    Embedding.lean        -- Sobolev embeddings (Thm A.5), compact embeddings (Thm A.5(C))
-    Multiplication.lean   -- Sobolev multiplication (Thm A.6)
-    Interpolation.lean    -- Sobolev interpolation (Thm A.7)
-    ZPsiEstimate.lean     -- Cross-term estimate Lemma A.5 (Z_Psi_n)
+  GaussianCylinder/
+    Covariance.lean                    70 lines,  0 sorrys  (9 axioms)
 
-  -- Sphere geometry
-  Sphere/
-    Basic.lean            -- S_R in R^3, geodesic distance, Riemannian measure
-    LaplaceBeltrami.lean  -- Delta_R, spectral decomposition, eigenvalues l(l+1)/R^2
-    SphericalHarmonics.lean  -- Eigenspaces, Legendre polynomials
-    StereographicProj.lean   -- j_R, w_R, pullback j_R^*, Laplacian identity
+  MeasureCylinder/
+    Regularized.lean                   36 lines,  0 sorrys  (3 axioms)
+    UVLimit.lean                       24 lines,  0 sorrys  (3 axioms)
 
-  -- Gaussian measure on sphere (Section 2)
-  GaussianSphere/
-    Covariance.lean       -- G_R = (1-Delta_R)^{-1}, regularized G_{R,N}
-    Counterterm.lean      -- c_{R,N} = Tr(G_{R,N})/(4pi R^2), bound |c - log N/2pi| <= C
-    GaussianMeasure.lean  -- nu_{R,N} on D'(S_R), concentration on L^1_2(S_R)
-    WickFields.lean       -- X_{R,N}, X^{:m:}_{R,N}, Y_{R,N}, Y^g_{R,N}
-
-  -- P(Phi)_2 measure on sphere (Section 2)
-  MeasureSphere/
-    Regularized.lean      -- mu_{R,N} and mu_{R,N}^g, well-definedness (Lem 2.1)
-    PolynomialBound.lean  -- P(tau,c) >= tau^n/(2n) - A c^{n/2} (Lem 2.3)
-    UVLimit.lean          -- UV limit mu_R = lim mu_{R,N} via Vitali (Prop 2.4)
-
-  -- Stochastic quantization (Section 3)
   StochasticQuant/
-    WienerProcess.lean    -- Cylindrical Wiener process W_R(t)
-    OUProcess.lean        -- Z_{R,N}(t) OU process, mild solution
-    InteractingSPDE.lean  -- Phi_{R,N}^g(t) interacting dynamics, mild solution
-    DapratoDebussche.lean -- Psi = Phi - Z, PDE for Psi (non-singular)
-    Stationarity.lean     -- Law(Z(t)) = nu, Law(Phi(t)) = mu (Lem 3.3)
+    DaPratoDebussche.lean              79 lines,  0 sorrys  (7 axioms)
 
-  -- Stochastic estimates (Appendix C)
   StochasticEst/
-    WienerChaos.lean      -- Wiener chaos, Hermite structure
-    NelsonHypercontractivity.lean  -- Nelson estimate (Lem C.4)
-    MomentBounds.lean     -- Lem C.1 (non-uniform), Lem C.2 (uniform in R,N)
-    YConvergence.lean     -- Y_{R,N} convergence (Lem C.3)
-    InfiniteVolumeBound.lean  -- ||j_R^* X^{:m:}||_{L^{-kappa}_p} <= C (Lem C.6)
+    InfiniteVolumeBound.lean           26 lines,  0 sorrys  (2 axioms)
 
-  -- Energy estimate (Section 5)
   Energy/
-    Weight.lean           -- v_L = w_L^8 / (4 pi L^2)
-    WeightEstimates.lean  -- Integration by parts (Lem 5.2 A,B,C)
-    EnergyEstimate.lean   -- Main a priori bound (Prop 5.1)
+    EnergyEstimate.lean                32 lines,  0 sorrys  (4 axioms)
 
-  -- Infinite volume limit (Section 6)
+  FunctionSpaces/
+    WeightedLp.lean                    40 lines,  2 sorrys
+    Embedding.lean                     31 lines,  0 sorrys  (4 axioms)
+
   InfiniteVolume/
-    Tightness.lean        -- Uniform moment bound (Prop 6.1)
-    Prokhorov.lean        -- Prokhorov's theorem, weak convergence
-    Limit.lean            -- Existence of accumulation point mu
+    Tightness.lean                     68 lines,  0 sorrys  (3 axioms)
 
-  -- Integrability (Section 7)
   Integrability/
-    VariationalBound.lean -- Lemma 7.2 (Barashkov's variational inequality)
-    Regularity.lean       -- OS regularity: int exp(phi(f)^n) d mu <= 2 (Prop 7.1)
+    Regularity.lean                    51 lines,  2 sorrys
 
-  -- Reflection positivity (Section 8)
   ReflectionPositivity/
-    Reflection.lean       -- Theta_R on S_R, Theta on R^2, half-spheres
-    CylindricalFunctionals.lean  -- F_R, F_R^+, F_{R,N}^+
-    LocalUVCutoff.lean    -- hat{K}_{R,N} with local kernel (Def 8.3)
-    LocalFields.lean      -- hat{X}_{R,N}, tilde{Y}_{R,N} (Def 8.5)
-    UVConvergence.lean    -- Local cutoff -> no cutoff (Lem 8.4)
-    RPSphere.lean         -- RP for mu_R (Lem 8.5 A-D)
-    RPPlane.lean          -- RP for mu (Prop 8.1)
+    RPPlane.lean                       74 lines,  1 sorry
 
-  -- Euclidean invariance (Section 9)
   EuclideanInvariance/
-    RotationSphere.lean   -- R_{R,alpha}: rotation of S_R around x_3
-    TranslationSphere.lean -- T_{R,alpha}: rotation around x_2
-    SRalpha.lean          -- S_{R,alpha} = j_R^{-1} o T_{R,alpha} o j_R on R^2
-    Convergence.lean      -- S_{R,alpha} -> T_alpha as R -> infty (Rem 9.3)
-    Invariance.lean       -- mu is E(2)-invariant (Prop 9.1)
-
-  -- Main theorem
-  Main.lean               -- Assembly of all OS axioms for P(Phi)_2
+    Invariance.lean                    54 lines,  1 sorry
 ```
 
----
+**Summary:** 16 files, ~1065 lines, 58 sorrys, ~35 axioms. Most downstream
+files are axiom signatures with the proof architecture sketched. The active
+development front is `Basic.lean`.
 
-## Formalization Strategy
+### What's Concrete in Basic.lean
 
-### Phase 1: Foundation (Parallel tracks)
+- `SpaceTimeCyl d L = ℝ × AddCircle L`
+- `TestFunctionCyl d L`: structure with `fourierMode : ℤ → SchwartzMap ℝ ℂ`,
+  `rapidDecay`, and `reality` condition
+- `TestFunctionCylℂ d L`: same without reality condition
+- `FieldConfigurationCyl d L = WeakDual ℝ (TestFunctionCyl d L)`
+- `QFTFramework.cylinder`: all 8 operational fields filled with concrete
+  definitions (sorry'd proofs, concrete type signatures)
+- `realGenFunctionalCyl`: Z[J] = ∫ exp(i⟨ω,J⟩) dμ — fully concrete
+- `complexGenFunctionalCyl`: built on `complexPairingCyl` (sorry'd)
+- `positiveTimeSubmoduleCyl`: carrier = {f | ∀n, tsupport(fₙ) ⊆ Ioi 0}
+- `timeReflectionCyl`, `translateTestFunCyl`: type signatures concrete, bodies sorry'd
 
-**Track A: Function spaces** (can start immediately)
-- Weighted L_p spaces, Bessel potential spaces
-- Sobolev embeddings on R^2 and S_R
-- These are general and don't depend on the specific QFT problem
+### What's Still Axiomatized
 
-**Track B: Sphere infrastructure** (can start immediately)
-- S_R as a Riemannian manifold in Lean/Mathlib
-- Spectral theory of Laplace-Beltrami (eigenvalues l(l+1)/R^2)
-- Stereographic projection and its properties
-
-**Track C: Port OS axiom definitions** (quick, from OSforGFF)
-- Adapt OS axiom definitions from d=4 to d=2
-- Set up FieldConfiguration = WeakDual R (SchwartzMap R^2 R)
-
-### Phase 2: Gaussian Theory on Spheres
-
-- Free covariance G_R, regularized G_{R,N}
-- Counterterm bounds (Lemma B.1)
-- Gaussian measure nu_{R,N} on D'(S_R)
-- Wick ordering, Hermite polynomials
-- Nelson hypercontractivity
-
-### Phase 3: Stochastic Quantization
-
-- Cylindrical Wiener process (may need significant new Mathlib work)
-- OU process Z_{R,N}
-- Interacting process Phi_{R,N}^g
-- Da Prato-Debussche decomposition
-- Stationarity of measures
-
-### Phase 4: Core Estimates
-
-- Energy estimate (Prop 5.1) -- the hardest analytical part
-- Stochastic moment bounds uniform in R, N (Appendix C)
-- Cross-term estimates (Lemma A.5)
-
-### Phase 5: Limit and Axioms
-
-- Tightness (Prop 6.1) via energy estimate
-- Prokhorov -> weak convergence
-- Integrability / OS regularity (Prop 7.1)
-- Reflection positivity (Sec 8) -- needs local cutoff
-- Euclidean invariance (Sec 9) -- the payoff of the sphere approach
-
-### Phase 6: Assembly
-
-- Main theorem combining all axioms
+- `SymmetryGroupCyl d L`: axiom (blocks `symmetryActionCyl`)
+- `laplacianCylinder`, `freeCovariance`: axiom CLMs
+- `counterterm`, `counterterm_bound`: axiom
+- All topology instances on `TestFunctionCyl`: sorry
 
 ---
 
-## Key Difficulties and Gaps
+## Proof Architecture (DDJ, Adapted to Cylinders)
 
-### Hard parts:
-1. **Cylindrical Wiener process in Lean**: No existing formalization.
-   This is a major infrastructure piece. May need to axiomatize initially.
-2. **Spectral theory on S_R**: Eigenvalue decomposition of Laplace-Beltrami.
-   Mathlib has some manifold theory but not this specifically.
-3. **Energy estimate (Prop 5.1)**: Technically involved, requires careful
-   integration by parts with weights. Many intermediate bounds.
-4. **Sobolev embedding/interpolation with weights**: Not in Mathlib.
-   Could axiomatize or build from scratch.
+### Section 2: UV Limit on the Cylinder
 
-### Likely axioms needed:
-- Spectral decomposition of Laplace-Beltrami on S_R
+Replace S_R with ℝ × S¹_L. The Laplacian Δ_L has eigenvalues
+-(k² + (2πn/L)²) in the Fourier representation.
+
+- G_L = (1 - Δ_L)⁻¹: free covariance (axiom `freeCovariance`)
+- K_{L,N}: UV regularization operator
+- ν_{L,N}: Gaussian measure with covariance G_{L,N} = K_{L,N} G_L K_{L,N}
+- c_{L,N}: counterterm (Wick ordering constant)
+- μ_{L,N}: regularized P(Φ)₂ measure
+
+**Files:** `GaussianCylinder/Covariance.lean`, `MeasureCylinder/Regularized.lean`,
+`MeasureCylinder/UVLimit.lean`
+
+### Section 3: Stochastic Quantization
+
+Da Prato-Debussche decomposition Φ = Ψ + Z where Z is the OU process
+(Gaussian) and Ψ satisfies a PDE with non-singular nonlinearity.
+
+**File:** `StochasticQuant/DaPratoDebussche.lean`
+
+### Section 5: Energy Estimate
+
+The core a priori bound, uniform in L and N. Controls ‖Ψ‖ by free-field
+stochastic terms.
+
+**File:** `Energy/EnergyEstimate.lean`
+
+### Section 6: Tightness and Infinite Volume
+
+Uniform moment bounds → tightness → Prokhorov → subsequential convergence.
+
+**Files:** `InfiniteVolume/Tightness.lean`, `StochasticEst/InfiniteVolumeBound.lean`
+
+### Section 7: Integrability / OS Regularity
+
+Variational bound (Barashkov) + tightness → ∫ exp(φ(f)ⁿ) dμ ≤ 2.
+
+**File:** `Integrability/Regularity.lean`
+
+### Section 8: Reflection Positivity
+
+Time reflection Θ: t ↦ -t on the cylinder. Free field is RP; interaction
+preserves RP by half-space factorization.
+
+**File:** `ReflectionPositivity/RPPlane.lean`
+
+### Section 9: Euclidean Invariance
+
+Translation invariance via L → ∞ limit. Rotation invariance from the
+circle symmetry.
+
+**File:** `EuclideanInvariance/Invariance.lean`
+
+---
+
+## Development Phases
+
+### Phase 0: Schwartz Infrastructure (CURRENT)
+
+Fill sorrys in `Basic.lean` — the algebraic and analytic foundations.
+
+**Phase 0a: Algebraic proofs** (straightforward, ~30 sorrys)
+- [ ] `ext` lemma for `TestFunctionCyl` and `TestFunctionCylℂ`
+- [ ] `AddCommGroup` laws (add_assoc, zero_add, add_zero, add_comm, neg_add_cancel)
+- [ ] `Module ℝ` laws (one_smul, mul_smul, smul_zero, smul_add, add_smul, zero_smul)
+- [ ] Same for `TestFunctionCylℂ` with `Module ℂ`
+- [ ] Rapid decay closure: add, neg, zero, smul
+- [ ] Reality condition closure: add, neg, zero, smul
+
+All ingredients are in Mathlib: `map_add_le_add`, `map_neg_eq_map`, `map_zero`,
+`map_smul_eq_mul` for seminorms; `star_add`, `star_neg`, `star_zero`,
+`Complex.conj_ofReal` for reality. See `refs/schwartz-map-lemmas.md`.
+
+**Phase 0b: Submodule and operations** (~6 sorrys)
+- [ ] `positiveTimeSubmoduleCyl`: zero_mem' (tsupport_zero), add_mem', smul_mem'
+- [ ] `timeReflectionCyl`: compose modes with negation via `SchwartzMap.compCLMOfContinuousLinearEquiv`
+- [ ] `complexPairingCyl`: Re/Im decomposition of complex test functions
+
+**Phase 0c: Leave as sorry/axiom**
+- Topology instances (requires defining Fréchet topology on mode families)
+- `symmetryActionCyl` (blocked on axiomatized `SymmetryGroupCyl`)
+- `translateTestFunCyl` (translation is affine, needs custom argument)
+- `timeTranslationDistCyl` (depends on translation)
+- `NuclearSpace` (textbook result, axiomatized as in aqft2)
+
+### Phase 1: Gaussian Theory on the Cylinder
+
+- [ ] Make `freeCovariance` concrete (mode-by-mode: multiply by 1/(1 + k² + (2πn/L)²))
+- [ ] Counterterm c_{L,N} = trace of regularized covariance
+- [ ] Gaussian measure ν_{L,N} via Minlos theorem (from OSforGFF)
+- [ ] Wick ordering in Fourier representation
+- [ ] Nelson hypercontractivity (axiomatize, as in aqft2)
+
+### Phase 2: Stochastic Quantization
+
+- [ ] OU process Z_{L,N}(t) — axiomatize cylindrical Wiener process
+- [ ] Da Prato-Debussche remainder Ψ = Φ - Z
+- [ ] PDE for Ψ (non-singular nonlinearity)
+- [ ] Stationarity: Law(Φ(t)) = μ_{L,N}
+
+### Phase 3: Core Estimates
+
+- [ ] Energy estimate (Prop 5.1) — the hardest analytical part
+- [ ] Stochastic moment bounds uniform in L, N
+- [ ] Cross-term estimates (Lemma A.5 via Sobolev interpolation)
+- [ ] Function space infrastructure: weighted Bessel potential spaces, embeddings
+
+### Phase 4: Limit and Axioms
+
+- [ ] Tightness (Prop 6.1) from energy estimate
+- [ ] UV limit μ_L = lim_N μ_{L,N} via Vitali
+- [ ] Infinite volume: tightness of {μ_L}, Prokhorov
+- [ ] OS regularity (Prop 7.1) via variational bound
+- [ ] Reflection positivity (Sec 8)
+- [ ] Euclidean invariance (Sec 9)
+
+### Phase 5: Assembly
+
+- [ ] `Main.lean`: combine all OS axioms into `SatisfiesDDJ_OS_generic`
+
+---
+
+## Relationship to Sibling Projects
+
+### aqft2 (GFF on ℝ^d)
+
+Proves all 5 OS axioms for the free Gaussian field. Shares:
+- Schwartz function infrastructure (`FunctionalAnalysis.lean`: 60+ lemmas)
+- Nuclear space framework and Hermite expansion
+- OS axiom definitions and generating functional patterns
+- Minlos theorem application pattern
+
+Does NOT share: interacting theory, stochastic quantization, cylinder geometry.
+
+### OSforGFF-dimensions
+
+Provides the `QFTFramework` structure that pphi2 instantiates. Also provides:
+- OS axiom type classes (`OS0`–`OS4`)
+- `NuclearSpace` class (if/when upstreamed from aqft2)
+- `WeakDual` field configuration pattern
+
+### Coordination needed
+
+- `NuclearSpace`: currently defined locally in pphi2 as a stub class.
+  Should be replaced with the real definition from OSforGFF once available.
+- Schwartz lemmas proved in aqft2 could be factored into a shared library.
+- `QFTFramework` may evolve toward the `FieldSpace` hierarchy
+  (see `field-space-brainstorming.md`) but not yet.
+
+---
+
+## Key Difficulties
+
+### Hard (require substantial new Lean work)
+1. **Topology on TestFunctionCyl:** The Fréchet topology on ℤ-indexed Schwartz
+   families is not in Mathlib. Could use the product topology on ℤ → 𝓢(ℝ,ℂ)
+   restricted to the rapid-decay subspace, but the restriction topology needs care.
+2. **Energy estimate (Prop 5.1):** Many intermediate bounds, integration by parts
+   with weights. The core technical challenge of the whole formalization.
+3. **Cylindrical Wiener process:** No Lean formalization exists. Must axiomatize.
+4. **Sobolev embeddings for weighted spaces:** Not in Mathlib.
+
+### Medium (require careful but routine Lean work)
+5. **Time reflection via compCLM:** Composition with negation. The CLM exists
+   in Mathlib; need to verify rapid decay and reality are preserved.
+6. **Complex pairing:** Decompose SchwartzMap ℝ ℂ into Re/Im parts. Requires
+   showing `Complex.reCLM ∘ f` and `Complex.imCLM ∘ f` are Schwartz.
+7. **Translation on the cylinder:** Affine map, not covered by `compCLMOfContinuousLinearEquiv`.
+
+### Likely axioms needed long-term
+- Spectral theory of Δ_L on the cylinder (eigenvalue decomposition)
 - Cylindrical Wiener process existence and properties
-- Sobolev embedding theorems for weighted spaces
-- Nelson hypercontractivity (or Gross's log-Sobolev inequality)
-- Prokhorov's theorem (if not yet in Mathlib)
-- Possibly: semigroup theory for e^{-tQ}
+- Nelson hypercontractivity / Gross log-Sobolev inequality
+- Sobolev embedding theorems for weighted Bessel spaces
+- Prokhorov's theorem (partial in Mathlib)
 
-### Estimated effort:
-- **Phase 1**: 2-4 months (function spaces + sphere infrastructure)
-- **Phase 2**: 1-2 months (Gaussian theory, leveraging OSforGFF patterns)
-- **Phase 3**: 2-3 months (stochastic quantization -- most novel)
-- **Phase 4**: 3-4 months (core estimates -- most technically demanding)
-- **Phase 5**: 2-3 months (limits and axiom verification)
-- **Phase 6**: 1 month (assembly and polish)
+---
+
+## File Index
+
+| File | Role | Status |
+|------|------|--------|
+| `Basic.lean` | Core types, QFTFramework instance | 46 sorrys, active |
+| `Polynomial.lean` | Interaction polynomial P(τ) | 3 sorrys |
+| `OSAxioms.lean` | `SatisfiesDDJ_OS_generic` structure | complete |
+| `Main.lean` | Main theorem assembly | 3 sorrys |
+| `GaussianCylinder/Covariance.lean` | Free covariance, Gaussian measure | axioms |
+| `MeasureCylinder/Regularized.lean` | Regularized P(Φ)₂ measure | axioms |
+| `MeasureCylinder/UVLimit.lean` | UV limit N → ∞ | axioms |
+| `StochasticQuant/DaPratoDebussche.lean` | Da Prato-Debussche decomposition | axioms |
+| `StochasticEst/InfiniteVolumeBound.lean` | Free field moment bounds | axioms |
+| `Energy/EnergyEstimate.lean` | A priori energy bound | axioms |
+| `FunctionSpaces/WeightedLp.lean` | Weighted Lp, Bessel spaces | 2 sorrys |
+| `FunctionSpaces/Embedding.lean` | Sobolev embeddings | axioms |
+| `InfiniteVolume/Tightness.lean` | Tightness, Prokhorov | axioms |
+| `Integrability/Regularity.lean` | OS regularity bound | 2 sorrys |
+| `ReflectionPositivity/RPPlane.lean` | Reflection positivity | 1 sorry |
+| `EuclideanInvariance/Invariance.lean` | Euclidean invariance | 1 sorry |
+
+| Supporting doc | Content |
+|---------------|---------|
+| `refs/schwartz-map-lemmas.md` | Mathlib Schwartz API inventory |
+| `field-space-brainstorming.md` | FieldSpace architecture analysis |
+| `docs/os_axioms_lattice_plan.md` | Lattice OS axiom plan |
 
 ---
 
 ## Immediate Next Steps
 
-1. Set up the directory structure in Pphi2/
-2. Define R^2 as SpaceTime, S_R, basic notation
-3. Start function space definitions (weighted Bessel potential spaces)
-4. Port OS axiom definitions from OSforGFF (adapt d=4 -> d=2)
-5. Define stereographic projection j_R and prove basic identities
-6. Begin Gaussian measure on sphere (covariance G_R)
+1. **Phase 0a:** Prove `ext` lemma and algebraic instances in `Basic.lean`
+2. **Phase 0b:** Prove `positiveTimeSubmoduleCyl` closure properties
+3. Coordinate with aqft2 on shared Schwartz lemma needs
+4. Make `freeCovariance` concrete (mode-by-mode multiplication)
