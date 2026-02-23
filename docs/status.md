@@ -251,3 +251,82 @@ The following theorems have complete proofs (no sorry):
 | `os2_inheritance` | OS2_WardIdentity | E(2) invariance (from translation + rotation) |
 | `continuumLimit_satisfies_allOS` | OS2_WardIdentity | All OS axioms (assembly from phases) |
 | `pphi2_main` | Main | Main theorem: SatisfiesFullOS (assembly) |
+
+---
+
+## Upstream: gaussian-field axioms and sorries
+
+The gaussian-field library (dependency) has 29 axioms and 14 sorries that
+pphi2 relies on. These are organized by priority for pphi2.
+
+### Critical for pphi2 (blocks lattice Gaussian measure)
+
+| Item | File | Type | Difficulty | Description |
+|------|------|------|-----------|-------------|
+| `spectralCLM` | HeatKernel/Axioms | axiom | Hard | Core: E →L[ℝ] ell2' from singular values. Everything flows through this. |
+| `spectralCLM_coord` | HeatKernel/Axioms | axiom | Easy | Coordinate formula. By construction. |
+| `spectralCLM_zero` | HeatKernel/Axioms | axiom | Easy | Zero singular values → zero map. |
+| `spectralCLM_smul` | HeatKernel/Axioms | axiom | Easy | Scalar compatibility. |
+| `finLatticeField_dyninMityaginSpace` | Lattice/FiniteField | 8 sorries | Medium | DyninMityaginSpace instance for finite lattice. Trivial in finite dim but needs careful ℕ-indexed framework handling. |
+| `lattice_singular_values_bounded` | Lattice/Covariance | sorry | Easy | σ_m ≤ 1/mass. From eigenvalue lower bound mass² > 0. |
+| `finiteLaplacian` linearity | Lattice/Laplacian | 3 sorries | Easy | map_add', map_smul', cont. Finite sums are linear, finite-dim is continuous. |
+
+### Used by pphi2 Normalization (FKG)
+
+| Item | File | Type | Difficulty | Description |
+|------|------|------|-----------|-------------|
+| `fkg_lattice_gaussian` | Lattice/FKG | axiom | Hard | FKG inequality for Gaussian measure. Harris-Kleitman generalization to continuous spins + log-concave density. |
+| `fkg_perturbed` | Lattice/FKG | axiom | Medium | FKG for convexly-perturbed measure. From fkg_lattice_gaussian + Holley criterion. |
+
+### Lattice Laplacian properties
+
+| Item | File | Type | Difficulty | Description |
+|------|------|------|-----------|-------------|
+| `finiteLaplacian_selfAdjoint` | Lattice/Laplacian | axiom | Easy | Symmetry: reindex summation. |
+| `finiteLaplacian_neg_semidefinite` | Lattice/Laplacian | axiom | Medium | ⟨f, Δf⟩ ≤ 0. Summation by parts. |
+| `massOperator_pos_def` | Lattice/Laplacian | axiom | Medium | -Δ + m² > 0. From neg-semidef + m² > 0. |
+| `infiniteLaplacian` | Lattice/Laplacian | axiom | Medium | CLM on RapidDecayLattice. Continuity proof needed. |
+| `infiniteLaplacian_apply` | Lattice/Laplacian | axiom | Easy | Application formula. By construction. |
+
+### Infinite lattice (not immediately needed by pphi2)
+
+| Item | File | Type | Difficulty | Description |
+|------|------|------|-----------|-------------|
+| `latticeEnum` | Lattice/RapidDecayLattice | axiom | Hard | ℤ^d ≃ ℕ with polynomial norm growth. Shell enumeration. |
+| `latticeEnum_norm_bound` | Lattice/RapidDecayLattice | axiom | Hard | ‖enum⁻¹(m)‖ ≤ C·m^{1/d}. |
+| `latticeEnum_index_bound` | Lattice/RapidDecayLattice | axiom | Hard | enum(x) ≤ C·(1+‖x‖)^d. |
+| `latticeRapidDecayEquiv` | Lattice/RapidDecayLattice | axiom | Hard | CLE to RapidDecaySeq. Requires enumeration + norm bounds. |
+| `latticeCoeffCLM` cont | Lattice/RapidDecayLattice | sorry | Medium | Continuity of evaluation CLM. |
+
+### Heat kernel (cylinder QFT, not used by lattice approach)
+
+| Item | File | Type | Difficulty | Description |
+|------|------|------|-----------|-------------|
+| `mehlerKernel_eq_series` | HeatKernel/PositionKernel | axiom | Hard | Mehler kernel = Hermite series. |
+| `mehlerKernel_summable` | HeatKernel/PositionKernel | axiom | Medium | Summability. |
+| `mehlerKernel_pos` | HeatKernel/PositionKernel | axiom | Hard | Strict positivity. |
+| `mehlerKernel_reproduces_hermite` | HeatKernel/PositionKernel | axiom | Medium | Reproducing property. |
+| `mehlerKernel_semigroup` | HeatKernel/PositionKernel | axiom | Medium | Chapman-Kolmogorov. |
+| `circleHeatKernel_*` (7 axioms) | HeatKernel/PositionKernel | axiom | Easy–Medium | Circle heat kernel properties. |
+| `cylinderHeatKernel_*` (3 axioms) | HeatKernel/PositionKernel | axiom | Medium | Cylinder = product kernel. |
+| `qft_singular_values_bounded` | HeatKernel/Axioms | axiom | Medium | QFT singular values bounded. |
+| `heat_singular_values_bounded'` | HeatKernel/Axioms | axiom | Medium | Heat singular values bounded. |
+
+### Other
+
+| Item | File | Type | Difficulty | Description |
+|------|------|------|-----------|-------------|
+| `schwartzComplexificationEquiv` | Nuclear/Complexification | sorry | Hard | CLE for complexified Schwartz space. |
+| `schwartzPointwiseProduct_apply` | SchwartzNuclear/SchwartzTensorProduct | sorry | Medium | Hermite-Fubini factorization. |
+
+### Summary
+
+| Category | Axioms | Sorries |
+|----------|--------|---------|
+| Critical for pphi2 lattice measure | 4 | 12 |
+| FKG (used by pphi2 Normalization) | 2 | 0 |
+| Lattice Laplacian | 5 | 0 |
+| Infinite lattice (future) | 4 | 1 |
+| Heat kernel / cylinder (not used) | 16 | 0 |
+| Other | 0 | 2 |
+| **Total** | **29** | **14** (unique sorry sites) |
