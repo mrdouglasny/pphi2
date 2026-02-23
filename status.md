@@ -42,21 +42,20 @@ progressively fill in the axioms with full proofs.
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
-These files are from the earlier DDJ-based approach and are not imported by the
-build. They may be useful as reference but are not part of the current
-development path.
+These files are from the earlier DDJ-based approach and live in `ddj/`.
+They are not imported by the build but may be useful as reference.
 
-- `Basic.lean` — cylinder test function spaces (44 sorries in instances)
-- `FunctionSpaces/WeightedLp.lean`, `FunctionSpaces/Embedding.lean`
-- `GaussianCylinder/Covariance.lean`
-- `MeasureCylinder/Regularized.lean`, `MeasureCylinder/UVLimit.lean`
-- `StochasticQuant/DaPratoDebussche.lean`
-- `StochasticEst/InfiniteVolumeBound.lean`
-- `Energy/EnergyEstimate.lean`
-- `InfiniteVolume/Tightness.lean`
-- `Integrability/Regularity.lean`
-- `ReflectionPositivity/RPPlane.lean`
-- `EuclideanInvariance/Invariance.lean`
+- `ddj/Basic.lean` — cylinder test function spaces (44 sorries in instances)
+- `ddj/FunctionSpaces/WeightedLp.lean`, `ddj/FunctionSpaces/Embedding.lean`
+- `ddj/GaussianCylinder/Covariance.lean`
+- `ddj/MeasureCylinder/Regularized.lean`, `ddj/MeasureCylinder/UVLimit.lean`
+- `ddj/StochasticQuant/DaPratoDebussche.lean`
+- `ddj/StochasticEst/InfiniteVolumeBound.lean`
+- `ddj/Energy/EnergyEstimate.lean`
+- `ddj/InfiniteVolume/Tightness.lean`
+- `ddj/Integrability/Regularity.lean`
+- `ddj/ReflectionPositivity/RPPlane.lean`
+- `ddj/EuclideanInvariance/Invariance.lean`
 
 ---
 
