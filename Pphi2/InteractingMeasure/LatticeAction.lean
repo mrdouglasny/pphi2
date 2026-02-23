@@ -80,15 +80,27 @@ theorem latticeInteraction_bounded_below (P : InteractionPolynomial) (a mass : �
         simp [Finset.sum_const, mul_comm, mul_assoc, neg_mul]
         ring
 
-/-- The lattice interaction is continuous (automatic: finite-dimensional). -/
+/-- Each Wick monomial is continuous as a function of its real argument. -/
+theorem wickMonomial_continuous : ∀ (n : ℕ) (c : ℝ), Continuous (wickMonomial n c)
+  | 0, _ => continuous_const
+  | 1, _ => continuous_id
+  | n + 2, c => by
+    show Continuous fun x => x * wickMonomial (n + 1) c x - (↑n + 1) * c * wickMonomial n c x
+    exact ((continuous_id.mul (wickMonomial_continuous (n + 1) c)).sub
+      (continuous_const.mul (wickMonomial_continuous n c)))
+
 theorem latticeInteraction_continuous (P : InteractionPolynomial) (a mass : ℝ) :
     Continuous (latticeInteraction d N P a mass) := by
   unfold latticeInteraction
   apply Continuous.mul continuous_const
   apply continuous_finset_sum
   intro x _
-  -- wickPolynomial is a polynomial in φ(x), hence continuous
-  sorry
+  unfold wickPolynomial
+  apply Continuous.add
+  · exact continuous_const.mul ((wickMonomial_continuous P.n _).comp (continuous_apply x))
+  · apply continuous_finset_sum
+    intro m _
+    exact continuous_const.mul ((wickMonomial_continuous m _).comp (continuous_apply x))
 
 /-- The lattice interaction is convex when P is convex.
 

@@ -83,11 +83,20 @@ def latticeRotation90 [NeZero N] :
 Proof sketch: Both the kinetic term `Σ (φ(x+eᵢ)-φ(x))²` and the
 potential term `Σ P(φ(x))` are sums over all sites, so shifting by v
 just relabels the summation index. -/
-axiom latticeAction_translation_invariant (P : InteractionPolynomial) (a mass : ℝ)
+theorem latticeAction_translation_invariant (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) (v : FinLatticeSites d N) :
     ∀ φ : FinLatticeField d N,
     latticeInteraction d N P a mass (latticeTranslation d N v φ) =
-    latticeInteraction d N P a mass φ
+    latticeInteraction d N P a mass φ := by
+  intro φ
+  unfold latticeInteraction latticeTranslation
+  congr 1
+  -- The sum Σ_x f(φ(x - v)) over all x is a relabeling of Σ_x f(φ(x))
+  -- since x ↦ x - v is a bijection on Fin d → Fin N
+  apply Fintype.sum_equiv (Equiv.subRight v)
+  intro x
+  simp only [Equiv.subRight, Equiv.coe_fn_mk]
+  congr 1
 
 /-- The interacting lattice measure is invariant under lattice translations.
 

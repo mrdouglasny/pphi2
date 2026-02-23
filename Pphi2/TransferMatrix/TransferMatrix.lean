@@ -112,7 +112,22 @@ theorem timeCoupling_nonneg (ψ ψ' : SpatialField Ns) :
 /-- The time coupling vanishes iff ψ = ψ'. -/
 theorem timeCoupling_eq_zero_iff (ψ ψ' : SpatialField Ns) :
     timeCoupling Ns ψ ψ' = 0 ↔ ψ = ψ' := by
-  sorry
+  unfold timeCoupling
+  rw [mul_eq_zero]
+  constructor
+  · intro h
+    rcases h with h | h
+    · norm_num at h
+    · ext x
+      have := Finset.sum_eq_zero_iff_of_nonneg (fun i _ => sq_nonneg (ψ i - ψ' i)) |>.mp h
+      have hx := this x (Finset.mem_univ x)
+      rwa [sq_eq_zero_iff, sub_eq_zero] at hx
+  · intro h
+    right
+    apply Finset.sum_eq_zero
+    intro x _
+    rw [h]
+    simp
 
 /-! ## Transfer matrix kernel -/
 
@@ -145,12 +160,15 @@ This follows from the symmetric split: the kernel has the form
 theorem transferKernel_symmetric (P : InteractionPolynomial) (a mass : ℝ)
     (ψ ψ' : SpatialField Ns) :
     transferKernel Ns P a mass ψ ψ' = transferKernel Ns P a mass ψ' ψ := by
-  unfold transferKernel
+  simp only [transferKernel]
   congr 1
-  -- The exponent has the form -(K(ψ,ψ') + ½a·h(ψ) + ½a·h(ψ'))
-  -- which is symmetric since K(ψ,ψ') = K(ψ',ψ) (sum of (ψ_x - ψ'_x)²)
-  -- and the h terms just swap.
-  sorry
+  -- The exponent: -(K(ψ,ψ') + ½a·h(ψ) + ½a·h(ψ')) is symmetric
+  -- because K(ψ,ψ') = K(ψ',ψ) and the h terms swap.
+  simp only [timeCoupling]
+  have : ∀ x : Fin Ns, (ψ x - ψ' x) ^ 2 = (ψ' x - ψ x) ^ 2 :=
+    fun x => by ring
+  simp_rw [this]
+  ring
 
 /-! ## Action decomposition
 
