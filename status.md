@@ -11,6 +11,8 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
+**Active file totals: 66 axioms, 31 sorries**
+
 ## File inventory
 
 ### Active files (lattice approach)
@@ -35,10 +37,8 @@ progressively fill in the axioms with full proofs.
 | 4 | `ContinuumLimit/Convergence.lean` | 5 axioms, 1 sorry |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 5 axioms, 1 sorry |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 8 axioms, 2 sorries |
-| 6 | `OSAxioms.lean` | 5 axioms, 1 sorry (strengthened to match OSforGFF) |
+| 6 | `OSAxioms.lean` | 5 axioms, 1 sorry |
 | 6 | `Main.lean` | 1 axiom, 7 sorries |
-
-**Active file totals: 66 axioms, 31 sorries**
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
@@ -60,7 +60,130 @@ development path.
 
 ---
 
-## Axiom inventory (active files only)
+## OS axiom formulations (OSAxioms.lean)
+
+The OS axioms are stated for a probability measure μ on S'(ℝ²) =
+`Configuration (ContinuumTestFunction 2)`, matching the formulations in
+`OSforGFF/OS_Axioms.lean` (adapted from d=4 to d=2).
+
+### Infrastructure definitions
+
+| Definition | Type | Description |
+|-----------|------|-------------|
+| `SpaceTime2` | `Type` | `EuclideanSpace ℝ (Fin 2)` — Euclidean ℝ² |
+| `TestFunction2` | `Type` | `ContinuumTestFunction 2` = `SchwartzMap (EuclideanSpace ℝ (Fin 2)) ℝ` |
+| `TestFunction2ℂ` | `Type` | `SchwartzMap SpaceTime2 ℂ` — complex test functions |
+| `FieldConfig2` | `Type` | `Configuration (ContinuumTestFunction 2)` = `WeakDual ℝ S(ℝ²)` |
+| `E2` | `structure` | Euclidean motion: `R : O2`, `t : SpaceTime2` |
+| `O2` | `Type` | `LinearIsometry (RingHom.id ℝ) SpaceTime2 SpaceTime2` |
+| `generatingFunctional μ f` | `ℂ` | `Z[f] = ∫ exp(i⟨ω, f⟩) dμ(ω)` for real f |
+| `generatingFunctionalℂ μ J` | `ℂ` | Complex extension of Z (has sorry) |
+| `timeReflection2 p` | `SpaceTime2` | `(t, x) ↦ (-t, x)` |
+| `hasPositiveTime2 p` | `Prop` | First coordinate > 0 |
+| `positiveTimeSubmodule2` | `Submodule ℝ TestFunction2` | Test functions with `tsupport ⊆ {t > 0}` |
+| `PositiveTimeTestFunction2` | `Type` | Elements of `positiveTimeSubmodule2` |
+
+### Axiomatized operations (5 axioms in OSAxioms.lean)
+
+| Axiom | Signature | Description |
+|-------|-----------|-------------|
+| `euclideanAction2 g` | `TestFunction2 →L[ℝ] TestFunction2` | Pullback of g ∈ E(2) on real Schwartz functions: `(g·f)(x) = f(g⁻¹x)`. Axiomatized because composing SchwartzMap with an affine map requires proving Schwartz decay preservation. |
+| `euclideanAction2ℂ g` | `TestFunction2ℂ →L[ℝ] TestFunction2ℂ` | Same for complex test functions. |
+| `compTimeReflection2` | `TestFunction2 →L[ℝ] TestFunction2` | `(Θf)(t,x) = f(-t,x)` as a CLM. Axiomatized for the same reason. |
+| `compTimeReflection2_apply` | `compTimeReflection2 f p = f (timeReflection2 p)` | Specification: Θ agrees with composition with timeReflection2. |
+| `SchwartzMap.translate a` | `TestFunction2 →L[ℝ] TestFunction2` | Translation: `(T_a f)(x) = f(x-a)`. Axiomatized because Mathlib's SchwartzMap has no built-in translate. |
+
+### OS axiom definitions
+
+**OS0 (Analyticity)** — `OS0_Analyticity μ`
+
+```
+∀ (n : ℕ) (J : Fin n → TestFunction2ℂ),
+  AnalyticOn ℂ (fun z : Fin n → ℂ =>
+    generatingFunctionalℂ μ (∑ i, z i • J i)) Set.univ
+```
+
+Z[Σ zᵢJᵢ] is entire analytic in z ∈ ℂⁿ for any complex test functions Jᵢ.
+
+**OS1 (Regularity)** — `OS1_Regularity μ`
+
+```
+∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
+  ∀ (f : TestFunction2ℂ),
+    ‖generatingFunctionalℂ μ f‖ ≤
+      Real.exp (c * (∫ x, ‖f x‖ ∂volume + ∫ x, ‖f x‖ ^ p ∂volume))
+```
+
+Exponential bound on Z[f] controlled by L¹ and Lᵖ norms of the test function.
+For P(Φ)₂, the relevant bound is `‖Z[f]‖ ≤ exp(c · ‖f‖²_{H^{-1}})` from
+Nelson's hypercontractive estimate.
+
+**OS2 (Euclidean Invariance)** — `OS2_EuclideanInvariance μ`
+
+```
+∀ (g : E2) (f : TestFunction2ℂ),
+  generatingFunctionalℂ μ f =
+  generatingFunctionalℂ μ (euclideanAction2ℂ g f)
+```
+
+Z[g·f] = Z[f] for all g ∈ E(2) = ℝ² ⋊ O(2).
+
+**OS3 (Reflection Positivity)** — `OS3_ReflectionPositivity μ`
+
+```
+∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction2) (c : Fin n → ℝ),
+  0 ≤ ∑ i, ∑ j, c i * c j *
+    (generatingFunctional μ
+      ((f i).val - compTimeReflection2 ((f j).val))).re
+```
+
+The RP matrix `Mᵢⱼ = Re(Z[fᵢ - Θfⱼ])` is positive semidefinite for
+positive-time test functions fᵢ and real coefficients cᵢ.
+
+**OS4 (Clustering)** — `OS4_Clustering μ`
+
+```
+∀ (f g : TestFunction2) (ε : ℝ), ε > 0 →
+  ∃ (R : ℝ), R > 0 ∧ ∀ (a : SpaceTime2), ‖a‖ > R →
+  ‖generatingFunctional μ (f + SchwartzMap.translate a g)
+   - generatingFunctional μ f * generatingFunctional μ g‖ < ε
+```
+
+Correlations factor at large separations: Z[f + T_a g] → Z[f]·Z[g] as ‖a‖ → ∞.
+
+**OS4 (Ergodicity)** — `OS4_Ergodicity μ`
+
+```
+True  -- Placeholder; full formulation needs time translation on
+      -- Configuration space and L²(μ) convergence
+```
+
+### Full axiom bundle
+
+`SatisfiesFullOS μ` is a structure with fields:
+- `os0 : OS0_Analyticity μ`
+- `os1 : OS1_Regularity μ`
+- `os2 : OS2_EuclideanInvariance μ`
+- `os3 : OS3_ReflectionPositivity μ`
+- `os4_clustering : OS4_Clustering μ`
+- `os4_ergodicity : OS4_Ergodicity μ`
+
+### Sorries in OSAxioms.lean
+
+| Sorry | Location | Description |
+|-------|----------|-------------|
+| `generatingFunctionalℂ` body | line 80 | Complex generating functional definition. Needs decomposition J = Re(J) + i·Im(J) and SchwartzMap real/imaginary part API. |
+
+### Proved theorems in OSAxioms.lean
+
+| Theorem | Description |
+|---------|-------------|
+| `timeReflection2_involution` | `Θ(Θp) = p` — time reflection is an involution |
+| `positiveTimeSubmodule2` | Submodule proof: zero_mem, add_mem, smul_mem |
+
+---
+
+## Axiom inventory (all active files)
 
 ### Difficulty rating
 
@@ -153,17 +276,20 @@ development path.
 | `anomaly_vanishes` | OS2_WardIdentity | Hard | Anomaly coefficient is O(a²). Needs power counting + super-renormalizability (no log corrections in d=2). |
 | `rotation_invariance_continuum` | OS2_WardIdentity | Hard | SO(2) invariance in the limit. Combines Ward identity + anomaly vanishing + Schwinger functions determine the measure. |
 
-### Phase 6: Assembly
+### Phase 6: OS axioms and assembly
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `os_reconstruction` | Main | Infrastructure | OS reconstruction theorem (Osterwalder-Schrader 1973, 1975). Converts Euclidean QFT to Wightman QFT. Would require formalizing Minkowski QFT. |
+| `euclideanAction2` | OSAxioms | Infrastructure | E(2) pullback on real Schwartz functions as CLM. Needs Schwartz decay preservation under affine composition. |
+| `euclideanAction2ℂ` | OSAxioms | Infrastructure | Same for complex Schwartz functions. |
+| `compTimeReflection2` | OSAxioms | Infrastructure | Time reflection Θ on Schwartz space as CLM. Same issue as euclideanAction2. |
+| `compTimeReflection2_apply` | OSAxioms | Easy | Specification that Θ agrees with composition. |
+| `SchwartzMap.translate` | OSAxioms | Infrastructure | Translation on Schwartz space as CLM. Needs Schwartz decay preservation under translation. |
+| `os_reconstruction` | Main | Infrastructure | OS reconstruction theorem (Osterwalder-Schrader 1973, 1975). Would require formalizing Minkowski QFT. |
 
 ---
 
-## Sorry inventory (active files only)
-
-These are theorems/definitions with `sorry` that need proofs filled in.
+## Sorry inventory (all active files)
 
 ### Provable with current Lean/Mathlib
 
@@ -180,6 +306,7 @@ These are theorems/definitions with `sorry` that need proofs filled in.
 
 | Sorry | File | Notes |
 |-------|------|-------|
+| `generatingFunctionalℂ` body | OSAxioms | Complex generating functional. Needs SchwartzMap real/imaginary part decomposition. |
 | `interactionFunctional_measurable` | LatticeMeasure | Measurability of V_a as function on Configuration space. |
 | `boltzmannWeight_integrable` | LatticeMeasure | exp(-V_a) is integrable w.r.t. Gaussian measure. Uses V_a bounded below. |
 | `partitionFunction_pos` | LatticeMeasure | Z_a > 0. From exp(-V_a) > 0 and Gaussian measure has full support. |
@@ -193,11 +320,12 @@ These are theorems/definitions with `sorry` that need proofs filled in.
 | `energyLevel_gap` | Positivity | E₁ > E₀. From transfer eigenvalue gap. |
 | `rp_closed_under_weak_limit` | OS3_RP_Inheritance | RP closed under weak limits. General topological fact: nonnegativity conditions are closed. |
 | `reflection_positivity_lattice` | OS3_RP_Lattice | Lattice RP from action decomposition. |
-| `continuumLimit` (as `continuumLimit_weak_convergence`) | Convergence | Apply Prokhorov to the tight family. Needs prokhorov_sequential + continuumMeasures_tight. |
+| `continuumLimit` | Convergence | Apply Prokhorov to the tight family. Needs prokhorov_sequential + continuumMeasures_tight. |
 | `continuumTimeReflection` | AxiomInheritance | Define Θf where (Θf)(t,x) = f(-t,x) as SchwartzMap. Needs Schwartz space API. |
 | `so2Generator` | OS2_WardIdentity | SO(2) generator J on Schwartz space. Needs SchwartzMap API for differential operators. |
 | `pphi2_exists` | OS2_WardIdentity | Main existence theorem. Needs continuumLimit + continuumLimit_satisfies_allOS. |
 | `pphi2_existence` | Main | Same as above, with SatisfiesFullOS instead of SatisfiesAllOS. |
+| `pphi2_main` (6 fields) | Main | Bridge from intermediate SatisfiesAllOS to strengthened SatisfiesFullOS. Each field needs its own proof connecting the placeholder and real formulations. |
 
 ---
 
@@ -208,27 +336,30 @@ These are theorems/definitions with `sorry` that need proofs filled in.
 1. **`prokhorov_sequential`** — May become available in Mathlib. Otherwise, axiomatize with a full proof sketch referencing Billingsley.
 2. **`transferEigenvalue` + spectral axioms** — Need compact self-adjoint operator spectral theory in Mathlib.
 3. **`latticeEmbed` / `latticeEmbedLift`** — Construction of the embedding as a CLM on Schwartz space.
+4. **`euclideanAction2` / `compTimeReflection2` / `SchwartzMap.translate`** — Schwartz space composition with linear/affine maps. Blocked on Mathlib's SchwartzMap API.
 
 ### Tier 2: Core analytic results (the hard axioms)
 
-4. **`nelson_hypercontractive`** — Deep (Gross log-Sobolev). Key engine for all moment bounds.
-5. **`second_moment_uniform` + `continuumMeasures_tight`** — Tightness argument. Depends on Nelson.
-6. **`spectral_gap_uniform`** — Uniform mass gap. Kato-Rellich perturbation theory.
-7. **`ward_identity_lattice` + `anomaly_vanishes`** — Ward identity + power counting for rotation invariance.
+5. **`nelson_hypercontractive`** — Deep (Gross log-Sobolev). Key engine for all moment bounds.
+6. **`second_moment_uniform` + `continuumMeasures_tight`** — Tightness argument. Depends on Nelson.
+7. **`spectral_gap_uniform`** — Uniform mass gap. Kato-Rellich perturbation theory.
+8. **`ward_identity_lattice` + `anomaly_vanishes`** — Ward identity + power counting for rotation invariance.
 
 ### Tier 3: Medium-difficulty proofs
 
-8. Transfer matrix properties (self-adjoint, positive definite, Hilbert-Schmidt, trace class)
-9. Reflection positivity on the lattice (action decomposition → perfect square)
-10. Clustering from spectral gap (standard spectral decomposition)
-11. OS axiom inheritance (mostly soft analysis: limits preserve bounds)
+9. Transfer matrix properties (self-adjoint, positive definite, Hilbert-Schmidt, trace class)
+10. Reflection positivity on the lattice (action decomposition → perfect square)
+11. Clustering from spectral gap (standard spectral decomposition)
+12. OS axiom inheritance (mostly soft analysis: limits preserve bounds)
+13. Bridge from `SatisfiesAllOS` to `SatisfiesFullOS` (connecting placeholder and real formulations)
 
 ### Tier 4: Easy / straightforward
 
-12. `latticeAction_translation_invariant` — relabeling sums
-13. `os1_inheritance` — |cos| ≤ 1
-14. `transferKernel_symmetric` — algebra
-15. Various measurability and integrability lemmas
+14. `latticeAction_translation_invariant` — relabeling sums
+15. `os1_inheritance` — |cos| ≤ 1
+16. `transferKernel_symmetric` — algebra
+17. Various measurability and integrability lemmas
+18. `compTimeReflection2_apply` — specification axiom
 
 ---
 
@@ -248,9 +379,10 @@ The following theorems have complete proofs (no sorry):
 | `clustering_uniform` | OS4_MassGap | Uniform clustering (from uniform spectral gap) |
 | `os4_lattice_from_gap` | OS4_Ergodicity | OS4 from mass gap (assembly) |
 | `timeReflection2D_involution` | OS3_RP_Lattice | Time reflection is an involution |
+| `timeReflection2_involution` | OSAxioms | Θ² = id for continuum time reflection |
+| `positiveTimeSubmodule2` | OSAxioms | Submodule proof for positive-time test functions |
 | `os2_inheritance` | OS2_WardIdentity | E(2) invariance (from translation + rotation) |
 | `continuumLimit_satisfies_allOS` | OS2_WardIdentity | All OS axioms (assembly from phases) |
-| `pphi2_main` | Main | Main theorem: SatisfiesFullOS (assembly) |
 
 ---
 
@@ -307,7 +439,7 @@ pphi2 relies on. These are organized by priority for pphi2.
 | `mehlerKernel_pos` | HeatKernel/PositionKernel | axiom | Hard | Strict positivity. |
 | `mehlerKernel_reproduces_hermite` | HeatKernel/PositionKernel | axiom | Medium | Reproducing property. |
 | `mehlerKernel_semigroup` | HeatKernel/PositionKernel | axiom | Medium | Chapman-Kolmogorov. |
-| `circleHeatKernel_*` (7 axioms) | HeatKernel/PositionKernel | axiom | Easy–Medium | Circle heat kernel properties. |
+| `circleHeatKernel_*` (7 axioms) | HeatKernel/PositionKernel | axiom | Easy-Medium | Circle heat kernel properties. |
 | `cylinderHeatKernel_*` (3 axioms) | HeatKernel/PositionKernel | axiom | Medium | Cylinder = product kernel. |
 | `qft_singular_values_bounded` | HeatKernel/Axioms | axiom | Medium | QFT singular values bounded. |
 | `heat_singular_values_bounded'` | HeatKernel/Axioms | axiom | Medium | Heat singular values bounded. |
