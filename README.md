@@ -90,15 +90,8 @@ Pphi2/
 
 ## Building
 
-Requires Lean 4 and gaussian-field as a sibling directory:
-
-```
-parent/
-  gaussian-field/
-  pphi2/              ← this repo
-```
-
-Then:
+Requires Lean 4. gaussian-field is a Lake dependency (currently via local path;
+see `lakefile.toml`):
 
 ```bash
 lake build
