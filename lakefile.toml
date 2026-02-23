@@ -10,10 +10,6 @@ weak.linter.mathlibStandardSet = true
 maxSynthPendingDepth = 3
 
 [[require]]
-name = "OSforGFF"
-path = "../OSforGFF-dimensions"
-
-[[require]]
 name = "GaussianField"
 path = "../gaussian-field"
 
