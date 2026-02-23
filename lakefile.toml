@@ -13,5 +13,9 @@ maxSynthPendingDepth = 3
 name = "OSforGFF"
 path = "../OSforGFF-dimensions"
 
+[[require]]
+name = "GaussianField"
+path = "../gaussian-field"
+
 [[lean_lib]]
 name = "Pphi2"

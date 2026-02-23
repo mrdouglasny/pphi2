@@ -1,350 +1,602 @@
-# Plan: Formal Construction of P(Φ)₂ in Lean 4
+# Plan: P(Φ)₂ via Lattice Construction
 
 ## Goal
 
-Formalize the construction of the P(Φ)₂ Euclidean quantum field theory
-on the cylinder ℝ × S¹_L and verify partial Osterwalder-Schrader axioms,
-following Duch-Dybalski-Jahandideh (arXiv:2311.04137).
+Construct the interacting P(Φ)₂ Euclidean quantum field theory in Lean 4
+and prove all five Osterwalder-Schrader axioms (OS0–OS4), using a lattice
+regularization and continuum limit.
 
-The main theorem (DDJ Theorem 1.1, adapted to cylinders):
+The main theorem:
 
-> For each L > 0, the P(Φ)₂ measure μ_L on D'(ℝ × S¹_L) exists as the
-> UV limit of regularized measures. The family {μ_L} is tight and every
-> accumulation point μ on S'(ℝ²) satisfies:
-> - (OS1) Euclidean invariance
+> For P(τ) an even polynomial of degree ≥ 4 bounded below, there exists a
+> probability measure μ on S'(ℝ²) such that:
+> - (OS0) The generating functional Z[f] is entire analytic
+> - (OS1) |Z[f]| ≤ exp(c(‖f‖₁ + ‖f‖_p^p)) (regularity)
+> - (OS2) Z[g·f] = Z[f] for all g ∈ E(2) (Euclidean invariance)
 > - (OS3) Reflection positivity
-> - (OS5/Regularity) ∃ ball B ⊂ S(ℝ²) s.t. ∀f ∈ B, ∫ exp(φ(f)ⁿ) dμ ≤ 2
+> - (OS4) Exponential clustering (mass gap)
 
-Clustering (OS4) is known only for small coupling and is not part of DDJ.
+## Approach: Lattice → Continuum
 
----
+We replace the DDJ stochastic quantization approach (previous plan) with the
+classical Glimm-Jaffe/Nelson lattice construction. This gives all 5 OS axioms
+including clustering, and tests the modular architecture needed for O(3) NLSM.
 
-## Primary Reference
+**Construction outline:**
 
-**Duch, Dybalski, Jahandideh** (2311.04137):
-*Stochastic quantization of two-dimensional P(Φ) Quantum Field Theory*
+1. Define the lattice P(Φ)₂ measure:
+   `dμ_a = (1/Z_a) exp(-V_a(φ)) dμ_{GFF,a}(φ)`
+   where `μ_{GFF,a}` is the lattice Gaussian from gaussian-field and
+   `V_a(φ) = a² Σ_x :P(φ(x)):_a` is the Wick-ordered interaction.
 
-Located at: `refs/duch-dybalski-jahandideh-2311.04137/`
+2. Prove OS axioms on the lattice (finite-dimensional, all proofs are clean).
 
-### Supplementary References
+3. Embed lattice fields into S'(ℝ²), show tightness, extract continuum limit.
 
-- Barashkov-Gubinelli (1805.10814): Variational method for Φ⁴₃
-- Gubinelli-Hofmanova (1810.01700): PDE construction of Φ⁴₃
-- Barashkov-Gubinelli (2112.05562): Infinite volume φ⁴₂ tightness
-- Gubinelli (2025): GSSI lecture notes on fractional Φ⁴₃
+4. Show OS axioms transfer to the limit.
 
----
-
-## Approach: Cylinders Instead of Spheres
-
-DDJ works on spheres S_R → ℝ² via stereographic projection. We work on
-cylinders ℝ × S¹_L → ℝ² via the L → ∞ limit instead. The cylinder approach:
-
-- **Preserves time direction:** ℝ factor is continuous time, giving natural
-  time reflection and positive-time support without stereographic subtleties.
-- **Fourier mode decomposition:** S(ℝ × S¹_L) ≅ {ℤ-indexed Schwartz families
-  with rapid decay}, making test functions concrete.
-- **Fits QFTFramework:** The cylinder has the same structure as OSforGFF
-  (spacetime, test functions, field configurations, symmetry group).
-- **Trade-off:** We lose the SO(3) ≅ E(2) trick for Euclidean invariance.
-  Translation invariance must be proved via the L → ∞ limit directly.
+**Key advantage:** Super-renormalizability means only one counterterm (mass).
+No coupling constant or wave function renormalization.
 
 ---
 
 ## Dependencies
 
-- **OSforGFF-dimensions** (`OSforGFF/`): QFTFramework structure, OS axiom
-  definitions, nuclear space class, Minlos theorem, positive definiteness.
-- **Mathlib**: Schwartz space, seminorms, AddCircle, measure theory, weak dual.
-- **aqft2** (sibling project): Schwartz function infrastructure, Hermite
-  functions, nuclear factorization. Not a build dependency but shares patterns.
+- **gaussian-field** (`Lattice/` module): `latticeGaussianMeasure`,
+  `latticeCovariance`, `latticeEigenvalue`, `fkg_perturbed`, `FinLatticeField`,
+  `FinLatticeSites`, `finiteLaplacian`, `massOperator`
+- **gaussian-field** (core): `GaussianField.measure`, `spectralCLM`,
+  `cross_moment_eq_covariance`, `wick_recursive`, `Configuration`
+- **OSforGFF**: `QFTFramework`, `OS_Axioms_Generic` (OS0–OS4 definitions)
+- **Mathlib**: measure theory, Schwartz space, spectral theory, weak convergence
 
 ---
 
-## Current State
+## File Structure
 
-### File Structure and Status
+### Keep from current pphi2
+
+| File | Role | Changes |
+|------|------|---------|
+| `Basic.lean` | SpaceTimeCyl, TestFunctionCyl, QFTFramework instance | Minimal — keep as the continuum target space |
+| `Polynomial.lean` | InteractionPolynomial structure | Add Wick ordering interface |
+| `OSAxioms.lean` | OS axiom bundle | Extend to all 5 axioms |
+| `Main.lean` | Main theorem | Rewrite for lattice route |
+| `FunctionSpaces/` | Weighted Lp, Sobolev embeddings | Keep for continuum limit |
+
+### Remove (DDJ stochastic quantization path)
+
+These are replaced by the lattice construction:
+- `StochasticQuant/DaPratoDebussche.lean`
+- `StochasticEst/InfiniteVolumeBound.lean`
+- `Energy/EnergyEstimate.lean`
+- `MeasureCylinder/Regularized.lean`, `UVLimit.lean`
+- `GaussianCylinder/Covariance.lean`
+
+### New files
 
 ```
 Pphi2/
-  Basic.lean                          338 lines, 46 sorrys  ← ACTIVE
-  Polynomial.lean                      41 lines,  3 sorrys
-  OSAxioms.lean                        28 lines,  0 sorrys  (structure definition only)
-  Main.lean                            52 lines,  3 sorrys
+  Basic.lean                          -- KEEP: continuum types
+  Polynomial.lean                     -- KEEP+EXTEND: add Wick ordering
+  OSAxioms.lean                       -- EXTEND: OS0–OS4 bundle
+  Main.lean                           -- REWRITE: lattice route
 
-  GaussianCylinder/
-    Covariance.lean                    70 lines,  0 sorrys  (9 axioms)
+  WickOrdering/
+    WickPolynomial.lean               -- :P(φ):_a definition via Hermite polynomials
+    Counterterm.lean                  -- c_a = G_a(0,0), asymptotics c_a ~ (1/2π) log(1/a)
 
-  MeasureCylinder/
-    Regularized.lean                   36 lines,  0 sorrys  (3 axioms)
-    UVLimit.lean                       24 lines,  0 sorrys  (3 axioms)
+  InteractingMeasure/
+    LatticeAction.lean                -- V_a(φ) = a² Σ_x :P(φ(x)):_a
+    LatticeMeasure.lean               -- dμ_a = (1/Z_a) exp(-V_a) dμ_{GFF,a}
+    Normalization.lean                -- Z_a > 0, integrability of exp(-V_a)
 
-  StochasticQuant/
-    DaPratoDebussche.lean              79 lines,  0 sorrys  (7 axioms)
+  TransferMatrix/
+    TransferMatrix.lean               -- T_a = e^{-aH} integral kernel
+    Positivity.lean                   -- T_a self-adjoint and positive
+    SpectralGap.lean                  -- H has compact resolvent, gap > 0
 
-  StochasticEst/
-    InfiniteVolumeBound.lean           26 lines,  0 sorrys  (2 axioms)
+  OSProofs/
+    OS0_Analyticity.lean              -- Z_a[J] entire, uniform bounds
+    OS1_Regularity.lean               -- |Z[f]| ≤ exp(c‖f‖²), uniform in a
+    OS2_WardIdentity.lean             -- Ward identity + irrelevance O(a²)
+    OS3_RP_Lattice.lean               -- RP via transfer matrix decomposition
+    OS3_RP_Inheritance.lean           -- RP closed under weak limits
+    OS4_MassGap.lean                  -- Spectral gap → exponential clustering
+    OS4_Ergodicity.lean               -- Clustering → ergodicity
 
-  Energy/
-    EnergyEstimate.lean                32 lines,  0 sorrys  (4 axioms)
+  ContinuumLimit/
+    Embedding.lean                    -- ι_a : lattice fields → S'(ℝ²)
+    Tightness.lean                    -- Uniform bounds → tightness
+    Convergence.lean                  -- μ_a ⇀ μ weakly (Prokhorov)
+    AxiomInheritance.lean             -- OS axioms pass to the limit
 
-  FunctionSpaces/
-    WeightedLp.lean                    40 lines,  2 sorrys
-    Embedding.lean                     31 lines,  0 sorrys  (4 axioms)
+  FunctionSpaces/                     -- KEEP
+    WeightedLp.lean
+    Embedding.lean
 
-  InfiniteVolume/
-    Tightness.lean                     68 lines,  0 sorrys  (3 axioms)
+  ReflectionPositivity/               -- KEEP (may merge into OSProofs/)
+    RPPlane.lean
 
-  Integrability/
-    Regularity.lean                    51 lines,  2 sorrys
+  EuclideanInvariance/                -- KEEP (may merge into OSProofs/)
+    Invariance.lean
 
-  ReflectionPositivity/
-    RPPlane.lean                       74 lines,  1 sorry
+  InfiniteVolume/                     -- KEEP (adapt for lattice tightness)
+    Tightness.lean
 
-  EuclideanInvariance/
-    Invariance.lean                    54 lines,  1 sorry
+  Integrability/                      -- KEEP
+    Regularity.lean
 ```
-
-**Summary:** 16 files, ~1065 lines, 58 sorrys, ~35 axioms. Most downstream
-files are axiom signatures with the proof architecture sketched. The active
-development front is `Basic.lean`.
-
-### What's Concrete in Basic.lean
-
-- `SpaceTimeCyl d L = ℝ × AddCircle L`
-- `TestFunctionCyl d L`: structure with `fourierMode : ℤ → SchwartzMap ℝ ℂ`,
-  `rapidDecay`, and `reality` condition
-- `TestFunctionCylℂ d L`: same without reality condition
-- `FieldConfigurationCyl d L = WeakDual ℝ (TestFunctionCyl d L)`
-- `QFTFramework.cylinder`: all 8 operational fields filled with concrete
-  definitions (sorry'd proofs, concrete type signatures)
-- `realGenFunctionalCyl`: Z[J] = ∫ exp(i⟨ω,J⟩) dμ — fully concrete
-- `complexGenFunctionalCyl`: built on `complexPairingCyl` (sorry'd)
-- `positiveTimeSubmoduleCyl`: carrier = {f | ∀n, tsupport(fₙ) ⊆ Ioi 0}
-- `timeReflectionCyl`, `translateTestFunCyl`: type signatures concrete, bodies sorry'd
-
-### What's Still Axiomatized
-
-- `SymmetryGroupCyl d L`: axiom (blocks `symmetryActionCyl`)
-- `laplacianCylinder`, `freeCovariance`: axiom CLMs
-- `counterterm`, `counterterm_bound`: axiom
-- All topology instances on `TestFunctionCyl`: sorry
 
 ---
 
-## Proof Architecture (DDJ, Adapted to Cylinders)
+## Detailed File Contents
 
-### Section 2: UV Limit on the Cylinder
+### WickOrdering/WickPolynomial.lean
 
-Replace S_R with ℝ × S¹_L. The Laplacian Δ_L has eigenvalues
--(k² + (2πn/L)²) in the Fourier representation.
+Wick ordering `:P(φ):_a` with respect to the lattice Gaussian measure.
 
-- G_L = (1 - Δ_L)⁻¹: free covariance (axiom `freeCovariance`)
-- K_{L,N}: UV regularization operator
-- ν_{L,N}: Gaussian measure with covariance G_{L,N} = K_{L,N} G_L K_{L,N}
-- c_{L,N}: counterterm (Wick ordering constant)
-- μ_{L,N}: regularized P(Φ)₂ measure
+Definitions:
+- `wickConstant d N a mass : ℝ` — the self-contraction `c_a = G_a(0,0)`,
+  computed as `(1/N^d) Σ_k 1/λ_k` where `λ_k = latticeEigenvalue d N a mass k`.
+  This equals the diagonal of the lattice Green's function.
+- `wickMonomial (n : ℕ) (c : ℝ) (x : ℝ) : ℝ` — the Wick-ordered monomial
+  `:x^n:_c`, defined via Hermite polynomials: `:x^n:_c = c^{n/2} He_n(x/√c)`.
+- `wickPolynomial (P : InteractionPolynomial) (c : ℝ) (x : ℝ) : ℝ` — apply Wick
+  ordering to each monomial of P.
 
-**Files:** `GaussianCylinder/Covariance.lean`, `MeasureCylinder/Regularized.lean`,
-`MeasureCylinder/UVLimit.lean`
+Key properties:
+- `wickMonomial_expectation_zero`: `E_μ[:φ^n:] = 0` for n ≥ 1 (the point of Wick ordering)
+- `wickMonomial_recursion`: `:x^{n+1}: = x · :x^n: - n·c · :x^{n-1}:`
 
-### Section 3: Stochastic Quantization
+### WickOrdering/Counterterm.lean
 
-Da Prato-Debussche decomposition Φ = Ψ + Z where Z is the OU process
-(Gaussian) and Ψ satisfies a PDE with non-singular nonlinearity.
+Asymptotics of the Wick ordering constant.
 
-**File:** `StochasticQuant/DaPratoDebussche.lean`
+Definitions:
+- `wickConstant_formula`: express `c_a` in terms of `latticeEigenvalue`
 
-### Section 5: Energy Estimate
+Key results:
+- `wickConstant_pos`: `c_a > 0`
+- `wickConstant_bound`: `c_a ≤ C · |log a| + C'` for uniform constants C, C'
+  (the logarithmic divergence — this is the ONLY UV divergence in P(Φ)₂)
+- `wickConstant_asymptotics`: `c_a ~ (1/2π) log(1/a) + O(1)` as `a → 0`
+  (axiomatize the asymptotic; the upper bound may be provable)
 
-The core a priori bound, uniform in L and N. Controls ‖Ψ‖ by free-field
-stochastic terms.
+### InteractingMeasure/LatticeAction.lean
 
-**File:** `Energy/EnergyEstimate.lean`
+The lattice interaction.
 
-### Section 6: Tightness and Infinite Volume
+Definitions:
+- `latticeInteraction (P : InteractionPolynomial) (d N : ℕ) (a mass : ℝ) :
+    FinLatticeField d N → ℝ`
+  defined as `V_a(φ) = a^d · Σ_{x : FinLatticeSites d N} wickPolynomial P c_a (φ x)`
 
-Uniform moment bounds → tightness → Prokhorov → subsequential convergence.
+Key properties:
+- `latticeInteraction_bounded_below`: `V_a(φ) ≥ -C · |Λ_a|` because P has
+  even degree ≥ 4 with positive leading coefficient
+- `latticeInteraction_convex`: `V_a` is convex on `FinLatticeField d N`
+  when P is convex (enables `fkg_perturbed` from gaussian-field)
+- `latticeInteraction_continuous`: continuous (finite-dimensional, automatic)
 
-**Files:** `InfiniteVolume/Tightness.lean`, `StochasticEst/InfiniteVolumeBound.lean`
+### InteractingMeasure/LatticeMeasure.lean
 
-### Section 7: Integrability / OS Regularity
+The interacting lattice measure.
 
-Variational bound (Barashkov) + tightness → ∫ exp(φ(f)ⁿ) dμ ≤ 2.
+Definitions:
+- `interactingLatticeMeasure (P : InteractionPolynomial) (d N : ℕ) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    Measure (Configuration (FinLatticeField d N))`
+  defined as `(1/Z_a) · (fun φ => exp(-V_a(φ))) • latticeGaussianMeasure d N a mass ha hmass`
+  i.e., the Gaussian measure reweighted by `exp(-V_a)/Z_a`.
+- `partitionFunction`: `Z_a = ∫ exp(-V_a(φ)) dμ_{GFF,a}(φ)`
 
-**File:** `Integrability/Regularity.lean`
+### InteractingMeasure/Normalization.lean
 
-### Section 8: Reflection Positivity
+Well-definedness of the interacting measure.
 
-Time reflection Θ: t ↦ -t on the cylinder. Free field is RP; interaction
-preserves RP by half-space factorization.
+Key results:
+- `expNegV_integrable`: `exp(-V_a) ∈ L¹(μ_{GFF,a})` — follows from
+  `latticeInteraction_bounded_below` (exp(-V) ≤ exp(C·|Λ|))
+- `partitionFunction_pos`: `Z_a > 0` — since `exp(-V) > 0` a.e.
+- `interactingLatticeMeasure_isProbability`: μ_a is a probability measure
 
-**File:** `ReflectionPositivity/RPPlane.lean`
+### TransferMatrix/TransferMatrix.lean
 
-### Section 9: Euclidean Invariance
+Transfer matrix for the lattice theory.
 
-Translation invariance via L → ∞ limit. Rotation invariance from the
-circle symmetry.
+The key idea: decompose the lattice action across time slices. On a lattice
+`{0,...,N_t-1} × {0,...,N_s-1}^{d-1}`, the action splits as:
 
-**File:** `EuclideanInvariance/Invariance.lean`
+```
+S_a[φ] = Σ_{t=0}^{N_t-1} [ ½a^{d-2} Σ_x |φ(t+1,x) - φ(t,x)|²
+                            + a^{d-1} · h_a(φ(t,·)) ]
+```
+
+where `h_a(ψ) = ½ Σ_{<xy>} a^{d-2}|ψ(x)-ψ(y)|² + a^{d-1} Σ_x (m²|ψ(x)|² + :P(ψ(x)):)`
+is the spatial action for a single time-slice field `ψ : {0,...,N_s-1}^{d-1} → ℝ`.
+
+Definitions:
+- `spatialField d N := FinLatticeSites (d-1) N → ℝ` — field on one time slice
+- `transferMatrix (d N : ℕ) (a mass : ℝ) (P : InteractionPolynomial) :
+    spatialField d N → spatialField d N → ℝ`
+  the integral kernel `T(ψ, ψ') = exp(-½a^{d-2} Σ_x |ψ(x)-ψ'(x)|² - a·h_a(ψ))`
+  (for d=2: `T(ψ,ψ') = exp(-½ Σ_x (ψ_x - ψ'_x)² - a·h_a(ψ))`)
+
+### TransferMatrix/Positivity.lean
+
+Self-adjointness and positivity of the transfer matrix.
+
+Key results:
+- `transferMatrix_symmetric`: `T(ψ, ψ') = T(ψ', ψ)` (the kernel is symmetric
+  after absorbing half of h_a into each side)
+- `transferMatrix_positive`: `T(ψ, ψ') > 0` for all ψ, ψ' (the kernel is
+  strictly positive because it's a Gaussian times exp(-V) > 0)
+- As an operator on L²(ℝ^{N_s^{d-1}}): T is self-adjoint, positive, trace class
+
+### TransferMatrix/SpectralGap.lean
+
+Spectral gap of the transfer matrix Hamiltonian.
+
+The transfer matrix is `T = e^{-aH}` where the Hamiltonian is:
+```
+H = -½ Σ_x ∂²/∂ψ(x)² + spatial kinetic + Σ_x (½m²ψ(x)² + :P(ψ(x)):)
+```
+
+For d=2, spatial dimension = 1, so H acts on L²(ℝ^{N_s}).
+
+Key results (axiomatize):
+- `hamiltonian_selfadjoint`: H is self-adjoint on L²
+- `hamiltonian_compact_resolvent`: (H + λ)⁻¹ is compact for λ large
+  (because V(ψ) → ∞ as |ψ| → ∞, so the potential is confining)
+- `hamiltonian_discrete_spectrum`: H has discrete spectrum E₀ < E₁ ≤ E₂ ≤ ...
+- `spectral_gap_pos`: `E₁ - E₀ > 0` (strict gap)
+  Proof: The ground state of a confining 1D Schrödinger operator is
+  non-degenerate (Perron-Frobenius for the heat semigroup).
+- `spectral_gap_lower_bound (m₀ λ : ℝ) : E₁ - E₀ ≥ f(m₀, λ)`
+  (explicit lower bound; stretch goal)
+
+### OSProofs/OS3_RP_Lattice.lean
+
+Reflection positivity on the lattice — the cleanest OS proof.
+
+**Proof sketch** (one page):
+1. Split the lattice at the time-reflection hyperplane t = 0.
+2. Fields decompose: φ = (φ⁺, φ⁰, φ⁻) where φ⁺ is at t > 0, φ⁰ at t = 0, φ⁻ at t < 0.
+3. The action decomposes: S[φ] = S⁺[φ⁺, φ⁰] + S⁻[φ⁻, φ⁰] where S⁻[φ⁻, φ⁰] = S⁺[Θφ⁻, φ⁰].
+4. For F supported at positive time:
+   `∫ F(φ) · F(Θφ) dμ_a = (1/Z) ∫∫∫ F(φ⁺) · F(Θφ⁻) · e^{-S⁺-S⁻} dφ⁺ dφ⁰ dφ⁻`
+   `= (1/Z) ∫ dφ⁰ [∫ F(φ⁺) e^{-S⁺[φ⁺,φ⁰]} dφ⁺]² ≥ 0`
+5. The square appears because Θ maps φ⁻ to the same integral as φ⁺.
+
+Definitions:
+- `positiveTimeField`, `negativeTimeField`, `boundaryField`: projections
+- `actionDecomposition`: `S[φ] = S⁺[φ⁺, φ⁰] + S⁻[φ⁻, φ⁰]`
+- `actionReflectionSymmetry`: `S⁻[φ⁻, φ⁰] = S⁺[Θφ⁻, φ⁰]`
+
+Main result:
+- `lattice_rp`: For test functions f₁,...,fₙ supported at t > 0 and
+  coefficients c₁,...,cₙ: `Σᵢⱼ cᵢcⱼ ∫ exp(i⟨φ, fᵢ - Θfⱼ⟩) dμ_a ≥ 0`
+
+### OSProofs/OS3_RP_Inheritance.lean
+
+RP transfers to the continuum limit.
+
+**Proof:** RP is a condition of the form `Σᵢⱼ cᵢcⱼ F(fᵢ, fⱼ) ≥ 0` where
+`F(f,g) = ∫ exp(i⟨φ, f-Θg⟩) dμ`. Since `φ ↦ exp(i⟨φ,f⟩)` is bounded and
+continuous on S', and `μ_a ⇀ μ` weakly, each `F_a(f,g) → F(f,g)`.
+A nonneg sum of convergent terms stays nonneg.
+
+Main result:
+- `rp_closed_under_weak_limit`: If `{μ_n}` are RP measures converging weakly
+  to μ, then μ is RP. (This should be provable, not just axiomatized.)
+
+### OSProofs/OS4_MassGap.lean
+
+Exponential clustering from spectral gap.
+
+**Proof (on lattice):**
+The two-point function satisfies:
+```
+⟨φ(t,x) φ(0,y)⟩ - ⟨φ⟩² = Σ_{n≥1} |⟨Ω, φ(x) ψ_n⟩|² · e^{-(E_n - E₀)|t|}
+                            ≤ C · e^{-(E₁ - E₀)|t|}
+```
+where Ω is the ground state and ψ_n are eigenstates of H.
+The exponential decay rate is the spectral gap `m_phys = E₁ - E₀ > 0`.
+
+For general n-point functions, the same argument gives:
+```
+|⟨F(φ)·G(T_R φ)⟩ - ⟨F⟩⟨G⟩| ≤ C(F,G) · exp(-m_phys · R)
+```
+
+Key results:
+- `exponential_clustering_lattice`: exponential decay on the lattice
+- `mass_gap_uniform`: the spectral gap is bounded below uniformly in a
+  (because the potential grows as φ^{2p}, confining regardless of a)
+
+### OSProofs/OS0_Analyticity.lean
+
+The generating functional Z_a[J] = ∫ exp(i⟨φ,J⟩) dμ_a is entire.
+
+**Proof (on lattice):** The integrand exp(i Σ J_x φ_x) is entire in J for
+each φ. Differentiation under the integral is justified by dominated
+convergence: |∂^α exp(i⟨φ,J⟩)| ≤ |φ|^|α| · exp(|Im J| · |φ|), and the
+Gaussian tail of μ_a (plus boundedness below of V_a) gives integrability
+of |φ|^k · exp(ε|φ|) for all k and small ε.
+
+### OSProofs/OS1_Regularity.lean
+
+Regularity bound: |Z[f]| ≤ exp(c · ‖f‖²).
+
+**Proof (on lattice):** `|Z_a[f]| ≤ ∫ |exp(i⟨φ,f⟩)| dμ_a = 1` trivially
+for real f. The nontrivial bound is on derivatives / moments:
+`∫ |⟨φ,f⟩|^{2n} dμ_a ≤ (2n)! · C^n · ‖f‖²ⁿ_{H^{-1}}`
+with C uniform in a. This follows from Wick's theorem for the Gaussian part
+plus the interaction only improving decay.
+
+### OSProofs/OS2_WardIdentity.lean
+
+Euclidean invariance restoration — the hardest axiom.
+
+The lattice breaks E(2) to discrete symmetries. Full invariance is restored
+in the continuum limit by a Ward identity argument.
+
+**Strategy:**
+1. Lattice translations by a are exact symmetries → translation invariance
+   in the limit (translations by multiples of a approximate all translations).
+2. Rotation invariance via Ward identity:
+   - Define the SO(2) generator J on lattice observables.
+   - The Ward identity on the lattice has an anomaly term O_break from the
+     nearest-neighbor action breaking rotation symmetry.
+   - O_break has scaling dimension 4.
+   - Since dim(O_break) = 4 > d = 2, it is RG-irrelevant.
+   - Its coefficient vanishes as O(a²) in the continuum limit.
+   - **Key simplification vs O(3):** P(Φ)₂ is super-renormalizable, so there
+     are NO logarithmic corrections competing with the a² decay. The irrelevance
+     argument is purely polynomial.
+
+Key results (axiomatize with detailed proof sketches):
+- `translation_invariance`: lattice translations → continuum translations
+- `ward_identity_lattice`: Ward identity with anomaly term
+- `anomaly_dimension`: dim(O_break) = 4
+- `anomaly_vanishes`: coefficient of O_break is O(a²)
+- `rotation_invariance_continuum`: full SO(2) invariance in the limit
+
+### ContinuumLimit/Embedding.lean
+
+Embedding lattice fields into the continuum distribution space.
+
+Definitions:
+- `latticeEmbed (d N : ℕ) (a : ℝ) (ha : 0 < a) :
+    FinLatticeField d N → Configuration (TestFunction d)`
+  defined by `(ι_a φ)(f) = a^d · Σ_{x : FinLatticeSites d N} φ(x) · f(a · x)`
+  where `f(a·x)` evaluates the Schwartz function f at the physical position of
+  lattice site x. This is a continuous linear functional on S(ℝ^d), hence an
+  element of S'(ℝ^d) = Configuration(TestFunction d).
+
+- `continuumMeasure_a`: pushforward `(ι_a)_* μ_a` on Configuration(TestFunction d)
+
+Properties:
+- `latticeEmbed_continuous`: ι_a is continuous (finite sum)
+- `latticeEmbed_linear`: ι_a is linear
+- `continuumMeasure_isProbability`: pushforward of probability is probability
+
+### ContinuumLimit/Tightness.lean
+
+Tightness of the family `{(ι_a)_* μ_a}_{a>0}` in S'(ℝ²).
+
+**Tightness criterion** (Mitoma): A family of measures on S'(ℝ^d) is tight iff
+for each f ∈ S(ℝ^d), the family of pushforward measures under `φ ↦ φ(f)` is
+tight on ℝ.
+
+Key results:
+- `second_moment_uniform`: `∫ |Φ_a(f)|² dμ_a ≤ C(f)` uniformly in a
+  (from lattice covariance convergence: `⟨f, G_a f⟩ → ⟨f, G f⟩`)
+- `moment_equicontinuity`: `∫ |Φ_a(f) - Φ_a(g)|² dμ_a ≤ C · ‖f-g‖²_s`
+  (from Sobolev regularity of the propagator)
+- `continuumMeasures_tight`: the family is tight in S'(ℝ²)
+
+### ContinuumLimit/Convergence.lean
+
+Existence of the continuum limit.
+
+Key results:
+- `prokhorov`: Tightness in S'(ℝ²) (Polish space) implies every sequence
+  has a weakly convergent subsequence. (Axiomatize; Prokhorov's theorem is
+  partially in Mathlib.)
+- `continuumLimit`: `∃ μ : ProbabilityMeasure (Configuration (TestFunction 2)),`
+  subsequence `μ_{a_k} ⇀ μ` weakly
+- `schwinger_convergence`: n-point Schwinger functions converge:
+  `S_a^{(n)}(f₁,...,fₙ) → S^{(n)}(f₁,...,fₙ)` for all test functions
+
+### ContinuumLimit/AxiomInheritance.lean
+
+OS axioms pass from lattice to continuum.
+
+Key results:
+- `os0_inheritance`: Analyticity from uniform exponential bounds
+- `os1_inheritance`: Regularity from uniform ‖f‖² bounds
+- `os3_inheritance`: RP from weak closure of RP cone (provable)
+- `os4_inheritance`: Clustering from uniform mass gap lower bound
+- `os2_inheritance`: Euclidean invariance from Ward identity (the hard one)
+
+### OSAxioms.lean (extended)
+
+```lean
+/-- Full OS axiom bundle for P(Φ)₂. -/
+structure SatisfiesFullOS (F : QFTFramework)
+    (dμ : ProbabilityMeasure F.FieldConfig) : Prop where
+  os0 : OS0_Analyticity_generic F dμ
+  os1 : OS1_Regularity_generic F dμ
+  os2 : OS2_Invariance_generic F dμ
+  os3 : OS3_ReflectionPositivity_generic F dμ
+  os4 : OS4_Clustering_generic F dμ
+```
+
+### Main.lean (rewritten)
+
+```lean
+/-- **Main Theorem**: The P(Φ)₂ measure exists and satisfies all OS axioms.
+    Constructed as the continuum limit of lattice measures. -/
+theorem pphi2_full_OS (P : InteractionPolynomial) :
+    ∃ (F : QFTFramework) (dμ : ProbabilityMeasure F.FieldConfig),
+      SatisfiesFullOS F dμ
+```
+
+---
+
+## What to Axiomatize vs Prove
+
+### Prove (feasible in Lean now)
+
+| Result | Why provable |
+|--------|-------------|
+| `wickConstant_pos` | Finite sum of positive terms |
+| `latticeInteraction_bounded_below` | Polynomial with positive leading coeff |
+| `expNegV_integrable` | Bounded below → exp is bounded above |
+| `partitionFunction_pos` | exp > 0 a.e. |
+| `interactingLatticeMeasure_isProbability` | Normalization |
+| `lattice_rp` (OS3 on lattice) | Transfer matrix decomposition (finite-dim linear algebra) |
+| `rp_closed_under_weak_limit` | Bounded continuous functions + weak convergence |
+| `latticeEmbed_continuous` | Finite sum |
+| `wickMonomial_recursion` | Hermite polynomial identity |
+
+### Axiomatize (with proof outlines, prove later)
+
+| Result | Difficulty | Proof strategy |
+|--------|-----------|----------------|
+| `wickConstant_asymptotics` | Medium | Euler-Maclaurin summation |
+| `transferMatrix_positive` | Medium | Gaussian kernel positivity |
+| `hamiltonian_compact_resolvent` | Medium | Confining potential → compact embedding |
+| `spectral_gap_pos` | Medium | Perron-Frobenius / non-degeneracy of ground state |
+| `mass_gap_uniform` | Hard | Uniform lower bound on confining potential |
+| `second_moment_uniform` | Hard | Nelson's estimate (hypercontractivity) |
+| `continuumMeasures_tight` | Hard | Uses Nelson's estimate + Mitoma criterion |
+| `prokhorov` | Medium | Standard but not fully in Mathlib |
+| `schwinger_convergence` | Hard | Lattice propagator → continuum propagator |
+| `translation_invariance` | Medium | Lattice translations approximate continuum |
+| `ward_identity_lattice` | Hard | Lattice Ward identity computation |
+| `anomaly_vanishes` | Hard | Power counting / RG irrelevance |
+| `os4_inheritance` | Medium | Uniform spectral gap → exponential decay in limit |
+
+### Nelson's estimate (the key hard axiom)
+
+Nelson's hypercontractive estimate is the engine behind tightness and uniform
+bounds. It says that for the Gaussian measure:
+
+```
+‖:φ^n:‖_{L^p(μ_GFF)} ≤ (p-1)^{n/2} · ‖:φ^n:‖_{L^2(μ_GFF)}
+```
+
+The proof goes through the Gross log-Sobolev inequality. This is deep and would
+be a significant formalization project in its own right. We axiomatize it as:
+
+```lean
+axiom nelson_hypercontractive (d N : ℕ) [NeZero N] (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) (n : ℕ) (p : ℝ) (hp : 2 ≤ p) :
+    ∫ |wickMonomial n c_a (φ x)|^p dμ_{GFF,a} ≤
+    (p - 1)^(n*p/2) * (∫ |wickMonomial n c_a (φ x)|^2 dμ_{GFF,a})^(p/2)
+```
+
+Breaking this into sub-axioms: log-Sobolev → hypercontractivity → moment bounds
+→ tightness gives a clear path for incremental proof.
 
 ---
 
 ## Development Phases
 
-### Phase 0: Schwartz Infrastructure (CURRENT)
+### Phase 1: Wick Ordering + Interacting Measure (2 weeks)
 
-Fill sorrys in `Basic.lean` — the algebraic and analytic foundations.
+Build the lattice interacting measure on top of gaussian-field.
 
-**Phase 0a: Algebraic proofs** (straightforward, ~30 sorrys)
-- [ ] `ext` lemma for `TestFunctionCyl` and `TestFunctionCylℂ`
-- [ ] `AddCommGroup` laws (add_assoc, zero_add, add_zero, add_comm, neg_add_cancel)
-- [ ] `Module ℝ` laws (one_smul, mul_smul, smul_zero, smul_add, add_smul, zero_smul)
-- [ ] Same for `TestFunctionCylℂ` with `Module ℂ`
-- [ ] Rapid decay closure: add, neg, zero, smul
-- [ ] Reality condition closure: add, neg, zero, smul
+1. `WickOrdering/WickPolynomial.lean` — Hermite-based Wick ordering
+2. `WickOrdering/Counterterm.lean` — `c_a = G_a(0,0)` from `latticeEigenvalue`
+3. `InteractingMeasure/LatticeAction.lean` — `V_a(φ)`
+4. `InteractingMeasure/LatticeMeasure.lean` — `dμ_a`
+5. `InteractingMeasure/Normalization.lean` — `Z_a > 0`
 
-All ingredients are in Mathlib: `map_add_le_add`, `map_neg_eq_map`, `map_zero`,
-`map_smul_eq_mul` for seminorms; `star_add`, `star_neg`, `star_zero`,
-`Complex.conj_ofReal` for reality. See `refs/schwartz-map-lemmas.md`.
+**Verification:** `lake build` succeeds; `interactingLatticeMeasure` has the right type.
 
-**Phase 0b: Submodule and operations** (~6 sorrys)
-- [ ] `positiveTimeSubmoduleCyl`: zero_mem' (tsupport_zero), add_mem', smul_mem'
-- [ ] `timeReflectionCyl`: compose modes with negation via `SchwartzMap.compCLMOfContinuousLinearEquiv`
-- [ ] `complexPairingCyl`: Re/Im decomposition of complex test functions
+### Phase 2: Transfer Matrix + OS3 (2–3 weeks)
 
-**Phase 0c: Leave as sorry/axiom**
-- Topology instances (requires defining Fréchet topology on mode families)
-- `symmetryActionCyl` (blocked on axiomatized `SymmetryGroupCyl`)
-- `translateTestFunCyl` (translation is affine, needs custom argument)
-- `timeTranslationDistCyl` (depends on translation)
-- `NuclearSpace` (textbook result, axiomatized as in aqft2)
+The cleanest OS proof — test the pipeline.
 
-### Phase 1: Gaussian Theory on the Cylinder
+1. `TransferMatrix/TransferMatrix.lean` — define T
+2. `TransferMatrix/Positivity.lean` — T symmetric and positive
+3. `OSProofs/OS3_RP_Lattice.lean` — RP via action decomposition
+4. `OSProofs/OS3_RP_Inheritance.lean` — RP closed under weak limits
 
-- [ ] Make `freeCovariance` concrete (mode-by-mode: multiply by 1/(1 + k² + (2πn/L)²))
-- [ ] Counterterm c_{L,N} = trace of regularized covariance
-- [ ] Gaussian measure ν_{L,N} via Minlos theorem (from OSforGFF)
-- [ ] Wick ordering in Fourier representation
-- [ ] Nelson hypercontractivity (axiomatize, as in aqft2)
+**Verification:** `lattice_rp` and `rp_closed_under_weak_limit` compile.
 
-### Phase 2: Stochastic Quantization
+### Phase 3: Spectral Gap + OS4 (2–3 weeks)
 
-- [ ] OU process Z_{L,N}(t) — axiomatize cylindrical Wiener process
-- [ ] Da Prato-Debussche remainder Ψ = Φ - Z
-- [ ] PDE for Ψ (non-singular nonlinearity)
-- [ ] Stationarity: Law(Φ(t)) = μ_{L,N}
+1. `TransferMatrix/SpectralGap.lean` — axiomatize spectral gap
+2. `OSProofs/OS4_MassGap.lean` — exponential clustering
+3. `OSProofs/OS4_Ergodicity.lean` — ergodicity from clustering
 
-### Phase 3: Core Estimates
+**Verification:** `exponential_clustering_lattice` compiles with correct type.
 
-- [ ] Energy estimate (Prop 5.1) — the hardest analytical part
-- [ ] Stochastic moment bounds uniform in L, N
-- [ ] Cross-term estimates (Lemma A.5 via Sobolev interpolation)
-- [ ] Function space infrastructure: weighted Bessel potential spaces, embeddings
+### Phase 4: Continuum Limit (3–4 weeks)
 
-### Phase 4: Limit and Axioms
+The main technical phase.
 
-- [ ] Tightness (Prop 6.1) from energy estimate
-- [ ] UV limit μ_L = lim_N μ_{L,N} via Vitali
-- [ ] Infinite volume: tightness of {μ_L}, Prokhorov
-- [ ] OS regularity (Prop 7.1) via variational bound
-- [ ] Reflection positivity (Sec 8)
-- [ ] Euclidean invariance (Sec 9)
+1. `ContinuumLimit/Embedding.lean` — ι_a : lattice → S'
+2. `ContinuumLimit/Tightness.lean` — uniform bounds (axiomatize Nelson)
+3. `ContinuumLimit/Convergence.lean` — Prokhorov, weak limit
+4. `ContinuumLimit/AxiomInheritance.lean` — OS0, OS1, OS3, OS4 transfer
 
-### Phase 5: Assembly
+**Verification:** `continuumLimit` and `os3_inheritance` compile.
 
-- [ ] `Main.lean`: combine all OS axioms into `SatisfiesDDJ_OS_generic`
+### Phase 5: Euclidean Invariance (3–4 weeks)
+
+The hardest axiom.
+
+1. `OSProofs/OS2_WardIdentity.lean` — Ward identity + irrelevance
+2. Translation invariance (easier half)
+3. Rotation invariance (Ward identity argument)
+
+**Verification:** `os2_inheritance` compiles.
+
+### Phase 6: Assembly (1 week)
+
+1. Extend `OSAxioms.lean` to `SatisfiesFullOS`
+2. Rewrite `Main.lean` to assemble all 5 axioms
+3. Full `lake build` succeeds
 
 ---
 
-## Relationship to Sibling Projects
+## Import Dependencies
 
-### aqft2 (GFF on ℝ^d)
-
-Proves all 5 OS axioms for the free Gaussian field. Shares:
-- Schwartz function infrastructure (`FunctionalAnalysis.lean`: 60+ lemmas)
-- Nuclear space framework and Hermite expansion
-- OS axiom definitions and generating functional patterns
-- Minlos theorem application pattern
-
-Does NOT share: interacting theory, stochastic quantization, cylinder geometry.
-
-### OSforGFF-dimensions
-
-Provides the `QFTFramework` structure that pphi2 instantiates. Also provides:
-- OS axiom type classes (`OS0`–`OS4`)
-- `NuclearSpace` class (if/when upstreamed from aqft2)
-- `WeakDual` field configuration pattern
-
-### Coordination needed
-
-- `NuclearSpace`: currently defined locally in pphi2 as a stub class.
-  Should be replaced with the real definition from OSforGFF once available.
-- Schwartz lemmas proved in aqft2 could be factored into a shared library.
-- `QFTFramework` may evolve toward the `FieldSpace` hierarchy
-  (see `field-space-brainstorming.md`) but not yet.
+```
+gaussian-field/Lattice ←── WickOrdering (uses latticeEigenvalue, latticeGaussianMeasure)
+WickOrdering ←── InteractingMeasure (uses wickPolynomial, wickConstant)
+InteractingMeasure ←── TransferMatrix (uses latticeInteraction)
+InteractingMeasure ←── OSProofs/OS3_RP_Lattice (uses interactingLatticeMeasure)
+TransferMatrix ←── OSProofs/OS4_MassGap (uses spectral_gap_pos)
+InteractingMeasure ←── ContinuumLimit/Embedding (uses interactingLatticeMeasure)
+ContinuumLimit ←── ContinuumLimit/AxiomInheritance
+OSProofs/* + ContinuumLimit/AxiomInheritance ←── Main.lean
+```
 
 ---
 
-## Key Difficulties
+## References
 
-### Hard (require substantial new Lean work)
-1. **Topology on TestFunctionCyl:** The Fréchet topology on ℤ-indexed Schwartz
-   families is not in Mathlib. Could use the product topology on ℤ → 𝓢(ℝ,ℂ)
-   restricted to the rapid-decay subspace, but the restriction topology needs care.
-2. **Energy estimate (Prop 5.1):** Many intermediate bounds, integration by parts
-   with weights. The core technical challenge of the whole formalization.
-3. **Cylindrical Wiener process:** No Lean formalization exists. Must axiomatize.
-4. **Sobolev embeddings for weighted spaces:** Not in Mathlib.
+### P(Φ)₂ Construction
+- **Glimm-Jaffe** (1973): Original construction
+- **Simon** (1974): *The P(φ)₂ Euclidean (Quantum) Field Theory* (Princeton)
+- **Guerra-Rosen-Simon** (1975): Correlation inequalities, Nelson's symmetry
+- **Nelson** (1973): *The free Markoff field*, hypercontractivity
 
-### Medium (require careful but routine Lean work)
-5. **Time reflection via compCLM:** Composition with negation. The CLM exists
-   in Mathlib; need to verify rapid decay and reality are preserved.
-6. **Complex pairing:** Decompose SchwartzMap ℝ ℂ into Re/Im parts. Requires
-   showing `Complex.reCLM ∘ f` and `Complex.imCLM ∘ f` are Schwartz.
-7. **Translation on the cylinder:** Affine map, not covered by `compCLMOfContinuousLinearEquiv`.
+### OS Axioms
+- **Osterwalder-Schrader** (1973, 1975): Axiom formulation and reconstruction
+- **Osterwalder-Seiler** (1978): Lattice reflection positivity
+- **Glimm-Jaffe** (1987): *Quantum Physics*, Ch. 6, 19
 
-### Likely axioms needed long-term
-- Spectral theory of Δ_L on the cylinder (eigenvalue decomposition)
-- Cylindrical Wiener process existence and properties
-- Nelson hypercontractivity / Gross log-Sobolev inequality
-- Sobolev embedding theorems for weighted Bessel spaces
-- Prokhorov's theorem (partial in Mathlib)
+### Cluster Expansion / Mass Gap
+- **Glimm-Jaffe-Spencer** (1975): Cluster expansion for P(φ)₂
+- **Simon-Hoegh-Krohn** (1972): Spectral gap → exponential clustering
 
----
-
-## File Index
-
-| File | Role | Status |
-|------|------|--------|
-| `Basic.lean` | Core types, QFTFramework instance | 46 sorrys, active |
-| `Polynomial.lean` | Interaction polynomial P(τ) | 3 sorrys |
-| `OSAxioms.lean` | `SatisfiesDDJ_OS_generic` structure | complete |
-| `Main.lean` | Main theorem assembly | 3 sorrys |
-| `GaussianCylinder/Covariance.lean` | Free covariance, Gaussian measure | axioms |
-| `MeasureCylinder/Regularized.lean` | Regularized P(Φ)₂ measure | axioms |
-| `MeasureCylinder/UVLimit.lean` | UV limit N → ∞ | axioms |
-| `StochasticQuant/DaPratoDebussche.lean` | Da Prato-Debussche decomposition | axioms |
-| `StochasticEst/InfiniteVolumeBound.lean` | Free field moment bounds | axioms |
-| `Energy/EnergyEstimate.lean` | A priori energy bound | axioms |
-| `FunctionSpaces/WeightedLp.lean` | Weighted Lp, Bessel spaces | 2 sorrys |
-| `FunctionSpaces/Embedding.lean` | Sobolev embeddings | axioms |
-| `InfiniteVolume/Tightness.lean` | Tightness, Prokhorov | axioms |
-| `Integrability/Regularity.lean` | OS regularity bound | 2 sorrys |
-| `ReflectionPositivity/RPPlane.lean` | Reflection positivity | 1 sorry |
-| `EuclideanInvariance/Invariance.lean` | Euclidean invariance | 1 sorry |
-
-| Supporting doc | Content |
-|---------------|---------|
-| `refs/schwartz-map-lemmas.md` | Mathlib Schwartz API inventory |
-| `field-space-brainstorming.md` | FieldSpace architecture analysis |
-| `docs/os_axioms_lattice_plan.md` | Lattice OS axiom plan |
-
----
-
-## Immediate Next Steps
-
-1. **Phase 0a:** Prove `ext` lemma and algebraic instances in `Basic.lean`
-2. **Phase 0b:** Prove `positiveTimeSubmoduleCyl` closure properties
-3. Coordinate with aqft2 on shared Schwartz lemma needs
-4. Make `freeCovariance` concrete (mode-by-mode multiplication)
+### Euclidean Invariance Restoration
+- **Symanzik** (1983): Continuum limit of lattice field theories
+- **Luscher-Weisz** (1985): Symanzik improvement program

@@ -4,7 +4,10 @@
 
   Reference: DDJ Section 1, Eq. (1.1) and Eq. (2.4).
 -/
-import Pphi2.Basic
+import Mathlib.Data.Real.Basic
+import Mathlib.Data.Fin.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Data.Fintype.Fin
 
 noncomputable section
 

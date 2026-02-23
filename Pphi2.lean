@@ -1,43 +1,39 @@
--- Pphi2: Formal construction of P(Φ)₂ via stochastic quantization
--- Following Duch-Dybalski-Jahandideh (arXiv:2311.04137)
--- On the cylinder ℝ × S¹_L (adapted from spheres S_R)
+-- Pphi2: Formal construction of P(Φ)₂ Euclidean QFT
+-- Approach: Glimm-Jaffe/Nelson lattice construction with continuum limit
+-- See plan.md for the development roadmap.
 
 -- Core definitions
-import Pphi2.Basic
 import Pphi2.Polynomial
+
+-- Phase 1: Wick ordering
+import Pphi2.WickOrdering.WickPolynomial
+import Pphi2.WickOrdering.Counterterm
+
+-- Phase 1: Interacting lattice measure
+import Pphi2.InteractingMeasure.LatticeAction
+import Pphi2.InteractingMeasure.LatticeMeasure
+import Pphi2.InteractingMeasure.Normalization
+
+-- Phase 2: Transfer matrix and reflection positivity
+import Pphi2.TransferMatrix.TransferMatrix
+import Pphi2.TransferMatrix.Positivity
+import Pphi2.OSProofs.OS3_RP_Lattice
+import Pphi2.OSProofs.OS3_RP_Inheritance
+
+-- Phase 3: Spectral gap and clustering (OS4)
+import Pphi2.TransferMatrix.SpectralGap
+import Pphi2.OSProofs.OS4_MassGap
+import Pphi2.OSProofs.OS4_Ergodicity
+
+-- Phase 4: Continuum limit
+import Pphi2.ContinuumLimit.Embedding
+import Pphi2.ContinuumLimit.Tightness
+import Pphi2.ContinuumLimit.Convergence
+import Pphi2.ContinuumLimit.AxiomInheritance
+
+-- Phase 5: Euclidean invariance (OS2)
+import Pphi2.OSProofs.OS2_WardIdentity
+
+-- Phase 6: Assembly — OS axiom framework and main theorem
 import Pphi2.OSAxioms
-
--- Function spaces
-import Pphi2.FunctionSpaces.WeightedLp
-import Pphi2.FunctionSpaces.Embedding
-
--- Gaussian theory on the cylinder
-import Pphi2.GaussianCylinder.Covariance
-
--- P(Φ)₂ measure on the cylinder
-import Pphi2.MeasureCylinder.Regularized
-import Pphi2.MeasureCylinder.UVLimit
-
--- Stochastic quantization
-import Pphi2.StochasticQuant.DaPratoDebussche
-
--- Stochastic estimates
-import Pphi2.StochasticEst.InfiniteVolumeBound
-
--- Energy estimate
-import Pphi2.Energy.EnergyEstimate
-
--- Infinite volume limit
-import Pphi2.InfiniteVolume.Tightness
-
--- Integrability / OS regularity
-import Pphi2.Integrability.Regularity
-
--- Reflection positivity
-import Pphi2.ReflectionPositivity.RPPlane
-
--- Euclidean invariance
-import Pphi2.EuclideanInvariance.Invariance
-
--- Main theorem
 import Pphi2.Main
