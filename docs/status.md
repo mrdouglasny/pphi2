@@ -35,10 +35,10 @@ progressively fill in the axioms with full proofs.
 | 4 | `ContinuumLimit/Convergence.lean` | 5 axioms, 1 sorry |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 5 axioms, 1 sorry |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 8 axioms, 2 sorries |
-| 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
-| 6 | `Main.lean` | 1 axiom, 1 sorry |
+| 6 | `OSAxioms.lean` | 5 axioms, 1 sorry (strengthened to match OSforGFF) |
+| 6 | `Main.lean` | 1 axiom, 7 sorries |
 
-**Active file totals: 61 axioms, 25 sorries**
+**Active file totals: 66 axioms, 31 sorries**
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 

@@ -8,33 +8,26 @@ Defines the OS axiom framework for the Glimm-Jaffe/Nelson lattice
 construction. The axioms are stated for probability measures on
 S'(ℝ²) = Configuration (ContinuumTestFunction 2).
 
+The formulations match those in OSforGFF/OS_Axioms.lean, adapted from
+d=4 to d=2.
+
 ## The five OS axioms
 
-- **OS0 (Analyticity):** The generating functional Z[f] = ∫ exp(iΦ(f)) dμ
-  is entire analytic in f. Equivalently: all moments are finite and the
-  moment series converges.
-
-- **OS1 (Regularity):** Z[f] satisfies growth bounds controlled by
-  Sobolev norms of f. For real f: |Z[f]| ≤ 1 trivially.
-
-- **OS2 (Euclidean Invariance):** μ is invariant under the Euclidean
-  group E(2) = ℝ² ⋊ SO(2). Translations + rotations.
-
-- **OS3 (Reflection Positivity):** For test functions supported at
-  positive time, the matrix Z[fᵢ - Θfⱼ] is positive semidefinite,
-  where Θ is time reflection.
-
-- **OS4 (Clustering):** Correlation functions cluster exponentially
-  with rate m₀ > 0 (the mass gap).
+- **OS0 (Analyticity):** Z[Σ zᵢfᵢ] is entire analytic in z ∈ ℂⁿ.
+- **OS1 (Regularity):** |Z[f]| ≤ exp(c(‖f‖₁ + ‖f‖ₚᵖ)).
+- **OS2 (Euclidean Invariance):** Z[g·f] = Z[f] for g ∈ E(2).
+- **OS3 (Reflection Positivity):** RP matrix is positive semidefinite.
+- **OS4 (Clustering):** Z[f + T_a g] → Z[f]·Z[g] as |a| → ∞.
 
 ## References
 
 - Osterwalder-Schrader (1973, 1975), Axiom formulation and reconstruction
-- Glimm-Jaffe, *Quantum Physics*, Ch. 6
+- Glimm-Jaffe, *Quantum Physics*, Ch. 6, pp. 89–90
 - Simon, *The P(φ)₂ Euclidean QFT*
 -/
 
 import Pphi2.ContinuumLimit.AxiomInheritance
+import Mathlib.Analysis.Analytic.Basic
 
 noncomputable section
 
@@ -42,49 +35,218 @@ open GaussianField MeasureTheory
 
 namespace Pphi2
 
-/-! ## Individual OS axiom predicates
+/-! ## Spacetime and test function setup for d=2 -/
 
-These are stated for probability measures on S'(ℝ²). -/
+/-- Spacetime for P(Φ)₂: Euclidean ℝ². -/
+abbrev SpaceTime2 := EuclideanSpace ℝ (Fin 2)
 
-/-- **OS0 (Analyticity):** All moments of field evaluations are finite. -/
+/-- Real test functions: S(ℝ²). Same as `ContinuumTestFunction 2`. -/
+abbrev TestFunction2 := ContinuumTestFunction 2
+
+/-- Complex test functions: S(ℝ², ℂ). -/
+abbrev TestFunction2ℂ := SchwartzMap SpaceTime2 ℂ
+
+/-- Field configurations: S'(ℝ²) = WeakDual ℝ S(ℝ²). -/
+abbrev FieldConfig2 := Configuration (ContinuumTestFunction 2)
+
+/-- The distribution pairing ⟨ω, f⟩ for ω ∈ S'(ℝ²), f ∈ S(ℝ²). -/
+def distribPairing (ω : FieldConfig2) (f : TestFunction2) : ℝ := ω f
+
+/-! ## Generating functional -/
+
+/-- The generating functional Z[f] = ∫ exp(i⟨ω, f⟩) dμ(ω).
+
+This is the fundamental object in constructive QFT. For real test
+functions f, this equals the characteristic function of the measure μ
+evaluated at f. Following Glimm-Jaffe notation. -/
+def generatingFunctional
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (f : TestFunction2) : ℂ :=
+  ∫ ω : FieldConfig2, Complex.exp (Complex.I * ↑(ω f)) ∂μ
+
+/-- The complex generating functional Z[J] for J ∈ S(ℝ², ℂ).
+
+For complex J = f + ig with f, g real:
+  Z[J] = ∫ exp(i⟨ω, f⟩ - ⟨ω, g⟩) dμ(ω)
+
+This extends the real generating functional to complex test functions,
+which is needed for the analyticity axiom (OS0). -/
+def generatingFunctionalℂ
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (J : TestFunction2ℂ) : ℂ :=
+  -- Decompose J into real and imaginary parts, then
+  -- Z[J] = ∫ exp(i · Re⟨ω, J⟩ - Im⟨ω, J⟩) dμ(ω)
+  -- For now axiomatize the complex extension
+  sorry
+
+/-! ## Euclidean group E(2) = ℝ² ⋊ O(2) -/
+
+/-- Orthogonal linear isometries of ℝ² (the group O(2)). -/
+abbrev O2 := LinearIsometry (RingHom.id ℝ) SpaceTime2 SpaceTime2
+
+/-- Euclidean motion in 2D: rotation/reflection R ∈ O(2) + translation t ∈ ℝ². -/
+structure E2 where
+  R : O2
+  t : SpaceTime2
+
+/-- Action of g ∈ E(2) on a spacetime point: g · x = R(x) + t. -/
+def E2.act (g : E2) (x : SpaceTime2) : SpaceTime2 := g.R x + g.t
+
+/-- The pullback action of E(2) on real test functions:
+  `(g · f)(x) = f(g⁻¹ · x)`.
+
+This is axiomatized because constructing SchwartzMap from composition
+requires showing the composition preserves Schwartz decay. -/
+axiom euclideanAction2 (g : E2) : TestFunction2 →L[ℝ] TestFunction2
+
+/-- The pullback action on complex test functions. -/
+axiom euclideanAction2ℂ (g : E2) : TestFunction2ℂ →L[ℝ] TestFunction2ℂ
+
+/-! ## Time reflection -/
+
+/-- Time reflection on ℝ²: (t, x) ↦ (-t, x).
+
+This negates the first coordinate (time) and preserves the second
+(space). It is an element of O(2) and an involution. -/
+def timeReflection2 (p : SpaceTime2) : SpaceTime2 :=
+  (WithLp.equiv 2 (Fin 2 → ℝ)).symm
+    (fun i => if i = 0 then -(WithLp.equiv 2 (Fin 2 → ℝ) p) i
+              else (WithLp.equiv 2 (Fin 2 → ℝ) p) i)
+
+/-- Time reflection is an involution: Θ² = id. -/
+theorem timeReflection2_involution (p : SpaceTime2) :
+    timeReflection2 (timeReflection2 p) = p := by
+  simp [timeReflection2]
+  ext i
+  simp [WithLp.equiv, Equiv.symm]
+  split <;> simp
+
+/-- The pullback of time reflection on real test functions:
+  `(Θf)(t, x) = f(-t, x)`.
+
+Axiomatized because the Schwartz space API for composition with
+linear maps is incomplete. -/
+axiom compTimeReflection2 : TestFunction2 →L[ℝ] TestFunction2
+
+/-- Θf agrees with composition: (compTimeReflection2 f)(p) = f(timeReflection2 p). -/
+axiom compTimeReflection2_apply (f : TestFunction2) (p : SpaceTime2) :
+    compTimeReflection2 f p = f (timeReflection2 p)
+
+/-- Translation of a real test function by a ∈ ℝ²:
+  `(translate a f)(x) = f(x - a)`.
+
+Axiomatized because SchwartzMap doesn't have a built-in translate. -/
+axiom SchwartzMap.translate (a : SpaceTime2) : TestFunction2 →L[ℝ] TestFunction2
+
+/-! ## Positive-time test functions -/
+
+/-- A spacetime point has positive time if its first coordinate is positive. -/
+def hasPositiveTime2 (p : SpaceTime2) : Prop :=
+  (WithLp.equiv 2 (Fin 2 → ℝ) p) 0 > 0
+
+/-- The submodule of real test functions supported at positive time. -/
+def positiveTimeSubmodule2 : Submodule ℝ TestFunction2 where
+  carrier := { f : TestFunction2 | tsupport f ⊆ { p | hasPositiveTime2 p } }
+  zero_mem' := by
+    simp only [Set.mem_setOf_eq, tsupport]
+    exact (closure_minimal Function.support_zero.subset isClosed_empty).trans (Set.empty_subset _)
+  add_mem' := fun {f g} hf hg =>
+    (tsupport_add f g).trans (Set.union_subset hf hg)
+  smul_mem' := fun c f hf =>
+    (tsupport_smul_subset_right (fun _ : SpaceTime2 => c) f).trans hf
+
+/-- Type of real test functions supported at positive time t > 0. -/
+abbrev PositiveTimeTestFunction2 := positiveTimeSubmodule2
+
+/-! ## OS Axiom Definitions -/
+
+/-- **OS0 (Analyticity):** The generating functional Z[Σ zᵢfᵢ] is
+entire analytic as a function of z = (z₁,...,zₙ) ∈ ℂⁿ, for any
+choice of complex test functions f₁,...,fₙ ∈ S(ℝ², ℂ).
+
+This matches OSforGFF.OS0_Analyticity. -/
 def OS0_Analyticity
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    [IsProbabilityMeasure μ] : Prop :=
-  ∀ (f : ContinuumTestFunction 2) (n : ℕ),
-    Integrable (fun ω : Configuration (ContinuumTestFunction 2) => (ω f) ^ n) μ
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] : Prop :=
+  ∀ (n : ℕ) (J : Fin n → TestFunction2ℂ),
+    AnalyticOn ℂ (fun z : Fin n → ℂ =>
+      generatingFunctionalℂ μ (∑ i, z i • J i)) Set.univ
 
-/-- **OS1 (Regularity):** The characteristic functional is bounded. -/
+/-- **OS1 (Regularity):** The complex generating functional satisfies
+exponential bounds controlled by Schwartz norms.
+
+  `‖Z[J]‖ ≤ exp(c · (‖J‖₁ + ‖J‖_p^p))`
+
+for some 1 ≤ p ≤ 2 and c > 0. When p = 2, this additionally requires
+local integrability of the two-point function.
+
+This matches OSforGFF.OS1_Regularity.
+
+For P(Φ)₂, the relevant bound is `‖Z[f]‖ ≤ exp(c · ‖f‖²_{H^{-1}})`
+from Nelson's hypercontractive estimate. -/
 def OS1_Regularity
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    [IsProbabilityMeasure μ] : Prop :=
-  ∀ (f : ContinuumTestFunction 2),
-    |∫ ω : Configuration (ContinuumTestFunction 2), Real.cos (ω f) ∂μ| ≤ 1
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] : Prop :=
+  ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
+    ∀ (f : TestFunction2ℂ),
+      ‖generatingFunctionalℂ μ f‖ ≤
+        Real.exp (c * (∫ x, ‖f x‖ ∂volume + ∫ x, ‖f x‖ ^ p ∂volume))
 
-/-- **OS2 (Euclidean Invariance):** μ is invariant under E(2).
+/-- **OS2 (Euclidean Invariance):** The generating functional is
+invariant under the Euclidean group E(2) = ℝ² ⋊ O(2).
 
-Stated as invariance under translations and rotations separately.
-Since E(2) is generated by these, this is equivalent to full E(2) invariance. -/
-structure OS2_EuclideanInvariance
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    [IsProbabilityMeasure μ] : Prop where
-  translation : ∀ (v : EuclideanSpace ℝ (Fin 2)), True
-    -- Full statement: (τ_v)_* μ = μ
-  rotation : ∀ (θ : ℝ), True
-    -- Full statement: (R_θ)_* μ = μ
+  `Z[g · f] = Z[f]` for all g ∈ E(2), f ∈ S(ℝ², ℂ).
 
-/-- **OS3 (Reflection Positivity):** The time-reflected inner product
-is positive semidefinite. -/
+This matches OSforGFF.OS2_EuclideanInvariance. -/
+def OS2_EuclideanInvariance
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] : Prop :=
+  ∀ (g : E2) (f : TestFunction2ℂ),
+    generatingFunctionalℂ μ f =
+    generatingFunctionalℂ μ (euclideanAction2ℂ g f)
+
+/-- **OS3 (Reflection Positivity):** For any finite collection of
+positive-time test functions f₁,...,fₙ and real coefficients c₁,...,cₙ,
+the reflection positivity matrix is positive semidefinite:
+
+  `Σᵢⱼ cᵢ cⱼ · Re(Z[fᵢ - Θfⱼ]) ≥ 0`
+
+where Θ is the time reflection operator.
+
+This matches OSforGFF.OS3_ReflectionPositivity. -/
 def OS3_ReflectionPositivity
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    [IsProbabilityMeasure μ] : Prop :=
-  True -- Σᵢⱼ cᵢc̄ⱼ ∫ exp(i⟨Φ, fᵢ - Θfⱼ⟩) dμ ≥ 0
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] : Prop :=
+  ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction2) (c : Fin n → ℝ),
+    0 ≤ ∑ i, ∑ j, c i * c j *
+      (generatingFunctional μ
+        ((f i).val - compTimeReflection2 ((f j).val))).re
 
-/-- **OS4 (Clustering / Mass Gap):** Correlations decay exponentially. -/
+/-- **OS4 (Clustering):** Correlations between well-separated regions
+decay to zero. The generating functional factors at large distances:
+
+  `Z[f + T_a g] → Z[f] · Z[g]` as `‖a‖ → ∞`
+
+This matches OSforGFF.OS4_Clustering.
+
+For P(Φ)₂, the decay is exponential with rate m₀ > 0 (the mass gap),
+but the axiom only requires convergence to zero. -/
 def OS4_Clustering
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    [IsProbabilityMeasure μ] : Prop :=
-  ∃ m₀ : ℝ, 0 < m₀ ∧ True
-  -- |∫ F · G_R dμ - (∫ F dμ)(∫ G dμ)| ≤ C · exp(-m₀ · R)
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] : Prop :=
+  ∀ (f g : TestFunction2) (ε : ℝ), ε > 0 →
+    ∃ (R : ℝ), R > 0 ∧ ∀ (a : SpaceTime2), ‖a‖ > R →
+    ‖generatingFunctional μ (f + SchwartzMap.translate a g)
+     - generatingFunctional μ f * generatingFunctional μ g‖ < ε
+
+/-- **OS4 (Ergodicity):** Time-averaged observables converge to their
+expectations in L²(μ).
+
+  `(1/T) ∫₀ᵀ A(T_s ω) ds → 𝔼_μ[A]` in L²(μ) as T → ∞
+
+This matches OSforGFF.OS4_Ergodicity.
+
+The standard formulation uses "generating function" observables
+A(ω) = Σⱼ zⱼ exp(⟨ω, fⱼ⟩). -/
+def OS4_Ergodicity
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] : Prop :=
+  True -- Full formulation requires time translation on Configuration space
+  -- and L²(μ) convergence, following OSforGFF.OS4_Ergodicity
 
 /-! ## Full OS axiom bundle -/
 
@@ -94,13 +256,13 @@ A probability measure μ on S'(ℝ²) satisfying all five OS axioms.
 By the OS reconstruction theorem (Osterwalder-Schrader 1973, 1975),
 such a measure yields a Wightman QFT in 1+1 dimensions. -/
 structure SatisfiesFullOS
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    [IsProbabilityMeasure μ] : Prop where
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] : Prop where
   os0 : OS0_Analyticity μ
   os1 : OS1_Regularity μ
   os2 : OS2_EuclideanInvariance μ
   os3 : OS3_ReflectionPositivity μ
-  os4 : OS4_Clustering μ
+  os4_clustering : OS4_Clustering μ
+  os4_ergodicity : OS4_Ergodicity μ
 
 end Pphi2
 

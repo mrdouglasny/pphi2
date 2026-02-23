@@ -77,14 +77,18 @@ theorem pphi2_main (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
     @SatisfiesFullOS μ hμ := by
-  have hall := @continuumLimit_satisfies_allOS P mass hmass μ hμ
-  have h2 := os2_inheritance P mass hmass μ hμ
+  -- Bridge from the intermediate SatisfiesAllOS (placeholder formulations)
+  -- to the strengthened SatisfiesFullOS (matching OSforGFF formulations).
+  -- Each axiom needs its own proof connecting the two formulations.
+  have _hall := @continuumLimit_satisfies_allOS P mass hmass μ hμ
+  have _h2 := os2_inheritance P mass hmass μ hμ
   exact {
-    os0 := hall.os0
-    os1 := hall.os1
-    os2 := ⟨h2.1, h2.2⟩
-    os3 := hall.os3
-    os4 := ⟨1, one_pos, trivial⟩  -- mass gap from OS4 inheritance
+    os0 := sorry  -- From hall.os0: moment bounds → complex analyticity
+    os1 := sorry  -- From hall.os1: |Z[f]| ≤ 1 → exponential Sobolev bound
+    os2 := sorry  -- From h2: translation + rotation → Z[g·f] = Z[f]
+    os3 := sorry  -- From hall.os3: RP matrix inequality
+    os4_clustering := sorry  -- From hall.os4 + mass gap → ε-δ clustering
+    os4_ergodicity := sorry  -- From hall.os4 → ergodicity
   }
 
 /-- **Existence of the P(Φ)₂ Euclidean measure.**
