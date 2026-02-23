@@ -90,12 +90,18 @@ Pphi2/
 
 ## Building
 
-Requires Lean 4. gaussian-field is a Lake dependency (currently via local path;
-see `lakefile.toml`):
+Requires Lean 4. gaussian-field is currently a local path dependency (both
+projects are under active simultaneous development). To build:
 
 ```bash
+git clone https://github.com/mrdouglasny/gaussian-field.git
+git clone https://github.com/mrdouglasny/pphi2.git
+cd pphi2
 lake build
 ```
+
+The two repos must be sibling directories. Once development stabilizes,
+gaussian-field will be switched to a versioned git dependency.
 
 ## Documentation
 
