@@ -85,19 +85,16 @@ Pphi2/
 
 - [gaussian-field](https://github.com/mrdouglasny/gaussian-field) — Gaussian
   free field on nuclear spaces, lattice field theory, FKG inequality
-- [OSforGFF](https://github.com/mrdouglasny/OSforGFF-dimensions) — OS axiom
-  framework and QFT formalism
 - [Mathlib](https://github.com/leanprover-community/mathlib4) — Lean 4
   mathematics library
 
 ## Building
 
-Requires Lean 4 and the dependencies above as sibling directories:
+Requires Lean 4 and gaussian-field as a sibling directory:
 
 ```
 parent/
   gaussian-field/
-  OSforGFF-dimensions/
   pphi2/              ← this repo
 ```
 
