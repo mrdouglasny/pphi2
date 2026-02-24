@@ -234,11 +234,8 @@ theorem os2_for_pphi2_via_phi4
     @OS2_EuclideanInvariance μ_latt hμ_latt := by
   -- The Phi4 measure is E(2)-invariant
   have h_os2_cont := @os2_from_phi4 μ_cont hμ_cont
-  -- Transfer via measure equality: since μ_latt = μ_cont,
-  -- the generating functional Z[g·f] = ∫ exp(iΦ(g·f)) dμ is the same,
-  -- so E(2)-invariance Z[g·f] = Z[f] transfers.
-  -- The rewrite requires reconciling the IsProbabilityMeasure instances.
-  sorry
+  subst h_eq
+  exact h_os2_cont
 
 /-! ## Axiom transfer: OS3 from pphi2 to Phi4
 
@@ -279,11 +276,8 @@ theorem os3_for_phi4_via_pphi2
     @OS3_ReflectionPositivity μ_cont hμ_cont := by
   -- The pphi2 measure is RP
   have h_os3_latt := @os3_from_pphi2 P mass hmass μ_latt hμ_latt
-  -- Transfer via measure equality: since μ_latt = μ_cont,
-  -- the generating functional ∫ exp(iΦ(f)) dμ is the same for both,
-  -- so the RP inequality Σᵢⱼ cᵢcⱼ Re(Z[fᵢ - Θfⱼ]) ≥ 0 transfers.
-  -- The rewrite requires reconciling the IsProbabilityMeasure instances.
-  sorry
+  subst h_eq
+  exact h_os3_latt
 
 /-! ## Combined: full OS axioms using the best of both worlds
 

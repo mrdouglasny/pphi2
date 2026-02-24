@@ -163,8 +163,10 @@ theorem connectedTwoPoint_symm (d N : ℕ) [NeZero N]
     connectedTwoPoint d N P a mass ha hmass g f := by
   -- Follows from commutativity of real multiplication under the integral
   simp only [connectedTwoPoint]
-  ring_nf
-  sorry
+  congr 1
+  · congr 1 with ω
+    ring
+  · ring
 
 /-- The connected two-point function is positive semidefinite (FKG consequence).
 

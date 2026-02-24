@@ -97,12 +97,19 @@ theorem rp_closed_under_weak_limit
         (nhds (∫ x, g x ∂μ_lim))) :
     IsRP μ_lim Θ S := by
   intro F hF
-  -- Proof outline:
-  -- 1. g(x) := F(x) · F(Θx) is bounded continuous (since F is, and Θ is continuous)
-  -- 2. By weak convergence: ∫ g dμₙ → ∫ g dμ_lim
-  -- 3. Each ∫ g dμₙ ≥ 0 by RP of μₙ
-  -- 4. The limit of a nonneg convergent sequence is nonneg
-  sorry
+  -- 1. g(x) := F(x) · F(Θx) is bounded continuous
+  have hF_cont := hS_cont F hF
+  obtain ⟨C, hC⟩ := hS_bdd F hF
+  have hg_cont : Continuous (fun x => F x * F (Θ x)) :=
+    hF_cont.mul (hF_cont.comp hΘ)
+  have hg_bdd : ∃ C', ∀ x, |(fun x => F x * F (Θ x)) x| ≤ C' :=
+    ⟨C * C, fun x => by
+      simp only; rw [abs_mul]
+      nlinarith [hC x, hC (Θ x), abs_nonneg (F x), abs_nonneg (F (Θ x))]⟩
+  -- 2. Weak convergence gives ∫ g dμₙ → ∫ g dμ_lim
+  have h_tend := h_weak _ hg_cont hg_bdd
+  -- 3-4. Each ∫ g dμₙ ≥ 0 by RP; limit of nonneg sequence is nonneg
+  exact ge_of_tendsto h_tend (.of_forall (fun n => h_rp n F hF))
 
 /-! ## Application to lattice → continuum
 
