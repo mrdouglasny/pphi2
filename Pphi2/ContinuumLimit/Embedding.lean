@@ -38,6 +38,7 @@ The pushforward `(ι_a)_* μ_a` is then a probability measure on
 
 import Pphi2.InteractingMeasure.LatticeMeasure
 import Mathlib.Analysis.Distribution.SchwartzSpace
+import Mathlib.Analysis.Calculus.ContDiff.FTaylorSeries
 
 noncomputable section
 
@@ -123,21 +124,60 @@ theorem latticeEmbedEval_linear_f (a : ℝ) (φ : FinLatticeField d N)
         Finset.mul_sum, mul_add, mul_left_comm]
 
 /-- The full embedding as a continuous linear map from `FinLatticeField d N`
-to `Configuration (ContinuumTestFunction d)` (axiomatized).
+to `Configuration (ContinuumTestFunction d)`.
 
-Making this rigorous requires showing that for each φ, the map
-`f ↦ a^d Σ_x φ(x) f(a·x)` is continuous in the Schwartz topology.
-This holds because evaluation at a point is continuous on S(ℝ^d),
-and a finite sum of continuous functionals is continuous. -/
-axiom latticeEmbed (a : ℝ) (ha : 0 < a) :
-    FinLatticeField d N → Configuration (ContinuumTestFunction d)
+For each lattice field φ, the map `f ↦ a^d Σ_x φ(x) f(a·x)` is a continuous
+linear functional on S(ℝ^d):
+- Linearity: from `latticeEmbedEval_linear_f`
+- Continuity: bounded by `(a^d · Σ|φ(x)|) · seminorm(0,0)(f)`, since point
+  evaluation on Schwartz space is bounded by the sup-norm seminorm.
 
-/-- The embedding preserves the evaluation formula. -/
-axiom latticeEmbed_eval (a : ℝ) (ha : 0 < a)
+Constructed via `SchwartzMap.mkCLMtoNormedSpace`. -/
+def latticeEmbed (a : ℝ) (ha : 0 < a) (φ : FinLatticeField d N) :
+    Configuration (ContinuumTestFunction d) :=
+  SchwartzMap.mkCLMtoNormedSpace
+    (latticeEmbedEval d N a φ)
+    (fun f g => by
+      show latticeEmbedEval d N a φ (f + g) =
+        latticeEmbedEval d N a φ f + latticeEmbedEval d N a φ g
+      simp only [latticeEmbedEval, evalAtSite, SchwartzMap.add_apply]
+      rw [← mul_add, ← Finset.sum_add_distrib]
+      congr 1; apply Finset.sum_congr rfl; intro x _; ring)
+    (fun r f => by
+      show latticeEmbedEval d N a φ (r • f) = r * latticeEmbedEval d N a φ f
+      simp only [latticeEmbedEval, evalAtSite, SchwartzMap.smul_apply, smul_eq_mul]
+      conv_rhs => rw [← mul_assoc, mul_comm r, mul_assoc, Finset.mul_sum]
+      congr 1; apply Finset.sum_congr rfl; intro x _; ring)
+    ⟨{(0, 0)}, a ^ d * ∑ x : FinLatticeSites d N, |φ x|,
+      mul_nonneg (pow_nonneg (le_of_lt ha) _) (Finset.sum_nonneg (fun x _ => abs_nonneg _)),
+      fun f => by
+        simp only [Finset.sup_singleton, SchwartzMap.schwartzSeminormFamily_apply]
+        simp only [latticeEmbedEval, evalAtSite, Real.norm_eq_abs]
+        calc |a ^ d * ∑ x, φ x * f (physicalPosition d N a x)|
+            ≤ a ^ d * ∑ x, |φ x| * |f (physicalPosition d N a x)| := by
+              rw [abs_mul, abs_of_nonneg (pow_nonneg (le_of_lt ha) _)]
+              gcongr
+              exact le_trans (Finset.abs_sum_le_sum_abs _ _)
+                (Finset.sum_le_sum (fun x _ => le_of_eq (abs_mul _ _)))
+          _ ≤ a ^ d * ∑ x, |φ x| * SchwartzMap.seminorm ℝ 0 0 f := by
+              gcongr with x _
+              have h := SchwartzMap.le_seminorm ℝ 0 0 f (physicalPosition d N a x)
+              simp only [pow_zero, one_mul, norm_iteratedFDeriv_zero, Real.norm_eq_abs] at h
+              exact h
+          _ = (a ^ d * ∑ x, |φ x|) * SchwartzMap.seminorm ℝ 0 0 f := by
+              rw [← Finset.sum_mul]; ring⟩
+
+/-- The embedding agrees with the evaluation formula. -/
+theorem latticeEmbed_eval (a : ℝ) (ha : 0 < a)
     (φ : FinLatticeField d N) (f : ContinuumTestFunction d) :
-    (latticeEmbed d N a ha φ) f = latticeEmbedEval d N a φ f
+    (latticeEmbed d N a ha φ) f = latticeEmbedEval d N a φ f :=
+  rfl
 
-/-- The embedding is measurable (needed for pushforward measure). -/
+/-- The embedding is measurable (needed for pushforward measure).
+
+This holds because for each test function f, the map φ ↦ (ι_a φ)(f) is
+linear in φ (hence continuous on the finite-dimensional space), and a map
+into the weak-* dual is measurable when each evaluation is measurable. -/
 axiom latticeEmbed_measurable (a : ℝ) (ha : 0 < a) :
     Measurable (latticeEmbed d N a ha)
 

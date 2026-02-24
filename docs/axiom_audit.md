@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-24 (Bridge axioms fixed and verified)
-**pphi2**: 27 axioms | **gaussian-field**: 21 axioms | **Total**: 48
+**Updated**: 2026-02-24 (latticeEmbed/eval proved, Bridge axioms fixed)
+**pphi2**: 25 axioms | **gaussian-field**: 21 axioms | **Total**: 46
 
 ## Verification Sources
 
@@ -19,7 +19,7 @@
 
 ---
 
-## pphi2 Axioms (27 active)
+## pphi2 Axioms (25 active)
 
 ### Phase 1: Wick Ordering (2 axioms)
 
@@ -50,8 +50,8 @@
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 11 | `latticeEmbed` | Embedding:132 | ✅ Standard | DT 2026-02-24 | Lattice → S'(ℝ²) embedding. Constructible (should be `def`). |
-| 12 | `latticeEmbed_eval` | Embedding:136 | ✅ Standard | DT 2026-02-24 | (ι_a φ)(f) = a^d Σ_x φ(x) f(a·x). Would be `rfl` if embed were a `def`. |
+| 11 | ~~`latticeEmbed`~~ | Embedding:136 | ✅ **PROVED** | DT 2026-02-24 | Constructed via `SchwartzMap.mkCLMtoNormedSpace`. |
+| 12 | ~~`latticeEmbed_eval`~~ | Embedding:170 | ✅ **PROVED** | DT 2026-02-24 | `rfl` from construction. |
 | 13 | `latticeEmbed_measurable` | Embedding:141 | ✅ Standard | DT 2026-02-24 | Map is continuous (stronger than measurable). Provable. |
 | 14 | `latticeEmbedLift` | Embedding:151 | ⚠️ Likely correct | DT 2026-02-24 | Lifted embedding on Configuration space. Domain matches `interactingLatticeMeasure`. |
 | 15 | `latticeEmbedLift_measurable` | Embedding:156 | ✅ Standard | DT 2026-02-24 | Lifted embedding measurable. Continuous → measurable. |
@@ -82,9 +82,10 @@
 
 | Status | Count |
 |--------|-------|
-| Verified (GR or DT) | 27 |
+| Verified (GR or DT) | 25 |
+| Proved (no longer axioms) | 2 |
 | Self-audit only **(NOT VERIFIED)** | 0 |
-| **Total** | **27** |
+| **Total active** | **25** |
 
 All 27 axioms have been reviewed by either the Gemini external review (GR) or Gemini deep think (DT).
 
@@ -149,6 +150,8 @@ The following were previously axioms and are now theorems:
 | `connectedTwoPoint_nonneg_delta` | OS4_MassGap | 2026-02-23 | Variance ∫(X-E[X])² ≥ 0 |
 | `so2Generator` | OS2_WardIdentity | 2026-02-24 | `smulLeftCLM` + `lineDerivOpCLM` |
 | `continuumLimit` | Convergence | 2026-02-24 | `prokhorov_sequential` + `continuumMeasures_tight` |
+| `latticeEmbed` | Embedding | 2026-02-24 | `SchwartzMap.mkCLMtoNormedSpace` with seminorm bound |
+| `latticeEmbed_eval` | Embedding | 2026-02-24 | `rfl` from `latticeEmbed` construction |
 
 ---
 

@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 27 axioms, 13 sorries** | **gaussian-field (upstream): 21 axioms, 6 sorries**
+**pphi2: 25 axioms, 13 sorries** | **gaussian-field (upstream): 21 axioms, 6 sorries**
 
 ## File inventory
 
@@ -32,7 +32,7 @@ progressively fill in the axioms with full proofs.
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
 | 3 | `OSProofs/OS4_MassGap.lean` | 0 axioms |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms |
-| 4 | `ContinuumLimit/Embedding.lean` | 5 axioms |
+| 4 | `ContinuumLimit/Embedding.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 0 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom |
@@ -241,8 +241,8 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `latticeEmbed` | Embedding | Easy | The embedding ι_a : FinLatticeField → S'(ℝ^d). Constructible (should be `def`). |
-| `latticeEmbed_eval` | Embedding | Easy | Embedding agrees with the explicit formula. Would be `rfl` if embed were a `def`. |
+| ~~`latticeEmbed`~~ | Embedding | ✅ Proved | Constructed via `SchwartzMap.mkCLMtoNormedSpace`. Bound: `|ι_a(φ)(f)| ≤ (a^d·Σ|φ(x)|)·seminorm(0,0)(f)`. |
+| ~~`latticeEmbed_eval`~~ | Embedding | ✅ Proved | `rfl` from construction. |
 | `latticeEmbed_measurable` | Embedding | Easy | Map is continuous (stronger). Provable from finite-dimensional linearity. |
 | `latticeEmbedLift` | Embedding | Medium | Lift of embedding to Configuration space. Domain matches `interactingLatticeMeasure`. |
 | `latticeEmbedLift_measurable` | Embedding | Easy | Lifted embedding measurable. Continuous → measurable. |
@@ -410,6 +410,8 @@ The following theorems have complete proofs (no sorry):
 | `SchwartzMap.translate` | OSAxioms | Translation on Schwartz space — `compCLMOfAntilipschitz` with translation |
 | `so2Generator` | OS2_WardIdentity | SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ — `smulLeftCLM` + `lineDerivOpCLM` |
 | `continuumLimit` | Convergence | Continuum limit via Prokhorov — `prokhorov_sequential` + `continuumMeasures_tight` |
+| `latticeEmbed` | Embedding | Lattice→S'(ℝ^d) embedding — `SchwartzMap.mkCLMtoNormedSpace` with `|ι(φ)(f)| ≤ (a^d·Σ|φ(x)|)·seminorm(0,0)(f)` |
+| `latticeEmbed_eval` | Embedding | Evaluation formula — `rfl` from construction |
 
 ---
 
