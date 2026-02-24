@@ -113,11 +113,12 @@ ergodic theory. It implies:
 1. Ergodicity (as shown above).
 2. The Central Limit Theorem for time-averaged observables.
 3. Exponential decay of the autocorrelation function. -/
-axiom exponential_mixing (Ns Nt : ℕ) [NeZero Ns] [NeZero Nt]
+theorem exponential_mixing (_Ns _Nt : ℕ) [NeZero _Ns] [NeZero _Nt]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     -- ∃ m > 0, ∀ bounded F G, |Cov(F, G ∘ T_R)| ≤ C·exp(-m·R)
-    ∃ m : ℝ, 0 < m ∧ m ≤ massGap P a mass ha hmass
+    ∃ m : ℝ, 0 < m ∧ m ≤ massGap P a mass ha hmass :=
+  ⟨massGap P a mass ha hmass, massGap_pos P a mass ha hmass, le_refl _⟩
 
 /-! ## OS4 on the lattice
 
@@ -138,11 +139,12 @@ This follows from:
 1. `massGap_pos`: the mass gap is strictly positive
 2. The spectral decomposition via the transfer matrix
 3. Completeness of the energy eigenstates -/
-axiom os4_lattice (Ns Nt : ℕ) [NeZero Ns] [NeZero Nt]
+theorem os4_lattice (_Ns _Nt : ℕ) [NeZero _Ns] [NeZero _Nt]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     -- The lattice measure satisfies OS4 with mass gap m_phys
-    0 < massGap P a mass ha hmass
+    0 < massGap P a mass ha hmass :=
+  massGap_pos P a mass ha hmass
 
 -- This is immediate from massGap_pos, but we state it as the "OS4 fact"
 -- to make the connection to the axiom framework explicit.
