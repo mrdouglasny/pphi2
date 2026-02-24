@@ -5,13 +5,13 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3081 jobs).
+3103 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 24 axioms, 13 sorries** | **gaussian-field (upstream): 9 axioms, 9 sorries**
+**pphi2: 24 axioms, 11 sorries** | **gaussian-field (upstream): 9 axioms, 9 sorries**
 
 ## File inventory
 
@@ -28,7 +28,7 @@ progressively fill in the axioms with full proofs.
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
 | 2 | `TransferMatrix/L2Operator.lean` | 7 axioms (3 operator + 4 eigenvalue) |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
-| 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 2 sorries |
+| 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 0 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
 | 3 | `OSProofs/OS4_MassGap.lean` | 0 axioms |
@@ -37,9 +37,9 @@ progressively fill in the axioms with full proofs.
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 0 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 1 axiom, 0 sorries |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 1 axiom, 5 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
-| 6 | `Main.lean` | 0 axioms, 5 sorries |
+| 6 | `Main.lean` | 0 axioms, 0 sorries |
 | 6 | `Bridge.lean` | 5 axioms, 6 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
@@ -245,8 +245,8 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`latticeEmbed`~~ | Embedding | ✅ Proved | Constructed via `SchwartzMap.mkCLMtoNormedSpace`. Bound: `|ι_a(φ)(f)| ≤ (a^d·Σ|φ(x)|)·seminorm(0,0)(f)`. |
 | ~~`latticeEmbed_eval`~~ | Embedding | ✅ Proved | `rfl` from construction. |
 | ~~`latticeEmbed_measurable`~~ | Embedding | ✅ Proved | `configuration_measurable_of_eval_measurable` + continuity of finite sum. |
-| `latticeEmbedLift` | Embedding | Medium | Lift of embedding to Configuration space. Domain matches `interactingLatticeMeasure`. |
-| `latticeEmbedLift_measurable` | Embedding | Easy | Lifted embedding measurable. Continuous → measurable. |
+| ~~`latticeEmbedLift`~~ | Embedding | ✅ Proved | Constructed as `latticeEmbed d N a ha (fun x => ω (Pi.single x 1))`. |
+| ~~`latticeEmbedLift_measurable`~~ | Embedding | ✅ Proved | `configuration_measurable_of_eval_measurable` + `configuration_eval_measurable`. |
 | `second_moment_uniform` | Tightness | Hard | ∫|Φ_a(f)|² dν_a ≤ C(f) uniformly in a. Key input: Nelson's hypercontractive estimate + convergence of lattice propagator. |
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
@@ -329,7 +329,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`continuumLimit`~~ | Convergence | **Proved** — Apply Prokhorov to the tight family. Uses `prokhorov_sequential` + `continuumMeasures_tight`. PolishSpace/BorelSpace instances now axioms. |
 | ~~`continuumTimeReflection`~~ | AxiomInheritance | **Proved** — defined via `compCLMOfContinuousLinearEquiv`. |
 | ~~`so2Generator`~~ | OS2_WardIdentity | **Proved** — SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ via `smulLeftCLM` + `lineDerivOpCLM`. |
-| `pphi2_exists` | OS2_WardIdentity | Main existence theorem. Needs continuumLimit + continuumLimit_satisfies_allOS. |
+| `pphi2_exists` | OS2_WardIdentity | Main existence theorem. Uses `continuumLimit_satisfies_fullOS`. |
 
 ---
 
@@ -339,7 +339,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 
 1. ~~**`prokhorov_sequential`**~~ — **Proved.** Now a theorem with complete proof.
 2. **`transferEigenvalue` + spectral axioms** — L2Operator.lean created with L² type, operator axioms, and proved spectral decomposition. Eigenvalue axioms remain (sorting + Perron-Frobenius).
-3. **`latticeEmbed` / `latticeEmbedLift`** — Construction of the embedding as a CLM on Schwartz space.
+3. ~~**`latticeEmbed` / `latticeEmbedLift`**~~ — ✅ All proved. `latticeEmbed` via `mkCLMtoNormedSpace`, `latticeEmbedLift` via composition with `Pi.single`.
 4. ~~**`euclideanAction2` / `compTimeReflection2` / `SchwartzMap.translate`**~~ — ✅ All proved using `SchwartzMap.compCLMOfContinuousLinearEquiv` and `SchwartzMap.compCLMOfAntilipschitz`.
 
 ### Tier 2: Core analytic results (the hard axioms)
@@ -355,7 +355,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 10. Reflection positivity on the lattice (action decomposition → perfect square)
 11. Clustering from spectral gap (standard spectral decomposition)
 12. OS axiom inheritance (mostly soft analysis: limits preserve bounds)
-13. Bridge from `SatisfiesAllOS` to `SatisfiesFullOS` (connecting placeholder and real formulations)
+13. ~~Bridge from `SatisfiesAllOS` to `SatisfiesFullOS`~~ — **Eliminated.** `SatisfiesAllOS` removed; `continuumLimit_satisfies_fullOS` returns `SatisfiesFullOS` directly. Sorries now in inheritance layer.
 
 ### Tier 4: Easy / straightforward
 
@@ -388,7 +388,7 @@ The following theorems have complete proofs (no sorry):
 | `timeCoupling_eq_zero_iff` | TransferMatrix | K(ψ,ψ') = 0 ↔ ψ = ψ' (sum of squares) |
 | `latticeAction_translation_invariant` | OS2_WardIdentity | V_a[T_v φ] = V_a[φ] via Equiv.subRight |
 | `os2_inheritance` | OS2_WardIdentity | E(2) invariance (from translation + rotation) |
-| `continuumLimit_satisfies_allOS` | OS2_WardIdentity | All OS axioms (assembly from phases) |
+| `continuumLimit_satisfies_fullOS` | OS2_WardIdentity | All OS axioms (assembly into SatisfiesFullOS, with sorry for type gaps) |
 | `interactionFunctional_measurable` | LatticeMeasure | Measurability of V_a as function on Configuration space |
 | `boltzmannWeight_integrable` | LatticeMeasure | exp(-V_a) is integrable w.r.t. Gaussian measure |
 | `partitionFunction_pos` | LatticeMeasure | Z_a > 0 from exp(-V_a) > 0 and Gaussian full support |

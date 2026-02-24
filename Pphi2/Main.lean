@@ -76,20 +76,8 @@ This combines:
 theorem pphi2_main (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
-    @SatisfiesFullOS μ hμ := by
-  -- Bridge from the intermediate SatisfiesAllOS (placeholder formulations)
-  -- to the strengthened SatisfiesFullOS (matching OSforGFF formulations).
-  -- Each axiom needs its own proof connecting the two formulations.
-  have _hall := @continuumLimit_satisfies_allOS P mass hmass μ hμ
-  have _h2 := os2_inheritance P mass hmass μ hμ
-  exact {
-    os0 := sorry  -- From hall.os0: moment bounds → complex analyticity
-    os1 := sorry  -- From hall.os1: |Z[f]| ≤ 1 → exponential Sobolev bound
-    os2 := sorry  -- From h2: translation + rotation → Z[g·f] = Z[f]
-    os3 := sorry  -- From hall.os3: RP matrix inequality
-    os4_clustering := sorry  -- From hall.os4 + mass gap → ε-δ clustering
-    os4_ergodicity := trivial  -- OS4_Ergodicity is currently True
-  }
+    @SatisfiesFullOS μ hμ :=
+  continuumLimit_satisfies_fullOS P mass hmass μ hμ
 
 /-- **Existence of the P(Φ)₂ Euclidean measure.**
 
@@ -106,12 +94,8 @@ The measure is constructed as the continuum limit of the lattice measures:
 theorem pphi2_existence (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (μ : Measure (Configuration (ContinuumTestFunction 2)))
       (hμ : IsProbabilityMeasure μ),
-    @SatisfiesFullOS μ hμ := by
-  -- Construct a concrete probability measure and apply pphi2_main.
-  -- The actual content is in the axioms called by pphi2_main.
-  -- Eventually this should use the continuum limit measure from Phase 4.
-  refine ⟨Measure.dirac 0, Measure.dirac.isProbabilityMeasure, ?_⟩
-  exact pphi2_main P mass hmass _ _
+    @SatisfiesFullOS μ hμ :=
+  pphi2_exists P mass hmass
 
 /-! ## Consequences -/
 

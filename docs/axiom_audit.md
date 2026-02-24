@@ -39,8 +39,8 @@
 | 7 | `transferEigenvalue_pos` | L2Operator | ✅ Standard | GR Group 3 | All eigenvalues > 0. Perron-Frobenius for strictly positive kernel. |
 | 8 | `transferEigenvalue_antitone` | L2Operator | ✅ Standard | GR Group 3 | Eigenvalues decreasing. Standard spectral ordering (min-max). |
 | 9 | `transferEigenvalue_ground_simple` | L2Operator | ✅ Standard | GR Group 3 | λ₀ > λ₁. Perron-Frobenius for positivity-improving operators. Reed-Simon IV Thm XIII.44. |
-| 10 | `action_decomposition` | OS3_RP_Lattice:114 | ⚠️ Likely correct | GR Group 5 | S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
-| 11 | `lattice_rp_matrix` | OS3_RP_Lattice:155 | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Support condition correct for periodic lattice. |
+| 10 | `action_decomposition` | OS3_RP_Lattice | ⚠️ Likely correct | GR Group 5 | S = S⁺ + S⁻ across time-reflection plane. Now uses `siteEquiv` + `fieldToSites` to connect `Fin N × Fin N` to `FinLatticeSites 2 N`. |
+| 11 | `lattice_rp_matrix` | OS3_RP_Lattice | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ ∫ cos(⟨φ, fᵢ-Θfⱼ⟩) dμ_a ≥ 0. Integral expression now explicit. |
 
 ### Phase 3: Spectral Gap (2 axioms)
 

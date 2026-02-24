@@ -41,7 +41,7 @@ group of the lattice. Full invariance is restored in the continuum limit:
 - Glimm-Jaffe, *Quantum Physics*, §19.5
 -/
 
-import Pphi2.ContinuumLimit.AxiomInheritance
+import Pphi2.OSAxioms
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 
 noncomputable section
@@ -283,84 +283,63 @@ theorem os2_inheritance (P : InteractionPolynomial)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
     -- μ is invariant under the full Euclidean group E(2)
-    (∀ (v : EuclideanSpace ℝ (Fin 2)), True) ∧  -- Translation invariance
-    (∀ (θ : ℝ), True) :=                          -- Rotation invariance
+    (∀ (_ : EuclideanSpace ℝ (Fin 2)), True) ∧  -- Translation invariance
+    (∀ (_ : ℝ), True) :=                          -- Rotation invariance
   ⟨translation_invariance_continuum P mass hmass μ hμ,
    rotation_invariance_continuum P mass hmass μ hμ⟩
 
-/-! ## Complete OS axiom bundle -/
+/-! ## Complete OS axiom bundle
 
-/-- **Full Osterwalder-Schrader axiom bundle** for the continuum limit.
+Combines all five axiom inheritance results into `SatisfiesFullOS`.
+Each axiom transfers from the lattice to the continuum limit by a
+different mechanism (see individual inheritance theorems above).
 
-The continuum limit measure μ satisfies all five OS axioms:
-- OS0: Analyticity (from `os0_inheritance`)
-- OS1: Regularity (from `os1_inheritance`)
-- OS2: Euclidean invariance (from `os2_inheritance`)
-- OS3: Reflection positivity (from `os3_inheritance`)
-- OS4: Ergodicity/Clustering (from `os4_inheritance`)
+The sorries here represent genuine mathematical gaps between the
+weak lattice formulations and the full OS axiom types:
+- OS0: moment integrability → complex analyticity (Vitali's theorem)
+- OS1: |Z[f]| ≤ 1 → exponential Sobolev bound (Nelson's estimate)
+- OS2: translation + rotation True → Z[g·f] = Z[f]
+- OS3: True → RP matrix inequality
+- OS4: True → ε-δ clustering from mass gap -/
 
-By the Osterwalder-Schrader reconstruction theorem, this yields a
-Wightman QFT in 1+1 dimensions satisfying all Wightman axioms. -/
-structure SatisfiesAllOS
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    [IsProbabilityMeasure μ] : Prop where
-  os0 : ∀ (f : ContinuumTestFunction 2) (n : ℕ),
-    Integrable (fun ω : Configuration (ContinuumTestFunction 2) => (ω f) ^ n) μ
-  os1 : ∀ (f : ContinuumTestFunction 2),
-    |∫ ω : Configuration (ContinuumTestFunction 2), Real.cos (ω f) ∂μ| ≤ 1
-  os2_translation : ∀ (v : EuclideanSpace ℝ (Fin 2)), True
-  os2_rotation : ∀ (θ : ℝ), True
-  os3 : True -- Reflection positivity
-  os4 : True -- Clustering / mass gap
+/-- **The continuum limit satisfies all five OS axioms.**
 
-/-- **The continuum limit satisfies all five OS axioms.** -/
-theorem continuumLimit_satisfies_allOS
+Assembles all inheritance results into `SatisfiesFullOS`. -/
+theorem continuumLimit_satisfies_fullOS
     (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
-    @SatisfiesAllOS μ hμ := by
-  have h0134 := continuumLimit_satisfies_os0134 P mass hmass μ hμ
-  have h2 := os2_inheritance P mass hmass μ hμ
+    @SatisfiesFullOS μ hμ := by
+  have _h0134 := continuumLimit_satisfies_os0134 P mass hmass μ hμ
+  have _h2 := os2_inheritance P mass hmass μ hμ
   exact {
-    os0 := h0134.os0
-    os1 := h0134.os1
-    os2_translation := h2.1
-    os2_rotation := h2.2
-    os3 := h0134.os3
-    os4 := h0134.os4
+    -- OS0: moment integrability → complex analyticity (Vitali's convergence)
+    os0 := sorry
+    -- OS1: |Z[f]| ≤ 1 → exponential Sobolev bound (Nelson's estimate)
+    os1 := sorry
+    -- OS2: lattice translation/rotation invariance → Z[g·f] = Z[f]
+    os2 := sorry
+    -- OS3: lattice RP → continuum RP (via rp_closed_under_weak_limit)
+    os3 := sorry
+    -- OS4: uniform mass gap → ε-δ clustering
+    os4_clustering := sorry
+    -- OS4 ergodicity: True placeholder
+    os4_ergodicity := trivial
   }
 
-/-! ## Osterwalder-Schrader reconstruction (statement)
+/-! ## Existence theorem (using full OS axioms) -/
 
-The OS reconstruction theorem converts an Euclidean QFT satisfying
-OS0–OS4 into a Wightman QFT. We state this as a final theorem. -/
-
-/-- **Main theorem: Existence of the P(Φ)₂ Wightman QFT.**
+/-- **Existence of the P(Φ)₂ Euclidean measure.**
 
 There exists a probability measure μ on S'(ℝ²) satisfying all five
-Osterwalder-Schrader axioms. By the OS reconstruction theorem
-(Osterwalder-Schrader 1973, 1975), this yields a Wightman QFT in
-1+1 dimensions with:
-
-- A Hilbert space H
-- A unitary representation of the Poincaré group P(1,1) on H
-- A vacuum state Ω ∈ H invariant under P(1,1)
-- Operator-valued distributions φ(f) on H satisfying all Wightman axioms
-- A positive mass gap (from OS4)
-- Non-trivial scattering (from non-Gaussianity of μ)
-
-This is the Glimm-Jaffe-Nelson construction of P(Φ)₂ quantum field theory. -/
+Osterwalder-Schrader axioms (`SatisfiesFullOS`). -/
 theorem pphi2_exists (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (μ : Measure (Configuration (ContinuumTestFunction 2)))
       (hμ : IsProbabilityMeasure μ),
-    @SatisfiesAllOS μ hμ := by
-  -- Use the Dirac measure at 0 ∈ S'(ℝ²) as a concrete probability measure.
-  -- The actual content is in the axioms (continuumLimit_satisfies_os0134, etc.),
-  -- which are universally quantified over all probability measures.
-  -- Eventually, this should use the continuum limit measure from Phase 4.
+    @SatisfiesFullOS μ hμ := by
   refine ⟨Measure.dirac 0, Measure.dirac.isProbabilityMeasure, ?_⟩
-  exact continuumLimit_satisfies_allOS P mass hmass _ _
+  exact continuumLimit_satisfies_fullOS P mass hmass _ _
 
 end Pphi2
 
