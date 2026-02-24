@@ -57,7 +57,7 @@ analytic/probabilistic results with detailed proof sketches, proves the logical
 structure connecting them, and progressively fills in the axioms with full proofs.
 
 - **pphi2:** 27 axioms, 13 sorries
-- **gaussian-field** (upstream dependency): 13 axioms, 9 sorries
+- **gaussian-field** (upstream dependency): 10 axioms, 3 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.

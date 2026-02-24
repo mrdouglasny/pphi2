@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 27 axioms, 13 sorries** | **gaussian-field (upstream): 13 axioms, 9 sorries**
+**pphi2: 27 axioms, 13 sorries** | **gaussian-field (upstream): 10 axioms, 3 sorries**
 
 ## File inventory
 
@@ -420,82 +420,52 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field axioms and sorries
 
-The gaussian-field library (dependency) has **13 axioms and 9 sorries**.
+The gaussian-field library (dependency) has **10 axioms and 3 sorries**.
 These are organized by priority for pphi2.
 
-*Updated 2026-02-24. See also `docs/gemini_review.md` for external review.*
+*Updated 2026-02-24 (rev 15f0b77). See also `docs/gemini_review.md` for external review.*
 
 ### Used by pphi2 Normalization (FKG)
 
 | Item | File | Type | Difficulty | Description |
 |------|------|------|-----------|-------------|
 | `fkg_from_lattice_condition` | Lattice/FKG | axiom | Hard | Core FKG: lattice condition ⟹ correlation inequality (Holley 1974). |
-| `gaussian_fkg_lattice_condition` | Lattice/FKG | axiom | Hard | Gaussian density satisfies FKG lattice condition (non-positive off-diagonal precision). |
-| `fkg_perturbed` | Lattice/FKG | axiom | Medium | FKG for single-site perturbed measure. Takes `hV_single_site`. |
+| `integrable_mul_gaussianDensity` | Lattice/FKG | axiom | Medium | Integrability of f·gaussianDensity (fixed: added integrability hypothesis). |
+| `latticeGaussianMeasure_density_integral` | Lattice/FKG | axiom | Medium | Gaussian measure density integral formula. |
 
-Proved supporting results in FKG.lean:
-- `chebyshev_integral_inequality` — 1D FKG for any probability measure (full proof via Fubini)
-- `fkg_lattice_condition_mul` — product of FKG-lattice densities is FKG-lattice
-- `fkg_lattice_condition_single_site` — exp(-V) trivially FKG for single-site V
-- `fkg_lattice_gaussian` — **now a theorem** (derived from `gaussian_fkg_lattice_condition`)
-
-### Lattice Laplacian properties — ALL PROVED
-
-| Item | File | Type | Description |
-|------|------|------|-------------|
-| `finiteLaplacian_selfAdjoint` | Lattice/Laplacian | **theorem** | Proved via `Equiv.addRight (Pi.single i 1)` reindexing. |
-| `finiteLaplacian_neg_semidefinite` | Lattice/Laplacian | **theorem** | Proved via summation by parts. |
-| `massOperator_pos_def` | Lattice/Laplacian | **theorem** | Proved from neg-semidefinite + m²‖f‖² > 0. |
-
-Note: `infiniteLaplacian` and `infiniteLaplacian_apply` remain axioms (infinite lattice, not needed by pphi2).
+Proved FKG results (no longer axioms):
+- `gaussian_fkg_lattice_condition` — now a theorem
+- `fkg_perturbed` — now a theorem
+- `fkg_lattice_gaussian` — derived from `gaussian_fkg_lattice_condition`
 
 ### Infinite lattice (not needed by pphi2)
 
 | Item | File | Type | Difficulty | Description |
 |------|------|------|-----------|-------------|
-| `latticeEnum` | Lattice/RapidDecayLattice | axiom | Hard | ℤ^d ≃ ℕ shell enumeration. |
 | `latticeEnum_norm_bound` | Lattice/RapidDecayLattice | axiom | Hard | ‖enum⁻¹(m)‖ ≤ C·m^{1/d}. |
 | `latticeEnum_index_bound` | Lattice/RapidDecayLattice | axiom | Hard | enum(x) ≤ C·(1+‖x‖)^d. |
 | `latticeRapidDecayEquiv` | Lattice/RapidDecayLattice | axiom | Hard | CLE to RapidDecaySeq. |
 
 ### Heat kernel (cylinder QFT, not used by lattice approach)
 
-PositionKernel.lean has **7 remaining axioms**. Proved axioms (now theorems):
-- `mehlerKernel_pos` — positivity from closed form (rpow_pos + sinh_pos + exp_pos)
-- `circleHeatKernel_symmetric` — tsum_congr + ring
-- `circleHeatKernel_periodic₁/₂` — fourierBasisFun_periodic
-- `circleHeatKernel_summable` — geometric series comparison
-- `mehlerKernel_summable` — Hermite sup bound + polynomial × geometric series
+| Item | File | Type | Difficulty | Description |
+|------|------|------|-----------|-------------|
+| `mehlerKernel_eq_series` | HeatKernel/PositionKernel | axiom | Hard | Mehler's formula. |
+| `circleHeatKernel_pos` | HeatKernel/PositionKernel | axiom | Hard | Requires Poisson summation. |
+| `cylinderEval_summable` | HeatKernel/PositionKernel | axiom | Medium | Convergence of eigenfunction expansion. |
 
-Remaining axioms:
-| Item | Difficulty | Description |
-|------|-----------|-------------|
-| `mehlerKernel_eq_series` | Hard | Mehler's formula (PDE uniqueness or generating function). |
-| `mehlerKernel_reproduces_hermite` | Medium | Series expansion + orthonormality. |
-| `mehlerKernel_semigroup` | Medium | Series expansion + Fubini + orthonormality. |
-| `circleHeatKernel_pos` | Hard | Requires Poisson summation (periodized Gaussian). |
-| `circleHeatKernel_reproduces_fourier` | Medium | Fourier orthonormality. |
-| `circleHeatKernel_semigroup` | Medium | Fourier + Fubini + orthonormality. |
-| `cylinderHeatKernel_eq_series` | Medium | Product of two series → single series via Nat.pair. |
-| `cylinderEval_summable` | Medium | Convergence of eigenfunction expansion. |
-| `cylinderHeatKernel_reproduces` | Hard | Bridge theorem. |
+### Infrastructure
 
-### Sorries
-
-| Sorry | File | Difficulty | Description |
-|-------|------|-----------|-------------|
-| `schwartzPointwiseProduct_apply` | SchwartzNuclear/SchwartzTensorProduct | Medium | Hermite-Fubini factorization. |
-| `hermiteTensorProduct_*` (2) | SchwartzNuclear/HermiteTensorProduct | Medium | Hermite tensor product sorries. |
-| `schwartzSlicing_*` (1) | SchwartzNuclear/SchwartzSlicing | Medium | Schwartz slicing sorry. |
+| Item | File | Type | Description |
+|------|------|------|-------------|
+| `schwartz_dyninMityaginSpace_axiom` | GaussianField | axiom | Schwartz space is a Dynin-Mityagin space (nuclear Fréchet). |
 
 ### Summary
 
 | Category | Axioms | Sorries |
 |----------|--------|---------|
 | PositionKernel (heat kernel / cylinder) | 3 | 2 |
-| RapidDecayLattice (infinite lattice) | 3 | 2 |
-| Laplacian (infinite only) | 0 | 0 |
-| FKG (used by pphi2 Normalization) | 6 | 2 |
+| RapidDecayLattice (infinite lattice) | 3 | 1 |
+| FKG (used by pphi2 Normalization) | 3 | 0 |
 | GaussianField (root) | 1 | 0 |
-| SchwartzNuclear | 0 | 3 |
-| **Total** | **13** | **9** |
+| **Total** | **10** | **3** |

@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-02-24 (L2Operator.lean + spectral theorem, Bridge axioms fixed)
-**pphi2**: 27 axioms | **gaussian-field**: 13 axioms | **Total**: 40
+**pphi2**: 27 axioms | **gaussian-field**: 10 axioms | **Total**: 37
 
 ## Verification Sources
 
@@ -99,17 +99,17 @@
 
 ---
 
-## gaussian-field Axioms (21 active)
+## gaussian-field Axioms (10 active)
 
-*Counts from `count_axioms.sh` 2026-02-24. See gemini_review.md Group 1-2 for detailed review of heat kernel and FKG axioms.*
+*Updated 2026-02-24 (rev 15f0b77). See gemini_review.md Group 1-2 for detailed review of heat kernel and FKG axioms.*
 
 | File | Count | Verified | Notes |
 |------|-------|----------|-------|
-| HeatKernel/PositionKernel.lean | 9 | GR Group 1 | All standard heat kernel facts. |
-| Lattice/FKG.lean | 6 | GR Group 2 | FKG lattice condition, Gaussian FKG, perturbed FKG. |
-| Lattice/Laplacian.lean | 2 | GR Group 2 | Infinite lattice Laplacian (not used by pphi2). |
-| Lattice/RapidDecayLattice.lean | 4 | GR Group 2 | Shell enumeration, rapid decay equiv. |
-| **Total** | **21** | | |
+| GaussianField.lean | 1 | SA | `schwartz_dyninMityaginSpace_axiom` (nuclear Fréchet structure). |
+| HeatKernel/PositionKernel.lean | 3 | GR Group 1 | Heat kernel: Mehler formula, circle positivity, cylinder summability. |
+| Lattice/FKG.lean | 3 | GR Group 2 | FKG lattice condition + 2 Gaussian integrability/density axioms. |
+| Lattice/RapidDecayLattice.lean | 3 | GR Group 2 | Shell enumeration bounds, rapid decay equiv. |
+| **Total** | **10** | | |
 
 ---
 
