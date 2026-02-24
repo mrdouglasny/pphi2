@@ -59,7 +59,7 @@ sorries are well-typed intermediate proof steps connecting axioms to the OS
 properties.
 
 - **pphi2:** 27 axioms, 31 sorries
-- **gaussian-field** (upstream dependency): 15 axioms, 16 sorries
+- **gaussian-field** (upstream dependency): 15 axioms, 12 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.

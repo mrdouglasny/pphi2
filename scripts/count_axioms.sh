@@ -19,7 +19,8 @@ count_file() {
     local file="$1"
     local pattern="$2"
     local n
-    n=$(grep -c "$pattern" "$file" 2>/dev/null) || true
+    # Skip lines marked with count_axioms:skip (e.g. axioms inside comments)
+    n=$(grep "$pattern" "$file" 2>/dev/null | grep -cv 'count_axioms:skip') || true
     n=$(echo "$n" | tr -cd '0-9')
     echo "${n:-0}"
 }
@@ -41,8 +42,14 @@ count_in_dir() {
     printf "%-50s %8s %8s\n" "----" "------" "-------"
 
     for src_dir in "${src_dirs[@]}"; do
-        [ -d "$dir/$src_dir" ] || continue
-        while IFS= read -r file; do
+        # Scan directory and matching root file (e.g. GaussianField/ and GaussianField.lean)
+        local files=()
+        if [ -d "$dir/$src_dir" ]; then
+            while IFS= read -r f; do files+=("$f"); done < <(find "$dir/$src_dir" -name '*.lean' 2>/dev/null | sort)
+        fi
+        [ -f "$dir/$src_dir.lean" ] && files+=("$dir/$src_dir.lean")
+
+        for file in "${files[@]}"; do
             local rel="${file#$dir/}"
             local axioms
             axioms=$(count_file "$file" '^axiom ')
@@ -54,7 +61,7 @@ count_in_dir() {
                 total_axioms=$((total_axioms + axioms))
                 total_sorries=$((total_sorries + sorries))
             fi
-        done < <(find "$dir/$src_dir" -name '*.lean' 2>/dev/null | sort)
+        done
     done
 
     printf "%-50s %8s %8s\n" "" "------" "-------"
