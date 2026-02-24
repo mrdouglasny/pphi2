@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 68 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
+**pphi2: 67 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
 
 ## File inventory
 
@@ -24,7 +24,7 @@ progressively fill in the axioms with full proofs.
 | 1 | `WickOrdering/Counterterm.lean` | 1 axiom |
 | 1 | `InteractingMeasure/LatticeAction.lean` | 0 axioms |
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
-| 1 | `InteractingMeasure/Normalization.lean` | 1 axiom, 0 sorries |
+| 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 1 axiom |
 | 2 | `TransferMatrix/Positivity.lean` | 8 axioms |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 4 axioms, 2 sorries |
@@ -199,7 +199,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`wickPolynomial_bounded_below`~~ | WickPolynomial | ~~Medium~~ | **Proved** — Even-degree Wick polynomial with positive leading coeff is bounded below. Proved via `poly_even_degree_bounded_below` (leading term domination + `Continuous.exists_forall_le`). |
 | `wickConstant_log_divergence` | Counterterm | Medium | `c_a ~ (1/2π) log(1/a)` as a→0. Needs lattice Green's function asymptotics. |
 | `latticeInteraction_single_site` | LatticeAction | **Proved** | V_a decomposes as sum of single-site functions. Enables FKG via log-supermodularity. (Replaced false `latticeInteraction_convex` axiom.) |
-| `field_all_moments_finite` | Normalization | Medium | All moments of field evaluations are finite under the interacting measure. From Nelson's estimate. |
+| ~~`field_all_moments_finite`~~ | Normalization | ✅ Proved | All moments finite: `pairing_is_gaussian` + `integrable_pow_of_mem_interior_integrableExpSet` gives Gaussian moments, domination by `exp(B)` handles the interaction weight. |
 
 ### Phase 2: Transfer matrix and reflection positivity
 

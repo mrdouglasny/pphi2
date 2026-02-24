@@ -131,13 +131,64 @@ theorem field_second_moment_finite (P : InteractionPolynomial) (a mass : ℝ)
   `∫ |ω(δ_x)|^p dμ_a(ω) < ∞`  for all p ∈ ℕ
 
 This is stronger than just p=2 and follows from the same argument:
-the Gaussian has all moments finite (`pairing_memLp T f p` for all p),
+the Gaussian has all moments finite (from `pairing_is_gaussian` +
+`integrable_pow_of_mem_interior_integrableExpSet`),
 and the interaction weight is bounded above. -/
-axiom field_all_moments_finite (P : InteractionPolynomial) (a mass : ℝ)
+theorem field_all_moments_finite (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) (x : FinLatticeSites d N) (p : ℕ) :
     Integrable (fun ω : Configuration (FinLatticeField d N) =>
       (ω (finLatticeDelta d N x)) ^ p)
-      (interactingLatticeMeasure d N P a mass ha hmass)
+      (interactingLatticeMeasure d N P a mass ha hmass) := by
+  -- Setup
+  obtain ⟨B, hB⟩ := interactionFunctional_bounded_below d N P a mass ha hmass
+  have hZ := partitionFunction_pos d N P a mass ha hmass
+  set μ_GFF := latticeGaussianMeasure d N a mass ha hmass with hμ_def
+  set δx := finLatticeDelta d N x
+  set bw := boltzmannWeight d N P a mass
+  -- Step 1: Reduce to withDensity measure (remove Z⁻¹ scaling)
+  suffices h : Integrable (fun ω : Configuration (FinLatticeField d N) =>
+      (ω δx) ^ p)
+      (μ_GFF.withDensity (fun ω => ENNReal.ofReal (bw ω))) by
+    unfold interactingLatticeMeasure
+    exact h.smul_measure (ENNReal.inv_ne_top.mpr ((ENNReal.ofReal_pos.mpr hZ).ne'))
+  -- Step 2: Reduce withDensity to multiplicative weight under Gaussian
+  have hf_meas : Measurable (fun ω : Configuration (FinLatticeField d N) =>
+      ENNReal.ofReal (bw ω)) :=
+    ENNReal.measurable_ofReal.comp ((interactionFunctional_measurable d N P a mass).neg.exp)
+  apply (integrable_withDensity_iff hf_meas
+    (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mpr
+  have hbw_simp : ∀ ω : Configuration (FinLatticeField d N),
+      (ENNReal.ofReal (bw ω)).toReal = bw ω :=
+    fun ω => ENNReal.toReal_ofReal (le_of_lt (boltzmannWeight_pos d N P a mass ω))
+  simp_rw [hbw_simp]
+  -- Goal: Integrable (fun ω => (ω δx)^p * bw ω) μ_GFF
+  -- Step 3: Get Gaussian integrability of (ω δx)^p
+  -- Pushforward by ω ↦ ω δx is a Gaussian; all moments of Gaussians are finite
+  have h_pow_int : Integrable (fun ω : Configuration (FinLatticeField d N) =>
+      (ω δx) ^ p) μ_GFF := by
+    set T := latticeCovariance d N a mass ha hmass
+    -- x^p is integrable under gaussianReal (Gaussian has all polynomial moments)
+    have h_gauss := pairing_is_gaussian T δx
+    have h_int_gauss : Integrable (fun x : ℝ => x ^ p)
+        (ProbabilityTheory.gaussianReal 0 (@inner ℝ _ _ (T δx) (T δx) : ℝ).toNNReal) :=
+      ProbabilityTheory.integrable_pow_of_mem_interior_integrableExpSet (by simp) p
+    -- Pull back via the pushforward identity
+    rw [← h_gauss] at h_int_gauss
+    rwa [integrable_map_measure h_int_gauss.aestronglyMeasurable
+      (configuration_eval_measurable δx).aemeasurable] at h_int_gauss
+  -- Step 4: Dominate (ω δx)^p * bw ω by |(ω δx)^p| * exp(B)
+  apply (h_pow_int.mul_const (Real.exp B)).mono
+  · -- AEStronglyMeasurable
+    exact ((configuration_eval_measurable δx).pow_const p).aestronglyMeasurable.mul
+      ((interactionFunctional_measurable d N P a mass).neg.exp.aestronglyMeasurable)
+  · -- Pointwise norm bound
+    exact Filter.Eventually.of_forall fun ω => by
+      rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_mul, abs_mul]
+      apply mul_le_mul_of_nonneg_left
+      · rw [abs_of_pos (boltzmannWeight_pos d N P a mass ω),
+            abs_of_pos (Real.exp_pos B)]
+        exact Real.exp_le_exp_of_le (by linarith [hB ω])
+      · exact abs_nonneg _
 
 /-! ## FKG inequality
 
