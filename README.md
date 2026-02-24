@@ -56,8 +56,8 @@ All six phases are structurally complete and the full project builds
 analytic/probabilistic results with detailed proof sketches, proves the logical
 structure connecting them, and progressively fills in the axioms with full proofs.
 
-- **pphi2:** 25 axioms, 16 sorries
-- **gaussian-field** (upstream dependency): 20 axioms, 12 sorries
+- **pphi2:** 27 axioms, 13 sorries
+- **gaussian-field** (upstream dependency): 21 axioms, 6 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.
@@ -76,6 +76,11 @@ Pphi2/
     OS4_MassGap.lean                 -- Phase 3: Clustering from spectral gap
     OS4_Ergodicity.lean              -- Phase 3: Ergodicity from mass gap
     OS2_WardIdentity.lean            -- Phase 5: Ward identity for rotation invariance
+  OSforGFF/                          -- Matrix positivity library (from OSforGFF-dimensions)
+    PositiveDefinite.lean            -- Positive definite functions
+    FrobeniusPositivity.lean         -- Frobenius inner product positivity
+    SchurProduct.lean                -- Schur (Hadamard) product theorem
+    HadamardExp.lean                 -- Entrywise exponential preserves PSD/PD
   ContinuumLimit/                    -- Phase 4: Embedding, tightness, convergence
   OSAxioms.lean                      -- Phase 6: OS axiom definitions (matching OSforGFF)
   Main.lean                          -- Phase 6: Main theorem assembly
@@ -118,6 +123,15 @@ lake build
 - E. Nelson, "Construction of quantum fields from Markoff fields," *J. Funct. Anal.* (1973)
 - K. Osterwalder and R. Schrader, "Axioms for Euclidean Green's functions I, II,"
   *Comm. Math. Phys.* 31 (1973), 42 (1975)
+
+## Imported material
+
+The files under `Pphi2/OSforGFF/` (PositiveDefinite, FrobeniusPositivity, SchurProduct,
+HadamardExp) are imported from the
+[OSforGFF-dimensions](https://github.com/mrdouglasny/OSforGFF-dimensions) project
+(dimension2 branch), authored by Michael R. Douglas, Sarah Hoback, Anna Mei, and
+Ron Nissim. These provide the Schur product theorem and entrywise exponential
+positivity results used in the OS3 reflection positivity proof.
 
 ## Related work
 

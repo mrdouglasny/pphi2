@@ -42,10 +42,11 @@ group of the lattice. Full invariance is restored in the continuum limit:
 -/
 
 import Pphi2.ContinuumLimit.AxiomInheritance
+import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 
 noncomputable section
 
-open GaussianField MeasureTheory
+open GaussianField MeasureTheory LineDeriv
 
 namespace Pphi2
 
@@ -149,7 +150,15 @@ O_break from the lattice action. -/
 
 This is the angular momentum operator. -/
 def so2Generator : ContinuumTestFunction 2 → ContinuumTestFunction 2 :=
-  sorry -- J : S(ℝ²) → S(ℝ²), well-defined on Schwartz space
+  let E := EuclideanSpace ℝ (Fin 2)
+  let e₀ : E := EuclideanSpace.single 0 1
+  let e₁ : E := EuclideanSpace.single 1 1
+  -- J f = x₁ · ∂f/∂x₂ - x₂ · ∂f/∂x₁
+  fun f =>
+    SchwartzMap.smulLeftCLM ℝ (⇑(EuclideanSpace.proj (0 : Fin 2) : E →L[ℝ] ℝ))
+      (lineDerivOpCLM ℝ (SchwartzMap E ℝ) e₁ f) -
+    SchwartzMap.smulLeftCLM ℝ (⇑(EuclideanSpace.proj (1 : Fin 2) : E →L[ℝ] ℝ))
+      (lineDerivOpCLM ℝ (SchwartzMap E ℝ) e₀ f)
 
 /-- The rotation-breaking operator on the lattice.
 

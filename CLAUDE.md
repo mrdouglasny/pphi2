@@ -76,6 +76,10 @@ lake env lean Pphi2/SomeFile.lean
   NOT axioms. Axioms should only be used for substantive mathematical claims.
 - When converting an axiom to a theorem, update the inventory tables in
   status.md.
+- When introducing new axioms, use `deep_think_gemini` to verify the
+  mathematical correctness of each axiom statement before committing.
+  In status.md, mark unverified axioms with **(NOT VERIFIED)** and
+  verified ones with **✅ Verified** (include the reference/source).
 
 ### Helper Lemma Principle
 

@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 25 axioms, 16 sorries** | **gaussian-field (upstream): 20 axioms, 12 sorries**
+**pphi2: 27 axioms, 13 sorries** | **gaussian-field (upstream): 21 axioms, 6 sorries**
 
 ## File inventory
 
@@ -34,9 +34,9 @@ progressively fill in the axioms with full proofs.
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms |
 | 4 | `ContinuumLimit/Embedding.lean` | 5 axioms |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
-| 4 | `ContinuumLimit/Convergence.lean` | 0 axioms, 2 sorries |
+| 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 0 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 1 axiom, 1 sorry |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 1 axiom, 0 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 0 axioms, 5 sorries |
 | 6 | `Bridge.lean` | 5 axioms, 6 sorries |
@@ -255,6 +255,8 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `schwinger_n_convergence` | Convergence | Medium | n-point Schwinger functions converge. |
 | `continuumLimit_nontrivial` | Convergence | Medium | Limit is not δ₀. From positive 2-point function. |
 | `continuumLimit_nonGaussian` | Convergence | Medium | Limit is not Gaussian. From nonzero 4th cumulant. |
+| `configuration_polishSpace` | Convergence | Infrastructure | S'(ℝ^d) is Polish (dual of nuclear Fréchet). Not in Mathlib. ✅ Verified (Gemini deep think: Gelfand-Vilenkin Vol. 4, Bogachev §3.2). |
+| `configuration_borelSpace` | Convergence | Infrastructure | Borel σ-algebra on S'(ℝ^d) = cylindrical σ-algebra (weak-* topology). Not in Mathlib. ✅ Verified (Gemini deep think: Bochner-Minlos framework). |
 | `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
 | `os1_inheritance` | AxiomInheritance | Easy | OS1 transfers: |cos(·)| ≤ 1 trivially. |
 | `os3_inheritance` | AxiomInheritance | Medium | OS3 transfers: RP is a nonnegativity condition, closed under pointwise limits. Uses rp_closed_under_weak_limit from Phase 2. |
@@ -324,9 +326,9 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`energyLevel_gap`~~ | Positivity | **Proved** — E₁ > E₀ from transfer eigenvalue gap. |
 | ~~`rp_closed_under_weak_limit`~~ | OS3_RP_Inheritance | **Proved** — RP closed under weak limits. |
 | `reflection_positivity_lattice` | OS3_RP_Lattice | Lattice RP from action decomposition. |
-| `continuumLimit` | Convergence | Apply Prokhorov to the tight family. Needs prokhorov_sequential + continuumMeasures_tight. |
-| `continuumTimeReflection` | AxiomInheritance | Define Θf where (Θf)(t,x) = f(-t,x) as SchwartzMap. Needs Schwartz space API. |
-| `so2Generator` | OS2_WardIdentity | SO(2) generator J on Schwartz space. Needs SchwartzMap API for differential operators. |
+| ~~`continuumLimit`~~ | Convergence | **Proved** — Apply Prokhorov to the tight family. Uses `prokhorov_sequential` + `continuumMeasures_tight`. PolishSpace/BorelSpace instances now axioms. |
+| ~~`continuumTimeReflection`~~ | AxiomInheritance | **Proved** — defined via `compCLMOfContinuousLinearEquiv`. |
+| ~~`so2Generator`~~ | OS2_WardIdentity | **Proved** — SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ via `smulLeftCLM` + `lineDerivOpCLM`. |
 | `pphi2_exists` | OS2_WardIdentity | Main existence theorem. Needs continuumLimit + continuumLimit_satisfies_allOS. |
 
 ---
@@ -407,6 +409,8 @@ The following theorems have complete proofs (no sorry):
 | `euclideanAction2ℂ` | OSAxioms | Same for complex Schwartz functions |
 | `compTimeReflection2` | OSAxioms | Time reflection on Schwartz space — `compCLMOfContinuousLinearEquiv` with time reflection CLE |
 | `SchwartzMap.translate` | OSAxioms | Translation on Schwartz space — `compCLMOfAntilipschitz` with translation |
+| `so2Generator` | OS2_WardIdentity | SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ — `smulLeftCLM` + `lineDerivOpCLM` |
+| `continuumLimit` | Convergence | Continuum limit via Prokhorov — `prokhorov_sequential` + `continuumMeasures_tight` |
 
 ---
 
@@ -489,4 +493,4 @@ Remaining axioms:
 | Laplacian (infinite only) | 2 | 0 |
 | FKG (used by pphi2 Normalization) | 3 | 0 |
 | SchwartzNuclear | 0 | 4 |
-| **Total** | **18** | **4** |
+| **Total** | **21** | **6** |
