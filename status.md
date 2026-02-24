@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 25 axioms, 13 sorries** | **gaussian-field (upstream): 13 axioms, 9 sorries**
+**pphi2: 28 axioms, 13 sorries** | **gaussian-field (upstream): 13 axioms, 9 sorries**
 
 ## File inventory
 
@@ -26,7 +26,8 @@ progressively fill in the axioms with full proofs.
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
 | 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
-| 2 | `TransferMatrix/Positivity.lean` | 4 axioms |
+| 2 | `TransferMatrix/L2Operator.lean` | 7 axioms (3 operator + 4 eigenvalue) |
+| 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 2 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
@@ -204,14 +205,14 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `transferOperator_selfAdjoint` | Positivity | Easy | T(ψ,ψ') = T(ψ',ψ) by construction (symmetric split of potential). |
-| `transferOperator_positiveDefinite` | Positivity | Medium | `⟨f, Tf⟩ > 0` for f ≠ 0. From Gaussian kernel positivity + exp(-V) > 0. |
-| `transferOperator_hilbertSchmidt` | Positivity | Medium | T is Hilbert-Schmidt. Kernel is L² because Gaussian factor gives exponential decay. |
-| `transferOperator_traceClass` | Positivity | Medium | Follows from Hilbert-Schmidt (HS ∘ HS = trace class, and T = T^{1/2} · T^{1/2}). |
-| `transferEigenvalue` | Positivity | Infrastructure | Existence of eigenvalue sequence. Spectral theorem for compact self-adjoint operators. |
-| `transferEigenvalue_pos` | Positivity | Easy | Eigenvalues positive (from positive definiteness). |
-| `transferEigenvalue_antitone` | Positivity | Easy | Eigenvalues decrease: λ₀ ≥ λ₁ ≥ ... (standard spectral ordering). |
-| `transferEigenvalue_ground_simple` | Positivity | Medium | λ₀ > λ₁ (strict). Perron-Frobenius for positivity-preserving operators. |
+| `transferOperatorCLM` | L2Operator | Medium | Transfer matrix as CLM on L²(ℝ^Ns). Integral operator with Gaussian-bounded kernel. |
+| `transferOperator_isSelfAdjoint` | L2Operator | Easy | Self-adjointness from kernel symmetry T(ψ,ψ') = T(ψ',ψ). |
+| `transferOperator_isCompact` | L2Operator | Medium | Compactness from Hilbert-Schmidt property (Gaussian kernel decay). |
+| `transferOperator_spectral` | L2Operator | **Proved** | Spectral decomposition from `compact_selfAdjoint_spectral` (gaussian-field). |
+| `transferEigenvalue` | L2Operator | Infrastructure | Sorted eigenvalue sequence λ₀ ≥ λ₁ ≥ ... from spectral decomposition. |
+| `transferEigenvalue_pos` | L2Operator | Easy | Eigenvalues positive (Perron-Frobenius for positivity-improving operators). |
+| `transferEigenvalue_antitone` | L2Operator | Easy | Eigenvalues decrease: λ₀ ≥ λ₁ ≥ ... (by construction from sorting). |
+| `transferEigenvalue_ground_simple` | L2Operator | Medium | λ₀ > λ₁ (strict). Perron-Frobenius for positivity-improving operators. |
 | `action_decomposition` | OS3_RP_Lattice | Medium | Lattice action decomposes as S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
 | `lattice_rp` | OS3_RP_Lattice | Medium | Lattice measure satisfies RP. From action decomposition + exp(-S) = exp(-S⁺)·exp(-S⁻) perfect square argument. |
 | `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. |
@@ -337,7 +338,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 ### Tier 1: Infrastructure (unlocks further work)
 
 1. ~~**`prokhorov_sequential`**~~ — **Proved.** Now a theorem with complete proof.
-2. **`transferEigenvalue` + spectral axioms** — Need compact self-adjoint operator spectral theory in Mathlib.
+2. **`transferEigenvalue` + spectral axioms** — L2Operator.lean created with L² type, operator axioms, and proved spectral decomposition. Eigenvalue axioms remain (sorting + Perron-Frobenius).
 3. **`latticeEmbed` / `latticeEmbedLift`** — Construction of the embedding as a CLM on Schwartz space.
 4. ~~**`euclideanAction2` / `compTimeReflection2` / `SchwartzMap.translate`**~~ — ✅ All proved using `SchwartzMap.compCLMOfContinuousLinearEquiv` and `SchwartzMap.compCLMOfAntilipschitz`.
 
@@ -350,7 +351,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 
 ### Tier 3: Medium-difficulty proofs
 
-9. Transfer matrix properties (self-adjoint, positive definite, Hilbert-Schmidt, trace class)
+9. ~~Transfer matrix properties (self-adjoint, positive definite, Hilbert-Schmidt, trace class)~~ — Replaced by L2Operator axioms (CLM, self-adjoint, compact)
 10. Reflection positivity on the lattice (action decomposition → perfect square)
 11. Clustering from spectral gap (standard spectral decomposition)
 12. OS axiom inheritance (mostly soft analysis: limits preserve bounds)
@@ -412,6 +413,7 @@ The following theorems have complete proofs (no sorry):
 | `continuumLimit` | Convergence | Continuum limit via Prokhorov — `prokhorov_sequential` + `continuumMeasures_tight` |
 | `latticeEmbed` | Embedding | Lattice→S'(ℝ^d) embedding — `SchwartzMap.mkCLMtoNormedSpace` with `|ι(φ)(f)| ≤ (a^d·Σ|φ(x)|)·seminorm(0,0)(f)` |
 | `latticeEmbed_eval` | Embedding | Evaluation formula — `rfl` from construction |
+| `transferOperator_spectral` | L2Operator | Spectral decomposition — `compact_selfAdjoint_spectral` from gaussian-field |
 
 ---
 

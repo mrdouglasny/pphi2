@@ -52,11 +52,11 @@ The construction proceeds in six phases:
 ## Current status
 
 All six phases are structurally complete and the full project builds
-(`lake build`, 3081 jobs). The proof architecture axiomatizes key
+(`lake build`, 3082 jobs). The proof architecture axiomatizes key
 analytic/probabilistic results with detailed proof sketches, proves the logical
 structure connecting them, and progressively fills in the axioms with full proofs.
 
-- **pphi2:** 25 axioms, 13 sorries
+- **pphi2:** 28 axioms, 13 sorries
 - **gaussian-field** (upstream dependency): 13 axioms, 9 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,

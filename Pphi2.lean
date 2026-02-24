@@ -16,6 +16,7 @@ import Pphi2.InteractingMeasure.Normalization
 
 -- Phase 2: Transfer matrix and reflection positivity
 import Pphi2.TransferMatrix.TransferMatrix
+import Pphi2.TransferMatrix.L2Operator
 import Pphi2.TransferMatrix.Positivity
 import Pphi2.OSProofs.OS3_RP_Lattice
 import Pphi2.OSProofs.OS3_RP_Inheritance

@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-24 (latticeEmbed/eval proved, Bridge axioms fixed)
-**pphi2**: 25 axioms | **gaussian-field**: 21 axioms | **Total**: 46
+**Updated**: 2026-02-24 (L2Operator.lean + spectral theorem, Bridge axioms fixed)
+**pphi2**: 28 axioms | **gaussian-field**: 13 axioms | **Total**: 41
 
 ## Verification Sources
 
@@ -19,7 +19,7 @@
 
 ---
 
-## pphi2 Axioms (25 active)
+## pphi2 Axioms (28 active)
 
 ### Phase 1: Wick Ordering (2 axioms)
 
@@ -28,23 +28,26 @@
 | 1 | `wickMonomial_eq_hermite` | WickPolynomial:113 | ⚠️ Likely correct | GR Group 5 | :x^n:_c = c^{n/2} He_n(x/√c). Standard; check normalization convention. |
 | 2 | `wickConstant_log_divergence` | Counterterm:146 | ✅ Standard | GR Group 5 | c_a ~ (2π)⁻¹ log(1/a). Standard lattice Green's function asymptotics. |
 
-### Phase 2: Transfer Matrix and RP (6 axioms)
+### Phase 2: Transfer Matrix and RP (9 axioms)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 3 | `transferEigenvalue` | Positivity:117 | ⚠️ Likely correct | DT 2026-02-24 | Existence of eigenvalue sequence. Spectral theorem for compact self-adjoint operators. |
-| 4 | `transferEigenvalue_pos` | Positivity:121 | ✅ Standard | GR Group 3 | All eigenvalues > 0. Perron-Frobenius for strictly positive kernel. |
-| 5 | `transferEigenvalue_antitone` | Positivity:126 | ✅ Standard | GR Group 3 | Eigenvalues decreasing. Standard spectral ordering (min-max). |
-| 6 | `transferEigenvalue_ground_simple` | Positivity:136 | ✅ Standard | GR Group 3 | λ₀ > λ₁. Perron-Frobenius for positivity-improving operators. Reed-Simon IV Thm XIII.44. |
-| 7 | `action_decomposition` | OS3_RP_Lattice:114 | ⚠️ Likely correct | GR Group 5 | S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
-| 8 | `lattice_rp_matrix` | OS3_RP_Lattice:155 | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Support condition correct for periodic lattice. |
+| 3 | `transferOperatorCLM` | L2Operator | ⚠️ Likely correct | SA | Transfer matrix as CLM on L²(ℝ^Ns). Integral operator with Gaussian-bounded kernel. NEW. |
+| 4 | `transferOperator_isSelfAdjoint` | L2Operator | ✅ Standard | SA | Self-adjoint from kernel symmetry. NEW. |
+| 5 | `transferOperator_isCompact` | L2Operator | ⚠️ Likely correct | SA | Compact from Hilbert-Schmidt (Gaussian kernel decay). NEW. |
+| 6 | `transferEigenvalue` | L2Operator | ⚠️ Likely correct | DT 2026-02-24 | Sorted eigenvalue sequence. Connected to spectral theorem via `transferOperator_spectral` (proved). |
+| 7 | `transferEigenvalue_pos` | L2Operator | ✅ Standard | GR Group 3 | All eigenvalues > 0. Perron-Frobenius for strictly positive kernel. |
+| 8 | `transferEigenvalue_antitone` | L2Operator | ✅ Standard | GR Group 3 | Eigenvalues decreasing. Standard spectral ordering (min-max). |
+| 9 | `transferEigenvalue_ground_simple` | L2Operator | ✅ Standard | GR Group 3 | λ₀ > λ₁. Perron-Frobenius for positivity-improving operators. Reed-Simon IV Thm XIII.44. |
+| 10 | `action_decomposition` | OS3_RP_Lattice:114 | ⚠️ Likely correct | GR Group 5 | S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
+| 11 | `lattice_rp_matrix` | OS3_RP_Lattice:155 | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Support condition correct for periodic lattice. |
 
 ### Phase 3: Spectral Gap (2 axioms)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 9 | `spectral_gap_uniform` | SpectralGap:134 | ⚠️ Likely correct | GR Group 3 | ∃ m₀ > 0, gap(a) ≥ m₀ ∀a ≤ a₀. Central result of Glimm-Jaffe. VERY HARD. |
-| 10 | `spectral_gap_lower_bound` | SpectralGap:145 | ⚠️ Likely correct | GR Group 3 | gap ≥ c·mass. Standard weak-coupling result. |
+| 12 | `spectral_gap_uniform` | SpectralGap:134 | ⚠️ Likely correct | GR Group 3 | ∃ m₀ > 0, gap(a) ≥ m₀ ∀a ≤ a₀. Central result of Glimm-Jaffe. VERY HARD. |
+| 13 | `spectral_gap_lower_bound` | SpectralGap:145 | ⚠️ Likely correct | GR Group 3 | gap ≥ c·mass. Standard weak-coupling result. |
 
 ### Phase 4: Continuum Limit (11 axioms)
 
@@ -83,11 +86,11 @@
 | Status | Count |
 |--------|-------|
 | Verified (GR or DT) | 25 |
+| New (L2Operator, self-audit only) | 3 |
 | Proved (no longer axioms) | 2 |
-| Self-audit only **(NOT VERIFIED)** | 0 |
-| **Total active** | **25** |
+| **Total active** | **28** |
 
-All 27 axioms have been reviewed by either the Gemini external review (GR) or Gemini deep think (DT).
+25 of 28 axioms verified by GR or DT. 3 new L2Operator axioms (CLM, self-adjoint, compact) are standard and self-audited.
 
 ### Notes from DT review (2026-02-24)
 
@@ -152,6 +155,7 @@ The following were previously axioms and are now theorems:
 | `continuumLimit` | Convergence | 2026-02-24 | `prokhorov_sequential` + `continuumMeasures_tight` |
 | `latticeEmbed` | Embedding | 2026-02-24 | `SchwartzMap.mkCLMtoNormedSpace` with seminorm bound |
 | `latticeEmbed_eval` | Embedding | 2026-02-24 | `rfl` from `latticeEmbed` construction |
+| `transferOperator_spectral` | L2Operator | 2026-02-24 | `compact_selfAdjoint_spectral` from gaussian-field (proved spectral theorem) |
 
 ---
 
