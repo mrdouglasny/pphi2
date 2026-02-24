@@ -54,6 +54,8 @@ This is the content of OS4 (clustering / exponential decay of correlations).
 
 import Pphi2.TransferMatrix.SpectralGap
 import Pphi2.InteractingMeasure.LatticeMeasure
+import Pphi2.InteractingMeasure.Normalization
+import Mathlib.Probability.Moments.Variance
 
 noncomputable section
 
@@ -170,17 +172,65 @@ theorem connectedTwoPoint_symm (d N : ℕ) [NeZero N]
     ring
   · ring
 
-/-- The connected two-point function is positive semidefinite (FKG consequence).
+/-- The connected two-point function is positive semidefinite.
 
-For the free field (P = 0), this follows from the covariance being
-positive definite. For the interacting field, it follows from the
-FKG inequality applied to monotone functions of the field. -/
-axiom connectedTwoPoint_nonneg_delta (d N : ℕ) [NeZero N]
+This is variance nonnegativity: `Var[ω(δ_x)] = E[ω(δ_x)²] - E[ω(δ_x)]² ≥ 0`.
+
+Previously stated as an axiom invoking FKG, but it follows directly from
+`ProbabilityTheory.variance_nonneg` combined with `variance_def'`. -/
+theorem connectedTwoPoint_nonneg_delta (d N : ℕ) [NeZero N]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (x : FinLatticeSites d N) :
     0 ≤ connectedTwoPoint d N P a mass ha hmass
-      (finLatticeDelta d N x) (finLatticeDelta d N x)
+      (finLatticeDelta d N x) (finLatticeDelta d N x) := by
+  unfold connectedTwoPoint
+  set μ := interactingLatticeMeasure d N P a mass ha hmass
+  set δx := finLatticeDelta d N x
+  -- The connected two-point function at (δx, δx) is Var[X] where X ω = ω δx.
+  -- Var[X] = E[X²] - E[X]² = ∫ (ω δx)² dμ - (∫ ω δx dμ)² ≥ 0
+  set X : Configuration (FinLatticeField d N) → ℝ := fun ω => ω δx
+  haveI : IsProbabilityMeasure μ :=
+    interactingLatticeMeasure_isProbability d N P a mass ha hmass
+  -- Integrability from Normalization.lean
+  have h_int : Integrable X μ := by
+    have := field_all_moments_finite d N P a mass ha hmass x 1
+    exact this.congr (ae_of_all μ (fun ω => by simp [X, δx, pow_one]))
+  have h_int2 : Integrable (fun ω => X ω * X ω) μ := by
+    have := field_second_moment_finite d N P a mass ha hmass x
+    exact this.congr (ae_of_all μ (fun ω => by simp [X, δx, sq]))
+  -- Key: 0 ≤ ∫ (X - E[X])² dμ = ∫ X² dμ - E[X]²
+  set c := ∫ ω, X ω ∂μ
+  -- We show ∫ X² dμ - c² = ∫ (X - c)² dμ ≥ 0
+  have h_nonneg : 0 ≤ ∫ ω, (X ω - c) ^ 2 ∂μ :=
+    integral_nonneg (fun ω => sq_nonneg (X ω - c))
+  -- Key: 0 ≤ ∫ (X - E[X])² dμ = ∫ X² dμ - E[X]²
+  set c := ∫ ω, X ω ∂μ
+  -- Expand ∫ (X - c)² and use integral_nonneg
+  have h_nonneg : 0 ≤ ∫ ω, (X ω - c) ^ 2 ∂μ :=
+    integral_nonneg (fun ω => sq_nonneg (X ω - c))
+  -- Compute ∫ (X - c)² by splitting into three integrals
+  have h_int_cc : Integrable (fun _ : Configuration (FinLatticeField d N) => c * c) μ :=
+    integrable_const _
+  have h_int_cX : Integrable (fun ω => (-(2 * c)) * X ω) μ :=
+    h_int.const_mul _
+  -- Direct approach: show the difference using integral arithmetic
+  have h_key : ∫ ω, (X ω - c) ^ 2 ∂μ =
+      (∫ ω, X ω * X ω ∂μ) - c * c := by
+    -- Express (X - c)² as sum of integrable parts
+    have h_eq : ∀ ω, (X ω - c) ^ 2 = X ω * X ω - 2 * c * X ω + c * c := fun ω => by ring
+    calc ∫ ω, (X ω - c) ^ 2 ∂μ
+        = ∫ ω, (X ω * X ω - 2 * c * X ω + c * c) ∂μ := by
+          congr 1 with ω; exact h_eq ω
+      _ = ∫ ω, (X ω * X ω - 2 * c * X ω) ∂μ + ∫ ω, c * c ∂μ := by
+          apply integral_add (h_int2.sub (h_int.const_mul _)) (integrable_const _)
+      _ = (∫ ω, X ω * X ω ∂μ - ∫ ω, 2 * c * X ω ∂μ) + ∫ ω, c * c ∂μ := by
+          congr 1; exact integral_sub h_int2 (h_int.const_mul _)
+      _ = (∫ ω, X ω * X ω ∂μ - 2 * c * ∫ ω, X ω ∂μ) + ∫ ω, c * c ∂μ := by
+          congr 1; congr 1; exact integral_const_mul _ _
+      _ = (∫ ω, X ω * X ω ∂μ) - c * c := by
+          simp [integral_const]; ring
+  linarith
 
 end Pphi2
 

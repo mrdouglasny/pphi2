@@ -64,20 +64,72 @@ def generatingFunctional
     (f : TestFunction2) : ℂ :=
   ∫ ω : FieldConfig2, Complex.exp (Complex.I * ↑(ω f)) ∂μ
 
+/-- Extract the real part of a complex Schwartz function as a real Schwartz function.
+
+Given J : S(ℝ², ℂ), returns Re(J) : S(ℝ², ℝ) defined pointwise by x ↦ (J x).re.
+Uses composition with `Complex.reCLM : ℂ →L[ℝ] ℝ`. -/
+def schwartzRe (J : TestFunction2ℂ) : TestFunction2 :=
+  SchwartzMap.mk (fun x => (J x).re)
+    (Complex.reCLM.contDiff.comp J.smooth')
+    (by
+      intro k n
+      obtain ⟨C, hC⟩ := J.decay' k n
+      use C * ‖Complex.reCLM‖
+      intro x
+      have h_eq : (fun y => (J y).re) = Complex.reCLM ∘ J.toFun := rfl
+      rw [h_eq, ContinuousLinearMap.iteratedFDeriv_comp_left Complex.reCLM
+        J.smooth'.contDiffAt (WithTop.coe_le_coe.mpr le_top)]
+      calc ‖x‖ ^ k * ‖Complex.reCLM.compContinuousMultilinearMap
+              (iteratedFDeriv ℝ n J.toFun x)‖
+          ≤ ‖x‖ ^ k * (‖Complex.reCLM‖ * ‖iteratedFDeriv ℝ n J.toFun x‖) :=
+            mul_le_mul_of_nonneg_left
+              (ContinuousLinearMap.norm_compContinuousMultilinearMap_le _ _)
+              (pow_nonneg (norm_nonneg _) _)
+        _ = ‖Complex.reCLM‖ * (‖x‖ ^ k * ‖iteratedFDeriv ℝ n J.toFun x‖) := by ring
+        _ ≤ ‖Complex.reCLM‖ * C := mul_le_mul_of_nonneg_left (hC x) (norm_nonneg _)
+        _ = C * ‖Complex.reCLM‖ := by ring)
+
+/-- Extract the imaginary part of a complex Schwartz function as a real Schwartz function.
+
+Given J : S(ℝ², ℂ), returns Im(J) : S(ℝ², ℝ) defined pointwise by x ↦ (J x).im. -/
+def schwartzIm (J : TestFunction2ℂ) : TestFunction2 :=
+  SchwartzMap.mk (fun x => (J x).im)
+    (Complex.imCLM.contDiff.comp J.smooth')
+    (by
+      intro k n
+      obtain ⟨C, hC⟩ := J.decay' k n
+      use C * ‖Complex.imCLM‖
+      intro x
+      have h_eq : (fun y => (J y).im) = Complex.imCLM ∘ J.toFun := rfl
+      rw [h_eq, ContinuousLinearMap.iteratedFDeriv_comp_left Complex.imCLM
+        J.smooth'.contDiffAt (WithTop.coe_le_coe.mpr le_top)]
+      calc ‖x‖ ^ k * ‖Complex.imCLM.compContinuousMultilinearMap
+              (iteratedFDeriv ℝ n J.toFun x)‖
+          ≤ ‖x‖ ^ k * (‖Complex.imCLM‖ * ‖iteratedFDeriv ℝ n J.toFun x‖) :=
+            mul_le_mul_of_nonneg_left
+              (ContinuousLinearMap.norm_compContinuousMultilinearMap_le _ _)
+              (pow_nonneg (norm_nonneg _) _)
+        _ = ‖Complex.imCLM‖ * (‖x‖ ^ k * ‖iteratedFDeriv ℝ n J.toFun x‖) := by ring
+        _ ≤ ‖Complex.imCLM‖ * C := mul_le_mul_of_nonneg_left (hC x) (norm_nonneg _)
+        _ = C * ‖Complex.imCLM‖ := by ring)
+
 /-- The complex generating functional Z[J] for J ∈ S(ℝ², ℂ).
 
 For complex J = f + ig with f, g real:
   Z[J] = ∫ exp(i⟨ω, f⟩ - ⟨ω, g⟩) dμ(ω)
 
 This extends the real generating functional to complex test functions,
-which is needed for the analyticity axiom (OS0). -/
+which is needed for the analyticity axiom (OS0). The complex pairing
+⟨ω, J⟩_ℂ = ⟨ω, Re(J)⟩ + i·⟨ω, Im(J)⟩ extends the real distribution
+ω ∈ S'(ℝ²) to complex test functions by linearity. -/
 def generatingFunctionalℂ
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (J : TestFunction2ℂ) : ℂ :=
-  -- Decompose J into real and imaginary parts, then
-  -- Z[J] = ∫ exp(i · Re⟨ω, J⟩ - Im⟨ω, J⟩) dμ(ω)
-  -- For now axiomatize the complex extension
-  sorry
+  -- ⟨ω, J⟩_ℂ = ⟨ω, Re(J)⟩ + i·⟨ω, Im(J)⟩
+  -- Z[J] = ∫ exp(i · ⟨ω, J⟩_ℂ) dμ(ω)
+  let f_re := schwartzRe J
+  let f_im := schwartzIm J
+  ∫ ω : FieldConfig2, Complex.exp (Complex.I * ((ω f_re : ℂ) + Complex.I * (ω f_im : ℂ))) ∂μ
 
 /-! ## Euclidean group E(2) = ℝ² ⋊ O(2) -/
 

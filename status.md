@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 26 axioms, 17 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
+**pphi2: 25 axioms, 16 sorries** | **gaussian-field (upstream): 20 axioms, 12 sorries**
 
 ## File inventory
 
@@ -30,14 +30,14 @@ progressively fill in the axioms with full proofs.
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 2 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
-| 3 | `OSProofs/OS4_MassGap.lean` | 1 axiom |
+| 3 | `OSProofs/OS4_MassGap.lean` | 0 axioms |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms |
 | 4 | `ContinuumLimit/Embedding.lean` | 5 axioms |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 0 axioms, 2 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 1 axiom, 1 sorry |
-| 6 | `OSAxioms.lean` | 0 axioms, 1 sorry |
+| 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 0 axioms, 5 sorries |
 | 6 | `Bridge.lean` | 5 axioms, 6 sorries |
 
@@ -231,7 +231,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `ground_state_smooth` | SpectralGap | Medium | Ground state is smooth. From elliptic regularity of H. |
 | `two_point_clustering_lattice` | OS4_MassGap | Medium | Two-point function decays exponentially with rate = mass gap. Standard spectral decomposition argument. |
 | `general_clustering_lattice` | OS4_MassGap | Medium | General n-point clustering from spectral gap. |
-| `connectedTwoPoint_nonneg_delta` | OS4_MassGap | Medium | Connected 2-point function ≥ 0 for delta functions (positivity). |
+| ~~`connectedTwoPoint_nonneg_delta`~~ | OS4_MassGap | ✅ Proved | Variance nonnegativity: direct proof via ∫(X-E[X])² ≥ 0. |
 | `clustering_implies_ergodicity` | OS4_Ergodicity | Medium | Exponential clustering → ergodicity of time translations. Standard. |
 | `unique_vacuum` | OS4_Ergodicity | Medium | Unique vacuum from ergodicity. Via GNS/OS reconstruction. |
 | `exponential_mixing` | OS4_Ergodicity | Medium | Exponential mixing from mass gap. |
