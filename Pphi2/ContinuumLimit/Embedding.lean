@@ -195,15 +195,32 @@ evaluation map `Configuration (FinLatticeField d N) → FinLatticeField d N → 
 to get `Configuration (FinLatticeField d N) → Configuration (ContinuumTestFunction d)`.
 
 Since `Configuration E = WeakDual ℝ E`, an element `ω ∈ Configuration E`
-is a continuous linear functional on E. The lifted embedding sends ω to
-the distribution `f ↦ ω(a^d Σ_x δ_x · f(a·x))`. -/
-axiom latticeEmbedLift (a : ℝ) (ha : 0 < a) :
-    Configuration (FinLatticeField d N) →
-    Configuration (ContinuumTestFunction d)
+is a continuous linear functional on E. We extract field values via
+`ω(Pi.single x 1)` (evaluating ω on the basis vector at site x) and
+apply the lattice embedding: `(latticeEmbedLift ω)(f) = a^d Σ_x ω(e_x) f(a·x)`. -/
+def latticeEmbedLift (a : ℝ) (ha : 0 < a)
+    (ω : Configuration (FinLatticeField d N)) :
+    Configuration (ContinuumTestFunction d) :=
+  latticeEmbed d N a ha (fun x => ω (Pi.single x 1))
 
-/-- The lifted embedding is measurable. -/
-axiom latticeEmbedLift_measurable (a : ℝ) (ha : 0 < a) :
-    Measurable (latticeEmbedLift d N a ha)
+omit [NeZero N] in
+/-- The lifted embedding is measurable.
+
+Each evaluation `ω ↦ (latticeEmbedLift ω)(f)` is a finite sum of measurable
+functions `ω ↦ ω(Pi.single x 1)` (measurable by `configuration_eval_measurable`)
+multiplied by constants, hence measurable. -/
+theorem latticeEmbedLift_measurable (a : ℝ) (ha : 0 < a) :
+    Measurable (latticeEmbedLift d N a ha) := by
+  apply configuration_measurable_of_eval_measurable
+  intro f
+  -- Goal: Measurable (fun ω => (latticeEmbedLift d N a ha ω) f)
+  -- By definition, this is fun ω => latticeEmbedEval d N a (fun x => ω (Pi.single x 1)) f
+  -- = fun ω => a^d * Σ_x ω(Pi.single x 1) * f(a·x)
+  change Measurable (fun (ω : Configuration (FinLatticeField d N)) =>
+    (latticeEmbed d N a ha (fun x => ω (Pi.single x 1))) f)
+  -- Unfolds to: a^d * Σ_x ω(Pi.single x 1) * f(a·x) — measurable in ω
+  exact measurable_const.mul (Finset.measurable_sum _ fun x _ =>
+    (configuration_eval_measurable (Pi.single x 1)).mul measurable_const)
 
 /-! ## Pushforward measures on S'(ℝ^d) -/
 

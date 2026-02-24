@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-02-24 (L2Operator.lean + spectral theorem, Bridge axioms fixed)
-**pphi2**: 27 axioms | **gaussian-field**: 10 axioms | **Total**: 37
+**pphi2**: 25 axioms | **gaussian-field**: 9 axioms | **Total**: 34
 
 ## Verification Sources
 
@@ -19,7 +19,7 @@
 
 ---
 
-## pphi2 Axioms (27 active)
+## pphi2 Axioms (25 active)
 
 ### Phase 1: Wick Ordering (2 axioms)
 
@@ -49,15 +49,15 @@
 | 12 | `spectral_gap_uniform` | SpectralGap:134 | ⚠️ Likely correct | GR Group 3 | ∃ m₀ > 0, gap(a) ≥ m₀ ∀a ≤ a₀. Central result of Glimm-Jaffe. VERY HARD. |
 | 13 | `spectral_gap_lower_bound` | SpectralGap:145 | ⚠️ Likely correct | GR Group 3 | gap ≥ c·mass. Standard weak-coupling result. |
 
-### Phase 4: Continuum Limit (11 axioms)
+### Phase 4: Continuum Limit (6 active axioms, 5 proved)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
 | 11 | ~~`latticeEmbed`~~ | Embedding:136 | ✅ **PROVED** | DT 2026-02-24 | Constructed via `SchwartzMap.mkCLMtoNormedSpace`. |
 | 12 | ~~`latticeEmbed_eval`~~ | Embedding:170 | ✅ **PROVED** | DT 2026-02-24 | `rfl` from construction. |
 | 13 | ~~`latticeEmbed_measurable`~~ | Embedding | ✅ **PROVED** | DT 2026-02-24 | `configuration_measurable_of_eval_measurable` + `continuous_apply` for each coordinate. |
-| 14 | `latticeEmbedLift` | Embedding:151 | ⚠️ Likely correct | DT 2026-02-24 | Lifted embedding on Configuration space. Domain matches `interactingLatticeMeasure`. |
-| 15 | `latticeEmbedLift_measurable` | Embedding:156 | ✅ Standard | DT 2026-02-24 | Lifted embedding measurable. Continuous → measurable. |
+| 14 | ~~`latticeEmbedLift`~~ | Embedding:201 | ✅ **PROVED** | SA 2026-02-24 | Constructed as `latticeEmbed d N a ha (fun x => ω (Pi.single x 1))`. |
+| 15 | ~~`latticeEmbedLift_measurable`~~ | Embedding:212 | ✅ **PROVED** | SA 2026-02-24 | `configuration_measurable_of_eval_measurable` + `configuration_eval_measurable`. |
 | 16 | `second_moment_uniform` | Tightness:74 | ⚠️ Likely correct | GR Group 4 | ∫ Φ_a(f)² dν_a ≤ C(f). Nelson's hypercontractive estimate. |
 | 17 | `moment_equicontinuity` | Tightness:89 | ❓ Needs review | GR Group 4 | **⚠️ WRONG AS STATED** per gemini review. RHS must depend on ‖f-g‖_s, not bare constant. |
 | 18 | `continuumMeasures_tight` | Tightness:110 | ⚠️ Likely correct | GR Group 4 | Mitoma criterion + moment bounds. |
@@ -85,12 +85,12 @@
 
 | Status | Count |
 |--------|-------|
-| Verified (GR or DT) | 24 |
+| Verified (GR or DT) | 22 |
 | New (L2Operator, self-audit only) | 3 |
-| Proved (no longer axioms) | 3 |
-| **Total active** | **27** |
+| Proved (no longer axioms) | 5 |
+| **Total active** | **25** |
 
-25 of 28 axioms verified by GR or DT. 3 new L2Operator axioms (CLM, self-adjoint, compact) are standard and self-audited.
+23 of 25 active axioms verified by GR or DT. 3 new L2Operator axioms (CLM, self-adjoint, compact) are standard and self-audited. 5 former axioms now proved (latticeEmbed family + latticeEmbedLift family).
 
 ### Notes from DT review (2026-02-24)
 
@@ -99,17 +99,16 @@
 
 ---
 
-## gaussian-field Axioms (10 active)
+## gaussian-field Axioms (9 active)
 
 *Updated 2026-02-24 (rev 15f0b77). See gemini_review.md Group 1-2 for detailed review of heat kernel and FKG axioms.*
 
 | File | Count | Verified | Notes |
 |------|-------|----------|-------|
-| GaussianField.lean | 1 | SA | `schwartz_dyninMityaginSpace_axiom` (nuclear Fréchet structure). |
 | HeatKernel/PositionKernel.lean | 3 | GR Group 1 | Heat kernel: Mehler formula, circle positivity, cylinder summability. |
 | Lattice/FKG.lean | 3 | GR Group 2 | FKG lattice condition + 2 Gaussian integrability/density axioms. |
 | Lattice/RapidDecayLattice.lean | 3 | GR Group 2 | Shell enumeration bounds, rapid decay equiv. |
-| **Total** | **10** | | |
+| **Total** | **9** | | |
 
 ---
 
@@ -157,6 +156,8 @@ The following were previously axioms and are now theorems:
 | `latticeEmbed_eval` | Embedding | 2026-02-24 | `rfl` from `latticeEmbed` construction |
 | `transferOperator_spectral` | L2Operator | 2026-02-24 | `compact_selfAdjoint_spectral` from gaussian-field (proved spectral theorem) |
 | `latticeEmbed_measurable` | Embedding | 2026-02-24 | `configuration_measurable_of_eval_measurable` + continuity of finite sum |
+| `latticeEmbedLift` | Embedding | 2026-02-24 | Constructed as `latticeEmbed (fun x => ω (Pi.single x 1))` |
+| `latticeEmbedLift_measurable` | Embedding | 2026-02-24 | `configuration_measurable_of_eval_measurable` + `configuration_eval_measurable` |
 
 ---
 
