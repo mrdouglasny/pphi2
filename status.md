@@ -26,7 +26,7 @@ progressively fill in the axioms with full proofs.
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
 | 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
-| 2 | `TransferMatrix/Positivity.lean` | 3 axioms |
+| 2 | `TransferMatrix/Positivity.lean` | 4 axioms |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 2 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
