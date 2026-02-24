@@ -78,8 +78,8 @@ lake env lean Pphi2/SomeFile.lean
   status.md.
 - When introducing new axioms, use `deep_think_gemini` to verify the
   mathematical correctness of each axiom statement before committing.
-  In status.md, mark unverified axioms with **(NOT VERIFIED)** and
-  verified ones with **✅ Verified** (include the reference/source).
+  Mark unverified axioms with **(NOT VERIFIED)** in status.md.
+  Record verification provenance in `docs/axiom_audit.md`.
 
 ### Helper Lemma Principle
 

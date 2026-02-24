@@ -208,13 +208,13 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `transferOperator_positiveDefinite` | Positivity | Medium | `⟨f, Tf⟩ > 0` for f ≠ 0. From Gaussian kernel positivity + exp(-V) > 0. |
 | `transferOperator_hilbertSchmidt` | Positivity | Medium | T is Hilbert-Schmidt. Kernel is L² because Gaussian factor gives exponential decay. |
 | `transferOperator_traceClass` | Positivity | Medium | Follows from Hilbert-Schmidt (HS ∘ HS = trace class, and T = T^{1/2} · T^{1/2}). |
-| `transferEigenvalue` | Positivity | Infrastructure | Existence of eigenvalue sequence. Needs spectral theorem for compact self-adjoint operators in Mathlib. |
+| `transferEigenvalue` | Positivity | Infrastructure | Existence of eigenvalue sequence. Needs spectral theorem for compact self-adjoint operators in Mathlib. **(NOT VERIFIED)** |
 | `transferEigenvalue_pos` | Positivity | Easy | Eigenvalues positive (from positive definiteness). |
 | `transferEigenvalue_antitone` | Positivity | Easy | Eigenvalues decrease: λ₀ ≥ λ₁ ≥ ... (standard spectral ordering). |
 | `transferEigenvalue_ground_simple` | Positivity | Medium | λ₀ > λ₁ (strict). Perron-Frobenius for positivity-preserving operators. |
 | `action_decomposition` | OS3_RP_Lattice | Medium | Lattice action decomposes as S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
 | `lattice_rp` | OS3_RP_Lattice | Medium | Lattice measure satisfies RP. From action decomposition + exp(-S) = exp(-S⁺)·exp(-S⁻) perfect square argument. |
-| `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. |
+| `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. **(NOT VERIFIED)** |
 | `rp_from_transfer_positivity` | OS3_RP_Lattice | Medium | RP from transfer matrix positivity. Alternative proof route. |
 | `partitionFunction_eq_trace` | TransferMatrix | Medium | Z = Tr(T^{Nt}). Standard transfer matrix identity. |
 
@@ -241,11 +241,11 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `latticeEmbed` | Embedding | Medium | The embedding ι_a : FinLatticeField → Configuration(S(ℝ^d)). Needs to show that f ↦ a^d Σ_x φ(x)f(ax) is continuous on Schwartz space. Finite sum of point evaluations — straightforward. |
-| `latticeEmbed_eval` | Embedding | Easy | Embedding agrees with the explicit formula. By construction. |
-| `latticeEmbed_measurable` | Embedding | Medium | Measurability of the embedding. Needs measurable structure on S'(ℝ^d). |
-| `latticeEmbedLift` | Embedding | Medium | Lift of embedding to Configuration space. |
-| `latticeEmbedLift_measurable` | Embedding | Medium | Measurability of the lifted embedding. |
+| `latticeEmbed` | Embedding | Medium | The embedding ι_a : FinLatticeField → Configuration(S(ℝ^d)). Finite sum of point evaluations. **(NOT VERIFIED)** |
+| `latticeEmbed_eval` | Embedding | Easy | Embedding agrees with the explicit formula. By construction. **(NOT VERIFIED)** |
+| `latticeEmbed_measurable` | Embedding | Medium | Measurability of the embedding. Needs measurable structure on S'(ℝ^d). **(NOT VERIFIED)** |
+| `latticeEmbedLift` | Embedding | Medium | Lift of embedding to Configuration space. **(NOT VERIFIED)** |
+| `latticeEmbedLift_measurable` | Embedding | Medium | Measurability of the lifted embedding. **(NOT VERIFIED)** |
 | `second_moment_uniform` | Tightness | Hard | ∫|Φ_a(f)|² dν_a ≤ C(f) uniformly in a. Key input: Nelson's hypercontractive estimate + convergence of lattice propagator. |
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
@@ -255,8 +255,8 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `schwinger_n_convergence` | Convergence | Medium | n-point Schwinger functions converge. |
 | `continuumLimit_nontrivial` | Convergence | Medium | Limit is not δ₀. From positive 2-point function. |
 | `continuumLimit_nonGaussian` | Convergence | Medium | Limit is not Gaussian. From nonzero 4th cumulant. |
-| `configuration_polishSpace` | Convergence | Infrastructure | S'(ℝ^d) is Polish (dual of nuclear Fréchet). Not in Mathlib. ✅ Verified (Gemini deep think: Gelfand-Vilenkin Vol. 4, Bogachev §3.2). |
-| `configuration_borelSpace` | Convergence | Infrastructure | Borel σ-algebra on S'(ℝ^d) = cylindrical σ-algebra (weak-* topology). Not in Mathlib. ✅ Verified (Gemini deep think: Bochner-Minlos framework). |
+| `configuration_polishSpace` | Convergence | Infrastructure | S'(ℝ^d) is Polish (dual of nuclear Fréchet). Not in Mathlib. |
+| `configuration_borelSpace` | Convergence | Infrastructure | Borel σ-algebra on S'(ℝ^d) = cylindrical σ-algebra (weak-* topology). Not in Mathlib. |
 | `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
 | `os1_inheritance` | AxiomInheritance | Easy | OS1 transfers: |cos(·)| ≤ 1 trivially. |
 | `os3_inheritance` | AxiomInheritance | Medium | OS3 transfers: RP is a nonnegativity condition, closed under pointwise limits. Uses rp_closed_under_weak_limit from Phase 2. |
@@ -286,12 +286,12 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`compTimeReflection2_apply`~~ | OSAxioms | ✅ Proved | Follows by `rfl` from the construction. |
 | ~~`SchwartzMap.translate`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfAntilipschitz` with translation (antilipschitz + temperate growth). |
 | `os_reconstruction` | Main | Infrastructure | OS reconstruction theorem (Osterwalder-Schrader 1973, 1975). Would require formalizing Minkowski QFT. |
-| `measure_determined_by_schwinger` | Bridge | Medium | A measure on S'(ℝ²) is determined by its Schwinger functions. |
-| `wick_constant_comparison` | Bridge | Medium | Wick constant comparison between formulations. |
-| `schwinger_agreement` | Bridge | Medium | Schwinger functions agree between formulations. |
-| `same_continuum_measure` | Bridge | Medium | Continuum measures agree. |
-| `os2_from_phi4` | Bridge | Medium | OS2 from Φ⁴ formulation. |
-| `os3_from_pphi2` | Bridge | Medium | OS3 from P(Φ)₂ formulation. |
+| `measure_determined_by_schwinger` | Bridge | Medium | A measure on S'(ℝ²) is determined by its Schwinger functions. **(NOT VERIFIED)** |
+| `wick_constant_comparison` | Bridge | Medium | Wick constant comparison between formulations. **(NOT VERIFIED)** |
+| `schwinger_agreement` | Bridge | Medium | Schwinger functions agree between formulations. **(NOT VERIFIED)** |
+| `same_continuum_measure` | Bridge | Medium | Continuum measures agree. **(NOT VERIFIED)** ❓ Needs review — uniqueness concern. |
+| `os2_from_phi4` | Bridge | Medium | OS2 from Φ⁴ formulation. **(NOT VERIFIED)** |
+| `os3_from_pphi2` | Bridge | Medium | OS3 from P(Φ)₂ formulation. **(NOT VERIFIED)** |
 
 ---
 
