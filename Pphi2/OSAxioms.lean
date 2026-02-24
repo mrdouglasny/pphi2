@@ -121,16 +121,33 @@ theorem timeReflection2_involution (p : SpaceTime2) :
   simp [WithLp.equiv, Equiv.symm]
   split <;> simp
 
+/-- Time reflection is a linear map on SpaceTime2. -/
+def timeReflectionLinear : SpaceTime2 →ₗ[ℝ] SpaceTime2 where
+  toFun := timeReflection2
+  map_add' p q := by
+    ext i
+    simp [timeReflection2, WithLp.equiv, Equiv.symm, Pi.add_apply]
+    split <;> ring
+  map_smul' c p := by
+    ext i
+    simp [timeReflection2, WithLp.equiv, Equiv.symm, Pi.smul_apply, smul_eq_mul]
+
+/-- Time reflection as a continuous linear equivalence (it's an involution). -/
+noncomputable def timeReflectionCLE : SpaceTime2 ≃L[ℝ] SpaceTime2 :=
+  (LinearEquiv.ofInvolutive timeReflectionLinear
+    timeReflection2_involution).toContinuousLinearEquiv
+
 /-- The pullback of time reflection on real test functions:
   `(Θf)(t, x) = f(-t, x)`.
 
-Axiomatized because the Schwartz space API for composition with
-linear maps is incomplete. -/
-axiom compTimeReflection2 : TestFunction2 →L[ℝ] TestFunction2
+Constructed using `SchwartzMap.compCLMOfContinuousLinearEquiv` from Mathlib,
+which composes a Schwartz function with a continuous linear equivalence. -/
+noncomputable def compTimeReflection2 : TestFunction2 →L[ℝ] TestFunction2 :=
+  SchwartzMap.compCLMOfContinuousLinearEquiv ℝ timeReflectionCLE
 
 /-- Θf agrees with composition: (compTimeReflection2 f)(p) = f(timeReflection2 p). -/
-axiom compTimeReflection2_apply (f : TestFunction2) (p : SpaceTime2) :
-    compTimeReflection2 f p = f (timeReflection2 p)
+theorem compTimeReflection2_apply (f : TestFunction2) (p : SpaceTime2) :
+    compTimeReflection2 f p = f (timeReflection2 p) := rfl
 
 /-- Translation of a real test function by a ∈ ℝ²:
   `(translate a f)(x) = f(x - a)`.

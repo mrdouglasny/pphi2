@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 67 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
+**pphi2: 64 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
 
 ## File inventory
 
@@ -19,7 +19,7 @@ progressively fill in the axioms with full proofs.
 
 | Phase | File | Status |
 |-------|------|--------|
-| Core | `Polynomial.lean` | 1 axiom (polynomial_lower_bound) |
+| Core | `Polynomial.lean` | 0 axioms |
 | 1 | `WickOrdering/WickPolynomial.lean` | 1 axiom (wickMonomial_eq_hermite) |
 | 1 | `WickOrdering/Counterterm.lean` | 1 axiom |
 | 1 | `InteractingMeasure/LatticeAction.lean` | 0 axioms |
@@ -37,7 +37,7 @@ progressively fill in the axioms with full proofs.
 | 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 5 axioms, 1 sorry |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 7 axioms, 1 sorry |
-| 6 | `OSAxioms.lean` | 5 axioms |
+| 6 | `OSAxioms.lean` | 3 axioms |
 | 6 | `Main.lean` | 1 axiom, 5 sorries |
 | 6 | `Bridge.lean` | 6 axioms, 6 sorries |
 
@@ -194,7 +194,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `polynomial_lower_bound` | Polynomial | Medium | Even degree + positive leading coeff → bounded below. Promoted from sorry to axiom. |
+| ~~`polynomial_lower_bound`~~ | Polynomial | ✅ Removed | Dead code — superseded by `wickPolynomial_bounded_below` in WickPolynomial.lean. |
 | `wickMonomial_eq_hermite` | WickPolynomial | Medium | Wick monomials equal probabilist Hermite polynomials |
 | ~~`wickPolynomial_bounded_below`~~ | WickPolynomial | ~~Medium~~ | **Proved** — Even-degree Wick polynomial with positive leading coeff is bounded below. Proved via `poly_even_degree_bounded_below` (leading term domination + `Continuous.exists_forall_le`). |
 | `wickConstant_log_divergence` | Counterterm | Medium | `c_a ~ (1/2π) log(1/a)` as a→0. Needs lattice Green's function asymptotics. |
@@ -281,8 +281,8 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 |-------|------|-----------|-------------|
 | `euclideanAction2` | OSAxioms | Infrastructure | E(2) pullback on real Schwartz functions as CLM. Needs Schwartz decay preservation under affine composition. |
 | `euclideanAction2ℂ` | OSAxioms | Infrastructure | Same for complex Schwartz functions. |
-| `compTimeReflection2` | OSAxioms | Infrastructure | Time reflection Θ on Schwartz space as CLM. Same issue as euclideanAction2. |
-| `compTimeReflection2_apply` | OSAxioms | Easy | Specification that Θ agrees with composition. |
+| ~~`compTimeReflection2`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfContinuousLinearEquiv` with time reflection as CLE. |
+| ~~`compTimeReflection2_apply`~~ | OSAxioms | ✅ Proved | Follows by `rfl` from the construction. |
 | `SchwartzMap.translate` | OSAxioms | Infrastructure | Translation on Schwartz space as CLM. Needs Schwartz decay preservation under translation. |
 | `os_reconstruction` | Main | Infrastructure | OS reconstruction theorem (Osterwalder-Schrader 1973, 1975). Would require formalizing Minkowski QFT. |
 | `measure_determined_by_schwinger` | Bridge | Medium | A measure on S'(ℝ²) is determined by its Schwinger functions. |
