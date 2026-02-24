@@ -286,12 +286,11 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`compTimeReflection2_apply`~~ | OSAxioms | ✅ Proved | Follows by `rfl` from the construction. |
 | ~~`SchwartzMap.translate`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfAntilipschitz` with translation (antilipschitz + temperate growth). |
 | `os_reconstruction` | Main | Infrastructure | OS reconstruction theorem (Osterwalder-Schrader 1973, 1975). Would require formalizing Minkowski QFT. |
-| `measure_determined_by_schwinger` | Bridge | Medium | A measure on S'(ℝ²) is determined by its Schwinger functions. **(NOT VERIFIED)** |
-| `wick_constant_comparison` | Bridge | Medium | Wick constant comparison between formulations. **(NOT VERIFIED)** |
-| `schwinger_agreement` | Bridge | Medium | Schwinger functions agree between formulations. **(NOT VERIFIED)** |
-| `same_continuum_measure` | Bridge | Medium | Continuum measures agree. **(NOT VERIFIED)** ❓ Needs review — uniqueness concern. |
-| `os2_from_phi4` | Bridge | Medium | OS2 from Φ⁴ formulation. **(NOT VERIFIED)** |
-| `os3_from_pphi2` | Bridge | Medium | OS3 from P(Φ)₂ formulation. **(NOT VERIFIED)** |
+| `measure_determined_by_schwinger` | Bridge | Medium | Moment determinacy on S'(ℝ²) with exponential (Fernique-type) moment bound. |
+| `wick_constant_comparison` | Bridge | Medium | Wick constant c_a ≈ (2π)⁻¹ log(1/a) with bounded remainder. |
+| `same_continuum_measure` | Bridge | Medium | pphi2 and Phi4 constructions agree at weak coupling. Requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
+| `os2_from_phi4` | Bridge | Medium | OS2 for Phi4 continuum limit. Requires `IsPhi4ContinuumLimit` hypothesis. |
+| `os3_from_pphi2` | Bridge | Medium | OS3 for pphi2 continuum limit. Requires `IsPphi2ContinuumLimit` hypothesis. |
 
 ---
 

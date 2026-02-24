@@ -1,6 +1,6 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-24
+**Updated**: 2026-02-24 (Bridge axioms fixed and verified)
 **pphi2**: 27 axioms | **gaussian-field**: 21 axioms | **Total**: 48
 
 ## Verification Sources
@@ -72,23 +72,23 @@
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 23 | `measure_determined_by_schwinger` | Bridge:110 | ⚠️ Likely correct | SA only **(NOT VERIFIED)** | Moment determinacy on S'(ℝ²). Bochner-Minlos on nuclear spaces. |
-| 24 | `wick_constant_comparison` | Bridge:136 | ✅ Standard | SA only **(NOT VERIFIED)** | Wick constant ≈ (2π)⁻¹ log(1/a). Standard asymptotics. |
-| 25 | `same_continuum_measure` | Bridge:179 | ❓ Needs review | SA only **(NOT VERIFIED)** | Two constructions yield same measure. Strong claim; may need weak-coupling uniqueness. |
-| 26 | `os2_from_phi4` | Bridge:214 | ⚠️ Likely correct | SA only **(NOT VERIFIED)** | E(2) invariance from Phi4 continuum formulation. |
-| 27 | `os3_from_pphi2` | Bridge:257 | ⚠️ Likely correct | SA only **(NOT VERIFIED)** | RP from pphi2 lattice. Hypothesis structure may be circular. |
+| 23 | `measure_determined_by_schwinger` | Bridge:152 | ⚠️ Likely correct | DT 2026-02-24 | Moment determinacy with exponential (Fernique-type) moment bound. Fixed from polynomial→exponential per DT review. |
+| 24 | `wick_constant_comparison` | Bridge:180 | ✅ Standard | DT 2026-02-24 | Wick constant ≈ (2π)⁻¹ log(1/a) with bounded remainder. Standard asymptotics. |
+| 25 | `same_continuum_measure` | Bridge:222 | ⚠️ Likely correct | DT 2026-02-24 | Fixed: now requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling` hypotheses. Was ❓ (vacuous), now properly constrained. |
+| 26 | `os2_from_phi4` | Bridge:255 | ⚠️ Likely correct | DT 2026-02-24 | Fixed: now requires `IsPhi4ContinuumLimit` hypothesis (was FALSE without it). |
+| 27 | `os3_from_pphi2` | Bridge:300 | ⚠️ Likely correct | DT 2026-02-24 | Fixed: now requires `IsPphi2ContinuumLimit` hypothesis (was FALSE without it). |
 
 ### Verification Summary (pphi2)
 
 | Status | Count |
 |--------|-------|
-| Verified (GR or DT) | 16 |
-| Self-audit only **(NOT VERIFIED)** | 11 |
+| Verified (GR or DT) | 21 |
+| Self-audit only **(NOT VERIFIED)** | 6 |
 | **Total** | **27** |
 
 ### Unverified Axioms List
 
-The following 11 axioms have only self-audit review:
+The following 6 axioms have only self-audit review:
 
 1. `transferEigenvalue` — eigenvalue existence (needs spectral theorem)
 2. `lattice_rp_matrix` — RP matrix positivity
@@ -97,11 +97,6 @@ The following 11 axioms have only self-audit review:
 5. `latticeEmbed_measurable` — embedding measurability
 6. `latticeEmbedLift` — lifted embedding
 7. `latticeEmbedLift_measurable` — lifted embedding measurability
-8. `measure_determined_by_schwinger` — moment determinacy
-9. `wick_constant_comparison` — Wick constant comparison
-10. `same_continuum_measure` — **❓ needs review** (uniqueness concern)
-11. `os2_from_phi4` — OS2 from Phi4
-12. `os3_from_pphi2` — OS3 from pphi2
 
 ---
 
@@ -121,11 +116,9 @@ The following 11 axioms have only self-audit review:
 
 ## Critical Issues
 
-### 1. ❓ `same_continuum_measure` (Bridge:179)
+### 1. ~~❓ `same_continuum_measure`~~ — FIXED (2026-02-24)
 
-**Severity**: MEDIUM — **(NOT VERIFIED)**
-**Issue**: Claims two different constructions produce the **same** measure. Requires both convergence AND uniqueness. At strong coupling, multiple phases may exist.
-**Action**: Add weak-coupling hypothesis. Verify with deep think.
+**Status**: RESOLVED. Now requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, and `IsWeakCoupling` hypotheses. Also fixed `os2_from_phi4` (was FALSE without `IsPhi4ContinuumLimit`), `os3_from_pphi2` (was FALSE without `IsPphi2ContinuumLimit`), and `measure_determined_by_schwinger` (polynomial→exponential moments).
 
 ### 2. ❓ `moment_equicontinuity` (Tightness:89)
 

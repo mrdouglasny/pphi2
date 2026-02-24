@@ -86,6 +86,44 @@ def isPhi4 (P : InteractionPolynomial) (coupling : ℝ) : Prop :=
   P.n = 4 ∧ 0 < coupling
   -- Full version: all coefficients match the φ⁴ interaction
 
+/-! ## Measure predicates
+
+These predicates record whether a measure arises from a specific construction.
+The bodies are placeholders (`True`); the full definitions would reference the
+weak limit of the respective regularized measure sequences. -/
+
+/-- A probability measure μ on S'(ℝ²) that arises as the continuum limit
+of pphi2's lattice construction: μ = weak-lim_{a→0} (ι_a)_* μ_a
+where μ_a is the interacting lattice measure at spacing a, embedded into S'(ℝ²).
+
+Placeholder body. Full definition requires weak convergence along a subsequence
+as in `continuumLimit`. -/
+def IsPphi2ContinuumLimit
+    (μ : @Measure FieldConfig instMeasurableSpaceConfiguration)
+    [IsProbabilityMeasure μ]
+    (P : InteractionPolynomial) (mass : ℝ) : Prop :=
+  True -- Placeholder: μ = weak-lim_{a→0} (ι_a)_* μ_a
+
+/-- A probability measure μ on S'(ℝ²) that arises as the infinite-volume limit
+of the Phi4 continuum construction: μ = weak-lim_{Λ→∞} μ^{Phi4}_{Λ}
+where μ^{Phi4}_{Λ} is the finite-volume Phi4 measure with UV cutoff removed.
+
+Placeholder body. Full definition requires the Phi4 project's formalization. -/
+def IsPhi4ContinuumLimit
+    (μ : @Measure FieldConfig instMeasurableSpaceConfiguration)
+    [IsProbabilityMeasure μ]
+    (P : InteractionPolynomial) (mass coupling : ℝ) : Prop :=
+  True -- Placeholder: μ = weak-lim_{Λ→∞} μ^{Phi4}_{Λ,κ→∞}
+
+/-- The coupling constant is in the weak-coupling regime where the cluster
+expansion converges, guaranteeing uniqueness of the infinite-volume limit.
+
+Placeholder body. The full condition is `coupling < l₀(P, mass)` where l₀
+is the radius of convergence of the Glimm-Jaffe-Spencer cluster expansion.
+Reference: Glimm-Jaffe-Spencer (1974). -/
+def IsWeakCoupling (P : InteractionPolynomial) (mass coupling : ℝ) : Prop :=
+  True -- Placeholder: coupling < cluster_expansion_radius(P, mass)
+
 /-! ## Core axiom: measure equality
 
 This is the central result that enables axiom transfer. It states that
@@ -102,19 +140,23 @@ The proof strategy (see same_measure.md) is:
 A probability measure on S'(ℝ²) with finite exponential moments is
 determined by its multilinear moments (Schwinger functions).
 
-This follows from the nuclear space structure: the characteristic functional
-Z[f] = ∫ exp(iΦ(f)) dμ is determined by its Taylor coefficients (the moments),
-and Z determines μ by Bochner-Minlos.
+The exponential moment bound (Fernique-type) ensures the characteristic
+functional Z[f] = ∫ exp(iΦ(f)) dμ equals its Taylor series (converges
+in a neighborhood of the origin), and Z determines μ by Bochner-Minlos.
+
+Note: polynomial moment integrability alone is NOT sufficient — the
+Hamburger moment problem on infinite-dimensional spaces requires
+exponential bounds to ensure moment determinacy.
 
 Reference: Dimock-Glimm (1974), Gel'fand-Vilenkin Ch. IV. -/
 axiom measure_determined_by_schwinger
     (μ ν : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ : IsProbabilityMeasure μ) (hν : IsProbabilityMeasure ν)
     -- Both have finite exponential moments (Fernique-type bound)
-    (hμ_exp : ∀ f : TestFun, ∀ n : ℕ,
-      Integrable (fun ω : FieldConfig => (ω f) ^ n) μ)
-    (hν_exp : ∀ f : TestFun, ∀ n : ℕ,
-      Integrable (fun ω : FieldConfig => (ω f) ^ n) ν)
+    (hμ_exp : ∀ f : TestFun, ∃ t : ℝ, 0 < t ∧
+      Integrable (fun ω : FieldConfig => Real.exp (t * (ω f) ^ 2)) μ)
+    (hν_exp : ∀ f : TestFun, ∃ t : ℝ, 0 < t ∧
+      Integrable (fun ω : FieldConfig => Real.exp (t * (ω f) ^ 2)) ν)
     -- All Schwinger functions agree
     (h_moments : ∀ (n : ℕ) (f : Fin n → TestFun),
       ∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ =
@@ -132,7 +174,9 @@ at leading order in Fourier space:
   G_a(k) = [a⁻²Σᵢ 2(1−cos(akᵢ)) + m²]⁻¹ → [k² + m²]⁻¹
 and the diagonal G_a(0,0) = (2π)⁻² ∫ G_a(k) dk picks up the same log
 divergence from the k → ∞ region, with O(1) differences from the lattice
-discretization of the integral. -/
+discretization of the integral.
+
+Note: C depends on N (lattice size) and mass, but is uniform in a. -/
 axiom wick_constant_comparison (N : ℕ) [NeZero N]
     (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧
@@ -155,8 +199,7 @@ Reference: Guerra-Rosen-Simon (1975), Simon Ch. V. -/
 theorem schwinger_agreement
     (P : InteractionPolynomial) (mass coupling : ℝ)
     (hmass : 0 < mass) (hP : isPhi4 P coupling)
-    -- Weak coupling hypothesis
-    (h_weak : ∃ l₀ : ℝ, 0 < l₀ ∧ coupling < l₀)
+    (h_weak : IsWeakCoupling P mass coupling)
     (n : ℕ) (f : Fin n → TestFun) :
     -- pphi2 Schwinger function = Phi4 Schwinger function
     True := -- Placeholder: needs the actual Schwinger function definitions
@@ -179,15 +222,13 @@ uniqueness (and hence equality) requires additional phase selection arguments. -
 axiom same_continuum_measure
     (P : InteractionPolynomial) (mass coupling : ℝ)
     (hmass : 0 < mass) (hP : isPhi4 P coupling)
-    (h_weak : ∃ l₀ : ℝ, 0 < l₀ ∧ coupling < l₀)
+    (h_weak : IsWeakCoupling P mass coupling)
     (μ_latt : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ_latt : IsProbabilityMeasure μ_latt)
-    -- μ_latt is the pphi2 continuum limit
-    (hμ_latt_os : @SatisfiesFullOS μ_latt hμ_latt)
+    (hμ_latt_limit : @IsPphi2ContinuumLimit μ_latt hμ_latt P mass)
     (μ_cont : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ_cont : IsProbabilityMeasure μ_cont)
-    -- μ_cont is the Phi4 infinite-volume limit
-    :
+    (hμ_cont_limit : @IsPhi4ContinuumLimit μ_cont hμ_cont P mass coupling) :
     μ_latt = μ_cont
 
 /-! ## Axiom transfer: OS2 from Phi4 to pphi2
@@ -212,10 +253,11 @@ In the continuum formulation this is essentially trivial: both (−Δ + m²)⁻�
 and the local interaction ∫ :φ⁴: dx are manifestly E(2)-invariant, and the
 infinite-volume limit preserves the symmetry. -/
 axiom os2_from_phi4
+    (P : InteractionPolynomial) (mass coupling : ℝ)
+    (hmass : 0 < mass) (hP : isPhi4 P coupling)
     (μ_cont : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ_cont : IsProbabilityMeasure μ_cont)
-    -- μ_cont is the Phi4 infinite-volume limit for some params
-    :
+    (hμ_cont_limit : @IsPhi4ContinuumLimit μ_cont hμ_cont P mass coupling) :
     @OS2_EuclideanInvariance μ_cont hμ_cont
 
 /-- **OS2 transferred to pphi2's lattice continuum limit.**
@@ -225,16 +267,17 @@ from Phi4 — bypassing the Ward identity argument entirely. -/
 theorem os2_for_pphi2_via_phi4
     (P : InteractionPolynomial) (mass coupling : ℝ)
     (hmass : 0 < mass) (hP : isPhi4 P coupling)
-    (h_weak : ∃ l₀ : ℝ, 0 < l₀ ∧ coupling < l₀)
+    (h_weak : IsWeakCoupling P mass coupling)
     (μ_latt : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ_latt : IsProbabilityMeasure μ_latt)
-    (hμ_latt_os : @SatisfiesFullOS μ_latt hμ_latt)
+    (hμ_latt_limit : @IsPphi2ContinuumLimit μ_latt hμ_latt P mass)
     (μ_cont : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ_cont : IsProbabilityMeasure μ_cont)
+    (hμ_cont_limit : @IsPhi4ContinuumLimit μ_cont hμ_cont P mass coupling)
     (h_eq : μ_latt = μ_cont) :
     @OS2_EuclideanInvariance μ_latt hμ_latt := by
-  -- The Phi4 measure is E(2)-invariant
-  have h_os2_cont := @os2_from_phi4 μ_cont hμ_cont
+  have h_os2_cont := @os2_from_phi4 P mass coupling hmass hP μ_cont hμ_cont
+    hμ_cont_limit
   subst h_eq
   exact h_os2_cont
 
@@ -257,7 +300,8 @@ The pphi2 continuum limit satisfies reflection positivity. This follows from:
 axiom os3_from_pphi2
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ_latt : @Measure FieldConfig instMeasurableSpaceConfiguration)
-    (hμ_latt : IsProbabilityMeasure μ_latt) :
+    (hμ_latt : IsProbabilityMeasure μ_latt)
+    (hμ_latt_limit : @IsPphi2ContinuumLimit μ_latt hμ_latt P mass) :
     @OS3_ReflectionPositivity μ_latt hμ_latt
 
 /-- **OS3 transferred to Phi4's continuum measure.**
@@ -268,15 +312,15 @@ checkerboard decomposition, and multiple reflection bounds. -/
 theorem os3_for_phi4_via_pphi2
     (P : InteractionPolynomial) (mass coupling : ℝ)
     (hmass : 0 < mass) (hP : isPhi4 P coupling)
-    (h_weak : ∃ l₀ : ℝ, 0 < l₀ ∧ coupling < l₀)
+    (h_weak : IsWeakCoupling P mass coupling)
     (μ_latt : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ_latt : IsProbabilityMeasure μ_latt)
+    (hμ_latt_limit : @IsPphi2ContinuumLimit μ_latt hμ_latt P mass)
     (μ_cont : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ_cont : IsProbabilityMeasure μ_cont)
     (h_eq : μ_latt = μ_cont) :
     @OS3_ReflectionPositivity μ_cont hμ_cont := by
-  -- The pphi2 measure is RP
-  have h_os3_latt := @os3_from_pphi2 P mass hmass μ_latt hμ_latt
+  have h_os3_latt := @os3_from_pphi2 P mass hmass μ_latt hμ_latt hμ_latt_limit
   subst h_eq
   exact h_os3_latt
 
@@ -300,20 +344,26 @@ This eliminates:
 theorem full_os_via_bridge
     (P : InteractionPolynomial) (mass coupling : ℝ)
     (hmass : 0 < mass) (hP : isPhi4 P coupling)
-    (h_weak : ∃ l₀ : ℝ, 0 < l₀ ∧ coupling < l₀)
-    (μ : @Measure FieldConfig instMeasurableSpaceConfiguration)
-    (hμ : IsProbabilityMeasure μ) :
-    @SatisfiesFullOS μ hμ := by
-  -- Get the pphi2 axioms (OS0, OS1, OS3, OS4 — no Ward identity needed)
-  have h0134 := @continuumLimit_satisfies_os0134 P mass hmass μ hμ
+    (h_weak : IsWeakCoupling P mass coupling)
+    (μ_latt : @Measure FieldConfig instMeasurableSpaceConfiguration)
+    (hμ_latt : IsProbabilityMeasure μ_latt)
+    (hμ_latt_limit : @IsPphi2ContinuumLimit μ_latt hμ_latt P mass)
+    (μ_cont : @Measure FieldConfig instMeasurableSpaceConfiguration)
+    (hμ_cont : IsProbabilityMeasure μ_cont)
+    (hμ_cont_limit : @IsPhi4ContinuumLimit μ_cont hμ_cont P mass coupling)
+    (h_eq : μ_latt = μ_cont) :
+    @SatisfiesFullOS μ_latt hμ_latt := by
+  have h0134 := @continuumLimit_satisfies_os0134 P mass hmass μ_latt hμ_latt
   -- Get OS3 from pphi2's transfer matrix argument
-  have h_os3 := @os3_from_pphi2 P mass hmass μ hμ
-  -- Get OS2 from Phi4's manifest continuum invariance
-  have h_os2 := @os2_from_phi4 μ hμ
+  have h_os3 := @os3_from_pphi2 P mass hmass μ_latt hμ_latt hμ_latt_limit
+  -- Get OS2 from Phi4's manifest continuum invariance, transferred via h_eq
+  have h_os2_cont := @os2_from_phi4 P mass coupling hmass hP μ_cont hμ_cont
+    hμ_cont_limit
+  subst h_eq
   exact {
     os0 := sorry  -- From h0134.os0
     os1 := sorry  -- From h0134.os1
-    os2 := h_os2
+    os2 := h_os2_cont
     os3 := h_os3
     os4_clustering := sorry  -- From h0134.os4 + mass gap
     os4_ergodicity := trivial  -- OS4_Ergodicity is currently True
@@ -332,18 +382,20 @@ but with a simpler proof of OS3. -/
 theorem phi4_full_os_via_bridge
     (P : InteractionPolynomial) (mass coupling : ℝ)
     (hmass : 0 < mass) (hP : isPhi4 P coupling)
-    (h_weak : ∃ l₀ : ℝ, 0 < l₀ ∧ coupling < l₀)
+    (h_weak : IsWeakCoupling P mass coupling)
     (μ_latt μ_cont : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ_latt : IsProbabilityMeasure μ_latt)
-    (hμ_latt_os : @SatisfiesFullOS μ_latt hμ_latt)
+    (hμ_latt_limit : @IsPphi2ContinuumLimit μ_latt hμ_latt P mass)
     (hμ_cont : IsProbabilityMeasure μ_cont)
+    (hμ_cont_limit : @IsPhi4ContinuumLimit μ_cont hμ_cont P mass coupling)
     (h_eq : μ_latt = μ_cont) :
     @SatisfiesFullOS μ_cont hμ_cont := by
   -- OS2 is native to Phi4 (manifest invariance)
-  have h_os2 := @os2_from_phi4 μ_cont hμ_cont
+  have h_os2 := @os2_from_phi4 P mass coupling hmass hP μ_cont hμ_cont
+    hμ_cont_limit
   -- OS3 transferred from pphi2
   have h_os3 := os3_for_phi4_via_pphi2 P mass coupling hmass hP h_weak
-    μ_latt hμ_latt μ_cont hμ_cont h_eq
+    μ_latt hμ_latt hμ_latt_limit μ_cont hμ_cont h_eq
   exact {
     os0 := sorry  -- From Phi4's phi4_os0
     os1 := sorry  -- From Phi4's phi4_os1
