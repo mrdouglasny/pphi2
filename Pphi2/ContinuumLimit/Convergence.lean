@@ -52,30 +52,39 @@ This follows from:
 -/
 
 import Pphi2.ContinuumLimit.Tightness
+import Mathlib.MeasureTheory.Measure.Prokhorov
+import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
+import Mathlib.Topology.Sequences
+import Mathlib.Topology.Metrizable.Basic
 
 noncomputable section
 
-open GaussianField MeasureTheory Filter
+open GaussianField MeasureTheory Filter BoundedContinuousFunction
 
 namespace Pphi2
 
 variable (d N : ℕ) [NeZero N]
 
-/-! ## Prokhorov's theorem (axiomatized)
+/-! ## Prokhorov's theorem
 
-Prokhorov's theorem for Polish spaces. Mathlib has partial support
-(`MeasureTheory.tight_iff_isRelativelyCompact`); we axiomatize the
-sequential version needed here. -/
+Prokhorov's theorem for Polish spaces: tightness implies sequential
+compactness. Derived from Mathlib's `isCompact_closure_of_isTightMeasureSet`
+and the Lévy-Prokhorov metrization of `ProbabilityMeasure X`. -/
 
 /-- **Prokhorov's theorem** (sequential version).
 
 On a Polish space X, if a sequence of probability measures {μₙ} is tight,
 then it has a weakly convergent subsequence.
 
-This is partially available in Mathlib but we axiomatize the sequential
-extraction for convenience. -/
-axiom prokhorov_sequential {X : Type*} [TopologicalSpace X]
-    [MeasurableSpace X] [PolishSpace X] [OpensMeasurableSpace X]
+Proof strategy:
+1. Lift `μ : ℕ → Measure X` to `P : ℕ → ProbabilityMeasure X`
+2. Convert the tightness hypothesis to `IsTightMeasureSet`
+3. Apply `isCompact_closure_of_isTightMeasureSet` to get compact closure
+4. Polish space → ProbabilityMeasure X is metrizable (Lévy-Prokhorov)
+   → compact = sequentially compact → extract convergent subsequence
+5. Convert back from `ProbabilityMeasure` convergence to integral convergence -/
+theorem prokhorov_sequential {X : Type*} [TopologicalSpace X]
+    [MeasurableSpace X] [PolishSpace X] [BorelSpace X]
     (μ : ℕ → Measure X)
     (hμ_prob : ∀ n, IsProbabilityMeasure (μ n))
     (hμ_tight : ∀ ε : ℝ, 0 < ε →
@@ -84,7 +93,69 @@ axiom prokhorov_sequential {X : Type*} [TopologicalSpace X]
       StrictMono φ ∧ IsProbabilityMeasure ν ∧
       -- Weak convergence: ∫ f dμ_{φ(n)} → ∫ f dν for bounded continuous f
       ∀ (f : X → ℝ), Continuous f → (∃ C, ∀ x, |f x| ≤ C) →
-        Tendsto (fun n => ∫ x, f x ∂(μ (φ n))) atTop (nhds (∫ x, f x ∂ν))
+        Tendsto (fun n => ∫ x, f x ∂(μ (φ n))) atTop (nhds (∫ x, f x ∂ν)) := by
+  -- Step 1: Lift to ProbabilityMeasure
+  let P : ℕ → ProbabilityMeasure X := fun n => ⟨μ n, hμ_prob n⟩
+  -- Step 2: Show the range is tight in Mathlib's sense
+  have htight : IsTightMeasureSet
+      {((p : ProbabilityMeasure X) : Measure X) | p ∈ Set.range P} := by
+    rw [isTightMeasureSet_iff_exists_isCompact_measure_compl_le]
+    intro ε hε
+    -- Need ε.toReal > 0; this holds when ε > 0 and ε ≠ ⊤
+    by_cases hε_top : ε = ⊤
+    · -- When ε = ⊤, the bound is trivial
+      subst hε_top
+      obtain ⟨K, hK, _⟩ := hμ_tight 1 one_pos
+      exact ⟨K, hK, fun _ _ => le_top⟩
+    · have hε_real : 0 < ε.toReal := ENNReal.toReal_pos (ne_of_gt hε) hε_top
+      obtain ⟨K, hK_compact, hK_bound⟩ := hμ_tight ε.toReal hε_real
+      refine ⟨K, hK_compact, ?_⟩
+      intro ν' hν'
+      obtain ⟨_, ⟨n, rfl⟩, rfl⟩ := hν'
+      -- Need: (P n : Measure X) Kᶜ ≤ ε, i.e. μ n Kᶜ ≤ ε
+      -- P n coerces to μ n
+      show (μ n) Kᶜ ≤ ε
+      have hK_meas : MeasurableSet K := hK_compact.measurableSet
+      have hbound := hK_bound n
+      rw [prob_compl_eq_one_sub hK_meas (μ := μ n)]
+      -- Goal: 1 - μ n K ≤ ε (in ℝ≥0∞)
+      -- Suffices: 1 ≤ ε + μ n K (by tsub_le_iff_right)
+      rw [tsub_le_iff_right]
+      -- From hbound: (μ n K).toReal ≥ 1 - ε.toReal, i.e. (μ n K).toReal + ε.toReal ≥ 1
+      have hK_fin : (μ n K) ≠ ⊤ := measure_ne_top (μ n) K
+      have h_add_fin : ε + (μ n K) ≠ ⊤ := ENNReal.add_ne_top.2 ⟨hε_top, hK_fin⟩
+      rw [← ENNReal.ofReal_toReal h_add_fin, ← ENNReal.ofReal_one]
+      apply ENNReal.ofReal_le_ofReal
+      rw [ENNReal.toReal_add hε_top hK_fin]
+      linarith
+  -- Step 3: Prokhorov's theorem gives compact closure
+  have hcomp : IsCompact (closure (Set.range P)) :=
+    isCompact_closure_of_isTightMeasureSet htight
+  -- Step 4: Extract convergent subsequence
+  -- ProbabilityMeasure X is metrizable (Lévy-Prokhorov) on Polish spaces,
+  -- hence first-countable, so compact ↔ sequentially compact
+  have hseq := hcomp.isSeqCompact
+  obtain ⟨ν, _, φ, hφ_strict, hφ_tend⟩ :=
+    hseq (fun n => subset_closure (Set.mem_range_self n))
+  -- Step 5: Convert back to Measure and integrals
+  refine ⟨φ, ν, hφ_strict, ν.prop, ?_⟩
+  intro f hf_cont ⟨C, hC⟩
+  -- Convergence in ProbabilityMeasure ↔ ∫ g dμ → ∫ g dν for all g : X →ᵇ ℝ
+  rw [ProbabilityMeasure.tendsto_iff_forall_integral_tendsto] at hφ_tend
+  -- Construct BoundedContinuousFunction from Continuous + bounded
+  have hf_bdd : ∀ x y : X, dist (f x) (f y) ≤ 2 * C := by
+    intro x y
+    rw [Real.dist_eq]
+    have h1 : |f x - f y| ≤ |f x| + |f y| := by
+      have := norm_sub_le (f x) (f y)
+      simp only [Real.norm_eq_abs] at this
+      exact this
+    linarith [hC x, hC y]
+  let f_bcf : BoundedContinuousFunction X ℝ :=
+    ⟨⟨f, hf_cont⟩, ⟨2 * C, fun x y => hf_bdd x y⟩⟩
+  have := hφ_tend f_bcf
+  -- The integrals match since f_bcf coerces to f
+  convert this using 1 <;> · ext n; rfl
 
 /-! ## The continuum limit -/
 
