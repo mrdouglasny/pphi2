@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 64 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
+**pphi2: 61 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
 
 ## File inventory
 
@@ -37,7 +37,7 @@ progressively fill in the axioms with full proofs.
 | 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 5 axioms, 1 sorry |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 7 axioms, 1 sorry |
-| 6 | `OSAxioms.lean` | 3 axioms |
+| 6 | `OSAxioms.lean` | 0 axioms |
 | 6 | `Main.lean` | 1 axiom, 5 sorries |
 | 6 | `Bridge.lean` | 6 axioms, 6 sorries |
 
@@ -83,15 +83,14 @@ The OS axioms are stated for a probability measure μ on S'(ℝ²) =
 | `positiveTimeSubmodule2` | `Submodule ℝ TestFunction2` | Test functions with `tsupport ⊆ {t > 0}` |
 | `PositiveTimeTestFunction2` | `Type` | Elements of `positiveTimeSubmodule2` |
 
-### Axiomatized operations (5 axioms in OSAxioms.lean)
+### Operations on Schwartz space (all proved, 0 axioms in OSAxioms.lean)
 
-| Axiom | Signature | Description |
-|-------|-----------|-------------|
-| `euclideanAction2 g` | `TestFunction2 →L[ℝ] TestFunction2` | Pullback of g ∈ E(2) on real Schwartz functions: `(g·f)(x) = f(g⁻¹x)`. Axiomatized because composing SchwartzMap with an affine map requires proving Schwartz decay preservation. |
-| `euclideanAction2ℂ g` | `TestFunction2ℂ →L[ℝ] TestFunction2ℂ` | Same for complex test functions. |
-| `compTimeReflection2` | `TestFunction2 →L[ℝ] TestFunction2` | `(Θf)(t,x) = f(-t,x)` as a CLM. Axiomatized for the same reason. |
-| `compTimeReflection2_apply` | `compTimeReflection2 f p = f (timeReflection2 p)` | Specification: Θ agrees with composition with timeReflection2. |
-| `SchwartzMap.translate a` | `TestFunction2 →L[ℝ] TestFunction2` | Translation: `(T_a f)(x) = f(x-a)`. Axiomatized because Mathlib's SchwartzMap has no built-in translate. |
+| Definition | Signature | Construction |
+|------------|-----------|-------------|
+| `euclideanAction2 g` | `TestFunction2 →L[ℝ] TestFunction2` | `compCLMOfAntilipschitz` with inverse Euclidean action |
+| `euclideanAction2ℂ g` | `TestFunction2ℂ →L[ℝ] TestFunction2ℂ` | Same for complex test functions |
+| `compTimeReflection2` | `TestFunction2 →L[ℝ] TestFunction2` | `compCLMOfContinuousLinearEquiv` with time reflection CLE |
+| `SchwartzMap.translate a` | `TestFunction2 →L[ℝ] TestFunction2` | `compCLMOfAntilipschitz` with translation |
 
 ### OS axiom definitions
 
@@ -279,11 +278,11 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `euclideanAction2` | OSAxioms | Infrastructure | E(2) pullback on real Schwartz functions as CLM. Needs Schwartz decay preservation under affine composition. |
-| `euclideanAction2ℂ` | OSAxioms | Infrastructure | Same for complex Schwartz functions. |
+| ~~`euclideanAction2`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfAntilipschitz` with inverse Euclidean action (antilipschitz + temperate growth). |
+| ~~`euclideanAction2ℂ`~~ | OSAxioms | ✅ Proved | Same construction for complex Schwartz functions. |
 | ~~`compTimeReflection2`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfContinuousLinearEquiv` with time reflection as CLE. |
 | ~~`compTimeReflection2_apply`~~ | OSAxioms | ✅ Proved | Follows by `rfl` from the construction. |
-| `SchwartzMap.translate` | OSAxioms | Infrastructure | Translation on Schwartz space as CLM. Needs Schwartz decay preservation under translation. |
+| ~~`SchwartzMap.translate`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfAntilipschitz` with translation (antilipschitz + temperate growth). |
 | `os_reconstruction` | Main | Infrastructure | OS reconstruction theorem (Osterwalder-Schrader 1973, 1975). Would require formalizing Minkowski QFT. |
 | `measure_determined_by_schwinger` | Bridge | Medium | A measure on S'(ℝ²) is determined by its Schwinger functions. |
 | `wick_constant_comparison` | Bridge | Medium | Wick constant comparison between formulations. |
@@ -339,7 +338,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 1. ~~**`prokhorov_sequential`**~~ — **Proved.** Now a theorem with complete proof.
 2. **`transferEigenvalue` + spectral axioms** — Need compact self-adjoint operator spectral theory in Mathlib.
 3. **`latticeEmbed` / `latticeEmbedLift`** — Construction of the embedding as a CLM on Schwartz space.
-4. **`euclideanAction2` / `compTimeReflection2` / `SchwartzMap.translate`** — Schwartz space composition with linear/affine maps. Blocked on Mathlib's SchwartzMap API.
+4. ~~**`euclideanAction2` / `compTimeReflection2` / `SchwartzMap.translate`**~~ — ✅ All proved using `SchwartzMap.compCLMOfContinuousLinearEquiv` and `SchwartzMap.compCLMOfAntilipschitz`.
 
 ### Tier 2: Core analytic results (the hard axioms)
 
@@ -359,8 +358,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 ### Tier 4: Easy / straightforward
 
 14. `os1_inheritance` — |cos| ≤ 1
-15. `compTimeReflection2_apply` — specification axiom
-16. Remaining measurability and integrability lemmas
+15. Remaining measurability and integrability lemmas
 
 ---
 
@@ -404,6 +402,11 @@ The following theorems have complete proofs (no sorry):
 | `wickPolynomial_bounded_below` | WickPolynomial | Wick polynomial bounded below — from leading term domination via `poly_even_degree_bounded_below` |
 | `poly_even_degree_bounded_below` | WickPolynomial | Even-degree polynomial with positive leading coeff is bounded below — `eval_eq_sum_range` + coefficient bound + `Continuous.exists_forall_le` |
 | `field_second_moment_finite` | Normalization | ∫\|ω(δ_x)\|² dμ_a < ∞ — `integrable_withDensity_iff` + `pairing_product_integrable` + domination by exp(B)·f² |
+| `field_all_moments_finite` | Normalization | ∫\|ω(δ_x)\|^p dμ_a < ∞ for all p — `pairing_is_gaussian` + `integrable_pow_of_mem_interior_integrableExpSet` |
+| `euclideanAction2` | OSAxioms | E(2) pullback on Schwartz functions — `compCLMOfAntilipschitz` with inverse Euclidean action |
+| `euclideanAction2ℂ` | OSAxioms | Same for complex Schwartz functions |
+| `compTimeReflection2` | OSAxioms | Time reflection on Schwartz space — `compCLMOfContinuousLinearEquiv` with time reflection CLE |
+| `SchwartzMap.translate` | OSAxioms | Translation on Schwartz space — `compCLMOfAntilipschitz` with translation |
 
 ---
 

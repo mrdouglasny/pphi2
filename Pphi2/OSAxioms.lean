@@ -81,8 +81,9 @@ def generatingFunctionalℂ
 
 /-! ## Euclidean group E(2) = ℝ² ⋊ O(2) -/
 
-/-- Orthogonal linear isometries of ℝ² (the group O(2)). -/
-abbrev O2 := LinearIsometry (RingHom.id ℝ) SpaceTime2 SpaceTime2
+/-- Orthogonal linear isometry equivalences of ℝ² (the group O(2)).
+Uses `LinearIsometryEquiv` (not `LinearIsometry`) so the inverse is available. -/
+abbrev O2 := SpaceTime2 ≃ₗᵢ[ℝ] SpaceTime2
 
 /-- Euclidean motion in 2D: rotation/reflection R ∈ O(2) + translation t ∈ ℝ². -/
 structure E2 where
@@ -92,15 +93,41 @@ structure E2 where
 /-- Action of g ∈ E(2) on a spacetime point: g · x = R(x) + t. -/
 def E2.act (g : E2) (x : SpaceTime2) : SpaceTime2 := g.R x + g.t
 
-/-- The pullback action of E(2) on real test functions:
-  `(g · f)(x) = f(g⁻¹ · x)`.
+/-- The inverse Euclidean action: `g⁻¹ · x = R⁻¹(x - t)`. -/
+private def euclideanInverse (g : E2) (x : SpaceTime2) : SpaceTime2 :=
+  g.R.symm (x - g.t)
 
-This is axiomatized because constructing SchwartzMap from composition
-requires showing the composition preserves Schwartz decay. -/
-axiom euclideanAction2 (g : E2) : TestFunction2 →L[ℝ] TestFunction2
+private lemma euclideanInverse_hasTemperateGrowth (g : E2) :
+    (euclideanInverse g).HasTemperateGrowth := by
+  have hR := g.R.symm.toContinuousLinearEquiv.hasTemperateGrowth
+  have hSub : (fun x : SpaceTime2 => x - g.t).HasTemperateGrowth :=
+    ((ContinuousLinearMap.id ℝ SpaceTime2).hasTemperateGrowth).sub
+      (Function.HasTemperateGrowth.const g.t)
+  convert hR.comp hSub
+
+private lemma euclideanInverse_antilipschitz (g : E2) :
+    AntilipschitzWith 1 (euclideanInverse g) :=
+  fun x y => by
+    simp only [euclideanInverse, ENNReal.coe_one, one_mul]
+    calc edist x y
+        = edist (x - g.t) (y - g.t) := by rw [edist_sub_right]
+      _ = edist (g.R.symm (x - g.t)) (g.R.symm (y - g.t)) :=
+          (g.R.symm.isometry.edist_eq _ _).symm
+      _ ≤ edist (g.R.symm (x - g.t)) (g.R.symm (y - g.t)) := le_refl _
+
+/-- The pullback action of E(2) on real test functions:
+  `(g · f)(x) = f(g⁻¹ · x)` where `g⁻¹ · x = R⁻¹(x - t)`.
+
+Constructed via `compCLMOfAntilipschitz`: the inverse Euclidean action
+is an affine isometry, which has temperate growth and is antilipschitz. -/
+noncomputable def euclideanAction2 (g : E2) : TestFunction2 →L[ℝ] TestFunction2 :=
+  SchwartzMap.compCLMOfAntilipschitz ℝ
+    (euclideanInverse_hasTemperateGrowth g) (euclideanInverse_antilipschitz g)
 
 /-- The pullback action on complex test functions. -/
-axiom euclideanAction2ℂ (g : E2) : TestFunction2ℂ →L[ℝ] TestFunction2ℂ
+noncomputable def euclideanAction2ℂ (g : E2) : TestFunction2ℂ →L[ℝ] TestFunction2ℂ :=
+  SchwartzMap.compCLMOfAntilipschitz ℝ
+    (euclideanInverse_hasTemperateGrowth g) (euclideanInverse_antilipschitz g)
 
 /-! ## Time reflection -/
 
@@ -152,8 +179,15 @@ theorem compTimeReflection2_apply (f : TestFunction2) (p : SpaceTime2) :
 /-- Translation of a real test function by a ∈ ℝ²:
   `(translate a f)(x) = f(x - a)`.
 
-Axiomatized because SchwartzMap doesn't have a built-in translate. -/
-axiom SchwartzMap.translate (a : SpaceTime2) : TestFunction2 →L[ℝ] TestFunction2
+Constructed using `SchwartzMap.compCLMOfAntilipschitz` with the translation map
+`x ↦ x - a`, which is an isometry with temperate growth. -/
+noncomputable def SchwartzMap.translate (a : SpaceTime2) : TestFunction2 →L[ℝ] TestFunction2 :=
+  SchwartzMap.compCLMOfAntilipschitz ℝ
+    (show (fun x : SpaceTime2 => x - a).HasTemperateGrowth from
+      ((ContinuousLinearMap.id ℝ SpaceTime2).hasTemperateGrowth).sub
+        (Function.HasTemperateGrowth.const a))
+    (show AntilipschitzWith 1 (fun x : SpaceTime2 => x - a) from
+      fun x y => by simp [edist_sub_right])
 
 /-! ## Positive-time test functions -/
 
