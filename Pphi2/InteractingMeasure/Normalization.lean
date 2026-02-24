@@ -75,7 +75,56 @@ theorem field_second_moment_finite (P : InteractionPolynomial) (a mass : ℝ)
     Integrable (fun ω : Configuration (FinLatticeField d N) =>
       (ω (finLatticeDelta d N x)) ^ 2)
       (interactingLatticeMeasure d N P a mass ha hmass) := by
-  sorry
+  -- Setup
+  obtain ⟨B, hB⟩ := interactionFunctional_bounded_below d N P a mass ha hmass
+  have hZ := partitionFunction_pos d N P a mass ha hmass
+  set μ_GFF := latticeGaussianMeasure d N a mass ha hmass with hμ_def
+  set δx := finLatticeDelta d N x
+  set bw := boltzmannWeight d N P a mass
+  -- The interacting measure = (1/Z) • μ_GFF.withDensity(bw)
+  -- Strategy: reduce to integrability under Gaussian via measure decomposition
+  -- Step 1: Suffices to show integrability under μ_GFF.withDensity
+  suffices h : Integrable (fun ω : Configuration (FinLatticeField d N) =>
+      (ω δx) ^ 2)
+      (μ_GFF.withDensity (fun ω => ENNReal.ofReal (bw ω))) by
+    unfold interactingLatticeMeasure
+    exact h.smul_measure (ENNReal.inv_ne_top.mpr ((ENNReal.ofReal_pos.mpr hZ).ne'))
+  -- Step 2: Reduce withDensity to multiplicative weight under Gaussian
+  -- Using integrable_withDensity_iff (f := density, g := our function)
+  have hf_meas : Measurable (fun ω : Configuration (FinLatticeField d N) =>
+      ENNReal.ofReal (bw ω)) :=
+    ENNReal.measurable_ofReal.comp ((interactionFunctional_measurable d N P a mass).neg.exp)
+  apply (integrable_withDensity_iff hf_meas
+    (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mpr
+  -- Goal: Integrable (fun ω => (ω δx)^2 * (ENNReal.ofReal (bw ω)).toReal) μ_GFF
+  -- Simplify toReal ∘ ofReal = id (since bw > 0)
+  have hbw_simp : ∀ ω : Configuration (FinLatticeField d N),
+      (ENNReal.ofReal (bw ω)).toReal = bw ω :=
+    fun ω => ENNReal.toReal_ofReal (le_of_lt (boltzmannWeight_pos d N P a mass ω))
+  simp_rw [hbw_simp]
+  -- Goal: Integrable (fun ω => (ω δx)^2 * bw ω) μ_GFF
+  -- Step 3: Get Gaussian integrability of (ω δx)²
+  have h_sq_int : Integrable (fun ω : Configuration (FinLatticeField d N) =>
+      (ω δx) ^ 2) μ_GFF := by
+    have := pairing_product_integrable (latticeCovariance d N a mass ha hmass) δx δx
+    simp only [sq]
+    exact this
+  -- Step 4: Dominate (ω δx)² * bw ω by (ω δx)² * exp(B)
+  apply (h_sq_int.mul_const (Real.exp B)).mono
+  · -- AEStronglyMeasurable
+    exact ((configuration_eval_measurable δx).pow_const 2).aestronglyMeasurable.mul
+      ((interactionFunctional_measurable d N P a mass).neg.exp.aestronglyMeasurable)
+  · -- Pointwise norm bound
+    exact Filter.Eventually.of_forall fun ω => by
+      simp only [Real.norm_eq_abs]
+      have h1 : 0 ≤ (ω δx) ^ 2 := sq_nonneg _
+      have h2 : 0 < bw ω := boltzmannWeight_pos d N P a mass ω
+      have h3 : bw ω ≤ Real.exp B := by
+        show Real.exp _ ≤ Real.exp B
+        exact Real.exp_le_exp_of_le (by linarith [hB ω])
+      rw [abs_of_nonneg (mul_nonneg h1 (le_of_lt h2)),
+          abs_of_nonneg (mul_nonneg h1 (le_of_lt (Real.exp_pos B)))]
+      exact mul_le_mul_of_nonneg_left h3 h1
 
 /-- All moments of field evaluations are finite under the interacting measure.
 

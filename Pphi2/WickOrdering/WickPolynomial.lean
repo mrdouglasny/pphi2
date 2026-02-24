@@ -285,7 +285,7 @@ Proof: Combine ‖p.eval‖ → ∞ (from `tendsto_norm_atTop`) with
 "eventually nonneg" (even degree + positive leading coeff) to get
 p.eval → +∞ on cocompact, then `Continuous.exists_forall_le` gives
 the global minimum. -/
-private theorem poly_even_degree_bounded_below (p : ℝ[X])
+theorem poly_even_degree_bounded_below (p : ℝ[X])
     (hd_pos : 0 < p.natDegree) (hd_even : Even p.natDegree)
     (hlc : 0 < p.leadingCoeff) :
     ∃ A : ℝ, 0 < A ∧ ∀ x : ℝ, p.eval x ≥ -A := by

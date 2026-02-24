@@ -315,7 +315,7 @@ theorem full_os_via_bridge
     os2 := h_os2
     os3 := h_os3
     os4_clustering := sorry  -- From h0134.os4 + mass gap
-    os4_ergodicity := sorry  -- From clustering
+    os4_ergodicity := trivial  -- OS4_Ergodicity is currently True
   }
 
 /-! ## Phi4 also gets the full bundle -/
@@ -349,7 +349,7 @@ theorem phi4_full_os_via_bridge
     os2 := h_os2
     os3 := h_os3
     os4_clustering := sorry  -- From Phi4's phi4_os4_weak_coupling
-    os4_ergodicity := sorry  -- From clustering
+    os4_ergodicity := trivial  -- OS4_Ergodicity is currently True
   }
 
 end Pphi2.Bridge

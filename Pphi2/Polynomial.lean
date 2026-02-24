@@ -41,7 +41,10 @@ def InteractionPolynomial.evalWick' (P : InteractionPolynomial) (τ c : ℝ) : �
   -- would use wickMonomial derivatives; not currently needed downstream.
 
 /-- P(τ, c) ≥ τⁿ/(2n) - A·c^{n/2} for some constant A depending only on P.
-    DDJ Lemma 2.3. -/
+    DDJ Lemma 2.3. Note: `evalWick` is a placeholder (= `eval`); the actual
+    Wick-ordered version is `wickPolynomial` in WickPolynomial.lean, where
+    `wickPolynomial_bounded_below` is fully proved. This axiom is not used
+    downstream (all code uses `wickPolynomial_bounded_below` directly). -/
 axiom InteractionPolynomial.polynomial_lower_bound (P : InteractionPolynomial) :
     ∃ A : ℝ, 0 < A ∧ ∀ τ c : ℝ, 1 < c →
       P.evalWick τ c ≥ -A * c ^ (P.n / 2)

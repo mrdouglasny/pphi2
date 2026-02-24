@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 68 axioms, 25 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
+**pphi2: 68 axioms, 19 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
 
 ## File inventory
 
@@ -24,7 +24,7 @@ progressively fill in the axioms with full proofs.
 | 1 | `WickOrdering/Counterterm.lean` | 1 axiom |
 | 1 | `InteractingMeasure/LatticeAction.lean` | 0 axioms |
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
-| 1 | `InteractingMeasure/Normalization.lean` | 1 axiom, 2 sorries |
+| 1 | `InteractingMeasure/Normalization.lean` | 1 axiom, 1 sorry |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 1 axiom |
 | 2 | `TransferMatrix/Positivity.lean` | 8 axioms |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 4 axioms, 2 sorries |
@@ -36,10 +36,10 @@ progressively fill in the axioms with full proofs.
 | 4 | `ContinuumLimit/Tightness.lean` | 4 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 5 axioms, 1 sorry |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 7 axioms, 2 sorries |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 7 axioms, 1 sorry |
 | 6 | `OSAxioms.lean` | 5 axioms |
-| 6 | `Main.lean` | 1 axiom |
-| 6 | `Bridge.lean` | 6 axioms |
+| 6 | `Main.lean` | 1 axiom, 5 sorries |
+| 6 | `Bridge.lean` | 6 axioms, 6 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
@@ -317,7 +317,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`partitionFunction_pos`~~ | LatticeMeasure | **Proved** — Z_a > 0. |
 | ~~`interactingLatticeMeasure_isProbability`~~ | LatticeMeasure | **Proved** — μ_a is a probability measure. |
 | ~~`boundedFunctions_integrable`~~ | Normalization | **Proved** — bounded functions integrable w.r.t. probability measure. |
-| `field_second_moment_finite` | Normalization | Second moment finite. From Nelson's estimate. |
+| ~~`field_second_moment_finite`~~ | Normalization | **Proved** — ∫|ω(δ_x)|² dμ_a < ∞. Boltzmann weight bounded above + Gaussian L². |
 | `fkg_interacting` | Normalization | FKG for the interacting measure. From lattice FKG + single-site perturbation. |
 | ~~`generating_functional_bounded`~~ | Normalization | **Proved** — \|Z[f]\| ≤ 1 for real f. From \|exp(it)\| = 1. |
 | ~~`wickConstant_le_inv_mass_sq`~~ | Counterterm | **Proved** (in gaussian-field) — c_a ≤ 1/m². |
@@ -403,6 +403,7 @@ The following theorems have complete proofs (no sorry):
 | `prokhorov_sequential` | Convergence | Prokhorov's theorem (sequential version) — proved as theorem with proof |
 | `wickPolynomial_bounded_below` | WickPolynomial | Wick polynomial bounded below — from leading term domination via `poly_even_degree_bounded_below` |
 | `poly_even_degree_bounded_below` | WickPolynomial | Even-degree polynomial with positive leading coeff is bounded below — `eval_eq_sum_range` + coefficient bound + `Continuous.exists_forall_le` |
+| `field_second_moment_finite` | Normalization | ∫\|ω(δ_x)\|² dμ_a < ∞ — `integrable_withDensity_iff` + `pairing_product_integrable` + domination by exp(B)·f² |
 
 ---
 
