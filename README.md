@@ -56,7 +56,7 @@ All six phases are structurally complete and the full project builds
 analytic/probabilistic results with detailed proof sketches, proves the logical
 structure connecting them, and progressively fills in the axioms with full proofs.
 
-- **pphi2:** 66 axioms, 31 sorries
+- **pphi2:** 65 axioms, 28 sorries
 - **gaussian-field** (upstream dependency): 29 axioms, 14 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,

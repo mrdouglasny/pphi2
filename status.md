@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 66 axioms, 31 sorries** | **gaussian-field (upstream): 29 axioms, 14 sorries**
+**pphi2: 65 axioms, 28 sorries** | **gaussian-field (upstream): 29 axioms, 14 sorries**
 
 ## File inventory
 
@@ -22,10 +22,10 @@ progressively fill in the axioms with full proofs.
 | Core | `Polynomial.lean` | 1 sorry (polynomial_lower_bound) |
 | 1 | `WickOrdering/WickPolynomial.lean` | 3 axioms |
 | 1 | `WickOrdering/Counterterm.lean` | 1 axiom, 2 sorries |
-| 1 | `InteractingMeasure/LatticeAction.lean` | 1 axiom, 1 sorry |
+| 1 | `InteractingMeasure/LatticeAction.lean` | 1 axiom |
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 4 sorries |
 | 1 | `InteractingMeasure/Normalization.lean` | 1 axiom, 4 sorries |
-| 2 | `TransferMatrix/TransferMatrix.lean` | 1 axiom, 2 sorries |
+| 2 | `TransferMatrix/TransferMatrix.lean` | 1 axiom |
 | 2 | `TransferMatrix/Positivity.lean` | 8 axioms, 1 sorry |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 4 axioms, 2 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 1 sorry |
@@ -36,7 +36,7 @@ progressively fill in the axioms with full proofs.
 | 4 | `ContinuumLimit/Tightness.lean` | 4 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 5 axioms, 1 sorry |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 5 axioms, 1 sorry |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 8 axioms, 2 sorries |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 7 axioms, 2 sorries |
 | 6 | `OSAxioms.lean` | 5 axioms, 1 sorry |
 | 6 | `Main.lean` | 1 axiom, 7 sorries |
 
@@ -266,7 +266,7 @@ True  -- Placeholder; full formulation needs time translation on
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `latticeAction_translation_invariant` | OS2_WardIdentity | Easy | Lattice action is translation-invariant (relabeling sum indices). |
+| ~~`latticeAction_translation_invariant`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — relabeling via `Equiv.subRight`. |
 | `latticeMeasure_translation_invariant` | OS2_WardIdentity | Easy | Lattice measure is translation-invariant (from Gaussian + interaction). |
 | `translation_invariance_continuum` | OS2_WardIdentity | Medium | Continuum limit is translation-invariant. Lattice translations approximate all translations as a→0; density argument. |
 | `rotationBreakingOperator` | OS2_WardIdentity | Medium | The rotation anomaly operator O_break. Explicit construction from lattice Laplacian correction terms. |
@@ -295,9 +295,9 @@ True  -- Placeholder; full formulation needs time translation on
 | Sorry | File | Notes |
 |-------|------|-------|
 | `polynomial_lower_bound` | Polynomial | Even degree + positive leading coeff → bounded below. Needs Polynomial API. |
-| `transferKernel_symmetric` | TransferMatrix | Algebra: the symmetric split K(ψ,ψ') + ½h(ψ) + ½h(ψ') is symmetric. Should close with `ring` after proper unfolding. |
-| `timeCoupling_eq_zero_iff` | TransferMatrix | When is the time coupling zero? Needs analysis of the sum. |
-| `latticeInteraction_continuous` | LatticeAction | Continuous function on finite-dimensional space. Composition of continuous operations. |
+| ~~`transferKernel_symmetric`~~ | TransferMatrix | **Proved** — `(a-b)² = (b-a)²` + `ring`. |
+| ~~`timeCoupling_eq_zero_iff`~~ | TransferMatrix | **Proved** — sum of nonneg squares = 0 iff each is 0. |
+| ~~`latticeInteraction_continuous`~~ | LatticeAction | **Proved** — via `wickMonomial_continuous` + finite sums. |
 | `continuumMeasure_isProbability` | Embedding | Pushforward of probability measure is probability measure. Standard measure theory. |
 | `connectedTwoPoint_symm` | OS4_MassGap | Symmetry of the connected 2-point function. Integral equality. |
 
@@ -380,6 +380,11 @@ The following theorems have complete proofs (no sorry):
 | `timeReflection2D_involution` | OS3_RP_Lattice | Time reflection is an involution |
 | `timeReflection2_involution` | OSAxioms | Θ² = id for continuum time reflection |
 | `positiveTimeSubmodule2` | OSAxioms | Submodule proof for positive-time test functions |
+| `wickMonomial_continuous` | LatticeAction | Wick monomials are continuous in their argument |
+| `latticeInteraction_continuous` | LatticeAction | Lattice interaction is continuous (finite sums of continuous functions) |
+| `transferKernel_symmetric` | TransferMatrix | T(ψ,ψ') = T(ψ',ψ) by (a-b)² = (b-a)² |
+| `timeCoupling_eq_zero_iff` | TransferMatrix | K(ψ,ψ') = 0 ↔ ψ = ψ' (sum of squares) |
+| `latticeAction_translation_invariant` | OS2_WardIdentity | V_a[T_v φ] = V_a[φ] via Equiv.subRight |
 | `os2_inheritance` | OS2_WardIdentity | E(2) invariance (from translation + rotation) |
 | `continuumLimit_satisfies_allOS` | OS2_WardIdentity | All OS axioms (assembly from phases) |
 
