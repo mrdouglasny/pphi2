@@ -208,13 +208,13 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `transferOperator_positiveDefinite` | Positivity | Medium | `⟨f, Tf⟩ > 0` for f ≠ 0. From Gaussian kernel positivity + exp(-V) > 0. |
 | `transferOperator_hilbertSchmidt` | Positivity | Medium | T is Hilbert-Schmidt. Kernel is L² because Gaussian factor gives exponential decay. |
 | `transferOperator_traceClass` | Positivity | Medium | Follows from Hilbert-Schmidt (HS ∘ HS = trace class, and T = T^{1/2} · T^{1/2}). |
-| `transferEigenvalue` | Positivity | Infrastructure | Existence of eigenvalue sequence. Needs spectral theorem for compact self-adjoint operators in Mathlib. **(NOT VERIFIED)** |
+| `transferEigenvalue` | Positivity | Infrastructure | Existence of eigenvalue sequence. Spectral theorem for compact self-adjoint operators. |
 | `transferEigenvalue_pos` | Positivity | Easy | Eigenvalues positive (from positive definiteness). |
 | `transferEigenvalue_antitone` | Positivity | Easy | Eigenvalues decrease: λ₀ ≥ λ₁ ≥ ... (standard spectral ordering). |
 | `transferEigenvalue_ground_simple` | Positivity | Medium | λ₀ > λ₁ (strict). Perron-Frobenius for positivity-preserving operators. |
 | `action_decomposition` | OS3_RP_Lattice | Medium | Lattice action decomposes as S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
 | `lattice_rp` | OS3_RP_Lattice | Medium | Lattice measure satisfies RP. From action decomposition + exp(-S) = exp(-S⁺)·exp(-S⁻) perfect square argument. |
-| `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. **(NOT VERIFIED)** |
+| `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. |
 | `rp_from_transfer_positivity` | OS3_RP_Lattice | Medium | RP from transfer matrix positivity. Alternative proof route. |
 | `partitionFunction_eq_trace` | TransferMatrix | Medium | Z = Tr(T^{Nt}). Standard transfer matrix identity. |
 
@@ -241,11 +241,11 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `latticeEmbed` | Embedding | Medium | The embedding ι_a : FinLatticeField → Configuration(S(ℝ^d)). Finite sum of point evaluations. **(NOT VERIFIED)** |
-| `latticeEmbed_eval` | Embedding | Easy | Embedding agrees with the explicit formula. By construction. **(NOT VERIFIED)** |
-| `latticeEmbed_measurable` | Embedding | Medium | Measurability of the embedding. Needs measurable structure on S'(ℝ^d). **(NOT VERIFIED)** |
-| `latticeEmbedLift` | Embedding | Medium | Lift of embedding to Configuration space. **(NOT VERIFIED)** |
-| `latticeEmbedLift_measurable` | Embedding | Medium | Measurability of the lifted embedding. **(NOT VERIFIED)** |
+| `latticeEmbed` | Embedding | Easy | The embedding ι_a : FinLatticeField → S'(ℝ^d). Constructible (should be `def`). |
+| `latticeEmbed_eval` | Embedding | Easy | Embedding agrees with the explicit formula. Would be `rfl` if embed were a `def`. |
+| `latticeEmbed_measurable` | Embedding | Easy | Map is continuous (stronger). Provable from finite-dimensional linearity. |
+| `latticeEmbedLift` | Embedding | Medium | Lift of embedding to Configuration space. Domain matches `interactingLatticeMeasure`. |
+| `latticeEmbedLift_measurable` | Embedding | Easy | Lifted embedding measurable. Continuous → measurable. |
 | `second_moment_uniform` | Tightness | Hard | ∫|Φ_a(f)|² dν_a ≤ C(f) uniformly in a. Key input: Nelson's hypercontractive estimate + convergence of lattice propagator. |
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |

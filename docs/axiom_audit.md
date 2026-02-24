@@ -32,12 +32,12 @@
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 3 | `transferEigenvalue` | Positivity:117 | ⚠️ Likely correct | SA only **(NOT VERIFIED)** | Existence of eigenvalue sequence. Needs compact self-adjoint spectral theorem. |
+| 3 | `transferEigenvalue` | Positivity:117 | ⚠️ Likely correct | DT 2026-02-24 | Existence of eigenvalue sequence. Spectral theorem for compact self-adjoint operators. |
 | 4 | `transferEigenvalue_pos` | Positivity:121 | ✅ Standard | GR Group 3 | All eigenvalues > 0. Perron-Frobenius for strictly positive kernel. |
 | 5 | `transferEigenvalue_antitone` | Positivity:126 | ✅ Standard | GR Group 3 | Eigenvalues decreasing. Standard spectral ordering (min-max). |
 | 6 | `transferEigenvalue_ground_simple` | Positivity:136 | ✅ Standard | GR Group 3 | λ₀ > λ₁. Perron-Frobenius for positivity-improving operators. Reed-Simon IV Thm XIII.44. |
 | 7 | `action_decomposition` | OS3_RP_Lattice:114 | ⚠️ Likely correct | GR Group 5 | S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
-| 8 | `lattice_rp_matrix` | OS3_RP_Lattice:155 | ⚠️ Likely correct | SA only **(NOT VERIFIED)** | RP matrix Σ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Follows from action decomposition + perfect square. |
+| 8 | `lattice_rp_matrix` | OS3_RP_Lattice:155 | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Support condition correct for periodic lattice. |
 
 ### Phase 3: Spectral Gap (2 axioms)
 
@@ -50,11 +50,11 @@
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 11 | `latticeEmbed` | Embedding:132 | ⚠️ Likely correct | SA only **(NOT VERIFIED)** | Lattice → S'(ℝ²) embedding. Standard Riemann sum interpretation. |
-| 12 | `latticeEmbed_eval` | Embedding:136 | ⚠️ Likely correct | SA only **(NOT VERIFIED)** | (ι_a φ)(f) = a^d Σ_x φ(x) f(a·x). Consistency axiom. |
-| 13 | `latticeEmbed_measurable` | Embedding:141 | ✅ Standard | SA only **(NOT VERIFIED)** | Continuous → measurable. Standard. |
-| 14 | `latticeEmbedLift` | Embedding:151 | ⚠️ Likely correct | SA only **(NOT VERIFIED)** | Lifted embedding on Configuration space. |
-| 15 | `latticeEmbedLift_measurable` | Embedding:156 | ✅ Standard | SA only **(NOT VERIFIED)** | Lifted embedding measurable. Standard. |
+| 11 | `latticeEmbed` | Embedding:132 | ✅ Standard | DT 2026-02-24 | Lattice → S'(ℝ²) embedding. Constructible (should be `def`). |
+| 12 | `latticeEmbed_eval` | Embedding:136 | ✅ Standard | DT 2026-02-24 | (ι_a φ)(f) = a^d Σ_x φ(x) f(a·x). Would be `rfl` if embed were a `def`. |
+| 13 | `latticeEmbed_measurable` | Embedding:141 | ✅ Standard | DT 2026-02-24 | Map is continuous (stronger than measurable). Provable. |
+| 14 | `latticeEmbedLift` | Embedding:151 | ⚠️ Likely correct | DT 2026-02-24 | Lifted embedding on Configuration space. Domain matches `interactingLatticeMeasure`. |
+| 15 | `latticeEmbedLift_measurable` | Embedding:156 | ✅ Standard | DT 2026-02-24 | Lifted embedding measurable. Continuous → measurable. |
 | 16 | `second_moment_uniform` | Tightness:74 | ⚠️ Likely correct | GR Group 4 | ∫ Φ_a(f)² dν_a ≤ C(f). Nelson's hypercontractive estimate. |
 | 17 | `moment_equicontinuity` | Tightness:89 | ❓ Needs review | GR Group 4 | **⚠️ WRONG AS STATED** per gemini review. RHS must depend on ‖f-g‖_s, not bare constant. |
 | 18 | `continuumMeasures_tight` | Tightness:110 | ⚠️ Likely correct | GR Group 4 | Mitoma criterion + moment bounds. |
@@ -82,21 +82,16 @@
 
 | Status | Count |
 |--------|-------|
-| Verified (GR or DT) | 21 |
-| Self-audit only **(NOT VERIFIED)** | 6 |
+| Verified (GR or DT) | 27 |
+| Self-audit only **(NOT VERIFIED)** | 0 |
 | **Total** | **27** |
 
-### Unverified Axioms List
+All 27 axioms have been reviewed by either the Gemini external review (GR) or Gemini deep think (DT).
 
-The following 6 axioms have only self-audit review:
+### Notes from DT review (2026-02-24)
 
-1. `transferEigenvalue` — eigenvalue existence (needs spectral theorem)
-2. `lattice_rp_matrix` — RP matrix positivity
-3. `latticeEmbed` — lattice embedding construction
-4. `latticeEmbed_eval` — embedding evaluation formula
-5. `latticeEmbed_measurable` — embedding measurability
-6. `latticeEmbedLift` — lifted embedding
-7. `latticeEmbedLift_measurable` — lifted embedding measurability
+- `latticeEmbed`, `latticeEmbed_eval`, `latticeEmbed_measurable` are constructible — should be converted from axioms to defs/theorems
+- `latticeEmbedLift` domain is `Configuration (FinLatticeField d N)` which matches `interactingLatticeMeasure` type (the gaussian-field library wraps all field spaces in `Configuration E = WeakDual ℝ E`)
 
 ---
 
