@@ -52,11 +52,11 @@ The construction proceeds in six phases:
 ## Current status
 
 All six phases are structurally complete and the full project builds
-(`lake build`, 3067 jobs). The proof architecture axiomatizes key
+(`lake build`, 3081 jobs). The proof architecture axiomatizes key
 analytic/probabilistic results with detailed proof sketches, proves the logical
 structure connecting them, and progressively fills in the axioms with full proofs.
 
-- **pphi2:** 65 axioms, 28 sorries
+- **pphi2:** 70 axioms, 22 sorries
 - **gaussian-field** (upstream dependency): 29 axioms, 14 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
@@ -90,18 +90,13 @@ Pphi2/
 
 ## Building
 
-Requires Lean 4. gaussian-field is currently a local path dependency (both
-projects are under active simultaneous development). To build:
+Requires Lean 4. gaussian-field is a git dependency (fetched automatically).
 
 ```bash
-git clone https://github.com/mrdouglasny/gaussian-field.git
 git clone https://github.com/mrdouglasny/pphi2.git
 cd pphi2
 lake build
 ```
-
-The two repos must be sibling directories. Once development stabilizes,
-gaussian-field will be switched to a versioned git dependency.
 
 ## Documentation
 
