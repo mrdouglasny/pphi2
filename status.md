@@ -406,49 +406,72 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field axioms and sorries
 
-The gaussian-field library (dependency) has 18 axioms and 4 sorries that
-pphi2 relies on. These are organized by priority for pphi2.
+The gaussian-field library (dependency) has **18 axioms and 2 sorries**.
+These are organized by priority for pphi2.
 
-### Critical for pphi2 (blocks lattice Gaussian measure)
-
-Most items in this category have been proved. The remaining axioms are in PositionKernel.lean (9 axioms), RapidDecayLattice.lean (4 axioms), Laplacian.lean (2 axioms), and FKG.lean (3 axioms). Sorries are in SchwartzNuclear/ (4 total).
+*Updated 2026-02-24. See also `docs/gemini_review.md` for external review.*
 
 ### Used by pphi2 Normalization (FKG)
 
 | Item | File | Type | Difficulty | Description |
 |------|------|------|-----------|-------------|
-| `fkg_lattice_gaussian` | Lattice/FKG | axiom | Hard | FKG inequality for Gaussian measure. Harris-Kleitman generalization to continuous spins + log-concave density. |
-| `fkg_perturbed` | Lattice/FKG | axiom | Medium | FKG for single-site perturbed measure. Takes `hV_single_site` instead of the old (false) `hV_convex`. From fkg_lattice_gaussian + Holley criterion. |
+| `fkg_from_lattice_condition` | Lattice/FKG | axiom | Hard | Core FKG: lattice condition ⟹ correlation inequality (Holley 1974). |
+| `gaussian_fkg_lattice_condition` | Lattice/FKG | axiom | Hard | Gaussian density satisfies FKG lattice condition (non-positive off-diagonal precision). |
+| `fkg_perturbed` | Lattice/FKG | axiom | Medium | FKG for single-site perturbed measure. Takes `hV_single_site`. |
 
-### Lattice Laplacian properties
+Proved supporting results in FKG.lean:
+- `chebyshev_integral_inequality` — 1D FKG for any probability measure (full proof via Fubini)
+- `fkg_lattice_condition_mul` — product of FKG-lattice densities is FKG-lattice
+- `fkg_lattice_condition_single_site` — exp(-V) trivially FKG for single-site V
+- `fkg_lattice_gaussian` — **now a theorem** (derived from `gaussian_fkg_lattice_condition`)
+
+### Lattice Laplacian properties — ALL PROVED
+
+| Item | File | Type | Description |
+|------|------|------|-------------|
+| `finiteLaplacian_selfAdjoint` | Lattice/Laplacian | **theorem** | Proved via `Equiv.addRight (Pi.single i 1)` reindexing. |
+| `finiteLaplacian_neg_semidefinite` | Lattice/Laplacian | **theorem** | Proved via summation by parts. |
+| `massOperator_pos_def` | Lattice/Laplacian | **theorem** | Proved from neg-semidefinite + m²‖f‖² > 0. |
+
+Note: `infiniteLaplacian` and `infiniteLaplacian_apply` remain axioms (infinite lattice, not needed by pphi2).
+
+### Infinite lattice (not needed by pphi2)
 
 | Item | File | Type | Difficulty | Description |
 |------|------|------|-----------|-------------|
-| `finiteLaplacian_selfAdjoint` | Lattice/Laplacian | axiom | Easy | Symmetry: reindex summation. |
-| `finiteLaplacian_neg_semidefinite` | Lattice/Laplacian | axiom | Medium | ⟨f, Δf⟩ ≤ 0. Summation by parts. |
-
-Note: `massOperator_pos_def`, `infiniteLaplacian`, and `infiniteLaplacian_apply` have been proved.
-
-### Infinite lattice (not immediately needed by pphi2)
-
-| Item | File | Type | Difficulty | Description |
-|------|------|------|-----------|-------------|
-| `latticeEnum` | Lattice/RapidDecayLattice | axiom | Hard | ℤ^d ≃ ℕ with polynomial norm growth. Shell enumeration. |
+| `latticeEnum` | Lattice/RapidDecayLattice | axiom | Hard | ℤ^d ≃ ℕ shell enumeration. |
 | `latticeEnum_norm_bound` | Lattice/RapidDecayLattice | axiom | Hard | ‖enum⁻¹(m)‖ ≤ C·m^{1/d}. |
 | `latticeEnum_index_bound` | Lattice/RapidDecayLattice | axiom | Hard | enum(x) ≤ C·(1+‖x‖)^d. |
-| `latticeRapidDecayEquiv` | Lattice/RapidDecayLattice | axiom | Hard | CLE to RapidDecaySeq. Requires enumeration + norm bounds. |
+| `latticeRapidDecayEquiv` | Lattice/RapidDecayLattice | axiom | Hard | CLE to RapidDecaySeq. |
 
 ### Heat kernel (cylinder QFT, not used by lattice approach)
 
-PositionKernel.lean has 9 remaining axioms (Mehler kernel, circle heat kernel, and cylinder heat kernel properties). Several former axioms (including mehlerKernel_pos, symmetry, periodicity) have been proved.
+PositionKernel.lean has **7 remaining axioms**. Proved axioms (now theorems):
+- `mehlerKernel_pos` — positivity from closed form (rpow_pos + sinh_pos + exp_pos)
+- `circleHeatKernel_symmetric` — tsum_congr + ring
+- `circleHeatKernel_periodic₁/₂` — fourierBasisFun_periodic
+- `circleHeatKernel_summable` — geometric series comparison
+- `mehlerKernel_summable` — Hermite sup bound + polynomial × geometric series
 
-### Other
+Remaining axioms:
+| Item | Difficulty | Description |
+|------|-----------|-------------|
+| `mehlerKernel_eq_series` | Hard | Mehler's formula (PDE uniqueness or generating function). |
+| `mehlerKernel_reproduces_hermite` | Medium | Series expansion + orthonormality. |
+| `mehlerKernel_semigroup` | Medium | Series expansion + Fubini + orthonormality. |
+| `circleHeatKernel_pos` | Hard | Requires Poisson summation (periodized Gaussian). |
+| `circleHeatKernel_reproduces_fourier` | Medium | Fourier orthonormality. |
+| `circleHeatKernel_semigroup` | Medium | Fourier + Fubini + orthonormality. |
+| `cylinderHeatKernel_eq_series` | Medium | Product of two series → single series via Nat.pair. |
+| `cylinderEval_summable` | Medium | Convergence of eigenfunction expansion. |
+| `cylinderHeatKernel_reproduces` | Hard | Bridge theorem. |
 
-| Item | File | Type | Difficulty | Description |
-|------|------|------|-----------|-------------|
-| `schwartzPointwiseProduct_apply` | SchwartzNuclear/SchwartzTensorProduct | sorry | Medium | Hermite-Fubini factorization. |
-| (2 sorries) | SchwartzNuclear/HermiteTensorProduct | sorry | Medium | Hermite tensor product properties. |
-| (1 sorry) | SchwartzNuclear/SchwartzSlicing | sorry | Medium | Schwartz slicing. |
+### Sorries
+
+| Sorry | File | Difficulty | Description |
+|-------|------|-----------|-------------|
+| `schwartzPointwiseProduct_apply` | SchwartzNuclear/SchwartzTensorProduct | Medium | Hermite-Fubini factorization. |
+| `schwartzComplexificationEquiv` | Nuclear/Complexification | Medium | Linear iso between complexification and complex Schwartz space. |
 
 ### Summary
 
@@ -456,7 +479,7 @@ PositionKernel.lean has 9 remaining axioms (Mehler kernel, circle heat kernel, a
 |----------|--------|---------|
 | PositionKernel (heat kernel / cylinder) | 9 | 0 |
 | RapidDecayLattice (infinite lattice) | 4 | 0 |
-| Laplacian | 2 | 0 |
+| Laplacian (infinite only) | 2 | 0 |
 | FKG (used by pphi2 Normalization) | 3 | 0 |
-| SchwartzNuclear | 0 | 4 |
-| **Total** | **18** | **4** |
+| SchwartzNuclear + Complexification | 0 | 2 |
+| **Total** | **18** | **2** |
