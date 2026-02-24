@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 25 axioms, 13 sorries** | **gaussian-field (upstream): 9 axioms, 9 sorries**
+**pphi2: 24 axioms, 13 sorries** | **gaussian-field (upstream): 9 axioms, 9 sorries**
 
 ## File inventory
 
@@ -20,7 +20,7 @@ progressively fill in the axioms with full proofs.
 | Phase | File | Status |
 |-------|------|--------|
 | Core | `Polynomial.lean` | 0 axioms |
-| 1 | `WickOrdering/WickPolynomial.lean` | 1 axiom (wickMonomial_eq_hermite) |
+| 1 | `WickOrdering/WickPolynomial.lean` | 0 axioms |
 | 1 | `WickOrdering/Counterterm.lean` | 1 axiom |
 | 1 | `InteractingMeasure/LatticeAction.lean` | 0 axioms |
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
@@ -195,7 +195,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | ~~`polynomial_lower_bound`~~ | Polynomial | ✅ Removed | Dead code — superseded by `wickPolynomial_bounded_below` in WickPolynomial.lean. |
-| `wickMonomial_eq_hermite` | WickPolynomial | Medium | Wick monomials equal probabilist Hermite polynomials |
+| ~~`wickMonomial_eq_hermite`~~ | WickPolynomial | ~~Medium~~ | **Proved** — via `wick_eq_hermiteR_rpow` from gaussian-field HermiteWick |
 | ~~`wickPolynomial_bounded_below`~~ | WickPolynomial | ~~Medium~~ | **Proved** — Even-degree Wick polynomial with positive leading coeff is bounded below. Proved via `poly_even_degree_bounded_below` (leading term domination + `Continuous.exists_forall_le`). |
 | `wickConstant_log_divergence` | Counterterm | Medium | `c_a ~ (1/2π) log(1/a)` as a→0. Needs lattice Green's function asymptotics. |
 | `latticeInteraction_single_site` | LatticeAction | **Proved** | V_a decomposes as sum of single-site functions. Enables FKG via log-supermodularity. (Replaced false `latticeInteraction_convex` axiom.) |

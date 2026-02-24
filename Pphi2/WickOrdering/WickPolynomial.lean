@@ -38,6 +38,7 @@ The key property: `E_μ[:x^n:] = 0` for n ≥ 1 when μ = N(0, c).
 import Pphi2.Polynomial
 import Mathlib.RingTheory.Polynomial.Hermite.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import SchwartzNuclear.HermiteWick
 import Mathlib.Topology.Algebra.Polynomial
 import Mathlib.Topology.Order.Compact
 import Mathlib.Algebra.Polynomial.EraseLead
@@ -106,14 +107,29 @@ theorem wickMonomial_four (c x : ℝ) :
 When c > 0, the Wick monomial equals the scaled Hermite polynomial:
   `:x^n:_c = c^{n/2} · He_n(x / √c)`
 
-This is axiomatized; the recursive definition and the Hermite definition
-agree by induction using the Hermite recurrence `He_{n+1}(t) = t·He_n(t) - n·He_{n-1}(t)`. -/
+Proved via `wick_eq_hermiteR_rpow` from gaussian-field's HermiteWick module,
+which establishes this by induction using the Hermite three-term recurrence.
+The bridge lemma `wickMonomial_eq_root` shows that `Pphi2.wickMonomial`
+agrees with the root-level `wickMonomial` from gaussian-field. -/
 
-/-- Wick monomials are Hermite polynomials scaled by the variance. -/
-axiom wickMonomial_eq_hermite (n : ℕ) (c : ℝ) (hc : 0 < c) (x : ℝ) :
+/-- Pphi2's Wick monomial agrees with the gaussian-field definition. -/
+private theorem wickMonomial_eq_root : ∀ (n : ℕ) (c x : ℝ),
+    wickMonomial n c x = _root_.wickMonomial n c x
+  | 0, _, _ => rfl
+  | 1, _, _ => rfl
+  | n + 2, c, x => by
+    simp only [Pphi2.wickMonomial_succ_succ, _root_.wickMonomial_succ_succ]
+    rw [wickMonomial_eq_root (n + 1), wickMonomial_eq_root n]
+
+/-- Wick monomials are Hermite polynomials scaled by the variance.
+
+Proved via the Hermite three-term recurrence (gaussian-field HermiteWick). -/
+theorem wickMonomial_eq_hermite (n : ℕ) (c : ℝ) (hc : 0 < c) (x : ℝ) :
     wickMonomial n c x =
     c ^ ((n : ℝ) / 2) * ((Polynomial.hermite n).map (Int.castRingHom ℝ)).eval
-      (x / Real.sqrt c)
+      (x / Real.sqrt c) := by
+  rw [wickMonomial_eq_root]
+  exact wick_eq_hermiteR_rpow n c hc x
 
 /-! ## Wick-ordered interaction polynomial -/
 

@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-02-24 (L2Operator.lean + spectral theorem, Bridge axioms fixed)
-**pphi2**: 25 axioms | **gaussian-field**: 9 axioms | **Total**: 34
+**pphi2**: 24 axioms | **gaussian-field**: 9 axioms | **Total**: 33
 
 ## Verification Sources
 
@@ -19,13 +19,13 @@
 
 ---
 
-## pphi2 Axioms (25 active)
+## pphi2 Axioms (24 active)
 
-### Phase 1: Wick Ordering (2 axioms)
+### Phase 1: Wick Ordering (1 active axiom, 1 proved)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 1 | `wickMonomial_eq_hermite` | WickPolynomial:113 | ⚠️ Likely correct | GR Group 5 | :x^n:_c = c^{n/2} He_n(x/√c). Standard; check normalization convention. |
+| 1 | ~~`wickMonomial_eq_hermite`~~ | WickPolynomial:113 | ✅ **PROVED** | SA 2026-02-24 | Via `wick_eq_hermiteR_rpow` from gaussian-field HermiteWick. |
 | 2 | `wickConstant_log_divergence` | Counterterm:146 | ✅ Standard | GR Group 5 | c_a ~ (2π)⁻¹ log(1/a). Standard lattice Green's function asymptotics. |
 
 ### Phase 2: Transfer Matrix and RP (9 axioms)
@@ -85,12 +85,12 @@
 
 | Status | Count |
 |--------|-------|
-| Verified (GR or DT) | 22 |
+| Verified (GR or DT) | 21 |
 | New (L2Operator, self-audit only) | 3 |
-| Proved (no longer axioms) | 5 |
-| **Total active** | **25** |
+| Proved (no longer axioms) | 6 |
+| **Total active** | **24** |
 
-23 of 25 active axioms verified by GR or DT. 3 new L2Operator axioms (CLM, self-adjoint, compact) are standard and self-audited. 5 former axioms now proved (latticeEmbed family + latticeEmbedLift family).
+22 of 24 active axioms verified by GR or DT. 3 new L2Operator axioms (CLM, self-adjoint, compact) are standard and self-audited. 6 former axioms now proved (latticeEmbed family, latticeEmbedLift family, wickMonomial_eq_hermite).
 
 ### Notes from DT review (2026-02-24)
 
@@ -158,6 +158,7 @@ The following were previously axioms and are now theorems:
 | `latticeEmbed_measurable` | Embedding | 2026-02-24 | `configuration_measurable_of_eval_measurable` + continuity of finite sum |
 | `latticeEmbedLift` | Embedding | 2026-02-24 | Constructed as `latticeEmbed (fun x => ω (Pi.single x 1))` |
 | `latticeEmbedLift_measurable` | Embedding | 2026-02-24 | `configuration_measurable_of_eval_measurable` + `configuration_eval_measurable` |
+| `wickMonomial_eq_hermite` | WickPolynomial | 2026-02-24 | `wick_eq_hermiteR_rpow` from gaussian-field HermiteWick |
 
 ---
 
