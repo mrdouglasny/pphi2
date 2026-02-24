@@ -288,19 +288,81 @@ theorem os2_inheritance (P : InteractionPolynomial)
   ⟨translation_invariance_continuum P mass hmass μ hμ,
    rotation_invariance_continuum P mass hmass μ hμ⟩
 
+/-! ## OS3: IsRP implies OS3_ReflectionPositivity
+
+The abstract RP property (`os3_inheritance`) implies the full OS3 axiom
+(`OS3_ReflectionPositivity`) via the trigonometric identity:
+
+  `Σᵢⱼ cᵢcⱼ cos(aᵢ - bⱼ) = (Σᵢ cᵢ cos aᵢ)(Σⱼ cⱼ cos bⱼ)
+                            + (Σᵢ cᵢ sin aᵢ)(Σⱼ cⱼ sin bⱼ)`
+
+Proof outline:
+1. `Re(Z[fᵢ - Θfⱼ]) = ∫ cos(⟨ω, fᵢ⟩ - ⟨Θ*ω, fⱼ⟩) dμ`
+2. Apply the identity with `aᵢ = ⟨ω, fᵢ⟩`, `bⱼ = ⟨Θ*ω, fⱼ⟩`
+3. The sum becomes `∫ [G_cos(ω)·G_cos(Θ*ω) + G_sin(ω)·G_sin(Θ*ω)] dμ`
+   where `G_cos(ω) = Σᵢ cᵢ cos(⟨ω, fᵢ⟩)`, `G_sin(ω) = Σᵢ cᵢ sin(⟨ω, fᵢ⟩)`
+4. Each integrand is `F(ω)·F(Θ*ω)` for bounded continuous F
+5. Each integral ≥ 0 by `os3_inheritance` -/
+
+/-- Key trigonometric identity for the RP matrix.
+
+For any reals `aᵢ`, `bⱼ` and coefficients `cᵢ`, `cⱼ`:
+`Σᵢⱼ cᵢ cⱼ cos(aᵢ - bⱼ) = (Σ cᵢ cos aᵢ)(Σ cⱼ cos bⱼ) + (Σ cᵢ sin aᵢ)(Σ cⱼ sin bⱼ)`
+
+This follows from `cos(a - b) = cos a · cos b + sin a · sin b`
+and bilinearity of the double sum. -/
+theorem rp_matrix_trig_identity {n : ℕ} (c : Fin n → ℝ)
+    (a b : Fin n → ℝ) :
+    ∑ i, ∑ j, c i * c j * Real.cos (a i - b j) =
+    (∑ i, c i * Real.cos (a i)) * (∑ j, c j * Real.cos (b j)) +
+    (∑ i, c i * Real.sin (a i)) * (∑ j, c j * Real.sin (b j)) := by
+  -- Step 1: Expand cos(a - b) = cos(a)cos(b) + sin(a)sin(b) in each term
+  have key : ∀ i j, c i * c j * Real.cos (a i - b j) =
+      c i * Real.cos (a i) * (c j * Real.cos (b j)) +
+      c i * Real.sin (a i) * (c j * Real.sin (b j)) := by
+    intros; rw [Real.cos_sub]; ring
+  simp_rw [key]
+  -- Step 2: Split double sum of (A + B) into double sum of A + double sum of B
+  simp_rw [Finset.sum_add_distrib]
+  congr 1
+  · -- cos·cos part: collapse double sum into product of sums
+    simp_rw [← Finset.mul_sum (f := fun j => c j * Real.cos (b j))]
+    exact (Finset.sum_mul ..).symm
+  · -- sin·sin part: collapse double sum into product of sums
+    simp_rw [← Finset.mul_sum (f := fun j => c j * Real.sin (b j))]
+    exact (Finset.sum_mul ..).symm
+
+/-- **OS3 for the continuum limit**, derived from abstract IsRP.
+
+The proof connects `os3_inheritance` (abstract RP) to `OS3_ReflectionPositivity`
+(the OS3 axiom formulated using the generating functional).
+
+The key mathematical steps:
+1. Expand `Re(Z[fᵢ - Θfⱼ])` as `∫ cos(⟨ω, fᵢ⟩ - ⟨Θ*ω, fⱼ⟩) dμ`
+2. Apply `rp_matrix_trig_identity` to decompose as sum of two integrals
+3. Each integral is `∫ F · F(Θ*·) dμ ≥ 0` by `os3_inheritance`
+
+The remaining gap covers the measure-theoretic steps (interchanging
+sums/integrals, expanding the generating functional). -/
+theorem os3_for_continuum_limit (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure (Configuration (ContinuumTestFunction 2)))
+    (hμ : IsProbabilityMeasure μ) :
+    @OS3_ReflectionPositivity μ hμ := by
+  have h_rp := os3_inheritance P mass hmass μ hμ
+  intro n f c
+  -- Goal: 0 ≤ Σᵢⱼ cᵢcⱼ Re(Z[fᵢ - Θfⱼ])
+  -- Step 1: Re(Z[g]) = ∫ cos(⟨ω, g⟩) dμ (definition of generatingFunctional)
+  -- Step 2: ⟨ω, fᵢ - Θfⱼ⟩ = ⟨ω, fᵢ⟩ - ⟨Θ*ω, fⱼ⟩ (linearity + duality)
+  -- Step 3: Apply rp_matrix_trig_identity
+  -- Step 4: Each term ≥ 0 by h_rp (G_cos, G_sin are bounded continuous)
+  sorry
+
 /-! ## Complete OS axiom bundle
 
 Combines all five axiom inheritance results into `SatisfiesFullOS`.
-Each axiom transfers from the lattice to the continuum limit by a
-different mechanism (see individual inheritance theorems above).
-
-The sorries here represent genuine mathematical gaps between the
-weak lattice formulations and the full OS axiom types:
-- OS0: moment integrability → complex analyticity (Vitali's theorem)
-- OS1: |Z[f]| ≤ 1 → exponential Sobolev bound (Nelson's estimate)
-- OS2: translation + rotation True → Z[g·f] = Z[f]
-- OS3: True → RP matrix inequality
-- OS4: True → ε-δ clustering from mass gap -/
+Sorries represent genuine mathematical gaps between weak lattice
+formulations and the full OS axiom types. -/
 
 /-- **The continuum limit satisfies all five OS axioms.**
 
@@ -320,8 +382,8 @@ theorem continuumLimit_satisfies_fullOS
     os1 := sorry
     -- OS2: lattice translation/rotation invariance → Z[g·f] = Z[f]
     os2 := sorry
-    -- OS3: lattice RP → continuum RP (via rp_closed_under_weak_limit)
-    os3 := sorry
+    -- OS3: abstract RP → OS3_ReflectionPositivity
+    os3 := os3_for_continuum_limit P mass hmass μ hμ
     -- OS4: uniform mass gap → ε-δ clustering
     os4_clustering := sorry
     -- OS4 ergodicity: True placeholder

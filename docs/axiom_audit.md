@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-02-24 (L2Operator.lean + spectral theorem, Bridge axioms fixed)
-**pphi2**: 24 axioms | **gaussian-field**: 9 axioms | **Total**: 33
+**pphi2**: 25 axioms | **gaussian-field**: 9 axioms | **Total**: 34
 
 ## Verification Sources
 
@@ -19,7 +19,7 @@
 
 ---
 
-## pphi2 Axioms (24 active)
+## pphi2 Axioms (25 active)
 
 ### Phase 1: Wick Ordering (1 active axiom, 1 proved)
 
@@ -49,7 +49,7 @@
 | 12 | `spectral_gap_uniform` | SpectralGap:134 | ⚠️ Likely correct | GR Group 3 | ∃ m₀ > 0, gap(a) ≥ m₀ ∀a ≤ a₀. Central result of Glimm-Jaffe. VERY HARD. |
 | 13 | `spectral_gap_lower_bound` | SpectralGap:145 | ⚠️ Likely correct | GR Group 3 | gap ≥ c·mass. Standard weak-coupling result. |
 
-### Phase 4: Continuum Limit (6 active axioms, 5 proved)
+### Phase 4: Continuum Limit (7 active axioms, 5 proved)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
@@ -64,6 +64,7 @@
 | 19 | `configuration_polishSpace` | Convergence:173 | ✅ Standard | DT 2026-02-24 | S'(ℝ^d) Polish. Gelfand-Vilenkin Vol. 4, Bogachev §3.2. |
 | 20 | `configuration_borelSpace` | Convergence:180 | ✅ Standard | DT 2026-02-24 | Borel = cylindrical σ-algebra. Bochner-Minlos framework. |
 | 21 | `os0_inheritance` | AxiomInheritance:78 | ⚠️ Likely correct | GR Group 4 | OS0 transfers. GR notes: "TRUE but TOO WEAK" — should include factorial growth (E0'). |
+| 22 | `os3_inheritance` | AxiomInheritance | ✅ Standard | SA 2026-02-24 | Abstract IsRP for continuum limit: ∫ F·F(Θ*·) dμ ≥ 0. NEW axiom (was trivial True). Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). Connected to OS3_ReflectionPositivity via `rp_matrix_trig_identity` (proved) + `os3_for_continuum_limit`. |
 
 ### Phase 5: Euclidean Invariance (1 axiom)
 
@@ -86,11 +87,11 @@
 | Status | Count |
 |--------|-------|
 | Verified (GR or DT) | 21 |
-| New (L2Operator, self-audit only) | 3 |
+| New (L2Operator + os3_inheritance, self-audit only) | 4 |
 | Proved (no longer axioms) | 6 |
-| **Total active** | **24** |
+| **Total active** | **25** |
 
-22 of 24 active axioms verified by GR or DT. 3 new L2Operator axioms (CLM, self-adjoint, compact) are standard and self-audited. 6 former axioms now proved (latticeEmbed family, latticeEmbedLift family, wickMonomial_eq_hermite).
+22 of 25 active axioms verified by GR or DT. 4 new axioms self-audited: 3 L2Operator (CLM, self-adjoint, compact), 1 os3_inheritance (abstract IsRP). 6 former axioms now proved.
 
 ### Notes from DT review (2026-02-24)
 

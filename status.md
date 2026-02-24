@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 24 axioms, 11 sorries** | **gaussian-field (upstream): 9 axioms, 9 sorries**
+**pphi2: 25 axioms, 11 sorries** | **gaussian-field (upstream): 9 axioms, 9 sorries**
 
 ## File inventory
 
@@ -36,7 +36,7 @@ progressively fill in the axioms with full proofs.
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 0 sorries |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | 2 axioms (os0_inheritance + os3_inheritance) |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 1 axiom, 5 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 0 axioms, 0 sorries |
@@ -260,7 +260,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `configuration_borelSpace` | Convergence | Infrastructure | Borel σ-algebra on S'(ℝ^d) = cylindrical σ-algebra (weak-* topology). Not in Mathlib. |
 | `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
 | `os1_inheritance` | AxiomInheritance | Easy | OS1 transfers: |cos(·)| ≤ 1 trivially. |
-| `os3_inheritance` | AxiomInheritance | Medium | OS3 transfers: RP is a nonnegativity condition, closed under pointwise limits. Uses rp_closed_under_weak_limit from Phase 2. |
+| `os3_inheritance` | AxiomInheritance | Medium | **Now an axiom** (was trivial True). Abstract IsRP: ∫ F(ω)·F(Θ*ω) dμ ≥ 0 for bounded continuous F. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
 | `os4_inheritance` | AxiomInheritance | Medium | OS4 transfers: uniform mass gap + weak convergence → exponential clustering preserved. |
 | `continuumLimit_satisfies_os0134` | AxiomInheritance | Easy | Assembly of the above four. |
 

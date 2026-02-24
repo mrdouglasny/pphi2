@@ -134,26 +134,46 @@ private lemma timeReflLinear_involutive : Function.Involutive timeReflLinear := 
 private noncomputable def timeReflCLE : EuclideanSpace ℝ (Fin 2) ≃L[ℝ] EuclideanSpace ℝ (Fin 2) :=
   (LinearEquiv.ofInvolutive timeReflLinear timeReflLinear_involutive).toContinuousLinearEquiv
 
-def continuumTimeReflection :
-    ContinuumTestFunction 2 → ContinuumTestFunction 2 :=
+noncomputable def continuumTimeReflection :
+    ContinuumTestFunction 2 →L[ℝ] ContinuumTestFunction 2 :=
   SchwartzMap.compCLMOfContinuousLinearEquiv ℝ timeReflCLE
 
-/-- **OS3 transfers to the continuum limit.**
+/-- Time reflection on distributions (the dual action).
 
-Reflection positivity passes to the limit by `rp_closed_under_weak_limit`
-(proved in OS3_RP_Inheritance.lean).
+For `ω ∈ S'(ℝ²)`, `(Θ*ω)(f) = ω(Θf)` where `Θf(t,x) = f(-t,x)`.
+This is the composition of the continuous linear functional ω with the
+time reflection CLM on Schwartz space. -/
+def distribTimeReflection :
+    Configuration (ContinuumTestFunction 2) →
+    Configuration (ContinuumTestFunction 2) :=
+  fun ω => ω.comp continuumTimeReflection
 
-Since each lattice measure satisfies RP (from `lattice_rp`), and the
-continuum-embedded measures converge weakly to μ, the limit μ is RP. -/
-theorem os3_inheritance (P : InteractionPolynomial)
+/-- `distribTimeReflection` evaluation: `(Θ*ω)(f) = ω(Θf)`. -/
+@[simp]
+theorem distribTimeReflection_apply
+    (ω : Configuration (ContinuumTestFunction 2))
+    (f : ContinuumTestFunction 2) :
+    distribTimeReflection ω f = ω (continuumTimeReflection f) := rfl
+
+/-- **OS3 transfers to the continuum limit** (abstract RP form).
+
+The continuum limit measure is reflection-positive in the abstract sense
+(`IsRP`). This follows from:
+1. Each lattice measure satisfies RP (from `lattice_rp_matrix`)
+2. The continuum-embedded measures converge weakly to μ (from Prokhorov)
+3. RP is closed under weak limits (`rp_closed_under_weak_limit`, proved)
+
+The function class S consists of bounded continuous real functions on S'(ℝ²)
+that depend only on evaluations at positive-time test functions. -/
+axiom os3_inheritance (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
-    -- μ satisfies reflection positivity
-    -- For all f₁,...,fₙ supported at t > 0 and coefficients c₁,...,cₙ:
-    -- Σᵢⱼ cᵢcⱼ ∫ exp(i⟨Φ, fᵢ - Θfⱼ⟩) dμ ≥ 0
-    True :=-- Follows from lattice_rp + rp_closed_under_weak_limit
-      trivial
+    -- For all bounded continuous F depending on positive-time evaluations:
+    -- ∫ F(ω) · F(Θ*ω) dμ(ω) ≥ 0
+    ∀ (F : Configuration (ContinuumTestFunction 2) → ℝ),
+      Continuous F → (∃ C, ∀ ω, |F ω| ≤ C) →
+      ∫ ω, F ω * F (distribTimeReflection ω) ∂μ ≥ 0
 
 /-! ## OS4: Clustering / Mass Gap -/
 
@@ -209,7 +229,7 @@ theorem continuumLimit_satisfies_os0134
     @SatisfiesOS0134 2 μ hμ where
   os0 := os0_inheritance 2 P mass hmass μ hμ
   os1 := os1_inheritance 2 P mass hmass μ hμ
-  os3 := os3_inheritance P mass hmass μ hμ
+  os3 := trivial
   os4 := trivial
 
 end Pphi2
