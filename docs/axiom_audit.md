@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-24 (L2Operator.lean + spectral theorem, Bridge axioms fixed)
-**pphi2**: 25 axioms | **gaussian-field**: 9 axioms | **Total**: 34
+**Updated**: 2026-02-24 (Full OS axioms, 0 sorries, rotationBreakingOperator removed)
+**pphi2**: 28 axioms | **gaussian-field**: 6 axioms | **Total**: 34
 
 ## Verification Sources
 
@@ -66,11 +66,14 @@
 | 21 | `os0_inheritance` | AxiomInheritance:78 | ⚠️ Likely correct | GR Group 4 | OS0 transfers. GR notes: "TRUE but TOO WEAK" — should include factorial growth (E0'). |
 | 22 | `os3_inheritance` | AxiomInheritance | ✅ Standard | SA 2026-02-24 | Abstract IsRP for continuum limit: ∫ F·F(Θ*·) dμ ≥ 0. NEW axiom (was trivial True). Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). Connected to OS3_ReflectionPositivity via `rp_matrix_trig_identity` (proved) + `os3_for_continuum_limit`. |
 
-### Phase 5: Euclidean Invariance (1 axiom)
+### Phase 5: Full OS Axioms for Continuum Limit (4 axioms)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 22 | `rotationBreakingOperator` | OS2_WardIdentity:177 | ⚠️ Likely correct | GR Group 5 | O_break with dim=4. Symanzik improvement: anomaly RG-irrelevant in d=2. |
+| 22 | `os0_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | Z[J] entire analytic. Fernique + Vitali. Replaces weaker `os0_inheritance`. |
+| 23 | `os1_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | ‖Z[J]‖ ≤ exp(c(‖J‖₁+‖J‖_p^p)). Nelson's hypercontractive estimate. |
+| 24 | `os2_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | Z[g·f]=Z[f] for g∈E(2). Translation + Ward identity + irrelevance. Replaces `rotationBreakingOperator`. |
+| 25 | `os4_clustering_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | Z[f+T_ag]→Z[f]Z[g]. Uniform spectral gap + exponential clustering. |
 
 ### Phase 6: Bridge (5 axioms)
 
@@ -86,12 +89,13 @@
 
 | Status | Count |
 |--------|-------|
-| Verified (GR or DT) | 21 |
-| New (L2Operator + os3_inheritance, self-audit only) | 4 |
+| Verified (GR or DT) | 20 |
+| New (self-audit only) | 8 |
 | Proved (no longer axioms) | 6 |
-| **Total active** | **25** |
+| Removed | 1 |
+| **Total active** | **28** |
 
-22 of 25 active axioms verified by GR or DT. 4 new axioms self-audited: 3 L2Operator (CLM, self-adjoint, compact), 1 os3_inheritance (abstract IsRP). 6 former axioms now proved.
+20 of 28 active axioms verified by GR or DT. 8 new axioms self-audited: 3 L2Operator (CLM, self-adjoint, compact), 1 os3_inheritance (abstract IsRP), 4 full OS (os0/os1/os2/os4 for continuum limit). 1 removed: `rotationBreakingOperator` (replaced by `os2_continuum`). **0 sorries remain.**
 
 ### Notes from DT review (2026-02-24)
 
