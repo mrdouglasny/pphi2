@@ -360,6 +360,7 @@ private lemma generatingFunctional_re_eq_integral_cos
         simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
               Complex.cos_ofReal_re, Complex.sin_ofReal_re]
 
+set_option maxHeartbeats 800000 in
 theorem os3_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
@@ -399,10 +400,24 @@ theorem os3_for_continuum_limit (P : InteractionPolynomial)
             rw [abs_mul]; exact (mul_le_mul_of_nonneg_left
               (Real.abs_sin_le_one _) (abs_nonneg _)).trans (le_of_eq (mul_one _)))⟩
   -- Proof: sum-integral exchange + trig identity + integral splitting
-  -- Integrability: each cos term is bounded, hence integrable
+  -- Measurability: evaluation maps are measurable in the cylindrical σ-algebra
+  have hm_eval : ∀ (g : TestFunction2), Measurable (fun ω : FieldConfig2 => ω g) :=
+    fun g => configuration_eval_measurable g
+  -- Integrability helper: bounded measurable functions on probability spaces are integrable
+  have integrable_bdd_meas : ∀ {g : FieldConfig2 → ℝ} (C : ℝ),
+      Measurable g → (∀ ω, |g ω| ≤ C) → Integrable g μ := fun C hg hb =>
+    (integrable_const C).mono' hg.aestronglyMeasurable
+      (ae_of_all μ fun ω => by rw [Real.norm_eq_abs]; exact hb ω)
   have hint : ∀ (i j : Fin n), Integrable (fun ω : FieldConfig2 =>
-      c i * c j * Real.cos (ω ↑(f i) - ω (compTimeReflection2 ↑(f j)))) μ :=
-    fun _ _ => sorry -- bounded measurable on probability space
+      c i * c j * Real.cos (ω ↑(f i) - ω (compTimeReflection2 ↑(f j)))) μ := by
+    intro i j
+    have hm_ij : Measurable (fun ω : FieldConfig2 =>
+        c i * c j * Real.cos (ω ↑(f i) - ω (compTimeReflection2 ↑(f j)))) :=
+      (Real.measurable_cos.comp ((hm_eval _).sub (hm_eval _))).const_mul (c i * c j)
+    refine integrable_bdd_meas (|c i * c j|) hm_ij (fun ω => ?_)
+    rw [abs_mul]
+    exact (mul_le_mul_of_nonneg_left (Real.abs_cos_le_one _) (abs_nonneg _)).trans
+      (le_of_eq (mul_one _))
   -- Go through intermediate ∫ of double sum
   trans (∫ ω : FieldConfig2, ∑ x, ∑ x_1,
     c x * c x_1 * Real.cos (ω ↑(f x) - ω (compTimeReflection2 ↑(f x_1))) ∂μ)
@@ -423,7 +438,46 @@ theorem os3_for_continuum_limit (P : InteractionPolynomial)
       simp only [distribTimeReflection_apply] at *
       convert this using 2 <;> (ext j; congr 1; rfl)
     simp_rw [h_trig]
-    exact integral_add (sorry) (sorry)  -- integrability of F_cos·F_cos∘Θ, F_sin·F_sin∘Θ
+    -- Integrability of F_trig · F_trig∘Θ: bounded measurable products
+    have hm_trig_sum : ∀ (trig : ℝ → ℝ), Measurable trig →
+        Measurable (fun ω : FieldConfig2 => ∑ i, c i * trig (ω (f i).val)) :=
+      fun trig htrig => Finset.measurable_sum _ fun i _ =>
+        (htrig.comp (hm_eval _)).const_mul _
+    have hm_trig_theta : ∀ (trig : ℝ → ℝ), Measurable trig →
+        Measurable (fun ω : FieldConfig2 => ∑ i, c i * trig (ω (compTimeReflection2 (f i).val))) :=
+      fun trig htrig => Finset.measurable_sum _ fun i _ =>
+        (htrig.comp (hm_eval _)).const_mul _
+    have hbd_trig : ∀ (trig : ℝ → ℝ), (∀ x, |trig x| ≤ 1) →
+        ∀ ω : FieldConfig2, |∑ i, c i * trig (ω (f i).val)| ≤ ∑ i, |c i| :=
+      fun trig hle ω => (Finset.abs_sum_le_sum_abs _ _).trans
+        (Finset.sum_le_sum fun i _ => by
+          rw [abs_mul]; exact (mul_le_mul_of_nonneg_left (hle _) (abs_nonneg _)).trans
+            (le_of_eq (mul_one _)))
+    have hbd_trig_theta : ∀ (trig : ℝ → ℝ), (∀ x, |trig x| ≤ 1) →
+        ∀ ω : FieldConfig2, |∑ i, c i * trig (ω (compTimeReflection2 (f i).val))| ≤ ∑ i, |c i| :=
+      fun trig hle ω => (Finset.abs_sum_le_sum_abs _ _).trans
+        (Finset.sum_le_sum fun i _ => by
+          rw [abs_mul]; exact (mul_le_mul_of_nonneg_left (hle _) (abs_nonneg _)).trans
+            (le_of_eq (mul_one _)))
+    have hint_cos : Integrable F_cos μ :=
+      integrable_bdd_meas (∑ i, |c i|) (hm_trig_sum _ Real.measurable_cos)
+        (hbd_trig _ Real.abs_cos_le_one)
+    have hint_sin : Integrable F_sin μ :=
+      integrable_bdd_meas (∑ i, |c i|) (hm_trig_sum _ Real.measurable_sin)
+        (hbd_trig _ Real.abs_sin_le_one)
+    have hint_cos_t : Integrable (fun ω => F_cos (distribTimeReflection ω)) μ :=
+      integrable_bdd_meas (∑ i, |c i|) (hm_trig_theta _ Real.measurable_cos)
+        (hbd_trig_theta _ Real.abs_cos_le_one)
+    have hint_sin_t : Integrable (fun ω => F_sin (distribTimeReflection ω)) μ :=
+      integrable_bdd_meas (∑ i, |c i|) (hm_trig_theta _ Real.measurable_sin)
+        (hbd_trig_theta _ Real.abs_sin_le_one)
+    exact integral_add
+      (hint_cos.mul_bdd hint_cos_t.aestronglyMeasurable
+        (ae_of_all μ fun ω => by
+          rw [Real.norm_eq_abs]; exact hbd_trig_theta _ Real.abs_cos_le_one ω))
+      (hint_sin.mul_bdd hint_sin_t.aestronglyMeasurable
+        (ae_of_all μ fun ω => by
+          rw [Real.norm_eq_abs]; exact hbd_trig_theta _ Real.abs_sin_le_one ω))
 
 /-! ## Complete OS axiom bundle
 
