@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 68 axioms, 19 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
+**pphi2: 68 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
 
 ## File inventory
 
@@ -24,7 +24,7 @@ progressively fill in the axioms with full proofs.
 | 1 | `WickOrdering/Counterterm.lean` | 1 axiom |
 | 1 | `InteractingMeasure/LatticeAction.lean` | 0 axioms |
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
-| 1 | `InteractingMeasure/Normalization.lean` | 1 axiom, 1 sorry |
+| 1 | `InteractingMeasure/Normalization.lean` | 1 axiom, 0 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 1 axiom |
 | 2 | `TransferMatrix/Positivity.lean` | 8 axioms |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 4 axioms, 2 sorries |
@@ -318,7 +318,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`interactingLatticeMeasure_isProbability`~~ | LatticeMeasure | **Proved** — μ_a is a probability measure. |
 | ~~`boundedFunctions_integrable`~~ | Normalization | **Proved** — bounded functions integrable w.r.t. probability measure. |
 | ~~`field_second_moment_finite`~~ | Normalization | **Proved** — ∫|ω(δ_x)|² dμ_a < ∞. Boltzmann weight bounded above + Gaussian L². |
-| `fkg_interacting` | Normalization | FKG for the interacting measure. From lattice FKG + single-site perturbation. |
+| ~~`fkg_interacting`~~ | Normalization | **Proved** — FKG for interacting measure. From `fkg_perturbed` + single-site + algebra. |
 | ~~`generating_functional_bounded`~~ | Normalization | **Proved** — \|Z[f]\| ≤ 1 for real f. From \|exp(it)\| = 1. |
 | ~~`wickConstant_le_inv_mass_sq`~~ | Counterterm | **Proved** (in gaussian-field) — c_a ≤ 1/m². |
 | ~~`wickConstant_antitone_mass`~~ | Counterterm | **Proved** (in gaussian-field) — c_a decreasing in mass. |

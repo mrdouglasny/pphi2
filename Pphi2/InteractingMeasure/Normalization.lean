@@ -164,10 +164,157 @@ theorem fkg_interacting (P : InteractionPolynomial) (a mass : ℝ)
     (hFGi : Integrable (F * G) (interactingLatticeMeasure d N P a mass ha hmass)) :
     let μ := interactingLatticeMeasure d N P a mass ha hmass
     (∫ ω, F ω * G ω ∂μ) ≥ (∫ ω, F ω ∂μ) * (∫ ω, G ω ∂μ) := by
-  -- The proof should connect to fkg_perturbed from gaussian-field.
-  -- The interacting measure is (1/Z) exp(-V) dμ_{GFF}, and V is a sum of
-  -- single-site functions (latticeInteraction_single_site), so fkg_perturbed applies.
-  sorry
+  -- Reduce let binding to explicit measure
+  show (∫ ω, F ω * G ω ∂interactingLatticeMeasure d N P a mass ha hmass) ≥
+    (∫ ω, F ω ∂interactingLatticeMeasure d N P a mass ha hmass) *
+    (∫ ω, G ω ∂interactingLatticeMeasure d N P a mass ha hmass)
+  -- Setup
+  set μ_GFF := latticeGaussianMeasure d N a mass ha hmass
+  set V := interactionFunctional d N P a mass
+  set bw := boltzmannWeight d N P a mass
+  set Z := partitionFunction d N P a mass ha hmass
+  have hZ_pos : (0 : ℝ) < Z := partitionFunction_pos d N P a mass ha hmass
+  -- ENNReal facts about Z
+  have hZ_ennreal_ne_zero : ENNReal.ofReal Z ≠ 0 :=
+    (ENNReal.ofReal_pos.mpr hZ_pos).ne'
+  have hZ_ennreal_ne_top : ENNReal.ofReal Z ≠ ⊤ := ENNReal.ofReal_ne_top
+  have hc_ne_zero : (ENNReal.ofReal Z)⁻¹ ≠ 0 :=
+    ENNReal.inv_ne_zero.mpr hZ_ennreal_ne_top
+  have hc_ne_top : (ENNReal.ofReal Z)⁻¹ ≠ ⊤ :=
+    ENNReal.inv_ne_top.mpr hZ_ennreal_ne_zero
+  -- Measurability of the density
+  have hbw_meas_ennreal : Measurable (fun ω : Configuration (FinLatticeField d N) =>
+      ENNReal.ofReal (bw ω)) :=
+    ENNReal.measurable_ofReal.comp
+      ((interactionFunctional_measurable d N P a mass).neg.exp)
+  have hbw_lt_top : ∀ ω : Configuration (FinLatticeField d N),
+      ENNReal.ofReal (bw ω) < ⊤ := fun _ => ENNReal.ofReal_lt_top
+  -- Step 1: V is single-site (absorb a^d into per-site functions)
+  have hV_ss : ∃ v : FinLatticeSites d N → (ℝ → ℝ),
+      ∀ ω : Configuration (FinLatticeField d N),
+        V ω = ∑ x, v x (ω (finLatticeDelta d N x)) := by
+    obtain ⟨v, hv⟩ := interactionFunctional_single_site d N P a mass
+    exact ⟨fun x t => a ^ (d : ℕ) * v x t, fun ω => by
+      simp only [V, hv ω]; rw [Finset.mul_sum]⟩
+  -- Step 2: Convert integrability from interacting measure to Gaussian + weight
+  -- μ_a = (ENNReal.ofReal Z)⁻¹ • μ_GFF.withDensity(ENNReal.ofReal ∘ bw)
+  have int_conv : ∀ (f : Configuration (FinLatticeField d N) → ℝ),
+      Integrable f (interactingLatticeMeasure d N P a mass ha hmass) →
+      Integrable (fun ω => f ω * bw ω) μ_GFF := by
+    intro f hf
+    -- Remove Z⁻¹ scaling
+    unfold interactingLatticeMeasure at hf
+    rw [integrable_smul_measure hc_ne_zero hc_ne_top] at hf
+    -- Remove withDensity
+    rw [integrable_withDensity_iff hbw_meas_ennreal
+      (Filter.Eventually.of_forall hbw_lt_top)] at hf
+    have hbw_simp : ∀ ω : Configuration (FinLatticeField d N),
+        (ENNReal.ofReal (bw ω)).toReal = bw ω :=
+      fun ω => ENNReal.toReal_ofReal (le_of_lt (boltzmannWeight_pos d N P a mass ω))
+    simp_rw [hbw_simp] at hf
+    exact hf
+  -- Convert each integrability hypothesis
+  have hFi' : Integrable (fun ω => F ω * Real.exp (-V ω)) μ_GFF := int_conv F hFi
+  have hGi' : Integrable (fun ω => G ω * Real.exp (-V ω)) μ_GFF := int_conv G hGi
+  have hFGi' : Integrable (fun ω => F ω * G ω * Real.exp (-V ω)) μ_GFF :=
+    int_conv (F * G) hFGi
+  -- Step 3: Apply fkg_perturbed (un-normalized FKG inequality)
+  have hfkg := fkg_perturbed d N a mass ha hmass V hV_ss
+    (boltzmannWeight_integrable d N P a mass ha hmass)
+    F G hF hG hFi' hGi' hFGi'
+  -- hfkg: (∫ FG*exp(-V) dμ_GFF) * (∫ exp(-V) dμ_GFF) ≥
+  --        (∫ F*exp(-V) dμ_GFF) * (∫ G*exp(-V) dμ_GFF)
+  -- Step 4: Convert back to interacting measure integrals
+  -- ∫ f dμ_a = Z⁻¹ * ∫ (f · bw) dμ_GFF, so ∫ (f · bw) dμ_GFF = Z * ∫ f dμ_a
+  -- The un-normalized inequality implies the normalized one by dividing by Z²
+  -- Use integral_smul_measure: ∫ f d(c • μ) = c.toReal • ∫ f dμ
+  unfold interactingLatticeMeasure
+  simp_rw [integral_smul_measure]
+  -- Goal now involves c.toReal • ∫ ... d(μ_GFF.withDensity ...)
+  -- where c = (ENNReal.ofReal Z)⁻¹
+  set c := (ENNReal.ofReal Z)⁻¹
+  -- c.toReal = Z⁻¹
+  have hc_real : c.toReal = Z⁻¹ := by
+    simp [c, ENNReal.toReal_inv, ENNReal.toReal_ofReal (le_of_lt hZ_pos)]
+  rw [hc_real]
+  -- Now use withDensity integral identity
+  -- ∫ f d(μ_GFF.withDensity(bw̃)) = ∫ (f * bw) dμ_GFF
+  -- via integral_withDensity_eq_integral_smul with NNReal density
+  set bw_nn := fun ω : Configuration (FinLatticeField d N) => Real.toNNReal (bw ω)
+  -- The withDensity measure with ENNReal.ofReal ∘ bw = withDensity with ↑bw_nn
+  -- (since ENNReal.ofReal = ↑ ∘ Real.toNNReal by definition)
+  have hbw_nn_meas : Measurable bw_nn := by
+    exact Measurable.real_toNNReal
+      ((interactionFunctional_measurable d N P a mass).neg.exp)
+  -- Rewrite the integrals using withDensity identity
+  have wd_eq : ∀ (f : Configuration (FinLatticeField d N) → ℝ),
+      ∫ ω, f ω ∂(μ_GFF.withDensity (fun ω => ENNReal.ofReal (bw ω))) =
+      ∫ ω, bw ω * f ω ∂μ_GFF := by
+    intro f
+    -- ENNReal.ofReal = ↑ ∘ Real.toNNReal (definitional)
+    change ∫ ω, f ω ∂(μ_GFF.withDensity (fun ω => ↑(bw_nn ω))) =
+      ∫ ω, bw ω * f ω ∂μ_GFF
+    rw [integral_withDensity_eq_integral_smul hbw_nn_meas]
+    congr 1; ext ω
+    simp only [bw_nn, NNReal.smul_def, smul_eq_mul]
+    rw [Real.coe_toNNReal _ (le_of_lt (boltzmannWeight_pos d N P a mass ω))]
+  -- Rewrite integrals using wd_eq: ∫ f dν = ∫ bw * f dμ_GFF
+  rw [wd_eq (fun ω => F ω * G ω), wd_eq F, wd_eq G]
+  -- Rewrite hfkg integrands to match goal form
+  -- hfkg has: ∫ F*G*exp(-V), ∫ F*exp(-V), ∫ G*exp(-V), ∫ exp(-V)
+  -- Goal has:  ∫ bw*(F*G),    ∫ bw*F,      ∫ bw*G
+  -- These match since bw = exp(-V) and up to commuting multiplication
+  have hA : ∫ ω, F ω * G ω * Real.exp (-V ω) ∂μ_GFF =
+      ∫ ω, bw ω * (F ω * G ω) ∂μ_GFF :=
+    integral_congr_ae (Filter.Eventually.of_forall fun ω => by
+      simp only [bw, boltzmannWeight]; ring)
+  have hB : ∫ ω, F ω * Real.exp (-V ω) ∂μ_GFF =
+      ∫ ω, bw ω * F ω ∂μ_GFF :=
+    integral_congr_ae (Filter.Eventually.of_forall fun ω => by
+      simp only [bw, boltzmannWeight]; ring)
+  have hC : ∫ ω, G ω * Real.exp (-V ω) ∂μ_GFF =
+      ∫ ω, bw ω * G ω ∂μ_GFF :=
+    integral_congr_ae (Filter.Eventually.of_forall fun ω => by
+      simp only [bw, boltzmannWeight]; ring)
+  -- Goal has • (smul); for ℝ this is definitionally *
+  show Z⁻¹ * (∫ ω, bw ω * (F ω * G ω) ∂μ_GFF) ≥
+    (Z⁻¹ * (∫ ω, bw ω * F ω ∂μ_GFF)) *
+    (Z⁻¹ * (∫ ω, bw ω * G ω ∂μ_GFF))
+  -- Suffices to show the un-normalized FKG inequality
+  suffices h_unnorm : (∫ ω, bw ω * (F ω * G ω) ∂μ_GFF) * Z ≥
+      (∫ ω, bw ω * F ω ∂μ_GFF) * (∫ ω, bw ω * G ω ∂μ_GFF) by
+    -- Derive normalized from un-normalized by dividing by Z²
+    have hZinv_pos : 0 < Z⁻¹ := inv_pos.mpr hZ_pos
+    have hZZ : Z⁻¹ * Z = 1 := inv_mul_cancel₀ (ne_of_gt hZ_pos)
+    set A := ∫ ω, bw ω * (F ω * G ω) ∂μ_GFF
+    set B := ∫ ω, bw ω * F ω ∂μ_GFF
+    set C := ∫ ω, bw ω * G ω ∂μ_GFF
+    -- h_unnorm: A * Z ≥ B * C; Goal: Z⁻¹ * A ≥ (Z⁻¹ * B) * (Z⁻¹ * C)
+    have step1 := mul_le_mul_of_nonneg_left (GE.ge.le h_unnorm)
+      (mul_nonneg (le_of_lt hZinv_pos) (le_of_lt hZinv_pos))
+    have lhs_simp : Z⁻¹ * Z⁻¹ * (A * Z) = Z⁻¹ * A := by
+      have : Z⁻¹ * Z⁻¹ * (A * Z) = Z⁻¹ * A * (Z⁻¹ * Z) := by ring
+      rw [this, hZZ, mul_one]
+    have rhs_simp : Z⁻¹ * Z⁻¹ * (B * C) = (Z⁻¹ * B) * (Z⁻¹ * C) := by ring
+    linarith
+  -- Prove the un-normalized FKG from hfkg by matching integrands
+  -- hfkg: (∫ FG*exp(-V)) * (∫ exp(-V)) ≥ (∫ F*exp(-V)) * (∫ G*exp(-V))
+  -- Convert: bw*f = f*exp(-V) (since bw = exp(-V)), Z = ∫ exp(-V) = ∫ bw
+  have eq1 : (∫ ω, bw ω * (F ω * G ω) ∂μ_GFF) =
+      (∫ ω, F ω * G ω * Real.exp (-V ω) ∂μ_GFF) :=
+    integral_congr_ae (Filter.Eventually.of_forall fun ω => by
+      simp only [bw, boltzmannWeight]; ring)
+  have eq2 : Z = ∫ ω, Real.exp (-V ω) ∂μ_GFF := rfl
+  have eq3 : (∫ ω, bw ω * F ω ∂μ_GFF) =
+      (∫ ω, F ω * Real.exp (-V ω) ∂μ_GFF) :=
+    integral_congr_ae (Filter.Eventually.of_forall fun ω => by
+      simp only [bw, boltzmannWeight]; ring)
+  have eq4 : (∫ ω, bw ω * G ω ∂μ_GFF) =
+      (∫ ω, G ω * Real.exp (-V ω) ∂μ_GFF) :=
+    integral_congr_ae (Filter.Eventually.of_forall fun ω => by
+      simp only [bw, boltzmannWeight]; ring)
+  rw [eq1, eq2, eq3, eq4]
+  exact hfkg
 
 /-! ## Exponential integrability
 
