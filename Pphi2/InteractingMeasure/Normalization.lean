@@ -52,7 +52,11 @@ theorem bounded_integrable_interacting (P : InteractionPolynomial) (a mass : ℝ
     (hF_meas : @Measurable _ _ instMeasurableSpaceConfiguration
       (borel ℝ) F) :
     Integrable F (interactingLatticeMeasure d N P a mass ha hmass) := by
-  sorry
+  obtain ⟨C, hC⟩ := hF_bound
+  haveI := interactingLatticeMeasure_isProbability d N P a mass ha hmass
+  exact Integrable.of_bound hF_meas.aestronglyMeasurable C
+    (Filter.Eventually.of_forall (fun ω => by
+      rw [Real.norm_eq_abs]; exact hC ω))
 
 /-! ## Moment bounds
 
@@ -131,7 +135,21 @@ theorem generating_functional_bounded (P : InteractionPolynomial) (a mass : ℝ)
     (f : FinLatticeField d N) :
     |∫ ω : Configuration (FinLatticeField d N),
       Real.cos (ω f) ∂(interactingLatticeMeasure d N P a mass ha hmass)| ≤ 1 := by
-  sorry
+  haveI := interactingLatticeMeasure_isProbability d N P a mass ha hmass
+  set μ := interactingLatticeMeasure d N P a mass ha hmass
+  -- |∫ cos dμ| ≤ ∫ |cos| dμ ≤ ∫ 1 dμ = 1
+  calc |∫ ω, Real.cos (ω f) ∂μ|
+      = ‖∫ ω, Real.cos (ω f) ∂μ‖ := (Real.norm_eq_abs _).symm
+    _ ≤ ∫ ω, ‖Real.cos (ω f)‖ ∂μ := norm_integral_le_integral_norm _
+    _ ≤ ∫ _ω, (1 : ℝ) ∂μ := by
+        apply integral_mono_of_nonneg
+        · exact Filter.Eventually.of_forall (fun _ => norm_nonneg _)
+        · exact integrable_const 1
+        · exact Filter.Eventually.of_forall (fun ω => by
+            show ‖Real.cos (ω f)‖ ≤ 1
+            rw [Real.norm_eq_abs]
+            exact abs_le.mpr ⟨by linarith [Real.neg_one_le_cos (ω f)], Real.cos_le_one _⟩)
+    _ = 1 := by rw [integral_const, smul_eq_mul, mul_one, probReal_univ]
 
 end Pphi2
 
