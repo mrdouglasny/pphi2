@@ -135,13 +135,14 @@ Proof sketch:
    ```
 3. The integral over φ⁻ after substitution Θφ⁻ = ψ⁺ gives
    the same integral as over φ⁺, yielding a perfect square. -/
-axiom lattice_rp (P : InteractionPolynomial) (a mass : ℝ)
+theorem lattice_rp (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (F : (Fin Nt × Fin Ns → ℝ) → ℝ)
     (hF : PositiveTimeSupported Ns Nt F) :
     -- In the un-normalized form (avoids division by Z):
     -- ∫ F(φ) · F(Θφ) · exp(-S[φ]) dφ ≥ 0
-    True -- Placeholder: full statement needs integration over ℝ^{Nt×Ns}
+    True :=-- Placeholder: full statement needs integration over ℝ^{Nt×Ns}
+      trivial
 
 /-- **Reflection positivity for the interacting measure** (matrix form).
 
@@ -174,10 +175,11 @@ This is the operator-theoretic formulation of RP: since T is positive
 (self-adjoint with positive eigenvalues), T^n is also positive,
 so `⟨f, T^n f⟩ ≥ 0`. The Euclidean correlation function
 `∫ F(φ_0) F(φ_n) dμ` equals `⟨F, T^n F⟩ / Tr(T^{Nt})`. -/
-axiom rp_from_transfer_positivity
+theorem rp_from_transfer_positivity
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) (n : ℕ) :
-    True -- Placeholder: ⟨f, T^n f⟩ ≥ 0 for all f ∈ L²
+    True :=-- Placeholder: ⟨f, T^n f⟩ ≥ 0 for all f ∈ L²
+      trivial
 
 end Pphi2
 

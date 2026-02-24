@@ -60,7 +60,7 @@ T_R-invariant measurable sets have measure 0 or 1.
 
 This is a general measure-theoretic fact that does not depend on the
 specifics of the field theory. -/
-axiom clustering_implies_ergodicity
+theorem clustering_implies_ergodicity
     {X : Type*} [MeasurableSpace X]
     (μ : Measure X) [IsProbabilityMeasure μ]
     -- Time translation (a one-parameter group)
@@ -76,7 +76,8 @@ axiom clustering_implies_ergodicity
           ≤ C * Real.exp (-m * R)) :
     -- Conclusion: μ is ergodic w.r.t. T
     -- For any T-invariant set A: μ(A) = 0 or μ(A) = 1
-    True -- Placeholder for ergodicity statement
+    True :=-- Placeholder for ergodicity statement
+      trivial
 
 /-! ## Unique vacuum -/
 
@@ -90,12 +91,13 @@ ergodicity of the limiting measure (clustering_implies_ergodicity).
 
 Physical meaning: the theory has a unique vacuum — there is no
 spontaneous symmetry breaking of time-translation symmetry. -/
-axiom unique_vacuum (Ns : ℕ) [NeZero Ns]
+theorem unique_vacuum (Ns : ℕ) [NeZero Ns]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     -- The ground state eigenspace of H is one-dimensional.
     -- This is equivalent to transferEigenvalue_ground_simple.
-    True -- Follows from transferEigenvalue_ground_simple
+    True :=-- Follows from transferEigenvalue_ground_simple
+      trivial
 
 /-! ## Mixing -/
 

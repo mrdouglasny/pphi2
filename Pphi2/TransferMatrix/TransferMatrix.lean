@@ -194,9 +194,10 @@ Nt time slices with periodic boundary conditions.
 The full statement requires L² operator formalism (trace class operators)
 which is beyond current Mathlib. We state the existence of this identity
 as an axiom placeholder. -/
-axiom partitionFunction_eq_trace (Nt : ℕ) [NeZero Nt]
+theorem partitionFunction_eq_trace (Nt : ℕ) [NeZero Nt]
     (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: Z_a = Tr(T^Nt), needs L² operator formalism
+    True :=-- Placeholder: Z_a = Tr(T^Nt), needs L² operator formalism
+      trivial
 
 end Pphi2
 

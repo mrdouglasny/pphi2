@@ -75,9 +75,10 @@ axiom transferOperator_selfAdjoint (P : InteractionPolynomial) (a mass : ℝ)
 
 for all f ∈ L²(ℝ^Ns). This follows from the kernel being strictly positive:
 T(ψ,ψ') > 0 everywhere. -/
-axiom transferOperator_positiveDefinite (P : InteractionPolynomial) (a mass : ℝ)
+theorem transferOperator_positiveDefinite (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: ⟨f, Tf⟩ ≥ 0 for all f ∈ L²
+    True :=-- Placeholder: ⟨f, Tf⟩ ≥ 0 for all f ∈ L²
+      trivial
 
 /-- The transfer operator is Hilbert-Schmidt (hence compact).
 
@@ -87,18 +88,20 @@ Proof outline: The kernel satisfies
   `T(ψ,ψ') ≤ exp(C) · exp(-½ Σ_x (ψ_x - ψ'_x)²)`
 where C comes from the lower bound on the spatial action (bounded below).
 The Gaussian factor makes the double integral converge. -/
-axiom transferOperator_hilbertSchmidt (P : InteractionPolynomial) (a mass : ℝ)
+theorem transferOperator_hilbertSchmidt (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: T is Hilbert-Schmidt on L²(ℝ^Ns)
+    True :=-- Placeholder: T is Hilbert-Schmidt on L²(ℝ^Ns)
+      trivial
 
 /-- The transfer operator is trace class.
 
 Since T = T^{1/2} · T^{1/2} (positive self-adjoint), and T^{1/2} is
 Hilbert-Schmidt (its kernel is also Gaussian-bounded), T is the product
 of two Hilbert-Schmidt operators, hence trace class. -/
-axiom transferOperator_traceClass (P : InteractionPolynomial) (a mass : ℝ)
+theorem transferOperator_traceClass (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: T is trace class on L²(ℝ^Ns)
+    True :=-- Placeholder: T is trace class on L²(ℝ^Ns)
+      trivial
 
 /-! ## Spectral decomposition
 

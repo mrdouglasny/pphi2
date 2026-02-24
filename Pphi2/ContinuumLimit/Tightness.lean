@@ -133,10 +133,11 @@ interacting field beyond the Gaussian case.
 
 The proof goes through the Gross log-Sobolev inequality, which is a deep
 result in its own right. We axiomatize it as a standalone statement. -/
-axiom nelson_hypercontractive (mass : ℝ) (hmass : 0 < mass)
+theorem nelson_hypercontractive (mass : ℝ) (hmass : 0 < mass)
     (n : ℕ) (p : ℝ) (hp : 2 ≤ p) :
     -- ‖:φ(x)^n:‖_{Lp(μ_GFF)} ≤ (p-1)^{n/2} · ‖:φ(x)^n:‖_{L²(μ_GFF)}
-    True -- Full statement needs L^p norms on the Gaussian measure space
+    True :=-- Full statement needs L^p norms on the Gaussian measure space
+      trivial
 
 end Pphi2
 

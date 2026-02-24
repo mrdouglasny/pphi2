@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 61 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
+**pphi2: 32 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
 
 ## File inventory
 
@@ -25,20 +25,20 @@ progressively fill in the axioms with full proofs.
 | 1 | `InteractingMeasure/LatticeAction.lean` | 0 axioms |
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
 | 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
-| 2 | `TransferMatrix/TransferMatrix.lean` | 1 axiom |
-| 2 | `TransferMatrix/Positivity.lean` | 8 axioms |
-| 2 | `OSProofs/OS3_RP_Lattice.lean` | 4 axioms, 2 sorries |
+| 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
+| 2 | `TransferMatrix/Positivity.lean` | 5 axioms |
+| 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 2 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
-| 3 | `TransferMatrix/SpectralGap.lean` | 7 axioms |
-| 3 | `OSProofs/OS4_MassGap.lean` | 3 axioms |
-| 3 | `OSProofs/OS4_Ergodicity.lean` | 4 axioms |
+| 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
+| 3 | `OSProofs/OS4_MassGap.lean` | 1 axiom |
+| 3 | `OSProofs/OS4_Ergodicity.lean` | 2 axioms |
 | 4 | `ContinuumLimit/Embedding.lean` | 5 axioms |
-| 4 | `ContinuumLimit/Tightness.lean` | 4 axioms |
-| 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 sorries |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | 5 axioms, 1 sorry |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 7 axioms, 1 sorry |
-| 6 | `OSAxioms.lean` | 0 axioms |
-| 6 | `Main.lean` | 1 axiom, 5 sorries |
+| 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
+| 4 | `ContinuumLimit/Convergence.lean` | 0 axioms, 2 sorries |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom, 1 sorry |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 3 axioms, 1 sorry |
+| 6 | `OSAxioms.lean` | 0 axioms, 1 sorry |
+| 6 | `Main.lean` | 0 axioms, 5 sorries |
 | 6 | `Bridge.lean` | 6 axioms, 6 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)

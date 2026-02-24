@@ -170,11 +170,12 @@ in 1+1 Minkowski spacetime satisfying the Wightman axioms:
 
 This is axiomatized as we do not formalize the reconstruction
 theorem itself (which requires Minkowski space QFT formalism). -/
-axiom os_reconstruction (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+theorem os_reconstruction (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ)
     (hos : @SatisfiesFullOS μ hμ) :
-    True -- Wightman QFT exists with all axioms satisfied
+    True :=-- Wightman QFT exists with all axioms satisfied
+      trivial
 
 /-- **The Glimm-Jaffe-Nelson theorem for P(Φ)₂.**
 

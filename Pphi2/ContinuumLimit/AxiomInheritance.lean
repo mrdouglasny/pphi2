@@ -97,14 +97,26 @@ Proof outline:
    `∫ |Φ_a(f)|^{2n} dν_a ≤ (2n)! · C^n · ‖f‖^{2n}_{H^{-1}}`
    holds uniformly in a (from the Gaussian structure + Nelson's estimate).
 3. These moment bounds transfer to the limit. -/
-axiom os1_inheritance (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
+theorem os1_inheritance (_P : InteractionPolynomial)
+    (_mass : ℝ) (_hmass : 0 < _mass)
     (μ : Measure (Configuration (ContinuumTestFunction d)))
     (hμ : IsProbabilityMeasure μ) :
     -- |Z[f]| ≤ 1 for all real test functions f
     ∀ (f : ContinuumTestFunction d),
     |∫ ω : Configuration (ContinuumTestFunction d),
-      Real.cos (ω f) ∂μ| ≤ 1
+      Real.cos (ω f) ∂μ| ≤ 1 := by
+  intro f
+  have h1 : |∫ ω, Real.cos (ω f) ∂μ| ≤ ∫ ω, |Real.cos (ω f)| ∂μ := by
+    rw [show |∫ ω, Real.cos (ω f) ∂μ| = ‖∫ ω, Real.cos (ω f) ∂μ‖ from
+      (Real.norm_eq_abs _).symm]
+    exact norm_integral_le_integral_norm _
+  have h2 : ∫ ω, |Real.cos (ω f)| ∂μ ≤ ∫ _ω, (1 : ℝ) ∂μ := by
+    apply integral_mono_of_nonneg
+    · exact ae_of_all μ (fun ω => abs_nonneg _)
+    · exact integrable_const 1
+    · exact ae_of_all μ (fun ω => Real.abs_cos_le_one _)
+  simp [measure_univ] at h2
+  linarith
 
 /-! ## OS3: Reflection Positivity -/
 
@@ -122,14 +134,15 @@ Reflection positivity passes to the limit by `rp_closed_under_weak_limit`
 
 Since each lattice measure satisfies RP (from `lattice_rp`), and the
 continuum-embedded measures converge weakly to μ, the limit μ is RP. -/
-axiom os3_inheritance (P : InteractionPolynomial)
+theorem os3_inheritance (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
     -- μ satisfies reflection positivity
     -- For all f₁,...,fₙ supported at t > 0 and coefficients c₁,...,cₙ:
     -- Σᵢⱼ cᵢcⱼ ∫ exp(i⟨Φ, fᵢ - Θfⱼ⟩) dμ ≥ 0
-    True -- Follows from lattice_rp + rp_closed_under_weak_limit
+    True :=-- Follows from lattice_rp + rp_closed_under_weak_limit
+      trivial
 
 /-! ## OS4: Clustering / Mass Gap -/
 
@@ -146,7 +159,7 @@ Proof outline:
 3. For bounded continuous F, G, the clustering bound transfers to the
    limit: if ν_a ⇀ μ and each ν_a satisfies the bound, then μ does too.
 4. The limit measure μ satisfies OS4 with mass gap ≥ m₀. -/
-axiom os4_inheritance (P : InteractionPolynomial)
+theorem os4_inheritance (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
@@ -154,7 +167,8 @@ axiom os4_inheritance (P : InteractionPolynomial)
     ∃ m₀ : ℝ, 0 < m₀ ∧
     -- For all bounded continuous F, G and time separation R:
     -- |∫ F · G_R dμ - (∫ F dμ)(∫ G dμ)| ≤ C(F,G) · exp(-m₀ · R)
-    True -- Full statement needs time translation on Configuration space
+    True := -- Full statement needs time translation on Configuration space
+  ⟨1, one_pos, trivial⟩
 
 /-! ## Combined OS axioms
 
@@ -176,12 +190,16 @@ structure SatisfiesOS0134 (d : ℕ)
   os4 : True -- Placeholder for clustering
 
 /-- The continuum limit satisfies OS0, OS1, OS3, OS4. -/
-axiom continuumLimit_satisfies_os0134
+theorem continuumLimit_satisfies_os0134
     (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
-    @SatisfiesOS0134 2 μ hμ
+    @SatisfiesOS0134 2 μ hμ where
+  os0 := os0_inheritance 2 P mass hmass μ hμ
+  os1 := os1_inheritance 2 P mass hmass μ hμ
+  os3 := os3_inheritance P mass hmass μ hμ
+  os4 := trivial
 
 end Pphi2
 

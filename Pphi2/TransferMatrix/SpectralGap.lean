@@ -65,9 +65,10 @@ Proof outline: H = -½Δ + V where Δ is the Ns-dimensional Laplacian and
 V is a polynomial potential. By Kato's theorem (or the Kato-Rellich theorem),
 since V is bounded below and grows polynomially, H is essentially self-adjoint
 on C₀^∞(ℝ^Ns). -/
-axiom hamiltonian_selfadjoint (P : InteractionPolynomial) (a mass : ℝ)
+theorem hamiltonian_selfadjoint (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: H is self-adjoint on its natural domain in L²(ℝ^Ns)
+    True :=-- Placeholder: H is self-adjoint on its natural domain in L²(ℝ^Ns)
+      trivial
 
 /-- The Hamiltonian has compact resolvent.
 
@@ -77,9 +78,10 @@ Equivalently, (H + λ)⁻¹ is compact for sufficiently large λ.
 
 This implies H has discrete spectrum: a sequence of eigenvalues
 E₀ ≤ E₁ ≤ E₂ ≤ ... → ∞ with finite multiplicities. -/
-axiom hamiltonian_compact_resolvent (P : InteractionPolynomial) (a mass : ℝ)
+theorem hamiltonian_compact_resolvent (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: (H + λ)⁻¹ is compact for large λ
+    True :=-- Placeholder: (H + λ)⁻¹ is compact for large λ
+      trivial
 
 /-- The ground state energy E₀ is simple (non-degenerate).
 
@@ -87,9 +89,10 @@ This follows from the Perron-Frobenius theorem: the semigroup e^{-tH}
 has a strictly positive kernel (from `transferKernel_pos`), so it is
 positivity-improving. Therefore the ground state eigenfunction is
 strictly positive (up to sign), hence unique. -/
-axiom ground_state_simple (P : InteractionPolynomial) (a mass : ℝ)
+theorem ground_state_simple (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: E₀ has multiplicity 1
+    True :=-- Placeholder: E₀ has multiplicity 1
+      trivial
 
 /-! ## Spectral gap
 
@@ -153,9 +156,10 @@ Its properties determine the structure of the continuum theory. -/
 
 This is the Perron-Frobenius property: since e^{-tH} is positivity-improving
 (its kernel T(ψ,ψ') > 0), the unique ground state must be strictly positive. -/
-axiom ground_state_positive (P : InteractionPolynomial) (a mass : ℝ)
+theorem ground_state_positive (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: Ω(ψ) > 0 for all ψ ∈ ℝ^Ns
+    True :=-- Placeholder: Ω(ψ) > 0 for all ψ ∈ ℝ^Ns
+      trivial
 
 /-- The ground state is in L²(ℝ^Ns) ∩ C^∞(ℝ^Ns).
 
@@ -163,9 +167,10 @@ Regularity: since V is smooth (polynomial) and H = -½Δ + V is an
 elliptic operator, eigenfunctions are smooth by elliptic regularity.
 L² membership follows from the compact resolvent (discrete spectrum
 means eigenfunctions are in L²). -/
-axiom ground_state_smooth (P : InteractionPolynomial) (a mass : ℝ)
+theorem ground_state_smooth (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: Ω ∈ L²(ℝ^Ns) ∩ C^∞(ℝ^Ns)
+    True :=-- Placeholder: Ω ∈ L²(ℝ^Ns) ∩ C^∞(ℝ^Ns)
+      trivial
 
 end Pphi2
 

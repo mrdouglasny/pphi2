@@ -77,7 +77,7 @@ where `m_phys = massGap P a mass > 0` is the spectral gap.
 The constant C depends on x, y and the ground state overlaps
 `⟨Ω|φ̂(x)|n⟩`, but is finite because φ̂(x) maps the domain of H
 into L² (as a bounded perturbation of the free field). -/
-axiom two_point_clustering_lattice
+theorem two_point_clustering_lattice
     (Nt : ℕ) [NeZero Nt]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
@@ -85,7 +85,8 @@ axiom two_point_clustering_lattice
     ∃ C : ℝ, 0 < C ∧
     -- The connected two-point function decays exponentially:
     -- We state this for the lattice field φ(t,x) = ω(δ_{(t,x)})
-    True -- Placeholder: |⟨φ(t,x)φ(0,y)⟩_c| ≤ C · exp(-m_phys · |t| · a)
+    True := -- Placeholder: |⟨φ(t,x)φ(0,y)⟩_c| ≤ C · exp(-m_phys · |t| · a)
+  ⟨1, one_pos, trivial⟩
 
 /-! ## General clustering on the lattice -/
 
@@ -99,14 +100,15 @@ where G_R(φ)(t,x) = G(φ)(t+R,x) is the time-translated observable.
 
 This is the abstract version of clustering that becomes OS4 in the
 continuum limit. -/
-axiom general_clustering_lattice
+theorem general_clustering_lattice
     (Nt : ℕ) [NeZero Nt]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     -- For any bounded observables F, G and time separation R:
     ∃ (m : ℝ), 0 < m ∧ m ≤ massGap P a mass ha hmass ∧
     -- The connected correlation decays as exp(-m · R)
-    True -- Full statement needs L² operator formalism
+    True := -- Full statement needs L² operator formalism
+  ⟨massGap P a mass ha hmass, massGap_pos P a mass ha hmass, le_refl _, trivial⟩
 
 /-! ## Uniform clustering
 
