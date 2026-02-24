@@ -56,7 +56,7 @@ All six phases are structurally complete and the full project builds
 analytic/probabilistic results with detailed proof sketches, proves the logical
 structure connecting them, and progressively fills in the axioms with full proofs.
 
-- **pphi2:** 69 axioms, 25 sorries
+- **pphi2:** 68 axioms, 25 sorries
 - **gaussian-field** (upstream dependency): 18 axioms, 4 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
@@ -118,6 +118,11 @@ lake build
 - E. Nelson, "Construction of quantum fields from Markoff fields," *J. Funct. Anal.* (1973)
 - K. Osterwalder and R. Schrader, "Axioms for Euclidean Green's functions I, II,"
   *Comm. Math. Phys.* 31 (1973), 42 (1975)
+
+## Related work
+
+- Xi Yin, [Phi4](https://github.com/xiyin137/Phi4) — Formalization of φ⁴ quantum
+  field theory in Lean 4
 
 ## License
 

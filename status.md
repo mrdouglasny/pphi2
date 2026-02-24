@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 69 axioms, 25 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
+**pphi2: 68 axioms, 25 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
 
 ## File inventory
 
@@ -20,7 +20,7 @@ progressively fill in the axioms with full proofs.
 | Phase | File | Status |
 |-------|------|--------|
 | Core | `Polynomial.lean` | 1 axiom (polynomial_lower_bound) |
-| 1 | `WickOrdering/WickPolynomial.lean` | 2 axioms |
+| 1 | `WickOrdering/WickPolynomial.lean` | 1 axiom (wickMonomial_eq_hermite) |
 | 1 | `WickOrdering/Counterterm.lean` | 1 axiom |
 | 1 | `InteractingMeasure/LatticeAction.lean` | 0 axioms |
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
@@ -196,7 +196,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 |-------|------|-----------|-------------|
 | `polynomial_lower_bound` | Polynomial | Medium | Even degree + positive leading coeff → bounded below. Promoted from sorry to axiom. |
 | `wickMonomial_eq_hermite` | WickPolynomial | Medium | Wick monomials equal probabilist Hermite polynomials |
-| `wickPolynomial_bounded_below` | WickPolynomial | Medium | Even-degree Wick polynomial with positive leading coeff is bounded below. Provable from leading term domination. |
+| ~~`wickPolynomial_bounded_below`~~ | WickPolynomial | ~~Medium~~ | **Proved** — Even-degree Wick polynomial with positive leading coeff is bounded below. Proved via `poly_even_degree_bounded_below` (leading term domination + `Continuous.exists_forall_le`). |
 | `wickConstant_log_divergence` | Counterterm | Medium | `c_a ~ (1/2π) log(1/a)` as a→0. Needs lattice Green's function asymptotics. |
 | `latticeInteraction_single_site` | LatticeAction | **Proved** | V_a decomposes as sum of single-site functions. Enables FKG via log-supermodularity. (Replaced false `latticeInteraction_convex` axiom.) |
 | `field_all_moments_finite` | Normalization | Medium | All moments of field evaluations are finite under the interacting measure. From Nelson's estimate. |
@@ -401,12 +401,14 @@ The following theorems have complete proofs (no sorry):
 | `connectedTwoPoint_symm` | OS4_MassGap | Symmetry of connected 2-point function |
 | `energyLevel_gap` | Positivity | E₁ > E₀ from transfer eigenvalue gap |
 | `prokhorov_sequential` | Convergence | Prokhorov's theorem (sequential version) — proved as theorem with proof |
+| `wickPolynomial_bounded_below` | WickPolynomial | Wick polynomial bounded below — from leading term domination via `poly_even_degree_bounded_below` |
+| `poly_even_degree_bounded_below` | WickPolynomial | Even-degree polynomial with positive leading coeff is bounded below — `eval_eq_sum_range` + coefficient bound + `Continuous.exists_forall_le` |
 
 ---
 
 ## Upstream: gaussian-field axioms and sorries
 
-The gaussian-field library (dependency) has **18 axioms and 2 sorries**.
+The gaussian-field library (dependency) has **18 axioms and 4 sorries**.
 These are organized by priority for pphi2.
 
 *Updated 2026-02-24. See also `docs/gemini_review.md` for external review.*
@@ -471,7 +473,8 @@ Remaining axioms:
 | Sorry | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | `schwartzPointwiseProduct_apply` | SchwartzNuclear/SchwartzTensorProduct | Medium | Hermite-Fubini factorization. |
-| `schwartzComplexificationEquiv` | Nuclear/Complexification | Medium | Linear iso between complexification and complex Schwartz space. |
+| `hermiteTensorProduct_*` (2) | SchwartzNuclear/HermiteTensorProduct | Medium | Hermite tensor product sorries. |
+| `schwartzSlicing_*` (1) | SchwartzNuclear/SchwartzSlicing | Medium | Schwartz slicing sorry. |
 
 ### Summary
 
@@ -481,5 +484,5 @@ Remaining axioms:
 | RapidDecayLattice (infinite lattice) | 4 | 0 |
 | Laplacian (infinite only) | 2 | 0 |
 | FKG (used by pphi2 Normalization) | 3 | 0 |
-| SchwartzNuclear + Complexification | 0 | 2 |
-| **Total** | **18** | **2** |
+| SchwartzNuclear | 0 | 4 |
+| **Total** | **18** | **4** |
