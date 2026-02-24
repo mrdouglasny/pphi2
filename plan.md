@@ -175,8 +175,8 @@ Definitions:
 Key properties:
 - `latticeInteraction_bounded_below`: `V_a(φ) ≥ -C · |Λ_a|` because P has
   even degree ≥ 4 with positive leading coefficient
-- `latticeInteraction_convex`: `V_a` is convex on `FinLatticeField d N`
-  when P is convex (enables `fkg_perturbed` from gaussian-field)
+- `latticeInteraction_single_site`: `V_a` is a sum of single-site functions
+  (enables `fkg_perturbed` from gaussian-field via log-supermodularity)
 - `latticeInteraction_continuous`: continuous (finite-dimensional, automatic)
 
 ### InteractingMeasure/LatticeMeasure.lean

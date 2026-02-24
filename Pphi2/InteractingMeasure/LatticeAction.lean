@@ -102,16 +102,22 @@ theorem latticeInteraction_continuous (P : InteractionPolynomial) (a mass : ℝ)
     intro m _
     exact continuous_const.mul ((wickMonomial_continuous m _).comp (continuous_apply x))
 
-/-- The lattice interaction is convex when P is convex.
+/-- The lattice interaction is a sum of single-site functions.
 
-For even-degree polynomials P bounded below, `:P:_c` is convex in φ(x)
-for each x (since Wick ordering only shifts by lower-order terms, and
-the sum of convex functions is convex).
+`V_a(φ) = a^d · Σ_x :P(φ(x)):_{c_a}` depends on φ only through the values
+φ(x) at individual lattice sites. This single-site structure is the key
+property needed for the FKG inequality (via `fkg_perturbed` from gaussian-field).
 
-This enables the use of `fkg_perturbed` from gaussian-field. -/
-axiom latticeInteraction_convex (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    ConvexOn ℝ Set.univ (latticeInteraction d N P a mass)
+Note: global convexity of V would be FALSE for typical P(Φ)₂ interactions
+(e.g., P(τ) = τ⁴/4 - μτ² is not globally convex). But FKG does not need
+convexity — the single-site decomposition suffices because products of
+single-variable functions are automatically log-supermodular. -/
+theorem latticeInteraction_single_site (P : InteractionPolynomial) (a mass : ℝ) :
+    ∃ v : FinLatticeSites d N → (ℝ → ℝ),
+      ∀ φ : FinLatticeField d N,
+        latticeInteraction d N P a mass φ =
+          a ^ d * ∑ x, v x (φ x) := by
+  exact ⟨fun _x τ => wickPolynomial P (wickConstant d N a mass) τ, fun _φ => rfl⟩
 
 end Pphi2
 

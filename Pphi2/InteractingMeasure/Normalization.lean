@@ -94,7 +94,7 @@ axiom field_all_moments_finite (P : InteractionPolynomial) (a mass : ℝ)
 
 The interacting measure satisfies the FKG inequality for monotone observables.
 This follows from `fkg_perturbed` in gaussian-field, since the interaction
-V_a is convex (when P is convex in φ(x) for each x). -/
+V_a is a sum of single-site functions (each :P(φ(x)): depends only on φ(x)). -/
 
 /-- **FKG inequality for the interacting lattice measure.**
 
@@ -105,7 +105,7 @@ That is, increasing functions are positively correlated under the
 interacting measure, just as under the Gaussian.
 
 This follows from `fkg_perturbed` (gaussian-field/Lattice/FKG.lean)
-applied to our interaction V_a, which is convex. -/
+applied to our interaction V_a, which is a sum of single-site functions. -/
 theorem fkg_interacting (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (F G : Configuration (FinLatticeField d N) → ℝ)
@@ -116,8 +116,8 @@ theorem fkg_interacting (P : InteractionPolynomial) (a mass : ℝ)
     let μ := interactingLatticeMeasure d N P a mass ha hmass
     (∫ ω, F ω * G ω ∂μ) ≥ (∫ ω, F ω ∂μ) * (∫ ω, G ω ∂μ) := by
   -- The proof should connect to fkg_perturbed from gaussian-field.
-  -- The interacting measure is (1/Z) exp(-V) dμ_{GFF}, and V is convex,
-  -- so fkg_perturbed applies.
+  -- The interacting measure is (1/Z) exp(-V) dμ_{GFF}, and V is a sum of
+  -- single-site functions (latticeInteraction_single_site), so fkg_perturbed applies.
   sorry
 
 /-! ## Exponential integrability

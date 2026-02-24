@@ -126,6 +126,18 @@ theorem interactionFunctional_bounded_below (P : InteractionPolynomial) (a mass 
     _ = -(a ^ d * Fintype.card (FinLatticeSites d N) * A) := by
         simp [Finset.sum_const, mul_comm, mul_assoc, neg_mul]; ring
 
+/-- The interaction functional is a sum of single-site functions.
+
+Each term :P(ω(δ_x)): depends on ω only through the single evaluation ω(δ_x),
+so V_a(ω) = a^d · Σ_x v_x(ω(δ_x)) where v_x(t) = :P(t):_{c_a}.
+This is the key property enabling the FKG inequality via `fkg_perturbed`. -/
+theorem interactionFunctional_single_site (P : InteractionPolynomial) (a mass : ℝ) :
+    ∃ v : FinLatticeSites d N → (ℝ → ℝ),
+      ∀ ω : Configuration (FinLatticeField d N),
+        interactionFunctional d N P a mass ω =
+          a ^ d * ∑ x, v x (ω (finLatticeDelta d N x)) :=
+  ⟨fun _x τ => wickPolynomial P (wickConstant d N a mass) τ, fun _ω => rfl⟩
+
 /-! ## Partition function -/
 
 /-- The Boltzmann weight `exp(-V_a(ω))`. -/

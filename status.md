@@ -5,13 +5,13 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3067 jobs).
+3081 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 65 axioms, 28 sorries** | **gaussian-field (upstream): 29 axioms, 14 sorries**
+**pphi2: 69 axioms, 25 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
 
 ## File inventory
 
@@ -19,26 +19,27 @@ progressively fill in the axioms with full proofs.
 
 | Phase | File | Status |
 |-------|------|--------|
-| Core | `Polynomial.lean` | 1 sorry (polynomial_lower_bound) |
-| 1 | `WickOrdering/WickPolynomial.lean` | 3 axioms |
-| 1 | `WickOrdering/Counterterm.lean` | 1 axiom, 2 sorries |
-| 1 | `InteractingMeasure/LatticeAction.lean` | 1 axiom |
-| 1 | `InteractingMeasure/LatticeMeasure.lean` | 4 sorries |
-| 1 | `InteractingMeasure/Normalization.lean` | 1 axiom, 4 sorries |
+| Core | `Polynomial.lean` | 1 axiom (polynomial_lower_bound) |
+| 1 | `WickOrdering/WickPolynomial.lean` | 2 axioms |
+| 1 | `WickOrdering/Counterterm.lean` | 1 axiom |
+| 1 | `InteractingMeasure/LatticeAction.lean` | 0 axioms |
+| 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
+| 1 | `InteractingMeasure/Normalization.lean` | 1 axiom, 2 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 1 axiom |
-| 2 | `TransferMatrix/Positivity.lean` | 8 axioms, 1 sorry |
+| 2 | `TransferMatrix/Positivity.lean` | 8 axioms |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 4 axioms, 2 sorries |
-| 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 1 sorry |
+| 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 7 axioms |
-| 3 | `OSProofs/OS4_MassGap.lean` | 3 axioms, 1 sorry |
+| 3 | `OSProofs/OS4_MassGap.lean` | 3 axioms |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 4 axioms |
-| 4 | `ContinuumLimit/Embedding.lean` | 5 axioms, 1 sorry |
+| 4 | `ContinuumLimit/Embedding.lean` | 5 axioms |
 | 4 | `ContinuumLimit/Tightness.lean` | 4 axioms |
-| 4 | `ContinuumLimit/Convergence.lean` | 5 axioms, 1 sorry |
+| 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 5 axioms, 1 sorry |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 7 axioms, 2 sorries |
-| 6 | `OSAxioms.lean` | 5 axioms, 1 sorry |
-| 6 | `Main.lean` | 1 axiom, 7 sorries |
+| 6 | `OSAxioms.lean` | 5 axioms |
+| 6 | `Main.lean` | 1 axiom |
+| 6 | `Bridge.lean` | 6 axioms |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
@@ -76,7 +77,7 @@ The OS axioms are stated for a probability measure μ on S'(ℝ²) =
 | `E2` | `structure` | Euclidean motion: `R : O2`, `t : SpaceTime2` |
 | `O2` | `Type` | `LinearIsometry (RingHom.id ℝ) SpaceTime2 SpaceTime2` |
 | `generatingFunctional μ f` | `ℂ` | `Z[f] = ∫ exp(i⟨ω, f⟩) dμ(ω)` for real f |
-| `generatingFunctionalℂ μ J` | `ℂ` | Complex extension of Z (has sorry) |
+| `generatingFunctionalℂ μ J` | `ℂ` | Complex extension of Z |
 | `timeReflection2 p` | `SpaceTime2` | `(t, x) ↦ (-t, x)` |
 | `hasPositiveTime2 p` | `Prop` | First coordinate > 0 |
 | `positiveTimeSubmodule2` | `Submodule ℝ TestFunction2` | Test functions with `tsupport ⊆ {t > 0}` |
@@ -169,9 +170,7 @@ True  -- Placeholder; full formulation needs time translation on
 
 ### Sorries in OSAxioms.lean
 
-| Sorry | Location | Description |
-|-------|----------|-------------|
-| `generatingFunctionalℂ` body | line 80 | Complex generating functional definition. Needs decomposition J = Re(J) + i·Im(J) and SchwartzMap real/imaginary part API. |
+None — all sorries have been resolved. The 5 remaining axioms are the infrastructure CLM axioms listed above.
 
 ### Proved theorems in OSAxioms.lean
 
@@ -195,10 +194,11 @@ True  -- Placeholder; full formulation needs time translation on
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
+| `polynomial_lower_bound` | Polynomial | Medium | Even degree + positive leading coeff → bounded below. Promoted from sorry to axiom. |
 | `wickMonomial_eq_hermite` | WickPolynomial | Medium | Wick monomials equal probabilist Hermite polynomials |
 | `wickPolynomial_bounded_below` | WickPolynomial | Medium | Even-degree Wick polynomial with positive leading coeff is bounded below. Provable from leading term domination. |
 | `wickConstant_log_divergence` | Counterterm | Medium | `c_a ~ (1/2π) log(1/a)` as a→0. Needs lattice Green's function asymptotics. |
-| `latticeInteraction_convex` | LatticeAction | Medium | V_a is convex when P is convex. Needed for FKG. Sum of convex functions argument. |
+| `latticeInteraction_single_site` | LatticeAction | **Proved** | V_a decomposes as sum of single-site functions. Enables FKG via log-supermodularity. (Replaced false `latticeInteraction_convex` axiom.) |
 | `field_all_moments_finite` | Normalization | Medium | All moments of field evaluations are finite under the interacting measure. From Nelson's estimate. |
 
 ### Phase 2: Transfer matrix and reflection positivity
@@ -251,7 +251,7 @@ True  -- Placeholder; full formulation needs time translation on
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
 | `nelson_hypercontractive` | Tightness | Hard | Nelson's hypercontractive estimate. Deep result (via Gross log-Sobolev inequality). |
-| `prokhorov_sequential` | Convergence | Infrastructure | Prokhorov's theorem (sequential version). Partially in Mathlib (`tight_iff_isRelativelyCompact`). |
+| ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — Prokhorov's theorem (sequential version). Now a theorem with complete proof. |
 | `schwinger2_convergence` | Convergence | Medium | 2-point Schwinger functions converge. From weak convergence + uniform integrability. |
 | `schwinger_n_convergence` | Convergence | Medium | n-point Schwinger functions converge. |
 | `continuumLimit_nontrivial` | Convergence | Medium | Limit is not δ₀. From positive 2-point function. |
@@ -285,6 +285,12 @@ True  -- Placeholder; full formulation needs time translation on
 | `compTimeReflection2_apply` | OSAxioms | Easy | Specification that Θ agrees with composition. |
 | `SchwartzMap.translate` | OSAxioms | Infrastructure | Translation on Schwartz space as CLM. Needs Schwartz decay preservation under translation. |
 | `os_reconstruction` | Main | Infrastructure | OS reconstruction theorem (Osterwalder-Schrader 1973, 1975). Would require formalizing Minkowski QFT. |
+| `measure_determined_by_schwinger` | Bridge | Medium | A measure on S'(ℝ²) is determined by its Schwinger functions. |
+| `wick_constant_comparison` | Bridge | Medium | Wick constant comparison between formulations. |
+| `schwinger_agreement` | Bridge | Medium | Schwinger functions agree between formulations. |
+| `same_continuum_measure` | Bridge | Medium | Continuum measures agree. |
+| `os2_from_phi4` | Bridge | Medium | OS2 from Φ⁴ formulation. |
+| `os3_from_pphi2` | Bridge | Medium | OS3 from P(Φ)₂ formulation. |
 
 ---
 
@@ -294,37 +300,35 @@ True  -- Placeholder; full formulation needs time translation on
 
 | Sorry | File | Notes |
 |-------|------|-------|
-| `polynomial_lower_bound` | Polynomial | Even degree + positive leading coeff → bounded below. Needs Polynomial API. |
+| ~~`polynomial_lower_bound`~~ | Polynomial | **Promoted to axiom** — even degree + positive leading coeff → bounded below. |
 | ~~`transferKernel_symmetric`~~ | TransferMatrix | **Proved** — `(a-b)² = (b-a)²` + `ring`. |
 | ~~`timeCoupling_eq_zero_iff`~~ | TransferMatrix | **Proved** — sum of nonneg squares = 0 iff each is 0. |
 | ~~`latticeInteraction_continuous`~~ | LatticeAction | **Proved** — via `wickMonomial_continuous` + finite sums. |
-| `continuumMeasure_isProbability` | Embedding | Pushforward of probability measure is probability measure. Standard measure theory. |
-| `connectedTwoPoint_symm` | OS4_MassGap | Symmetry of the connected 2-point function. Integral equality. |
+| ~~`continuumMeasure_isProbability`~~ | Embedding | **Proved** — pushforward of probability measure is probability measure. |
+| ~~`connectedTwoPoint_symm`~~ | OS4_MassGap | **Proved** — symmetry of the connected 2-point function. |
 
 ### Require nontrivial proofs
 
 | Sorry | File | Notes |
 |-------|------|-------|
-| `generatingFunctionalℂ` body | OSAxioms | Complex generating functional. Needs SchwartzMap real/imaginary part decomposition. |
-| `interactionFunctional_measurable` | LatticeMeasure | Measurability of V_a as function on Configuration space. |
-| `boltzmannWeight_integrable` | LatticeMeasure | exp(-V_a) is integrable w.r.t. Gaussian measure. Uses V_a bounded below. |
-| `partitionFunction_pos` | LatticeMeasure | Z_a > 0. From exp(-V_a) > 0 and Gaussian measure has full support. |
-| `interactingLatticeMeasure_isProbability` | LatticeMeasure | μ_a is a probability measure. From Z_a > 0 + normalization. |
-| `boundedFunctions_integrable` | Normalization | Bounded functions are integrable w.r.t. probability measure. |
+| ~~`generatingFunctionalℂ` body~~ | OSAxioms | **Proved** — complex generating functional defined. |
+| ~~`interactionFunctional_measurable`~~ | LatticeMeasure | **Proved** — measurability of V_a. |
+| ~~`boltzmannWeight_integrable`~~ | LatticeMeasure | **Proved** — exp(-V_a) integrable w.r.t. Gaussian. |
+| ~~`partitionFunction_pos`~~ | LatticeMeasure | **Proved** — Z_a > 0. |
+| ~~`interactingLatticeMeasure_isProbability`~~ | LatticeMeasure | **Proved** — μ_a is a probability measure. |
+| ~~`boundedFunctions_integrable`~~ | Normalization | **Proved** — bounded functions integrable w.r.t. probability measure. |
 | `field_second_moment_finite` | Normalization | Second moment finite. From Nelson's estimate. |
-| `fkg_interacting` | Normalization | FKG for the interacting measure. From lattice FKG + convex perturbation. |
-| `generating_functional_bounded` | Normalization | |Z[f]| ≤ 1 for real f. From |exp(it)| = 1. |
-| `wickConstant_le_inv_mass_sq` | Counterterm | c_a ≤ 1/m². Upper bound on Wick constant. |
-| `wickConstant_antitone_mass` | Counterterm | c_a decreasing in mass. Monotonicity of Green's function. |
-| `energyLevel_gap` | Positivity | E₁ > E₀. From transfer eigenvalue gap. |
-| `rp_closed_under_weak_limit` | OS3_RP_Inheritance | RP closed under weak limits. General topological fact: nonnegativity conditions are closed. |
+| `fkg_interacting` | Normalization | FKG for the interacting measure. From lattice FKG + single-site perturbation. |
+| ~~`generating_functional_bounded`~~ | Normalization | **Proved** — \|Z[f]\| ≤ 1 for real f. From \|exp(it)\| = 1. |
+| ~~`wickConstant_le_inv_mass_sq`~~ | Counterterm | **Proved** (in gaussian-field) — c_a ≤ 1/m². |
+| ~~`wickConstant_antitone_mass`~~ | Counterterm | **Proved** (in gaussian-field) — c_a decreasing in mass. |
+| ~~`energyLevel_gap`~~ | Positivity | **Proved** — E₁ > E₀ from transfer eigenvalue gap. |
+| ~~`rp_closed_under_weak_limit`~~ | OS3_RP_Inheritance | **Proved** — RP closed under weak limits. |
 | `reflection_positivity_lattice` | OS3_RP_Lattice | Lattice RP from action decomposition. |
 | `continuumLimit` | Convergence | Apply Prokhorov to the tight family. Needs prokhorov_sequential + continuumMeasures_tight. |
 | `continuumTimeReflection` | AxiomInheritance | Define Θf where (Θf)(t,x) = f(-t,x) as SchwartzMap. Needs Schwartz space API. |
 | `so2Generator` | OS2_WardIdentity | SO(2) generator J on Schwartz space. Needs SchwartzMap API for differential operators. |
 | `pphi2_exists` | OS2_WardIdentity | Main existence theorem. Needs continuumLimit + continuumLimit_satisfies_allOS. |
-| `pphi2_existence` | Main | Same as above, with SatisfiesFullOS instead of SatisfiesAllOS. |
-| `pphi2_main` (6 fields) | Main | Bridge from intermediate SatisfiesAllOS to strengthened SatisfiesFullOS. Each field needs its own proof connecting the placeholder and real formulations. |
 
 ---
 
@@ -332,7 +336,7 @@ True  -- Placeholder; full formulation needs time translation on
 
 ### Tier 1: Infrastructure (unlocks further work)
 
-1. **`prokhorov_sequential`** — May become available in Mathlib. Otherwise, axiomatize with a full proof sketch referencing Billingsley.
+1. ~~**`prokhorov_sequential`**~~ — **Proved.** Now a theorem with complete proof.
 2. **`transferEigenvalue` + spectral axioms** — Need compact self-adjoint operator spectral theory in Mathlib.
 3. **`latticeEmbed` / `latticeEmbedLift`** — Construction of the embedding as a CLM on Schwartz space.
 4. **`euclideanAction2` / `compTimeReflection2` / `SchwartzMap.translate`** — Schwartz space composition with linear/affine maps. Blocked on Mathlib's SchwartzMap API.
@@ -354,11 +358,9 @@ True  -- Placeholder; full formulation needs time translation on
 
 ### Tier 4: Easy / straightforward
 
-14. `latticeAction_translation_invariant` — relabeling sums
-15. `os1_inheritance` — |cos| ≤ 1
-16. `transferKernel_symmetric` — algebra
-17. Various measurability and integrability lemmas
-18. `compTimeReflection2_apply` — specification axiom
+14. `os1_inheritance` — |cos| ≤ 1
+15. `compTimeReflection2_apply` — specification axiom
+16. Remaining measurability and integrability lemmas
 
 ---
 
@@ -387,32 +389,36 @@ The following theorems have complete proofs (no sorry):
 | `latticeAction_translation_invariant` | OS2_WardIdentity | V_a[T_v φ] = V_a[φ] via Equiv.subRight |
 | `os2_inheritance` | OS2_WardIdentity | E(2) invariance (from translation + rotation) |
 | `continuumLimit_satisfies_allOS` | OS2_WardIdentity | All OS axioms (assembly from phases) |
+| `interactionFunctional_measurable` | LatticeMeasure | Measurability of V_a as function on Configuration space |
+| `boltzmannWeight_integrable` | LatticeMeasure | exp(-V_a) is integrable w.r.t. Gaussian measure |
+| `partitionFunction_pos` | LatticeMeasure | Z_a > 0 from exp(-V_a) > 0 and Gaussian full support |
+| `interactingLatticeMeasure_isProbability` | LatticeMeasure | μ_a is a probability measure |
+| `latticeInteraction_single_site` | LatticeAction | V_a decomposes as sum of single-site functions (replaced false convexity axiom) |
+| `bounded_integrable_interacting` | Normalization | Bounded functions integrable w.r.t. interacting measure |
+| `generating_functional_bounded` | Normalization | \|Z[f]\| ≤ 1 for real f |
+| `rp_closed_under_weak_limit` | OS3_RP_Inheritance | RP closed under weak limits |
+| `continuumMeasure_isProbability` | Embedding | Pushforward of probability measure is probability measure |
+| `connectedTwoPoint_symm` | OS4_MassGap | Symmetry of connected 2-point function |
+| `energyLevel_gap` | Positivity | E₁ > E₀ from transfer eigenvalue gap |
+| `prokhorov_sequential` | Convergence | Prokhorov's theorem (sequential version) — proved as theorem with proof |
 
 ---
 
 ## Upstream: gaussian-field axioms and sorries
 
-The gaussian-field library (dependency) has 29 axioms and 14 sorries that
+The gaussian-field library (dependency) has 18 axioms and 4 sorries that
 pphi2 relies on. These are organized by priority for pphi2.
 
 ### Critical for pphi2 (blocks lattice Gaussian measure)
 
-| Item | File | Type | Difficulty | Description |
-|------|------|------|-----------|-------------|
-| `spectralCLM` | HeatKernel/Axioms | axiom | Hard | Core: E →L[ℝ] ell2' from singular values. Everything flows through this. |
-| `spectralCLM_coord` | HeatKernel/Axioms | axiom | Easy | Coordinate formula. By construction. |
-| `spectralCLM_zero` | HeatKernel/Axioms | axiom | Easy | Zero singular values → zero map. |
-| `spectralCLM_smul` | HeatKernel/Axioms | axiom | Easy | Scalar compatibility. |
-| `finLatticeField_dyninMityaginSpace` | Lattice/FiniteField | 8 sorries | Medium | DyninMityaginSpace instance for finite lattice. Trivial in finite dim but needs careful ℕ-indexed framework handling. |
-| `lattice_singular_values_bounded` | Lattice/Covariance | sorry | Easy | σ_m ≤ 1/mass. From eigenvalue lower bound mass² > 0. |
-| `finiteLaplacian` linearity | Lattice/Laplacian | 3 sorries | Easy | map_add', map_smul', cont. Finite sums are linear, finite-dim is continuous. |
+Most items in this category have been proved. The remaining axioms are in PositionKernel.lean (9 axioms), RapidDecayLattice.lean (4 axioms), Laplacian.lean (2 axioms), and FKG.lean (3 axioms). Sorries are in SchwartzNuclear/ (4 total).
 
 ### Used by pphi2 Normalization (FKG)
 
 | Item | File | Type | Difficulty | Description |
 |------|------|------|-----------|-------------|
 | `fkg_lattice_gaussian` | Lattice/FKG | axiom | Hard | FKG inequality for Gaussian measure. Harris-Kleitman generalization to continuous spins + log-concave density. |
-| `fkg_perturbed` | Lattice/FKG | axiom | Medium | FKG for convexly-perturbed measure. From fkg_lattice_gaussian + Holley criterion. |
+| `fkg_perturbed` | Lattice/FKG | axiom | Medium | FKG for single-site perturbed measure. Takes `hV_single_site` instead of the old (false) `hV_convex`. From fkg_lattice_gaussian + Holley criterion. |
 
 ### Lattice Laplacian properties
 
@@ -420,9 +426,8 @@ pphi2 relies on. These are organized by priority for pphi2.
 |------|------|------|-----------|-------------|
 | `finiteLaplacian_selfAdjoint` | Lattice/Laplacian | axiom | Easy | Symmetry: reindex summation. |
 | `finiteLaplacian_neg_semidefinite` | Lattice/Laplacian | axiom | Medium | ⟨f, Δf⟩ ≤ 0. Summation by parts. |
-| `massOperator_pos_def` | Lattice/Laplacian | axiom | Medium | -Δ + m² > 0. From neg-semidef + m² > 0. |
-| `infiniteLaplacian` | Lattice/Laplacian | axiom | Medium | CLM on RapidDecayLattice. Continuity proof needed. |
-| `infiniteLaplacian_apply` | Lattice/Laplacian | axiom | Easy | Application formula. By construction. |
+
+Note: `massOperator_pos_def`, `infiniteLaplacian`, and `infiniteLaplacian_apply` have been proved.
 
 ### Infinite lattice (not immediately needed by pphi2)
 
@@ -432,37 +437,26 @@ pphi2 relies on. These are organized by priority for pphi2.
 | `latticeEnum_norm_bound` | Lattice/RapidDecayLattice | axiom | Hard | ‖enum⁻¹(m)‖ ≤ C·m^{1/d}. |
 | `latticeEnum_index_bound` | Lattice/RapidDecayLattice | axiom | Hard | enum(x) ≤ C·(1+‖x‖)^d. |
 | `latticeRapidDecayEquiv` | Lattice/RapidDecayLattice | axiom | Hard | CLE to RapidDecaySeq. Requires enumeration + norm bounds. |
-| `latticeCoeffCLM` cont | Lattice/RapidDecayLattice | sorry | Medium | Continuity of evaluation CLM. |
 
 ### Heat kernel (cylinder QFT, not used by lattice approach)
 
-| Item | File | Type | Difficulty | Description |
-|------|------|------|-----------|-------------|
-| `mehlerKernel_eq_series` | HeatKernel/PositionKernel | axiom | Hard | Mehler kernel = Hermite series. |
-| `mehlerKernel_summable` | HeatKernel/PositionKernel | axiom | Medium | Summability. |
-| `mehlerKernel_pos` | HeatKernel/PositionKernel | axiom | Hard | Strict positivity. |
-| `mehlerKernel_reproduces_hermite` | HeatKernel/PositionKernel | axiom | Medium | Reproducing property. |
-| `mehlerKernel_semigroup` | HeatKernel/PositionKernel | axiom | Medium | Chapman-Kolmogorov. |
-| `circleHeatKernel_*` (7 axioms) | HeatKernel/PositionKernel | axiom | Easy-Medium | Circle heat kernel properties. |
-| `cylinderHeatKernel_*` (3 axioms) | HeatKernel/PositionKernel | axiom | Medium | Cylinder = product kernel. |
-| `qft_singular_values_bounded` | HeatKernel/Axioms | axiom | Medium | QFT singular values bounded. |
-| `heat_singular_values_bounded'` | HeatKernel/Axioms | axiom | Medium | Heat singular values bounded. |
+PositionKernel.lean has 9 remaining axioms (Mehler kernel, circle heat kernel, and cylinder heat kernel properties). Several former axioms (including mehlerKernel_pos, symmetry, periodicity) have been proved.
 
 ### Other
 
 | Item | File | Type | Difficulty | Description |
 |------|------|------|-----------|-------------|
-| `schwartzComplexificationEquiv` | Nuclear/Complexification | sorry | Hard | CLE for complexified Schwartz space. |
 | `schwartzPointwiseProduct_apply` | SchwartzNuclear/SchwartzTensorProduct | sorry | Medium | Hermite-Fubini factorization. |
+| (2 sorries) | SchwartzNuclear/HermiteTensorProduct | sorry | Medium | Hermite tensor product properties. |
+| (1 sorry) | SchwartzNuclear/SchwartzSlicing | sorry | Medium | Schwartz slicing. |
 
 ### Summary
 
 | Category | Axioms | Sorries |
 |----------|--------|---------|
-| Critical for pphi2 lattice measure | 4 | 12 |
-| FKG (used by pphi2 Normalization) | 2 | 0 |
-| Lattice Laplacian | 5 | 0 |
-| Infinite lattice (future) | 4 | 1 |
-| Heat kernel / cylinder (not used) | 16 | 0 |
-| Other | 0 | 2 |
-| **Total** | **29** | **14** (unique sorry sites) |
+| PositionKernel (heat kernel / cylinder) | 9 | 0 |
+| RapidDecayLattice (infinite lattice) | 4 | 0 |
+| Laplacian | 2 | 0 |
+| FKG (used by pphi2 Normalization) | 3 | 0 |
+| SchwartzNuclear | 0 | 4 |
+| **Total** | **18** | **4** |

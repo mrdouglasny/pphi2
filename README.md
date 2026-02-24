@@ -56,8 +56,8 @@ All six phases are structurally complete and the full project builds
 analytic/probabilistic results with detailed proof sketches, proves the logical
 structure connecting them, and progressively fills in the axioms with full proofs.
 
-- **pphi2:** 70 axioms, 22 sorries
-- **gaussian-field** (upstream dependency): 29 axioms, 14 sorries
+- **pphi2:** 69 axioms, 25 sorries
+- **gaussian-field** (upstream dependency): 18 axioms, 4 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.
@@ -103,6 +103,10 @@ lake build
 - [status.md](status.md) — Complete axiom/sorry inventory with difficulty
   ratings and priority ordering
 - [plan.md](plan.md) — Development roadmap and construction outline
+- [docs/axiom_audit.md](docs/axiom_audit.md) — Self-audit of all axioms
+  (pphi2 + gaussian-field) with correctness ratings
+- [docs/gemini_review.md](docs/gemini_review.md) — External review of axioms
+  with references and proof strategies
 - [docs/os_axioms_lattice_plan.md](docs/os_axioms_lattice_plan.md) — Design
   notes for OS axiom formulations
 
