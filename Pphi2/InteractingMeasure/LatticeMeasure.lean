@@ -72,11 +72,40 @@ def interactionFunctional (P : InteractionPolynomial) (a mass : ℝ) :
 Each evaluation `ω ↦ ω(δ_x)` is measurable (by definition of the cylindrical
 σ-algebra on Configuration), and `wickPolynomial` is a polynomial in the
 evaluation, hence measurable. A finite sum of measurable functions is measurable. -/
+private theorem wickMonomial_measurable (n : ℕ) (c : ℝ) (f : α → ℝ)
+    {mα : MeasurableSpace α}
+    (hf : @Measurable α ℝ mα (borel ℝ) f) :
+    @Measurable α ℝ mα (borel ℝ) (fun x => wickMonomial n c (f x)) := by
+  -- Induct on n with two-step hypothesis via strong induction
+  suffices h : ∀ k ≤ n, @Measurable α ℝ mα (borel ℝ) (fun x => wickMonomial k c (f x)) from
+    h n le_rfl
+  intro k hk
+  induction k using Nat.strongRecOn with
+  | ind k ih =>
+    match k with
+    | 0 => exact measurable_const
+    | 1 => exact hf
+    | k + 2 =>
+      simp only [wickMonomial_succ_succ]
+      exact (hf.mul (ih (k + 1) (by omega) (by omega))).sub
+        (measurable_const.mul (ih k (by omega) (by omega)))
+
 theorem interactionFunctional_measurable (P : InteractionPolynomial) (a mass : ℝ) :
     @Measurable (Configuration (FinLatticeField d N)) ℝ
       instMeasurableSpaceConfiguration (borel ℝ)
       (interactionFunctional d N P a mass) := by
-  sorry
+  unfold interactionFunctional
+  apply Measurable.const_mul
+  apply Finset.measurable_sum _ (fun x _ => ?_)
+  unfold wickPolynomial
+  apply Measurable.add
+  · exact Measurable.const_mul
+      (wickMonomial_measurable P.n (wickConstant d N a mass) _
+        (configuration_eval_measurable _)) _
+  · exact Finset.measurable_sum _ (fun m _ =>
+      Measurable.const_mul
+        (wickMonomial_measurable m (wickConstant d N a mass) _
+          (configuration_eval_measurable _)) _)
 
 /-- The interaction functional is bounded below (lifted from `latticeInteraction_bounded_below`). -/
 theorem interactionFunctional_bounded_below (P : InteractionPolynomial) (a mass : ℝ)
@@ -118,7 +147,18 @@ theorem boltzmannWeight_integrable (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     Integrable (boltzmannWeight d N P a mass)
       (latticeGaussianMeasure d N a mass ha hmass) := by
-  sorry
+  -- exp(-V) is bounded: V ≥ -B implies exp(-V) ≤ exp(B)
+  obtain ⟨B, hB_bound⟩ := interactionFunctional_bounded_below d N P a mass ha hmass
+  haveI := latticeGaussianMeasure_isProbability d N a mass ha hmass
+  apply Integrable.of_bound (C := Real.exp B)
+  · -- AEStronglyMeasurable: boltzmannWeight is measurable
+    apply Measurable.aestronglyMeasurable
+    exact (interactionFunctional_measurable d N P a mass).neg.exp
+  · -- Bound: ‖exp(-V(ω))‖ ≤ exp(B)
+    apply Filter.Eventually.of_forall
+    intro ω
+    simp only [boltzmannWeight, Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
+    exact Real.exp_le_exp_of_le (by linarith [hB_bound ω])
 
 /-- The partition function: `Z_a = ∫ exp(-V_a(ω)) dμ_{GFF,a}(ω)`.
 
@@ -135,7 +175,17 @@ so the integral of a strictly positive integrable function is positive. -/
 theorem partitionFunction_pos (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     0 < partitionFunction d N P a mass ha hmass := by
-  sorry
+  unfold partitionFunction
+  haveI := latticeGaussianMeasure_isProbability d N a mass ha hmass
+  have hinteg := boltzmannWeight_integrable d N P a mass ha hmass
+  -- Use integral_pos_iff_support_of_nonneg with exp > 0 everywhere
+  rw [integral_pos_iff_support_of_nonneg
+    (fun ω => le_of_lt (boltzmannWeight_pos d N P a mass ω)) hinteg]
+  -- support of boltzmannWeight = univ (since exp > 0)
+  have hsup : Function.support (boltzmannWeight d N P a mass) = Set.univ := by
+    ext ω; simp [Function.mem_support, ne_of_gt (boltzmannWeight_pos d N P a mass ω)]
+  rw [hsup]
+  exact Measure.measure_univ_pos.mpr (IsProbabilityMeasure.ne_zero _)
 
 /-! ## The interacting lattice measure -/
 
@@ -158,7 +208,21 @@ theorem interactingLatticeMeasure_isProbability (P : InteractionPolynomial)
     @IsProbabilityMeasure (Configuration (FinLatticeField d N))
       instMeasurableSpaceConfiguration
       (interactingLatticeMeasure d N P a mass ha hmass) := by
-  sorry
+  constructor
+  have hZ := partitionFunction_pos d N P a mass ha hmass
+  have hZ_ne : ENNReal.ofReal (partitionFunction d N P a mass ha hmass) ≠ 0 :=
+    ENNReal.ofReal_pos.mpr hZ |>.ne'
+  have hZ_ne_top : ENNReal.ofReal (partitionFunction d N P a mass ha hmass) ≠ ⊤ :=
+    ENNReal.ofReal_ne_top
+  unfold interactingLatticeMeasure
+  rw [Measure.smul_apply, withDensity_apply _ MeasurableSet.univ,
+      Measure.restrict_univ]
+  -- Need: ∫⁻ ofReal(boltzmannWeight) dμ = ofReal(Z)
+  rw [← ofReal_integral_eq_lintegral_ofReal
+    (boltzmannWeight_integrable d N P a mass ha hmass)
+    (Filter.Eventually.of_forall (fun ω => le_of_lt (boltzmannWeight_pos d N P a mass ω)))]
+  simp only [smul_eq_mul]
+  exact ENNReal.inv_mul_cancel hZ_ne hZ_ne_top
 
 /-! ## Schwinger functions
 
