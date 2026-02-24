@@ -179,7 +179,10 @@ This follows from:
 theorem continuumMeasure_isProbability (P : InteractionPolynomial)
     (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
     IsProbabilityMeasure (continuumMeasure d N P a mass ha hmass) := by
-  sorry
+  unfold continuumMeasure
+  have := interactingLatticeMeasure_isProbability d N P a mass ha hmass
+  exact Measure.isProbabilityMeasure_map
+    (latticeEmbedLift_measurable d N a ha).aemeasurable
 
 end Pphi2
 

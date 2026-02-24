@@ -157,7 +157,11 @@ theorem energyLevel_gap (P : InteractionPolynomial) (a mass : ℝ)
   have hlam0 := transferEigenvalue_pos P a mass ha hmass 0
   have hlam1 := transferEigenvalue_pos P a mass ha hmass 1
   -- -(1/a) log λ₀ < -(1/a) log λ₁ because λ₀ > λ₁ > 0 and -(1/a) < 0
-  sorry
+  have ha_neg : -(1 / a) < 0 := by linarith [div_pos one_pos ha]
+  have hlog : Real.log (transferEigenvalue P a mass ha hmass 1) <
+      Real.log (transferEigenvalue P a mass ha hmass 0) :=
+    Real.log_lt_log hlam1 h
+  exact mul_lt_mul_of_neg_left hlog ha_neg
 
 /-- The mass gap: `m_phys = E₁ - E₀ > 0`. -/
 def massGap (P : InteractionPolynomial) (a mass : ℝ)

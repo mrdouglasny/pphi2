@@ -183,8 +183,21 @@ theorem continuumLimit (P : InteractionPolynomial)
         Tendsto (fun n => ∫ ω, f ω ∂(continuumMeasure d N P (a (φ n)) mass
           (ha_pos (φ n)) hmass))
           atTop (nhds (∫ ω, f ω ∂μ)) := by
-  -- Apply Prokhorov's theorem to the tight family
-  sorry
+  -- S'(ℝ^d) is Polish (dual of nuclear Fréchet) — not yet in Mathlib
+  haveI : PolishSpace (Configuration (ContinuumTestFunction d)) := by
+    exact sorry
+  haveI : BorelSpace (Configuration (ContinuumTestFunction d)) := by
+    exact sorry
+  -- Define the sequence of measures indexed by ℕ
+  let ν : ℕ → Measure (Configuration (ContinuumTestFunction d)) :=
+    fun n => continuumMeasure d N P (a n) mass (ha_pos n) hmass
+  -- Apply Prokhorov's theorem
+  obtain ⟨φ, μ, hφ, hμ_prob, hconv⟩ := prokhorov_sequential ν
+    (fun n => continuumMeasure_isProbability d N P (a n) mass (ha_pos n) hmass)
+    (fun ε hε => by
+      obtain ⟨K, hK_compact, hK_bound⟩ := continuumMeasures_tight d N P mass hmass ε hε
+      exact ⟨K, hK_compact, fun n => hK_bound (a n) (ha_pos n) (ha_le n)⟩)
+  exact ⟨φ, μ, hφ, hμ_prob, hconv⟩
 
 /-! ## Schwinger function convergence -/
 

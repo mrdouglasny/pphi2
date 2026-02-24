@@ -78,14 +78,55 @@ Each eigenvalue satisfies `λ_m ≥ m²`, so `1/λ_m ≤ 1/m²`, and the average
 of |Λ| terms each bounded by 1/m² gives c_a ≤ 1/m². -/
 theorem wickConstant_le_inv_mass_sq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
     wickConstant d N a mass ≤ mass⁻¹ ^ 2 := by
-  sorry
+  unfold wickConstant
+  have hcard_pos : (0 : ℝ) < Fintype.card (FinLatticeSites d N) :=
+    by exact_mod_cast Fintype.card_pos
+  -- Each eigenvalue ≥ mass², so each inverse ≤ (mass²)⁻¹ = mass⁻¹²
+  have h_each : ∀ m ∈ Finset.range (Fintype.card (FinLatticeSites d N)),
+      (latticeEigenvalue d N a mass m)⁻¹ ≤ mass⁻¹ ^ 2 := by
+    intro m _
+    rw [inv_pow]
+    apply inv_anti₀ (sq_pos_of_pos hmass)
+    unfold latticeEigenvalue
+    split_ifs with h
+    · have h_sin_nonneg : (0 : ℝ) ≤ ∑ i : Fin d,
+          sin (π * ↑((Fintype.equivFin (FinLatticeSites d N)).symm ⟨m, h⟩ i) / ↑N) ^ 2 :=
+        Finset.sum_nonneg fun _ _ => sq_nonneg _
+      linarith [mul_nonneg (div_nonneg (by norm_num : (0:ℝ) ≤ 4) (sq_nonneg a)) h_sin_nonneg]
+    · exact le_refl _
+  -- Sum of |Λ| terms each ≤ C gives sum ≤ |Λ| * C
+  have h_sum : ∑ m ∈ Finset.range (Fintype.card (FinLatticeSites d N)),
+      (latticeEigenvalue d N a mass m)⁻¹ ≤
+      ↑(Fintype.card (FinLatticeSites d N)) * (mass⁻¹ ^ 2) := by
+    have := Finset.sum_le_card_nsmul _ _ _ h_each
+    rwa [Finset.card_range, nsmul_eq_mul] at this
+  -- (1/|Λ|) * (|Λ| * C) = C
+  calc (1 / ↑(Fintype.card (FinLatticeSites d N))) *
+      ∑ m ∈ Finset.range (Fintype.card (FinLatticeSites d N)),
+        (latticeEigenvalue d N a mass m)⁻¹
+    ≤ (1 / ↑(Fintype.card (FinLatticeSites d N))) *
+      (↑(Fintype.card (FinLatticeSites d N)) * (mass⁻¹ ^ 2)) :=
+      mul_le_mul_of_nonneg_left h_sum (by positivity)
+    _ = mass⁻¹ ^ 2 := by field_simp
 
 /-- The Wick constant is monotone decreasing in mass: larger mass means
 smaller self-contraction. -/
 theorem wickConstant_antitone_mass (a : ℝ) (ha : 0 < a)
     (m₁ m₂ : ℝ) (hm₁ : 0 < m₁) (hm₂ : m₁ ≤ m₂) :
     wickConstant d N a m₂ ≤ wickConstant d N a m₁ := by
-  sorry
+  unfold wickConstant
+  -- Same prefactor (1/|Λ|), so suffices to show sum decreases
+  apply mul_le_mul_of_nonneg_left _ (by positivity)
+  apply Finset.sum_le_sum
+  intro m _
+  -- Eigenvalue is monotone in mass, so inverse is antitone
+  apply inv_anti₀ (latticeEigenvalue_pos d N a m₁ ha hm₁ m)
+  unfold latticeEigenvalue
+  split_ifs with h
+  · -- (4/a²) Σ sin² + m₁² ≤ (4/a²) Σ sin² + m₂²
+    linarith [pow_le_pow_left₀ (le_of_lt hm₁) hm₂ 2]
+  · -- m₁² ≤ m₂²
+    exact pow_le_pow_left₀ (le_of_lt hm₁) hm₂ 2
 
 /-! ## Asymptotics
 
