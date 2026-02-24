@@ -353,7 +353,8 @@ theorem full_os_via_bridge
     (hμ_cont_limit : @IsPhi4ContinuumLimit μ_cont hμ_cont P mass coupling)
     (h_eq : μ_latt = μ_cont) :
     @SatisfiesFullOS μ_latt hμ_latt := by
-  have h0134 := @continuumLimit_satisfies_os0134 P mass hmass μ_latt hμ_latt
+  -- Get full OS bundle from the main construction (has sorries for os0/os1/os2/os4)
+  have h_full := @continuumLimit_satisfies_fullOS P mass hmass μ_latt hμ_latt
   -- Get OS3 from pphi2's transfer matrix argument
   have h_os3 := @os3_from_pphi2 P mass hmass μ_latt hμ_latt hμ_latt_limit
   -- Get OS2 from Phi4's manifest continuum invariance, transferred via h_eq
@@ -361,12 +362,12 @@ theorem full_os_via_bridge
     hμ_cont_limit
   subst h_eq
   exact {
-    os0 := sorry  -- From h0134.os0
-    os1 := sorry  -- From h0134.os1
-    os2 := h_os2_cont
-    os3 := h_os3
-    os4_clustering := sorry  -- From h0134.os4 + mass gap
-    os4_ergodicity := trivial  -- OS4_Ergodicity is currently True
+    os0 := h_full.os0
+    os1 := h_full.os1
+    os2 := h_os2_cont  -- From Phi4 (better than Ward identity)
+    os3 := h_os3        -- From pphi2 (transfer matrix)
+    os4_clustering := h_full.os4_clustering
+    os4_ergodicity := trivial
   }
 
 /-! ## Phi4 also gets the full bundle -/
@@ -396,13 +397,16 @@ theorem phi4_full_os_via_bridge
   -- OS3 transferred from pphi2
   have h_os3 := os3_for_phi4_via_pphi2 P mass coupling hmass hP h_weak
     μ_latt hμ_latt hμ_latt_limit μ_cont hμ_cont h_eq
+  -- Delegate os0/os1/os4 to the main construction via measure equality
+  subst h_eq
+  have h_full := @continuumLimit_satisfies_fullOS P mass hmass μ_latt hμ_latt
   exact {
-    os0 := sorry  -- From Phi4's phi4_os0
-    os1 := sorry  -- From Phi4's phi4_os1
+    os0 := h_full.os0
+    os1 := h_full.os1
     os2 := h_os2
     os3 := h_os3
-    os4_clustering := sorry  -- From Phi4's phi4_os4_weak_coupling
-    os4_ergodicity := trivial  -- OS4_Ergodicity is currently True
+    os4_clustering := h_full.os4_clustering
+    os4_ergodicity := trivial
   }
 
 end Pphi2.Bridge

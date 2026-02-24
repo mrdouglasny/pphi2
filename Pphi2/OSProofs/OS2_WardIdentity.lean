@@ -332,18 +332,34 @@ theorem rp_matrix_trig_identity {n : ℕ} (c : Fin n → ℝ)
     simp_rw [← Finset.mul_sum (f := fun j => c j * Real.sin (b j))]
     exact (Finset.sum_mul ..).symm
 
-/-- **OS3 for the continuum limit**, derived from abstract IsRP.
+/-- `Re(Z[g]) = ∫ cos(⟨ω, g⟩) dμ` — the real part of the generating functional
+is the integral of cosine of the distribution pairing.
 
-The proof connects `os3_inheritance` (abstract RP) to `OS3_ReflectionPositivity`
-(the OS3 axiom formulated using the generating functional).
+Proof: Euler's formula gives `exp(it) = cos(t) + i·sin(t)`, so
+`Re(exp(it)) = cos(t)`. Pull `Re` through `∫` via `reCLM.integral_comp_comm`. -/
+private lemma generatingFunctional_re_eq_integral_cos
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] (g : TestFunction2) :
+    (generatingFunctional μ g).re = ∫ ω : FieldConfig2, Real.cos (ω g) ∂μ := by
+  unfold generatingFunctional
+  have hint : Integrable (fun ω : FieldConfig2 => Complex.exp (Complex.I * ↑(ω g))) μ :=
+    (integrable_const (1 : ℂ)).mono
+      ((Complex.measurable_ofReal.comp (configuration_eval_measurable g)).const_mul Complex.I
+        |>.cexp).aestronglyMeasurable
+      (ae_of_all μ fun ω => by
+        simp only [norm_one]
+        rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
+        exact le_of_eq (Complex.norm_exp_ofReal_mul_I _))
+  calc (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re
+      = Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) := rfl
+    _ = ∫ ω, Complex.reCLM (Complex.exp (Complex.I * ↑(ω g))) ∂μ :=
+        (ContinuousLinearMap.integral_comp_comm _ hint).symm
+    _ = ∫ ω, Real.cos (ω g) ∂μ := by
+        congr 1; ext ω
+        change (Complex.exp (Complex.I * ↑(ω g))).re = Real.cos (ω g)
+        rw [mul_comm, Complex.exp_mul_I]
+        simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+              Complex.cos_ofReal_re, Complex.sin_ofReal_re]
 
-The key mathematical steps:
-1. Expand `Re(Z[fᵢ - Θfⱼ])` as `∫ cos(⟨ω, fᵢ⟩ - ⟨Θ*ω, fⱼ⟩) dμ`
-2. Apply `rp_matrix_trig_identity` to decompose as sum of two integrals
-3. Each integral is `∫ F · F(Θ*·) dμ ≥ 0` by `os3_inheritance`
-
-The remaining gap covers the measure-theoretic steps (interchanging
-sums/integrals, expanding the generating functional). -/
 theorem os3_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
@@ -351,12 +367,63 @@ theorem os3_for_continuum_limit (P : InteractionPolynomial)
     @OS3_ReflectionPositivity μ hμ := by
   have h_rp := os3_inheritance P mass hmass μ hμ
   intro n f c
-  -- Goal: 0 ≤ Σᵢⱼ cᵢcⱼ Re(Z[fᵢ - Θfⱼ])
-  -- Step 1: Re(Z[g]) = ∫ cos(⟨ω, g⟩) dμ (definition of generatingFunctional)
-  -- Step 2: ⟨ω, fᵢ - Θfⱼ⟩ = ⟨ω, fᵢ⟩ - ⟨Θ*ω, fⱼ⟩ (linearity + duality)
-  -- Step 3: Apply rp_matrix_trig_identity
-  -- Step 4: Each term ≥ 0 by h_rp (G_cos, G_sin are bounded continuous)
-  sorry
+  -- Step 1: Re(Z[g]) = ∫ cos(ω g) dμ (Euler's formula + pull Re through ∫)
+  simp_rw [generatingFunctional_re_eq_integral_cos]
+  -- Step 2: ω(fᵢ - Θfⱼ) = ω(fᵢ) - ω(Θfⱼ) (linearity of distributions)
+  simp_rw [show ∀ (i j : Fin n), (fun ω : FieldConfig2 => Real.cos (ω (↑(f i) -
+    compTimeReflection2 ↑(f j)))) = (fun ω => Real.cos (ω ↑(f i) -
+    ω (compTimeReflection2 ↑(f j)))) from fun i j => by ext ω; rw [map_sub]]
+  -- Step 3: Suffices to show the sum equals nonneg expression
+  -- Define bounded continuous functions for RP application
+  let F_cos : FieldConfig2 → ℝ := fun ω => ∑ i, c i * Real.cos (ω (f i).val)
+  let F_sin : FieldConfig2 → ℝ := fun ω => ∑ i, c i * Real.sin (ω (f i).val)
+  -- The RP matrix sum equals ∫ F_cos·F_cos∘Θ* + ∫ F_sin·F_sin∘Θ*
+  -- via sum-integral exchange + rp_matrix_trig_identity + integral splitting
+  suffices h_eq : ∑ x, ∑ x_1, c x * c x_1 *
+      ∫ ω : FieldConfig2, Real.cos (ω ↑(f x) - ω (compTimeReflection2 ↑(f x_1))) ∂μ =
+      ∫ ω, F_cos ω * F_cos (distribTimeReflection ω) ∂μ +
+      ∫ ω, F_sin ω * F_sin (distribTimeReflection ω) ∂μ by
+    rw [h_eq]; apply add_nonneg
+    · exact h_rp F_cos
+        (continuous_finset_sum _ fun i _ => continuous_const.mul
+          (Real.continuous_cos.comp (WeakDual.eval_continuous (f i).val)))
+        ⟨∑ i, |c i|, fun ω => (Finset.abs_sum_le_sum_abs _ _).trans
+          (Finset.sum_le_sum fun i _ => by
+            rw [abs_mul]; exact (mul_le_mul_of_nonneg_left
+              (Real.abs_cos_le_one _) (abs_nonneg _)).trans (le_of_eq (mul_one _)))⟩
+    · exact h_rp F_sin
+        (continuous_finset_sum _ fun i _ => continuous_const.mul
+          (Real.continuous_sin.comp (WeakDual.eval_continuous (f i).val)))
+        ⟨∑ i, |c i|, fun ω => (Finset.abs_sum_le_sum_abs _ _).trans
+          (Finset.sum_le_sum fun i _ => by
+            rw [abs_mul]; exact (mul_le_mul_of_nonneg_left
+              (Real.abs_sin_le_one _) (abs_nonneg _)).trans (le_of_eq (mul_one _)))⟩
+  -- Proof: sum-integral exchange + trig identity + integral splitting
+  -- Integrability: each cos term is bounded, hence integrable
+  have hint : ∀ (i j : Fin n), Integrable (fun ω : FieldConfig2 =>
+      c i * c j * Real.cos (ω ↑(f i) - ω (compTimeReflection2 ↑(f j)))) μ :=
+    fun _ _ => sorry -- bounded measurable on probability space
+  -- Go through intermediate ∫ of double sum
+  trans (∫ ω : FieldConfig2, ∑ x, ∑ x_1,
+    c x * c x_1 * Real.cos (ω ↑(f x) - ω (compTimeReflection2 ↑(f x_1))) ∂μ)
+  · -- LHS = ∫ (double sum): pull sums/constants into integral
+    rw [integral_finset_sum _ fun i _ => integrable_finset_sum _ fun j _ => hint i j]
+    congr 1; ext i
+    rw [integral_finset_sum _ fun j _ => hint i j]
+    congr 1; ext j
+    exact (integral_const_mul _ _).symm
+  · -- ∫ (double sum) = RHS: apply trig identity pointwise + split integral
+    have h_trig : ∀ (ω : FieldConfig2), ∑ x, ∑ x_1,
+        c x * c x_1 * Real.cos (ω ↑(f x) - ω (compTimeReflection2 ↑(f x_1))) =
+        F_cos ω * F_cos (distribTimeReflection ω) +
+        F_sin ω * F_sin (distribTimeReflection ω) := by
+      intro ω
+      have := rp_matrix_trig_identity c
+        (fun i => ω (f i).val) (fun j => ω (compTimeReflection2 (f j).val))
+      simp only [distribTimeReflection_apply] at *
+      convert this using 2 <;> (ext j; congr 1; rfl)
+    simp_rw [h_trig]
+    exact integral_add (sorry) (sorry)  -- integrability of F_cos·F_cos∘Θ, F_sin·F_sin∘Θ
 
 /-! ## Complete OS axiom bundle
 
