@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-02-24 (L2Operator.lean + spectral theorem, Bridge axioms fixed)
-**pphi2**: 28 axioms | **gaussian-field**: 13 axioms | **Total**: 41
+**pphi2**: 27 axioms | **gaussian-field**: 13 axioms | **Total**: 40
 
 ## Verification Sources
 
@@ -19,7 +19,7 @@
 
 ---
 
-## pphi2 Axioms (28 active)
+## pphi2 Axioms (27 active)
 
 ### Phase 1: Wick Ordering (2 axioms)
 
@@ -55,7 +55,7 @@
 |---|------|----------|--------|----------|-------|
 | 11 | ~~`latticeEmbed`~~ | Embedding:136 | ✅ **PROVED** | DT 2026-02-24 | Constructed via `SchwartzMap.mkCLMtoNormedSpace`. |
 | 12 | ~~`latticeEmbed_eval`~~ | Embedding:170 | ✅ **PROVED** | DT 2026-02-24 | `rfl` from construction. |
-| 13 | `latticeEmbed_measurable` | Embedding:141 | ✅ Standard | DT 2026-02-24 | Map is continuous (stronger than measurable). Provable. |
+| 13 | ~~`latticeEmbed_measurable`~~ | Embedding | ✅ **PROVED** | DT 2026-02-24 | `configuration_measurable_of_eval_measurable` + `continuous_apply` for each coordinate. |
 | 14 | `latticeEmbedLift` | Embedding:151 | ⚠️ Likely correct | DT 2026-02-24 | Lifted embedding on Configuration space. Domain matches `interactingLatticeMeasure`. |
 | 15 | `latticeEmbedLift_measurable` | Embedding:156 | ✅ Standard | DT 2026-02-24 | Lifted embedding measurable. Continuous → measurable. |
 | 16 | `second_moment_uniform` | Tightness:74 | ⚠️ Likely correct | GR Group 4 | ∫ Φ_a(f)² dν_a ≤ C(f). Nelson's hypercontractive estimate. |
@@ -85,10 +85,10 @@
 
 | Status | Count |
 |--------|-------|
-| Verified (GR or DT) | 25 |
+| Verified (GR or DT) | 24 |
 | New (L2Operator, self-audit only) | 3 |
-| Proved (no longer axioms) | 2 |
-| **Total active** | **28** |
+| Proved (no longer axioms) | 3 |
+| **Total active** | **27** |
 
 25 of 28 axioms verified by GR or DT. 3 new L2Operator axioms (CLM, self-adjoint, compact) are standard and self-audited.
 
@@ -156,6 +156,7 @@ The following were previously axioms and are now theorems:
 | `latticeEmbed` | Embedding | 2026-02-24 | `SchwartzMap.mkCLMtoNormedSpace` with seminorm bound |
 | `latticeEmbed_eval` | Embedding | 2026-02-24 | `rfl` from `latticeEmbed` construction |
 | `transferOperator_spectral` | L2Operator | 2026-02-24 | `compact_selfAdjoint_spectral` from gaussian-field (proved spectral theorem) |
+| `latticeEmbed_measurable` | Embedding | 2026-02-24 | `configuration_measurable_of_eval_measurable` + continuity of finite sum |
 
 ---
 

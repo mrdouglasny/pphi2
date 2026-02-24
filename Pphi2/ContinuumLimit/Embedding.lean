@@ -173,13 +173,22 @@ theorem latticeEmbed_eval (a : ℝ) (ha : 0 < a)
     (latticeEmbed d N a ha φ) f = latticeEmbedEval d N a φ f :=
   rfl
 
+omit [NeZero N] in
 /-- The embedding is measurable (needed for pushforward measure).
 
 This holds because for each test function f, the map φ ↦ (ι_a φ)(f) is
 linear in φ (hence continuous on the finite-dimensional space), and a map
 into the weak-* dual is measurable when each evaluation is measurable. -/
-axiom latticeEmbed_measurable (a : ℝ) (ha : 0 < a) :
-    Measurable (latticeEmbed d N a ha)
+theorem latticeEmbed_measurable (a : ℝ) (ha : 0 < a) :
+    Measurable (latticeEmbed d N a ha) := by
+  apply configuration_measurable_of_eval_measurable
+  intro f
+  -- Goal: Measurable (fun φ => (latticeEmbed d N a ha φ) f)
+  -- By latticeEmbed_eval, this is fun φ => a^d * Σ_x φ(x) * f(a·x)
+  -- which is continuous (hence measurable) in φ
+  show Measurable (fun φ => latticeEmbedEval d N a φ f)
+  exact (continuous_const.mul (continuous_finset_sum _ (fun x _ =>
+    ((continuous_apply x).mul continuous_const)))).measurable
 
 /-- Lift the embedding to Configuration space: compose with the canonical
 evaluation map `Configuration (FinLatticeField d N) → FinLatticeField d N → ℝ`

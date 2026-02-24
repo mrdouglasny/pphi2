@@ -180,24 +180,12 @@ For a 2D lattice with Nt time slices and periodic BC in time:
   `= Tr(T^{Nt})`
 
 where T acts on L²(ℝ^Ns, dψ) as an integral operator with kernel T(ψ,ψ').
-
-This trace formula is the basis of the transfer matrix / Hamiltonian approach. -/
-
-/-- The partition function equals the trace of T^Nt (axiomatized).
-
-  `Z_a = Tr(T_a^{Nt})`
-
-where T_a is the transfer matrix integral operator on L²(ℝ^Ns).
-This identity follows from iterating the transfer matrix across all
+This trace formula follows from iterating the transfer matrix across all
 Nt time slices with periodic boundary conditions.
 
-The full statement requires L² operator formalism (trace class operators)
-which is beyond current Mathlib. We state the existence of this identity
-as an axiom placeholder. -/
-theorem partitionFunction_eq_trace (Nt : ℕ) [NeZero Nt]
-    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
-    True :=-- Placeholder: Z_a = Tr(T^Nt), needs L² operator formalism
-      trivial
+The formal statement requires trace class operators on L²(ℝ^Ns), which is
+set up in L2Operator.lean via `transferOperatorCLM`. The trace formula
+itself is a standard identity but not formalized here. -/
 
 end Pphi2
 

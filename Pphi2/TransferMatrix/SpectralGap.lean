@@ -10,11 +10,9 @@ exponential decay of correlations (mass gap / clustering).
 
 ## Main results
 
-- `hamiltonian_selfadjoint` — H is self-adjoint on L²
-- `hamiltonian_compact_resolvent` — (H + λ)⁻¹ is compact
-- `hamiltonian_discrete_spectrum` — H has discrete spectrum
-- `spectral_gap_pos` — E₁ - E₀ > 0 (strict gap)
+- `spectral_gap_pos` — E₁ - E₀ > 0 (strict gap, from `massGap_pos`)
 - `spectral_gap_uniform` — the gap is bounded below uniformly in a
+- `spectral_gap_lower_bound` — m_phys ≥ c·m_bare
 
 ## Mathematical background
 
@@ -29,13 +27,10 @@ where the potential is:
 This is a Schrödinger operator on L²(ℝ^Ns) with a confining potential
 (V(ψ) → ∞ as |ψ| → ∞ since P has even degree ≥ 4).
 
-**Key properties:**
-1. Self-adjoint on a natural domain (Kato's theorem — V is Kato class).
-2. Compact resolvent (confining potential → discrete spectrum).
-3. Simple ground state (Perron-Frobenius: e^{-tH} is positivity-improving).
-4. Strict spectral gap E₁ - E₀ > 0.
-5. The gap is bounded below uniformly in a (the confining strength of V
-   grows with 1/a, so the gap cannot collapse).
+The Hamiltonian properties (self-adjointness, compact resolvent, simple ground
+state, ground state positivity and smoothness) all follow from the transfer
+operator being compact and self-adjoint with a strictly positive kernel
+(see L2Operator.lean for the operator axioms and spectral decomposition).
 
 ## References
 
@@ -51,48 +46,6 @@ noncomputable section
 open GaussianField Real
 
 namespace Pphi2
-
-variable (Ns : ℕ) [NeZero Ns]
-
-/-! ## Hamiltonian properties
-
-The Hamiltonian H = -(1/a) log T is the generator of Euclidean time
-evolution. We axiomatize its key spectral properties. -/
-
-/-- The lattice Hamiltonian is self-adjoint on L²(ℝ^Ns).
-
-Proof outline: H = -½Δ + V where Δ is the Ns-dimensional Laplacian and
-V is a polynomial potential. By Kato's theorem (or the Kato-Rellich theorem),
-since V is bounded below and grows polynomially, H is essentially self-adjoint
-on C₀^∞(ℝ^Ns). -/
-theorem hamiltonian_selfadjoint (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    True :=-- Placeholder: H is self-adjoint on its natural domain in L²(ℝ^Ns)
-      trivial
-
-/-- The Hamiltonian has compact resolvent.
-
-Since V(ψ) → ∞ as |ψ| → ∞ (P has degree ≥ 4 with positive leading
-coefficient), the embedding of the form domain of H into L² is compact.
-Equivalently, (H + λ)⁻¹ is compact for sufficiently large λ.
-
-This implies H has discrete spectrum: a sequence of eigenvalues
-E₀ ≤ E₁ ≤ E₂ ≤ ... → ∞ with finite multiplicities. -/
-theorem hamiltonian_compact_resolvent (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    True :=-- Placeholder: (H + λ)⁻¹ is compact for large λ
-      trivial
-
-/-- The ground state energy E₀ is simple (non-degenerate).
-
-This follows from the Perron-Frobenius theorem: the semigroup e^{-tH}
-has a strictly positive kernel (from `transferKernel_pos`), so it is
-positivity-improving. Therefore the ground state eigenfunction is
-strictly positive (up to sign), hence unique. -/
-theorem ground_state_simple (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    True :=-- Placeholder: E₀ has multiplicity 1
-      trivial
 
 /-! ## Spectral gap
 
@@ -146,31 +99,6 @@ axiom spectral_gap_lower_bound (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ c : ℝ, 0 < c ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
     c * mass ≤ massGap P a mass ha hmass
-
-/-! ## Ground state properties
-
-The ground state Ω of H is the vacuum of the lattice QFT.
-Its properties determine the structure of the continuum theory. -/
-
-/-- The ground state eigenfunction Ω is strictly positive: Ω(ψ) > 0 for all ψ.
-
-This is the Perron-Frobenius property: since e^{-tH} is positivity-improving
-(its kernel T(ψ,ψ') > 0), the unique ground state must be strictly positive. -/
-theorem ground_state_positive (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    True :=-- Placeholder: Ω(ψ) > 0 for all ψ ∈ ℝ^Ns
-      trivial
-
-/-- The ground state is in L²(ℝ^Ns) ∩ C^∞(ℝ^Ns).
-
-Regularity: since V is smooth (polynomial) and H = -½Δ + V is an
-elliptic operator, eigenfunctions are smooth by elliptic regularity.
-L² membership follows from the compact resolvent (discrete spectrum
-means eigenfunctions are in L²). -/
-theorem ground_state_smooth (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    True :=-- Placeholder: Ω ∈ L²(ℝ^Ns) ∩ C^∞(ℝ^Ns)
-      trivial
 
 end Pphi2
 
