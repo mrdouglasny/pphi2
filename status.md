@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 28 axioms, 0 sorries** | **gaussian-field (upstream): 6 axioms, 19 sorries**
+**pphi2: 28 axioms, 0 sorries** | **gaussian-field (upstream): 14 axioms, 22 sorries**
 
 ## File inventory
 
@@ -420,10 +420,9 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field axioms and sorries
 
-The gaussian-field library (dependency) has **10 axioms and 3 sorries**.
-These are organized by priority for pphi2.
+The gaussian-field library (dependency) has **14 axioms and 22 sorries**.
 
-*Updated 2026-02-24 (rev 15f0b77). See also `docs/gemini_review.md` for external review.*
+*Updated 2026-02-24. See also `docs/gemini_review.md` for external review.*
 
 ### Used by pphi2 Normalization (FKG)
 
@@ -465,7 +464,9 @@ Proved FKG results (no longer axioms):
 | Category | Axioms | Sorries |
 |----------|--------|---------|
 | PositionKernel (heat kernel / cylinder) | 3 | 2 |
-| RapidDecayLattice (infinite lattice) | 3 | 1 |
-| FKG (used by pphi2 Normalization) | 3 | 0 |
-| GaussianField (root) | 1 | 0 |
-| **Total** | **10** | **3** |
+| RapidDecayLattice (infinite lattice) | 3 | 2 |
+| FKG (used by pphi2 Normalization) | 8 | 6 |
+| SpectralCovariance | 0 | 7 |
+| GaussianField/Density | 0 | 2 |
+| SchwartzNuclear | 0 | 3 |
+| **Total** | **14** | **22** |

@@ -68,11 +68,11 @@ Phase 4 (via Prokhorov's theorem applied to the tight family of
 continuum-embedded lattice measures), μ satisfies all five OS axioms.
 
 This combines:
-- OS0 (Analyticity): from `os0_inheritance` — uniform moment bounds transfer
-- OS1 (Regularity): from `os1_inheritance` — |Z[f]| ≤ 1 transfers trivially
-- OS2 (Euclidean Invariance): from `os2_inheritance` — Ward identity argument
-- OS3 (Reflection Positivity): from `os3_inheritance` — RP closed under weak limits
-- OS4 (Clustering): from `os4_inheritance` — uniform mass gap transfers -/
+- OS0 (Analyticity): `os0_continuum` — Fernique bounds + Vitali's theorem
+- OS1 (Regularity): `os1_continuum` — Nelson's hypercontractive estimate
+- OS2 (Euclidean Invariance): `os2_continuum` — translations + Ward identity + irrelevance
+- OS3 (Reflection Positivity): `os3_for_continuum_limit` — fully proved from `os3_inheritance`
+- OS4 (Clustering): `os4_clustering_continuum` — uniform spectral gap + exponential decay -/
 theorem pphi2_main (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
