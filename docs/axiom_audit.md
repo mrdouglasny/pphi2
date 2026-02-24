@@ -59,7 +59,7 @@
 | 14 | ~~`latticeEmbedLift`~~ | Embedding:201 | ✅ **PROVED** | SA 2026-02-24 | Constructed as `latticeEmbed d N a ha (fun x => ω (Pi.single x 1))`. |
 | 15 | ~~`latticeEmbedLift_measurable`~~ | Embedding:212 | ✅ **PROVED** | SA 2026-02-24 | `configuration_measurable_of_eval_measurable` + `configuration_eval_measurable`. |
 | 16 | `second_moment_uniform` | Tightness:74 | ⚠️ Likely correct | GR Group 4 | ∫ Φ_a(f)² dν_a ≤ C(f). Nelson's hypercontractive estimate. |
-| 17 | `moment_equicontinuity` | Tightness:89 | ❓ Needs review | GR Group 4 | **⚠️ WRONG AS STATED** per gemini review. RHS must depend on ‖f-g‖_s, not bare constant. |
+| 17 | `moment_equicontinuity` | Tightness:89 | ⚠️ Likely correct | GR Group 4 | Fixed: RHS now `C * (seminorm k n (f-g))²`. Was bare constant (flagged WRONG by GR). |
 | 18 | `continuumMeasures_tight` | Tightness:110 | ⚠️ Likely correct | GR Group 4 | Mitoma criterion + moment bounds. |
 | 19 | `configuration_polishSpace` | Convergence:173 | ✅ Standard | DT 2026-02-24 | S'(ℝ^d) Polish. Gelfand-Vilenkin Vol. 4, Bogachev §3.2. |
 | 20 | `configuration_borelSpace` | Convergence:180 | ✅ Standard | DT 2026-02-24 | Borel = cylindrical σ-algebra. Bochner-Minlos framework. |
@@ -119,11 +119,9 @@
 
 **Status**: RESOLVED. Now requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, and `IsWeakCoupling` hypotheses. Also fixed `os2_from_phi4` (was FALSE without `IsPhi4ContinuumLimit`), `os3_from_pphi2` (was FALSE without `IsPphi2ContinuumLimit`), and `measure_determined_by_schwinger` (polynomial→exponential moments).
 
-### 2. ❓ `moment_equicontinuity` (Tightness:89)
+### 2. ~~❓ `moment_equicontinuity`~~ — FIXED (2026-02-24)
 
-**Severity**: MEDIUM — Verified but flagged **WRONG** by GR
-**Issue**: RHS is bare constant C, should be C·‖f-g‖_s in Schwartz/Sobolev norm.
-**Action**: Correct the bound to depend on ‖f-g‖_s.
+**Status**: RESOLVED. RHS now `C * (SchwartzMap.seminorm ℝ k n (f - g)) ^ 2` with existentially quantified seminorm indices `k n`. Was bare constant `C` (flagged WRONG by GR).
 
 ### 3. ⚠️ `os0_inheritance` (AxiomInheritance:78)
 

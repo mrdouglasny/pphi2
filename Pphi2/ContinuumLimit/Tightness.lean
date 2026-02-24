@@ -88,11 +88,11 @@ This ensures the family of measures is "equicontinuous" in the test
 function variable, which is needed for tightness on the full space S'. -/
 axiom moment_equicontinuity (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
-    ∃ (C : ℝ) (s : ℕ), 0 < C ∧
+    ∃ (C : ℝ) (k n : ℕ), 0 < C ∧
     ∀ (f g : ContinuumTestFunction d) (a : ℝ) (ha : 0 < a), a ≤ 1 →
     ∫ ω : Configuration (ContinuumTestFunction d),
       (ω f - ω g) ^ 2 ∂(continuumMeasure d N P a mass ha hmass) ≤
-    C -- * ‖f - g‖²_s (seminorm bound, not easily expressible without seminorm API)
+    C * (SchwartzMap.seminorm ℝ k n (f - g)) ^ 2
 
 /-! ## Tightness -/
 
