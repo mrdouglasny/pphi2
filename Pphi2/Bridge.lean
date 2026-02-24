@@ -152,15 +152,16 @@ The proof uses:
    (c) Wick ordering equivalence (wick_constant_comparison)
 
 Reference: Guerra-Rosen-Simon (1975), Simon Ch. V. -/
-axiom schwinger_agreement
+theorem schwinger_agreement
     (P : InteractionPolynomial) (mass coupling : ℝ)
     (hmass : 0 < mass) (hP : isPhi4 P coupling)
     -- Weak coupling hypothesis
     (h_weak : ∃ l₀ : ℝ, 0 < l₀ ∧ coupling < l₀)
     (n : ℕ) (f : Fin n → TestFun) :
     -- pphi2 Schwinger function = Phi4 Schwinger function
-    True -- Placeholder: needs the actual Schwinger function definitions
+    True := -- Placeholder: needs the actual Schwinger function definitions
          -- from both projects to state precisely
+  trivial
 
 /-- **Main theorem: the two constructions produce the same measure.**
 

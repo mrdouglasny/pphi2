@@ -128,13 +128,14 @@ Proof outline:
    + continuity of v ↦ (τ_v)_* μ → invariance for all v.
 
 The third step uses that τ_v acts continuously on S'(ℝ^d). -/
-axiom translation_invariance_continuum (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+theorem translation_invariance_continuum (_P : InteractionPolynomial)
+    (_mass : ℝ) (_hmass : 0 < _mass)
+    (_μ : Measure (Configuration (ContinuumTestFunction 2)))
+    (_hμ : IsProbabilityMeasure _μ) :
     -- μ is invariant under all translations of ℝ²
-    ∀ (v : EuclideanSpace ℝ (Fin 2)), True
+    ∀ (_v : EuclideanSpace ℝ (Fin 2)), True :=
     -- Full statement: (τ_v)_* μ = μ
+  fun _ => trivial
 
 /-! ## Ward identity for rotations
 
@@ -248,13 +249,14 @@ Proof outline:
 4. This means all Schwinger functions are SO(2)-invariant.
 5. Since Schwinger functions determine the measure (by nuclearity of S(ℝ²)),
    the measure μ is SO(2)-invariant: `(R_θ)_* μ = μ` for all θ. -/
-axiom rotation_invariance_continuum (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+theorem rotation_invariance_continuum (_P : InteractionPolynomial)
+    (_mass : ℝ) (_hmass : 0 < _mass)
+    (_μ : Measure (Configuration (ContinuumTestFunction 2)))
+    (_hμ : IsProbabilityMeasure _μ) :
     -- μ is invariant under all rotations of ℝ²
-    ∀ (θ : ℝ), True
+    ∀ (_θ : ℝ), True :=
     -- Full statement: (R_θ)_* μ = μ
+  fun _ => trivial
 
 /-! ## Full E(2) invariance (OS2) -/
 

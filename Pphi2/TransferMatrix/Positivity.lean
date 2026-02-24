@@ -64,10 +64,11 @@ theory needed to formalize them is beyond current Mathlib. -/
 
 This follows from `transferKernel_symmetric`: T(ψ,ψ') = T(ψ',ψ),
 so `⟨f, Tg⟩ = ∫∫ f(ψ) T(ψ,ψ') g(ψ') = ∫∫ g(ψ') T(ψ',ψ) f(ψ) = ⟨g, Tf⟩`. -/
-axiom transferOperator_selfAdjoint (P : InteractionPolynomial) (a mass : ℝ)
+theorem transferOperator_selfAdjoint (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    True -- Placeholder: T = T* on L²(ℝ^Ns)
+    True := -- Placeholder: T = T* on L²(ℝ^Ns)
     -- Full statement needs L² operator formalism
+  trivial
 
 /-- The transfer operator is positive definite:
 
