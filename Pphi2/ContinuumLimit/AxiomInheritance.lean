@@ -52,6 +52,7 @@ restoration requires the Ward identity argument (see OS2_WardIdentity.lean).
 import Pphi2.ContinuumLimit.Convergence
 import Pphi2.OSProofs.OS3_RP_Inheritance
 import Pphi2.OSProofs.OS4_MassGap
+import Mathlib.Topology.Algebra.Module.FiniteDimension
 
 noncomputable section
 
@@ -120,12 +121,22 @@ theorem os1_inheritance (_P : InteractionPolynomial)
 
 /-! ## OS3: Reflection Positivity -/
 
-/-- Time reflection on the continuum: `(Θf)(t, x) = f(-t, x)`.
+/-- Time reflection as a linear map on ℝ²: (t,x) ↦ (-t,x). -/
+private def timeReflLinear : EuclideanSpace ℝ (Fin 2) →ₗ[ℝ] EuclideanSpace ℝ (Fin 2) where
+  toFun p := (WithLp.equiv 2 (Fin 2 → ℝ)).symm (fun i =>
+    if i = (0 : Fin 2) then -(WithLp.equiv 2 (Fin 2 → ℝ) p i) else WithLp.equiv 2 (Fin 2 → ℝ) p i)
+  map_add' p q := by ext i; simp [WithLp.equiv]; split <;> ring
+  map_smul' c p := by ext i; simp [WithLp.equiv, smul_eq_mul]
 
-For d=2, this reflects the first coordinate. -/
+private lemma timeReflLinear_involutive : Function.Involutive timeReflLinear := by
+  intro p; ext i; simp [timeReflLinear, WithLp.equiv]; split <;> ring
+
+private noncomputable def timeReflCLE : EuclideanSpace ℝ (Fin 2) ≃L[ℝ] EuclideanSpace ℝ (Fin 2) :=
+  (LinearEquiv.ofInvolutive timeReflLinear timeReflLinear_involutive).toContinuousLinearEquiv
+
 def continuumTimeReflection :
     ContinuumTestFunction 2 → ContinuumTestFunction 2 :=
-  sorry -- Needs to define Θf where (Θf)(t,x) = f(-t,x) as a SchwartzMap
+  SchwartzMap.compCLMOfContinuousLinearEquiv ℝ timeReflCLE
 
 /-- **OS3 transfers to the continuum limit.**
 

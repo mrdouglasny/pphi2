@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 28 axioms, 18 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
+**pphi2: 28 axioms, 17 sorries** | **gaussian-field (upstream): 18 axioms, 4 sorries**
 
 ## File inventory
 
@@ -35,7 +35,7 @@ progressively fill in the axioms with full proofs.
 | 4 | `ContinuumLimit/Embedding.lean` | 5 axioms |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 0 axioms, 2 sorries |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom, 1 sorry |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 1 axiom, 1 sorry |
 | 6 | `OSAxioms.lean` | 0 axioms, 1 sorry |
 | 6 | `Main.lean` | 0 axioms, 5 sorries |
