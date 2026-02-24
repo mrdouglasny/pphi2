@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-24 (Full OS axioms, 0 sorries, rotationBreakingOperator removed)
-**pphi2**: 28 axioms | **gaussian-field**: 6 axioms | **Total**: 34
+**Updated**: 2026-02-24 (All placeholder theorems filled with real Lean types)
+**pphi2**: 27 axioms, 31 sorries, 0 placeholder theorems | **gaussian-field**: 15 axioms | **Total**: 42
 
 ## Verification Sources
 
@@ -66,14 +66,23 @@
 | 21 | `os0_inheritance` | AxiomInheritance:78 | ⚠️ Likely correct | GR Group 4 | OS0 transfers. GR notes: "TRUE but TOO WEAK" — should include factorial growth (E0'). |
 | 22 | `os3_inheritance` | AxiomInheritance | ✅ Standard | SA 2026-02-24 | Abstract IsRP for continuum limit: ∫ F·F(Θ*·) dμ ≥ 0. NEW axiom (was trivial True). Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). Connected to OS3_ReflectionPositivity via `rp_matrix_trig_identity` (proved) + `os3_for_continuum_limit`. |
 
-### Phase 5: Full OS Axioms for Continuum Limit (4 axioms)
+### Phase 5: Proof Chain Axioms with Real Types (3 axioms, 5 sorries)
 
-| # | Name | File:Line | Rating | Verified | Notes |
-|---|------|----------|--------|----------|-------|
-| 22 | `os0_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | Z[J] entire analytic. Fernique + Vitali. Replaces weaker `os0_inheritance`. |
-| 23 | `os1_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | ‖Z[J]‖ ≤ exp(c(‖J‖₁+‖J‖_p^p)). Nelson's hypercontractive estimate. |
-| 24 | `os2_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | Z[g·f]=Z[f] for g∈E(2). Translation + Ward identity + irrelevance. Replaces `rotationBreakingOperator`. |
-| 25 | `os4_clustering_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | Z[f+T_ag]→Z[f]Z[g]. Uniform spectral gap + exponential clustering. |
+Each OS axiom (OS0, OS1, OS2, OS4) is derived via a proof chain:
+**axiom** (real Lean type) → **sorry-proofed theorem** → **OS property**.
+
+| # | Name | File | Rating | Verified | Notes |
+|---|------|------|--------|----------|-------|
+| 22 | `continuum_exponential_moments` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | `∃ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson transferred to limit. Feeds OS0 + OS1. |
+| 23 | `rotation_invariance_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + dim(O_break)=4>d=2 + super-renormalizability. Feeds OS2. |
+| 24 | `continuum_exponential_clustering` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap + exp clustering. Feeds OS4. |
+
+**Proof chain theorems (5 sorries):**
+- `translation_invariance_continuum`: `Z[τ_v f] = Z[f]` (lattice translations + rational density + continuity)
+- `os0_for_continuum_limit`: exponential moments → OS0_Analyticity (dominated convergence + Hartogs)
+- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (|Z[J]| ≤ ∫ exp(|ω(Im J)|) + Jensen)
+- `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance (E(2) decomposition + real→complex)
+- `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (ε-δ from exp decay)
 
 ### Phase 6: Bridge (5 axioms)
 
@@ -90,12 +99,12 @@
 | Status | Count |
 |--------|-------|
 | Verified (GR or DT) | 20 |
-| New (self-audit only) | 8 |
+| New (self-audit only) | 7 |
 | Proved (no longer axioms) | 6 |
-| Removed | 1 |
-| **Total active** | **28** |
+| Removed | 2 |
+| **Total active** | **27** |
 
-20 of 28 active axioms verified by GR or DT. 8 new axioms self-audited: 3 L2Operator (CLM, self-adjoint, compact), 1 os3_inheritance (abstract IsRP), 4 full OS (os0/os1/os2/os4 for continuum limit). 1 removed: `rotationBreakingOperator` (replaced by `os2_continuum`). **0 sorries remain.**
+20 of 27 active axioms verified by GR or DT. 7 new axioms self-audited: 3 L2Operator (CLM, self-adjoint, compact), 1 os3_inheritance (abstract IsRP), 3 proof chain axioms with real Lean types (exponential moments, rotation invariance, exponential clustering). **5 sorries** bridge axioms to OS properties.
 
 ### Notes from DT review (2026-02-24)
 
@@ -132,6 +141,47 @@
 **Severity**: LOW — Verified but flagged **TOO WEAK** by GR
 **Issue**: States all moments finite, but OS0 requires factorial growth bound (E0' condition).
 **Action**: Strengthen to include growth bound.
+
+---
+
+## Placeholder Theorems (Filled 2026-02-24)
+
+All 21 former placeholder theorems (previously `True`-valued) have been filled with
+real Lean types and `sorry` proofs. They are now tracked as sorries in the sorry count.
+`unique_vacuum` was fully proved. `ward_identity_lattice` was proved (trivially, since
+the lattice rotation action is not yet defined). The rest are sorry-proofed with
+meaningful mathematical types.
+
+### OS2: Euclidean Invariance (Ward Identity)
+- `latticeMeasure_translation_invariant` — Integral equality under lattice translation (sorry)
+- `ward_identity_lattice` — Ward identity bound: $|∫ F dμ - ∫ F∘R_θ dμ| ≤ C|θ|a²$ (proved, pending rotation action)
+- `anomaly_scaling_dimension` — Lattice dispersion Taylor error $≤ (a²/12)Σ k_i⁴ + a⁴ Σ k_i⁶$ (sorry)
+- `anomaly_vanishes` — $‖Z[R·f] - Z[f]‖ ≤ C·a²$ for continuum-embedded lattice measure (sorry)
+
+### OS3: Reflection Positivity
+- `lattice_rp` — RP inequality for `interactingLatticeMeasure` with `fieldFromSites`/`fieldReflection2D` (sorry)
+- `rp_from_transfer_positivity` — $⟨f, T^n f⟩_{L²} ≥ 0$ via `transferOperatorCLM` (sorry)
+
+### OS4: Clustering & Ergodicity
+- `two_point_clustering_lattice` — Exponential decay bound using `finLatticeDelta` and `massGap` (sorry)
+- `general_clustering_lattice` — Quantified clustering over bounded observables (sorry)
+- `clustering_implies_ergodicity` — Measure-theoretic ergodicity criterion (sorry)
+- `unique_vacuum` — **PROVED** from `transferEigenvalue_ground_simple`
+
+### Continuum Limit & Convergence
+- `nelson_hypercontractive` — $L^{pn}$ hypercontractive inequality for `continuumMeasure` (sorry)
+- `os4_inheritance` — Exponential clustering of connected 2-point functions (sorry)
+- `schwinger2_convergence` — 2-point Schwinger function convergence along subsequence (sorry)
+- `schwinger_n_convergence` — n-point Schwinger function convergence along subsequence (sorry)
+- `continuumLimit_nontrivial` — $∫ (ω f)² dμ > 0$ for some $f$ (sorry)
+- `continuumLimit_nonGaussian` — Connected 4-point function $≠ 0$ (sorry)
+
+### Main Assembly & Bridge
+- `schwinger_agreement` — n-point Schwinger function equality between lattice and Phi4 limits (sorry)
+- `pphi2_nontrivial` — $∫ (ω f)² dμ > 0$ for all $f ≠ 0$ (sorry)
+- `pphi2_nonGaussian` — $∫ (ω f)⁴ dμ - 3(∫ (ω f)² dμ)² ≠ 0$ (sorry)
+- `os_reconstruction` — OS reconstruction yields mass gap $m₀ > 0$ (proved: `⟨mass, hmass⟩`)
+- `pphi2_wightman` — Full OS bundle + mass gap existence (proved from `pphi2_exists` + `os_reconstruction`)
 
 ---
 

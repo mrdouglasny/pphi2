@@ -236,11 +236,20 @@ This follows from weak convergence plus uniform integrability
 (from the uniform moment bounds). -/
 theorem schwinger2_convergence (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
-    (f g : ContinuumTestFunction d) :
-    -- Along the convergent subsequence, the two-point functions converge.
-    -- The full statement requires the subsequence from continuumLimit.
-    True :=-- Placeholder
-      trivial
+    (f g : ContinuumTestFunction d)
+    -- A sequence of lattice spacings converging to 0
+    (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
+    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    -- There exist a subsequence and a limit measure such that the two-point
+    -- Schwinger functions converge along that subsequence.
+    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
+      StrictMono φ ∧ IsProbabilityMeasure μ ∧
+      Filter.Tendsto
+        (fun n => ∫ ω : Configuration (ContinuumTestFunction d),
+          ω f * ω g ∂(continuumMeasure d N P (a (φ n)) mass (ha_pos (φ n)) hmass))
+        Filter.atTop
+        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ω f * ω g ∂μ)) := by
+  sorry
 
 /-- **Convergence of general n-point Schwinger functions.**
 
@@ -252,9 +261,21 @@ The connected parts decay according to the mass gap
 (from `clustering_uniform`). -/
 theorem schwinger_n_convergence (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) (n : ℕ)
-    (f : Fin n → ContinuumTestFunction d) :
-    True :=-- Placeholder
-      trivial
+    (f : Fin n → ContinuumTestFunction d)
+    -- A sequence of lattice spacings converging to 0
+    (a : ℕ → ℝ) (ha_pos : ∀ k, 0 < a k) (ha_le : ∀ k, a k ≤ 1)
+    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    -- There exist a subsequence and a limit measure such that the n-point
+    -- Schwinger functions converge along that subsequence.
+    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
+      StrictMono φ ∧ IsProbabilityMeasure μ ∧
+      Filter.Tendsto
+        (fun k => ∫ ω : Configuration (ContinuumTestFunction d),
+          ∏ i : Fin n, ω (f i) ∂(continuumMeasure d N P (a (φ k)) mass (ha_pos (φ k)) hmass))
+        Filter.atTop
+        (nhds (∫ ω : Configuration (ContinuumTestFunction d),
+          ∏ i : Fin n, ω (f i) ∂μ)) := by
+  sorry
 
 /-! ## Properties of the continuum limit -/
 
@@ -265,9 +286,16 @@ This follows from the two-point function being nonzero:
 
 The Gaussian two-point function provides a lower bound. -/
 theorem continuumLimit_nontrivial (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) :
-    True :=-- Placeholder: μ is not δ₀
-      trivial
+    (mass : ℝ) (hmass : 0 < mass)
+    (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
+    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    -- The continuum limit measure is non-trivial: there exists a test function
+    -- f such that the two-point function ∫ (ω f)² dμ is strictly positive.
+    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
+      StrictMono φ ∧ IsProbabilityMeasure μ ∧
+      ∃ (f : ContinuumTestFunction d),
+        0 < ∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 2 ∂μ := by
+  sorry
 
 /-- The continuum limit is non-Gaussian (for nontrivial P).
 
@@ -278,9 +306,19 @@ i.e., the connected four-point function (fourth cumulant) is nonzero.
 For a Gaussian measure, all connected n-point functions with n ≥ 3 vanish,
 so a nonzero fourth cumulant proves non-Gaussianity. -/
 theorem continuumLimit_nonGaussian (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) :
-    True :=-- Placeholder: μ is not Gaussian
-      trivial
+    (mass : ℝ) (hmass : 0 < mass)
+    (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
+    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    -- The continuum limit is non-Gaussian: the connected four-point function
+    -- (fourth cumulant) is nonzero for some test function f.
+    -- For a Gaussian measure: ∫ (ω f)⁴ dμ = 3 · (∫ (ω f)² dμ)²,
+    -- so nonzero fourth cumulant witnesses non-Gaussianity.
+    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
+      StrictMono φ ∧ IsProbabilityMeasure μ ∧
+      ∃ (f : ContinuumTestFunction d),
+        ∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 4 ∂μ -
+        3 * (∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 2 ∂μ) ^ 2 ≠ 0 := by
+  sorry
 
 end Pphi2
 

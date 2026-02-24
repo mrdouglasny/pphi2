@@ -80,15 +80,24 @@ The constant C depends on x, y and the ground state overlaps
 `⟨Ω|φ̂(x)|n⟩`, but is finite because φ̂(x) maps the domain of H
 into L² (as a bounded perturbation of the free field). -/
 theorem two_point_clustering_lattice
-    (Nt : ℕ) [NeZero Nt]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
-    (x y : Fin Ns) (t : Fin Nt) :
+    -- Sites x, y in the spatial direction; t is the time index (both in Fin Ns
+    -- since we use an Ns × Ns square lattice)
+    (t x y : Fin Ns) :
     ∃ C : ℝ, 0 < C ∧
     -- The connected two-point function decays exponentially:
-    -- We state this for the lattice field φ(t,x) = ω(δ_{(t,x)})
-    True := -- Placeholder: |⟨φ(t,x)φ(0,y)⟩_c| ≤ C · exp(-m_phys · |t| · a)
-  ⟨1, one_pos, trivial⟩
+    -- |⟨φ(t,x) · φ(0,y)⟩_c| ≤ C · exp(-m_phys · t · a)
+    -- Expressed via the interacting lattice measure and delta functions:
+    let μ := interactingLatticeMeasure 2 Ns P a mass ha hmass
+    -- δ_{(t,x)} and δ_{(0,y)} are the delta functions at the two sites
+    let δtx : FinLatticeField 2 Ns := finLatticeDelta 2 Ns (![t, x])
+    let δ0y : FinLatticeField 2 Ns := finLatticeDelta 2 Ns (![0, y])
+    |(∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx * ω δ0y ∂μ) -
+     (∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx ∂μ) *
+     (∫ ω : Configuration (FinLatticeField 2 Ns), ω δ0y ∂μ)| ≤
+      C * Real.exp (-massGap P a mass ha hmass * (t.val : ℝ) * a) := by
+  exact ⟨1, one_pos, by sorry⟩
 
 /-! ## General clustering on the lattice -/
 
@@ -106,11 +115,22 @@ theorem general_clustering_lattice
     (Nt : ℕ) [NeZero Nt]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    -- For any bounded observables F, G and time separation R:
+    -- For any bounded observables F, G and time separation R, the connected
+    -- correlator decays exponentially at the rate of the mass gap:
+    -- ∃ m > 0, ∀ bounded F G, ∀ R : ℕ,
+    --   |∫ F(ω) · G(T_R ω) dμ - (∫ F dμ)(∫ G dμ)| ≤ C(F,G) · exp(-m · R · a)
     ∃ (m : ℝ), 0 < m ∧ m ≤ massGap P a mass ha hmass ∧
-    -- The connected correlation decays as exp(-m · R)
-    True := -- Full statement needs L² operator formalism
-  ⟨massGap P a mass ha hmass, massGap_pos P a mass ha hmass, le_refl _, trivial⟩
+    ∀ (F G : Configuration (FinLatticeField 2 Ns) → ℝ)
+      (hF : ∃ C, ∀ ω, |F ω| ≤ C) (hG : ∃ C, ∀ ω, |G ω| ≤ C),
+      ∃ (C_FG : ℝ), 0 ≤ C_FG ∧
+      ∀ (R : ℕ),
+        |(∫ ω, F ω * G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) -
+         (∫ ω, F ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) *
+         (∫ ω, G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass))|
+        ≤ C_FG * Real.exp (-m * (R : ℝ) * a) := by
+  refine ⟨massGap P a mass ha hmass, massGap_pos P a mass ha hmass, le_refl _, ?_⟩
+  intro F G _hF _hG
+  exact ⟨1, le_of_lt one_pos, by intro R; sorry⟩
 
 /-! ## Uniform clustering
 

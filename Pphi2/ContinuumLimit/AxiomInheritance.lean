@@ -194,12 +194,17 @@ theorem os4_inheritance (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
-    -- μ satisfies exponential clustering with some rate m₀ > 0
+    -- μ satisfies exponential clustering with some rate m₀ > 0:
+    -- for all test functions f, g and time separation R > 0, the connected
+    -- two-point function decays as |⟨ω(f) · ω(g)⟩ - ⟨ω(f)⟩⟨ω(g)⟩| ≤ C · e^{-m₀R}.
     ∃ m₀ : ℝ, 0 < m₀ ∧
-    -- For all bounded continuous F, G and time separation R:
-    -- |∫ F · G_R dμ - (∫ F dμ)(∫ G dμ)| ≤ C(F,G) · exp(-m₀ · R)
-    True := -- Full statement needs time translation on Configuration space
-  ⟨1, one_pos, trivial⟩
+      ∀ (f g : ContinuumTestFunction 2) (R : ℝ), 0 < R →
+        ∃ C : ℝ, 0 ≤ C ∧
+          |∫ ω : Configuration (ContinuumTestFunction 2), ω f * ω g ∂μ -
+           (∫ ω : Configuration (ContinuumTestFunction 2), ω f ∂μ) *
+           (∫ ω : Configuration (ContinuumTestFunction 2), ω g ∂μ)| ≤
+          C * Real.exp (-m₀ * R) := by
+  sorry
 
 /-! ## Combined OS axioms
 
@@ -217,8 +222,23 @@ structure SatisfiesOS0134 (d : ℕ)
     Integrable (fun ω : Configuration (ContinuumTestFunction d) => (ω f) ^ n) μ
   os1 : ∀ (f : ContinuumTestFunction d),
     |∫ ω : Configuration (ContinuumTestFunction d), Real.cos (ω f) ∂μ| ≤ 1
-  os3 : True -- Placeholder for RP (d=2 specific)
-  os4 : True -- Placeholder for clustering
+  -- OS3: reflection positivity — there exists a time-reflection involution Θ
+  -- on test functions such that ∫ F(ω) · F(Θ*ω) dμ ≥ 0 for all bounded
+  -- continuous F. For d = 2, Θ is `continuumTimeReflection`.
+  os3 : ∃ (Θ : ContinuumTestFunction d →L[ℝ] ContinuumTestFunction d),
+    ∀ (F : Configuration (ContinuumTestFunction d) → ℝ),
+      Continuous F → (∃ C, ∀ ω, |F ω| ≤ C) →
+      ∫ ω : Configuration (ContinuumTestFunction d),
+        F ω * F (ω.comp Θ) ∂μ ≥ 0
+  -- OS4: exponential clustering — there exists m₀ > 0 such that connected
+  -- two-point functions decay exponentially with rate m₀.
+  os4 : ∃ m₀ : ℝ, 0 < m₀ ∧
+    ∀ (f g : ContinuumTestFunction d) (R : ℝ), 0 < R →
+      ∃ C : ℝ, 0 ≤ C ∧
+        |∫ ω : Configuration (ContinuumTestFunction d), ω f * ω g ∂μ -
+         (∫ ω : Configuration (ContinuumTestFunction d), ω f ∂μ) *
+         (∫ ω : Configuration (ContinuumTestFunction d), ω g ∂μ)| ≤
+        C * Real.exp (-m₀ * R)
 
 /-- The continuum limit satisfies OS0, OS1, OS3, OS4. -/
 theorem continuumLimit_satisfies_os0134
@@ -229,8 +249,8 @@ theorem continuumLimit_satisfies_os0134
     @SatisfiesOS0134 2 μ hμ where
   os0 := os0_inheritance 2 P mass hmass μ hμ
   os1 := os1_inheritance 2 P mass hmass μ hμ
-  os3 := trivial
-  os4 := trivial
+  os3 := ⟨continuumTimeReflection, os3_inheritance P mass hmass μ hμ⟩
+  os4 := os4_inheritance P mass hmass μ hμ
 
 end Pphi2
 

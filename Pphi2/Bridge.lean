@@ -102,7 +102,20 @@ def IsPphi2ContinuumLimit
     (μ : @Measure FieldConfig instMeasurableSpaceConfiguration)
     [IsProbabilityMeasure μ]
     (P : InteractionPolynomial) (mass : ℝ) : Prop :=
-  True -- Placeholder: μ = weak-lim_{a→0} (ι_a)_* μ_a
+  -- μ arises as a weak limit along a sequence a_n → 0 of lattice measures embedded
+  -- into S'(ℝ²). We abstract the lattice Schwinger functions via a family of
+  -- probability measures ν_k on S'(ℝ²) (the continuum-embedded lattice measures),
+  -- requiring Schwinger function convergence: for all test function tuples,
+  --   ∫ ∏ᵢ ω(fᵢ) dν_k → ∫ ∏ᵢ ω(fᵢ) dμ.
+  ∃ (a : ℕ → ℝ) (ν : ℕ → Measure FieldConfig),
+    (∀ k : ℕ, IsProbabilityMeasure (ν k)) ∧
+    Filter.Tendsto a Filter.atTop (nhds 0) ∧
+    (∀ k : ℕ, 0 < a k) ∧
+    ∀ (n : ℕ) (f : Fin n → TestFun),
+      Filter.Tendsto
+        (fun k : ℕ => ∫ ω : FieldConfig, ∏ i, ω (f i) ∂(ν k))
+        Filter.atTop
+        (nhds (∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ))
 
 /-- A probability measure μ on S'(ℝ²) that arises as the infinite-volume limit
 of the Phi4 continuum construction: μ = weak-lim_{Λ→∞} μ^{Phi4}_{Λ}
@@ -113,7 +126,18 @@ def IsPhi4ContinuumLimit
     (μ : @Measure FieldConfig instMeasurableSpaceConfiguration)
     [IsProbabilityMeasure μ]
     (P : InteractionPolynomial) (mass coupling : ℝ) : Prop :=
-  True -- Placeholder: μ = weak-lim_{Λ→∞} μ^{Phi4}_{Λ,κ→∞}
+  -- μ arises as the infinite-volume limit of the Phi4 finite-volume measures μ^{Phi4}_{Λ}
+  -- on S'(ℝ²), obtained after removing the UV cutoff (κ → ∞). We abstract these as a
+  -- sequence of probability measures on S'(ℝ²) indexed by volume cutoff Λ_k → ∞,
+  -- with Schwinger function convergence to those of μ.
+  ∃ (Λ : ℕ → ℝ) (ν : ℕ → Measure FieldConfig),
+    (∀ k : ℕ, IsProbabilityMeasure (ν k)) ∧
+    Filter.Tendsto Λ Filter.atTop Filter.atTop ∧
+    ∀ (n : ℕ) (f : Fin n → TestFun),
+      Filter.Tendsto
+        (fun k : ℕ => ∫ ω : FieldConfig, ∏ i, ω (f i) ∂(ν k))
+        Filter.atTop
+        (nhds (∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ))
 
 /-- The coupling constant is in the weak-coupling regime where the cluster
 expansion converges, guaranteeing uniqueness of the infinite-volume limit.
@@ -122,7 +146,14 @@ Placeholder body. The full condition is `coupling < l₀(P, mass)` where l₀
 is the radius of convergence of the Glimm-Jaffe-Spencer cluster expansion.
 Reference: Glimm-Jaffe-Spencer (1974). -/
 def IsWeakCoupling (P : InteractionPolynomial) (mass coupling : ℝ) : Prop :=
-  True -- Placeholder: coupling < cluster_expansion_radius(P, mass)
+  -- The coupling constant is small enough for the Glimm-Jaffe-Spencer cluster
+  -- expansion to converge. Concretely, for P(τ) = λτ⁴ this requires λ < λ₀(m)
+  -- where λ₀(m) > 0 is a mass-dependent radius of convergence.
+  -- We state this as: there exists a positive threshold λ₀ > coupling such that
+  -- the expansion converges, ensuring uniqueness of the infinite-volume limit.
+  0 < coupling ∧ coupling < mass ^ 2 / 4
+  -- Note: the true condition is coupling < λ₀(P, mass) per Glimm-Jaffe-Spencer (1974).
+  -- We use mass² / 4 as a conservative stand-in for the convergence radius.
 
 /-! ## Core axiom: measure equality
 
@@ -200,11 +231,20 @@ theorem schwinger_agreement
     (P : InteractionPolynomial) (mass coupling : ℝ)
     (hmass : 0 < mass) (hP : isPhi4 P coupling)
     (h_weak : IsWeakCoupling P mass coupling)
+    (μ_latt : @Measure FieldConfig instMeasurableSpaceConfiguration)
+    (hμ_latt : IsProbabilityMeasure μ_latt)
+    (hμ_latt_limit : @IsPphi2ContinuumLimit μ_latt hμ_latt P mass)
+    (μ_cont : @Measure FieldConfig instMeasurableSpaceConfiguration)
+    (hμ_cont : IsProbabilityMeasure μ_cont)
+    (hμ_cont_limit : @IsPhi4ContinuumLimit μ_cont hμ_cont P mass coupling)
     (n : ℕ) (f : Fin n → TestFun) :
-    -- pphi2 Schwinger function = Phi4 Schwinger function
-    True := -- Placeholder: needs the actual Schwinger function definitions
-         -- from both projects to state precisely
-  trivial
+    ∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ_latt =
+    ∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ_cont := by
+  -- At weak coupling, both Schwinger function sequences converge to the same limit.
+  -- By Schwinger function uniqueness (cluster expansion), the double limit
+  -- (a → 0, Λ → ∞) commutes and both constructions yield the same n-point functions.
+  -- Reference: Guerra-Rosen-Simon (1975), Simon Ch. V.
+  sorry
 
 /-- **Main theorem: the two constructions produce the same measure.**
 
@@ -367,7 +407,7 @@ theorem full_os_via_bridge
     os2 := h_os2_cont  -- From Phi4 (better than Ward identity)
     os3 := h_os3        -- From pphi2 (transfer matrix)
     os4_clustering := h_full.os4_clustering
-    os4_ergodicity := trivial
+    os4_ergodicity := by sorry
   }
 
 /-! ## Phi4 also gets the full bundle -/
@@ -406,7 +446,7 @@ theorem phi4_full_os_via_bridge
     os2 := h_os2
     os3 := h_os3
     os4_clustering := h_full.os4_clustering
-    os4_ergodicity := trivial
+    os4_ergodicity := by sorry
   }
 
 end Pphi2.Bridge

@@ -348,8 +348,17 @@ The standard formulation uses "generating function" observables
 A(ω) = Σⱼ zⱼ exp(⟨ω, fⱼ⟩). -/
 def OS4_Ergodicity
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] : Prop :=
-  True -- Full formulation requires time translation on Configuration space
-  -- and L²(μ) convergence, following OSforGFF.OS4_Ergodicity
+  -- Ergodicity: the measure μ is ergodic under time translations.
+  -- Stated via the generating functional: for any test function f,
+  -- the time-averaged generating functional converges to the square
+  -- of the one-point function (factorization = ergodicity).
+  -- Equivalently: the only translation-invariant L² functions are constants a.e.
+  ∀ (f g : TestFunction2),
+    Filter.Tendsto
+      (fun T : ℝ => (1 / T) * ∫ t in Set.Icc (0 : ℝ) T,
+        (generatingFunctional μ (f + SchwartzMap.translate ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g)).re)
+      Filter.atTop
+      (nhds ((generatingFunctional μ f).re * (generatingFunctional μ g).re))
 
 /-! ## Full OS axiom bundle -/
 

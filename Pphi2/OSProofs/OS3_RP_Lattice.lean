@@ -171,10 +171,15 @@ theorem lattice_rp (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (F : (Fin N × Fin N → ℝ) → ℝ)
     (hF : PositiveTimeSupported N F) :
-    -- In the un-normalized form (avoids division by Z):
-    -- ∫ F(φ) · F(Θφ) · exp(-S[φ]) dφ ≥ 0
-    True :=-- Placeholder: full statement needs integration over ℝ^{N×N}
-      trivial
+    -- Reflection positivity: ∫ F(φ) · F(Θφ) dμ_a ≥ 0
+    -- where Θ is time reflection and μ_a is the interacting lattice measure.
+    -- The integral is expressed using the fieldToSites conversion to connect
+    -- the product representation to the Configuration type.
+    0 ≤ ∫ ω : Configuration (FinLatticeField 2 N),
+      (F (fieldFromSites N (fun x => ω (Pi.single x 1)))) *
+      (F (fieldReflection2D N (fieldFromSites N (fun x => ω (Pi.single x 1)))))
+      ∂(interactingLatticeMeasure 2 N P a mass ha hmass) := by
+  sorry
 
 /-- **Reflection positivity for the interacting measure** (matrix form).
 
@@ -216,9 +221,14 @@ so `⟨f, T^n f⟩ ≥ 0`. The Euclidean correlation function
 `∫ F(φ_0) F(φ_n) dμ` equals `⟨F, T^n F⟩ / Tr(T^N)`. -/
 theorem rp_from_transfer_positivity
     (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) (n : ℕ) :
-    True :=-- Placeholder: ⟨f, T^n f⟩ ≥ 0 for all f ∈ L²
-      trivial
+    (ha : 0 < a) (hmass : 0 < mass) (n : ℕ)
+    (f : L2SpatialField N) :
+    -- Transfer matrix positivity: ⟨f, T^n f⟩ ≥ 0 for all f ∈ L²(ℝ^N) and n ≥ 0.
+    -- Since T is a positive self-adjoint operator (T = T* and ⟨g, Tg⟩ ≥ 0 for all g),
+    -- T^n is also positive, so the inner product is nonneg.
+    0 ≤ @inner ℝ _ _ f
+      ((transferOperatorCLM N P a mass ha hmass ^ n) f) := by
+  sorry
 
 end Pphi2
 

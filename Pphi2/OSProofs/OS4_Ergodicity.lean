@@ -74,10 +74,13 @@ theorem clustering_implies_ergodicity
       ∃ (C m : ℝ), 0 < m ∧ ∀ R, 0 < R →
         |(∫ x, F x * G (T R x) ∂μ) - (∫ x, F x ∂μ) * (∫ x, G x ∂μ)|
           ≤ C * Real.exp (-m * R)) :
-    -- Conclusion: μ is ergodic w.r.t. T
-    -- For any T-invariant set A: μ(A) = 0 or μ(A) = 1
-    True :=-- Placeholder for ergodicity statement
-      trivial
+    -- Conclusion: μ is ergodic w.r.t. T.
+    -- For any T_R-invariant measurable set A (i.e., (T R)⁻¹ A = A for all R > 0),
+    -- the measure satisfies μ(A) = 0 or μ(A) = 1.
+    ∀ (A : Set X), MeasurableSet A →
+      (∀ R : ℝ, 0 < R → T R ⁻¹' A = A) →
+      μ A = 0 ∨ μ A = 1 := by
+  sorry
 
 /-! ## Unique vacuum -/
 
@@ -94,10 +97,13 @@ spontaneous symmetry breaking of time-translation symmetry. -/
 theorem unique_vacuum (Ns : ℕ) [NeZero Ns]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    -- The ground state eigenspace of H is one-dimensional.
-    -- This is equivalent to transferEigenvalue_ground_simple.
-    True :=-- Follows from transferEigenvalue_ground_simple
-      trivial
+    -- The ground state eigenspace of the transfer matrix is one-dimensional:
+    -- the largest eigenvalue λ₀ is simple (strictly greater than λ₁).
+    -- This is the Perron-Frobenius theorem for positivity-improving operators.
+    -- Equivalently: the vacuum state Ω (ground state of H) is unique up to phase.
+    transferEigenvalue P a mass ha hmass 0 >
+    transferEigenvalue P a mass ha hmass 1 :=
+  transferEigenvalue_ground_simple P a mass ha hmass
 
 /-! ## Mixing -/
 

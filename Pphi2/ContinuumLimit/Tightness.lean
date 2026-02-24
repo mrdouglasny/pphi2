@@ -133,11 +133,21 @@ interacting field beyond the Gaussian case.
 
 The proof goes through the Gross log-Sobolev inequality, which is a deep
 result in its own right. We axiomatize it as a standalone statement. -/
-theorem nelson_hypercontractive (mass : ℝ) (hmass : 0 < mass)
-    (n : ℕ) (p : ℝ) (hp : 2 ≤ p) :
-    -- ‖:φ(x)^n:‖_{Lp(μ_GFF)} ≤ (p-1)^{n/2} · ‖:φ(x)^n:‖_{L²(μ_GFF)}
-    True :=-- Full statement needs L^p norms on the Gaussian measure space
-      trivial
+theorem nelson_hypercontractive (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (n : ℕ) (p : ℝ) (hp : 2 ≤ p) (f : ContinuumTestFunction d)
+    (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1) :
+    -- Nelson's hypercontractive estimate: the L^p moment of ω(f) under the
+    -- continuum-embedded measure is controlled by the L^2 moment
+    -- with the hypercontractive factor (p - 1)^n.
+    -- This is the key input for the uniform moment bounds needed for tightness.
+    ∫ ω : Configuration (ContinuumTestFunction d),
+        |ω f| ^ (p * n) ∂(continuumMeasure d N P a mass ha hmass) ≤
+      (p - 1) ^ n *
+      (∫ ω : Configuration (ContinuumTestFunction d),
+        (ω f) ^ (2 * n) ∂(continuumMeasure d N P a mass ha hmass)) ^
+      (p / 2) := by
+  sorry
 
 end Pphi2
 

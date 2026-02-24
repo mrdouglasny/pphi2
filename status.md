@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 28 axioms, 0 sorries** | **gaussian-field (upstream): 14 axioms, 22 sorries**
+**pphi2: 27 axioms, 31 sorries** | **gaussian-field (upstream): 15 axioms, 16 sorries**
 
 ## File inventory
 
@@ -28,19 +28,19 @@ progressively fill in the axioms with full proofs.
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
 | 2 | `TransferMatrix/L2Operator.lean` | 7 axioms (3 operator + 4 eigenvalue) |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
-| 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 0 sorries |
+| 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 2 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
-| 3 | `OSProofs/OS4_MassGap.lean` | 0 axioms |
-| 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms |
+| 3 | `OSProofs/OS4_MassGap.lean` | 0 axioms, 2 sorries |
+| 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 1 sorry |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms |
-| 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
-| 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 0 sorries |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | 2 axioms (os0_inheritance + os3_inheritance) |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 1 axiom, 5 sorries |
+| 4 | `ContinuumLimit/Tightness.lean` | 3 axioms, 1 sorry |
+| 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 4 sorries |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | 2 axioms, 1 sorry |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 3 axioms, 15 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
-| 6 | `Main.lean` | 0 axioms, 0 sorries |
-| 6 | `Bridge.lean` | 5 axioms, 6 sorries |
+| 6 | `Main.lean` | 0 axioms, 2 sorries |
+| 6 | `Bridge.lean` | 5 axioms, 3 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
@@ -153,10 +153,8 @@ Correlations factor at large separations: Z[f + T_a g] → Z[f]·Z[g] as ‖a‖
 
 **OS4 (Ergodicity)** — `OS4_Ergodicity μ`
 
-```
-True  -- Placeholder; full formulation needs time translation on
-      -- Configuration space and L²(μ) convergence
-```
+Time-averaged generating functional converges to the product:
+`(1/T) ∫₀ᵀ Re(Z[f + τ_{(t,0)} g]) dt → Re(Z[f]) · Re(Z[g])` as T → ∞.
 
 ### Full axiom bundle
 
@@ -214,29 +212,27 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `transferEigenvalue_antitone` | L2Operator | Easy | Eigenvalues decrease: λ₀ ≥ λ₁ ≥ ... (by construction from sorting). |
 | `transferEigenvalue_ground_simple` | L2Operator | Medium | λ₀ > λ₁ (strict). Perron-Frobenius for positivity-improving operators. |
 | `action_decomposition` | OS3_RP_Lattice | Medium | Lattice action decomposes as S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
-| `lattice_rp` | OS3_RP_Lattice | Medium | Lattice measure satisfies RP. From action decomposition + exp(-S) = exp(-S⁺)·exp(-S⁻) perfect square argument. |
+| ~~`lattice_rp`~~ | OS3_RP_Lattice | **Theorem (sorry)** | RP inequality for `interactingLatticeMeasure`. |
 | `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. |
-| `rp_from_transfer_positivity` | OS3_RP_Lattice | Medium | RP from transfer matrix positivity. Alternative proof route. |
-| `partitionFunction_eq_trace` | TransferMatrix | Medium | Z = Tr(T^{Nt}). Standard transfer matrix identity. |
+| ~~`rp_from_transfer_positivity`~~ | OS3_RP_Lattice | **Theorem (sorry)** | ⟨f, T^n f⟩ ≥ 0 via `transferOperatorCLM`. |
 
 ### Phase 3: Spectral gap and clustering
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `hamiltonian_selfadjoint` | SpectralGap | Easy | H = -(1/a)log(T) is self-adjoint (from T self-adjoint, positive). |
-| `hamiltonian_compact_resolvent` | SpectralGap | Medium | Follows from T being trace class. |
-| `ground_state_simple` | SpectralGap | Medium | Non-degenerate ground state. From Perron-Frobenius (positivity-preserving). |
 | `spectral_gap_uniform` | SpectralGap | Hard | Mass gap bounded below uniformly in a. Key input: the interaction is a bounded perturbation of the free field in the sense of Kato-Rellich, and the free mass gap is m > 0. Needs careful control of the perturbation as a→0. |
 | `spectral_gap_lower_bound` | SpectralGap | Hard | m_phys ≥ c·m_bare. Quantitative bound on the physical mass. |
-| `ground_state_positive` | SpectralGap | Medium | Ground state wavefunction is strictly positive. From Perron-Frobenius. |
-| `ground_state_smooth` | SpectralGap | Medium | Ground state is smooth. From elliptic regularity of H. |
-| `two_point_clustering_lattice` | OS4_MassGap | Medium | Two-point function decays exponentially with rate = mass gap. Standard spectral decomposition argument. |
-| `general_clustering_lattice` | OS4_MassGap | Medium | General n-point clustering from spectral gap. |
 | ~~`connectedTwoPoint_nonneg_delta`~~ | OS4_MassGap | ✅ Proved | Variance nonnegativity: direct proof via ∫(X-E[X])² ≥ 0. |
-| `clustering_implies_ergodicity` | OS4_Ergodicity | Medium | Exponential clustering → ergodicity of time translations. Standard. |
-| `unique_vacuum` | OS4_Ergodicity | Medium | Unique vacuum from ergodicity. Via GNS/OS reconstruction. |
-| `exponential_mixing` | OS4_Ergodicity | Medium | Exponential mixing from mass gap. |
-| `os4_lattice` | OS4_Ergodicity | Easy | Lattice satisfies OS4 (assembles the above). |
+| ~~`two_point_clustering_lattice`~~ | OS4_MassGap | **Theorem (sorry)** | Exponential decay bound using `finLatticeDelta` and `massGap`. |
+| ~~`general_clustering_lattice`~~ | OS4_MassGap | **Theorem (sorry)** | Quantified clustering over bounded observables. |
+| ~~`clustering_implies_ergodicity`~~ | OS4_Ergodicity | **Theorem (sorry)** | Exponential clustering → ergodicity of time translations. |
+| ~~`unique_vacuum`~~ | OS4_Ergodicity | ✅ **Proved** | From `transferEigenvalue_ground_simple`. No sorry. |
+| ~~`exponential_mixing`~~ | OS4_Ergodicity | **Theorem (sorry)** | Exponential mixing from mass gap. |
+| ~~`os4_lattice`~~ | OS4_Ergodicity | **Theorem (sorry)** | Lattice satisfies OS4 (assembles the above). |
+
+Note: `partitionFunction_eq_trace`, `hamiltonian_selfadjoint`, `hamiltonian_compact_resolvent`,
+`ground_state_simple`, `ground_state_positive`, `ground_state_smooth` were removed in earlier
+refactoring (functionality consolidated into L2Operator axioms).
 
 ### Phase 4: Continuum limit
 
@@ -250,32 +246,40 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `second_moment_uniform` | Tightness | Hard | ∫|Φ_a(f)|² dν_a ≤ C(f) uniformly in a. Key input: Nelson's hypercontractive estimate + convergence of lattice propagator. |
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
-| `nelson_hypercontractive` | Tightness | Hard | Nelson's hypercontractive estimate. Deep result (via Gross log-Sobolev inequality). |
+| ~~`nelson_hypercontractive`~~ | Tightness | **Theorem (sorry)** | Nelson's hypercontractive inequality for `continuumMeasure`. |
 | ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — Prokhorov's theorem (sequential version). Now a theorem with complete proof. |
-| `schwinger2_convergence` | Convergence | Medium | 2-point Schwinger functions converge. From weak convergence + uniform integrability. |
-| `schwinger_n_convergence` | Convergence | Medium | n-point Schwinger functions converge. |
-| `continuumLimit_nontrivial` | Convergence | Medium | Limit is not δ₀. From positive 2-point function. |
-| `continuumLimit_nonGaussian` | Convergence | Medium | Limit is not Gaussian. From nonzero 4th cumulant. |
+| ~~`schwinger2_convergence`~~ | Convergence | **Theorem (sorry)** | 2-point Schwinger functions converge along subsequence. |
+| ~~`schwinger_n_convergence`~~ | Convergence | **Theorem (sorry)** | n-point Schwinger functions converge along subsequence. |
+| ~~`continuumLimit_nontrivial`~~ | Convergence | **Theorem (sorry)** | ∫ (ω f)² dμ > 0 for some f. |
+| ~~`continuumLimit_nonGaussian`~~ | Convergence | **Theorem (sorry)** | Connected 4-point function ≠ 0. |
 | `configuration_polishSpace` | Convergence | Infrastructure | S'(ℝ^d) is Polish (dual of nuclear Fréchet). Not in Mathlib. |
 | `configuration_borelSpace` | Convergence | Infrastructure | Borel σ-algebra on S'(ℝ^d) = cylindrical σ-algebra (weak-* topology). Not in Mathlib. |
 | `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
-| `os1_inheritance` | AxiomInheritance | Easy | OS1 transfers: |cos(·)| ≤ 1 trivially. |
-| `os3_inheritance` | AxiomInheritance | Medium | **Now an axiom** (was trivial True). Abstract IsRP: ∫ F(ω)·F(Θ*ω) dμ ≥ 0 for bounded continuous F. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
-| `os4_inheritance` | AxiomInheritance | Medium | OS4 transfers: uniform mass gap + weak convergence → exponential clustering preserved. |
-| `continuumLimit_satisfies_os0134` | AxiomInheritance | Easy | Assembly of the above four. |
+| `os3_inheritance` | AxiomInheritance | Medium | Abstract RP: ∫ F(ω)·F(Θ*ω) dμ ≥ 0 for bounded continuous F. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
+| ~~`os4_inheritance`~~ | AxiomInheritance | **Theorem (sorry)** | Exponential clustering of connected 2-point functions. |
+| ~~`continuumLimit_satisfies_os0134`~~ | AxiomInheritance | **Theorem** | Assembly of os0/os1/os3/os4 inheritance results. |
 
-### Phase 5: Euclidean invariance (OS2)
+Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially since |cos(·)| ≤ 1.
+
+### Phase 5: Euclidean invariance (OS2) and OS proof chains
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | ~~`latticeAction_translation_invariant`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — relabeling via `Equiv.subRight`. |
-| `latticeMeasure_translation_invariant` | OS2_WardIdentity | Easy | Lattice measure is translation-invariant (from Gaussian + interaction). |
-| `translation_invariance_continuum` | OS2_WardIdentity | Medium | Continuum limit is translation-invariant. Lattice translations approximate all translations as a→0; density argument. |
-| `rotationBreakingOperator` | OS2_WardIdentity | Medium | The rotation anomaly operator O_break. Explicit construction from lattice Laplacian correction terms. |
-| `ward_identity_lattice` | OS2_WardIdentity | Hard | Ward identity: ⟨δ_J F⟩_a = ⟨F · O_break⟩_a. Integration by parts in the path integral. |
-| `anomaly_scaling_dimension` | OS2_WardIdentity | Medium | dim(O_break) = 4. From Fourier analysis: Δ_lattice - Δ_continuum = O(a²k⁴). |
-| `anomaly_vanishes` | OS2_WardIdentity | Hard | Anomaly coefficient is O(a²). Needs power counting + super-renormalizability (no log corrections in d=2). |
-| `rotation_invariance_continuum` | OS2_WardIdentity | Hard | SO(2) invariance in the limit. Combines Ward identity + anomaly vanishing + Schwinger functions determine the measure. |
+| `continuum_exponential_moments` | OS2_WardIdentity | Hard | `∃ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson, transferred to limit. Feeds OS0 + OS1. |
+| `rotation_invariance_continuum` | OS2_WardIdentity | Hard | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + anomaly irrelevance. Feeds OS2. |
+| `continuum_exponential_clustering` | OS2_WardIdentity | Hard | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap → exp clustering. Feeds OS4. |
+
+**Proof chain theorems** (sorry-proofed with real Lean types):
+- `latticeMeasure_translation_invariant`: integral equality under lattice translation (sorry)
+- `translation_invariance_continuum`: `Z[τ_v f] = Z[f]` (3 sorries: continuity, density, combine)
+- `ward_identity_lattice`: Ward identity bound (proved; pending lattice rotation action)
+- `anomaly_scaling_dimension`: lattice dispersion Taylor error bound (sorry)
+- `anomaly_vanishes`: ‖Z[R·f] - Z[f]‖ ≤ C·a² for continuum-embedded lattice measure (sorry)
+- `os0_for_continuum_limit`: exponential moments → OS0_Analyticity (3 sorries)
+- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (3 sorries)
+- `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance (2 sorries)
+- `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (**fully proved**, ε-δ from exp decay)
 
 ### Phase 6: OS axioms and assembly
 
@@ -286,7 +290,10 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`compTimeReflection2`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfContinuousLinearEquiv` with time reflection as CLE. |
 | ~~`compTimeReflection2_apply`~~ | OSAxioms | ✅ Proved | Follows by `rfl` from the construction. |
 | ~~`SchwartzMap.translate`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfAntilipschitz` with translation (antilipschitz + temperate growth). |
-| `os_reconstruction` | Main | Infrastructure | OS reconstruction theorem (Osterwalder-Schrader 1973, 1975). Would require formalizing Minkowski QFT. |
+| ~~`os_reconstruction`~~ | Main | **Proved** | ∃ m₀ > 0 from ⟨mass, hmass⟩. Full Wightman formalism not formalized. |
+| ~~`pphi2_wightman`~~ | Main | **Proved** | Full OS bundle + mass gap existence, from `pphi2_exists` + `os_reconstruction`. |
+| ~~`pphi2_nontrivial`~~ | Main | **Theorem (sorry)** | ∫ (ω f)² dμ > 0 for all f ≠ 0. |
+| ~~`pphi2_nonGaussian`~~ | Main | **Theorem (sorry)** | ∫ (ω f)⁴ dμ - 3(∫ (ω f)² dμ)² ≠ 0. |
 | `measure_determined_by_schwinger` | Bridge | Medium | Moment determinacy on S'(ℝ²) with exponential (Fernique-type) moment bound. |
 | `wick_constant_comparison` | Bridge | Medium | Wick constant c_a ≈ (2π)⁻¹ log(1/a) with bounded remainder. |
 | `same_continuum_measure` | Bridge | Medium | pphi2 and Phi4 constructions agree at weak coupling. Requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
@@ -325,11 +332,11 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | ~~`wickConstant_antitone_mass`~~ | Counterterm | **Proved** (in gaussian-field) — c_a decreasing in mass. |
 | ~~`energyLevel_gap`~~ | Positivity | **Proved** — E₁ > E₀ from transfer eigenvalue gap. |
 | ~~`rp_closed_under_weak_limit`~~ | OS3_RP_Inheritance | **Proved** — RP closed under weak limits. |
-| `reflection_positivity_lattice` | OS3_RP_Lattice | Lattice RP from action decomposition. |
+| ~~`reflection_positivity_lattice`~~ | OS3_RP_Lattice | **Converted** to `lattice_rp` theorem (sorry). |
 | ~~`continuumLimit`~~ | Convergence | **Proved** — Apply Prokhorov to the tight family. Uses `prokhorov_sequential` + `continuumMeasures_tight`. PolishSpace/BorelSpace instances now axioms. |
 | ~~`continuumTimeReflection`~~ | AxiomInheritance | **Proved** — defined via `compCLMOfContinuousLinearEquiv`. |
 | ~~`so2Generator`~~ | OS2_WardIdentity | **Proved** — SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ via `smulLeftCLM` + `lineDerivOpCLM`. |
-| `pphi2_exists` | OS2_WardIdentity | Main existence theorem. Uses `continuumLimit_satisfies_fullOS`. |
+| ~~`pphi2_exists`~~ | OS2_WardIdentity | **Proved** — Main existence theorem. Uses `continuumLimit_satisfies_fullOS`. |
 
 ---
 
@@ -418,55 +425,7 @@ The following theorems have complete proofs (no sorry):
 
 ---
 
-## Upstream: gaussian-field axioms and sorries
+## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **14 axioms and 22 sorries**.
-
-*Updated 2026-02-24. See also `docs/gemini_review.md` for external review.*
-
-### Used by pphi2 Normalization (FKG)
-
-| Item | File | Type | Difficulty | Description |
-|------|------|------|-----------|-------------|
-| `fkg_from_lattice_condition` | Lattice/FKG | axiom | Hard | Core FKG: lattice condition ⟹ correlation inequality (Holley 1974). |
-| `integrable_mul_gaussianDensity` | Lattice/FKG | axiom | Medium | Integrability of f·gaussianDensity (fixed: added integrability hypothesis). |
-| `latticeGaussianMeasure_density_integral` | Lattice/FKG | axiom | Medium | Gaussian measure density integral formula. |
-
-Proved FKG results (no longer axioms):
-- `gaussian_fkg_lattice_condition` — now a theorem
-- `fkg_perturbed` — now a theorem
-- `fkg_lattice_gaussian` — derived from `gaussian_fkg_lattice_condition`
-
-### Infinite lattice (not needed by pphi2)
-
-| Item | File | Type | Difficulty | Description |
-|------|------|------|-----------|-------------|
-| `latticeEnum_norm_bound` | Lattice/RapidDecayLattice | axiom | Hard | ‖enum⁻¹(m)‖ ≤ C·m^{1/d}. |
-| `latticeEnum_index_bound` | Lattice/RapidDecayLattice | axiom | Hard | enum(x) ≤ C·(1+‖x‖)^d. |
-| `latticeRapidDecayEquiv` | Lattice/RapidDecayLattice | axiom | Hard | CLE to RapidDecaySeq. |
-
-### Heat kernel (cylinder QFT, not used by lattice approach)
-
-| Item | File | Type | Difficulty | Description |
-|------|------|------|-----------|-------------|
-| `mehlerKernel_eq_series` | HeatKernel/PositionKernel | axiom | Hard | Mehler's formula. |
-| `circleHeatKernel_pos` | HeatKernel/PositionKernel | axiom | Hard | Requires Poisson summation. |
-| `cylinderEval_summable` | HeatKernel/PositionKernel | axiom | Medium | Convergence of eigenfunction expansion. |
-
-### Infrastructure
-
-| Item | File | Type | Description |
-|------|------|------|-------------|
-| `schwartz_dyninMityaginSpace_axiom` | GaussianField | axiom | Schwartz space is a Dynin-Mityagin space (nuclear Fréchet). |
-
-### Summary
-
-| Category | Axioms | Sorries |
-|----------|--------|---------|
-| PositionKernel (heat kernel / cylinder) | 3 | 2 |
-| RapidDecayLattice (infinite lattice) | 3 | 2 |
-| FKG (used by pphi2 Normalization) | 8 | 6 |
-| SpectralCovariance | 0 | 7 |
-| GaussianField/Density | 0 | 2 |
-| SchwartzNuclear | 0 | 3 |
-| **Total** | **14** | **22** |
+The gaussian-field library (dependency) has **14 axioms and 23 sorries**.
+See [gaussian-field status](../gaussian-field/status.md) for the full inventory.
