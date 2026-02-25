@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-25 (All sorries eliminated, 54 axioms)
-**pphi2**: 54 axioms (49 required + 5 Option B), 0 sorries | **gaussian-field**: 18 axioms, 2 sorries | **Total**: 72 (67 required)
+**Updated**: 2026-02-25 (All sorries eliminated, 47 axioms)
+**pphi2**: 47 axioms, 0 sorries | **gaussian-field**: 14 axioms, 0 sorries | **Total**: 61
 
 ## Verification Sources
 
@@ -68,7 +68,7 @@
 | 22b | ~~`IsPphi2Limit`~~ | Embedding:271 | ✅ **DEFINED** | SA 2026-02-25 | Converted from axiom to `def`: ∃ (a, ν) with Schwinger function convergence. Mirrors `IsPphi2ContinuumLimit` in Bridge.lean. |
 | 22c | `pphi2_limit_exists` | Convergence | ⚠️ Likely correct | SA 2026-02-25 | ∃ μ `IsPphi2Limit`. Prokhorov + tightness + diagonal argument. Moved from OS2_WardIdentity to Convergence. |
 
-### Phase 5: OS2 Ward Identity and Proof Chain (10 axioms)
+### Phase 5: OS2 Ward Identity and Proof Chain (12 axioms)
 
 All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 6 axioms were overly strong, quantifying over arbitrary μ instead of P(φ)₂ limits).
@@ -84,9 +84,12 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 | 28 | `exponential_moment_schwartz_bound` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `∫ exp(\|ω g\|) ≤ exp(c·(‖g‖₁+‖g‖₂²))`. Non-standard norm formulation. |
 | 29 | `complex_gf_invariant_of_real_gf_invariant` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Real Z invariance → complex Z invariance (Cramér-Wold + Lévy uniqueness). |
 | 30 | `continuum_exponential_clustering` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Now requires `IsPphi2Limit`. Spectral gap. |
-| 31 | `os4_clustering_implies_ergodicity` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Clustering → ergodicity. Mean ergodic theorem. |
+| 31 | `cesaro_set_integral_tendsto` | OS2_WardIdentity:954 | ✅ Standard | DT 2026-02-25 | Continuous Cesàro convergence: h(t)→L bounded ⟹ (1/T)∫₀ᵀ h dt → L. Standard real analysis. EASY. |
+| 32 | `pphi2_generating_functional_real` | OS2_WardIdentity:975 | ✅ Standard | DT 2026-02-25 | Im(Z[f])=0 from φ→-φ symmetry of even P. EASY. |
+| 33 | `generatingFunctional_translate_continuous` | OS2_WardIdentity:990 | ✅ Standard | DT 2026-02-25 | t ↦ Z[f + τ_{(t,0)} g] continuous. DCT with bounded integrand. EASY. |
 
 **Proved theorems in OS2_WardIdentity.lean:**
+- `os4_clustering_implies_ergodicity`: clustering → ergodicity via Cesàro + reality (**fully proved**)
 - `anomaly_vanishes`: delegates to `anomaly_bound_from_superrenormalizability`
 - `os3_for_continuum_limit`: trig identity decomposition + `os3_inheritance` (**fully proved**)
 - `os0_for_continuum_limit`: exponential moments → OS0_Analyticity

@@ -55,8 +55,8 @@ All six phases are structurally complete and the full project builds
 (`lake build`, 3141 jobs). Every theorem has a real Lean type — no `True`
 placeholders remain.
 
-- **pphi2:** 47 axioms, 0 sorries
-- **gaussian-field** (upstream dependency): 14 axioms, 0 sorries
+- **pphi2:** 49 axioms, 0 sorries
+- **gaussian-field** (upstream dependency): 10 axioms, 0 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.

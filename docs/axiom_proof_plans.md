@@ -282,20 +282,58 @@
 
 ---
 
-#### 17. `os4_clustering_implies_ergodicity` (OS2_WardIdentity.lean:956)
+#### 17. ~~`os4_clustering_implies_ergodicity`~~ (OS2_WardIdentity.lean:1031) — **PROVED**
 
-**Statement**: Clustering implies ergodicity.
+Now a theorem, proved from `cesaro_set_integral_tendsto` + `pphi2_generating_functional_real` +
+`generatingFunctional_translate_continuous` + exponential clustering.
+
+---
+
+#### 17a. `cesaro_set_integral_tendsto` (OS2_WardIdentity.lean:954)
+
+**Statement**: If h : ℝ → ℝ is measurable, bounded, and h(t) → L, then (1/T)∫₀ᵀ h(t) dt → L.
 
 **Plan**:
-1. Consider variance of spatial average: Var((1/|V|) integral_V F_a da)
-2. Expand: (1/|V|^2) integral_V integral_V Cov(F_a, F_b) da db
-3. By translation invariance: Cov(F_a, F_b) = C(b-a) where C is the connected correlator
-4. Exponential clustering gives |C(x)| <= C' exp(-m_0 ||x||), which is integrable
-5. Therefore variance -> 0 as |V| -> infinity (dominated convergence)
-6. Spatial average converges in L^2 to its mean: this is ergodicity
+1. For given ε > 0, pick T₀ such that |h(t) - L| < ε for t > T₀
+2. Split: (1/T)∫₀ᵀ h = (1/T)∫₀^{T₀} h + (1/T)∫_{T₀}ᵀ h
+3. First term: bounded by M·T₀/T → 0 as T → ∞
+4. Second term: ≈ (T-T₀)/T · L ± ε → L as T → ∞
+5. Combine for (1/T)∫₀ᵀ h → L
 
-**Key Mathlib**: `MeasureTheory.integral_integral_swap` (Fubini), Cauchy-Schwarz
-**Difficulty**: MEDIUM
+**Key Mathlib**: `MeasureTheory.integral_mono`, `MeasureTheory.set_integral_le_of_abs_le`,
+`Filter.Tendsto`, basic limit arithmetic
+**Difficulty**: EASY
+
+---
+
+#### 17b. `pphi2_generating_functional_real` (OS2_WardIdentity.lean:975)
+
+**Statement**: Im(Z[f]) = 0 for real Schwartz f, where μ is a P(Φ)₂ limit.
+
+**Plan**:
+1. The P(Φ)₂ measure is φ → -φ symmetric (even polynomial P)
+2. Z[f] = ∫ exp(iφ(f)) dμ; under φ → -φ: Z[f] = ∫ exp(-iφ(f)) dμ = Z̄[f]
+3. Z[f] = Z̄[f] implies Im(Z[f]) = 0
+4. Need: `Measure.map Neg.neg μ = μ` (from even polynomial symmetry)
+
+**Key Mathlib**: `MeasureTheory.integral_map`, `Real.sin_neg`, `eq_zero_of_neg_eq`
+**Difficulty**: EASY (given the φ → -φ invariance of μ)
+
+---
+
+#### 17c. `generatingFunctional_translate_continuous` (OS2_WardIdentity.lean:990)
+
+**Statement**: t ↦ Z[f + τ_{(t,0)} g] is continuous.
+
+**Plan**:
+1. Integrand: ω ↦ exp(i·ω(f + τ_{(t,0)} g))
+2. **Pointwise continuity in t**: t ↦ ω(τ_{(t,0)} g) is continuous (from continuity
+   of translation in Schwartz space + continuity of evaluation)
+3. **Dominating function**: |exp(i·...)| = 1, and μ is probability measure
+4. Apply `continuous_of_dominated` or `MeasureTheory.continuous_at_of_dominated`
+
+**Key Mathlib**: `MeasureTheory.continuous_at_of_dominated`, `SchwartzMap.translate` continuity
+**Difficulty**: EASY
 
 ---
 
@@ -807,7 +845,10 @@
 | 14 | `rotation_invariance_continuum` | OS2_Ward | MEDIUM | Needs anomaly bound |
 | 15 | `analyticOn_generatingFunctionalC` | OS2_Ward | MEDIUM | Needs exponential moments |
 | 16 | `complex_gf_invariant_of_real_gf_invariant` | OS2_Ward | MEDIUM | Needs analyticity |
-| 17 | `os4_clustering_implies_ergodicity` | OS2_Ward | MEDIUM | Ergodic theory setup |
+| 17 | ~~`os4_clustering_implies_ergodicity`~~ | OS2_Ward | **PROVED** | — |
+| 17a | `cesaro_set_integral_tendsto` | OS2_Ward | EASY | Standard real analysis |
+| 17b | `pphi2_generating_functional_real` | OS2_Ward | EASY | φ→-φ symmetry |
+| 17c | `generatingFunctional_translate_continuous` | OS2_Ward | EASY | DCT with bounded integrand |
 | 18 | `configuration_borelSpace` | Convergence | MEDIUM | Needs polishSpace |
 | 19 | `schwinger_n_convergence` | Convergence | MEDIUM | Needs tightness |
 | 20 | `second_moment_uniform` | Tightness | MEDIUM | Lattice Green's function |

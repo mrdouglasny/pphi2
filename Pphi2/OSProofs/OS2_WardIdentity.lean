@@ -937,6 +937,81 @@ theorem os4_for_continuum_limit (P : InteractionPolynomial)
             < C * (ε / C) := by apply mul_lt_mul_of_pos_left hexp_lt hC_pos
           _ = ε := by field_simp
 
+/-! ## Textbook axioms for clustering → ergodicity -/
+
+/-- **Textbook axiom: Continuous Cesàro convergence.**
+
+If h : ℝ → ℝ is measurable, bounded, and h(t) → L as t → +∞, then
+the Cesàro average (1/T) ∫₀ᵀ h(t) dt → L as T → +∞.
+
+This is the continuous analogue of Mathlib's `Filter.Tendsto.cesaro`
+(for discrete sequences). The proof uses dominated convergence:
+for sufficiently large T, h(t) ≈ L on most of [0,T], and the bounded
+initial segment [0,R] contributes O(R/T) → 0.
+
+Reference: Rudin, *Real and Complex Analysis*, Exercise 3.14;
+Folland, *Real Analysis*, §3.4. -/
+axiom cesaro_set_integral_tendsto (h : ℝ → ℝ) (L : ℝ)
+    (hm : Measurable h)
+    (hb : ∃ M : ℝ, ∀ t, |h t| ≤ M)
+    (htend : Filter.Tendsto h Filter.atTop (nhds L)) :
+    Filter.Tendsto
+      (fun T : ℝ => (1 / T) * ∫ t in Set.Icc (0 : ℝ) T, h t)
+      Filter.atTop (nhds L)
+
+/-- **Textbook axiom: Reality of the generating functional for P(Φ)₂ measures.**
+
+For a P(Φ)₂ continuum limit measure μ, the generating functional
+Z[f] = ∫ exp(i⟨ω,f⟩) dμ(ω) is real-valued for all real test functions f.
+
+This follows from the φ → -φ symmetry of the P(Φ)₂ measure. The interaction
+polynomial P(φ) = Σ aₖ :φ^k: has only even Wick powers (since P is semibounded,
+the leading term must be even, and for P(Φ)₂ we use even polynomials).
+Under φ → -φ, the measure is invariant, so:
+  Z[f] = ∫ exp(iφ(f)) dμ(φ) = ∫ exp(-iφ(f)) dμ(φ) = Z̄[f]
+
+Reference: Simon, *The P(φ)₂ Euclidean QFT*, §II.3 (symmetry Z₂);
+Glimm-Jaffe, *Quantum Physics*, §6.1. -/
+axiom pphi2_generating_functional_real (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass)
+    (f : TestFunction2) :
+    (generatingFunctional μ f).im = 0
+
+/-- **Textbook axiom: Continuity of the generating functional under translations.**
+
+The map t ↦ Z[f + τ_{(t,0)} g] is continuous in t : ℝ. This follows from
+the dominated convergence theorem applied to the integral
+∫ exp(i⟨ω, f + τ_{(t,0)} g⟩) dμ(ω), since the integrand is bounded by 1
+and converges pointwise as the test function varies continuously.
+
+Reference: Reed-Simon II, §IX.3 (continuity of characteristic functions). -/
+axiom generatingFunctional_translate_continuous
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (f g : TestFunction2) :
+    Continuous (fun t : ℝ =>
+      generatingFunctional μ (f + SchwartzMap.translate
+        ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g))
+
+/-- **Norm bound on the generating functional.**
+
+For any probability measure μ, the generating functional satisfies
+‖Z[f]‖ ≤ 1. This follows from:
+  ‖Z[f]‖ = ‖∫ exp(i⟨ω,f⟩) dμ(ω)‖ ≤ ∫ ‖exp(i⟨ω,f⟩)‖ dμ(ω) = ∫ 1 dμ = 1. -/
+theorem norm_generatingFunctional_le_one
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (f : TestFunction2) :
+    ‖generatingFunctional μ f‖ ≤ 1 := by
+  unfold generatingFunctional
+  calc ‖∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂μ‖
+      ≤ ∫ ω, ‖Complex.exp (Complex.I * ↑(ω f))‖ ∂μ :=
+        norm_integral_le_integral_norm _
+    _ = ∫ _ : FieldConfig2, (1 : ℝ) ∂μ := by
+        congr 1; ext ω; exact Complex.norm_exp_I_mul_ofReal (ω f)
+    _ = 1 := by
+        rw [integral_const, probReal_univ, smul_eq_mul, mul_one]
+
 /-- **Clustering implies ergodicity for P(Φ)₂ measures.**
 
 For the P(Φ)₂ Euclidean measure, OS4_Clustering implies OS4_Ergodicity.
@@ -953,11 +1028,62 @@ The proof uses three ingredients:
 
 References: Glimm-Jaffe Ch. 6; Simon, The P(φ)₂ Theory, Ch. V;
 Reed-Simon I §XIII.12 (mean ergodic theorem). -/
-axiom os4_clustering_implies_ergodicity (P : InteractionPolynomial)
+theorem os4_clustering_implies_ergodicity (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass)
     (h_cluster : OS4_Clustering μ) :
-    OS4_Ergodicity μ
+    OS4_Ergodicity μ := by
+  intro f g
+  set L := (generatingFunctional μ f).re * (generatingFunctional μ g).re
+  -- Step 1: Show Re(Z[f]·Z[g]) = Re(Z[f])·Re(Z[g]) using reality of Z
+  have hf_real := pphi2_generating_functional_real P mass hmass μ h_limit f
+  have hg_real := pphi2_generating_functional_real P mass hmass μ h_limit g
+  have h_re_product : (generatingFunctional μ f * generatingFunctional μ g).re = L := by
+    simp only [Complex.mul_re, L]
+    rw [hf_real, hg_real]
+    ring
+  -- Step 2: Define the integrand h(t) = Re(Z[f + τ_{(t,0)} g])
+  set h_fun : ℝ → ℝ := fun t =>
+    (generatingFunctional μ (f + SchwartzMap.translate
+      ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g)).re
+  -- Step 3: Show Z[f + τ_t g] → Z[f]·Z[g] in ℂ using clustering
+  have h_Z_tend : Filter.Tendsto
+      (fun t : ℝ => generatingFunctional μ (f + SchwartzMap.translate
+        ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g))
+      Filter.atTop (nhds (generatingFunctional μ f * generatingFunctional μ g)) := by
+    rw [Metric.tendsto_atTop]
+    intro ε hε
+    obtain ⟨R, hR, h_bound⟩ := h_cluster f g ε hε
+    use R + 1
+    intro t ht
+    have h_norm_ge : ‖(WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]‖ > R := by
+      have h1 := PiLp.norm_apply_le
+        ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) (0 : Fin 2)
+      have h2 : ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]).ofLp (0 : Fin 2) = t := by
+        simp [WithLp.equiv_symm_apply, WithLp.ofLp_toLp, Matrix.cons_val_zero]
+      rw [h2, Real.norm_eq_abs] at h1
+      linarith [le_abs_self t]
+    rw [Complex.dist_eq]
+    exact h_bound _ h_norm_ge
+  -- Step 4: Take Re: continuous Re ∘ Z-tendsto gives h(t) → L
+  have h_ptwise : Filter.Tendsto h_fun Filter.atTop (nhds L) := by
+    rw [show L = (generatingFunctional μ f * generatingFunctional μ g).re from h_re_product.symm]
+    have h_re_cont : Filter.Tendsto Complex.re
+        (nhds (generatingFunctional μ f * generatingFunctional μ g))
+        (nhds (generatingFunctional μ f * generatingFunctional μ g).re) :=
+      Complex.continuous_re.continuousAt
+    exact h_re_cont.comp h_Z_tend
+  -- Step 5: h is bounded (|Re(z)| ≤ ‖z‖ ≤ 1)
+  have h_bounded : ∃ M : ℝ, ∀ t, |h_fun t| ≤ M := by
+    use 1
+    intro t
+    exact (Complex.abs_re_le_norm _).trans (norm_generatingFunctional_le_one μ _)
+  -- Step 6: h is measurable (from continuity of Z under translations)
+  have h_meas : Measurable h_fun :=
+    (Complex.continuous_re.comp (generatingFunctional_translate_continuous μ f g)).measurable
+  -- Step 7: Apply Cesàro convergence
+  exact cesaro_set_integral_tendsto h_fun L h_meas h_bounded h_ptwise
 
 /-- **The continuum limit satisfies all five OS axioms.**
 
@@ -977,7 +1103,7 @@ theorem continuumLimit_satisfies_fullOS
   os3 := os3_for_continuum_limit P mass hmass μ hμ h_limit
   os4_clustering := os4_for_continuum_limit P mass hmass μ hμ h_limit
   os4_ergodicity :=
-    os4_clustering_implies_ergodicity P mass hmass μ
+    os4_clustering_implies_ergodicity P mass hmass μ h_limit
       (os4_for_continuum_limit P mass hmass μ hμ h_limit)
 
 /-! ## Existence theorem (using full OS axioms) -/

@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 47 axioms, 0 sorries** | **gaussian-field (upstream): 14 axioms, 0 sorries**
+**pphi2: 49 axioms, 0 sorries** | **gaussian-field (upstream): 10 axioms, 0 sorries**
 
 The 5 former "Option B" axioms in `Hypercontractivity.lean` have been converted to
 theorems (they had `True` conclusions). `schwinger2_convergence` was proved from
@@ -42,7 +42,7 @@ theorems (they had `True` conclusions). `schwinger2_convergence` was proved from
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 6 axioms, 1 proved theorem |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 10 axioms, 0 sorries |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 12 axioms, 0 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 6 | `Bridge.lean` | 6 axioms, 0 sorries |
@@ -278,6 +278,11 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | ~~`latticeAction_translation_invariant`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — relabeling via `Equiv.subRight`. |
+| `cesaro_set_integral_tendsto` | OS2_WardIdentity | Medium | Textbook: continuous Cesàro convergence. If h(t)→L and h bounded measurable, then (1/T)∫₀ᵀ h(t)dt → L. |
+| `pphi2_generating_functional_real` | OS2_WardIdentity | Medium | Textbook: Z[f].im = 0 for P(Φ)₂ measures (φ→-φ symmetry of even polynomial). |
+| `generatingFunctional_translate_continuous` | OS2_WardIdentity | Easy | Textbook: t ↦ Z[f + τ_{(t,0)} g] is continuous (DCT). |
+| ~~`norm_generatingFunctional_le_one`~~ | OS2_WardIdentity | ✅ **Proved** | ‖Z[f]‖ ≤ 1 from norm_integral ≤ ∫ norm + ‖exp(ix)‖=1. |
+| ~~`os4_clustering_implies_ergodicity`~~ | OS2_WardIdentity | ✅ **Proved** | OS4_Clustering → OS4_Ergodicity via reality of Z + Cesàro convergence. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Hard | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson, transferred to limit. Feeds OS0 + OS1. |
 | `rotation_invariance_continuum` | OS2_WardIdentity | Hard | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + anomaly irrelevance. Feeds OS2. |
 | `continuum_exponential_clustering` | OS2_WardIdentity | Hard | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap → exp clustering. Feeds OS4. |
@@ -292,6 +297,8 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `os1_for_continuum_limit`: exponential moments → OS1_Regularity (2 sorries: h_exp_norm_bound, final assembly)
 - `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance (2 sorries)
 - `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (**fully proved**, ε-δ from exp decay)
+- `os4_clustering_implies_ergodicity`: OS4_Clustering → OS4_Ergodicity (**fully proved**, via reality of Z + Cesàro convergence)
+- `norm_generatingFunctional_le_one`: ‖Z[f]‖ ≤ 1 (**fully proved**, norm_integral_le + ‖exp(ix)‖ = 1)
 
 ### Phase 6: OS axioms and assembly
 
@@ -437,10 +444,12 @@ The following theorems have complete proofs (no sorry):
 | `latticeEmbed_eval` | Embedding | Evaluation formula — `rfl` from construction |
 | `transferOperator_spectral` | L2Operator | Spectral decomposition — `compact_selfAdjoint_spectral` from gaussian-field |
 | `latticeEmbed_measurable` | Embedding | `configuration_measurable_of_eval_measurable` + `continuous_apply` for each coordinate |
+| `norm_generatingFunctional_le_one` | OS2_WardIdentity | ‖Z[f]‖ ≤ 1 via norm_integral + ‖exp(ix)‖ = 1 + measure_univ = 1 |
+| `os4_clustering_implies_ergodicity` | OS2_WardIdentity | Clustering → Ergodicity via reality of Z[f], Cesàro convergence, and characteristic function bound |
 
 ---
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **15 axioms and 13 sorries**.
+The gaussian-field library (dependency) has **10 axioms and 0 sorries**.
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.
