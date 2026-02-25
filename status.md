@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 27 axioms, 31 sorries** | **gaussian-field (upstream): 15 axioms, 12 sorries**
+**pphi2: 27 axioms, 31 sorries** | **gaussian-field (upstream): 17 axioms, 12 sorries**
 
 ## File inventory
 
