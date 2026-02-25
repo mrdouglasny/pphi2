@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-02-24 (All placeholder theorems filled with real Lean types)
-**pphi2**: 27 axioms, 31 sorries, 0 placeholder theorems | **gaussian-field**: 15 axioms | **Total**: 42
+**pphi2**: 35 axioms (30 required + 5 Option B), 30 sorries, 0 placeholder theorems | **gaussian-field**: 15 axioms | **Total**: 50 (45 required)
 
 ## Verification Sources
 

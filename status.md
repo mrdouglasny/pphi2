@@ -11,7 +11,11 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 27 axioms, 31 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
+**pphi2: 35 axioms (30 required + 5 Option B), 30 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
+
+Note: The 5 "Option B" axioms in `Hypercontractivity.lean` provide an alternative
+full Gross-Rothaus-Simon proof path but are **not required** for the main pphi2 theorem.
+The main proof uses Option A (Hölder + exponential moments, 3 axioms).
 
 ## File inventory
 
@@ -34,7 +38,8 @@ progressively fill in the axioms with full proofs.
 | 3 | `OSProofs/OS4_MassGap.lean` | 0 axioms, 2 sorries |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 1 sorry |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms |
-| 4 | `ContinuumLimit/Tightness.lean` | 3 axioms, 1 sorry |
+| 4 | `ContinuumLimit/Hypercontractivity.lean` | 8 axioms (3 required Option A + 5 optional Option B) |
+| 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 4 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 2 axioms, 1 sorry |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 3 axioms, 15 sorries |
@@ -246,7 +251,15 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `second_moment_uniform` | Tightness | Hard | ∫|Φ_a(f)|² dν_a ≤ C(f) uniformly in a. Key input: Nelson's hypercontractive estimate + convergence of lattice propagator. |
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
-| ~~`nelson_hypercontractive`~~ | Tightness | **Theorem (sorry)** | Nelson's hypercontractive inequality for `continuumMeasure`. |
+| ~~`nelson_hypercontractive`~~ | Hypercontractivity | **Proved** | Nelson's hypercontractive inequality for `continuumMeasure`. Delegates to `hoelder_transfer`. |
+| `gaussian_hypercontractivity_continuum` | Hypercontractivity | Medium | Gaussian hypercontractivity in continuum-embedded form. From `gaussian_hypercontractive` (gaussian-field) via pushforward. |
+| `exponential_moment_bound` | Hypercontractivity | Hard | ∫ exp(-V_a)² dμ_{GFF} ≤ K uniformly in a. Core analytic estimate (Nelson/Simon §V). |
+| `hoelder_transfer` | Hypercontractivity | Medium | Cauchy-Schwarz transfers Gaussian hypercontractivity to interacting measure using exponential moment bound. |
+| `wick_is_eigenfunction` | Hypercontractivity | Medium | (Option B) Wick monomials :φ^n: are eigenfunctions of the number operator. |
+| `ou_semigroup_exists` | Hypercontractivity | Medium | (Option B) OU semigroup P_t exists on L²(μ_GFF) with Mehler formula. |
+| `ou_semigroup_eigenvalue` | Hypercontractivity | Medium | (Option B) P_t(:φ^n:) = e^{-nt}·:φ^n:. From Mehler kernel reproducing formula. |
+| `gross_theorem_lsi_to_hypercontractivity` | Hypercontractivity | Hard | (Option B) Gross's theorem: LSI ⟹ OU hypercontractivity via Rothaus-Simon ODE. |
+| `bakry_emery_gaussian_lsi` | Hypercontractivity | Medium | (Option B) Bakry-Émery Γ₂ criterion gives LSI(m²) for Gaussian. |
 | ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — Prokhorov's theorem (sequential version). Now a theorem with complete proof. |
 | ~~`schwinger2_convergence`~~ | Convergence | **Theorem (sorry)** | 2-point Schwinger functions converge along subsequence. |
 | ~~`schwinger_n_convergence`~~ | Convergence | **Theorem (sorry)** | n-point Schwinger functions converge along subsequence. |
@@ -351,7 +364,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 
 ### Tier 2: Core analytic results (the hard axioms)
 
-5. **`nelson_hypercontractive`** — Deep (Gross log-Sobolev). Key engine for all moment bounds.
+5. **Hypercontractivity axioms** (`gaussian_hypercontractivity_continuum`, `exponential_moment_bound`, `hoelder_transfer`) — Hölder + exponential moments approach. `nelson_hypercontractive` proved via `hoelder_transfer`.
 6. **`second_moment_uniform` + `continuumMeasures_tight`** — Tightness argument. Depends on Nelson.
 7. **`spectral_gap_uniform`** — Uniform mass gap. Kato-Rellich perturbation theory.
 8. **`ward_identity_lattice` + `anomaly_vanishes`** — Ward identity + power counting for rotation invariance.
@@ -427,5 +440,5 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **14 axioms and 23 sorries**.
+The gaussian-field library (dependency) has **15 axioms and 13 sorries**.
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.

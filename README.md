@@ -52,13 +52,13 @@ The construction proceeds in six phases:
 ## Current status
 
 All six phases are structurally complete and the full project builds
-(`lake build`, 3138 jobs). Every theorem has a real Lean type — no `True`
-placeholders remain. The 27 axioms are leaf-level mathematical facts (transfer
-matrix properties, tightness bounds, exponential moment estimates); the 31
-sorries are well-typed intermediate proof steps connecting axioms to the OS
-properties.
+(`lake build`, 3139 jobs). Every theorem has a real Lean type — no `True`
+placeholders remain. Of the 35 axioms, 30 are required for the main theorem
+and 5 are optional (an alternative "Option B" Gross-Rothaus-Simon proof path
+for hypercontractivity). The 30 sorries are well-typed intermediate proof steps
+connecting axioms to the OS properties.
 
-- **pphi2:** 27 axioms, 31 sorries
+- **pphi2:** 35 axioms (30 required + 5 optional), 30 sorries
 - **gaussian-field** (upstream dependency): 15 axioms, 13 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
@@ -84,6 +84,7 @@ Pphi2/
     SchurProduct.lean                -- Schur (Hadamard) product theorem
     HadamardExp.lean                 -- Entrywise exponential preserves PSD/PD
   ContinuumLimit/                    -- Phase 4: Embedding, tightness, convergence
+    Hypercontractivity.lean          -- Nelson's estimate (Option A: Holley-Stroock, Option B: Gross-Rothaus-Simon)
   OSAxioms.lean                      -- Phase 6: OS axiom definitions (matching OSforGFF)
   Main.lean                          -- Phase 6: Main theorem assembly
   Bridge.lean                        -- Bridge between pphi2 and Phi4 approaches
