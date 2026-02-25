@@ -128,25 +128,6 @@ theorem wickConstant_antitone_mass (a : ℝ) (ha : 0 < a)
   · -- m₁² ≤ m₂²
     exact pow_le_pow_left₀ (le_of_lt hm₁) hm₂ 2
 
-/-! ## Asymptotics
-
-As a → 0 with N = L/a, the Wick constant diverges logarithmically.
-This is the ONLY UV divergence in P(Φ)₂ (super-renormalizability). -/
-
-/-- The Wick constant diverges as `(1/2π) log(1/a)` in d=2.
-
-More precisely, for d = 2 and N = ⌊L/a⌋:
-  `c_a = (1/2π) log(1/a) + O(1)`
-
-The proof uses Euler-Maclaurin summation to compare the lattice sum
-`Σ_k 1/(k² + m²)` with the integral `∫ dk/(k² + m²) = (1/2π) log(Λ²/m²)`.
-
-This is axiomatized for now; the upper bound `wickConstant_le_inv_mass_sq`
-already provides a (crude) uniform bound. -/
-axiom wickConstant_log_divergence (mass : ℝ) (hmass : 0 < mass) :
-    ∃ C : ℝ, ∀ (N : ℕ) [NeZero N] (a : ℝ), 0 < a → a ≤ 1 →
-    |wickConstant 2 N a mass - (1 / (2 * π)) * Real.log (1 / a)| ≤ C
-
 end Pphi2
 
 end

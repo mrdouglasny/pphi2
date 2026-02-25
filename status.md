@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 46 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types) | **gaussian-field (upstream): 8 axioms, 0 sorries**
+**pphi2: 44 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 8 axioms, 0 sorries**
 
 The 5 "Option B" axioms in `HypercontractivityOptionB.lean` provide an alternative
 proof path via the Gross-Rothaus-Simon OU semigroup framework. They currently have
@@ -27,7 +27,7 @@ required for the main theorem. `schwinger2_convergence` was proved from
 |-------|------|--------|
 | Core | `Polynomial.lean` | 0 axioms |
 | 1 | `WickOrdering/WickPolynomial.lean` | 0 axioms |
-| 1 | `WickOrdering/Counterterm.lean` | 1 axiom |
+| 1 | `WickOrdering/Counterterm.lean` | 0 axioms |
 | 1 | `InteractingMeasure/LatticeAction.lean` | 0 axioms |
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
 | 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
@@ -50,7 +50,7 @@ required for the main theorem. `schwinger2_convergence` was proved from
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
-| 6 | `Bridge.lean` | 6 axioms, 0 sorries |
+| 6 | `Bridge.lean` | 5 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
@@ -200,14 +200,8 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 
 ### Phase 1: Wick ordering and lattice measure
 
-| Axiom | File | Difficulty | Description |
-|-------|------|-----------|-------------|
-| ~~`polynomial_lower_bound`~~ | Polynomial | ✅ Removed | Dead code — superseded by `wickPolynomial_bounded_below` in WickPolynomial.lean. |
-| ~~`wickMonomial_eq_hermite`~~ | WickPolynomial | ~~Medium~~ | **Proved** — via `wick_eq_hermiteR_rpow` from gaussian-field HermiteWick |
-| ~~`wickPolynomial_bounded_below`~~ | WickPolynomial | ~~Medium~~ | **Proved** — Even-degree Wick polynomial with positive leading coeff is bounded below. Proved via `poly_even_degree_bounded_below` (leading term domination + `Continuous.exists_forall_le`). |
-| `wickConstant_log_divergence` | Counterterm | Medium | `c_a ~ (1/2π) log(1/a)` as a→0. Needs lattice Green's function asymptotics. |
-| `latticeInteraction_single_site` | LatticeAction | **Proved** | V_a decomposes as sum of single-site functions. Enables FKG via log-supermodularity. (Replaced false `latticeInteraction_convex` axiom.) |
-| ~~`field_all_moments_finite`~~ | Normalization | ✅ Proved | All moments finite: `pairing_is_gaussian` + `integrable_pow_of_mem_interior_integrableExpSet` gives Gaussian moments, domination by `exp(B)` handles the interaction weight. |
+All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
+(a pure computation, unused by the proof chain) was moved to `Unused/WickAsymptotics.lean`.
 
 ### Phase 2: Transfer matrix and reflection positivity
 
@@ -320,7 +314,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | `pphi2_nontriviality` | Main | Hard | ∫ (ω f)² dμ > 0 for all f ≠ 0. Correlation inequalities (Griffiths, FKG). |
 | `pphi2_nonGaussianity` | Main | Hard | ∫ (ω f)⁴ dμ − 3(∫ (ω f)² dμ)² ≠ 0. Perturbation theory, O(λ) at weak coupling. |
 | `measure_determined_by_schwinger` | Bridge | Medium | Moment determinacy on S'(ℝ²) with exponential (Fernique-type) moment bound. |
-| `wick_constant_comparison` | Bridge | Medium | Wick constant c_a ≈ (2π)⁻¹ log(1/a) with bounded remainder. |
+| ~~`wick_constant_comparison`~~ | ~~Bridge~~ | — | **Removed** — duplicate of `wickConstant_log_divergence`, moved to Unused/. |
 | `same_continuum_measure` | Bridge | Medium | pphi2 and Phi4 constructions agree at weak coupling. Requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
 | `os2_from_phi4` | Bridge | Medium | OS2 for Phi4 continuum limit. Requires `IsPhi4ContinuumLimit` hypothesis. |
 | `os3_from_pphi2` | Bridge | Medium | OS3 for pphi2 continuum limit. Requires `IsPphi2ContinuumLimit` hypothesis. |

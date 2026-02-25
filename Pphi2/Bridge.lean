@@ -211,25 +211,6 @@ axiom measure_determined_by_schwinger
       ∫ ω : FieldConfig, ∏ i, ω (f i) ∂ν) :
     μ = ν
 
-/-- **Wick ordering equivalence.**
-
-The lattice Wick constant c_a = G_a(0,0) and the continuum regularized
-covariance c_κ with κ = 1/a satisfy |c_a − c_{1/a}| ≤ C uniformly in a.
-
-Both diverge as (2π)⁻¹ log(1/a), and their difference is bounded because
-the lattice propagator and the continuum propagator with the same mass agree
-at leading order in Fourier space:
-  G_a(k) = [a⁻²Σᵢ 2(1−cos(akᵢ)) + m²]⁻¹ → [k² + m²]⁻¹
-and the diagonal G_a(0,0) = (2π)⁻² ∫ G_a(k) dk picks up the same log
-divergence from the k → ∞ region, with O(1) differences from the lattice
-discretization of the integral.
-
-Note: C depends on N (lattice size) and mass, but is uniform in a. -/
-axiom wick_constant_comparison (N : ℕ) [NeZero N]
-    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
-    ∃ C : ℝ, 0 < C ∧
-    |wickConstant 2 N a mass - (2 * Real.pi)⁻¹ * Real.log (a⁻¹)| ≤ C
-
 /-- **Schwinger function agreement.**
 
 For the φ⁴ interaction at weak coupling, the n-point Schwinger functions
