@@ -50,6 +50,27 @@ open GaussianField MeasureTheory LineDeriv
 
 namespace Pphi2
 
+/-! ## Schwartz integrability helpers -/
+
+/-- Schwartz functions have integrable `‖f x‖ ^ p` for any `p > 0`.
+This is a consequence of `SchwartzMap.eLpNorm_lt_top` and `integrable_norm_rpow_iff`. -/
+lemma schwartz_integrable_norm_rpow {E F : Type*}
+    [NormedAddCommGroup E] [NormedSpace ℝ E] [MeasureSpace E]
+    [OpensMeasurableSpace E] [BorelSpace E] [SecondCountableTopology E]
+    [NormedAddCommGroup F] [NormedSpace ℝ F] [SecondCountableTopologyEither E F]
+    [Measure.HasTemperateGrowth (volume : Measure E)]
+    (f : SchwartzMap E F) {p : ℝ} (hp : 0 < p) :
+    Integrable (fun x => ‖f x‖ ^ p) volume := by
+  have hq : ENNReal.ofReal p ≠ 0 := by
+    simp [ENNReal.ofReal_eq_zero, not_le.mpr hp]
+  have hq' : ENNReal.ofReal p ≠ ⊤ := ENNReal.ofReal_ne_top
+  have key : (ENNReal.ofReal p).toReal = p := ENNReal.toReal_ofReal (le_of_lt hp)
+  have := (MeasureTheory.integrable_norm_rpow_iff
+    (SchwartzMap.continuous f).aestronglyMeasurable hq hq').mpr
+    ⟨(SchwartzMap.continuous f).aestronglyMeasurable, SchwartzMap.eLpNorm_lt_top _ _⟩
+  simp only [key] at this
+  exact this
+
 variable (d N : ℕ) [NeZero N]
 
 /-! ## Lattice symmetries
@@ -252,16 +273,64 @@ RG sense: its contribution to correlation functions is suppressed by
 a^{dim - d} = a² as a → 0. -/
 theorem anomaly_scaling_dimension (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    -- The lattice Laplacian dispersion relation differs from the continuum by O(a²k⁴):
-    -- Σᵢ (2/a²)(1 - cos(a·kᵢ)) = ‖k‖² - (a²/12)·Σᵢ kᵢ⁴ + O(a⁴)
-    -- This is equivalent to dim(O_break) = 4 > d = 2, making O_break RG-irrelevant.
-    -- We state this as: the lattice dispersion approximation error is bounded by a² × (k-norm⁴).
+    -- The lattice Laplacian dispersion relation differs from the continuum by O(a²):
+    -- Σᵢ (2/a²)(1 - cos(a·kᵢ)) = ‖k‖² + O(a²·(Σkᵢ⁴ + Σkᵢ²))
+    -- Uses cos_bound for |ak|≤1 (Taylor) and crude bound for |ak|>1.
     ∀ (k : Fin 2 → ℝ), a ≤ 1 →
     |∑ i : Fin 2, (2 / a ^ 2) * (1 - Real.cos (a * k i)) -
      ∑ i : Fin 2, (k i) ^ 2| ≤
-    (a ^ 2 / 12) * ∑ i : Fin 2, (k i) ^ 4 + a ^ 4 * ∑ i : Fin 2, (k i) ^ 6 := by
-  intro k _ha1
-  sorry
+    a ^ 2 * (∑ i : Fin 2, (k i) ^ 4 + 3 * ∑ i : Fin 2, (k i) ^ 2) := by
+  intro k ha1
+  -- Reduce to per-component bound
+  suffices key : ∀ i : Fin 2, |2 / a ^ 2 * (1 - Real.cos (a * k i)) - (k i) ^ 2| ≤
+      a ^ 2 * ((k i) ^ 4 + 3 * (k i) ^ 2) by
+    have h_split : ∑ i, 2 / a ^ 2 * (1 - Real.cos (a * k i)) - ∑ i, k i ^ 2 =
+        ∑ i : Fin 2, (2 / a ^ 2 * (1 - Real.cos (a * k i)) - (k i) ^ 2) :=
+      (Finset.sum_sub_distrib _ _).symm
+    rw [h_split]
+    calc |∑ i : Fin 2, (2 / a ^ 2 * (1 - Real.cos (a * k i)) - (k i) ^ 2)|
+        ≤ ∑ i : Fin 2, |2 / a ^ 2 * (1 - Real.cos (a * k i)) - (k i) ^ 2| :=
+          Finset.abs_sum_le_sum_abs _ _
+      _ ≤ ∑ i : Fin 2, (a ^ 2 * ((k i) ^ 4 + 3 * (k i) ^ 2)) :=
+          Finset.sum_le_sum (fun i _ => key i)
+      _ = a ^ 2 * (∑ i, (k i) ^ 4 + 3 * ∑ i, (k i) ^ 2) := by
+          simp only [Fin.sum_univ_two]; ring
+  intro i
+  have ha2 : (0 : ℝ) < a ^ 2 := by positivity
+  -- Clear the denominator via field_simp
+  have h_equiv : 2 / a ^ 2 * (1 - Real.cos (a * k i)) - (k i) ^ 2 =
+      (2 * (1 - Real.cos (a * k i)) - a ^ 2 * (k i) ^ 2) / a ^ 2 := by
+    field_simp
+  rw [h_equiv, abs_div, abs_of_pos ha2, div_le_iff₀ ha2]
+  -- Goal: |2(1-cos(ak)) - a²k²| ≤ a²(k⁴ + 3k²) * a² = a⁴(k⁴ + 3k²)
+  -- Key bounds: 0 ≤ 2(1-cos(ak)) ≤ (ak)² = a²k², so diff is nonpositive
+  have h_cos_le : Real.cos (a * k i) ≤ 1 := Real.cos_le_one _
+  have h_cos_ge := Real.one_sub_sq_div_two_le_cos (x := a * k i)
+  have h_nonneg : 0 ≤ 2 * (1 - Real.cos (a * k i)) := by nlinarith
+  have h_le_sq : 2 * (1 - Real.cos (a * k i)) ≤ (a * k i) ^ 2 := by nlinarith
+  have h_nonpos : 2 * (1 - Real.cos (a * k i)) - a ^ 2 * (k i) ^ 2 ≤ 0 := by nlinarith
+  rw [abs_of_nonpos h_nonpos, neg_sub]
+  -- Goal: a²k² - 2(1-cos(ak)) ≤ a⁴(k⁴ + 3k²)
+  by_cases hak : |a * k i| ≤ 1
+  · -- Taylor bound: |cos(x) - (1 - x²/2)| ≤ |x|⁴ * (5/96)
+    -- gives: a²k² - 2(1-cos(ak)) ≤ 5a⁴k⁴/48 ≤ a⁴k⁴
+    have hcb := Real.cos_bound hak
+    have h1 : Real.cos (a * k i) - (1 - (a * k i) ^ 2 / 2) ≤
+        |a * k i| ^ 4 * (5 / 96) := (abs_le.mp hcb).2
+    have h_abs_pow : |a * k i| ^ 4 = a ^ 4 * (k i) ^ 4 := by
+      have : |a * k i| ^ 2 = (a * k i) ^ 2 := sq_abs _
+      nlinarith [sq_nonneg (|a * k i|), sq_nonneg (a * k i), sq_abs (a * k i)]
+    nlinarith [sq_nonneg (k i), sq_nonneg a]
+  · -- |ak| > 1: diff ≤ a²k² ≤ a⁴k⁴ (since a²k² ≥ 1)
+    push_neg at hak
+    have h_sq : 1 < (a * k i) ^ 2 := by
+      nlinarith [sq_abs (a * k i), abs_nonneg (a * k i)]
+    -- a²k² ≤ a⁴k⁴ since 1 ≤ a²k² (multiply both sides by a²k²)
+    have h_bound : a ^ 2 * (k i) ^ 2 ≤ a ^ 4 * (k i) ^ 4 := by
+      have : 0 ≤ a ^ 2 * (k i) ^ 2 * (a ^ 2 * (k i) ^ 2 - 1) :=
+        mul_nonneg (by nlinarith) (by nlinarith)
+      nlinarith
+    nlinarith [sq_nonneg (k i), sq_nonneg a]
 
 /-- **The anomaly vanishes as O(a²).**
 
@@ -658,8 +727,25 @@ theorem os1_for_continuum_limit (P : InteractionPolynomial)
     sorry -- Jensen's inequality + H⁻¹ norm bounds variance of ⟨ω, g⟩
   -- Step 4: Combine: ‖Z_ℂ[J]‖ ≤ exp(c(‖Im J‖₁ + ‖Im J‖₂²)) ≤ exp(c(‖J‖₁ + ‖J‖₂²))
   obtain ⟨c, hc, h_norm⟩ := h_exp_norm_bound
+  -- Combination: h_bound + h_norm + (‖Im J‖ ≤ ‖J‖) gives OS1
   exact ⟨2, c, one_le_two, le_refl _, hc, fun J => by
-    sorry⟩ -- chain: h_bound J, h_norm (schwartzIm J), ‖Im J‖ ≤ ‖J‖
+    calc ‖generatingFunctionalℂ μ J‖
+        ≤ ∫ ω : FieldConfig2, Real.exp |ω (schwartzIm J)| ∂μ := h_bound J
+      _ ≤ Real.exp (c * ((∫ x, ‖schwartzIm J x‖) + ∫ x, ‖schwartzIm J x‖ ^ (2 : ℝ))) :=
+            h_norm (schwartzIm J)
+      _ ≤ Real.exp (c * ((∫ x : SpaceTime2, ‖J x‖) + ∫ x : SpaceTime2, ‖J x‖ ^ (2 : ℝ))) := by
+            apply Real.exp_le_exp.mpr
+            apply mul_le_mul_of_nonneg_left _ (le_of_lt hc)
+            have hIm : ∀ x, ‖schwartzIm J x‖ ≤ ‖J x‖ :=
+              fun x => RCLike.norm_im_le_norm (J x)
+            apply add_le_add
+            · exact integral_mono
+                (SchwartzMap.integrable (schwartzIm J)).norm
+                (SchwartzMap.integrable J).norm hIm
+            · exact integral_mono
+                (schwartz_integrable_norm_rpow (schwartzIm J) two_pos)
+                (schwartz_integrable_norm_rpow J two_pos)
+                (fun x => Real.rpow_le_rpow (norm_nonneg _) (hIm x) (by norm_num))⟩
 
 /-- **OS2 for the continuum limit** from translation + rotation invariance.
 
@@ -690,7 +776,15 @@ theorem os2_for_continuum_limit (P : InteractionPolynomial)
       generatingFunctional μ f =
       generatingFunctional μ (euclideanAction2 g f) := by
     intro g f
-    sorry -- decompose g = (R, t), use h_trans then h_rot
+    -- Decompose g = (R, t): Z[f] = Z[R·f] (rotation) = Z[τ_t(R·f)] (translation) = Z[g·f]
+    calc generatingFunctional μ f
+        = generatingFunctional μ ((euclideanAction2 ⟨g.R, 0⟩) f) := by rw [h_rot g.R f]
+      _ = generatingFunctional μ ((SchwartzMap.translate g.t)
+            ((euclideanAction2 ⟨g.R, 0⟩) f)) := h_trans g.t _
+      _ = generatingFunctional μ ((euclideanAction2 g) f) := by
+            congr 1; ext x
+            show f (g.R.symm ((x - g.t) - 0)) = f (g.R.symm (x - g.t))
+            simp [sub_zero]
   -- Step 2: Extend to complex test functions.
   -- Z_ℂ[J] = ∫ exp(i⟨ω, Re J⟩ - ⟨ω, Im J⟩) dμ. Under g ∈ E(2):
   -- ⟨ω, Re(g·J)⟩ = ⟨g⁻¹·ω, Re J⟩ and ⟨ω, Im(g·J)⟩ = ⟨g⁻¹·ω, Im J⟩.

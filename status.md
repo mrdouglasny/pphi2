@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 34 axioms (29 required + 5 Option B), 27 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
+**pphi2: 34 axioms (29 required + 5 Option B), 24 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
 
 Note: The 5 "Option B" axioms in `Hypercontractivity.lean` provide an alternative
 full Gross-Rothaus-Simon proof path but are **not required** for the main pphi2 theorem.
@@ -42,7 +42,7 @@ The main proof uses Option A (Cauchy-Schwarz density transfer, 2 axioms + 1 prov
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 4 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 2 axioms, 1 sorry |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 3 axioms, 13 sorries |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 3 axioms, 10 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 0 axioms, 2 sorries |
 | 6 | `Bridge.lean` | 5 axioms, 3 sorries |
@@ -286,7 +286,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `latticeMeasure_translation_invariant`: integral equality under lattice translation (sorry)
 - `translation_invariance_continuum`: `Z[τ_v f] = Z[f]` (3 sorries: continuity, density, combine)
 - `ward_identity_lattice`: Ward identity bound (proved; pending lattice rotation action)
-- `anomaly_scaling_dimension`: lattice dispersion Taylor error bound (sorry)
+- `anomaly_scaling_dimension`: lattice dispersion Taylor error bound (**proved**, cos_bound + crude bound)
 - `anomaly_vanishes`: ‖Z[R·f] - Z[f]‖ ≤ C·a² for continuum-embedded lattice measure (sorry)
 - `os0_for_continuum_limit`: exponential moments → OS0_Analyticity (3 sorries)
 - `os1_for_continuum_limit`: exponential moments → OS1_Regularity (3 sorries)

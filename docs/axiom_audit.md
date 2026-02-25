@@ -155,7 +155,7 @@ meaningful mathematical types.
 ### OS2: Euclidean Invariance (Ward Identity)
 - `latticeMeasure_translation_invariant` — Integral equality under lattice translation (sorry)
 - `ward_identity_lattice` — Ward identity bound: $|∫ F dμ - ∫ F∘R_θ dμ| ≤ C|θ|a²$ (proved, pending rotation action)
-- `anomaly_scaling_dimension` — Lattice dispersion Taylor error $≤ (a²/12)Σ k_i⁴ + a⁴ Σ k_i⁶$ (sorry)
+- `anomaly_scaling_dimension` — Lattice dispersion Taylor error $≤ a²(Σ k_i⁴ + 3Σ k_i²)$ (**proved**, cos_bound + crude bound)
 - `anomaly_vanishes` — $‖Z[R·f] - Z[f]‖ ≤ C·a²$ for continuum-embedded lattice measure (sorry)
 
 ### OS3: Reflection Positivity
