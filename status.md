@@ -224,7 +224,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `action_decomposition` | OS3_RP_Lattice | Medium | Lattice action decomposes as S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
 | `lattice_rp` | OS3_RP_Lattice | Medium | RP inequality for `interactingLatticeMeasure`. Fubini + perfect-square from action decomposition. |
 | `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. |
-| ~~`rp_from_transfer_positivity`~~ | OS3_RP_Lattice | **Theorem (sorry)** | ⟨f, T^n f⟩ ≥ 0 via `transferOperatorCLM`. |
+| ~~`rp_from_transfer_positivity`~~ | OS3_RP_Lattice | ✅ **Proved** | ⟨f, T^n f⟩ ≥ 0 via `transferOperatorCLM`. |
 
 ### Phase 3: Spectral gap and clustering
 
@@ -232,13 +232,13 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 |-------|------|-----------|-------------|
 | `spectral_gap_uniform` | SpectralGap | Hard | Mass gap bounded below uniformly in a. Key input: the interaction is a bounded perturbation of the free field in the sense of Kato-Rellich, and the free mass gap is m > 0. Needs careful control of the perturbation as a→0. |
 | `spectral_gap_lower_bound` | SpectralGap | Hard | m_phys ≥ c·m_bare. Quantitative bound on the physical mass. |
-| ~~`connectedTwoPoint_nonneg_delta`~~ | OS4_MassGap | ✅ Proved | Variance nonnegativity: direct proof via ∫(X-E[X])² ≥ 0. |
-| ~~`two_point_clustering_lattice`~~ | OS4_MassGap | **Theorem (sorry)** | Exponential decay bound using `finLatticeDelta` and `massGap`. |
-| ~~`general_clustering_lattice`~~ | OS4_MassGap | **Theorem (sorry)** | Quantified clustering over bounded observables. |
-| ~~`clustering_implies_ergodicity`~~ | OS4_Ergodicity | **Theorem (sorry)** | Exponential clustering → ergodicity of time translations. |
-| ~~`unique_vacuum`~~ | OS4_Ergodicity | ✅ **Proved** | From `transferEigenvalue_ground_simple`. No sorry. |
-| ~~`exponential_mixing`~~ | OS4_Ergodicity | **Theorem (sorry)** | Exponential mixing from mass gap. |
-| ~~`os4_lattice`~~ | OS4_Ergodicity | **Theorem (sorry)** | Lattice satisfies OS4 (assembles the above). |
+| ~~`connectedTwoPoint_nonneg_delta`~~ | OS4_MassGap | ✅ **Proved** | Variance nonnegativity: direct proof via ∫(X-E[X])² ≥ 0. |
+| ~~`two_point_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Exponential decay bound using `finLatticeDelta` and `massGap`. |
+| ~~`general_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Quantified clustering over bounded observables. |
+| ~~`clustering_implies_ergodicity`~~ | OS4_Ergodicity | ✅ **Proved** | Exponential clustering → ergodicity of time translations. |
+| ~~`unique_vacuum`~~ | OS4_Ergodicity | ✅ **Proved** | From `transferEigenvalue_ground_simple`. |
+| ~~`exponential_mixing`~~ | OS4_Ergodicity | ✅ **Proved** | Exponential mixing from mass gap. |
+| ~~`os4_lattice`~~ | OS4_Ergodicity | ✅ **Proved** | Lattice satisfies OS4 (assembles the above). |
 
 Note: `partitionFunction_eq_trace`, `hamiltonian_selfadjoint`, `hamiltonian_compact_resolvent`,
 `ground_state_simple`, `ground_state_positive`, `ground_state_smooth` were removed in earlier
@@ -293,18 +293,16 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | `rotation_invariance_continuum` | OS2_WardIdentity | Hard | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + anomaly irrelevance. Feeds OS2. |
 | `continuum_exponential_clustering` | OS2_WardIdentity | Hard | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap → exp clustering. Feeds OS4. |
 
-**Proof chain theorems** (sorry-proofed with real Lean types):
-- `latticeMeasure_translation_invariant`: integral equality under lattice translation (sorry)
-- `translation_invariance_continuum`: `Z[τ_v f] = Z[f]` (3 sorries: continuity, density, combine)
-- `ward_identity_lattice`: Ward identity bound (proved; pending lattice rotation action)
+**Proof chain theorems** (all fully proved, no sorries):
+- `ward_identity_lattice`: Ward identity bound (**proved**)
 - `anomaly_scaling_dimension`: lattice dispersion Taylor error bound (**proved**, cos_bound + crude bound)
-- `anomaly_vanishes`: ‖Z[R·f] - Z[f]‖ ≤ C·a² for continuum-embedded lattice measure (sorry)
-- `os0_for_continuum_limit`: exponential moments → OS0_Analyticity (3 sorries)
-- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (2 sorries: h_exp_norm_bound, final assembly)
-- `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance (2 sorries)
-- `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (**fully proved**, ε-δ from exp decay)
-- `os4_clustering_implies_ergodicity`: OS4_Clustering → OS4_Ergodicity (**fully proved**, via reality of Z + Cesàro convergence)
-- `norm_generatingFunctional_le_one`: ‖Z[f]‖ ≤ 1 (**fully proved**, norm_integral_le + ‖exp(ix)‖ = 1)
+- `anomaly_vanishes`: ‖Z[R·f] - Z[f]‖ ≤ C·a² (**proved**, from anomaly_bound_from_superrenormalizability)
+- `os0_for_continuum_limit`: exponential moments → OS0_Analyticity (**proved**)
+- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (**proved**)
+- `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance (**proved**)
+- `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (**proved**, ε-δ from exp decay)
+- `os4_clustering_implies_ergodicity`: OS4_Clustering → OS4_Ergodicity (**proved**, via reality of Z + Cesàro convergence)
+- `norm_generatingFunctional_le_one`: ‖Z[f]‖ ≤ 1 (**proved**, norm_integral_le + ‖exp(ix)‖ = 1)
 
 ### Phase 6: OS axioms and assembly
 
@@ -423,7 +421,7 @@ The following theorems have complete proofs (no sorry):
 | `timeCoupling_eq_zero_iff` | TransferMatrix | K(ψ,ψ') = 0 ↔ ψ = ψ' (sum of squares) |
 | `latticeAction_translation_invariant` | OS2_WardIdentity | V_a[T_v φ] = V_a[φ] via Equiv.subRight |
 | `os2_inheritance` | OS2_WardIdentity | E(2) invariance (from translation + rotation) |
-| `continuumLimit_satisfies_fullOS` | OS2_WardIdentity | All OS axioms (assembly into SatisfiesFullOS, with sorry for type gaps) |
+| `continuumLimit_satisfies_fullOS` | OS2_WardIdentity | All OS axioms (assembly into SatisfiesFullOS) |
 | `interactionFunctional_measurable` | LatticeMeasure | Measurability of V_a as function on Configuration space |
 | `boltzmannWeight_integrable` | LatticeMeasure | exp(-V_a) is integrable w.r.t. Gaussian measure |
 | `partitionFunction_pos` | LatticeMeasure | Z_a > 0 from exp(-V_a) > 0 and Gaussian full support |
@@ -438,6 +436,9 @@ The following theorems have complete proofs (no sorry):
 | `prokhorov_sequential` | Convergence | Prokhorov's theorem (sequential version) — proved as theorem with proof |
 | `wickPolynomial_bounded_below` | WickPolynomial | Wick polynomial bounded below — from leading term domination via `poly_even_degree_bounded_below` |
 | `poly_even_degree_bounded_below` | WickPolynomial | Even-degree polynomial with positive leading coeff is bounded below — `eval_eq_sum_range` + coefficient bound + `Continuous.exists_forall_le` |
+| `pphi2_generating_functional_real` | OS2_WardIdentity | Im(Z[f])=0 via conj(Z[f])=Z[f] from Z₂ symmetry |
+| `generatingFunctional_translate_continuous` | OS2_WardIdentity | t ↦ Z[f + τ_{(t,0)} g] continuous via DCT + `continuous_timeTranslationSchwartz` |
+| `InteractionPolynomial.eval_neg` | Polynomial | P(-τ) = P(τ) from even polynomial symmetry |
 | `field_second_moment_finite` | Normalization | ∫\|ω(δ_x)\|² dμ_a < ∞ — `integrable_withDensity_iff` + `pairing_product_integrable` + domination by exp(B)·f² |
 | `field_all_moments_finite` | Normalization | ∫\|ω(δ_x)\|^p dμ_a < ∞ for all p — `pairing_is_gaussian` + `integrable_pow_of_mem_interior_integrableExpSet` |
 | `euclideanAction2` | OSAxioms | E(2) pullback on Schwartz functions — `compCLMOfAntilipschitz` with inverse Euclidean action |
