@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 34 axioms (29 required + 5 Option B), 23 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
+**pphi2: 35 axioms (30 required + 5 Option B), 22 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
 
 Note: The 5 "Option B" axioms in `Hypercontractivity.lean` provide an alternative
 full Gross-Rothaus-Simon proof path but are **not required** for the main pphi2 theorem.
@@ -30,9 +30,9 @@ The main proof uses Option A (Cauchy-Schwarz density transfer, 2 axioms + 1 prov
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
 | 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
-| 2 | `TransferMatrix/L2Operator.lean` | 7 axioms (3 operator + 4 eigenvalue) |
+| 2 | `TransferMatrix/L2Operator.lean` | 8 axioms (4 operator + 4 eigenvalue) |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
-| 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 2 sorries |
+| 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 1 sorry |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
 | 3 | `OSProofs/OS4_MassGap.lean` | 0 axioms, 2 sorries |

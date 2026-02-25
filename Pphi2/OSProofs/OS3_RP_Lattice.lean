@@ -228,7 +228,29 @@ theorem rp_from_transfer_positivity
     -- T^n is also positive, so the inner product is nonneg.
     0 ≤ @inner ℝ _ _ f
       ((transferOperatorCLM N P a mass ha hmass ^ n) f) := by
-  sorry
+  set T := transferOperatorCLM N P a mass ha hmass with hT
+  have hsa : IsSelfAdjoint T := transferOperator_isSelfAdjoint N P a mass ha hmass
+  have h_pos := transferOperator_inner_nonneg N P a mass ha hmass
+  rcases Nat.even_or_odd n with ⟨m, hm⟩ | ⟨m, hm⟩
+  · -- Even case: n = m + m, ⟨f, T^{2m}f⟩ = ‖T^m f‖² ≥ 0
+    subst hm
+    rw [pow_add, ContinuousLinearMap.mul_apply,
+        ← ContinuousLinearMap.adjoint_inner_left (T ^ m) ((T ^ m) f) f]
+    have : ContinuousLinearMap.adjoint (T ^ m) = T ^ m := (hsa.pow m).star_eq
+    rw [this]
+    exact real_inner_self_nonneg
+  · -- Odd case: n = 2m+1, ⟨f, T^{2m+1}f⟩ = ⟨T^m f, T(T^m f)⟩ ≥ 0
+    subst hm
+    have key : @inner ℝ _ _ f ((T ^ (2 * m + 1)) f) =
+        @inner ℝ _ _ ((T ^ m) f) (T ((T ^ m) f)) := by
+      conv_lhs => rw [show 2 * m + 1 = m + 1 + m from by omega, pow_add,
+          ContinuousLinearMap.mul_apply, pow_succ,
+          ContinuousLinearMap.mul_apply]
+      rw [← ContinuousLinearMap.adjoint_inner_left (T ^ m) (T ((T ^ m) f)) f]
+      have : ContinuousLinearMap.adjoint (T ^ m) = T ^ m := (hsa.pow m).star_eq
+      rw [this]
+    rw [key]
+    exact h_pos ((T ^ m) f)
 
 end Pphi2
 

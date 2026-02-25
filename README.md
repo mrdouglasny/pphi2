@@ -53,12 +53,12 @@ The construction proceeds in six phases:
 
 All six phases are structurally complete and the full project builds
 (`lake build`, 3141 jobs). Every theorem has a real Lean type — no `True`
-placeholders remain. Of the 34 axioms, 29 are required for the main theorem
+placeholders remain. Of the 35 axioms, 30 are required for the main theorem
 and 5 are optional (an alternative "Option B" Gross-Rothaus-Simon proof path
-for hypercontractivity). The 27 sorries are well-typed intermediate proof steps
+for hypercontractivity). The 22 sorries are well-typed intermediate proof steps
 connecting axioms to the OS properties.
 
-- **pphi2:** 34 axioms (29 required + 5 optional), 23 sorries
+- **pphi2:** 35 axioms (30 required + 5 optional), 22 sorries
 - **gaussian-field** (upstream dependency): 15 axioms, 13 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,

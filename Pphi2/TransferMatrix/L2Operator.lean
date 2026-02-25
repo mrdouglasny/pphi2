@@ -103,6 +103,24 @@ axiom transferOperator_isSelfAdjoint (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     IsSelfAdjoint (transferOperatorCLM Ns P a mass ha hmass)
 
+/-- The transfer operator is a *positive* operator: `⟨f, Tf⟩ ≥ 0` for all `f`.
+
+This is a consequence of the Perron-Frobenius theorem for the transfer
+matrix: the kernel `T(ψ,ψ') > 0` is strictly positive everywhere
+(`transferKernel_pos`), which implies the operator is positivity-improving.
+Combined with self-adjointness, all eigenvalues are nonneg, giving
+`⟨f, Tf⟩ = Σᵢ λᵢ |⟨eᵢ, f⟩|² ≥ 0`.
+
+**Proof strategy**: Use the spectral decomposition from
+`compact_selfAdjoint_spectral` and the Perron-Frobenius theorem
+to show all spectral values are nonneg.
+
+**References**: Reed-Simon IV, Theorem XIII.44; Simon P(φ)₂, §III.2. -/
+axiom transferOperator_inner_nonneg (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    ∀ (f : L2SpatialField Ns),
+      0 ≤ @inner ℝ _ _ f (transferOperatorCLM Ns P a mass ha hmass f)
+
 /-- The transfer operator is compact on L²(ℝ^Ns).
 
 The kernel satisfies T(ψ,ψ') ≤ exp(C) · exp(-½|ψ-ψ'|²), making the
