@@ -1,7 +1,7 @@
 # pphi2 Axiom Proof Plans
 
 **Generated**: 2026-02-25 via Gemini deep think review
-**Total**: 47 axioms, 0 sorries
+**Total**: 46 axioms, 0 sorries (plus 5 Option B)
 
 ## Priority Order
 
@@ -304,19 +304,11 @@ Then `Complex.conj_eq_iff_im` gives `Im(Z[f]) = 0`.
 
 ---
 
-#### 17c. `generatingFunctional_translate_continuous` (OS2_WardIdentity.lean:990)
+#### 17c. ~~`generatingFunctional_translate_continuous`~~ — **PROVED**
 
-**Statement**: t ↦ Z[f + τ_{(t,0)} g] is continuous.
-
-**Plan**:
-1. Integrand: ω ↦ exp(i·ω(f + τ_{(t,0)} g))
-2. **Pointwise continuity in t**: t ↦ ω(τ_{(t,0)} g) is continuous (from continuity
-   of translation in Schwartz space + continuity of evaluation)
-3. **Dominating function**: |exp(i·...)| = 1, and μ is probability measure
-4. Apply `continuous_of_dominated` or `MeasureTheory.continuous_at_of_dominated`
-
-**Key Mathlib**: `MeasureTheory.continuous_at_of_dominated`, `SchwartzMap.translate` continuity
-**Difficulty**: EASY
+Proved via `MeasureTheory.continuous_of_dominated` with bound 1 (‖exp(ix)‖=1) and
+`continuous_timeTranslationSchwartz` from `OSforGFF/TimeTranslation.lean` for the
+Schwartz-topology continuity of `t ↦ translate(t,0) g`.
 
 ---
 
@@ -831,7 +823,7 @@ Then `Complex.conj_eq_iff_im` gives `Im(Z[f]) = 0`.
 | 17 | ~~`os4_clustering_implies_ergodicity`~~ | OS2_Ward | **PROVED** | — |
 | 17a | `cesaro_set_integral_tendsto` | **PROVED** | — | Moved to GeneralResults/FunctionalAnalysis.lean |
 | 17b | `pphi2_generating_functional_real` | **PROVED** | — | From pphi2_measure_neg_invariant |
-| 17c | `generatingFunctional_translate_continuous` | OS2_Ward | EASY | DCT with bounded integrand |
+| 17c | `generatingFunctional_translate_continuous` | **PROVED** | — | DCT + continuous_timeTranslationSchwartz |
 | 18 | `configuration_borelSpace` | Convergence | MEDIUM | Needs polishSpace |
 | 19 | `schwinger_n_convergence` | Convergence | MEDIUM | Needs tightness |
 | 20 | `second_moment_uniform` | Tightness | MEDIUM | Lattice Green's function |
