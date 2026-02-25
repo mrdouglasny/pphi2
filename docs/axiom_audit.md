@@ -85,7 +85,8 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 | 29 | `complex_gf_invariant_of_real_gf_invariant` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Real Z invariance → complex Z invariance (Cramér-Wold + Lévy uniqueness). |
 | 30 | `continuum_exponential_clustering` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Now requires `IsPphi2Limit`. Spectral gap. |
 | 31 | `cesaro_set_integral_tendsto` | **PROVED** → `GeneralResults/FunctionalAnalysis.lean` | ✅ Proved | 2026-02-25 | Continuous Cesàro convergence. Moved to GeneralResults as pure Mathlib result. |
-| 32 | `pphi2_generating_functional_real` | OS2_WardIdentity:975 | ✅ Standard | DT 2026-02-25 | Im(Z[f])=0 from φ→-φ symmetry of even P. EASY. |
+| 32 | `pphi2_generating_functional_real` | **PROVED** from `pphi2_measure_neg_invariant` | ✅ Proved | 2026-02-25 | Im(Z[f])=0 via conj(Z[f])=Z[f] from Z₂ symmetry. |
+| 32a | `pphi2_measure_neg_invariant` | OS2_WardIdentity | ✅ Standard | 2026-02-25 | Z₂ symmetry: map Neg.neg μ = μ. From even P + GFF symmetry + weak limit closure. |
 | 33 | `generatingFunctional_translate_continuous` | OS2_WardIdentity:990 | ✅ Standard | DT 2026-02-25 | t ↦ Z[f + τ_{(t,0)} g] continuous. DCT with bounded integrand. EASY. |
 
 **Proved theorems in OS2_WardIdentity.lean:**

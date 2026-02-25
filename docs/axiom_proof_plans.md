@@ -296,18 +296,11 @@ Proved and moved to `GeneralResults/FunctionalAnalysis.lean`. Pure Mathlib resul
 
 ---
 
-#### 17b. `pphi2_generating_functional_real` (OS2_WardIdentity.lean:975)
+#### 17b. `pphi2_generating_functional_real` — **PROVED**
 
-**Statement**: Im(Z[f]) = 0 for real Schwartz f, where μ is a P(Φ)₂ limit.
-
-**Plan**:
-1. The P(Φ)₂ measure is φ → -φ symmetric (even polynomial P)
-2. Z[f] = ∫ exp(iφ(f)) dμ; under φ → -φ: Z[f] = ∫ exp(-iφ(f)) dμ = Z̄[f]
-3. Z[f] = Z̄[f] implies Im(Z[f]) = 0
-4. Need: `Measure.map Neg.neg μ = μ` (from even polynomial symmetry)
-
-**Key Mathlib**: `MeasureTheory.integral_map`, `Real.sin_neg`, `eq_zero_of_neg_eq`
-**Difficulty**: EASY (given the φ → -φ invariance of μ)
+Proved from new axiom `pphi2_measure_neg_invariant` (Z₂ symmetry: `Measure.map Neg.neg μ = μ`).
+Proof: `conj(Z[f]) = Z[f]` via `integral_conj` + change of variables ω → -ω + Z₂ symmetry.
+Then `Complex.conj_eq_iff_im` gives `Im(Z[f]) = 0`.
 
 ---
 
@@ -837,7 +830,7 @@ Proved and moved to `GeneralResults/FunctionalAnalysis.lean`. Pure Mathlib resul
 | 16 | `complex_gf_invariant_of_real_gf_invariant` | OS2_Ward | MEDIUM | Needs analyticity |
 | 17 | ~~`os4_clustering_implies_ergodicity`~~ | OS2_Ward | **PROVED** | — |
 | 17a | `cesaro_set_integral_tendsto` | **PROVED** | — | Moved to GeneralResults/FunctionalAnalysis.lean |
-| 17b | `pphi2_generating_functional_real` | OS2_Ward | EASY | φ→-φ symmetry |
+| 17b | `pphi2_generating_functional_real` | **PROVED** | — | From pphi2_measure_neg_invariant |
 | 17c | `generatingFunctional_translate_continuous` | OS2_Ward | EASY | DCT with bounded integrand |
 | 18 | `configuration_borelSpace` | Convergence | MEDIUM | Needs polishSpace |
 | 19 | `schwinger_n_convergence` | Convergence | MEDIUM | Needs tightness |

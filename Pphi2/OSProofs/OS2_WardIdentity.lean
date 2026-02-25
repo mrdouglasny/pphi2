@@ -891,25 +891,93 @@ theorem os4_for_continuum_limit (P : InteractionPolynomial)
 
 /-! ## Textbook axioms for clustering → ergodicity -/
 
-/-- **Textbook axiom: Reality of the generating functional for P(Φ)₂ measures.**
+/-- **Textbook axiom: Z₂ symmetry of the P(Φ)₂ measure.**
 
-For a P(Φ)₂ continuum limit measure μ, the generating functional
-Z[f] = ∫ exp(i⟨ω,f⟩) dμ(ω) is real-valued for all real test functions f.
+The P(Φ)₂ continuum limit measure μ is invariant under field negation φ → -φ:
+  Measure.map (Neg.neg) μ = μ
 
-This follows from the φ → -φ symmetry of the P(Φ)₂ measure. The interaction
-polynomial P(φ) = Σ aₖ :φ^k: has only even Wick powers (since P is semibounded,
-the leading term must be even, and for P(Φ)₂ we use even polynomials).
-Under φ → -φ, the measure is invariant, so:
-  Z[f] = ∫ exp(iφ(f)) dμ(φ) = ∫ exp(-iφ(f)) dμ(φ) = Z̄[f]
+This follows from:
+1. The GFF is a centered Gaussian, hence invariant under φ → -φ.
+2. The interaction P(φ) is even (`InteractionPolynomial.eval_neg`: P(-φ) = P(φ)),
+   so the Boltzmann weight exp(-V_a(φ)) is invariant under φ → -φ.
+3. Therefore each lattice measure dμ_a = (1/Z) exp(-V_a) dμ_{GFF} is Z₂-symmetric.
+4. Z₂ symmetry is preserved under weak limits (since field negation is
+   continuous in the weak-* topology on S'(ℝ²)).
 
-Reference: Simon, *The P(φ)₂ Euclidean QFT*, §II.3 (symmetry Z₂);
+Reference: Simon, *The P(φ)₂ Euclidean QFT*, §II.3;
 Glimm-Jaffe, *Quantum Physics*, §6.1. -/
-axiom pphi2_generating_functional_real (P : InteractionPolynomial)
+axiom pphi2_measure_neg_invariant (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass) :
+    Measure.map (Neg.neg : FieldConfig2 → FieldConfig2) μ = μ
+
+/-- Negation on Configuration is measurable w.r.t. the cylindrical σ-algebra. -/
+theorem configuration_neg_measurable :
+    @Measurable FieldConfig2 FieldConfig2
+      instMeasurableSpaceConfiguration instMeasurableSpaceConfiguration
+      (Neg.neg : FieldConfig2 → FieldConfig2) :=
+  configuration_measurable_of_eval_measurable _ fun f =>
+    (configuration_eval_measurable f).neg
+
+/-- The generating functional of a Z₂-symmetric measure is real-valued.
+
+Proof: conj(Z[f]) = conj(∫ exp(iωf) dμ) = ∫ exp(-iωf) dμ
+     = ∫ exp(i(-ω)f) dμ = ∫ exp(iωf) d(map(-) μ) = ∫ exp(iωf) dμ = Z[f].
+So Z[f] = conj(Z[f]), hence Im(Z[f]) = 0. -/
+theorem pphi2_generating_functional_real (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (h_limit : IsPphi2Limit μ P mass)
     (f : TestFunction2) :
-    (generatingFunctional μ f).im = 0
+    (generatingFunctional μ f).im = 0 := by
+  have h_sym := pphi2_measure_neg_invariant P mass hmass μ h_limit
+  -- Strategy: show conj(Z[f]) = Z[f], then Im = 0.
+  -- conj(Z[f]) = conj(∫ exp(iωf) dμ) = ∫ conj(exp(iωf)) dμ   [integral_conj]
+  --            = ∫ exp(-iωf) dμ                                  [conj of exp]
+  --            = ∫ exp(i(-ω)f) dμ                                [(-ω)f = -(ωf)]
+  --            = ∫ exp(iωf) d(map(-) μ)                          [change of vars]
+  --            = ∫ exp(iωf) dμ = Z[f]                            [h_sym]
+  unfold generatingFunctional
+  set g := fun ω : FieldConfig2 => Complex.exp (Complex.I * ↑(ω f))
+  -- Step 1: conj(∫ g dμ) = ∫ conj(g) dμ via integral_conj
+  have hconj : starRingEnd ℂ (∫ ω, g ω ∂μ) = ∫ ω, starRingEnd ℂ (g ω) ∂μ :=
+    (integral_conj (f := g)).symm
+  -- Step 2: conj(exp(i·r)) = exp(-i·r) for real r
+  have hconj_exp : ∀ ω : FieldConfig2,
+      starRingEnd ℂ (g ω) = Complex.exp (Complex.I * ↑((-ω) f)) := by
+    intro ω
+    simp only [g]
+    rw [← Complex.exp_conj]
+    congr 1
+    rw [map_mul, Complex.conj_I, Complex.conj_ofReal,
+        ContinuousLinearMap.neg_apply, Complex.ofReal_neg]
+    ring
+  -- Step 3: ∫ exp(i(-ω)f) dμ = ∫ exp(iωf) d(map(-) μ) by change of variables
+  -- Then use h_sym to get = ∫ exp(iωf) dμ
+  have hcov : ∫ ω, Complex.exp (Complex.I * ↑((-ω) f)) ∂μ = ∫ ω, g ω ∂μ := by
+    have heq : (fun ω : FieldConfig2 => Complex.exp (Complex.I * ↑((-ω) f))) =
+        g ∘ Neg.neg := by
+      ext ω; simp only [g, Function.comp]
+    rw [heq]
+    -- ∫ (g ∘ Neg.neg) dμ = ∫ g d(map Neg.neg μ) = ∫ g dμ  by h_sym
+    have hasm : AEStronglyMeasurable g (Measure.map Neg.neg μ) := by
+      rw [h_sym]
+      exact ((Complex.measurable_ofReal.comp (configuration_eval_measurable f)).const_mul
+        Complex.I |>.cexp).aestronglyMeasurable
+    have := MeasureTheory.integral_map configuration_neg_measurable.aemeasurable hasm
+    -- integral_map: ∫ g ∂(map Neg μ) = ∫ (g ∘ Neg) ∂μ
+    -- h_sym: map Neg μ = μ, so ∫ g ∂μ = ∫ (g ∘ Neg) ∂μ
+    rw [h_sym] at this
+    exact this.symm
+  -- Combine: conj(Z[f]) = Z[f]
+  have hself_conj : starRingEnd ℂ (∫ ω, g ω ∂μ) = ∫ ω, g ω ∂μ := by
+    rw [hconj]
+    simp_rw [hconj_exp]
+    exact hcov
+  -- conj(z) = z implies z.im = 0
+  have := Complex.conj_eq_iff_im.mp hself_conj
+  exact this
 
 /-- **Textbook axiom: Continuity of the generating functional under translations.**
 
