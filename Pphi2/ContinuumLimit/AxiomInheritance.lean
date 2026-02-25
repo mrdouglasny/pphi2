@@ -199,11 +199,13 @@ axiom os4_inheritance (P : InteractionPolynomial)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
     -- μ satisfies exponential clustering with some rate m₀ > 0:
-    -- for all test functions f, g and time separation R > 0, the connected
-    -- two-point function decays as |⟨ω(f) · ω(g)⟩ - ⟨ω(f)⟩⟨ω(g)⟩| ≤ C · e^{-m₀R}.
+    -- for all test functions f, g there exists C (independent of R) such that
+    -- |⟨ω(f) · ω(g_R)⟩ - ⟨ω(f)⟩⟨ω(g)⟩| ≤ C · e^{-m₀R} for all R > 0,
+    -- where g_R denotes the time-separation by R.
     ∃ m₀ : ℝ, 0 < m₀ ∧
-      ∀ (f g : ContinuumTestFunction 2) (R : ℝ), 0 < R →
+      ∀ (f g : ContinuumTestFunction 2),
         ∃ C : ℝ, 0 ≤ C ∧
+        ∀ (R : ℝ), 0 < R →
           |∫ ω : Configuration (ContinuumTestFunction 2), ω f * ω g ∂μ -
            (∫ ω : Configuration (ContinuumTestFunction 2), ω f ∂μ) *
            (∫ ω : Configuration (ContinuumTestFunction 2), ω g ∂μ)| ≤
@@ -235,9 +237,11 @@ structure SatisfiesOS0134 (d : ℕ)
         F ω * F (ω.comp Θ) ∂μ ≥ 0
   -- OS4: exponential clustering — there exists m₀ > 0 such that connected
   -- two-point functions decay exponentially with rate m₀.
+  -- C is independent of R (quantified before R).
   os4 : ∃ m₀ : ℝ, 0 < m₀ ∧
-    ∀ (f g : ContinuumTestFunction d) (R : ℝ), 0 < R →
+    ∀ (f g : ContinuumTestFunction d),
       ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (R : ℝ), 0 < R →
         |∫ ω : Configuration (ContinuumTestFunction d), ω f * ω g ∂μ -
          (∫ ω : Configuration (ContinuumTestFunction d), ω f ∂μ) *
          (∫ ω : Configuration (ContinuumTestFunction d), ω g ∂μ)| ≤
