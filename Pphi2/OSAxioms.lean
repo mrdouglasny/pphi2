@@ -52,6 +52,7 @@ abbrev FieldConfig2 := Configuration (ContinuumTestFunction 2)
 /-- The distribution pairing ⟨ω, f⟩ for ω ∈ S'(ℝ²), f ∈ S(ℝ²). -/
 def distribPairing (ω : FieldConfig2) (f : TestFunction2) : ℝ := ω f
 
+
 /-! ## Generating functional -/
 
 /-- The generating functional Z[f] = ∫ exp(i⟨ω, f⟩) dμ(ω).

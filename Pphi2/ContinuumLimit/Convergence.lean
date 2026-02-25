@@ -224,36 +224,6 @@ theorem continuumLimit (P : InteractionPolynomial)
 
 /-! ## Schwinger function convergence -/
 
-/-- **Convergence of the two-point Schwinger function.**
-
-For Schwartz functions f, g ∈ S(ℝ^d):
-
-  `S₂^{(a)}(f, g) = ∫ Φ(f) · Φ(g) dν_a → S₂(f, g) = ∫ Φ(f) · Φ(g) dμ`
-
-as a → 0 (along the convergent subsequence).
-
-This follows from weak convergence plus uniform integrability
-(from the uniform moment bounds).
-
-Reference: Glimm-Jaffe Ch. 19.2 — Prokhorov tightness gives subsequential
-weak convergence; uniform L² integrability (from Nelson hypercontractive
-estimates) upgrades weak to strong moment convergence. -/
-axiom schwinger2_convergence (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (f g : ContinuumTestFunction d)
-    -- A sequence of lattice spacings converging to 0
-    (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
-    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
-    -- There exist a subsequence and a limit measure such that the two-point
-    -- Schwinger functions converge along that subsequence.
-    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
-      StrictMono φ ∧ IsProbabilityMeasure μ ∧
-      Filter.Tendsto
-        (fun n => ∫ ω : Configuration (ContinuumTestFunction d),
-          ω f * ω g ∂(continuumMeasure d N P (a (φ n)) mass (ha_pos (φ n)) hmass))
-        Filter.atTop
-        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ω f * ω g ∂μ))
-
 /-- **Convergence of general n-point Schwinger functions.**
 
   `S_n^{(a)}(f₁,...,fₙ) → S_n(f₁,...,fₙ)`
@@ -282,6 +252,46 @@ axiom schwinger_n_convergence (P : InteractionPolynomial)
         Filter.atTop
         (nhds (∫ ω : Configuration (ContinuumTestFunction d),
           ∏ i : Fin n, ω (f i) ∂μ))
+
+/-- **Convergence of the two-point Schwinger function.**
+
+For Schwartz functions f, g ∈ S(ℝ^d):
+
+  `S₂^{(a)}(f, g) = ∫ Φ(f) · Φ(g) dν_a → S₂(f, g) = ∫ Φ(f) · Φ(g) dμ`
+
+as a → 0 (along the convergent subsequence).
+
+This is a special case of `schwinger_n_convergence` with n = 2 and
+test functions `![f, g]`.
+
+Reference: Glimm-Jaffe Ch. 19.2 — Prokhorov tightness gives subsequential
+weak convergence; uniform L² integrability (from Nelson hypercontractive
+estimates) upgrades weak to strong moment convergence. -/
+theorem schwinger2_convergence (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (f g : ContinuumTestFunction d)
+    -- A sequence of lattice spacings converging to 0
+    (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
+    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    -- There exist a subsequence and a limit measure such that the two-point
+    -- Schwinger functions converge along that subsequence.
+    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
+      StrictMono φ ∧ IsProbabilityMeasure μ ∧
+      Filter.Tendsto
+        (fun n => ∫ ω : Configuration (ContinuumTestFunction d),
+          ω f * ω g ∂(continuumMeasure d N P (a (φ n)) mass (ha_pos (φ n)) hmass))
+        Filter.atTop
+        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ω f * ω g ∂μ)) := by
+  -- Apply schwinger_n_convergence with n = 2 and test functions ![f, g]
+  obtain ⟨φ, μ, hφ, hμ, hconv⟩ :=
+    schwinger_n_convergence d N P mass hmass 2 ![f, g] a ha_pos ha_le ha_lim
+  refine ⟨φ, μ, hφ, hμ, ?_⟩
+  -- The product ∏ i : Fin 2, ω (![f, g] i) = ω f * ω g
+  have key : ∀ ω : Configuration (ContinuumTestFunction d),
+      ω f * ω g = ∏ i : Fin 2, ω (![f, g] i) := by
+    intro ω; simp [Fin.prod_univ_two]
+  simp_rw [key]
+  exact hconv
 
 /-! ## Properties of the continuum limit -/
 
@@ -333,6 +343,30 @@ axiom continuumLimit_nonGaussian (P : InteractionPolynomial)
       ∃ (f : ContinuumTestFunction d),
         ∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 4 ∂μ -
         3 * (∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 2 ∂μ) ^ 2 ≠ 0
+
+/-! ## Existence of a P(φ)₂ continuum limit -/
+
+/-- **Existence of a P(Φ)₂ continuum limit measure.**
+
+There exists a probability measure μ on S'(ℝ²) that is a P(Φ)₂ continuum
+limit, i.e. satisfies `IsPphi2Limit μ P mass`. This follows from the
+Prokhorov tightness argument:
+
+1. The continuum-embedded lattice measures {ν_a} are tight
+   (by `continuumMeasures_tight`).
+2. By `continuumLimit` (Prokhorov), any sequence a_n → 0 has a weakly
+   convergent subsequence ν_{a_nk} ⇀ μ.
+3. Uniform moment bounds (from hypercontractivity) upgrade weak convergence
+   to Schwinger function convergence for all n.
+4. A diagonal argument across n gives a single subsequence with all
+   Schwinger functions converging simultaneously.
+
+References: Glimm-Jaffe Ch. 19.2; Simon §V.2; Billingsley Ch. 1. -/
+axiom pphi2_limit_exists (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass) :
+    ∃ (μ : Measure (Configuration (ContinuumTestFunction 2)))
+      (_ : IsProbabilityMeasure μ),
+    IsPphi2Limit μ P mass
 
 end Pphi2
 

@@ -20,8 +20,8 @@ group of the lattice. Full invariance is restored in the continuum limit:
   vanishes as O(a²) in the continuum limit.
 
   **Key simplification for P(Φ)₂:** The theory is super-renormalizable, so
-  there are NO logarithmic corrections competing with the a² decay. The
-  irrelevance argument is purely polynomial.
+  logarithmic corrections are at most polynomial in |log a| (Glimm-Jaffe
+  Theorem 19.3.1). The bound is O(a² |log a|^p), which still vanishes.
 
 ## Main results
 
@@ -162,10 +162,11 @@ Proof outline:
    everywhere (topology: closed set containing a dense set is the whole space).
 
 Reference: Glimm-Jaffe §8.6 (translation invariance of the continuum limit). -/
-axiom translation_invariance_continuum (_P : InteractionPolynomial)
-    (_mass : ℝ) (_hmass : 0 < _mass)
+axiom translation_invariance_continuum (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (_hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     ∀ (v : EuclideanSpace ℝ (Fin 2)) (f : TestFunction2),
     generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f)
 
@@ -313,54 +314,57 @@ theorem anomaly_scaling_dimension (P : InteractionPolynomial) (a mass : ℝ)
       nlinarith
     nlinarith [sq_nonneg (k i), sq_nonneg a]
 
-/-- **The rotation anomaly is O(a²) from super-renormalizability.**
+/-- **The rotation anomaly is O(a² |log a|^p) from super-renormalizability.**
 
 In Fourier space, the anomaly operator O_break carries an explicit factor
 of `a²` (from `anomaly_scaling_dimension`). The remaining integral is
 bounded by Schwartz norms of the test functions via Nelson's hypercontractive
-estimate. P(Φ)₂ super-renormalizability ensures no log corrections compete
-with the `a²` suppression (unlike d=4 theories where RG flow could generate
-`log(1/a)` factors).
+estimate. In P(Φ)₂, super-renormalizability limits the logarithmic corrections
+to at most polynomial powers of |log a| (unlike d=4 theories where RG flow
+generates essential log divergences).
 
-Reference: Glimm-Jaffe §19.5; Symanzik (1983); Duch (2024), Ward identities. -/
+The bound `C · a² · (1 + |log a|)^p` follows from Glimm-Jaffe Theorem 19.3.1:
+the anomaly has scaling dimension 4, giving a² suppression, but the Wick
+ordering and renormalization generate at most polynomial-in-log corrections.
+
+Reference: Glimm-Jaffe §19.3, Theorem 19.3.1; Symanzik (1983); Duch (2024). -/
 axiom anomaly_bound_from_superrenormalizability (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) (n : ℕ)
     (f : Fin n → ContinuumTestFunction 2) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∃ (C : ℝ) (p : ℕ), 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
     ∀ (i : Fin n) (R : O2),
     haveI : IsProbabilityMeasure (continuumMeasure 2 N P a mass ha hmass) :=
       continuumMeasure_isProbability 2 N P a mass ha hmass
     ‖generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (euclideanAction2 ⟨R, 0⟩ (f i)) -
-     generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (f i)‖ ≤ C * a ^ 2
+     generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (f i)‖ ≤
+      C * a ^ 2 * (1 + |Real.log a|) ^ p
 
-/-- **The anomaly vanishes as O(a²).**
+/-- **The anomaly vanishes as O(a² |log a|^p).**
 
 For any n-point Schwinger function with test functions f₁,...,fₙ ∈ S(ℝ²):
 
-  `|⟨Φ(f₁)···Φ(fₙ) · O_break⟩_a| ≤ C(f₁,...,fₙ) · a²`
+  `|⟨Φ(f₁)···Φ(fₙ) · O_break⟩_a| ≤ C(f₁,...,fₙ) · a² · (1 + |log a|)^p`
 
-where C is uniform in a (depends on the Schwartz norms of the fᵢ).
+where C is uniform in a (depends on the Schwartz norms of the fᵢ) and
+p is a fixed power depending on the degree of the interaction polynomial.
 
-Proof outline:
-1. In Fourier space, O_break has an explicit factor of a².
-2. The remaining integral is bounded by Schwartz norms via Nelson's estimate.
-3. Super-renormalizability of P(Φ)₂ ensures NO logarithmic corrections:
-   - In d=2, the interaction P(φ) has dimension 2 (marginal at worst for φ⁴).
-   - But the anomaly at dimension 4 is strictly irrelevant.
-   - Unlike d=4 theories, there is no renormalization group flow that could
-     generate log(1/a) factors to compete with the a² suppression.
-4. Therefore the bound is purely polynomial: O(a²) with no logs. -/
+The a² factor comes from the dimension-4 anomaly operator; the log factors
+arise from Wick ordering and renormalization in the super-renormalizable theory.
+Crucially, in d=2 these are at most polynomial in |log a| (not essential),
+so the bound still vanishes as a → 0. -/
 theorem anomaly_vanishes (P : InteractionPolynomial) (mass : ℝ)
     (hmass : 0 < mass) (n : ℕ) (f : Fin n → ContinuumTestFunction 2) :
-    -- The rotation anomaly of the lattice generating functional vanishes as O(a²).
-    -- For each rotation R ∈ O(2), the generating functional Z_a[R·fᵢ] - Z_a[fᵢ] is O(a²),
-    -- where Z_a is the generating functional of the continuum-embedded lattice measure.
-    ∃ C : ℝ, 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    -- The rotation anomaly of the lattice generating functional vanishes as a → 0.
+    -- For each rotation R ∈ O(2), the generating functional Z_a[R·fᵢ] - Z_a[fᵢ]
+    -- is O(a² |log a|^p), where Z_a is the generating functional of the
+    -- continuum-embedded lattice measure.
+    ∃ (C : ℝ) (p : ℕ), 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
     ∀ (i : Fin n) (R : O2),
     haveI : IsProbabilityMeasure (continuumMeasure 2 N P a mass ha hmass) :=
       continuumMeasure_isProbability 2 N P a mass ha hmass
     ‖generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (euclideanAction2 ⟨R, 0⟩ (f i)) -
-     generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (f i)‖ ≤ C * a ^ 2 := by
+     generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (f i)‖ ≤
+      C * a ^ 2 * (1 + |Real.log a|) ^ p := by
   exact anomaly_bound_from_superrenormalizability (N := N) P mass hmass n f
 
 /-! ## Rotation invariance in the continuum -/
@@ -382,10 +386,11 @@ Proof outline (Ward identity argument):
 6. Schwinger functions determine μ (nuclearity of S(ℝ²)) ⟹ `Z[R·f] = Z[f]`.
 
 Refs: Symanzik (1983), Lüscher-Weisz (1985), Duch (2024). -/
-axiom rotation_invariance_continuum (_P : InteractionPolynomial)
-    (_mass : ℝ) (_hmass : 0 < _mass)
+axiom rotation_invariance_continuum (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass)
     (R : O2) (f : TestFunction2) :
     generatingFunctional μ (euclideanAction2 ⟨R, 0⟩ f) = generatingFunctional μ f
 
@@ -465,9 +470,10 @@ set_option maxHeartbeats 800000 in
 theorem os3_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     @OS3_ReflectionPositivity μ hμ := by
-  have h_rp := os3_inheritance P mass hmass μ hμ
+  have h_rp := os3_inheritance P mass hmass μ hμ h_limit
   intro n f c
   -- Step 1: Re(Z[g]) = ∫ cos(ω g) dμ (Euler's formula + pull Re through ∫)
   simp_rw [generatingFunctional_re_eq_integral_cos]
@@ -636,6 +642,7 @@ establish integrability of `exp(|⟨ω, f⟩|)` (the c = 1 case) in the OS1 proo
 axiom continuum_exponential_moments (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass)
     (f : TestFunction2) :
     ∀ (c : ℝ), 0 < c →
     Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ
@@ -672,9 +679,10 @@ and `continuum_exponential_moments`. -/
 theorem os0_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     @OS0_Analyticity μ hμ := by
-  have h_exp := continuum_exponential_moments P mass hmass μ
+  have h_exp := continuum_exponential_moments P mass hmass μ h_limit
   intro n J
   exact analyticOn_generatingFunctionalC μ h_exp n J
 
@@ -713,9 +721,10 @@ Proof chain from `continuum_exponential_moments`:
 theorem os1_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     @OS1_Regularity μ hμ := by
-  have h_exp := continuum_exponential_moments P mass hmass μ
+  have h_exp := continuum_exponential_moments P mass hmass μ h_limit
   -- Step 1: |Z_ℂ[J]| ≤ ∫ exp(|⟨ω, Im(J)⟩|) dμ
   -- (from |exp(i⟨ω,Re J⟩ - ⟨ω,Im J⟩)| = exp(-⟨ω,Im J⟩) ≤ exp(|⟨ω,Im J⟩|))
   have h_bound : ∀ (J : TestFunction2ℂ),
@@ -820,10 +829,11 @@ Proof chain to `OS2_EuclideanInvariance`:
 theorem os2_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     @OS2_EuclideanInvariance μ hμ := by
-  have h_trans := translation_invariance_continuum P mass hmass μ hμ
-  have h_rot := rotation_invariance_continuum P mass hmass μ
+  have h_trans := translation_invariance_continuum P mass hmass μ hμ h_limit
+  have h_rot := rotation_invariance_continuum P mass hmass μ h_limit
   -- Step 1: Real generating functional is E(2)-invariant.
   -- Any g = ⟨R, t⟩ ∈ E(2) acts by g·f = τ_t(R·f), so
   -- Z[g·f] = Z[τ_t(R·f)] = Z[R·f] (by h_trans) = Z[f] (by h_rot).
@@ -870,6 +880,7 @@ Proof chain from the lattice:
 axiom continuum_exponential_clustering (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass)
     (f g : TestFunction2) :
     ∃ (m₀ C : ℝ), 0 < m₀ ∧ 0 < C ∧
     ∀ (a : SpaceTime2),
@@ -889,11 +900,12 @@ Proof chain from `continuum_exponential_clustering`:
 theorem os4_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     @OS4_Clustering μ hμ := by
   intro f g ε hε
   -- Step 1: Get exponential clustering bound
-  obtain ⟨m₀, C, hm₀, hC, h_bound⟩ := continuum_exponential_clustering P mass hmass μ f g
+  obtain ⟨m₀, C, hm₀, hC, h_bound⟩ := continuum_exponential_clustering P mass hmass μ h_limit f g
   -- Step 2: Choose R so that C · exp(-m₀ · R) < ε
   refine ⟨max 1 (Real.log (C / ε) / m₀), lt_max_of_lt_left one_pos, fun a ha => ?_⟩
   -- Step 3: ‖a‖ > R ≥ 1, so ‖a‖ > 0 and exp(-m₀‖a‖) < 1
@@ -956,16 +968,17 @@ theorem continuumLimit_satisfies_fullOS
     (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     @SatisfiesFullOS μ hμ where
-  os0 := os0_for_continuum_limit P mass hmass μ hμ
-  os1 := os1_for_continuum_limit P mass hmass μ hμ
-  os2 := os2_for_continuum_limit P mass hmass μ hμ
-  os3 := os3_for_continuum_limit P mass hmass μ hμ
-  os4_clustering := os4_for_continuum_limit P mass hmass μ hμ
+  os0 := os0_for_continuum_limit P mass hmass μ hμ h_limit
+  os1 := os1_for_continuum_limit P mass hmass μ hμ h_limit
+  os2 := os2_for_continuum_limit P mass hmass μ hμ h_limit
+  os3 := os3_for_continuum_limit P mass hmass μ hμ h_limit
+  os4_clustering := os4_for_continuum_limit P mass hmass μ hμ h_limit
   os4_ergodicity :=
     os4_clustering_implies_ergodicity P mass hmass μ
-      (os4_for_continuum_limit P mass hmass μ hμ)
+      (os4_for_continuum_limit P mass hmass μ hμ h_limit)
 
 /-! ## Existence theorem (using full OS axioms) -/
 
@@ -977,8 +990,8 @@ theorem pphi2_exists (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     ∃ (μ : Measure (Configuration (ContinuumTestFunction 2)))
       (hμ : IsProbabilityMeasure μ),
     @SatisfiesFullOS μ hμ := by
-  refine ⟨Measure.dirac 0, Measure.dirac.isProbabilityMeasure, ?_⟩
-  exact continuumLimit_satisfies_fullOS P mass hmass _ _
+  obtain ⟨μ, hμ, h_limit⟩ := pphi2_limit_exists P mass hmass
+  exact ⟨μ, hμ, continuumLimit_satisfies_fullOS P mass hmass μ hμ h_limit⟩
 
 end Pphi2
 

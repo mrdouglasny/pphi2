@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-25 (All sorries eliminated, 53 axioms)
-**pphi2**: 53 axioms (48 required + 5 Option B), 0 sorries | **gaussian-field**: 15 axioms, 7 sorries | **Total**: 68 (63 required)
+**Updated**: 2026-02-25 (All sorries eliminated, 54 axioms)
+**pphi2**: 54 axioms (49 required + 5 Option B), 0 sorries | **gaussian-field**: 18 axioms, 2 sorries | **Total**: 72 (67 required)
 
 ## Verification Sources
 
@@ -49,7 +49,7 @@
 | 12 | `spectral_gap_uniform` | SpectralGap:134 | ⚠️ Likely correct | GR Group 3 | ∃ m₀ > 0, gap(a) ≥ m₀ ∀a ≤ a₀. Central result of Glimm-Jaffe. VERY HARD. |
 | 13 | `spectral_gap_lower_bound` | SpectralGap:145 | ⚠️ Likely correct | GR Group 3 | gap ≥ c·mass. Standard weak-coupling result. |
 
-### Phase 4: Continuum Limit (7 active axioms, 5 proved)
+### Phase 4: Continuum Limit (8 active axioms, 5 proved)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
@@ -64,65 +64,100 @@
 | 19 | `configuration_polishSpace` | Convergence:173 | ✅ Standard | DT 2026-02-24 | S'(ℝ^d) Polish. Gelfand-Vilenkin Vol. 4, Bogachev §3.2. |
 | 20 | `configuration_borelSpace` | Convergence:180 | ✅ Standard | DT 2026-02-24 | Borel = cylindrical σ-algebra. Bochner-Minlos framework. |
 | 21 | `os0_inheritance` | AxiomInheritance:78 | ⚠️ Likely correct | GR Group 4 | OS0 transfers. GR notes: "TRUE but TOO WEAK" — should include factorial growth (E0'). |
-| 22 | `os3_inheritance` | AxiomInheritance | ✅ Standard | SA 2026-02-24 | Abstract IsRP for continuum limit: ∫ F·F(Θ*·) dμ ≥ 0. NEW axiom (was trivial True). Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). Connected to OS3_ReflectionPositivity via `rp_matrix_trig_identity` (proved) + `os3_for_continuum_limit`. |
+| 22 | `os3_inheritance` | AxiomInheritance | ✅ Standard | DT 2026-02-25 | Abstract IsRP for continuum limit: ∫ F·F(Θ*·) dμ ≥ 0. Now requires `IsPphi2Limit`. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
+| 22b | ~~`IsPphi2Limit`~~ | Embedding:271 | ✅ **DEFINED** | SA 2026-02-25 | Converted from axiom to `def`: ∃ (a, ν) with Schwinger function convergence. Mirrors `IsPphi2ContinuumLimit` in Bridge.lean. |
+| 22c | `pphi2_limit_exists` | Convergence | ⚠️ Likely correct | SA 2026-02-25 | ∃ μ `IsPphi2Limit`. Prokhorov + tightness + diagonal argument. Moved from OS2_WardIdentity to Convergence. |
 
-### Phase 5: Proof Chain Axioms with Real Types (3 axioms, 5 sorries)
+### Phase 5: OS2 Ward Identity and Proof Chain (10 axioms)
 
-Each OS axiom (OS0, OS1, OS2, OS4) is derived via a proof chain:
-**axiom** (real Lean type) → **sorry-proofed theorem** → **OS property**.
+All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
+6 axioms were overly strong, quantifying over arbitrary μ instead of P(φ)₂ limits).
 
 | # | Name | File | Rating | Verified | Notes |
 |---|------|------|--------|----------|-------|
-| 22 | `continuum_exponential_moments` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-25 | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Strengthened from ∃ to ∀ (all exponential moments exist). Fernique + Nelson transferred to limit. Feeds OS0 + OS1. |
-| 23 | `rotation_invariance_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + dim(O_break)=4>d=2 + super-renormalizability. Feeds OS2. |
-| 24 | `continuum_exponential_clustering` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap + exp clustering. Feeds OS4. |
+| 22 | `latticeMeasure_translation_invariant` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Lattice measure invariant under cyclic translation. |
+| 23 | `translation_invariance_continuum` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | `Z[τ_v f] = Z[f]`. Now requires `IsPphi2Limit`. Rational density + continuity. |
+| 24 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `‖Z_a[R·f]-Z_a[f]‖ ≤ C·a²·(1+\|log a\|)^p`. **Fixed**: added log factor per Glimm-Jaffe Thm 19.3.1 (was flagged SUSPICIOUS by DT without log). |
+| 25 | `rotation_invariance_continuum` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `Z[R·f] = Z[f]` for R ∈ O(2). Now requires `IsPphi2Limit`. Ward identity + irrelevance. |
+| 26 | `continuum_exponential_moments` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Now requires `IsPphi2Limit`. Fernique + Nelson. Feeds OS0+OS1. |
+| 27 | `analyticOn_generatingFunctionalC` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Exp moments → joint analyticity (Hartogs + dominated convergence). |
+| 28 | `exponential_moment_schwartz_bound` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `∫ exp(\|ω g\|) ≤ exp(c·(‖g‖₁+‖g‖₂²))`. Non-standard norm formulation. |
+| 29 | `complex_gf_invariant_of_real_gf_invariant` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Real Z invariance → complex Z invariance (Cramér-Wold + Lévy uniqueness). |
+| 30 | `continuum_exponential_clustering` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Now requires `IsPphi2Limit`. Spectral gap. |
+| 31 | `os4_clustering_implies_ergodicity` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Clustering → ergodicity. Mean ergodic theorem. |
 
-**Proof chain theorems (5 sorries):**
-- `translation_invariance_continuum`: `Z[τ_v f] = Z[f]` (lattice translations + rational density + continuity)
-- `os0_for_continuum_limit`: exponential moments → OS0_Analyticity (dominated convergence + Hartogs)
-- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (|Z[J]| ≤ ∫ exp(|ω(Im J)|) + Jensen)
-- `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance (E(2) decomposition + real→complex)
-- `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (ε-δ from exp decay)
+**Proved theorems in OS2_WardIdentity.lean:**
+- `anomaly_vanishes`: delegates to `anomaly_bound_from_superrenormalizability`
+- `os3_for_continuum_limit`: trig identity decomposition + `os3_inheritance` (**fully proved**)
+- `os0_for_continuum_limit`: exponential moments → OS0_Analyticity
+- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (**fully proved**)
+- `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance
+- `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (**fully proved**)
 
-### Phase 6: Bridge (5 axioms)
+### Phase 6: Bridge (6 axioms)
 
 | # | Name | File:Line | Rating | Verified | Notes |
-|---|------|----------|--------|----------|-------|
-| 23 | `measure_determined_by_schwinger` | Bridge:152 | ⚠️ Likely correct | DT 2026-02-24 | Moment determinacy with exponential (Fernique-type) moment bound. Fixed from polynomial→exponential per DT review. |
-| 24 | `wick_constant_comparison` | Bridge:180 | ✅ Standard | DT 2026-02-24 | Wick constant ≈ (2π)⁻¹ log(1/a) with bounded remainder. Standard asymptotics. |
-| 25 | `same_continuum_measure` | Bridge:222 | ⚠️ Likely correct | DT 2026-02-24 | Fixed: now requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling` hypotheses. Was ❓ (vacuous), now properly constrained. |
-| 26 | `os2_from_phi4` | Bridge:255 | ⚠️ Likely correct | DT 2026-02-24 | Fixed: now requires `IsPhi4ContinuumLimit` hypothesis (was FALSE without it). |
-| 27 | `os3_from_pphi2` | Bridge:300 | ⚠️ Likely correct | DT 2026-02-24 | Fixed: now requires `IsPphi2ContinuumLimit` hypothesis (was FALSE without it). |
+|---|------|----------|--------|----------|---------|
+| 33 | ~~`IsPphi2ContinuumLimit.toIsPphi2Limit`~~ | Bridge | ✅ **PROVED** | SA 2026-02-25 | Converted from axiom to `theorem`. Proof is `exact h` since `IsPphi2Limit` and `IsPphi2ContinuumLimit` have identical bodies (modulo type aliases). |
+| 34 | `measure_determined_by_schwinger` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Moment determinacy with exponential (Fernique-type) moment bound. |
+| 35 | `wick_constant_comparison` | Bridge | ✅ Standard | DT 2026-02-24 | Wick constant ≈ (2π)⁻¹ log(1/a) with bounded remainder. |
+| 36 | `schwinger_agreement` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | n-point Schwinger function equality at weak coupling. |
+| 37 | `same_continuum_measure` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Fixed: requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
+| 38 | `os2_from_phi4` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Fixed: requires `IsPhi4ContinuumLimit`. |
+| 39 | `os3_from_pphi2` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Fixed: requires `IsPphi2ContinuumLimit`. |
 
 ### Verification Summary (pphi2)
 
 | Status | Count |
 |--------|-------|
-| Verified (GR or DT) | 20 |
-| New (self-audit only) | 7 |
-| Proved (no longer axioms) | 6 |
-| Removed | 2 |
-| **Total active** | **27** |
+| Verified (GR or DT) | 35 |
+| Self-audit only | 2 |
+| Proved/Defined (no longer axioms) | 8 |
+| **Total active** | **54** |
 
-20 of 27 active axioms verified by GR or DT. 7 new axioms self-audited: 3 L2Operator (CLM, self-adjoint, compact), 1 os3_inheritance (abstract IsRP), 3 proof chain axioms with real Lean types (exponential moments, rotation invariance, exponential clustering). **5 sorries** bridge axioms to OS properties.
+35 of 54 active axioms verified by GR or DT.
+2 self-audit only: `pphi2_limit_exists` (Prokhorov existence), `transferOperatorCLM` (CLM construction).
 
-### Notes from DT review (2026-02-24)
+### Notes from DT review (2026-02-25)
 
-- `latticeEmbed`, `latticeEmbed_eval`, `latticeEmbed_measurable` are constructible — should be converted from axioms to defs/theorems
-- `latticeEmbedLift` domain is `Configuration (FinLatticeField d N)` which matches `interactingLatticeMeasure` type (the gaussian-field library wraps all field spaces in `Configuration E = WeakDual ℝ E`)
+**Batch review of 19 new axioms (sorry→axiom conversion):**
+- 15 Correct, 2 Likely correct, 1 Suspicious, 0 Wrong
+- **Fixed SUSPICIOUS**: `anomaly_bound_from_superrenormalizability` — missing log factors per Glimm-Jaffe Thm 19.3.1. Now `C·a²·(1+|log a|)^p` instead of `C·a²`.
+- **Likely correct**: `lattice_rp_matrix` (cos vs exp(i) — correct, both equivalent formulations), `exponential_moment_schwartz_bound` (non-standard norm but correct bound)
+- **Fixed 6 overly-strong axioms**: `translation_invariance_continuum`, `rotation_invariance_continuum`, `continuum_exponential_moments`, `os0_inheritance`, `os3_inheritance`, `os4_inheritance` — all now require `IsPphi2Limit μ P mass`
+- **Added 3 new axioms**: `IsPphi2Limit` (marker predicate, later converted to def), `pphi2_limit_exists` (Prokhorov existence, moved to Convergence.lean), `IsPphi2ContinuumLimit.toIsPphi2Limit` (bridge, later proved as theorem)
 
 ---
 
-## gaussian-field Axioms (9 active)
+## gaussian-field Axioms (18 active, 2 sorries)
 
-*Updated 2026-02-24 (rev 15f0b77). See gemini_review.md Group 1-2 for detailed review of heat kernel and FKG axioms.*
+*Updated 2026-02-25 (rev 567851c). See gemini_review.md Group 1-2 for original review; DT 2026-02-25 for new axioms.*
 
-| File | Count | Verified | Notes |
-|------|-------|----------|-------|
-| HeatKernel/PositionKernel.lean | 3 | GR Group 1 | Heat kernel: Mehler formula, circle positivity, cylinder summability. |
-| Lattice/FKG.lean | 3 | GR Group 2 | FKG lattice condition + 2 Gaussian integrability/density axioms. |
-| Lattice/RapidDecayLattice.lean | 3 | GR Group 2 | Shell enumeration bounds, rapid decay equiv. |
-| **Total** | **9** | | |
+| File | Axioms | Sorries | Verified | Notes |
+|------|--------|---------|----------|-------|
+| GaussianField/Density.lean | 2 | 0 | DT 2026-02-25 | Density bridge: `latticeGaussianMeasure_density_integral`, `integrable_mul_gaussianDensity`. NEW. |
+| GaussianField/Hypercontractive.lean | 1 | 0 | DT 2026-02-25 | `gaussian_moment_ratio_bound` — Gamma function inequality for 1D hypercontractivity. NEW. |
+| HeatKernel/PositionKernel.lean | 3 | 2 | GR Group 1 | Mehler formula, circle positivity, cylinder summability. (was 4; `cylinderHeatKernel_reproduces` restored as proved code) |
+| Lattice/FKG.lean | 9 | 0 | DT 2026-02-25 | 9 axioms: `ad_marginal_preservation_ae` (LIKELY CORRECT), 4 Fubini/integration axioms (CORRECT), 4 truncation axioms (CORRECT). All support FKG proof. |
+| Lattice/RapidDecayLattice.lean | 3 | 0 | GR Group 2 | Shell enumeration bounds, rapid decay equiv. |
+| **Total** | **18** | **2** | | |
+
+### New axiom details (DT 2026-02-25 review: 9 CORRECT, 1 LIKELY CORRECT)
+
+| # | Name | File | Rating | Notes |
+|---|------|------|--------|-------|
+| 1 | `gaussian_moment_ratio_bound` | Hypercontractive:152 | ✅ CORRECT | `E[Z^{pn}]^{1/p} ≤ (p-1)^{n/2} E[Z^{2n}]^{1/2}` for standard Normal. Sharp Bonami inequality. |
+| 2 | `latticeGaussianMeasure_density_integral` | Density:98 | ✅ CORRECT | Density bridge: abstract Gaussian measure ↔ Lebesgue integral with `gaussianDensity`. |
+| 3 | `integrable_mul_gaussianDensity` | Density:112 | ✅ CORRECT | Direct corollary of density bridge. |
+| 4 | `fubini_pi_decomp` | FKG:507 | ✅ CORRECT | Fubini for ℝ^ι = ℝ × ℝ^{ι\{i}}. |
+| 5 | `integrable_marginal` | FKG:514 | ✅ CORRECT | Fubini-Tonelli for nonneg integrable. |
+| 6 | `integrable_fiber_ae` | FKG:522 | ✅ CORRECT | Fiber integrable a.e. (Fubini). |
+| 7 | `integral_empty_pi` | FKG:529 | ✅ CORRECT | Base case: ∫ over ℝ^∅ = f(unique point). |
+| 8 | `ad_marginal_preservation_ae` | FKG:567 | ⚠️ LIKELY CORRECT | AD condition preserved by marginalization. Core induction step for FKG. |
+| 9 | `fkg_truncation_dct` | FKG:732 | ✅ CORRECT | DCT for truncation max(F,-n)→F. Domination: \|max(F,-n)\| ≤ \|F\|. |
+| 10 | `fkg_truncation_dct_prod` | FKG:739 | ✅ CORRECT | DCT for product truncation. |
+| 11 | `integrable_truncation_mul` | FKG:747 | ✅ CORRECT | Integrability of truncated F·ρ. |
+| 12 | `integrable_truncation_prod_mul` | FKG:752 | ✅ CORRECT | Integrability of truncated F·G·ρ. |
 
 ---
 
@@ -156,7 +191,7 @@ meaningful mathematical types.
 - `latticeMeasure_translation_invariant` — Integral equality under lattice translation (sorry)
 - `ward_identity_lattice` — Ward identity bound: $|∫ F dμ - ∫ F∘R_θ dμ| ≤ C|θ|a²$ (proved, pending rotation action)
 - `anomaly_scaling_dimension` — Lattice dispersion Taylor error $≤ a²(Σ k_i⁴ + 3Σ k_i²)$ (**proved**, cos_bound + crude bound)
-- `anomaly_vanishes` — $‖Z[R·f] - Z[f]‖ ≤ C·a²$ for continuum-embedded lattice measure (sorry)
+- `anomaly_vanishes` — $‖Z[R·f] - Z[f]‖ ≤ C·a²·(1+|log a|)^p$ for continuum-embedded lattice measure (delegates to axiom)
 
 ### OS3: Reflection Positivity
 - `lattice_rp` — RP inequality for `interactingLatticeMeasure` with `fieldFromSites`/`fieldReflection2D` (sorry)

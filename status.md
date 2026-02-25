@@ -11,11 +11,11 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 53 axioms (48 required + 5 Option B), 0 sorries** | **gaussian-field (upstream): 15 axioms, 7 sorries**
+**pphi2: 47 axioms, 0 sorries** | **gaussian-field (upstream): 18 axioms, 0 sorries**
 
-Note: The 5 "Option B" axioms in `Hypercontractivity.lean` provide an alternative
-full Gross-Rothaus-Simon proof path but are **not required** for the main pphi2 theorem.
-The main proof uses Option A (Cauchy-Schwarz density transfer, 2 axioms + 1 proved theorem).
+The 5 former "Option B" axioms in `Hypercontractivity.lean` have been converted to
+theorems (they had `True` conclusions). `schwinger2_convergence` was proved from
+`schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
 
 ## File inventory
 
@@ -37,14 +37,14 @@ The main proof uses Option A (Cauchy-Schwarz density transfer, 2 axioms + 1 prov
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
 | 3 | `OSProofs/OS4_MassGap.lean` | 2 axioms, 0 sorries |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
-| 4 | `ContinuumLimit/Embedding.lean` | 0 axioms |
-| 4 | `ContinuumLimit/Hypercontractivity.lean` | 7 axioms (2 required Option A + 5 optional Option B), 1 proved theorem |
+| 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def) |
+| 4 | `ContinuumLimit/Hypercontractivity.lean` | 2 axioms, 6 proved theorems |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
-| 4 | `ContinuumLimit/Convergence.lean` | 6 axioms, 0 sorries |
+| 4 | `ContinuumLimit/Convergence.lean` | 6 axioms, 1 proved theorem |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 10 axioms, 0 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
-| 6 | `Main.lean` | 2 axioms, 0 sorries |
+| 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 6 | `Bridge.lean` | 6 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)

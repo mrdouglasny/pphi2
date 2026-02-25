@@ -155,6 +155,23 @@ def IsWeakCoupling (P : InteractionPolynomial) (mass coupling : ℝ) : Prop :=
   -- Note: the true condition is coupling < λ₀(P, mass) per Glimm-Jaffe-Spencer (1974).
   -- We use mass² / 4 as a conservative stand-in for the convergence radius.
 
+/-! ## Bridge between IsPphi2ContinuumLimit and IsPphi2Limit
+
+`IsPphi2Limit` is defined in Embedding.lean as: ∃ (a, ν) with Schwinger function
+convergence. `IsPphi2ContinuumLimit` is the same definition using Bridge.lean's
+type aliases (`FieldConfig`, `TestFun`). This theorem connects them. -/
+
+/-- Any concrete P(Φ)₂ continuum limit (as defined by `IsPphi2ContinuumLimit`)
+satisfies the `IsPphi2Limit` predicate. The definitions have identical bodies
+(modulo type aliases `FieldConfig = Configuration (ContinuumTestFunction 2)` and
+`TestFun = ContinuumTestFunction 2`), so the proof is `exact h`. -/
+theorem IsPphi2ContinuumLimit.toIsPphi2Limit
+    {μ : @Measure FieldConfig instMeasurableSpaceConfiguration}
+    {hμ : IsProbabilityMeasure μ}
+    {P : InteractionPolynomial} {mass : ℝ}
+    (h : @IsPphi2ContinuumLimit μ hμ P mass) :
+    IsPphi2Limit μ P mass := h
+
 /-! ## Core axiom: measure equality
 
 This is the central result that enables axiom transfer. It states that
@@ -396,6 +413,7 @@ theorem full_os_via_bridge
     @SatisfiesFullOS μ_latt hμ_latt := by
   -- Get full OS bundle from the main construction (has sorries for os0/os1/os2/os4)
   have h_full := @continuumLimit_satisfies_fullOS P mass hmass μ_latt hμ_latt
+    (IsPphi2ContinuumLimit.toIsPphi2Limit hμ_latt_limit)
   -- Get OS3 from pphi2's transfer matrix argument
   have h_os3 := @os3_from_pphi2 P mass hmass μ_latt hμ_latt hμ_latt_limit
   -- Get OS2 from Phi4's manifest continuum invariance, transferred via h_eq
@@ -441,6 +459,7 @@ theorem phi4_full_os_via_bridge
   -- Delegate os0/os1/os4 to the main construction via measure equality
   subst h_eq
   have h_full := @continuumLimit_satisfies_fullOS P mass hmass μ_latt hμ_latt
+    (IsPphi2ContinuumLimit.toIsPphi2Limit hμ_latt_limit)
   exact {
     os0 := h_full.os0
     os1 := h_full.os1

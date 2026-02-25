@@ -250,6 +250,39 @@ theorem continuumMeasure_isProbability (P : InteractionPolynomial)
   exact Measure.isProbabilityMeasure_map
     (latticeEmbedLift_measurable d N a ha).aemeasurable
 
+/-! ## P(φ)₂ continuum limit predicate -/
+
+/-- **Marker predicate**: μ is a P(φ)₂ continuum limit measure.
+
+A probability measure μ on S'(ℝ^d) satisfies `IsPphi2Limit` if it arises as
+a subsequential weak limit of the lattice construction. Concretely, this means
+there exists a sequence of lattice spacings aₖ → 0 and a corresponding sequence
+of probability measures νₖ on S'(ℝ^d) such that all Schwinger functions converge:
+
+  `∫ ∏ᵢ ω(fᵢ) dνₖ → ∫ ∏ᵢ ω(fᵢ) dμ`
+
+for all n and all Schwartz test functions f₁,...,fₙ.
+
+This predicate is used as a hypothesis on axioms that hold specifically for
+P(φ)₂ continuum limit measures (translation/rotation invariance, exponential
+moments, RP, clustering) — properties that do NOT hold for arbitrary probability
+measures on S'(ℝ^d).
+
+The definition is mirrored in `Bridge.lean` by `IsPphi2ContinuumLimit`, which
+uses the type aliases `FieldConfig` and `TestFun` for the d=2 case. -/
+def IsPphi2Limit {d : ℕ}
+    (μ : Measure (Configuration (ContinuumTestFunction d)))
+    (P : InteractionPolynomial) (mass : ℝ) : Prop :=
+  ∃ (a : ℕ → ℝ) (ν : ℕ → Measure (Configuration (ContinuumTestFunction d))),
+    (∀ k, IsProbabilityMeasure (ν k)) ∧
+    Filter.Tendsto a Filter.atTop (nhds 0) ∧
+    (∀ k, 0 < a k) ∧
+    ∀ (n : ℕ) (f : Fin n → ContinuumTestFunction d),
+      Filter.Tendsto
+        (fun k => ∫ ω : Configuration (ContinuumTestFunction d), ∏ i, ω (f i) ∂(ν k))
+        Filter.atTop
+        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ∏ i, ω (f i) ∂μ))
+
 end Pphi2
 
 end

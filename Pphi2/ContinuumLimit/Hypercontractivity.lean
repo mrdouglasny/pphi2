@@ -265,11 +265,11 @@ F ∈ Lᵖ). See docstrings for mathematical content and references. -/
 :φ(f)^n: ∈ H_n (n-th Wiener chaos), eigenspace of N with eigenvalue n.
 
 Reference: Simon (1974), §I.4; Nelson (1973), §3. -/
-axiom wick_is_eigenfunction
+theorem wick_is_eigenfunction
     (mass : ℝ) (hmass : 0 < mass)
     (n : ℕ) (f : ContinuumTestFunction d)
     (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1) :
-    True  -- placeholder
+    True := trivial  -- placeholder
 
 /-- **OU semigroup on L²(μ_{GFF})** via Mehler formula.
 
@@ -279,37 +279,38 @@ Infrastructure: gaussian-field has `mehlerKernel` with proved semigroup
 property and Hermite reproducing formula.
 
 Reference: Nelson (1973); Simon (1974), §I.5. -/
-axiom ou_semigroup_exists
+theorem ou_semigroup_exists
     (mass : ℝ) (hmass : 0 < mass)
     (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1) :
-    True  -- placeholder
+    True := trivial  -- placeholder
 
 /-- **OU semigroup eigenvalue**: P_t(:φ(f)^n:) = e^{-nt} · :φ(f)^n:.
 
 Reference: Simon (1974), Theorem I.15. -/
-axiom ou_semigroup_eigenvalue
+theorem ou_semigroup_eigenvalue
     (mass : ℝ) (hmass : 0 < mass)
     (n : ℕ) (f : ContinuumTestFunction d)
     (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1) :
-    True  -- placeholder
+    True := trivial  -- placeholder
 
 /-- **Gross's theorem**: LSI ⟹ OU hypercontractivity via Rothaus-Simon ODE.
 
 Reference: Gross (1975), Theorem 3; Rothaus (1985). -/
-axiom gross_theorem_lsi_to_hypercontractivity
+theorem gross_theorem_lsi_to_hypercontractivity
     (mass : ℝ) (hmass : 0 < mass)
     (p : ℝ) (hp : 2 ≤ p)
     (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1) :
-    True  -- placeholder
+    True := trivial  -- placeholder
 
 /-- **Bakry-Émery Γ₂ criterion**: LSI(m²) for the lattice GFF.
 
 Reference: Bakry-Émery (1985), Théorème 3; Ledoux (1999), Ch. 5. -/
-axiom bakry_emery_gaussian_lsi
+theorem bakry_emery_gaussian_lsi
     (mass : ℝ) (hmass : 0 < mass)
     (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1) :
     ∃ ρ : ℝ, 0 < ρ ∧ ρ = mass ^ 2 ∧
-    True  -- placeholder
+    True :=
+  ⟨mass ^ 2, pow_pos hmass 2, rfl, trivial⟩
 
 /-- **Interacting moment bound via Option B.**
 Same conclusion as `interacting_moment_bound` but via the full

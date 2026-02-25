@@ -78,7 +78,8 @@ Proof outline:
 axiom os0_inheritance (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction d)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     -- Z[f] = ∫ exp(i Φ(f)) dμ is entire analytic
     -- (Stated as: all moments are finite and the moment series converges)
     ∀ (f : ContinuumTestFunction d) (n : ℕ),
@@ -168,7 +169,8 @@ that depend only on evaluations at positive-time test functions. -/
 axiom os3_inheritance (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     -- For all bounded continuous F depending on positive-time evaluations:
     -- ∫ F(ω) · F(Θ*ω) dμ(ω) ≥ 0
     ∀ (F : Configuration (ContinuumTestFunction 2) → ℝ),
@@ -197,7 +199,8 @@ parameter. -/
 axiom os4_inheritance (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     -- μ satisfies exponential clustering with some rate m₀ > 0:
     -- for all test functions f, g there exists C (independent of R) such that
     -- |⟨ω(f) · ω(g_R)⟩ - ⟨ω(f)⟩⟨ω(g)⟩| ≤ C · e^{-m₀R} for all R > 0,
@@ -252,12 +255,13 @@ theorem continuumLimit_satisfies_os0134
     (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     @SatisfiesOS0134 2 μ hμ where
-  os0 := os0_inheritance 2 P mass hmass μ hμ
+  os0 := os0_inheritance 2 P mass hmass μ hμ h_limit
   os1 := os1_inheritance 2 P mass hmass μ hμ
-  os3 := ⟨continuumTimeReflection, os3_inheritance P mass hmass μ hμ⟩
-  os4 := os4_inheritance P mass hmass μ hμ
+  os3 := ⟨continuumTimeReflection, os3_inheritance P mass hmass μ hμ h_limit⟩
+  os4 := os4_inheritance P mass hmass μ hμ h_limit
 
 end Pphi2
 

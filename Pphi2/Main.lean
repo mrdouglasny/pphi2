@@ -75,9 +75,10 @@ This combines:
 - OS4 (Clustering): `os4_clustering_continuum` — uniform spectral gap + exponential decay -/
 theorem pphi2_main (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ) :
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
     @SatisfiesFullOS μ hμ :=
-  continuumLimit_satisfies_fullOS P mass hmass μ hμ
+  continuumLimit_satisfies_fullOS P mass hmass μ hμ h_limit
 
 /-- **Existence of the P(Φ)₂ Euclidean measure.**
 
@@ -135,14 +136,27 @@ theorem pphi2_nontrivial (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < m
 The connected four-point function (fourth cumulant) is nonzero:
 S₄(f,f,f,f) - 3·S₂(f,f)² ≠ 0 for some test function f.
 
+Proved from `continuumLimit_nonGaussian` by providing a fixed sequence
+of lattice spacings aₙ = 1/(n+1) → 0 and extracting the limit measure.
+
 Reference: Simon Ch. VIII — perturbation theory shows the connected
 four-point function is O(λ) at weak coupling, hence nonzero for λ > 0. -/
-axiom pphi2_nonGaussianity (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+theorem pphi2_nonGaussianity (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (μ : Measure (Configuration (ContinuumTestFunction 2)))
       (_ : IsProbabilityMeasure μ),
       ∃ (f : ContinuumTestFunction 2),
         ∫ ω : Configuration (ContinuumTestFunction 2), (ω f) ^ 4 ∂μ -
-        3 * (∫ ω : Configuration (ContinuumTestFunction 2), (ω f) ^ 2 ∂μ) ^ 2 ≠ 0
+        3 * (∫ ω : Configuration (ContinuumTestFunction 2), (ω f) ^ 2 ∂μ) ^ 2 ≠ 0 := by
+  -- Use a fixed sequence aₙ = 1/(n+1) → 0
+  obtain ⟨_, μ, _, hμ, f, hf⟩ := continuumLimit_nonGaussian 2 P mass hmass
+    (fun n => 1 / (↑n + 1))
+    (fun n => by positivity)
+    (fun n => by
+      have h1 : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+      have h2 : (1 : ℝ) ≤ (n : ℝ) + 1 := by linarith [show (0 : ℝ) ≤ (n : ℝ) from Nat.cast_nonneg n]
+      exact (div_le_one h1).mpr h2)
+    tendsto_one_div_add_atTop_nhds_zero_nat
+  exact ⟨μ, hμ, f, hf⟩
 
 /-- **The P(Φ)₂ measure is non-Gaussian.**
 
