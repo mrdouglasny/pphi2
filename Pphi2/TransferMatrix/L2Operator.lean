@@ -39,6 +39,8 @@ import Pphi2.TransferMatrix.L2Multiplication
 import Pphi2.TransferMatrix.L2Convolution
 import GaussianField.SpectralTheorem
 import Mathlib.MeasureTheory.Function.L2Space
+import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
+import Mathlib.MeasureTheory.Integral.Pi
 
 noncomputable section
 
@@ -184,15 +186,38 @@ theorem transferWeight_bound (P : InteractionPolynomial) (a mass : ℝ)
   have h := hB ψ
   nlinarith
 
+omit [NeZero Ns] in
 /-- The Gaussian kernel is in L¹(ℝ^Ns).
 
 This is the standard Gaussian integral:
 `∫_{ℝ^Ns} exp(-½‖x‖²) dx = (2π)^{Ns/2} < ∞`.
 
-**Proof strategy**: Factor into product of 1D Gaussian integrals via Fubini,
-use Mathlib's `integral_gaussian` for each factor. -/
-axiom transferGaussian_memLp :
-    MemLp (transferGaussian Ns) 1 (volume : Measure (SpatialField Ns))
+**Proof**: Factor `exp(-½‖x‖²) = ∏ᵢ exp(-½xᵢ²)` and use `Integrable.fintype_prod`
+with `integrable_exp_neg_mul_sq` for each 1D factor. -/
+theorem transferGaussian_memLp :
+    MemLp (transferGaussian Ns) 1 (volume : Measure (SpatialField Ns)) := by
+  rw [memLp_one_iff_integrable]
+  -- Show transferGaussian = fun ψ => ∏ x, exp (-(1/2) * (ψ x)^2)
+  have hfact : transferGaussian Ns =
+      fun ψ => ∏ x : Fin Ns, Real.exp (-(1/2) * (ψ x) ^ 2) := by
+    ext ψ
+    simp only [transferGaussian, timeCoupling]
+    rw [show (0 : SpatialField Ns) = fun _ => (0 : ℝ) from rfl]
+    simp only [zero_sub, neg_sq]
+    -- Goal: exp (-(1/2 * Σ x, (ψ x)^2)) = ∏ x, exp (-(1/2) * (ψ x)^2)
+    have : -(1 / 2 * ∑ x : Fin Ns, (ψ x) ^ 2) =
+        ∑ x : Fin Ns, (-(1/2) * (ψ x) ^ 2) := by
+      simp only [neg_mul, Finset.mul_sum, ← Finset.sum_neg_distrib]
+    rw [this]
+    exact Real.exp_sum Finset.univ _
+  rw [hfact]
+  -- volume on (Fin Ns → ℝ) is Measure.pi (fun _ => volume)
+  have hvol : (volume : Measure (SpatialField Ns)) =
+      Measure.pi (fun _ : Fin Ns => (volume : Measure ℝ)) := rfl
+  rw [hvol]
+  -- Use fintype_prod to reduce to 1D integrability
+  exact MeasureTheory.Integrable.fintype_prod
+    (fun i => integrable_exp_neg_mul_sq (by norm_num : (0 : ℝ) < 1/2))
 
 /-! ## Transfer operator definition
 
