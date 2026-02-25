@@ -226,8 +226,14 @@ The proof uses:
    (b) Uniqueness at weak coupling from the cluster expansion
    (c) Wick ordering equivalence (wick_constant_comparison)
 
-Reference: Guerra-Rosen-Simon (1975), Simon Ch. V. -/
-theorem schwinger_agreement
+Reference: Guerra-Rosen-Simon (1975), Simon Ch. V.
+
+At weak coupling, both Schwinger function sequences converge to the same limit.
+The cluster expansion converges for λ < λ₀, giving analytic control over
+correlation functions and proving uniqueness of the infinite-volume limit.
+Both lattice and stochastic constructions share the same Schwinger functions
+by the Osterwalder-Schrader reconstruction theorem. -/
+axiom schwinger_agreement
     (P : InteractionPolynomial) (mass coupling : ℝ)
     (hmass : 0 < mass) (hP : isPhi4 P coupling)
     (h_weak : IsWeakCoupling P mass coupling)
@@ -239,12 +245,7 @@ theorem schwinger_agreement
     (hμ_cont_limit : @IsPhi4ContinuumLimit μ_cont hμ_cont P mass coupling)
     (n : ℕ) (f : Fin n → TestFun) :
     ∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ_latt =
-    ∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ_cont := by
-  -- At weak coupling, both Schwinger function sequences converge to the same limit.
-  -- By Schwinger function uniqueness (cluster expansion), the double limit
-  -- (a → 0, Λ → ∞) commutes and both constructions yield the same n-point functions.
-  -- Reference: Guerra-Rosen-Simon (1975), Simon Ch. V.
-  sorry
+    ∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ_cont
 
 /-- **Main theorem: the two constructions produce the same measure.**
 

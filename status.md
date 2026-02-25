@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 44 axioms (39 required + 5 Option B), 9 sorries** | **gaussian-field (upstream): 15 axioms, 9 sorries**
+**pphi2: 53 axioms (48 required + 5 Option B), 0 sorries** | **gaussian-field (upstream): 15 axioms, 7 sorries**
 
 Note: The 5 "Option B" axioms in `Hypercontractivity.lean` provide an alternative
 full Gross-Rothaus-Simon proof path but are **not required** for the main pphi2 theorem.
@@ -32,7 +32,7 @@ The main proof uses Option A (Cauchy-Schwarz density transfer, 2 axioms + 1 prov
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
 | 2 | `TransferMatrix/L2Operator.lean` | 8 axioms (4 operator + 4 eigenvalue) |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
-| 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 1 sorry |
+| 2 | `OSProofs/OS3_RP_Lattice.lean` | 3 axioms, 0 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
 | 3 | `OSProofs/OS4_MassGap.lean` | 2 axioms, 0 sorries |
@@ -40,12 +40,12 @@ The main proof uses Option A (Cauchy-Schwarz density transfer, 2 axioms + 1 prov
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms |
 | 4 | `ContinuumLimit/Hypercontractivity.lean` | 7 axioms (2 required Option A + 5 optional Option B), 1 proved theorem |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
-| 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 4 sorries |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | 2 axioms, 1 sorry |
+| 4 | `ContinuumLimit/Convergence.lean` | 6 axioms, 0 sorries |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 10 axioms, 0 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
-| 6 | `Main.lean` | 0 axioms, 2 sorries |
-| 6 | `Bridge.lean` | 5 axioms, 1 sorry |
+| 6 | `Main.lean` | 2 axioms, 0 sorries |
+| 6 | `Bridge.lean` | 6 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
@@ -217,7 +217,7 @@ None — all sorries have been resolved. The 5 remaining axioms are the infrastr
 | `transferEigenvalue_antitone` | L2Operator | Easy | Eigenvalues decrease: λ₀ ≥ λ₁ ≥ ... (by construction from sorting). |
 | `transferEigenvalue_ground_simple` | L2Operator | Medium | λ₀ > λ₁ (strict). Perron-Frobenius for positivity-improving operators. |
 | `action_decomposition` | OS3_RP_Lattice | Medium | Lattice action decomposes as S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
-| ~~`lattice_rp`~~ | OS3_RP_Lattice | **Theorem (sorry)** | RP inequality for `interactingLatticeMeasure`. |
+| `lattice_rp` | OS3_RP_Lattice | Medium | RP inequality for `interactingLatticeMeasure`. Fubini + perfect-square from action decomposition. |
 | `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. |
 | ~~`rp_from_transfer_positivity`~~ | OS3_RP_Lattice | **Theorem (sorry)** | ⟨f, T^n f⟩ ≥ 0 via `transferOperatorCLM`. |
 
@@ -260,15 +260,15 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `gross_theorem_lsi_to_hypercontractivity` | Hypercontractivity | Hard | (Option B) Gross's theorem: LSI ⟹ OU hypercontractivity via Rothaus-Simon ODE. |
 | `bakry_emery_gaussian_lsi` | Hypercontractivity | Medium | (Option B) Bakry-Émery Γ₂ criterion gives LSI(m²) for Gaussian. |
 | ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — Prokhorov's theorem (sequential version). Now a theorem with complete proof. |
-| ~~`schwinger2_convergence`~~ | Convergence | **Theorem (sorry)** | 2-point Schwinger functions converge along subsequence. |
-| ~~`schwinger_n_convergence`~~ | Convergence | **Theorem (sorry)** | n-point Schwinger functions converge along subsequence. |
-| ~~`continuumLimit_nontrivial`~~ | Convergence | **Theorem (sorry)** | ∫ (ω f)² dμ > 0 for some f. |
-| ~~`continuumLimit_nonGaussian`~~ | Convergence | **Theorem (sorry)** | Connected 4-point function ≠ 0. |
+| `schwinger2_convergence` | Convergence | Med/Hard | 2-point Schwinger functions converge along subsequence. Prokhorov + uniform L² integrability. |
+| `schwinger_n_convergence` | Convergence | Hard | n-point Schwinger functions converge along subsequence. Diagonal subsequence extraction. |
+| `continuumLimit_nontrivial` | Convergence | Hard | ∫ (ω f)² dμ > 0 for some f. Free field two-point function gives lower bound. |
+| `continuumLimit_nonGaussian` | Convergence | Hard | Connected 4-point function ≠ 0. Perturbation theory gives O(λ) contribution. |
 | `configuration_polishSpace` | Convergence | Infrastructure | S'(ℝ^d) is Polish (dual of nuclear Fréchet). Not in Mathlib. |
 | `configuration_borelSpace` | Convergence | Infrastructure | Borel σ-algebra on S'(ℝ^d) = cylindrical σ-algebra (weak-* topology). Not in Mathlib. |
 | `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
 | `os3_inheritance` | AxiomInheritance | Medium | Abstract RP: ∫ F(ω)·F(Θ*ω) dμ ≥ 0 for bounded continuous F. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
-| ~~`os4_inheritance`~~ | AxiomInheritance | **Theorem (sorry)** | Exponential clustering of connected 2-point functions. |
+| `os4_inheritance` | AxiomInheritance | Med/Hard | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | ~~`continuumLimit_satisfies_os0134`~~ | AxiomInheritance | **Theorem** | Assembly of os0/os1/os3/os4 inheritance results. |
 
 Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially since |cos(·)| ≤ 1.
@@ -304,13 +304,16 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`SchwartzMap.translate`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfAntilipschitz` with translation (antilipschitz + temperate growth). |
 | ~~`os_reconstruction`~~ | Main | **Proved** | ∃ m₀ > 0 from ⟨mass, hmass⟩. Full Wightman formalism not formalized. |
 | ~~`pphi2_wightman`~~ | Main | **Proved** | Full OS bundle + mass gap existence, from `pphi2_exists` + `os_reconstruction`. |
-| ~~`pphi2_nontrivial`~~ | Main | **Theorem (sorry)** | ∫ (ω f)² dμ > 0 for all f ≠ 0. |
-| ~~`pphi2_nonGaussian`~~ | Main | **Theorem (sorry)** | ∫ (ω f)⁴ dμ - 3(∫ (ω f)² dμ)² ≠ 0. |
+| ~~`pphi2_nontrivial`~~ | Main | **Proved** | Uses `pphi2_nontriviality` axiom. |
+| ~~`pphi2_nonGaussian`~~ | Main | **Proved** | Uses `pphi2_nonGaussianity` axiom. |
+| `pphi2_nontriviality` | Main | Hard | ∫ (ω f)² dμ > 0 for all f ≠ 0. Correlation inequalities (Griffiths, FKG). |
+| `pphi2_nonGaussianity` | Main | Hard | ∫ (ω f)⁴ dμ − 3(∫ (ω f)² dμ)² ≠ 0. Perturbation theory, O(λ) at weak coupling. |
 | `measure_determined_by_schwinger` | Bridge | Medium | Moment determinacy on S'(ℝ²) with exponential (Fernique-type) moment bound. |
 | `wick_constant_comparison` | Bridge | Medium | Wick constant c_a ≈ (2π)⁻¹ log(1/a) with bounded remainder. |
 | `same_continuum_measure` | Bridge | Medium | pphi2 and Phi4 constructions agree at weak coupling. Requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
 | `os2_from_phi4` | Bridge | Medium | OS2 for Phi4 continuum limit. Requires `IsPhi4ContinuumLimit` hypothesis. |
 | `os3_from_pphi2` | Bridge | Medium | OS3 for pphi2 continuum limit. Requires `IsPphi2ContinuumLimit` hypothesis. |
+| `schwinger_agreement` | Bridge | Very Hard | Schwinger function agreement at weak coupling. Cluster expansion (Guerra-Rosen-Simon). |
 
 ---
 
@@ -344,7 +347,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`wickConstant_antitone_mass`~~ | Counterterm | **Proved** (in gaussian-field) — c_a decreasing in mass. |
 | ~~`energyLevel_gap`~~ | Positivity | **Proved** — E₁ > E₀ from transfer eigenvalue gap. |
 | ~~`rp_closed_under_weak_limit`~~ | OS3_RP_Inheritance | **Proved** — RP closed under weak limits. |
-| ~~`reflection_positivity_lattice`~~ | OS3_RP_Lattice | **Converted** to `lattice_rp` theorem (sorry). |
+| ~~`reflection_positivity_lattice`~~ | OS3_RP_Lattice | **Converted** to `lattice_rp` axiom. |
 | ~~`continuumLimit`~~ | Convergence | **Proved** — Apply Prokhorov to the tight family. Uses `prokhorov_sequential` + `continuumMeasures_tight`. PolishSpace/BorelSpace instances now axioms. |
 | ~~`continuumTimeReflection`~~ | AxiomInheritance | **Proved** — defined via `compCLMOfContinuousLinearEquiv`. |
 | ~~`so2Generator`~~ | OS2_WardIdentity | **Proved** — SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ via `smulLeftCLM` + `lineDerivOpCLM`. |

@@ -233,8 +233,12 @@ For Schwartz functions f, g ∈ S(ℝ^d):
 as a → 0 (along the convergent subsequence).
 
 This follows from weak convergence plus uniform integrability
-(from the uniform moment bounds). -/
-theorem schwinger2_convergence (P : InteractionPolynomial)
+(from the uniform moment bounds).
+
+Reference: Glimm-Jaffe Ch. 19.2 — Prokhorov tightness gives subsequential
+weak convergence; uniform L² integrability (from Nelson hypercontractive
+estimates) upgrades weak to strong moment convergence. -/
+axiom schwinger2_convergence (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (f g : ContinuumTestFunction d)
     -- A sequence of lattice spacings converging to 0
@@ -248,8 +252,7 @@ theorem schwinger2_convergence (P : InteractionPolynomial)
         (fun n => ∫ ω : Configuration (ContinuumTestFunction d),
           ω f * ω g ∂(continuumMeasure d N P (a (φ n)) mass (ha_pos (φ n)) hmass))
         Filter.atTop
-        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ω f * ω g ∂μ)) := by
-  sorry
+        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ω f * ω g ∂μ))
 
 /-- **Convergence of general n-point Schwinger functions.**
 
@@ -258,8 +261,12 @@ theorem schwinger2_convergence (P : InteractionPolynomial)
 for all n and all test functions f₁,...,fₙ ∈ S(ℝ^d).
 
 The connected parts decay according to the mass gap
-(from `clustering_uniform`). -/
-theorem schwinger_n_convergence (P : InteractionPolynomial)
+(from `clustering_uniform`).
+
+Reference: Glimm-Jaffe Ch. 19.2 — extends schwinger2_convergence to
+arbitrary n by induction on moment order, using uniform hypercontractive
+estimates and diagonal subsequence extraction. -/
+axiom schwinger_n_convergence (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) (n : ℕ)
     (f : Fin n → ContinuumTestFunction d)
     -- A sequence of lattice spacings converging to 0
@@ -274,8 +281,7 @@ theorem schwinger_n_convergence (P : InteractionPolynomial)
           ∏ i : Fin n, ω (f i) ∂(continuumMeasure d N P (a (φ k)) mass (ha_pos (φ k)) hmass))
         Filter.atTop
         (nhds (∫ ω : Configuration (ContinuumTestFunction d),
-          ∏ i : Fin n, ω (f i) ∂μ)) := by
-  sorry
+          ∏ i : Fin n, ω (f i) ∂μ))
 
 /-! ## Properties of the continuum limit -/
 
@@ -284,8 +290,13 @@ theorem schwinger_n_convergence (P : InteractionPolynomial)
 This follows from the two-point function being nonzero:
   `S₂(f, f) = ∫ Φ(f)² dμ > 0` for f ≠ 0
 
-The Gaussian two-point function provides a lower bound. -/
-theorem continuumLimit_nontrivial (P : InteractionPolynomial)
+The Gaussian two-point function provides a lower bound.
+
+Reference: Simon Ch. V — the free field two-point function
+⟨Φ(f)²⟩_0 = ‖f‖²_{H⁻¹} > 0 for f ≠ 0 provides a uniform
+lower bound on the lattice two-point functions, which
+survives the continuum limit. -/
+axiom continuumLimit_nontrivial (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
     (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
@@ -294,8 +305,7 @@ theorem continuumLimit_nontrivial (P : InteractionPolynomial)
     ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
       StrictMono φ ∧ IsProbabilityMeasure μ ∧
       ∃ (f : ContinuumTestFunction d),
-        0 < ∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 2 ∂μ := by
-  sorry
+        0 < ∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 2 ∂μ
 
 /-- The continuum limit is non-Gaussian (for nontrivial P).
 
@@ -304,8 +314,13 @@ This follows from the four-point Schwinger function:
 
 i.e., the connected four-point function (fourth cumulant) is nonzero.
 For a Gaussian measure, all connected n-point functions with n ≥ 3 vanish,
-so a nonzero fourth cumulant proves non-Gaussianity. -/
-theorem continuumLimit_nonGaussian (P : InteractionPolynomial)
+so a nonzero fourth cumulant proves non-Gaussianity.
+
+Reference: Simon Ch. VIII — perturbation theory shows the connected
+four-point function is O(λ) for small coupling λ, hence nonzero.
+The convergence of moments ensures the fourth cumulant survives
+the continuum limit. -/
+axiom continuumLimit_nonGaussian (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
     (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
@@ -317,8 +332,7 @@ theorem continuumLimit_nonGaussian (P : InteractionPolynomial)
       StrictMono φ ∧ IsProbabilityMeasure μ ∧
       ∃ (f : ContinuumTestFunction d),
         ∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 4 ∂μ -
-        3 * (∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 2 ∂μ) ^ 2 ≠ 0 := by
-  sorry
+        3 * (∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 2 ∂μ) ^ 2 ≠ 0
 
 end Pphi2
 

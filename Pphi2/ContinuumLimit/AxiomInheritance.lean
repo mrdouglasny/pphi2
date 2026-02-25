@@ -189,8 +189,12 @@ Proof outline:
    `|⟨F · G_R⟩ - ⟨F⟩⟨G⟩| ≤ C · exp(-m₀ · R)` for all a ≤ a₀.
 3. For bounded continuous F, G, the clustering bound transfers to the
    limit: if ν_a ⇀ μ and each ν_a satisfies the bound, then μ does too.
-4. The limit measure μ satisfies OS4 with mass gap ≥ m₀. -/
-theorem os4_inheritance (P : InteractionPolynomial)
+4. The limit measure μ satisfies OS4 with mass gap ≥ m₀.
+
+Reference: Glimm-Jaffe Ch. 19, Simon Ch. V — weak convergence preserves
+exponential clustering when the rate m₀ is uniform in the approximation
+parameter. -/
+axiom os4_inheritance (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
@@ -203,8 +207,7 @@ theorem os4_inheritance (P : InteractionPolynomial)
           |∫ ω : Configuration (ContinuumTestFunction 2), ω f * ω g ∂μ -
            (∫ ω : Configuration (ContinuumTestFunction 2), ω f ∂μ) *
            (∫ ω : Configuration (ContinuumTestFunction 2), ω g ∂μ)| ≤
-          C * Real.exp (-m₀ * R) := by
-  sorry
+          C * Real.exp (-m₀ * R)
 
 /-! ## Combined OS axioms
 

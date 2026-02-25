@@ -166,8 +166,13 @@ Proof sketch:
    ∫ F(φ) F(Θφ) e^{-S} dφ = ∫ dφ⁰ [∫ F(φ⁺,φ⁰) e^{-S⁺} dφ⁺]² ≥ 0
    ```
 3. The integral over φ⁻ after substitution Θφ⁻ = ψ⁺ gives
-   the same integral as over φ⁺, yielding a perfect square. -/
-theorem lattice_rp (P : InteractionPolynomial) (a mass : ℝ)
+   the same integral as over φ⁺, yielding a perfect square.
+
+Reference: Glimm-Jaffe Ch. 6.1, Simon Ch. III — lattice action decomposes
+as S = S⁺ + S⁻ + S⁰ where S± involves only φ± and S⁰ couples
+through the boundary. The Fubini factorization plus time-reflection
+symmetry of S gives the perfect-square structure. -/
+axiom lattice_rp (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (F : (Fin N × Fin N → ℝ) → ℝ)
     (hF : PositiveTimeSupported N F) :
@@ -178,8 +183,7 @@ theorem lattice_rp (P : InteractionPolynomial) (a mass : ℝ)
     0 ≤ ∫ ω : Configuration (FinLatticeField 2 N),
       (F (fieldFromSites N (fun x => ω (Pi.single x 1)))) *
       (F (fieldReflection2D N (fieldFromSites N (fun x => ω (Pi.single x 1)))))
-      ∂(interactingLatticeMeasure 2 N P a mass ha hmass) := by
-  sorry
+      ∂(interactingLatticeMeasure 2 N P a mass ha hmass)
 
 /-- **Reflection positivity for the interacting measure** (matrix form).
 
