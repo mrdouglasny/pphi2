@@ -73,7 +73,7 @@ Each OS axiom (OS0, OS1, OS2, OS4) is derived via a proof chain:
 
 | # | Name | File | Rating | Verified | Notes |
 |---|------|------|--------|----------|-------|
-| 22 | `continuum_exponential_moments` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | `∃ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson transferred to limit. Feeds OS0 + OS1. |
+| 22 | `continuum_exponential_moments` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-25 | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Strengthened from ∃ to ∀ (all exponential moments exist). Fernique + Nelson transferred to limit. Feeds OS0 + OS1. |
 | 23 | `rotation_invariance_continuum` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + dim(O_break)=4>d=2 + super-renormalizability. Feeds OS2. |
 | 24 | `continuum_exponential_clustering` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-02-24 | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap + exp clustering. Feeds OS4. |
 

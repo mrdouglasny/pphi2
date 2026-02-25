@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 34 axioms (29 required + 5 Option B), 24 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
+**pphi2: 34 axioms (29 required + 5 Option B), 23 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
 
 Note: The 5 "Option B" axioms in `Hypercontractivity.lean` provide an alternative
 full Gross-Rothaus-Simon proof path but are **not required** for the main pphi2 theorem.
@@ -42,7 +42,7 @@ The main proof uses Option A (Cauchy-Schwarz density transfer, 2 axioms + 1 prov
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 4 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 2 axioms, 1 sorry |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 3 axioms, 10 sorries |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 3 axioms, 9 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 0 axioms, 2 sorries |
 | 6 | `Bridge.lean` | 5 axioms, 3 sorries |
@@ -278,7 +278,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | ~~`latticeAction_translation_invariant`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — relabeling via `Equiv.subRight`. |
-| `continuum_exponential_moments` | OS2_WardIdentity | Hard | `∃ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson, transferred to limit. Feeds OS0 + OS1. |
+| `continuum_exponential_moments` | OS2_WardIdentity | Hard | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson, transferred to limit. Feeds OS0 + OS1. |
 | `rotation_invariance_continuum` | OS2_WardIdentity | Hard | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + anomaly irrelevance. Feeds OS2. |
 | `continuum_exponential_clustering` | OS2_WardIdentity | Hard | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap → exp clustering. Feeds OS4. |
 
@@ -289,7 +289,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `anomaly_scaling_dimension`: lattice dispersion Taylor error bound (**proved**, cos_bound + crude bound)
 - `anomaly_vanishes`: ‖Z[R·f] - Z[f]‖ ≤ C·a² for continuum-embedded lattice measure (sorry)
 - `os0_for_continuum_limit`: exponential moments → OS0_Analyticity (3 sorries)
-- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (3 sorries)
+- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (2 sorries: h_exp_norm_bound, final assembly)
 - `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance (2 sorries)
 - `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (**fully proved**, ε-δ from exp decay)
 

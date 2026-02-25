@@ -625,12 +625,18 @@ continuum limit. On the lattice, it follows from:
 Transfer to the limit: the exponential moment bound is a lower-semicontinuous
 functional under weak convergence, so the bound passes to the limit μ.
 
-This single axiom feeds both OS0 (analyticity) and OS1 (regularity). -/
+This single axiom feeds both OS0 (analyticity) and OS1 (regularity).
+
+**Strengthening note:** The axiom states `∀ c > 0` (all exponential moments)
+rather than `∃ c > 0`. This is the correct mathematical statement: Fernique's
+theorem gives Gaussian moments for all c, and Nelson's hypercontractive estimate
+preserves this for the interacting measure. The stronger form is needed to
+establish integrability of `exp(|⟨ω, f⟩|)` (the c = 1 case) in the OS1 proof. -/
 axiom continuum_exponential_moments (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (f : TestFunction2) :
-    ∃ (c : ℝ), 0 < c ∧
+    ∀ (c : ℝ), 0 < c →
     Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ
 
 /-- **OS0 for the continuum limit** from exponential moments.
@@ -659,7 +665,9 @@ theorem os0_for_continuum_limit (P : InteractionPolynomial)
   have h_poly_moments : ∀ (f : TestFunction2) (n : ℕ),
       Integrable (fun ω : FieldConfig2 => (ω f) ^ n) μ := by
     intro f n
-    obtain ⟨c, hc, h_int⟩ := h_exp f
+    -- Pick c = 1 from the all-exponential-moments axiom
+    have hc : (0 : ℝ) < 1 := one_pos
+    have h_int := h_exp f 1 hc
     -- exp(c·x) and exp(-c·x) are both ≤ exp(c·|x|); apply Integrable.mono
     have hm := configuration_eval_measurable f
     refine ProbabilityTheory.integrable_pow_of_integrable_exp_mul (ne_of_gt hc) ?_ ?_ n
@@ -675,7 +683,7 @@ theorem os0_for_continuum_limit (P : InteractionPolynomial)
         (ae_of_all μ fun ω => by
           rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _),
               Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
-          rw [show (-c) * ω f = c * -(ω f) from by ring]
+          rw [show (-1 : ℝ) * ω f = 1 * -(ω f) from by ring]
           exact Real.exp_le_exp.mpr
             (mul_le_mul_of_nonneg_left
               ((le_abs_self _).trans_eq (abs_neg _)) (le_of_lt hc)))
@@ -713,12 +721,36 @@ theorem os1_for_continuum_limit (P : InteractionPolynomial)
   have h_bound : ∀ (J : TestFunction2ℂ),
       ‖generatingFunctionalℂ μ J‖ ≤
         ∫ ω : FieldConfig2, Real.exp (|ω (schwartzIm J)|) ∂μ := by
-    sorry -- triangle inequality on the integral + |exp(ix - y)| = exp(-y) ≤ exp(|y|)
+    intro J
+    -- Integrability of exp(|ω(Im J)|) from the strengthened exponential moments axiom
+    have hint_abs : Integrable (fun ω : FieldConfig2 => Real.exp (|ω (schwartzIm J)|)) μ := by
+      have := h_exp (schwartzIm J) 1 one_pos; simp only [one_mul] at this; exact this
+    -- Pointwise bound: ‖exp(i·Re - Im)‖ ≤ exp(|Im|)
+    -- Because ‖exp(z)‖ = exp(Re z), and Re(i·a - b) = -b, and exp(-b) ≤ exp(|b|)
+    have h_le : ∀ ω : FieldConfig2,
+        ‖Complex.exp (Complex.I * (↑(ω (schwartzRe J)) + Complex.I * ↑(ω (schwartzIm J))))‖ ≤
+        Real.exp (|ω (schwartzIm J)|) := by
+      intro ω
+      rw [Complex.norm_exp]
+      apply Real.exp_le_exp.mpr
+      -- Re(i·(a + i·b)) = -b ≤ |b|
+      have h_re : (Complex.I * (↑(ω (schwartzRe J)) + Complex.I * ↑(ω (schwartzIm J)))).re =
+          -(ω (schwartzIm J)) := by
+        simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+              Complex.ofReal_re, Complex.ofReal_im]
+      rw [h_re]
+      exact (le_abs_self (-(ω (schwartzIm J)))).trans_eq (abs_neg _)
+    -- Chain: ‖Z[J]‖ ≤ ∫ ‖integrand‖ ≤ ∫ exp(|y|)
+    exact (norm_integral_le_integral_norm _).trans
+      (integral_mono_of_nonneg
+        (ae_of_all μ fun ω => norm_nonneg _)
+        hint_abs
+        (ae_of_all μ h_le))
   -- Step 2: Exponential moments for Im(J) give ∫ exp(|⟨ω, Im J⟩|) dμ < ∞
   have h_exp_im : ∀ (J : TestFunction2ℂ),
-      ∃ (c : ℝ), 0 < c ∧
+      ∀ (c : ℝ), 0 < c →
       Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω (schwartzIm J)|)) μ := by
-    intro J; exact h_exp (schwartzIm J)
+    intro J c hc; exact h_exp (schwartzIm J) c hc
   -- Step 3: ∫ exp(|⟨ω,g⟩|) dμ ≤ exp(C · (‖g‖₁ + ‖g‖₂²))
   -- (Jensen + covariance bound: Var(⟨ω,g⟩) ≤ C‖g‖²_{H⁻¹} ≤ C'(‖g‖₁+‖g‖₂²))
   have h_exp_norm_bound : ∃ (c : ℝ), 0 < c ∧ ∀ (g : TestFunction2),

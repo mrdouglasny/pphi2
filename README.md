@@ -58,7 +58,7 @@ and 5 are optional (an alternative "Option B" Gross-Rothaus-Simon proof path
 for hypercontractivity). The 27 sorries are well-typed intermediate proof steps
 connecting axioms to the OS properties.
 
-- **pphi2:** 34 axioms (29 required + 5 optional), 24 sorries
+- **pphi2:** 34 axioms (29 required + 5 optional), 23 sorries
 - **gaussian-field** (upstream dependency): 15 axioms, 13 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
