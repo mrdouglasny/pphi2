@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 47 axioms, 0 sorries** | **gaussian-field (upstream): 18 axioms, 0 sorries**
+**pphi2: 47 axioms, 0 sorries** | **gaussian-field (upstream): 14 axioms, 0 sorries**
 
 The 5 former "Option B" axioms in `Hypercontractivity.lean` have been converted to
 theorems (they had `True` conclusions). `schwinger2_convergence` was proved from

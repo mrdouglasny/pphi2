@@ -56,7 +56,7 @@ All six phases are structurally complete and the full project builds
 placeholders remain.
 
 - **pphi2:** 47 axioms, 0 sorries
-- **gaussian-field** (upstream dependency): 18 axioms, 0 sorries
+- **gaussian-field** (upstream dependency): 14 axioms, 0 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.

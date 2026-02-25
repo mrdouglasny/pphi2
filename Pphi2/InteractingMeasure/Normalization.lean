@@ -210,6 +210,7 @@ theorem fkg_interacting (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (F G : Configuration (FinLatticeField d N) → ℝ)
     (hF : IsFieldMonotone d N F) (hG : IsFieldMonotone d N G)
+    (hFm : Measurable F) (hGm : Measurable G)
     (hFi : Integrable F (interactingLatticeMeasure d N P a mass ha hmass))
     (hGi : Integrable G (interactingLatticeMeasure d N P a mass ha hmass))
     (hFGi : Integrable (F * G) (interactingLatticeMeasure d N P a mass ha hmass)) :
@@ -272,7 +273,7 @@ theorem fkg_interacting (P : InteractionPolynomial) (a mass : ℝ)
   -- Step 3: Apply fkg_perturbed (un-normalized FKG inequality)
   have hfkg := fkg_perturbed d N a mass ha hmass V hV_ss
     (boltzmannWeight_integrable d N P a mass ha hmass)
-    F G hF hG hFi' hGi' hFGi'
+    F G hF hG hFm hGm hFi' hGi' hFGi'
   -- hfkg: (∫ FG*exp(-V) dμ_GFF) * (∫ exp(-V) dμ_GFF) ≥
   --        (∫ F*exp(-V) dμ_GFF) * (∫ G*exp(-V) dμ_GFF)
   -- Step 4: Convert back to interacting measure integrals
