@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-02-25 (All sorries eliminated, 47 axioms)
-**pphi2**: 47 axioms, 0 sorries | **gaussian-field**: 14 axioms, 0 sorries | **Total**: 61
+**pphi2**: 47 axioms, 0 sorries (+ 5 Option B) | **gaussian-field**: 9 axioms, 0 sorries | **Total**: 56 (+ 5 Option B)
 
 ## Verification Sources
 
@@ -84,7 +84,7 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 | 28 | `exponential_moment_schwartz_bound` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `∫ exp(\|ω g\|) ≤ exp(c·(‖g‖₁+‖g‖₂²))`. Non-standard norm formulation. |
 | 29 | `complex_gf_invariant_of_real_gf_invariant` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Real Z invariance → complex Z invariance (Cramér-Wold + Lévy uniqueness). |
 | 30 | `continuum_exponential_clustering` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Now requires `IsPphi2Limit`. Spectral gap. |
-| 31 | `cesaro_set_integral_tendsto` | OS2_WardIdentity:954 | ✅ Standard | DT 2026-02-25 | Continuous Cesàro convergence: h(t)→L bounded ⟹ (1/T)∫₀ᵀ h dt → L. Standard real analysis. EASY. |
+| 31 | `cesaro_set_integral_tendsto` | **PROVED** → `GeneralResults/FunctionalAnalysis.lean` | ✅ Proved | 2026-02-25 | Continuous Cesàro convergence. Moved to GeneralResults as pure Mathlib result. |
 | 32 | `pphi2_generating_functional_real` | OS2_WardIdentity:975 | ✅ Standard | DT 2026-02-25 | Im(Z[f])=0 from φ→-φ symmetry of even P. EASY. |
 | 33 | `generatingFunctional_translate_continuous` | OS2_WardIdentity:990 | ✅ Standard | DT 2026-02-25 | t ↦ Z[f + τ_{(t,0)} g] continuous. DCT with bounded integrand. EASY. |
 

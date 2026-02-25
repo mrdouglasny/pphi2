@@ -44,6 +44,8 @@ Pphi2/
     OS4_Ergodicity.lean         -- Ergodicity from mass gap
     OS2_WardIdentity.lean       -- Ward identity for rotation invariance
   ContinuumLimit/               -- Phase 4: Embedding, tightness, convergence
+  GeneralResults/               -- Pure Mathlib results (candidates for upstreaming)
+    FunctionalAnalysis.lean     -- Cesàro convergence, Schwartz Lp, trig identity
   OSAxioms.lean                 -- Phase 6: OS axiom definitions (E2 action, etc.)
   Main.lean                     -- Phase 6: Main theorem assembly
   Bridge.lean                   -- Bridge between pphi2 and Phi4 approaches

@@ -289,19 +289,9 @@ Now a theorem, proved from `cesaro_set_integral_tendsto` + `pphi2_generating_fun
 
 ---
 
-#### 17a. `cesaro_set_integral_tendsto` (OS2_WardIdentity.lean:954)
+#### 17a. `cesaro_set_integral_tendsto` — **PROVED**
 
-**Statement**: If h : ℝ → ℝ is measurable, bounded, and h(t) → L, then (1/T)∫₀ᵀ h(t) dt → L.
-
-**Plan**:
-1. For given ε > 0, pick T₀ such that |h(t) - L| < ε for t > T₀
-2. Split: (1/T)∫₀ᵀ h = (1/T)∫₀^{T₀} h + (1/T)∫_{T₀}ᵀ h
-3. First term: bounded by M·T₀/T → 0 as T → ∞
-4. Second term: ≈ (T-T₀)/T · L ± ε → L as T → ∞
-5. Combine for (1/T)∫₀ᵀ h → L
-
-**Key Mathlib**: `MeasureTheory.integral_mono`, `MeasureTheory.set_integral_le_of_abs_le`,
-`Filter.Tendsto`, basic limit arithmetic
+Proved and moved to `GeneralResults/FunctionalAnalysis.lean`. Pure Mathlib result (no project types).
 **Difficulty**: EASY
 
 ---
@@ -846,7 +836,7 @@ Now a theorem, proved from `cesaro_set_integral_tendsto` + `pphi2_generating_fun
 | 15 | `analyticOn_generatingFunctionalC` | OS2_Ward | MEDIUM | Needs exponential moments |
 | 16 | `complex_gf_invariant_of_real_gf_invariant` | OS2_Ward | MEDIUM | Needs analyticity |
 | 17 | ~~`os4_clustering_implies_ergodicity`~~ | OS2_Ward | **PROVED** | — |
-| 17a | `cesaro_set_integral_tendsto` | OS2_Ward | EASY | Standard real analysis |
+| 17a | `cesaro_set_integral_tendsto` | **PROVED** | — | Moved to GeneralResults/FunctionalAnalysis.lean |
 | 17b | `pphi2_generating_functional_real` | OS2_Ward | EASY | φ→-φ symmetry |
 | 17c | `generatingFunctional_translate_continuous` | OS2_Ward | EASY | DCT with bounded integrand |
 | 18 | `configuration_borelSpace` | Convergence | MEDIUM | Needs polishSpace |

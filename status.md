@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 48 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types) | **gaussian-field (upstream): 9 axioms, 0 sorries**
+**pphi2: 47 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types) | **gaussian-field (upstream): 9 axioms, 0 sorries**
 
 The 5 "Option B" axioms in `HypercontractivityOptionB.lean` provide an alternative
 proof path via the Gross-Rothaus-Simon OU semigroup framework. They currently have
@@ -45,7 +45,8 @@ required for the main theorem. `schwinger2_convergence` was proved from
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 5 axioms, 2 proved theorems |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 12 axioms |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 11 axioms |
+| — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 6 | `Bridge.lean` | 6 axioms, 0 sorries |
