@@ -639,63 +639,43 @@ axiom continuum_exponential_moments (P : InteractionPolynomial)
     ∀ (c : ℝ), 0 < c →
     Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ
 
+/-- **Analyticity of the complex generating functional from exponential moments.**
+
+If the measure μ has all exponential moments (`∀ f c > 0, ∫ exp(c|ω(f)|) dμ < ∞`),
+then the complex generating functional `z ↦ Z_ℂ[Σ zᵢ Jᵢ]` is jointly analytic
+in `z ∈ ℂⁿ` for any finite collection of complex test functions Jᵢ.
+
+The proof combines:
+1. **Power series representation:** Each ω-integrand `exp(i Σ zᵢ⟨ω,Jᵢ⟩)` is entire
+   in z, so the integral has a termwise convergent power series with moments
+   as coefficients.
+2. **Exponential moment bounds** justify term-by-term integration (dominated
+   convergence with majorant `exp(Σ |Im zᵢ| · |⟨ω, Jᵢ⟩|)`).
+3. Alternatively: single-variable analyticity (dominated convergence + Morera)
+   combined with **Hartogs' theorem** gives joint analyticity.
+
+References: Simon, P(φ)₂ Theory, §I.2; Reed-Simon II §X.7 (Hartogs). -/
+axiom analyticOn_generatingFunctionalC
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_moments : ∀ (f : TestFunction2) (c : ℝ), 0 < c →
+        Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ)
+    (n : ℕ) (J : Fin n → TestFunction2ℂ) :
+    AnalyticOn ℂ (fun z : Fin n → ℂ =>
+      generatingFunctionalℂ μ (∑ i, z i • J i)) Set.univ
+
 /-- **OS0 for the continuum limit** from exponential moments.
 
 The generating functional `Z[Σ zᵢJᵢ] = ∫ exp(i · Σ zᵢ⟨ω, Jᵢ⟩) dμ` is
-entire analytic in `z ∈ ℂⁿ`.
-
-Proof chain from `continuum_exponential_moments`:
-1. For real J, `|exp(iz·⟨ω,J⟩)| = 1`, so Z[zJ] is trivially bounded.
-   For complex z = x + iy, `|exp(iz·⟨ω,J⟩)| = exp(-y·⟨ω,J⟩) ≤ exp(|y|·|⟨ω,J⟩|)`.
-2. By `continuum_exponential_moments`, `∫ exp(c|⟨ω,J⟩|) dμ < ∞` for some c > 0.
-   So for |y| < c, dominated convergence justifies differentiating under ∫.
-3. The n-th derivative is `∫ (i⟨ω,J⟩)ⁿ exp(iz·⟨ω,J⟩) dμ`, bounded by
-   `∫ |⟨ω,J⟩|ⁿ exp(|y|·|⟨ω,J⟩|) dμ ≤ (n!/cⁿ) · ∫ exp(c|⟨ω,J⟩|) dμ`.
-4. The power series converges on all of ℂ (radius ∞), so Z is entire.
-5. For several variables z = (z₁,...,zₙ), apply Hartogs' theorem:
-   analyticity in each variable separately ⟹ joint analyticity. -/
+entire analytic in `z ∈ ℂⁿ`. Follows from `analyticOn_generatingFunctionalC`
+and `continuum_exponential_moments`. -/
 theorem os0_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ) :
     @OS0_Analyticity μ hμ := by
   have h_exp := continuum_exponential_moments P mass hmass μ
-  -- Step 1: Exponential moments ⟹ all polynomial moments finite
-  -- (|x|^n ≤ (n/(ce))^n · exp(c|x|) for all x, c > 0)
-  have h_poly_moments : ∀ (f : TestFunction2) (n : ℕ),
-      Integrable (fun ω : FieldConfig2 => (ω f) ^ n) μ := by
-    intro f n
-    -- Pick c = 1 from the all-exponential-moments axiom
-    have hc : (0 : ℝ) < 1 := one_pos
-    have h_int := h_exp f 1 hc
-    -- exp(c·x) and exp(-c·x) are both ≤ exp(c·|x|); apply Integrable.mono
-    have hm := configuration_eval_measurable f
-    refine ProbabilityTheory.integrable_pow_of_integrable_exp_mul (ne_of_gt hc) ?_ ?_ n
-    · exact h_int.mono
-        (measurable_const.mul hm).exp.aestronglyMeasurable
-        (ae_of_all μ fun ω => by
-          rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _),
-              Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
-          exact Real.exp_le_exp.mpr
-            (mul_le_mul_of_nonneg_left (le_abs_self _) (le_of_lt hc)))
-    · exact h_int.mono
-        (measurable_const.mul hm).exp.aestronglyMeasurable
-        (ae_of_all μ fun ω => by
-          rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _),
-              Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
-          rw [show (-1 : ℝ) * ω f = 1 * -(ω f) from by ring]
-          exact Real.exp_le_exp.mpr
-            (mul_le_mul_of_nonneg_left
-              ((le_abs_self _).trans_eq (abs_neg _)) (le_of_lt hc)))
-  -- Step 2: For each Jᵢ, the integrand z ↦ exp(iz⟨ω, Jᵢ⟩) is entire in z,
-  -- dominated by exp(|Im z| · |⟨ω, Jᵢ⟩|) which is integrable for |Im z| < c.
-  -- Dominated convergence ⟹ Z[zJ] is analytic in each zᵢ separately.
-  have h_single_var : ∀ (J : TestFunction2ℂ),
-      AnalyticOn ℂ (fun z : ℂ => generatingFunctionalℂ μ (z • J)) Set.univ := by
-    sorry -- dominated convergence + Morera's theorem (or power series from moments)
-  -- Step 3: Hartogs' theorem: separately analytic ⟹ jointly analytic
   intro n J
-  sorry -- Hartogs' theorem applied to the n-variable function
+  exact analyticOn_generatingFunctionalC μ h_exp n J
 
 /-- **OS1 for the continuum limit** from exponential moments.
 
