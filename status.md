@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 47 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types) | **gaussian-field (upstream): 8 axioms, 0 sorries**
+**pphi2: 46 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types) | **gaussian-field (upstream): 8 axioms, 0 sorries**
 
 The 5 "Option B" axioms in `HypercontractivityOptionB.lean` provide an alternative
 proof path via the Gross-Rothaus-Simon OU semigroup framework. They currently have
@@ -45,7 +45,7 @@ required for the main theorem. `schwinger2_convergence` was proved from
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 5 axioms, 2 proved theorems |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 11 axioms |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 10 axioms |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
@@ -286,7 +286,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`cesaro_set_integral_tendsto`~~ | GeneralResults/FunctionalAnalysis | ~~Medium~~ | **Proved** — moved to GeneralResults as pure Mathlib result. |
 | ~~`pphi2_generating_functional_real`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — from `pphi2_measure_neg_invariant` via conj(Z[f])=Z[f]. |
 | `pphi2_measure_neg_invariant` | OS2_WardIdentity | Medium | Z₂ symmetry: `Measure.map Neg.neg μ = μ`. Even P + GFF symmetry + weak limit closure. |
-| `generatingFunctional_translate_continuous` | OS2_WardIdentity | Easy | Textbook: t ↦ Z[f + τ_{(t,0)} g] is continuous (DCT). |
+| ~~`generatingFunctional_translate_continuous`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — via DCT (bound 1) + `continuous_timeTranslationSchwartz` from TimeTranslation.lean. |
 | ~~`norm_generatingFunctional_le_one`~~ | OS2_WardIdentity | ✅ **Proved** | ‖Z[f]‖ ≤ 1 from norm_integral ≤ ∫ norm + ‖exp(ix)‖=1. |
 | ~~`os4_clustering_implies_ergodicity`~~ | OS2_WardIdentity | ✅ **Proved** | OS4_Clustering → OS4_Ergodicity via reality of Z + Cesàro convergence. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Hard | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson, transferred to limit. Feeds OS0 + OS1. |

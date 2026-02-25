@@ -43,6 +43,7 @@ group of the lattice. Full invariance is restored in the continuum limit:
 
 import Pphi2.OSAxioms
 import Pphi2.GeneralResults.FunctionalAnalysis
+import Pphi2.OSforGFF.TimeTranslation
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 
 noncomputable section
@@ -979,7 +980,7 @@ theorem pphi2_generating_functional_real (P : InteractionPolynomial)
   have := Complex.conj_eq_iff_im.mp hself_conj
   exact this
 
-/-- **Textbook axiom: Continuity of the generating functional under translations.**
+/-- **Continuity of the generating functional under translations.**
 
 The map t ↦ Z[f + τ_{(t,0)} g] is continuous in t : ℝ. This follows from
 the dominated convergence theorem applied to the integral
@@ -987,12 +988,65 @@ the dominated convergence theorem applied to the integral
 and converges pointwise as the test function varies continuously.
 
 Reference: Reed-Simon II, §IX.3 (continuity of characteristic functions). -/
-axiom generatingFunctional_translate_continuous
+theorem generatingFunctional_translate_continuous
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (f g : TestFunction2) :
     Continuous (fun t : ℝ =>
       generatingFunctional μ (f + SchwartzMap.translate
-        ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g))
+        ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g)) := by
+  -- Define the test function as a function of t
+  set h : ℝ → TestFunction2 := fun t =>
+    f + SchwartzMap.translate ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g with hh_def
+  -- The generating functional is ∫ exp(i * ω(h(t))) dμ(ω)
+  -- Apply DCT: F t ω = exp(i * ω(h(t))), bound = 1
+  show Continuous (fun t => ∫ ω : FieldConfig2, Complex.exp (Complex.I * ↑(ω (h t))) ∂μ)
+  apply MeasureTheory.continuous_of_dominated
+  -- 1. AEStronglyMeasurable for each t
+  · intro t
+    exact ((Complex.measurable_ofReal.comp (configuration_eval_measurable (h t))).const_mul
+      Complex.I |>.cexp).aestronglyMeasurable
+  -- 2. Norm bound: ‖exp(i * ω(h(t)))‖ ≤ 1 for all t, ω
+  · intro t
+    exact ae_of_all μ fun ω => by
+      rw [show Complex.I * ↑(ω (h t)) = ↑(ω (h t)) * Complex.I from mul_comm _ _]
+      exact le_of_eq (Complex.norm_exp_ofReal_mul_I _)
+  -- 3. Integrable bound: ∫ 1 dμ < ∞ (probability measure)
+  · exact integrable_const 1
+  -- 4. Pointwise continuity: for each ω, t ↦ exp(i * ω(h(t))) is continuous
+  · exact ae_of_all μ fun ω => by
+      apply Complex.continuous_exp.comp
+      apply Continuous.mul continuous_const
+      apply Complex.continuous_ofReal.comp
+      -- Need: t ↦ ω(h(t)) is continuous
+      -- ω is a continuous linear functional, so it suffices that t ↦ h(t) is continuous
+      -- h(t) = f + translate(t,0) g, and ω(h(t)) = ω(f) + ω(translate(t,0) g)
+      -- So we need t ↦ ω(translate(t,0) g) continuous
+      show Continuous (fun t => ω (h t))
+      simp only [hh_def, map_add]
+      apply Continuous.add continuous_const
+      -- Need: t ↦ ω(translate(t,0) g) continuous
+      -- ω is continuous, and translate(t,0) g is continuous in t (Schwartz topology)
+      apply ω.continuous.comp
+      -- Need: t ↦ translate(t,0) g continuous in Schwartz topology
+      -- This is the key step using TimeTranslation infrastructure
+      haveI : Fact (0 < 2) := ⟨by norm_num⟩
+      -- translate(t,0) g and timeTranslationSchwartz(-t) g agree pointwise
+      have h_eq : (fun t => SchwartzMap.translate
+          ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g) =
+          (fun t => TimeTranslation.timeTranslationSchwartz (-t) g) := by
+        funext t
+        ext x
+        simp only [SchwartzMap.translate, SchwartzMap.compCLMOfAntilipschitz_apply,
+          Function.comp_apply, TimeTranslation.timeTranslationSchwartz,
+          TimeTranslation.timeTranslationSchwartzCLM,
+          SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
+        congr 1
+        -- Need: x - (t, 0) = timeShift(-t)(x) as elements of SpaceTime 2
+        ext i
+        simp only [TimeTranslation.timeShift]
+        fin_cases i <;> simp [Matrix.cons_val_zero, Matrix.cons_val_one, sub_eq_add_neg]
+      rw [h_eq]
+      exact (TimeTranslation.continuous_timeTranslationSchwartz g).comp (continuous_neg)
 
 /-- **Norm bound on the generating functional.**
 
