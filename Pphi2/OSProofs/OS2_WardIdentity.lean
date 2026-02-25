@@ -158,7 +158,14 @@ theorem translation_invariance_continuum (_P : InteractionPolynomial)
     sorry
   -- Step 3: A continuous function that equals a constant on a dense set is constant
   intro v f
-  sorry
+  have h_closed : IsClosed {v : EuclideanSpace ℝ (Fin 2) |
+      generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f)} :=
+    isClosed_eq continuous_const (h_cont f)
+  have h_eq : {v : EuclideanSpace ℝ (Fin 2) |
+      generatingFunctional μ f =
+      generatingFunctional μ (SchwartzMap.translate v f)} = Set.univ := by
+    rw [← h_closed.closure_eq]; exact (h_dense f).closure_eq
+  exact Set.eq_univ_iff_forall.mp h_eq v
 
 /-! ## Ward identity for rotations
 
@@ -584,7 +591,25 @@ theorem os0_for_continuum_limit (P : InteractionPolynomial)
       Integrable (fun ω : FieldConfig2 => (ω f) ^ n) μ := by
     intro f n
     obtain ⟨c, hc, h_int⟩ := h_exp f
-    sorry -- dominated by exp(c|ω f|) which is integrable
+    -- exp(c·x) and exp(-c·x) are both ≤ exp(c·|x|); apply Integrable.mono
+    have hm := configuration_eval_measurable f
+    refine ProbabilityTheory.integrable_pow_of_integrable_exp_mul (ne_of_gt hc) ?_ ?_ n
+    · exact h_int.mono
+        (measurable_const.mul hm).exp.aestronglyMeasurable
+        (ae_of_all μ fun ω => by
+          rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _),
+              Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
+          exact Real.exp_le_exp.mpr
+            (mul_le_mul_of_nonneg_left (le_abs_self _) (le_of_lt hc)))
+    · exact h_int.mono
+        (measurable_const.mul hm).exp.aestronglyMeasurable
+        (ae_of_all μ fun ω => by
+          rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _),
+              Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
+          rw [show (-c) * ω f = c * -(ω f) from by ring]
+          exact Real.exp_le_exp.mpr
+            (mul_le_mul_of_nonneg_left
+              ((le_abs_self _).trans_eq (abs_neg _)) (le_of_lt hc)))
   -- Step 2: For each Jᵢ, the integrand z ↦ exp(iz⟨ω, Jᵢ⟩) is entire in z,
   -- dominated by exp(|Im z| · |⟨ω, Jᵢ⟩|) which is integrable for |Im z| < c.
   -- Dominated convergence ⟹ Z[zJ] is analytic in each zᵢ separately.

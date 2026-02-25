@@ -66,7 +66,7 @@ theorem clustering_implies_ergodicity
     -- Time translation (a one-parameter group)
     (T : ℝ → X → X)
     -- μ is invariant under T
-    (hT_inv : ∀ R, Measure.map (T R) μ = μ)
+    (_hT_inv : ∀ R, Measure.map (T R) μ = μ)
     -- Exponential clustering: for all bounded measurable F, G:
     -- |∫ F · (G ∘ T_R) dμ - (∫ F dμ)(∫ G dμ)| ≤ C · exp(-m·R) for R > 0
     (h_cluster : ∀ (F G : X → ℝ),
@@ -80,7 +80,105 @@ theorem clustering_implies_ergodicity
     ∀ (A : Set X), MeasurableSet A →
       (∀ R : ℝ, 0 < R → T R ⁻¹' A = A) →
       μ A = 0 ∨ μ A = 1 := by
-  sorry
+  intro A hA hA_inv
+  -- Set F = G = 1_A (indicator of A)
+  set F := A.indicator (fun _ => (1 : ℝ)) with hF_def
+  -- F is bounded by 1
+  have hF_bdd : ∃ C : ℝ, ∀ x, |F x| ≤ C := by
+    exact ⟨1, fun x => by
+      simp only [F, Set.indicator]
+      split <;> simp⟩
+  -- Apply clustering with F = G
+  obtain ⟨C, m, hm, h_bound⟩ := h_cluster F F hF_bdd hF_bdd
+  -- Key: for T_R-invariant A, F(T R x) = F(x) for all R > 0
+  have hF_inv : ∀ R : ℝ, 0 < R → ∀ x, F (T R x) = F x := by
+    intro R hR x
+    have hx_iff : T R x ∈ A ↔ x ∈ A := by
+      rw [← Set.mem_preimage, hA_inv R hR]
+    change A.indicator (fun _ => (1:ℝ)) (T R x) = A.indicator (fun _ => (1:ℝ)) x
+    by_cases hx : x ∈ A
+    · rw [Set.indicator_of_mem (hx_iff.mpr hx), Set.indicator_of_mem hx]
+    · rw [Set.indicator_of_notMem (mt hx_iff.mp hx), Set.indicator_of_notMem hx]
+  -- For invariant A: ∫ F * F(T R ·) = ∫ F * F = ∫ 1_A = μ(A)
+  have h_prod : ∀ R : ℝ, 0 < R →
+      ∫ x, F x * F (T R x) ∂μ = (μ A).toReal := by
+    intro R hR
+    have : ∫ x, F x * F (T R x) ∂μ = ∫ x, F x * F x ∂μ := by
+      congr 1; ext x; rw [hF_inv R hR x]
+    rw [this]
+    simp only [F, Set.indicator]
+    trans (∫ x, A.indicator (fun _ => (1 : ℝ)) x ∂μ)
+    · congr 1; ext x; simp [Set.indicator]
+    · rw [MeasureTheory.integral_indicator hA, MeasureTheory.setIntegral_const]
+      simp [Measure.real_def]
+  -- Also: (∫ F dμ)² = μ(A)²
+  have h_int_F : ∫ x, F x ∂μ = (μ A).toReal := by
+    simp only [F]; rw [MeasureTheory.integral_indicator hA, MeasureTheory.setIntegral_const]
+    simp [Measure.real_def]
+  -- So the clustering bound gives: |μ(A) - μ(A)²| ≤ C · exp(-mR) for all R > 0
+  have h_squeeze : ∀ R : ℝ, 0 < R →
+      |(μ A).toReal - (μ A).toReal ^ 2| ≤ C * Real.exp (-m * R) := by
+    intro R hR
+    have := h_bound R hR
+    rw [h_prod R hR, h_int_F, ← sq] at this
+    exact this
+  -- Taking R → ∞, the RHS → 0, so |μ(A) - μ(A)²| = 0
+  have h_eq : |(μ A).toReal - (μ A).toReal ^ 2| = 0 := by
+    by_contra h_ne
+    have h_pos : 0 < |(μ A).toReal - (μ A).toReal ^ 2| :=
+      lt_of_le_of_ne (abs_nonneg _) (Ne.symm h_ne)
+    -- Since exp(-mR) → 0 as R → ∞ (m > 0), C * exp(-mR) → 0
+    have h_lim : Filter.Tendsto (fun R => C * Real.exp (-m * R))
+        Filter.atTop (nhds 0) := by
+      have h_exp : Filter.Tendsto (fun R => Real.exp (-m * R)) Filter.atTop (nhds 0) :=
+        Real.tendsto_exp_atBot.comp (by
+          rw [Filter.tendsto_atBot]
+          intro b; rw [Filter.eventually_atTop]
+          refine ⟨-(b / m), fun y hy => ?_⟩
+          have h1 : m * y ≥ m * (-(b / m)) := mul_le_mul_of_nonneg_left hy (le_of_lt hm)
+          have h2 : m * (-(b / m)) = -b := by field_simp
+          linarith)
+      have h_const : Filter.Tendsto (fun _ : ℝ => C) Filter.atTop (nhds C) := tendsto_const_nhds
+      have h_mul := h_const.mul h_exp
+      rw [mul_zero] at h_mul
+      exact h_mul
+    -- Get R₀ such that for R ≥ R₀, C * exp(-mR) < |diff|/2
+    have h_ev := Metric.tendsto_nhds.mp h_lim
+      (|(μ A).toReal - (μ A).toReal ^ 2| / 2) (half_pos h_pos)
+    rw [Filter.eventually_atTop] at h_ev
+    obtain ⟨R₀, hR₀⟩ := h_ev
+    -- Use R = max R₀ 1 > 0
+    have h_R_pos : 0 < max R₀ 1 := lt_max_of_lt_right one_pos
+    have h1 := h_squeeze (max R₀ 1) h_R_pos
+    have h2 := hR₀ (max R₀ 1) (le_max_left R₀ 1)
+    rw [Real.dist_eq, sub_zero] at h2
+    have h3 : C * Real.exp (-m * max R₀ 1) ≤ |C * Real.exp (-m * max R₀ 1)| :=
+      le_abs_self _
+    linarith
+  -- |μ(A) - μ(A)²| = 0 means μ(A)² = μ(A)
+  rw [abs_eq_zero, sub_eq_zero] at h_eq
+  -- μ(A).toReal ∈ [0,1] as a probability measure
+  have h_le : (μ A).toReal ≤ 1 := by
+    have h_ne_top : μ A ≠ ⊤ := measure_ne_top μ A
+    have h1 : μ A ≤ 1 := by
+      calc μ A ≤ μ Set.univ := measure_mono (Set.subset_univ A)
+        _ = 1 := measure_univ
+    rwa [← ENNReal.toReal_one, ENNReal.toReal_le_toReal h_ne_top ENNReal.one_ne_top]
+  have h_ge : 0 ≤ (μ A).toReal := ENNReal.toReal_nonneg
+  -- μ(A)² = μ(A) means μ(A) = 0 or μ(A) = 1 (for μ(A) ∈ [0,1])
+  have h_zero_or_one : (μ A).toReal = 0 ∨ (μ A).toReal = 1 := by
+    have : (μ A).toReal * ((μ A).toReal - 1) = 0 := by nlinarith
+    rcases mul_eq_zero.mp this with h | h
+    · left; exact h
+    · right; linarith
+  rcases h_zero_or_one with h | h
+  · left
+    have h_ne_top : μ A ≠ ⊤ := measure_ne_top μ A
+    rw [ENNReal.toReal_eq_zero_iff] at h
+    exact h.elim id (fun h_top => absurd h_top h_ne_top)
+  · right
+    have h_ne_top : μ A ≠ ⊤ := measure_ne_top μ A
+    rw [← ENNReal.ofReal_toReal h_ne_top, h, ENNReal.ofReal_one]
 
 /-! ## Unique vacuum -/
 

@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-02-24 (All placeholder theorems filled with real Lean types)
-**pphi2**: 35 axioms (30 required + 5 Option B), 30 sorries, 0 placeholder theorems | **gaussian-field**: 15 axioms | **Total**: 50 (45 required)
+**pphi2**: 34 axioms (29 required + 5 Option B), 30 sorries, 0 placeholder theorems | **gaussian-field**: 15 axioms | **Total**: 49 (44 required)
 
 ## Verification Sources
 
@@ -169,7 +169,9 @@ meaningful mathematical types.
 - `unique_vacuum` — **PROVED** from `transferEigenvalue_ground_simple`
 
 ### Continuum Limit & Convergence
-- `nelson_hypercontractive` — $L^{pn}$ hypercontractive inequality for `continuumMeasure` (sorry)
+- ~~`gaussian_hypercontractivity_continuum`~~ — **PROVED** from `gaussian_hypercontractive` via pushforward + `latticeEmbedLift_eval_eq`
+- `exponential_moment_bound` — Deep stability estimate: $∫ e^{-2V_a} dμ_{GFF} ≤ K$ uniformly in $a$ (axiom)
+- `interacting_moment_bound` — Bounds interacting $L^{pn}$ moments in terms of FREE Gaussian $L^{2n}$ moments (axiom)
 - `os4_inheritance` — Exponential clustering of connected 2-point functions (sorry)
 - `schwinger2_convergence` — 2-point Schwinger function convergence along subsequence (sorry)
 - `schwinger_n_convergence` — n-point Schwinger function convergence along subsequence (sorry)

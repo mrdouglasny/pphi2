@@ -39,20 +39,14 @@ Reference: Glimm-Jaffe (1987), Theorem 8.6.1; Simon (1974), §V.
 
 ## Option A Axiom Plans
 
-### Axiom 1: `gaussian_hypercontractivity_continuum` — Medium
+### ~~Theorem 1: `gaussian_hypercontractivity_continuum`~~ — PROVED
 
 **Statement:** Gaussian hypercontractivity for the pushforward (ι_a)_*μ_{GFF}.
 
-**Proof strategy:**
-- ω(f) under (ι_a)_*μ_{GFF} is Gaussian with variance ⟨f, G_a f⟩
-- Apply `gaussian_hypercontractive` from gaussian-field (already proved)
-- Pushforward preserves the inequality
-
-**Infrastructure needed:**
-- `pairing_is_gaussian` from gaussian-field
-- `Measure.map` integral formula
-
-**Difficulty:** Medium (type plumbing, not hard math).
+**Proof:** Proved by reducing to `gaussian_hypercontractive` from gaussian-field.
+Key steps: `integral_map` to pull back from S'(ℝ^d) to lattice, then
+`latticeEmbedLift_eval_eq` to rewrite `(ι_a ω)(f) = ω(g_f)` where g_f is the
+embedded test function, reducing to an instance of the abstract bound.
 
 ### Axiom 2: `exponential_moment_bound` — Hard (deep C-QFT result)
 
@@ -76,47 +70,42 @@ construction is stable. This is the analytic heart of the theory.
 
 **Difficulty:** Hard (literature result, not provable from current Lean infra).
 
-### Axiom 3: `hoelder_transfer` — Medium
+### Axiom 3: `interacting_moment_bound` — Medium
 
-**Statement:** Transfer from Gaussian to interacting measure via Hölder.
+**Statement:** Bounds interacting L^{pn} moments in terms of FREE Gaussian
+L^{2n} moments.
 
-**Proof strategy (Hölder with exponents r, s):**
-1. ∫|F|^p dμ_a = (1/Z_a) ∫|F|^p · e^{-V_a} dμ_{GFF}
-2. Hölder: ≤ (1/Z_a) · (∫|F|^{pr} dμ_{GFF})^{1/r} · (∫e^{-sV_a} dμ_{GFF})^{1/s}
-3. Apply Gaussian hypercontractivity to first factor
-4. Apply exponential_moment_bound to second factor
-5. Z_a ≥ Z_min > 0 from partitionFunction_pos
+**Key mathematical point:** The RHS uses the FREE Gaussian measure μ_{GFF},
+NOT the interacting measure μ_a. The earlier `hoelder_transfer` axiom had
+both sides in terms of μ_a, which is UNPROVABLE because converting the
+RHS back from μ_{GFF} to μ_a requires bounding ∫ e^{+V_a} dμ_{GFF}, and
+since V_a ~ φ⁴ grows faster than the Gaussian suppression e^{-φ²}, this
+integral diverges to infinity.
 
-**Subtlety (from Gemini):** The Hölder approach gives a bound involving
-‖F‖_{L^{pr}(μ_GFF)}, not ‖F‖_{L²(μ_a)}. The current axiom statement
-has the RHS in terms of μ_a. This is the correct final form (it's the
-hypercontractive inequality for the interacting theory), but deriving it
-from the Hölder bound requires additional work:
-- Either state the axiom with RHS in terms of μ_{GFF} (simpler to prove)
-- Or include the conversion back to μ_a norms (requires another
-  application of the density bound)
+**Proof strategy (Cauchy-Schwarz with r=s=2):**
+1. ∫|F|^{pn} dμ_a = (1/Z_a) ∫|F|^{pn} · e^{-V_a} dμ_{GFF}
+2. Cauchy-Schwarz: ≤ (1/Z_a) · (∫|F|^{2pn} dμ_{GFF})^{1/2} · (∫e^{-2V_a} dμ_{GFF})^{1/2}
+3. Apply `exponential_moment_bound` to bound second factor by K^{1/2}
+4. Apply `gaussian_hypercontractivity_continuum` with exponent 2p to first factor:
+   (∫|F|^{2pn} dμ_{GFF})^{1/2} ≤ (2p-1)^{pn/2} · (∫|F|^{2n} dμ_{GFF})^{p/2}
+5. Combine: ∫|F|^{pn} dμ_a ≤ (K^{1/2}/Z_a) · (2p-1)^{pn/2} · (∫|F|^{2n} dμ_{GFF})^{p/2}
 
-**Note:** The current axiom statement may need revision to match what
-the Hölder argument actually proves. The standard result is:
+**Why this suffices for tightness:** Setting p=2, n=1 gives:
+  ∫|ω f|² dμ_a ≤ C · 3 · ∫|ω f|² dμ_{GFF} = C · 3 · ⟨f, G_a f⟩
+which is trivially bounded uniformly in a since G_a → G in operator norm.
 
-  ‖T_t F‖_{Lp(μ_a)} ≤ ‖F‖_{Lq(μ_a)}
-
-where T_t = exp(-tH_a) is the interacting semigroup and
-p = 1 + e^{2ρt}(q-1). For Wick monomials (eigenfunctions with eigenvalue n),
-this gives the (p-1)^{n/2} bound.
-
-**Difficulty:** Medium (measure theory plumbing).
+**Difficulty:** Medium (Cauchy-Schwarz for Bochner integrals + measurability).
 
 ## Summary
 
-| Axiom | Difficulty | Status |
+| Axiom/Theorem | Difficulty | Status |
 |-------|-----------|--------|
-| `gaussian_hypercontractivity_continuum` | Medium | Provable from gaussian-field |
+| ~~`gaussian_hypercontractivity_continuum`~~ | Medium | **PROVED** from gaussian-field via pushforward |
 | `exponential_moment_bound` | Hard | Deep C-QFT stability estimate — keep as axiom |
-| `hoelder_transfer` | Medium | Provable from axioms 1+2 via Hölder |
+| `interacting_moment_bound` | Medium | Provable from theorem 1 + axiom 2 via Cauchy-Schwarz |
 
 The key mathematical content is in Axiom 2 (exponential moment bound).
-Axioms 1 and 3 are standard measure theory / functional analysis.
+Theorem 1 is proved and Axiom 3 is standard measure theory (Cauchy-Schwarz).
 
 ## Option B Axioms (Gross-Rothaus-Simon) — Not Required
 

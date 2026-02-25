@@ -11,11 +11,11 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 35 axioms (30 required + 5 Option B), 30 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
+**pphi2: 34 axioms (29 required + 5 Option B), 27 sorries** | **gaussian-field (upstream): 15 axioms, 13 sorries**
 
 Note: The 5 "Option B" axioms in `Hypercontractivity.lean` provide an alternative
 full Gross-Rothaus-Simon proof path but are **not required** for the main pphi2 theorem.
-The main proof uses Option A (Hölder + exponential moments, 3 axioms).
+The main proof uses Option A (Cauchy-Schwarz density transfer, 2 axioms + 1 proved theorem).
 
 ## File inventory
 
@@ -36,13 +36,13 @@ The main proof uses Option A (Hölder + exponential moments, 3 axioms).
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
 | 3 | `OSProofs/OS4_MassGap.lean` | 0 axioms, 2 sorries |
-| 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 1 sorry |
+| 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms |
-| 4 | `ContinuumLimit/Hypercontractivity.lean` | 8 axioms (3 required Option A + 5 optional Option B) |
+| 4 | `ContinuumLimit/Hypercontractivity.lean` | 7 axioms (2 required Option A + 5 optional Option B), 1 proved theorem |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 4 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 2 axioms, 1 sorry |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 3 axioms, 15 sorries |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 3 axioms, 13 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 0 axioms, 2 sorries |
 | 6 | `Bridge.lean` | 5 axioms, 3 sorries |
@@ -251,10 +251,9 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `second_moment_uniform` | Tightness | Hard | ∫|Φ_a(f)|² dν_a ≤ C(f) uniformly in a. Key input: Nelson's hypercontractive estimate + convergence of lattice propagator. |
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
-| ~~`nelson_hypercontractive`~~ | Hypercontractivity | **Proved** | Nelson's hypercontractive inequality for `continuumMeasure`. Delegates to `hoelder_transfer`. |
-| `gaussian_hypercontractivity_continuum` | Hypercontractivity | Medium | Gaussian hypercontractivity in continuum-embedded form. From `gaussian_hypercontractive` (gaussian-field) via pushforward. |
-| `exponential_moment_bound` | Hypercontractivity | Hard | ∫ exp(-V_a)² dμ_{GFF} ≤ K uniformly in a. Core analytic estimate (Nelson/Simon §V). |
-| `hoelder_transfer` | Hypercontractivity | Medium | Cauchy-Schwarz transfers Gaussian hypercontractivity to interacting measure using exponential moment bound. |
+| ~~`gaussian_hypercontractivity_continuum`~~ | Hypercontractivity | **Proved** | Gaussian hypercontractivity in continuum-embedded form. Proved from `gaussian_hypercontractive` (gaussian-field) via pushforward + `latticeEmbedLift_eval_eq`. |
+| `exponential_moment_bound` | Hypercontractivity | Hard | ∫ exp(-2V_a) dμ_{GFF} ≤ K uniformly in a. Deep stability estimate (cluster expansions, Glimm-Jaffe Thm 8.6.1). |
+| `interacting_moment_bound` | Hypercontractivity | Medium | Bounds interacting L^{pn} moments in terms of FREE Gaussian L^{2n} moments via Cauchy-Schwarz density transfer. RHS uses μ_{GFF}, not μ_a (converting back requires e^{+V_a} which diverges). |
 | `wick_is_eigenfunction` | Hypercontractivity | Medium | (Option B) Wick monomials :φ^n: are eigenfunctions of the number operator. |
 | `ou_semigroup_exists` | Hypercontractivity | Medium | (Option B) OU semigroup P_t exists on L²(μ_GFF) with Mehler formula. |
 | `ou_semigroup_eigenvalue` | Hypercontractivity | Medium | (Option B) P_t(:φ^n:) = e^{-nt}·:φ^n:. From Mehler kernel reproducing formula. |
@@ -364,7 +363,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 
 ### Tier 2: Core analytic results (the hard axioms)
 
-5. **Hypercontractivity axioms** (`gaussian_hypercontractivity_continuum`, `exponential_moment_bound`, `hoelder_transfer`) — Hölder + exponential moments approach. `nelson_hypercontractive` proved via `hoelder_transfer`.
+5. **Hypercontractivity axioms** (`exponential_moment_bound`, `interacting_moment_bound`) — Cauchy-Schwarz density transfer approach. `gaussian_hypercontractivity_continuum` proved from gaussian-field.
 6. **`second_moment_uniform` + `continuumMeasures_tight`** — Tightness argument. Depends on Nelson.
 7. **`spectral_gap_uniform`** — Uniform mass gap. Kato-Rellich perturbation theory.
 8. **`ward_identity_lattice` + `anomaly_vanishes`** — Ward identity + power counting for rotation invariance.
