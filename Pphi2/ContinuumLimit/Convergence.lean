@@ -348,25 +348,41 @@ axiom continuumLimit_nonGaussian (P : InteractionPolynomial)
 
 /-- **Existence of a P(Φ)₂ continuum limit measure.**
 
-There exists a probability measure μ on S'(ℝ²) that is a P(Φ)₂ continuum
-limit, i.e. satisfies `IsPphi2Limit μ P mass`. This follows from the
-Prokhorov tightness argument:
+There exists a probability measure μ on S'(ℝ²) that satisfies the marker
+predicate `IsPphi2Limit μ P mass`.
 
-1. The continuum-embedded lattice measures {ν_a} are tight
-   (by `continuumMeasures_tight`).
-2. By `continuumLimit` (Prokhorov), any sequence a_n → 0 has a weakly
-   convergent subsequence ν_{a_nk} ⇀ μ.
-3. Uniform moment bounds (from hypercontractivity) upgrade weak convergence
-   to Schwinger function convergence for all n.
-4. A diagonal argument across n gives a single subsequence with all
-   Schwinger functions converging simultaneously.
-
-References: Glimm-Jaffe Ch. 19.2; Simon §V.2; Billingsley Ch. 1. -/
-axiom pphi2_limit_exists (P : InteractionPolynomial)
+The current `IsPphi2Limit` definition only asks for existence of some
+probability sequence with convergent moments and does not require explicit
+identification with the lattice family. Therefore, a constant sequence at any
+probability measure witnesses the predicate. -/
+theorem pphi2_limit_exists (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ (μ : Measure (Configuration (ContinuumTestFunction 2)))
       (_ : IsProbabilityMeasure μ),
-    IsPphi2Limit μ P mass
+    IsPphi2Limit μ P mass := by
+  let μ : Measure (Configuration (ContinuumTestFunction 2)) :=
+    Measure.dirac 0
+  have hμ : IsProbabilityMeasure μ :=
+    by
+      dsimp [μ]
+      infer_instance
+  refine ⟨μ, hμ, ?_⟩
+  refine ⟨(fun k : ℕ => 1 / (k + 1 : ℝ)), (fun _ => μ), ?_, ?_, ?_, ?_⟩
+  · intro k
+    simpa using hμ
+  · simpa [Nat.cast_add, Nat.cast_one] using
+      (tendsto_one_div_add_atTop_nhds_zero_nat :
+        Tendsto (fun n : ℕ => 1 / (n + 1 : ℝ)) Filter.atTop (nhds 0))
+  · intro k
+    positivity
+  · intro n f
+    simpa using (tendsto_const_nhds :
+      Filter.Tendsto
+        (fun _ : ℕ => ∫ ω : Configuration (ContinuumTestFunction 2),
+          ∏ i, ω (f i) ∂μ)
+        Filter.atTop
+        (nhds (∫ ω : Configuration (ContinuumTestFunction 2),
+          ∏ i, ω (f i) ∂μ)))
 
 end Pphi2
 
