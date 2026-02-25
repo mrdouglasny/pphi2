@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 40 axioms (35 required + 5 Option B), 13 sorries** | **gaussian-field (upstream): 15 axioms, 9 sorries**
+**pphi2: 44 axioms (39 required + 5 Option B), 9 sorries** | **gaussian-field (upstream): 15 axioms, 9 sorries**
 
 Note: The 5 "Option B" axioms in `Hypercontractivity.lean` provide an alternative
 full Gross-Rothaus-Simon proof path but are **not required** for the main pphi2 theorem.
@@ -35,14 +35,14 @@ The main proof uses Option A (Cauchy-Schwarz density transfer, 2 axioms + 1 prov
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 1 sorry |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
-| 3 | `OSProofs/OS4_MassGap.lean` | 0 axioms, 2 sorries |
+| 3 | `OSProofs/OS4_MassGap.lean` | 2 axioms, 0 sorries |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms |
 | 4 | `ContinuumLimit/Hypercontractivity.lean` | 7 axioms (2 required Option A + 5 optional Option B), 1 proved theorem |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 4 sorries |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 2 axioms, 1 sorry |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 8 axioms, 2 sorries |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 10 axioms, 0 sorries |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 0 axioms, 2 sorries |
 | 6 | `Bridge.lean` | 5 axioms, 1 sorry |

@@ -65,6 +65,47 @@ namespace Pphi2
 
 variable (Ns : ℕ) [NeZero Ns]
 
+/-! ## Spectral gap clustering axioms
+
+The clustering results from the spectral decomposition of the transfer matrix.
+Insert a complete set of eigenstates `|n⟩` between φ̂(t,x) and φ̂(0,y):
+  `⟨φ(t,x)φ(0,y)⟩ = Σₙ |⟨Ω|φ̂(x)|n⟩|² exp(-(Eₙ - E₀)|t|a)`
+
+Since `Eₙ - E₀ ≥ m_phys` for all `n ≥ 1`:
+  `|⟨φ(t,x)φ(0,y)⟩ - ⟨φ(x)⟩⟨φ(y)⟩| ≤ C exp(-m_phys |t| a)`
+
+References: Reed-Simon IV Thm XIII.44; Glimm-Jaffe §6.2;
+Simon P(φ)₂ Theory §III.3. -/
+
+/-- Two-point clustering from spectral gap: the connected two-point function
+decays exponentially at the rate of the mass gap. -/
+axiom two_point_clustering_from_spectral_gap
+    (Ns : ℕ) [NeZero Ns] (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass)
+    (t x y : Fin Ns) :
+    ∃ C : ℝ, 0 < C ∧
+    let μ := interactingLatticeMeasure 2 Ns P a mass ha hmass
+    let δtx : FinLatticeField 2 Ns := finLatticeDelta 2 Ns (![t, x])
+    let δ0y : FinLatticeField 2 Ns := finLatticeDelta 2 Ns (![0, y])
+    |(∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx * ω δ0y ∂μ) -
+     (∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx ∂μ) *
+     (∫ ω : Configuration (FinLatticeField 2 Ns), ω δ0y ∂μ)| ≤
+      C * Real.exp (-massGap P a mass ha hmass * (t.val : ℝ) * a)
+
+/-- General clustering from spectral gap: connected correlators of bounded
+observables decay exponentially with the mass gap rate. -/
+axiom general_clustering_from_spectral_gap
+    (Ns : ℕ) [NeZero Ns] (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    ∀ (F G : Configuration (FinLatticeField 2 Ns) → ℝ)
+      (hF : ∃ C, ∀ ω, |F ω| ≤ C) (hG : ∃ C, ∀ ω, |G ω| ≤ C),
+      ∃ (C_FG : ℝ), 0 ≤ C_FG ∧
+      ∀ (R : ℕ),
+        |(∫ ω, F ω * G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) -
+         (∫ ω, F ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) *
+         (∫ ω, G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass))|
+        ≤ C_FG * Real.exp (-massGap P a mass ha hmass * (R : ℝ) * a)
+
 /-! ## Two-point clustering on the lattice -/
 
 /-- **Exponential clustering of the two-point function on the lattice.**
@@ -97,7 +138,7 @@ theorem two_point_clustering_lattice
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx ∂μ) *
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δ0y ∂μ)| ≤
       C * Real.exp (-massGap P a mass ha hmass * (t.val : ℝ) * a) := by
-  exact ⟨1, one_pos, by sorry⟩
+  exact two_point_clustering_from_spectral_gap Ns P a mass ha hmass t x y
 
 /-! ## General clustering on the lattice -/
 
@@ -129,8 +170,8 @@ theorem general_clustering_lattice
          (∫ ω, G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass))|
         ≤ C_FG * Real.exp (-m * (R : ℝ) * a) := by
   refine ⟨massGap P a mass ha hmass, massGap_pos P a mass ha hmass, le_refl _, ?_⟩
-  intro F G _hF _hG
-  exact ⟨1, le_of_lt one_pos, by intro R; sorry⟩
+  intro F G hF hG
+  exact general_clustering_from_spectral_gap Ns P a mass ha hmass F G hF hG
 
 /-! ## Uniform clustering
 
