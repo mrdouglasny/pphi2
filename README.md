@@ -55,7 +55,7 @@ All six phases are structurally complete and the full project builds
 (`lake build`, 3141 jobs).
 
 - **pphi2:** 47 axioms, 0 sorries (plus 5 Option B axioms with placeholder types, for future work)
-- **gaussian-field** (upstream dependency): 9 axioms, 0 sorries
+- **gaussian-field** (upstream dependency): 8 axioms, 0 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.
@@ -79,6 +79,7 @@ Pphi2/
     FrobeniusPositivity.lean         -- Frobenius inner product positivity
     SchurProduct.lean                -- Schur (Hadamard) product theorem
     HadamardExp.lean                 -- Entrywise exponential preserves PSD/PD
+    TimeTranslation.lean             -- Schwartz space time translation continuity
   ContinuumLimit/                    -- Phase 4: Embedding, tightness, convergence
     Hypercontractivity.lean          -- Nelson's estimate (Option A: Holley-Stroock, Option B: Gross-Rothaus-Simon)
   GeneralResults/
