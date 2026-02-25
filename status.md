@@ -282,8 +282,9 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | ~~`latticeAction_translation_invariant`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — relabeling via `Equiv.subRight`. |
-| `cesaro_set_integral_tendsto` | OS2_WardIdentity | Medium | Textbook: continuous Cesàro convergence. If h(t)→L and h bounded measurable, then (1/T)∫₀ᵀ h(t)dt → L. |
-| `pphi2_generating_functional_real` | OS2_WardIdentity | Medium | Textbook: Z[f].im = 0 for P(Φ)₂ measures (φ→-φ symmetry of even polynomial). |
+| ~~`cesaro_set_integral_tendsto`~~ | GeneralResults/FunctionalAnalysis | ~~Medium~~ | **Proved** — moved to GeneralResults as pure Mathlib result. |
+| ~~`pphi2_generating_functional_real`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — from `pphi2_measure_neg_invariant` via conj(Z[f])=Z[f]. |
+| `pphi2_measure_neg_invariant` | OS2_WardIdentity | Medium | Z₂ symmetry: `Measure.map Neg.neg μ = μ`. Even P + GFF symmetry + weak limit closure. |
 | `generatingFunctional_translate_continuous` | OS2_WardIdentity | Easy | Textbook: t ↦ Z[f + τ_{(t,0)} g] is continuous (DCT). |
 | ~~`norm_generatingFunctional_le_one`~~ | OS2_WardIdentity | ✅ **Proved** | ‖Z[f]‖ ≤ 1 from norm_integral ≤ ∫ norm + ‖exp(ix)‖=1. |
 | ~~`os4_clustering_implies_ergodicity`~~ | OS2_WardIdentity | ✅ **Proved** | OS4_Clustering → OS4_Ergodicity via reality of Z + Cesàro convergence. |
