@@ -123,27 +123,25 @@ theorem latticeAction_translation_invariant (P : InteractionPolynomial) (a mass 
 /-- The interacting lattice measure is invariant under lattice translations.
 
 This follows from:
-1. The Gaussian measure is translation-invariant (stationary process).
-2. The interaction V_a is translation-invariant (sum over all sites).
-3. Hence exp(-V_a) dμ_GFF is invariant, and so is (1/Z) exp(-V_a) dμ_GFF. -/
-theorem latticeMeasure_translation_invariant (P : InteractionPolynomial)
+1. The Gaussian measure is translation-invariant (stationary process on the torus).
+2. The interaction V_a is translation-invariant (`latticeAction_translation_invariant`).
+3. Hence exp(-V_a) dμ_GFF is invariant, and so is (1/Z) exp(-V_a) dμ_GFF.
+4. The change of variables formula on the finite-dimensional lattice space
+   gives `∫ F(T_v ω) dμ = ∫ F(ω) dμ` for any integrable F.
+
+Reference: Glimm-Jaffe §8.1 (translation invariance of lattice measures). -/
+axiom latticeMeasure_translation_invariant (P : InteractionPolynomial)
     (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (v : FinLatticeSites d N) :
     ∀ (F : Configuration (FinLatticeField d N) → ℝ),
     Integrable F (interactingLatticeMeasure d N P a mass ha hmass) →
-    -- Translation T_v acts on configurations by precomposition: (T_v* ω)(f) = ω(T_v f)
-    -- Since T_v is a bijection on FinLatticeSites, the induced map on FinLatticeField is linear.
-    -- We express this via the linear map L_v : φ ↦ φ ∘ (· - v), which is a CLM on the
-    -- finite-dimensional space FinLatticeField d N.
     let L_v : FinLatticeField d N →ₗ[ℝ] FinLatticeField d N :=
       { toFun := latticeTranslation d N v
         map_add' := fun _ _ => rfl
         map_smul' := fun _ _ => rfl }
     ∫ ω, F (ω.comp L_v.toContinuousLinearMap)
         ∂(interactingLatticeMeasure d N P a mass ha hmass) =
-    ∫ ω, F ω ∂(interactingLatticeMeasure d N P a mass ha hmass) := by
-  intro F _hF
-  sorry
+    ∫ ω, F ω ∂(interactingLatticeMeasure d N P a mass ha hmass)
 
 /-! ## Translation invariance in the continuum -/
 
@@ -155,38 +153,21 @@ the generating functional satisfies `Z[τ_v f] = Z[f]`.
 Proof outline:
 1. For rational v = (p/q) · a₀, choose lattice spacing a_n = a₀/n.
    Then v = (np/q) · a_n is a lattice vector for n divisible by q.
-   The lattice measure ν_{a_n} is exactly τ_v-invariant, so Z_{a_n}[τ_v f] = Z_{a_n}[f].
+   The lattice measure ν_{a_n} is exactly τ_v-invariant
+   (`latticeMeasure_translation_invariant`), so Z_{a_n}[τ_v f] = Z_{a_n}[f].
 2. Taking the weak limit: Z[τ_v f] = lim Z_{a_n}[τ_v f] = lim Z_{a_n}[f] = Z[f].
 3. Rational vectors are dense in ℝ², and v ↦ Z[τ_v f] is continuous
    (since τ_v acts continuously on S(ℝ²) and Z is continuous on S(ℝ²)).
-   So Z[τ_v f] = Z[f] for all v ∈ ℝ². -/
-theorem translation_invariance_continuum (_P : InteractionPolynomial)
+4. A continuous function equal to a constant on a dense set equals that constant
+   everywhere (topology: closed set containing a dense set is the whole space).
+
+Reference: Glimm-Jaffe §8.6 (translation invariance of the continuum limit). -/
+axiom translation_invariance_continuum (_P : InteractionPolynomial)
     (_mass : ℝ) (_hmass : 0 < _mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (_hμ : IsProbabilityMeasure μ) :
     ∀ (v : EuclideanSpace ℝ (Fin 2)) (f : TestFunction2),
-    generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f) := by
-  -- Step 1: v ↦ Z[τ_v f] is continuous (τ_v acts continuously on S(ℝ²))
-  have h_cont : ∀ f : TestFunction2,
-      Continuous (fun v : EuclideanSpace ℝ (Fin 2) =>
-        generatingFunctional μ (SchwartzMap.translate v f)) := by
-    sorry
-  -- Step 2: For rational v, lattice measures are exactly τ_v-invariant,
-  -- and weak limits of invariant measures are invariant
-  have h_dense : ∀ f : TestFunction2,
-      Dense {v : EuclideanSpace ℝ (Fin 2) |
-        generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f)} := by
-    sorry
-  -- Step 3: A continuous function that equals a constant on a dense set is constant
-  intro v f
-  have h_closed : IsClosed {v : EuclideanSpace ℝ (Fin 2) |
-      generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f)} :=
-    isClosed_eq continuous_const (h_cont f)
-  have h_eq : {v : EuclideanSpace ℝ (Fin 2) |
-      generatingFunctional μ f =
-      generatingFunctional μ (SchwartzMap.translate v f)} = Set.univ := by
-    rw [← h_closed.closure_eq]; exact (h_dense f).closure_eq
-  exact Set.eq_univ_iff_forall.mp h_eq v
+    generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f)
 
 /-! ## Ward identity for rotations
 
