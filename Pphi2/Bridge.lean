@@ -407,7 +407,7 @@ theorem full_os_via_bridge
     os2 := h_os2_cont  -- From Phi4 (better than Ward identity)
     os3 := h_os3        -- From pphi2 (transfer matrix)
     os4_clustering := h_full.os4_clustering
-    os4_ergodicity := by sorry
+    os4_ergodicity := h_full.os4_ergodicity
   }
 
 /-! ## Phi4 also gets the full bundle -/
@@ -446,7 +446,7 @@ theorem phi4_full_os_via_bridge
     os2 := h_os2
     os3 := h_os3
     os4_clustering := h_full.os4_clustering
-    os4_ergodicity := by sorry
+    os4_ergodicity := h_full.os4_ergodicity
   }
 
 end Pphi2.Bridge

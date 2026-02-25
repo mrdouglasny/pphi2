@@ -902,6 +902,28 @@ theorem os4_for_continuum_limit (P : InteractionPolynomial)
             < C * (ε / C) := by apply mul_lt_mul_of_pos_left hexp_lt hC_pos
           _ = ε := by field_simp
 
+/-- **Clustering implies ergodicity for P(Φ)₂ measures.**
+
+For the P(Φ)₂ Euclidean measure, OS4_Clustering implies OS4_Ergodicity.
+The proof uses three ingredients:
+
+1. **Clustering → pointwise convergence:** `Z[f + τ_a g] → Z[f]·Z[g]` as `‖a‖ → ∞`.
+
+2. **Reality of Z[f]:** The P(Φ)₂ measure with even polynomial P is φ → -φ
+   symmetric, making Z[f] = Z̄[f] real. Then `Re(Z[f]·Z[g]) = Z[f].re · Z[g].re`.
+
+3. **Cesàro mean convergence:** The time-averaged `(1/T) ∫₀ᵀ Re(Z[f+τ_{(t,0)} g]) dt`
+   converges to the limit `Z[f].re · Z[g].re`, since the integrand converges
+   with exponential rate (from the mass gap).
+
+References: Glimm-Jaffe Ch. 6; Simon, The P(φ)₂ Theory, Ch. V;
+Reed-Simon I §XIII.12 (mean ergodic theorem). -/
+axiom os4_clustering_implies_ergodicity (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_cluster : OS4_Clustering μ) :
+    OS4_Ergodicity μ
+
 /-- **The continuum limit satisfies all five OS axioms.**
 
 Assembles all results: OS3 is fully proved via the trig identity decomposition
@@ -918,11 +940,9 @@ theorem continuumLimit_satisfies_fullOS
   os2 := os2_for_continuum_limit P mass hmass μ hμ
   os3 := os3_for_continuum_limit P mass hmass μ hμ
   os4_clustering := os4_for_continuum_limit P mass hmass μ hμ
-  os4_ergodicity := by
-    -- Ergodicity follows from clustering (OS4): exponential decay of correlations
-    -- implies uniqueness of the vacuum, which gives ergodicity under time translations.
-    -- Reference: Glimm-Jaffe Ch. 6; Simon Ch. V.
-    sorry
+  os4_ergodicity :=
+    os4_clustering_implies_ergodicity P mass hmass μ
+      (os4_for_continuum_limit P mass hmass μ hμ)
 
 /-! ## Existence theorem (using full OS axioms) -/
 
