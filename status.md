@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 52 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 48 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 4 axioms, 0 sorries (2 used by pphi2)**
 
 The 5 "Option B" axioms in `HypercontractivityOptionB.lean` provide an alternative
 proof path via the Gross-Rothaus-Simon OU semigroup framework. They currently have
@@ -268,8 +268,8 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `schwinger_n_convergence` | Convergence | Hard | n-point Schwinger functions converge along subsequence. Diagonal subsequence extraction. |
 | `continuumLimit_nontrivial` | Convergence | Hard | ∫ (ω f)² dμ > 0 for some f. Free field two-point function gives lower bound. |
 | `continuumLimit_nonGaussian` | Convergence | Hard | Connected 4-point function ≠ 0. Perturbation theory gives O(λ) contribution. |
-| `configuration_polishSpace` | Convergence | Infrastructure | S'(ℝ^d) is Polish (dual of nuclear Fréchet). Not in Mathlib. |
-| `configuration_borelSpace` | Convergence | Infrastructure | Borel σ-algebra on S'(ℝ^d) = cylindrical σ-algebra (weak-* topology). Not in Mathlib. |
+| `configuration_polishSpace` | *(moved upstream)* | Infrastructure | Now in `gaussian-field/GaussianField/ConfigurationTopology.lean`; consumed by `Convergence.lean`. |
+| `configuration_borelSpace` | *(moved upstream)* | Infrastructure | Now in `gaussian-field/GaussianField/ConfigurationTopology.lean`; consumed by `Convergence.lean`. |
 | `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
 | `os3_inheritance` | AxiomInheritance | Medium | Abstract RP: ∫ F(ω)·F(Θ*ω) dμ ≥ 0 for bounded continuous F. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
 | `os4_inheritance` | AxiomInheritance | Med/Hard | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
@@ -462,10 +462,9 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **2 axioms and 0 sorries**.
-None of these 2 axioms are in the transitive dependency chain used by pphi2.
-The axioms are in `HeatKernel/PositionKernel.lean` (`mehlerKernel_eq_series`,
-`circleHeatKernel_pos`). pphi2 imports only
-`HypercontractiveNat`, `SpectralTheorem`, and `Construction`, which do not
-depend on either of these files.
+The gaussian-field library (dependency) has **4 axioms and 0 sorries**.
+Two are used by pphi2 (`configuration_polishSpace`, `configuration_borelSpace`
+from `GaussianField/ConfigurationTopology.lean`). The other two are in
+`HeatKernel/PositionKernel.lean` (`mehlerKernel_eq_series`,
+`circleHeatKernel_pos`) and are not used by the pphi2 lattice route.
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.
