@@ -60,6 +60,15 @@ All six phases are structurally complete and the full project builds
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.
 
+For `ContinuumLimit/Convergence.lean`, the current extraction axiom
+`prokhorov_configuration_sequential` is intentionally temporary. The planned
+replacement is a weighted-Sobolev route: prove uniform interacting Sobolev
+moments by Holder/Cauchy-Schwarz transfer from the free Gaussian measure,
+derive tightness via Markov bounds and compact weighted embeddings, apply the
+already-proved Polish-space `prokhorov_sequential`, then lift back to
+configuration-space convergence. See
+`Pphi2/ContinuumLimit/SobolevProkhorovPlan.lean`.
+
 ## File structure
 
 ```

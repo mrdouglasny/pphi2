@@ -318,6 +318,11 @@ Schwartz-topology continuity of `t ↦ translate(t,0) g`.
 
 **Status**: Axiom (configuration-space extraction principle).
 
+**Implementation track**: see
+`Pphi2/ContinuumLimit/SobolevProkhorovPlan.lean` for the staged weighted-Sobolev
+replacement plan (Holder transfer + Markov tightness + compact embedding +
+Polish-space Prokhorov + lift back to configuration space).
+
 ---
 
 #### 19. `schwinger_n_convergence` (Convergence.lean:239)
