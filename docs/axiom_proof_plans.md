@@ -71,20 +71,24 @@ with product-integrand integrability).
 
 ---
 
-#### 5. `lattice_rp_matrix` (OS3_RP_Lattice.lean:199)
+#### 5. `lattice_rp_matrix` (OS3_RP_Lattice.lean)
 
 **Statement**: RP in matrix form: sum c_i c_j integral cos(phi . (f_i - Theta f_j)) d mu >= 0.
 
-**Plan**:
-1. Assume `lattice_rp`
-2. Choose F(phi) = sum_i c_i cos(<phi, f_i>) with f_i supported in positive time
-3. Substitute into lattice_rp: integral F(phi) * F(Theta phi) d mu >= 0
-4. Expand using `Finset.sum_mul_sum` and linearity of integral
-5. Use trig identities to get the cos(A-B) form
+**Current progress**:
+1. Added helper definitions/lemmas directly in `OS3_RP_Lattice.lean`:
+   `pairing2D`, `evalField2D`, `Fcos`, `Fsin`,
+   `positiveTimeSupported_Fcos`, `positiveTimeSupported_Fsin`,
+   `pairing_reflection_reindex`.
+2. Added theorem `lattice_rp_matrix_reduction`:
+   matrix RP follows from two scalar RP applications (`Fcos`, `Fsin`) plus
+   one expansion identity `h_expand`.
+3. Remaining step: prove `h_expand` (finite-sum/integral expansion with
+   `cos(u-v)=cos u cos v + sin u sin v` and reflection reindexing).
 
 **Key Mathlib**: `Finset.sum_mul_sum`, `MeasureTheory.integral_finset_sum`
 **Depends on**: `lattice_rp`
-**Difficulty**: EASY (conditional on lattice_rp)
+**Difficulty**: MEDIUM (bookkeeping-heavy, but no new deep analysis)
 
 ---
 

@@ -724,6 +724,27 @@ theorem spectral_gap {n : ℕ}
           · rw [abs_of_pos hpos_x] at hqx; linarith
         exact absurd this.exists.choose_spec id
 
+/-! ## Spectral decomposition of the Rayleigh quotient -/
+
+/-- The Rayleigh quotient ⟨f, Tf⟩ equals the sum Σ eigenval(i) * ⟨b(i), f⟩².
+This follows by applying the inner product CLM to the eigenbasis expansion. -/
+private theorem rayleigh_hasSum {n : ℕ} {ι : Type}
+    (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
+      Lp ℝ 2 (volume : Measure (Fin n → ℝ)))
+    (b : HilbertBasis ι ℝ (Lp ℝ 2 (volume : Measure (Fin n → ℝ))))
+    (eigenval : ι → ℝ)
+    (h_sum : ∀ x, HasSum
+      (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i) (T x))
+    (f : Lp ℝ 2 (volume : Measure (Fin n → ℝ))) :
+    HasSum (fun i => eigenval i * (@inner ℝ _ _ (b i) f) ^ 2)
+      (@inner ℝ _ _ f (T f)) := by
+  have h1 := (h_sum f).mapL (innerSL ℝ f)
+  simp only [innerSL_apply_apply] at h1
+  convert h1 using 1
+  ext i
+  simp only [inner_smul_right]
+  rw [sq, real_inner_comm f (b i), mul_assoc]
+
 /-! ## Assembly: Jentzsch's theorem
 
 Combine all phases to prove the full theorem. -/
@@ -734,7 +755,7 @@ For a compact, self-adjoint, positivity-improving operator on L²(ℝ^n)
 with eigenbasis indexed by a type with ≥ 2 elements:
 - The top eigenvalue lam₀ > 0 is simple.
 - All other eigenvalues satisfy |λ| < lam₀.
-- The second-largest eigenvalue exists and is attained. -/
+-/
 theorem jentzsch_theorem_proved {n : ℕ}
     (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
       Lp ℝ 2 (volume : Measure (Fin n → ℝ)))
@@ -749,19 +770,292 @@ theorem jentzsch_theorem_proved {n : ℕ}
           Lp ℝ 2 (volume : Measure (Fin n → ℝ))) (b i) = eigenval i • b i)
       (h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i) (T x))
       (h_nt : ∃ j k : ι, j ≠ k),
-    ∃ i₀ i₁ : ι,
+    ∃ i₀ : ι,
       (0 < eigenval i₀) ∧
       (∀ i, eigenval i = eigenval i₀ → i = i₀) ∧
-      (∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀) ∧
-      (i₁ ≠ i₀) ∧
-      (∀ i, i ≠ i₀ → eigenval i ≤ eigenval i₁) := by
+      (∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀) := by
   intro ι b eigenval h_eigen h_sum h_nt
-  -- Step 1: Find i₀ with |eigenval i₀| = ‖T‖ (compact SA operator achieves norm)
-  -- Step 2: Show eigenval i₀ > 0 (from positivity-improving)
-  -- Step 3: Show lam₀ is simple (Phase 6)
-  -- Step 4: Show |eigenval i| < eigenval i₀ for i ≠ i₀ (Phase 7)
-  -- Step 5: Find i₁ achieving max among excited eigenvalues (compact operator
-  --         eigenvalues converge to 0, so max over nonempty bounded set attained)
-  sorry
+  -- Eigenvectors have CLM form
+  have h_eigen_clm : ∀ i, T (b i) = eigenval i • b i := by
+    intro i; exact_mod_cast h_eigen i
+  -- Norm of basis vectors is 1
+  have h_norm_one : ∀ i, ‖b i‖ = 1 := fun i => b.orthonormal.1 i
+  -- Step A: Eigenvalues are bounded by ‖T‖
+  have h_eigenval_bdd : ∀ i, |eigenval i| ≤ ‖T‖ := by
+    intro i
+    calc |eigenval i| = |eigenval i| * 1 := (mul_one _).symm
+      _ = |eigenval i| * ‖b i‖ := by rw [h_norm_one]
+      _ = ‖eigenval i • b i‖ := by rw [norm_smul, Real.norm_eq_abs]
+      _ = ‖T (b i)‖ := by rw [h_eigen_clm]
+      _ ≤ ‖T‖ * ‖b i‖ := T.le_opNorm _
+      _ = ‖T‖ := by rw [h_norm_one, mul_one]
+  -- Step B: For any ε > 0, {i : |eigenval i| > ε} is finite
+  -- Proof: if infinite, extract sequence with pairwise distance ≥ √2 · ε,
+  -- contradicting compactness.
+  have h_finite_above : ∀ ε : ℝ, 0 < ε →
+      Set.Finite {i : ι | ε < |eigenval i|} := by
+    intro ε hε
+    by_contra h_inf
+    rw [Set.not_finite] at h_inf
+    -- Extract an injective sequence from the infinite set
+    set emb := h_inf.natEmbedding {i : ι | ε < |eigenval i|}
+    let s : ℕ → ι := fun k => (emb k).1
+    have hs_inj : Function.Injective s := by
+      intro a b h; exact emb.injective (Subtype.val_injective h)
+    have hs_mem : ∀ k, ε < |eigenval (s k)| := fun k => (emb k).2
+    -- The sequence T(b(s n)) lies in the compact set closure(T(closedBall 0 1))
+    have h_in_ball : ∀ k, b (s k) ∈ Metric.closedBall (0 : Lp ℝ 2 _) 1 := by
+      intro k; rw [Metric.mem_closedBall, dist_zero_right, h_norm_one]
+    have h_compact := hT_compact.isCompact_closure_image_closedBall 1
+    have h_seq_compact := h_compact.isSeqCompact
+    -- T(b(s n)) is in closure(T(closedBall 0 1))
+    have h_in_closure : ∀ k, T (b (s k)) ∈ closure (T '' Metric.closedBall 0 1) :=
+      fun k => subset_closure ⟨b (s k), h_in_ball k, rfl⟩
+    -- By sequential compactness, extract convergent subsequence
+    obtain ⟨a, _, φ, hφ_mono, hφ_lim⟩ := h_seq_compact (fun k => h_in_closure k)
+    -- But pairwise distances are ≥ √2 · ε (from orthonormality + eigenvalue bound)
+    have h_dist : ∀ m k, m ≠ k →
+        Real.sqrt 2 * ε ≤ ‖T (b (s (φ m))) - T (b (s (φ k)))‖ := by
+      intro m k hmk
+      have h_ne_idx : s (φ m) ≠ s (φ k) :=
+        fun h => hmk (hφ_mono.injective (hs_inj h))
+      -- ‖T(b i) - T(b j)‖² = eigenval(i)² + eigenval(j)² ≥ 2ε²
+      have h_sq : 2 * ε ^ 2 ≤
+          ‖T (b (s (φ m))) - T (b (s (φ k)))‖ ^ 2 := by
+        rw [h_eigen_clm, h_eigen_clm, @norm_sub_sq_real]
+        simp only [norm_smul, h_norm_one, mul_one, Real.norm_eq_abs,
+          inner_smul_left, inner_smul_right, b.orthonormal.2 h_ne_idx,
+          mul_zero, sub_zero]
+        have hle1 : ε ^ 2 ≤ |eigenval (s (φ m))| ^ 2 :=
+          sq_le_sq' (by linarith [abs_nonneg (eigenval (s (φ m)))])
+            (le_of_lt (hs_mem (φ m)))
+        have hle2 : ε ^ 2 ≤ |eigenval (s (φ k))| ^ 2 :=
+          sq_le_sq' (by linarith [abs_nonneg (eigenval (s (φ k)))])
+            (le_of_lt (hs_mem (φ k)))
+        linarith
+      -- √(2ε²) ≤ √(‖...‖²) = ‖...‖
+      calc Real.sqrt 2 * ε
+            = Real.sqrt (2 * ε ^ 2) := by
+              rw [Real.sqrt_mul (by norm_num : (2:ℝ) ≥ 0),
+                Real.sqrt_sq (le_of_lt hε)]
+          _ ≤ Real.sqrt (‖T (b (s (φ m))) - T (b (s (φ k)))‖ ^ 2) :=
+              Real.sqrt_le_sqrt h_sq
+          _ = ‖T (b (s (φ m))) - T (b (s (φ k)))‖ :=
+              Real.sqrt_sq (norm_nonneg _)
+    -- Convergent sequence can't have pairwise distance ≥ √2·ε
+    obtain ⟨N, hN⟩ := (Metric.tendsto_atTop.mp hφ_lim)
+      (Real.sqrt 2 * ε / 2) (by positivity)
+    have h_close : dist (T (b (s (φ N))))
+        (T (b (s (φ (N + 1))))) < Real.sqrt 2 * ε := by
+      calc dist (T (b (s (φ N)))) (T (b (s (φ (N + 1)))))
+          ≤ dist (T (b (s (φ N)))) a +
+            dist a (T (b (s (φ (N + 1))))) := dist_triangle _ a _
+        _ < Real.sqrt 2 * ε / 2 + Real.sqrt 2 * ε / 2 :=
+            add_lt_add (hN N le_rfl)
+              (by rw [dist_comm]; exact hN (N + 1) (by omega))
+        _ = Real.sqrt 2 * ε := by ring
+    linarith [h_dist N (N + 1) (by omega), dist_eq_norm
+      (T (b (s (φ N)))) (T (b (s (φ (N + 1)))))]
+  -- Step C: Find i₀ with maximum eigenvalue
+  -- Some eigenvalue is positive (spectral decomposition + positivity-improving)
+  -- Proof: if all eigenval ≤ 0, then inner f (Tf) ≤ 0 for all f (by HasSum),
+  -- but positivity-improving gives inner |bj| (T|bj|) > 0, contradiction.
+  have h_some_pos : ∃ i, 0 < eigenval i := by
+    by_contra h_all; push_neg at h_all
+    obtain ⟨j, _, _⟩ := h_nt
+    -- ⟨f, Tf⟩ ≤ 0 for all f (spectral decomposition + all eigenval ≤ 0)
+    have h_rnp : ∀ f : Lp ℝ 2 (volume : Measure (Fin n → ℝ)),
+        @inner ℝ _ _ f (T f) ≤ 0 :=
+      fun f => hasSum_le (fun i => mul_nonpos_of_nonpos_of_nonneg
+        (h_all i) (sq_nonneg _)) (rayleigh_hasSum T b eigenval h_sum f)
+        hasSum_zero
+    -- |b j| ≥ 0, |b j| ≠ 0
+    have habs_nn : (0 : Lp ℝ 2 _) ≤ |b j| := abs_nonneg (b j)
+    have habs_ne : |b j| ≠ (0 : Lp ℝ 2 _) := by
+      intro h; have h2 : ‖|b j|‖ = 0 := by rw [h, norm_zero]
+      rw [norm_abs_eq_norm] at h2; linarith [h_norm_one j]
+    -- inner |bj| (T|bj|) ≤ 0
+    have h_le := h_rnp (|b j|)
+    -- inner |bj| (T|bj|) ≥ 0 (both factors nonneg)
+    have h_Tnn : (0 : Lp ℝ 2 _) ≤ T |b j| := hT_pi.toPreserving _ habs_nn
+    have h_ge : 0 ≤ @inner ℝ _ _ (|b j| : Lp ℝ 2 _) (T (|b j|)) := by
+      rw [MeasureTheory.L2.inner_def]
+      apply integral_nonneg_of_ae
+      filter_upwards [(Lp.coeFn_nonneg (|b j|)).mpr habs_nn,
+        (Lp.coeFn_nonneg (T (|b j|))).mpr h_Tnn] with x hf hg
+      simp only [RCLike.inner_apply, starRingEnd_apply, star_trivial]
+      exact mul_nonneg hg hf
+    -- So inner = 0, but T|bj| > 0 a.e. and |bj| ≠ 0
+    have h_eq : @inner ℝ _ _ (|b j| : Lp ℝ 2 _) (T (|b j|)) = 0 :=
+      le_antisymm h_le h_ge
+    -- ∫ |bj| * T|bj| = 0 with both ≥ 0 → |bj| * T|bj| = 0 a.e.
+    -- But T|bj| > 0 a.e. → |bj| = 0 a.e. → |bj| = 0 in Lp, contradiction
+    -- Convert to integral form: ∫ |bj| * T|bj| = 0
+    -- Since both ≥ 0 and T|bj| > 0 a.e. and |bj| ≠ 0, get contradiction
+    have hT_pos := hT_pi (|b j|) habs_nn habs_ne
+    -- T maps |bj| to T|bj| which is > 0 a.e.
+    -- The Rayleigh quotient ⟨|bj|, T|bj|⟩ = Σ eigenval(i) * ⟨b(i), |bj|⟩²
+    -- Each term ≤ 0 (by h_all), so the sum ≤ 0 (h_le)
+    -- But the sum ≥ 0 (h_ge), so = 0
+    -- All terms = 0 → for each i, eigenval(i) * ⟨b(i), |bj|⟩² = 0
+    -- The HasSum of zeros is zero, which equals ⟨|bj|, T|bj|⟩
+    -- Now ⟨|bj|, T|bj|⟩ = 0 means ∫ |bj| * T|bj| = 0
+    -- But |bj| ≥ 0, T|bj| > 0 a.e., and |bj| ≠ 0 in L²
+    -- → |bj| > 0 on a set of positive measure → integral > 0
+    -- Contradiction
+    -- inner = 0 means ∫ |bj|·T|bj| = 0, both ≥ 0 → product = 0 a.e.
+    -- T|bj| > 0 a.e. → |bj| = 0 a.e. → contradiction
+    rw [MeasureTheory.L2.inner_def] at h_eq
+    have h_nn : (0 : (Fin n → ℝ) → ℝ) ≤ᵐ[volume]
+        (fun x => @inner ℝ ℝ _
+          (((|b j| : Lp ℝ 2 _) : _ → ℝ) x)
+          (((T (|b j|) : Lp ℝ 2 _) : _ → ℝ) x)) := by
+      filter_upwards [(Lp.coeFn_nonneg (|b j|)).mpr habs_nn,
+        (Lp.coeFn_nonneg (T (|b j|))).mpr h_Tnn] with x hf hg
+      simp only [Pi.zero_apply, RCLike.inner_apply,
+        starRingEnd_apply, star_trivial]
+      exact mul_nonneg hg hf
+    have h_int := MeasureTheory.L2.integrable_inner (𝕜 := ℝ) (|b j|) (T (|b j|))
+    have h_ae := (integral_eq_zero_iff_of_nonneg_ae h_nn h_int).mp h_eq
+    -- |bj| = 0 a.e. from product = 0 a.e. and T|bj| > 0 a.e.
+    have h_abs_ae : ∀ᵐ x ∂(volume : Measure (Fin n → ℝ)),
+        (|b j| : Lp ℝ 2 (volume : Measure (Fin n → ℝ))).1 x = 0 := by
+      filter_upwards [h_ae, hT_pos] with x hp hTp
+      simp only [RCLike.inner_apply, starRingEnd_apply,
+        star_trivial, Pi.zero_apply] at hp
+      exact (mul_eq_zero.mp hp).resolve_left (ne_of_gt hTp)
+    -- |bj| = 0 in Lp: f =ᵐ 0 → eLpNorm = 0 → ‖f‖ = 0 → f = 0
+    have h_snorm : MeasureTheory.eLpNorm
+        ((|b j| : Lp ℝ 2 (volume : Measure (Fin n → ℝ))).1) 2 volume = 0 := by
+      rw [(eLpNorm_eq_zero_iff (Lp.aestronglyMeasurable _)
+        (by norm_num : (2 : ENNReal) ≠ 0)).mpr h_abs_ae]
+    have h_norm_zero : ‖(|b j| : Lp ℝ 2 (volume : Measure (Fin n → ℝ)))‖ = 0 := by
+      simp [Lp.norm_def, h_snorm]
+    exact habs_ne ((Lp.norm_eq_zero_iff
+      (by norm_num : (0 : ENNReal) < 2)).mp h_norm_zero)
+  obtain ⟨j₀, hj₀_pos⟩ := h_some_pos
+  -- The set {i : eigenval i ≥ eigenval j₀} is finite (subset of {i : |eigenval i| > eigenval j₀ / 2})
+  have h_fin : Set.Finite {i : ι | eigenval j₀ / 2 < |eigenval i|} :=
+    h_finite_above _ (by linarith)
+  -- j₀ is in this finite set
+  have hj₀_mem : j₀ ∈ {i : ι | eigenval j₀ / 2 < |eigenval i|} := by
+    simp; rw [abs_of_pos hj₀_pos]; linarith
+  -- Find the index with maximum eigenvalue in this finite set
+  have h_fin_nonempty : (h_fin.toFinset).Nonempty := ⟨j₀, h_fin.mem_toFinset.mpr hj₀_mem⟩
+  obtain ⟨i₀, hi₀_mem, hi₀_max⟩ := h_fin.toFinset.exists_max_image
+    (fun i => eigenval i) h_fin_nonempty
+  rw [Set.Finite.mem_toFinset] at hi₀_mem
+  -- eigenval i₀ is the maximum over ALL indices
+  have hi₀_is_max : ∀ i, eigenval i ≤ eigenval i₀ := by
+    intro i
+    by_cases h : eigenval j₀ / 2 < |eigenval i|
+    · exact hi₀_max i (h_fin.mem_toFinset.mpr h)
+    · push_neg at h
+      have : eigenval i ≤ |eigenval i| := le_abs_self _
+      linarith [hi₀_max j₀ (h_fin.mem_toFinset.mpr hj₀_mem)]
+  -- eigenval i₀ > 0
+  have hi₀_pos : 0 < eigenval i₀ := lt_of_lt_of_le hj₀_pos (hi₀_is_max j₀)
+  -- Rayleigh bound
+  have h_rayleigh : ∀ f : Lp ℝ 2 (volume : Measure (Fin n → ℝ)),
+      @inner ℝ _ _ f (T f) ≤ eigenval i₀ * ‖f‖ ^ 2 := by
+    intro f
+    -- ⟨f, Tf⟩ = Σ eigenval(i) * ⟨b(i), f⟩²
+    have hs := rayleigh_hasSum T b eigenval h_sum f
+    -- Each term ≤ eigenval i₀ * ⟨b(i), f⟩²
+    have h_le : ∀ i, eigenval i * (@inner ℝ _ _ (b i) f) ^ 2 ≤
+        eigenval i₀ * (@inner ℝ _ _ (b i) f) ^ 2 :=
+      fun i => mul_le_mul_of_nonneg_right (hi₀_is_max i) (sq_nonneg _)
+    -- Parseval: Σ eigenval i₀ * ⟨b(i), f⟩² = eigenval i₀ * ‖f‖²
+    have hs2 : HasSum (fun i => eigenval i₀ *
+        (@inner ℝ _ _ (b i) f) ^ 2) (eigenval i₀ * ‖f‖ ^ 2) := by
+      -- ‖f‖² = Σ ⟨b(i), f⟩² (Parseval)
+      have h_parseval : HasSum (fun i => (@inner ℝ _ _ (b i) f) ^ 2)
+          (‖f‖ ^ 2) := by
+        have h_imii := b.hasSum_inner_mul_inner f f
+        simp only [inner_self_eq_norm_sq_to_K, RCLike.ofReal_real_eq_id,
+          id_eq] at h_imii
+        convert h_imii using 1
+        ext i; rw [sq, real_inner_comm f (b i)]
+      exact h_parseval.const_smul (eigenval i₀)
+    exact hasSum_le h_le hs hs2
+  -- Phase 6: simplicity
+  have h_simple : ∀ i, eigenval i = eigenval i₀ → i = i₀ := by
+    intro i hi
+    by_contra h_ne
+    exact top_eigenvalue_simple T hT_compact hT_sa hT_pi
+      (eigenval i₀) hi₀_pos h_rayleigh (b i) (b i₀)
+      (by intro h; have := congr_arg (‖·‖) h; simp [h_norm_one] at this)
+      (by intro h; have := congr_arg (‖·‖) h; simp [h_norm_one] at this)
+      (by rw [h_eigen, hi]) (h_eigen i₀)
+      (by rw [MeasureTheory.L2.inner_def]
+          have := b.orthonormal.2 h_ne
+          simp only [RCLike.inner_apply, starRingEnd_apply, star_trivial] at this ⊢
+          convert this using 1)
+  -- Basis elements are nonzero
+  have h_ne_zero : ∀ i, b i ≠ 0 := by
+    intro i h; have := h_norm_one i; rw [h, norm_zero] at this; simp at this
+  -- Simplicity in "all eigenvectors are multiples" form
+  -- Proof: by self-adjointness, for j ≠ i₀, inner (b j) v = 0,
+  -- so v = inner (b i₀) v • b i₀
+  have h_simple_mult : ∀ v, v ≠ 0 →
+      (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →ₗ[ℝ]
+        Lp ℝ 2 (volume : Measure (Fin n → ℝ))) v = eigenval i₀ • v →
+      ∃ c : ℝ, v = c • b i₀ := by
+    classical
+    intro v hv hTv
+    use @inner ℝ _ _ (b i₀) v
+    -- For j ≠ i₀: use self-adjointness to show inner (b j) v = 0
+    have h_coeff_zero : ∀ j, j ≠ i₀ → @inner ℝ _ _ (b j) v = 0 := by
+      intro j hj
+      -- inner (T (b j)) v = inner (eigenval j • b j) v = eigenval j * inner (b j) v
+      have h1 : @inner ℝ _ _ (T (b j)) v =
+          eigenval j * @inner ℝ _ _ (b j) v := by
+        rw [h_eigen_clm j, inner_smul_left]
+        simp [star_trivial, mul_comm]
+      -- inner (T (b j)) v = inner (b j) (T v) by self-adjointness
+      --   = inner (b j) (eigenval i₀ • v) = eigenval i₀ * inner (b j) v
+      have hTv' : T v = eigenval i₀ • v := by
+        have := hTv; simp only [ContinuousLinearMap.coe_coe] at this; exact this
+      have h2 : @inner ℝ _ _ (T (b j)) v =
+          eigenval i₀ * @inner ℝ _ _ (b j) v := by
+        have hsa : @inner ℝ _ _
+            ((ContinuousLinearMap.adjoint T) (b j)) v =
+            @inner ℝ _ _ (b j) (T v) :=
+          ContinuousLinearMap.adjoint_inner_left T v (b j)
+        rw [show ContinuousLinearMap.adjoint T = T from hT_sa] at hsa
+        rw [hsa, hTv', inner_smul_right]
+      have h3 : (eigenval i₀ - eigenval j) * @inner ℝ _ _ (b j) v = 0 := by
+        linarith
+      exact (mul_eq_zero.mp h3).resolve_left
+        (sub_ne_zero.mpr (fun h => hj (h_simple j h.symm)))
+    -- Reconstruct: v = Σ inner (b i) v • b i, all terms zero except i₀
+    have h_expand := b.hasSum_repr v
+    have h_repr_eq : ∀ i, b.repr v i = @inner ℝ _ _ (b i) v :=
+      fun i => b.repr_apply_apply v i
+    simp_rw [h_repr_eq] at h_expand
+    -- All terms except i₀ vanish
+    -- All terms except i₀ vanish, so the sum equals the i₀ term
+    have h_support : ∀ i, i ≠ i₀ → @inner ℝ _ _ (b i) v • b i = 0 := by
+      intro i hi; rw [h_coeff_zero i hi, zero_smul]
+    -- v = Σ inner (b i) v • b i, but only i₀ term is nonzero
+    -- So v = inner (b i₀) v • b i₀
+    symm
+    have h_eq_ite : ∀ i, @inner ℝ _ _ (b i) v • b i =
+        if i = i₀ then @inner ℝ _ _ (b i₀) v • b i₀ else 0 := by
+      intro i; split
+      · next h => subst h; rfl
+      · next h => exact h_support i h
+    rw [show (fun i => @inner ℝ _ _ (b i) v • b i) =
+        (fun i => if i = i₀ then @inner ℝ _ _ (b i₀) v • b i₀
+          else 0) from funext h_eq_ite] at h_expand
+    exact (h_expand.unique (hasSum_ite_eq i₀ _)).symm
+  -- Phase 7: spectral gap
+  have h_gap : ∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀ := by
+    intro i hi
+    exact spectral_gap T hT_compact hT_sa hT_pi (b i₀) (h_ne_zero i₀)
+      (eigenval i₀) hi₀_pos (h_eigen i₀) h_rayleigh h_simple_mult
+      (eigenval i) (fun h => hi (h_simple i h)) (b i) (h_ne_zero i)
+      (h_eigen i)
+  exact ⟨i₀, hi₀_pos, h_simple, h_gap⟩
 
 end

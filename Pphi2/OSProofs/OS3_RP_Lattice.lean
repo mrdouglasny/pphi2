@@ -185,6 +185,162 @@ axiom lattice_rp (P : InteractionPolynomial) (a mass : ℝ)
       (F (fieldReflection2D N (fieldFromSites N (fun x => ω (Pi.single x 1)))))
       ∂(interactingLatticeMeasure 2 N P a mass ha hmass)
 
+/-- Pairing on finite lattice fields in product coordinates. -/
+def pairing2D (φ g : Fin N × Fin N → ℝ) : ℝ :=
+  ∑ tx : Fin N × Fin N, φ tx * g tx
+
+/-- Lattice field extracted from `Configuration` in product coordinates. -/
+def evalField2D (ω : Configuration (FinLatticeField 2 N)) : Fin N × Fin N → ℝ :=
+  fieldFromSites N (fun x => ω (Pi.single x 1))
+
+/-- Finite cosine test functional used in matrix RP reduction. -/
+def Fcos (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (Fin N × Fin N → ℝ)) :
+    ((Fin N × Fin N → ℝ) → ℝ) :=
+  fun φ => ∑ i : Fin n, c i * Real.cos (pairing2D N φ (f i))
+
+/-- Finite sine test functional used in matrix RP reduction. -/
+def Fsin (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (Fin N × Fin N → ℝ)) :
+    ((Fin N × Fin N → ℝ) → ℝ) :=
+  fun φ => ∑ i : Fin n, c i * Real.sin (pairing2D N φ (f i))
+
+/-- If each `f i` is positive-time supported, then `Fcos` is positive-time supported. -/
+theorem positiveTimeSupported_Fcos
+    (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (Fin N × Fin N → ℝ))
+    (hf : ∀ i, ∀ tx : Fin N × Fin N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 → f i tx = 0) :
+    PositiveTimeSupported N (Fcos N n c f) := by
+  intro φ₁ φ₂ hEq
+  unfold Fcos pairing2D
+  apply Fintype.sum_congr
+  intro i
+  have hpair : (∑ tx : Fin N × Fin N, φ₁ tx * f i tx) =
+      (∑ tx : Fin N × Fin N, φ₂ tx * f i tx) := by
+    apply Fintype.sum_congr
+    intro tx
+    by_cases htx : tx.1.val = 0 ∨ tx.1.val ≥ N / 2
+    · have hfi : f i tx = 0 := hf i tx htx
+      simp [hfi]
+    · have hpos : 0 < tx.1.val ∧ tx.1.val < N / 2 := by
+        constructor
+        · have h0 : tx.1.val ≠ 0 := by
+            intro h0eq
+            exact htx (Or.inl h0eq)
+          exact Nat.pos_of_ne_zero h0
+        · have hlt_or_ge : tx.1.val < N / 2 ∨ tx.1.val ≥ N / 2 := lt_or_ge tx.1.val (N / 2)
+          rcases hlt_or_ge with hlt | hge
+          · exact hlt
+          · exact False.elim (htx (Or.inr hge))
+      have hφ : φ₁ tx = φ₂ tx := hEq tx.1 hpos tx.2
+      simp [hφ]
+  simp [hpair]
+
+/-- If each `f i` is positive-time supported, then `Fsin` is positive-time supported. -/
+theorem positiveTimeSupported_Fsin
+    (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (Fin N × Fin N → ℝ))
+    (hf : ∀ i, ∀ tx : Fin N × Fin N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 → f i tx = 0) :
+    PositiveTimeSupported N (Fsin N n c f) := by
+  intro φ₁ φ₂ hEq
+  unfold Fsin pairing2D
+  apply Fintype.sum_congr
+  intro i
+  have hpair : (∑ tx : Fin N × Fin N, φ₁ tx * f i tx) =
+      (∑ tx : Fin N × Fin N, φ₂ tx * f i tx) := by
+    apply Fintype.sum_congr
+    intro tx
+    by_cases htx : tx.1.val = 0 ∨ tx.1.val ≥ N / 2
+    · have hfi : f i tx = 0 := hf i tx htx
+      simp [hfi]
+    · have hpos : 0 < tx.1.val ∧ tx.1.val < N / 2 := by
+        constructor
+        · have h0 : tx.1.val ≠ 0 := by
+            intro h0eq
+            exact htx (Or.inl h0eq)
+          exact Nat.pos_of_ne_zero h0
+        · have hlt_or_ge : tx.1.val < N / 2 ∨ tx.1.val ≥ N / 2 := lt_or_ge tx.1.val (N / 2)
+          rcases hlt_or_ge with hlt | hge
+          · exact hlt
+          · exact False.elim (htx (Or.inr hge))
+      have hφ : φ₁ tx = φ₂ tx := hEq tx.1 hpos tx.2
+      simp [hφ]
+  simp [hpair]
+
+/-- Reflection reindexing for finite pairings. -/
+theorem pairing_reflection_reindex
+    (φ g : Fin N × Fin N → ℝ) :
+    pairing2D N (fieldReflection2D N φ) g =
+      pairing2D N φ (g ∘ timeReflection2D N) := by
+  unfold pairing2D fieldReflection2D
+  let θ : Fin N × Fin N → Fin N × Fin N := timeReflection2D N
+  have hθbij : Function.Bijective θ :=
+    Function.Involutive.bijective (timeReflection2D_involution (N := N))
+  calc
+    ∑ tx : Fin N × Fin N, (φ ∘ timeReflection2D N) tx * g tx
+        = ∑ tx : Fin N × Fin N, g tx * φ (timeReflection2D N tx) := by
+          simp [Function.comp, mul_comm]
+    _ = ∑ tx : Fin N × Fin N, g (θ tx) * φ (θ (θ tx)) := by
+          simpa [θ] using (Function.Bijective.sum_comp hθbij (fun tx => g tx * φ (θ tx))).symm
+    _ = ∑ tx : Fin N × Fin N, φ tx * g (timeReflection2D N tx) := by
+          have hθθ : ∀ tx : Fin N × Fin N, θ (θ tx) = tx := by
+            intro tx
+            simpa [θ] using (timeReflection2D_involution (N := N) tx)
+          calc
+            ∑ tx : Fin N × Fin N, g (θ tx) * φ (θ (θ tx))
+                = ∑ tx : Fin N × Fin N, g (θ tx) * φ tx := by
+                    apply Fintype.sum_congr
+                    intro tx
+                    simp [hθθ]
+            _ = ∑ tx : Fin N × Fin N, φ tx * g (timeReflection2D N tx) := by
+                  apply Fintype.sum_congr
+                  intro tx
+                  simp [θ, mul_comm]
+    _ = ∑ tx : Fin N × Fin N, φ tx * (g ∘ timeReflection2D N) tx := by rfl
+
+/-- Reduction theorem: matrix RP follows from scalar RP plus trigonometric
+expansion identity. -/
+theorem lattice_rp_matrix_reduction
+    (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass)
+    (n : ℕ) (c : Fin n → ℝ)
+    (f : Fin n → (Fin N × Fin N → ℝ))
+    (hf : ∀ i, ∀ tx : Fin N × Fin N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 → f i tx = 0)
+    (h_expand :
+      (∑ i : Fin n, ∑ j : Fin n, c i * c j *
+        ∫ ω : Configuration (FinLatticeField 2 N),
+          Real.cos (pairing2D N (evalField2D N ω) (f i - f j ∘ timeReflection2D N))
+          ∂(interactingLatticeMeasure 2 N P a mass ha hmass))
+      =
+      (∫ ω : Configuration (FinLatticeField 2 N),
+        (Fcos N n c f) (evalField2D N ω) *
+        (Fcos N n c f) (fieldReflection2D N (evalField2D N ω))
+        ∂(interactingLatticeMeasure 2 N P a mass ha hmass))
+      +
+      (∫ ω : Configuration (FinLatticeField 2 N),
+        (Fsin N n c f) (evalField2D N ω) *
+        (Fsin N n c f) (fieldReflection2D N (evalField2D N ω))
+        ∂(interactingLatticeMeasure 2 N P a mass ha hmass))) :
+    0 ≤
+      ∑ i : Fin n, ∑ j : Fin n, c i * c j *
+        ∫ ω : Configuration (FinLatticeField 2 N),
+          Real.cos (pairing2D N (evalField2D N ω) (f i - f j ∘ timeReflection2D N))
+          ∂(interactingLatticeMeasure 2 N P a mass ha hmass) := by
+  have hcos :
+      0 ≤ ∫ ω : Configuration (FinLatticeField 2 N),
+        (Fcos N n c f) (evalField2D N ω) *
+        (Fcos N n c f) (fieldReflection2D N (evalField2D N ω))
+        ∂(interactingLatticeMeasure 2 N P a mass ha hmass) := by
+    simpa [evalField2D, Function.comp] using
+      lattice_rp (N := N) P a mass ha hmass (Fcos N n c f)
+        (positiveTimeSupported_Fcos (N := N) n c f hf)
+  have hsin :
+      0 ≤ ∫ ω : Configuration (FinLatticeField 2 N),
+        (Fsin N n c f) (evalField2D N ω) *
+        (Fsin N n c f) (fieldReflection2D N (evalField2D N ω))
+        ∂(interactingLatticeMeasure 2 N P a mass ha hmass) := by
+    simpa [evalField2D, Function.comp] using
+      lattice_rp (N := N) P a mass ha hmass (Fsin N n c f)
+        (positiveTimeSupported_Fsin (N := N) n c f hf)
+  rw [h_expand]
+  exact add_nonneg hcos hsin
+
 /-- **Reflection positivity for the interacting measure** (matrix form).
 
 For test functions f₁,...,fₙ supported at positive time and

@@ -202,7 +202,7 @@ theorem unique_vacuum (Ns : ℕ) [NeZero Ns]
           L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i) ∧
       i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ := by
   rcases transferOperator_ground_simple_spectral Ns P a mass ha hmass with
-    ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt, hmax⟩
+    ⟨ι, b, eigenval, i₀, i₁, h_eigen, _h_sum, hi_ne, hlt⟩
   exact ⟨ι, b, eigenval, i₀, i₁, h_eigen, hi_ne, hlt⟩
 
 /-! ## Mixing -/

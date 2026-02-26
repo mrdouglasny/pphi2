@@ -40,7 +40,7 @@
 | 8 | `transferEigenvalue_antitone` | L2Operator | ✅ Standard | GR Group 3 | Eigenvalues decreasing. Standard spectral ordering (min-max). |
 | 9 | `transferEigenvalue_ground_simple` | L2Operator | ✅ Standard | GR Group 3 | λ₀ > λ₁. Perron-Frobenius for positivity-improving operators. Reed-Simon IV Thm XIII.44. |
 | 10 | `action_decomposition` | OS3_RP_Lattice | ⚠️ Likely correct | GR Group 5 | S = S⁺ + S⁻ across time-reflection plane. Now uses `siteEquiv` + `fieldToSites` to connect `Fin N × Fin N` to `FinLatticeSites 2 N`. |
-| 11 | `lattice_rp_matrix` | OS3_RP_Lattice | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ ∫ cos(⟨φ, fᵢ-Θfⱼ⟩) dμ_a ≥ 0. Integral expression now explicit. |
+| 11 | `lattice_rp_matrix` | OS3_RP_Lattice | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ ∫ cos(⟨φ, fᵢ-Θfⱼ⟩) dμ_a ≥ 0. New partial formalization in-file: helper lemmas + `lattice_rp_matrix_reduction`; remaining gap is explicit trig/sum expansion identity. |
 
 ### Phase 3: Spectral Gap (2 axioms)
 
@@ -61,8 +61,7 @@
 | 16 | `second_moment_uniform` | Tightness:74 | ⚠️ Likely correct | GR Group 4 | ∫ Φ_a(f)² dν_a ≤ C(f). Nelson's hypercontractive estimate. |
 | 17 | `moment_equicontinuity` | Tightness:89 | ⚠️ Likely correct | GR Group 4 | Fixed: RHS now `C * (seminorm k n (f-g))²`. Was bare constant (flagged WRONG by GR). |
 | 18 | `continuumMeasures_tight` | Tightness:110 | ⚠️ Likely correct | GR Group 4 | Mitoma criterion + moment bounds. |
-| 19 | `configuration_polishSpace` | Convergence:173 | ✅ Standard | DT 2026-02-24 | S'(ℝ^d) Polish. Gelfand-Vilenkin Vol. 4, Bogachev §3.2. |
-| 20 | `configuration_borelSpace` | Convergence:180 | ✅ Standard | DT 2026-02-24 | Borel = cylindrical σ-algebra. Bochner-Minlos framework. |
+| 19 | `prokhorov_configuration_sequential` | Convergence | ⚠️ Infrastructure | DT 2026-02-26 | Configuration-space sequential extraction axiom replacing global Polish/Borel assumptions on `Configuration (ContinuumTestFunction d)`. Planned replacement route documented in `Pphi2/ContinuumLimit/SobolevProkhorovPlan.lean`. |
 | 21 | `os0_inheritance` | AxiomInheritance:78 | ⚠️ Likely correct | GR Group 4 | OS0 transfers. GR notes: "TRUE but TOO WEAK" — should include factorial growth (E0'). |
 | 22 | `os3_inheritance` | AxiomInheritance | ✅ Standard | DT 2026-02-25 | Abstract IsRP for continuum limit: ∫ F·F(Θ*·) dμ ≥ 0. Now requires `IsPphi2Limit`. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
 | 22b | ~~`IsPphi2Limit`~~ | Embedding:271 | ✅ **DEFINED** | SA 2026-02-25 | Converted from axiom to `def`: ∃ (a, ν) with Schwinger function convergence. Mirrors `IsPphi2ContinuumLimit` in Bridge.lean. |

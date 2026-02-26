@@ -65,7 +65,6 @@ structure TransferGroundExcitedData (P : InteractionPolynomial) (a mass : ℝ)
       (transferOperatorCLM Ns P a mass ha hmass x)
   hi_ne : i₁ ≠ i₀
   hlt : eigenval i₁ < eigenval i₀
-  hmax : ∀ i : ι, i ≠ i₀ → eigenval i ≤ eigenval i₁
 
 /-- A noncomputable choice of spectral data with distinguished ground/first-excited indices. -/
 noncomputable def transferGroundExcitedData (P : InteractionPolynomial) (a mass : ℝ)
@@ -74,7 +73,7 @@ noncomputable def transferGroundExcitedData (P : InteractionPolynomial) (a mass 
   classical
   exact Classical.choice <| by
     rcases transferOperator_ground_simple_spectral Ns P a mass ha hmass with
-      ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt, hmax⟩
+      ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt⟩
     exact ⟨{
         ι := ι
         b := b
@@ -85,7 +84,6 @@ noncomputable def transferGroundExcitedData (P : InteractionPolynomial) (a mass 
         h_sum := h_sum
         hi_ne := hi_ne
         hlt := hlt
-        hmax := hmax
       }⟩
 
 /-- Ground-state eigenvalue λ₀ from spectral data. -/

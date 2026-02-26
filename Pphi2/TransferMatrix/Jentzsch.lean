@@ -13,8 +13,6 @@ For a compact, self-adjoint, positivity-improving operator T on L² with
 eigenbasis indexed by a type with ≥ 2 elements:
 - The spectral radius r is a simple eigenvalue with strictly positive value.
 - All other eigenvalues λ satisfy |λ| < r.
-- The second-largest eigenvalue exists (eigenvalues converge to 0 for
-  compact operators, so the sup over excited indices is attained).
 
 **Important**: Jentzsch does NOT imply all eigenvalues are positive.
 Counterexample: [[1,2],[2,1]] is positivity-improving with eigenvalues 3,-1.
@@ -37,7 +35,7 @@ Any Hilbert basis of L²(ℝ^Ns) has at least 2 elements.
 From axioms 1-4 we derive:
 - `transferOperator_inner_nonneg`: ⟨f, Tf⟩ ≥ 0
 - `transferOperator_eigenvalues_pos`: all λᵢ > 0
-- `transferOperator_ground_simple`: unique leading eigenvalue with second-largest
+- `transferOperator_ground_simple`: unique leading eigenvalue with strict gap
 - `transferOperator_ground_simple_spectral`: packaged spectral data
 
 ## References
@@ -68,20 +66,15 @@ def IsPositivityImproving {n : ℕ}
 /-! ## Axiom 1: Jentzsch's theorem -/
 
 /-- **Jentzsch's theorem** for compact self-adjoint positivity-improving
-operators on L²(ℝ^n), with second eigenvalue existence.
+operators on L²(ℝ^n).
 
-Given a nontrivial eigenbasis (|ι| ≥ 2), there exist distinguished indices
-i₀ (ground) and i₁ (first excited) such that:
+Given a nontrivial eigenbasis (|ι| ≥ 2), there exists a distinguished index
+i₀ (ground) such that:
 (a) λ(i₀) > 0 (the leading eigenvalue is strictly positive).
 (b) λ(i₀) is simple: it is the unique index with this eigenvalue.
 (c) |λ(i)| < λ(i₀) for all i ≠ i₀ (strict spectral gap).
-(d) i₁ ≠ i₀ and λ(i₁) ≥ λ(j) for all j ≠ i₀ (i₁ is the second-largest).
 
-Part (d) uses that eigenvalues of compact operators converge to 0,
-so only finitely many exceed any threshold and the sup is attained.
-
-This is Reed-Simon IV, Theorems XIII.43–44, plus standard compact
-operator eigenvalue theory (Reed-Simon I, §VI.5). -/
+This is Reed-Simon IV, Theorems XIII.43–44. -/
 axiom jentzsch_theorem {n : ℕ}
     (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
       Lp ℝ 2 (volume : Measure (Fin n → ℝ)))
@@ -96,12 +89,10 @@ axiom jentzsch_theorem {n : ℕ}
           Lp ℝ 2 (volume : Measure (Fin n → ℝ))) (b i) = eigenval i • b i)
       (h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i) (T x))
       (h_nt : ∃ j k : ι, j ≠ k),
-    ∃ i₀ i₁ : ι,
+    ∃ i₀ : ι,
       (0 < eigenval i₀) ∧
       (∀ i, eigenval i = eigenval i₀ → i = i₀) ∧
-      (∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀) ∧
-      (i₁ ≠ i₀) ∧
-      (∀ i, i ≠ i₀ → eigenval i ≤ eigenval i₁)
+      (∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀)
 
 namespace Pphi2
 
@@ -205,8 +196,9 @@ theorem transferOperator_eigenvalues_pos (P : InteractionPolynomial) (a mass : �
 
 /-- Ground-state simplicity and existence of first excited level.
 
-Derived from Jentzsch (which gives i₀, i₁, spectral gap, max property)
-combined with eigenvalue positivity (to convert |λᵢ| < λ₀ to λᵢ < λ₀). -/
+Derived from Jentzsch (which gives i₀ with spectral gap) combined with
+nontriviality (to pick some i₁ ≠ i₀) and eigenvalue positivity
+(to convert |λᵢ| < λ₀ to λᵢ < λ₀). -/
 theorem transferOperator_ground_simple (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     ∀ {ι : Type} (b : HilbertBasis ι ℝ (L2SpatialField Ns)) (eigenval : ι → ℝ)
@@ -214,25 +206,31 @@ theorem transferOperator_ground_simple (P : InteractionPolynomial) (a mass : ℝ
           L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i)
       (h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
           (transferOperatorCLM Ns P a mass ha hmass x)),
-      ∃ i₀ i₁ : ι, i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ ∧
-        (∀ i : ι, i ≠ i₀ → eigenval i ≤ eigenval i₁) := by
+      ∃ i₀ i₁ : ι, i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ := by
   intro ι b eigenval h_eigen h_sum
   -- Nontriviality: L²(ℝ^Ns) is infinite-dimensional
   have h_nt := l2SpatialField_hilbertBasis_nontrivial Ns b
-  -- Jentzsch gives i₀, i₁ with all required properties
-  obtain ⟨i₀, i₁, hpos, _hsimple, hgap, hi₁_ne, hmax⟩ := jentzsch_theorem
+  -- Jentzsch gives i₀ with positivity, simplicity, and spectral gap
+  obtain ⟨i₀, hpos, _hsimple, hgap⟩ := jentzsch_theorem
     (transferOperatorCLM Ns P a mass ha hmass)
     (transferOperator_isCompact Ns P a mass ha hmass)
     (transferOperator_isSelfAdjoint Ns P a mass ha hmass)
     (transferOperator_positivityImproving Ns P a mass ha hmass)
     b eigenval h_eigen h_sum h_nt
+  -- Pick any i₁ ≠ i₀ from nontriviality
+  obtain ⟨j, k, hjk⟩ := h_nt
+  have h_exists_ne : ∃ i₁, i₁ ≠ i₀ := by
+    by_cases hj : j = i₀
+    · exact ⟨k, fun hk => hjk (hj.trans hk.symm)⟩
+    · exact ⟨j, hj⟩
+  obtain ⟨i₁, hi₁_ne⟩ := h_exists_ne
   -- All eigenvalues positive, so |λᵢ| = λᵢ → gap gives λ(i₁) < λ(i₀)
   have hall_pos : ∀ i, 0 < eigenval i :=
     fun i => transferOperator_eigenvalues_pos Ns P a mass ha hmass b eigenval h_eigen i
   have hlt : eigenval i₁ < eigenval i₀ := by
     have := hgap i₁ hi₁_ne
     rwa [abs_of_pos (hall_pos i₁)] at this
-  exact ⟨i₀, i₁, hi₁_ne, hlt, hmax⟩
+  exact ⟨i₀, i₁, hi₁_ne, hlt⟩
 
 /-- Spectral data with distinguished ground and first excited levels. -/
 theorem transferOperator_ground_simple_spectral (P : InteractionPolynomial) (a mass : ℝ)
@@ -243,12 +241,11 @@ theorem transferOperator_ground_simple_spectral (P : InteractionPolynomial) (a m
           L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i) ∧
       (∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
           (transferOperatorCLM Ns P a mass ha hmass x)) ∧
-      i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ ∧
-      (∀ i : ι, i ≠ i₀ → eigenval i ≤ eigenval i₁) := by
+      i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ := by
   rcases transferOperator_spectral Ns P a mass ha hmass with ⟨ι, b, eigenval, h_eigen, h_sum⟩
   rcases transferOperator_ground_simple Ns P a mass ha hmass b eigenval h_eigen h_sum
-    with ⟨i₀, i₁, hi_ne, hlt, hmax⟩
-  exact ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt, hmax⟩
+    with ⟨i₀, i₁, hi_ne, hlt⟩
+  exact ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt⟩
 
 end Pphi2
 
