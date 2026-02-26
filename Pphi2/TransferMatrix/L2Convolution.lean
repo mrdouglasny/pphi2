@@ -76,6 +76,21 @@ axiom young_convolution_bound {G : Type*} [NormedAddCommGroup G] [NormedSpace �
     (hg : MemLp g 1 μ) (hf : MemLp f 2 μ) :
     eLpNorm (realConv μ g f) 2 μ ≤ eLpNorm g 1 μ * eLpNorm f 2 μ
 
+/-- Convolution is additive in the second argument a.e.: `g ⋆ (f₁ + f₂) =ᵐ g ⋆ f₁ + g ⋆ f₂`.
+
+This follows from: (1) `convolution_congr` to handle a.e. representatives, and
+(2) linearity of the integral (`integral_add`) for a.e. `x`, using the fact that
+the convolution integrand `t ↦ g(t) · f(x-t)` is integrable for a.e. `x`
+(Fubini applied within the Young's inequality proof). -/
+axiom young_convolution_ae_add {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
+    [MeasurableSpace G] [BorelSpace G]
+    [T2Space G] [LocallyCompactSpace G] [SecondCountableTopology G]
+    {μ : Measure G} [μ.IsAddHaarMeasure]
+    (g : G → ℝ) (f1 f2 : G → ℝ)
+    (hg : MemLp g 1 μ) (hf1 : MemLp f1 2 μ) (hf2 : MemLp f2 2 μ) :
+    realConv μ g (f1 + f2) =ᵐ[μ] realConv μ g f1 + realConv μ g f2
+
+
 /-! ## Convolution CLM construction
 
 Given `g ∈ L¹(μ)`, we construct convolution with `g` as a continuous
@@ -93,14 +108,30 @@ noncomputable def convCLM {μ : Measure G} [μ.IsAddHaarMeasure]
     { toFun := fun f =>
         (young_convolution_memLp g (⇑f) hg (Lp.memLp f)).toLp (realConv μ g ⇑f)
       map_add' := fun f1 f2 => by
-        -- Linearity of convolution through Lp coercion:
-        -- realConv μ g (⇑(f1+f2)) =ᵐ realConv μ g (⇑f1) + realConv μ g (⇑f2)
-        -- Uses: ⇑(f1+f2) =ᵐ ⇑f1 + ⇑f2, linearity of integral
-        sorry
+        -- Use toLp_congr to reduce to ae equality, then toLp_add
+        rw [← MemLp.toLp_add]
+        apply MemLp.toLp_congr
+        -- Step 1: ↑↑(f1+f2) =ᵐ ↑↑f1 + ↑↑f2, so by convolution_congr:
+        have hcongr : realConv μ g (↑↑f1 + ↑↑f2) = realConv μ g ↑↑(f1 + f2) :=
+          convolution_congr (lsmul ℝ ℝ) (ae_eq_refl g) (Lp.coeFn_add f1 f2).symm
+        -- Step 2: linearity of convolution in second argument (axiom)
+        have hlin := young_convolution_ae_add g (⇑f1) (⇑f2) hg (Lp.memLp f1) (Lp.memLp f2)
+        -- Combine: realConv μ g ↑↑(f1+f2) = realConv μ g (↑↑f1+↑↑f2) =ᵐ ...
+        calc realConv μ g ↑↑(f1 + f2)
+            = realConv μ g (↑↑f1 + ↑↑f2) := hcongr.symm
+          _ =ᵐ[μ] realConv μ g ↑↑f1 + realConv μ g ↑↑f2 := hlin
       map_smul' := fun c f => by
-        -- Scalar linearity: realConv μ g (⇑(c•f)) =ᵐ c • realConv μ g (⇑f)
-        -- Uses: ⇑(c•f) =ᵐ c • ⇑f, linearity of integral
-        sorry
+        simp only [RingHom.id_apply]
+        rw [← MemLp.toLp_const_smul]
+        apply MemLp.toLp_congr
+        -- Step 1: ↑↑(c • f) =ᵐ c • ↑↑f, so by convolution_congr:
+        have hcongr : realConv μ g (c • ↑↑f) = realConv μ g ↑↑(c • f) :=
+          convolution_congr (lsmul ℝ ℝ) (ae_eq_refl g) (Lp.coeFn_smul c f).symm
+        -- Step 2: convolution_smul gives pointwise: g ⋆ (c • f) = c • (g ⋆ f)
+        have hsmul : realConv μ g (c • ↑↑f) = c • realConv μ g ↑↑f :=
+          convolution_smul
+        -- Combine: pointwise equality implies ae equality
+        exact ae_of_all _ (fun x => by rw [← hsmul, ← hcongr])
     }
     (eLpNorm g 1 μ).toReal
     (fun f => by

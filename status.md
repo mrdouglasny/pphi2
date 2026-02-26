@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 44 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 8 axioms, 0 sorries**
+**pphi2: 52 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 7 axioms, 0 sorries**
 
 The 5 "Option B" axioms in `HypercontractivityOptionB.lean` provide an alternative
 proof path via the Gross-Rothaus-Simon OU semigroup framework. They currently have
@@ -32,7 +32,9 @@ required for the main theorem. `schwinger2_convergence` was proved from
 | 1 | `InteractingMeasure/LatticeMeasure.lean` | 0 axioms, 0 sorries |
 | 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
-| 2 | `TransferMatrix/L2Operator.lean` | 8 axioms (4 operator + 4 eigenvalue) |
+| 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
+| 2 | `TransferMatrix/L2Convolution.lean` | 3 axioms (Young's inequality, convolution CLM) |
+| 2 | `TransferMatrix/L2Operator.lean` | 7 axioms (transfer operator via kernel factorization) |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 3 axioms, 0 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
@@ -207,8 +209,12 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `transferOperatorCLM` | L2Operator | Medium | Transfer matrix as CLM on L²(ℝ^Ns). Integral operator with Gaussian-bounded kernel. |
+| ~~`transferOperatorCLM`~~ | L2Operator | ✅ **Defined** | Transfer matrix as `M_w ∘L Conv_G ∘L M_w` via kernel factorization. Uses `mulCLM` (L2Multiplication) and `convCLM` (L2Convolution). |
+| `young_convolution_memLp` | L2Convolution | Infrastructure | Young's inequality: `g ∈ L¹, f ∈ L² ⟹ g ⋆ f ∈ L²`. Standard (Reed-Simon II, §IX.4). Not yet in Mathlib. |
+| `young_convolution_bound` | L2Convolution | Infrastructure | Young's inequality norm bound: `‖g ⋆ f‖₂ ≤ ‖g‖₁ · ‖f‖₂`. |
+| `young_convolution_ae_add` | L2Convolution | Infrastructure | Convolution additive in second argument a.e.: `g ⋆ (f₁+f₂) =ᵐ g ⋆ f₁ + g ⋆ f₂`. |
 | `transferOperator_isSelfAdjoint` | L2Operator | Easy | Self-adjointness from kernel symmetry T(ψ,ψ') = T(ψ',ψ). |
+| `transferOperator_inner_nonneg` | L2Operator | Easy | ⟨f, Tf⟩ ≥ 0 from kernel positivity (exp > 0). |
 | `transferOperator_isCompact` | L2Operator | Medium | Compactness from Hilbert-Schmidt property (Gaussian kernel decay). |
 | `transferOperator_spectral` | L2Operator | **Proved** | Spectral decomposition from `compact_selfAdjoint_spectral` (gaussian-field). |
 | `transferEigenvalue` | L2Operator | Infrastructure | Sorted eigenvalue sequence λ₀ ≥ λ₁ ≥ ... from spectral decomposition. |
@@ -447,10 +453,15 @@ The following theorems have complete proofs (no sorry):
 | `latticeEmbed_measurable` | Embedding | `configuration_measurable_of_eval_measurable` + `continuous_apply` for each coordinate |
 | `norm_generatingFunctional_le_one` | OS2_WardIdentity | ‖Z[f]‖ ≤ 1 via norm_integral + ‖exp(ix)‖ = 1 + measure_univ = 1 |
 | `os4_clustering_implies_ergodicity` | OS2_WardIdentity | Clustering → Ergodicity via reality of Z[f], Cesàro convergence, and characteristic function bound |
+| `transferWeight_measurable` | L2Operator | Transfer weight w(ψ) = exp(-(a/2)·h(ψ)) is measurable — continuity chain via `wickMonomial_continuous` |
+| `transferWeight_bound` | L2Operator | Transfer weight is essentially bounded — from `wickPolynomial_bounded_below` + exponentiation |
+| `transferGaussian_memLp` | L2Operator | Gaussian kernel ∈ L¹ — product factorization + `integrable_exp_neg_mul_sq` |
+| `mulCLM` | L2Multiplication | Multiplication by bounded function as CLM on L² — Hölder (∞,2,2) |
+| `convCLM` | L2Convolution | Convolution with L¹ function as CLM on L² — Young's inequality |
 
 ---
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **10 axioms and 0 sorries**.
+The gaussian-field library (dependency) has **7 axioms and 0 sorries**.
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.

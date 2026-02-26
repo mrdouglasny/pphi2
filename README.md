@@ -54,8 +54,8 @@ The construction proceeds in six phases:
 All six phases are structurally complete and the full project builds
 (`lake build`, 3141 jobs).
 
-- **pphi2:** 44 axioms, 0 sorries (plus 5 Option B axioms with placeholder types, for future work)
-- **gaussian-field** (upstream dependency): 8 axioms, 0 sorries
+- **pphi2:** 52 axioms, 0 sorries (plus 5 Option B axioms with placeholder types, for future work)
+- **gaussian-field** (upstream dependency): 7 axioms, 0 sorries
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.
@@ -68,6 +68,9 @@ Pphi2/
   WickOrdering/                      -- Phase 1: Wick monomials and counterterms
   InteractingMeasure/                -- Phase 1: Lattice action and measure
   TransferMatrix/                    -- Phase 2-3: Transfer matrix, positivity, spectral gap
+    L2Multiplication.lean            -- Multiplication operator M_w on L²
+    L2Convolution.lean               -- Convolution operator Conv_G on L² (Young's inequality)
+    L2Operator.lean                  -- Transfer operator T = M_w ∘ Conv_G ∘ M_w
   OSProofs/
     OS3_RP_Lattice.lean              -- Phase 2: Reflection positivity on the lattice
     OS3_RP_Inheritance.lean          -- Phase 2: RP closed under weak limits
