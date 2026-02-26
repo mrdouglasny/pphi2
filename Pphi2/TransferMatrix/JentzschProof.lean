@@ -43,7 +43,17 @@ def IsPositivityPreserving {n : ℕ}
     (0 ≤ f) → (0 ≤ T f)
 
 /-- An operator on L²(ℝ^n) is positivity-improving if it maps nonneg
-nonzero functions to a.e. strictly positive functions. -/
+nonzero functions to a.e. strictly positive functions (ae-filter version). -/
+def IsPositivityImproving {n : ℕ}
+    (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
+      Lp ℝ 2 (volume : Measure (Fin n → ℝ))) : Prop :=
+  ∀ f : Lp ℝ 2 (volume : Measure (Fin n → ℝ)),
+    (∀ᵐ x ∂(volume : Measure (Fin n → ℝ)), 0 ≤ (f : (Fin n → ℝ) → ℝ) x) →
+    (¬ (f : (Fin n → ℝ) → ℝ) =ᵐ[volume] 0) →
+    (∀ᵐ x ∂(volume : Measure (Fin n → ℝ)), 0 < (T f : (Fin n → ℝ) → ℝ) x)
+
+/-- An operator on L²(ℝ^n) is positivity-improving if it maps nonneg
+nonzero functions to a.e. strictly positive functions (Lp lattice version). -/
 def IsPositivityImproving' {n : ℕ}
     (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
       Lp ℝ 2 (volume : Measure (Fin n → ℝ))) : Prop :=
@@ -67,6 +77,19 @@ theorem IsPositivityImproving'.toPreserving {n : ℕ}
     filter_upwards [hpos, Lp.coeFn_zero ℝ 2 volume] with x hx h0
     rw [h0]
     exact le_of_lt hx
+
+/-- `IsPositivityImproving` (ae conditions) implies `IsPositivityImproving'` (Lp lattice).
+The definitions differ only in whether the hypotheses use ae-filter or Lp order/equality:
+- `0 ≤ f` in Lp ↔ `0 ≤ᵐ[μ] f` (by `Lp.coeFn_nonneg`)
+- `f ≠ 0` in Lp ↔ `¬ f =ᵐ[μ] 0` (by `Lp.eq_zero_iff_ae_eq_zero`) -/
+theorem IsPositivityImproving.toPI' {n : ℕ}
+    {T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
+      Lp ℝ 2 (volume : Measure (Fin n → ℝ))}
+    (hT : IsPositivityImproving T) : IsPositivityImproving' T := by
+  intro f hf hf_ne
+  apply hT f
+  · exact (Lp.coeFn_nonneg f).mpr hf
+  · rwa [← Lp.eq_zero_iff_ae_eq_zero]
 
 /-! ## Phase 1: Absolute value inequality
 

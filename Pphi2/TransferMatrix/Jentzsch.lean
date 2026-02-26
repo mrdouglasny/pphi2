@@ -2,17 +2,20 @@
 Copyright (c) 2026 Michael R. Douglas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 
-# Jentzsch's Theorem and Kernel Positivity (Axiomatized)
+# Jentzsch's Theorem and Kernel Positivity
 
-This file axiomatizes spectral-theoretic facts about the transfer operator
-and derives the Perron-Frobenius properties needed for the P(Φ)₂ construction.
+This file states Jentzsch's theorem (proved in JentzschProof.lean), axiomatizes
+kernel positivity facts about the transfer operator, and derives the
+Perron-Frobenius properties needed for the P(Φ)₂ construction.
 
-## Axiom 1: Jentzsch's theorem (Reed-Simon IV, XIII.43–44)
+## Theorem: Jentzsch's theorem (Reed-Simon IV, XIII.43–44)
 
 For a compact, self-adjoint, positivity-improving operator T on L² with
 eigenbasis indexed by a type with ≥ 2 elements:
 - The spectral radius r is a simple eigenvalue with strictly positive value.
 - All other eigenvalues λ satisfy |λ| < r.
+
+Proved in `JentzschProof.lean` via the variational absolute value trick.
 
 **Important**: Jentzsch does NOT imply all eigenvalues are positive.
 Counterexample: [[1,2],[2,1]] is positivity-improving with eigenvalues 3,-1.
@@ -32,7 +35,7 @@ Any Hilbert basis of L²(ℝ^Ns) has at least 2 elements.
 
 ## Derived theorems
 
-From axioms 1-4 we derive:
+From Jentzsch + axioms 2-4 we derive:
 - `transferOperator_inner_nonneg`: ⟨f, Tf⟩ ≥ 0
 - `transferOperator_eigenvalues_pos`: all λᵢ > 0
 - `transferOperator_ground_simple`: unique leading eigenvalue with strict gap
@@ -46,24 +49,13 @@ From axioms 1-4 we derive:
 -/
 
 import Pphi2.TransferMatrix.L2Operator
+import Pphi2.TransferMatrix.JentzschProof
 
 noncomputable section
 
 open MeasureTheory
 
-/-! ## Positivity-improving operators -/
-
-/-- An operator on L²(ℝ^n) is positivity-improving if it maps nonneg
-nonzero functions to a.e. strictly positive functions. -/
-def IsPositivityImproving {n : ℕ}
-    (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
-      Lp ℝ 2 (volume : Measure (Fin n → ℝ))) : Prop :=
-  ∀ f : Lp ℝ 2 (volume : Measure (Fin n → ℝ)),
-    (∀ᵐ x ∂(volume : Measure (Fin n → ℝ)), 0 ≤ (f : (Fin n → ℝ) → ℝ) x) →
-    (¬ (f : (Fin n → ℝ) → ℝ) =ᵐ[volume] 0) →
-    (∀ᵐ x ∂(volume : Measure (Fin n → ℝ)), 0 < (T f : (Fin n → ℝ) → ℝ) x)
-
-/-! ## Axiom 1: Jentzsch's theorem -/
+/-! ## Jentzsch's theorem (proved in JentzschProof.lean) -/
 
 /-- **Jentzsch's theorem** for compact self-adjoint positivity-improving
 operators on L²(ℝ^n).
@@ -74,8 +66,12 @@ i₀ (ground) such that:
 (b) λ(i₀) is simple: it is the unique index with this eigenvalue.
 (c) |λ(i)| < λ(i₀) for all i ≠ i₀ (strict spectral gap).
 
-This is Reed-Simon IV, Theorems XIII.43–44. -/
-axiom jentzsch_theorem {n : ℕ}
+Proved in `JentzschProof.lean` via the variational absolute value trick.
+The bridge from `IsPositivityImproving` (ae) to `IsPositivityImproving'` (Lp lattice)
+is `IsPositivityImproving.toPI'`.
+
+**References**: Reed-Simon IV, Theorems XIII.43–44. -/
+theorem jentzsch_theorem {n : ℕ}
     (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
       Lp ℝ 2 (volume : Measure (Fin n → ℝ)))
     (hT_compact : IsCompactOperator T)
@@ -92,7 +88,8 @@ axiom jentzsch_theorem {n : ℕ}
     ∃ i₀ : ι,
       (0 < eigenval i₀) ∧
       (∀ i, eigenval i = eigenval i₀ → i = i₀) ∧
-      (∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀)
+      (∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀) :=
+  jentzsch_theorem_proved T hT_compact hT_sa hT_pi.toPI'
 
 namespace Pphi2
 
