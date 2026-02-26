@@ -30,6 +30,7 @@ exponents ∞ and 2).
 
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.MeasureTheory.Function.LpSeminorm.SMul
+import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 noncomputable section
 
@@ -134,5 +135,27 @@ theorem mulCLM_norm_bound {μ : Measure α}
   rw [ENNReal.ofReal_mul (le_of_lt hC)]
   gcongr
   exact le_of_eq (ENNReal.ofReal_toReal (Lp.memLp f).eLpNorm_ne_top).symm
+
+/-- The multiplication operator is self-adjoint: `⟨f, M_w g⟩ = ⟨M_w f, g⟩`.
+
+This is because `w` is real-valued, so:
+  `⟨f, M_w g⟩ = ∫ f(x) · (w(x) · g(x)) dμ = ∫ (w(x) · f(x)) · g(x) dμ = ⟨M_w f, g⟩`
+by commutativity and associativity of real multiplication. -/
+theorem mulCLM_isSelfAdjoint {μ : Measure α}
+    (w : α → ℝ) (hw_meas : Measurable w) (C : ℝ) (hC : 0 < C)
+    (hw_bound : ∀ᵐ x ∂μ, ‖w x‖ ≤ C) :
+    IsSelfAdjoint (mulCLM w hw_meas C hC hw_bound) := by
+  rw [ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric]
+  intro f g
+  simp only [MeasureTheory.L2.inner_def]
+  apply integral_congr_ae
+  -- Both sides: ∫ ⟨(M_w f)(x), g(x)⟩ dμ = ∫ ⟨f(x), (M_w g)(x)⟩ dμ
+  -- Using M_w acts by pointwise multiplication: (M_w f)(x) =ᵐ w(x) * f(x)
+  have hf := mulCLM_spec w hw_meas C hC hw_bound f
+  have hg := mulCLM_spec w hw_meas C hC hw_bound g
+  filter_upwards [hf, hg] with x hfx hgx
+  simp only [RCLike.inner_apply, RCLike.conj_to_real]
+  erw [hfx, hgx]
+  ring
 
 end

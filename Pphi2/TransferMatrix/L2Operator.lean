@@ -174,7 +174,7 @@ private theorem spatialAction_lower_bound (P : InteractionPolynomial) (a mass : 
 Since `spatialAction ≥ -Ns · A` and `w = exp(-(a/2)·h)`, we get
 `0 < w ≤ exp(a · Ns · A / 2)`, so `‖w‖_∞` is finite. -/
 theorem transferWeight_bound (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
+    (ha : 0 < a) (_hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧
       ∀ᵐ (x : SpatialField Ns) ∂volume, ‖transferWeight Ns P a mass x‖ ≤ C := by
   obtain ⟨B, hB⟩ := spatialAction_lower_bound Ns P a mass
@@ -330,69 +330,67 @@ theorem transferOperator_spectral (P : InteractionPolynomial) (a mass : ℝ)
     (transferOperator_isSelfAdjoint Ns P a mass ha hmass)
     (transferOperator_isCompact Ns P a mass ha hmass)
 
-/-! ## Sorted eigenvalue sequence
+/-! ## Perron-Frobenius facts on spectral data
 
-The spectral theorem gives eigenvalues indexed by an arbitrary type ι.
-For the physical application (energy levels, mass gap), we need them
-sorted in decreasing order as a sequence ℕ → ℝ.
+We keep the spectral decomposition indexed by an arbitrary type `ι` (from
+`transferOperator_spectral`) and axiomatize only the Perron-Frobenius facts we
+need directly on that spectral data, without introducing a sorted sequence
+`ℕ → ℝ`. -/
 
-Mathematically, since L²(ℝ^Ns) is separable, ι is countable, and since
-all eigenvalues are positive (Perron-Frobenius), they can be arranged as
-λ₀ ≥ λ₁ ≥ λ₂ ≥ ... > 0.
+/-- All eigenvalues from a spectral decomposition are strictly positive.
 
-We axiomatize this sorted sequence and its Perron-Frobenius properties
-(strict positivity and simplicity of the ground state). -/
-
-/-- Eigenvalues of the transfer matrix, in decreasing order:
-`λ₀ ≥ λ₁ ≥ λ₂ ≥ ... > 0`.
-
-These are the eigenvalues from `transferOperator_spectral`, sorted in
-decreasing order. The sorting is well-defined because:
-- L²(ℝ^Ns) is separable, so the spectral decomposition has countably many terms
-- All eigenvalues are positive (by Perron-Frobenius), so they accumulate only at 0
-- They can be arranged in decreasing order by the spectral theorem for compact operators
-
-**Connection to spectral theorem**: The eigenvalues here are exactly the
-values from `transferOperator_spectral`, enumerated in decreasing order.
-The eigenvectors form the Hilbert basis given by that theorem. -/
-axiom transferEigenvalue (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) (n : ℕ) : ℝ
-
-/-- All eigenvalues are strictly positive.
+For any Hilbert basis `b` and eigenvalues `eigenval` satisfying
+`T(bᵢ) = eigenval(i) • bᵢ`, every eigenvalue is strictly positive.
 
 This is the Perron-Frobenius theorem for integral operators with strictly
 positive kernels: since T(ψ,ψ') > 0 for all ψ, ψ' (from `transferKernel_pos`),
-the operator T is positivity-preserving, which forces all eigenvalues to
+the operator T is positivity-improving, which forces all eigenvalues to
 be nonneg. Strict positivity follows from the stronger property that T
 is positivity-*improving* (maps nonneg nonzero functions to strictly positive
 functions), which implies no eigenvalue is zero.
 
 **References**: Reed-Simon IV, Theorem XIII.44; Simon, P(φ)₂, §III.2. -/
-axiom transferEigenvalue_pos (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) (n : ℕ) :
-    0 < transferEigenvalue P a mass ha hmass n
+axiom transferOperator_eigenvalues_pos (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass)
+    {ι : Type} (b : HilbertBasis ι ℝ (L2SpatialField Ns)) (eigenval : ι → ℝ)
+    (h_eigen : ∀ i, (transferOperatorCLM Ns P a mass ha hmass :
+        L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i)
+    (i : ι) : 0 < eigenval i
 
-/-- The eigenvalues are decreasing: `λ₀ ≥ λ₁ ≥ λ₂ ≥ ...`.
-
-This is by construction: the eigenvalues from the spectral decomposition
-are sorted in decreasing order. -/
-axiom transferEigenvalue_antitone (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    Antitone (transferEigenvalue P a mass ha hmass)
-
-/-- The largest eigenvalue λ₀ is simple (non-degenerate): `λ₀ > λ₁`.
+/-- Ground-state simplicity and existence of first excited level.
 
 This is the Perron-Frobenius theorem for the transfer matrix: since the
 kernel T(ψ,ψ') > 0 everywhere, the operator is positivity-improving,
-so the ground state eigenvalue is simple and the ground state
-eigenfunction is strictly positive.
+so the top eigenvalue is simple and strictly greater than a first excited
+eigenvalue. The `i₁` index is maximal among excited indices.
 
 **References**: Reed-Simon IV, Theorem XIII.44 (Perron-Frobenius for
 positivity-improving operators); Glimm-Jaffe §6.1. -/
-axiom transferEigenvalue_ground_simple (P : InteractionPolynomial) (a mass : ℝ)
+axiom transferOperator_ground_simple (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    transferEigenvalue P a mass ha hmass 0 >
-    transferEigenvalue P a mass ha hmass 1
+    ∀ {ι : Type} (b : HilbertBasis ι ℝ (L2SpatialField Ns)) (eigenval : ι → ℝ)
+      (_h_eigen : ∀ i, (transferOperatorCLM Ns P a mass ha hmass :
+          L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i)
+      (_h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
+          (transferOperatorCLM Ns P a mass ha hmass x)),
+      ∃ i₀ i₁ : ι, i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ ∧
+        (∀ i : ι, i ≠ i₀ → eigenval i ≤ eigenval i₁)
+
+/-- Spectral data with distinguished ground and first excited levels. -/
+theorem transferOperator_ground_simple_spectral (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    ∃ (ι : Type) (b : HilbertBasis ι ℝ (L2SpatialField Ns)) (eigenval : ι → ℝ)
+      (i₀ i₁ : ι),
+      (∀ i, (transferOperatorCLM Ns P a mass ha hmass :
+          L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i) ∧
+      (∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
+          (transferOperatorCLM Ns P a mass ha hmass x)) ∧
+      i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ ∧
+      (∀ i : ι, i ≠ i₀ → eigenval i ≤ eigenval i₁) := by
+  rcases transferOperator_spectral Ns P a mass ha hmass with ⟨ι, b, eigenval, h_eigen, h_sum⟩
+  rcases transferOperator_ground_simple Ns P a mass ha hmass b eigenval h_eigen h_sum
+    with ⟨i₀, i₁, hi_ne, hlt, hmax⟩
+  exact ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt, hmax⟩
 
 end Pphi2
 

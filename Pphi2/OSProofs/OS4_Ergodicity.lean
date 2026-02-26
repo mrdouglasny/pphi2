@@ -185,7 +185,7 @@ theorem clustering_implies_ergodicity
 /-- **The vacuum is unique.**
 
 On the lattice, uniqueness of the ground state Ω follows from the
-Perron-Frobenius theorem (`transferEigenvalue_ground_simple`).
+Perron-Frobenius theorem (`transferOperator_ground_simple`).
 
 In the continuum limit, uniqueness of the vacuum follows from
 ergodicity of the limiting measure (clustering_implies_ergodicity).
@@ -195,13 +195,15 @@ spontaneous symmetry breaking of time-translation symmetry. -/
 theorem unique_vacuum (Ns : ℕ) [NeZero Ns]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    -- The ground state eigenspace of the transfer matrix is one-dimensional:
-    -- the largest eigenvalue λ₀ is simple (strictly greater than λ₁).
-    -- This is the Perron-Frobenius theorem for positivity-improving operators.
-    -- Equivalently: the vacuum state Ω (ground state of H) is unique up to phase.
-    transferEigenvalue P a mass ha hmass 0 >
-    transferEigenvalue P a mass ha hmass 1 :=
-  transferEigenvalue_ground_simple P a mass ha hmass
+    -- Spectral data with simple ground state and strict first gap.
+    ∃ (ι : Type) (b : HilbertBasis ι ℝ (L2SpatialField Ns)) (eigenval : ι → ℝ)
+      (i₀ i₁ : ι),
+      (∀ i, (transferOperatorCLM Ns P a mass ha hmass :
+          L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i) ∧
+      i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ := by
+  rcases transferOperator_ground_simple_spectral Ns P a mass ha hmass with
+    ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt, hmax⟩
+  exact ⟨ι, b, eigenval, i₀, i₁, h_eigen, hi_ne, hlt⟩
 
 /-! ## Mixing -/
 
@@ -221,8 +223,8 @@ theorem exponential_mixing (_Ns _Nt : ℕ) [NeZero _Ns] [NeZero _Nt]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     -- ∃ m > 0, ∀ bounded F G, |Cov(F, G ∘ T_R)| ≤ C·exp(-m·R)
-    ∃ m : ℝ, 0 < m ∧ m ≤ massGap P a mass ha hmass :=
-  ⟨massGap P a mass ha hmass, massGap_pos P a mass ha hmass, le_refl _⟩
+    ∃ m : ℝ, 0 < m ∧ m ≤ massGap _Ns P a mass ha hmass :=
+  ⟨massGap _Ns P a mass ha hmass, massGap_pos _Ns P a mass ha hmass, le_refl _⟩
 
 /-! ## OS4 on the lattice
 
@@ -247,16 +249,16 @@ theorem os4_lattice (_Ns _Nt : ℕ) [NeZero _Ns] [NeZero _Nt]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     -- The lattice measure satisfies OS4 with mass gap m_phys
-    0 < massGap P a mass ha hmass :=
-  massGap_pos P a mass ha hmass
+    0 < massGap _Ns P a mass ha hmass :=
+  massGap_pos _Ns P a mass ha hmass
 
 -- This is immediate from massGap_pos, but we state it as the "OS4 fact"
 -- to make the connection to the axiom framework explicit.
 theorem os4_lattice_from_gap
-    (P : InteractionPolynomial) (a mass : ℝ)
+    (Ns : ℕ) [NeZero Ns] (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    0 < massGap P a mass ha hmass :=
-  massGap_pos P a mass ha hmass
+    0 < massGap Ns P a mass ha hmass :=
+  massGap_pos Ns P a mass ha hmass
 
 end Pphi2
 

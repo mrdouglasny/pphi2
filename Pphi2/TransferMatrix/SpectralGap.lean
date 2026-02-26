@@ -47,6 +47,8 @@ open GaussianField Real
 
 namespace Pphi2
 
+variable (Ns : ℕ) [NeZero Ns]
+
 /-! ## Spectral gap
 
 The spectral gap `m_phys = E₁ - E₀` is the physical mass of the theory.
@@ -54,16 +56,16 @@ It controls the exponential decay of connected correlation functions. -/
 
 /-- **The spectral gap is strictly positive**: `E₁ - E₀ > 0`.
 
-This is equivalent to `transferEigenvalue 0 > transferEigenvalue 1`
-(already stated as `transferEigenvalue_ground_simple`), since
-`Eₙ = -(1/a) log λₙ`.
+This follows from strict Perron-Frobenius separation on the spectral data
+(`transferOperator_ground_simple`) and positivity of eigenvalues, since
+`E = -(1/a) log λ`.
 
 Physical interpretation: the theory has a nonzero mass gap. There is
 a gap between the vacuum and the first excited state. -/
 theorem spectral_gap_pos (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    0 < massGap P a mass ha hmass :=
-  massGap_pos P a mass ha hmass
+    0 < massGap Ns P a mass ha hmass :=
+  massGap_pos Ns P a mass ha hmass
 
 /-! ## Uniform lower bound on the spectral gap
 
@@ -88,7 +90,7 @@ axiom spectral_gap_uniform (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ m₀ : ℝ, 0 < m₀ ∧ ∃ a₀ : ℝ, 0 < a₀ ∧
     ∀ (a : ℝ) (ha : 0 < a), a ≤ a₀ →
-    m₀ ≤ massGap P a mass ha hmass
+    m₀ ≤ massGap Ns P a mass ha hmass
 
 /-- The spectral gap has an explicit lower bound in terms of the bare mass.
 
@@ -98,7 +100,7 @@ positive: `m_phys ≥ c · m` for some constant c depending on P. -/
 axiom spectral_gap_lower_bound (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ c : ℝ, 0 < c ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-    c * mass ≤ massGap P a mass ha hmass
+    c * mass ≤ massGap Ns P a mass ha hmass
 
 end Pphi2
 

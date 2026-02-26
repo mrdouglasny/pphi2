@@ -90,7 +90,7 @@ axiom two_point_clustering_from_spectral_gap
     |(∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx * ω δ0y ∂μ) -
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx ∂μ) *
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δ0y ∂μ)| ≤
-      C * Real.exp (-massGap P a mass ha hmass * (t.val : ℝ) * a)
+      C * Real.exp (-massGap Ns P a mass ha hmass * (t.val : ℝ) * a)
 
 /-- General clustering from spectral gap: connected correlators of bounded
 observables decay exponentially with the mass gap rate. -/
@@ -98,13 +98,13 @@ axiom general_clustering_from_spectral_gap
     (Ns : ℕ) [NeZero Ns] (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     ∀ (F G : Configuration (FinLatticeField 2 Ns) → ℝ)
-      (hF : ∃ C, ∀ ω, |F ω| ≤ C) (hG : ∃ C, ∀ ω, |G ω| ≤ C),
+      (_hF : ∃ C, ∀ ω, |F ω| ≤ C) (_hG : ∃ C, ∀ ω, |G ω| ≤ C),
       ∃ (C_FG : ℝ), 0 ≤ C_FG ∧
       ∀ (R : ℕ),
         |(∫ ω, F ω * G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) -
          (∫ ω, F ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) *
          (∫ ω, G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass))|
-        ≤ C_FG * Real.exp (-massGap P a mass ha hmass * (R : ℝ) * a)
+        ≤ C_FG * Real.exp (-massGap Ns P a mass ha hmass * (R : ℝ) * a)
 
 /-! ## Two-point clustering on the lattice -/
 
@@ -137,7 +137,7 @@ theorem two_point_clustering_lattice
     |(∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx * ω δ0y ∂μ) -
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx ∂μ) *
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δ0y ∂μ)| ≤
-      C * Real.exp (-massGap P a mass ha hmass * (t.val : ℝ) * a) := by
+      C * Real.exp (-massGap Ns P a mass ha hmass * (t.val : ℝ) * a) := by
   exact two_point_clustering_from_spectral_gap Ns P a mass ha hmass t x y
 
 /-! ## General clustering on the lattice -/
@@ -160,16 +160,16 @@ theorem general_clustering_lattice
     -- correlator decays exponentially at the rate of the mass gap:
     -- ∃ m > 0, ∀ bounded F G, ∀ R : ℕ,
     --   |∫ F(ω) · G(T_R ω) dμ - (∫ F dμ)(∫ G dμ)| ≤ C(F,G) · exp(-m · R · a)
-    ∃ (m : ℝ), 0 < m ∧ m ≤ massGap P a mass ha hmass ∧
+    ∃ (m : ℝ), 0 < m ∧ m ≤ massGap Ns P a mass ha hmass ∧
     ∀ (F G : Configuration (FinLatticeField 2 Ns) → ℝ)
-      (hF : ∃ C, ∀ ω, |F ω| ≤ C) (hG : ∃ C, ∀ ω, |G ω| ≤ C),
+      (_hF : ∃ C, ∀ ω, |F ω| ≤ C) (_hG : ∃ C, ∀ ω, |G ω| ≤ C),
       ∃ (C_FG : ℝ), 0 ≤ C_FG ∧
       ∀ (R : ℕ),
         |(∫ ω, F ω * G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) -
          (∫ ω, F ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) *
          (∫ ω, G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass))|
         ≤ C_FG * Real.exp (-m * (R : ℝ) * a) := by
-  refine ⟨massGap P a mass ha hmass, massGap_pos P a mass ha hmass, le_refl _, ?_⟩
+  refine ⟨massGap Ns P a mass ha hmass, massGap_pos Ns P a mass ha hmass, le_refl _, ?_⟩
   intro F G hF hG
   exact general_clustering_from_spectral_gap Ns P a mass ha hmass F G hF hG
 
@@ -196,8 +196,8 @@ theorem clustering_uniform (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ m₀ : ℝ, 0 < m₀ ∧ ∃ a₀ : ℝ, 0 < a₀ ∧
     ∀ (a : ℝ) (ha : 0 < a), a ≤ a₀ →
-    m₀ ≤ massGap P a mass ha hmass :=
-  spectral_gap_uniform P mass hmass
+    m₀ ≤ massGap Ns P a mass ha hmass :=
+  spectral_gap_uniform Ns P mass hmass
 
 /-! ## Connected correlation functions
 
