@@ -5,13 +5,13 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3103 jobs).
+3122 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 52 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 5 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 52 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
 The 5 "Option B" axioms in `HypercontractivityOptionB.lean` provide an alternative
 proof path via the Gross-Rothaus-Simon OU semigroup framework. They currently have
@@ -33,8 +33,8 @@ required for the main theorem. `schwinger2_convergence` was proved from
 | 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
-| 2 | `TransferMatrix/L2Convolution.lean` | 3 axioms (Young's inequality, convolution CLM) |
-| 2 | `TransferMatrix/L2Operator.lean` | 7 axioms (transfer operator via kernel factorization) |
+| 2 | `TransferMatrix/L2Convolution.lean` | 4 axioms (Young's inequality + even-kernel self-adjointness bridge) |
+| 2 | `TransferMatrix/L2Operator.lean` | 4 axioms (transfer operator via kernel factorization + Perron-Frobenius spectral data) |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 3 axioms, 0 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
@@ -180,7 +180,7 @@ Time-averaged generating functional converges to the product:
 
 ### Sorries in OSAxioms.lean
 
-None — all sorries have been resolved. The 5 remaining axioms are the infrastructure CLM axioms listed above.
+None — all sorries have been resolved.
 
 ### Proved theorems in OSAxioms.lean
 
@@ -213,14 +213,13 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | `young_convolution_memLp` | L2Convolution | Infrastructure | Young's inequality: `g ∈ L¹, f ∈ L² ⟹ g ⋆ f ∈ L²`. Standard (Reed-Simon II, §IX.4). Not yet in Mathlib. |
 | `young_convolution_bound` | L2Convolution | Infrastructure | Young's inequality norm bound: `‖g ⋆ f‖₂ ≤ ‖g‖₁ · ‖f‖₂`. |
 | `young_convolution_ae_add` | L2Convolution | Infrastructure | Convolution additive in second argument a.e.: `g ⋆ (f₁+f₂) =ᵐ g ⋆ f₁ + g ⋆ f₂`. |
-| `transferOperator_isSelfAdjoint` | L2Operator | Easy | Self-adjointness from kernel symmetry T(ψ,ψ') = T(ψ',ψ). |
+| `convCLM_isSelfAdjoint_of_even` | L2Convolution | Infrastructure | Self-adjointness of convolution by an even kernel on `L²`; isolates the current Fubini/integrability bridge in one place. |
+| ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | ✅ **Proved** | Self-adjointness of `A ∘ B ∘ A` from `mulCLM_isSelfAdjoint` and `convCLM_isSelfAdjoint_of_even` for the Gaussian kernel. |
 | `transferOperator_inner_nonneg` | L2Operator | Easy | ⟨f, Tf⟩ ≥ 0 from kernel positivity (exp > 0). |
-| `transferOperator_isCompact` | L2Operator | Medium | Compactness from Hilbert-Schmidt property (Gaussian kernel decay). |
+| `transferOperator_isCompact` | L2Operator | Medium | Compactness from Hilbert-Schmidt strategy using Gaussian decay of the weight (not the divergent translation-invariant bound). |
 | `transferOperator_spectral` | L2Operator | **Proved** | Spectral decomposition from `compact_selfAdjoint_spectral` (gaussian-field). |
-| `transferEigenvalue` | L2Operator | Infrastructure | Sorted eigenvalue sequence λ₀ ≥ λ₁ ≥ ... from spectral decomposition. |
-| `transferEigenvalue_pos` | L2Operator | Easy | Eigenvalues positive (Perron-Frobenius for positivity-improving operators). |
-| `transferEigenvalue_antitone` | L2Operator | Easy | Eigenvalues decrease: λ₀ ≥ λ₁ ≥ ... (by construction from sorting). |
-| `transferEigenvalue_ground_simple` | L2Operator | Medium | λ₀ > λ₁ (strict). Perron-Frobenius for positivity-improving operators. |
+| `transferOperator_eigenvalues_pos` | L2Operator | Easy | Every eigenvalue in a spectral decomposition is strictly positive (Perron-Frobenius positivity-improving input). |
+| `transferOperator_ground_simple` | L2Operator | Medium | Ground-state simplicity and first excited level on spectral data (`∃ i₀ i₁, λᵢ₁ < λᵢ₀` with excited maximality). |
 | `action_decomposition` | OS3_RP_Lattice | Medium | Lattice action decomposes as S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
 | `lattice_rp` | OS3_RP_Lattice | Medium | RP inequality for `interactingLatticeMeasure`. Fubini + perfect-square from action decomposition. |
 | `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. |
@@ -236,7 +235,7 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`two_point_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Exponential decay bound using `finLatticeDelta` and `massGap`. |
 | ~~`general_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Quantified clustering over bounded observables. |
 | ~~`clustering_implies_ergodicity`~~ | OS4_Ergodicity | ✅ **Proved** | Exponential clustering → ergodicity of time translations. |
-| ~~`unique_vacuum`~~ | OS4_Ergodicity | ✅ **Proved** | From `transferEigenvalue_ground_simple`. |
+| ~~`unique_vacuum`~~ | OS4_Ergodicity | ✅ **Proved** | From `transferOperator_ground_simple_spectral`. |
 | ~~`exponential_mixing`~~ | OS4_Ergodicity | ✅ **Proved** | Exponential mixing from mass gap. |
 | ~~`os4_lattice`~~ | OS4_Ergodicity | ✅ **Proved** | Lattice satisfies OS4 (assembles the above). |
 
@@ -432,7 +431,7 @@ The following theorems have complete proofs (no sorry):
 | `rp_closed_under_weak_limit` | OS3_RP_Inheritance | RP closed under weak limits |
 | `continuumMeasure_isProbability` | Embedding | Pushforward of probability measure is probability measure |
 | `connectedTwoPoint_symm` | OS4_MassGap | Symmetry of connected 2-point function |
-| `energyLevel_gap` | Positivity | E₁ > E₀ from transfer eigenvalue gap |
+| `energyLevel_gap` | Positivity | E₁ > E₀ from spectral-data ground/excited separation |
 | `prokhorov_sequential` | Convergence | Prokhorov's theorem (sequential version) — proved as theorem with proof |
 | `wickPolynomial_bounded_below` | WickPolynomial | Wick polynomial bounded below — from leading term domination via `poly_even_degree_bounded_below` |
 | `poly_even_degree_bounded_below` | WickPolynomial | Even-degree polynomial with positive leading coeff is bounded below — `eval_eq_sum_range` + coefficient bound + `Continuous.exists_forall_le` |
@@ -463,11 +462,10 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **5 axioms and 0 sorries**.
-None of these 5 axioms are in the transitive dependency chain used by pphi2.
-The axioms are in `HeatKernel/PositionKernel.lean` (2: `mehlerKernel_eq_series`,
-`circleHeatKernel_pos`) and `Lattice/RapidDecayLattice.lean` (3: `latticeEnum_norm_bound`,
-`latticeEnum_index_bound`, `latticeRapidDecayEquiv`). pphi2 imports only
+The gaussian-field library (dependency) has **2 axioms and 0 sorries**.
+None of these 2 axioms are in the transitive dependency chain used by pphi2.
+The axioms are in `HeatKernel/PositionKernel.lean` (`mehlerKernel_eq_series`,
+`circleHeatKernel_pos`). pphi2 imports only
 `HypercontractiveNat`, `SpectralTheorem`, and `Construction`, which do not
 depend on either of these files.
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.

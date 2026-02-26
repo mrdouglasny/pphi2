@@ -26,6 +26,7 @@ T = M_w ∘ Conv_G ∘ M_w.
 
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.Analysis.Convolution
+import Mathlib.Analysis.InnerProductSpace.Adjoint
 
 noncomputable section
 
@@ -153,5 +154,17 @@ lemma convCLM_spec {μ : Measure G} [μ.IsAddHaarMeasure]
     (convCLM g hg f : G → ℝ) =ᵐ[μ] realConv μ g ⇑f := by
   simp only [convCLM, LinearMap.mkContinuous_apply, LinearMap.coe_mk, AddHom.coe_mk]
   exact MemLp.coeFn_toLp _
+
+/-- Convolution by an even kernel is self-adjoint on `L²`.
+
+For additive Haar measure and `g(-x) = g(x)`, one has
+`⟨f, convCLM g hg h⟩ = ⟨convCLM g hg f, h⟩`.
+
+This is the standard Fubini + kernel-symmetry argument. We keep it axiomatic
+here to isolate the current integration API gap in the `L²`-level proof. -/
+axiom convCLM_isSelfAdjoint_of_even {μ : Measure G} [μ.IsAddHaarMeasure]
+    (g : G → ℝ) (hg : MemLp g 1 μ)
+    (heven : ∀ x : G, g (-x) = g x) :
+    IsSelfAdjoint (convCLM g hg)
 
 end

@@ -3,24 +3,23 @@
 **Generated**: 2026-02-25 via Gemini deep think review
 **Total**: 46 axioms, 0 sorries (plus 5 Option B)
 
+> Update (2026-02-26): `transferOperator_isSelfAdjoint` is now proved in
+> `TransferMatrix/L2Operator.lean`. The remaining analytic gap is tracked as
+> `convCLM_isSelfAdjoint_of_even` in `TransferMatrix/L2Convolution.lean`.
+
 ## Priority Order
 
 ### Tier 1: EASY (standard arguments, conditional on infrastructure)
 
-#### 1. `transferOperator_isSelfAdjoint` (L2Operator.lean:102)
+#### 1. ~~`transferOperator_isSelfAdjoint`~~ (L2Operator.lean)
 
-**Statement**: The transfer operator T is self-adjoint on L^2 spatial field space.
+**Status**: **PROVED**.
 
-**Plan**:
-1. For an integral operator with real kernel K(x,y), self-adjointness is equivalent to kernel symmetry: K(x,y) = K(y,x)
-2. The kernel is `Kernel(psi, psi') = integral exp(-S(psi, phi, psi')) d mu_0(phi)`
-3. The lattice action S is symmetric under psi <-> psi' (direct calculational check)
-4. Therefore Kernel(psi, psi') = Kernel(psi', psi)
-5. Write out `<f, Tg>` and `<Tf, g>` and use Fubini to swap integrals
+Theorem now follows by operator algebra from
+`mulCLM_isSelfAdjoint` and the convolution self-adjointness bridge axiom.
 
-**Key Mathlib**: `IsSelfAdjoint`, `MeasureTheory.integral_integral_swap`
-**Depends on**: `transferOperatorCLM` (#1)
-**Difficulty**: EASY (conditional on transfer operator construction)
+**Follow-up target**: prove `convCLM_isSelfAdjoint_of_even` directly (Fubini
+with product-integrand integrability).
 
 ---
 
@@ -804,7 +803,7 @@ Schwartz-topology continuity of `t ↦ translate(t,0) g`.
 
 | # | Axiom | File | Difficulty | Key Blocker |
 |---|-------|------|-----------|-------------|
-| 1 | `transferOperator_isSelfAdjoint` | L2Operator | EASY | Needs transferOperatorCLM |
+| 1 | ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | **PROVED** | — |
 | 2 | `transferOperator_isCompact` | L2Operator | EASY | Needs transferOperatorCLM |
 | 3 | `transferEigenvalue_antitone` | L2Operator | EASY | Needs eigenvalue construction |
 | 4 | `os3_inheritance` | AxiomInheritance | EASY | Theta continuity on S' |

@@ -84,6 +84,24 @@ This is in L¹(ℝ^Ns) since `∫ exp(-½‖x‖²) dx = (2π)^{Ns/2}`. -/
 def transferGaussian : SpatialField Ns → ℝ :=
   fun ψ => Real.exp (-timeCoupling Ns 0 ψ)
 
+omit [NeZero Ns] in
+/-- The transfer Gaussian is even: `G(-ψ) = G(ψ)`. -/
+theorem transferGaussian_neg (ψ : SpatialField Ns) :
+    transferGaussian Ns (-ψ) = transferGaussian Ns ψ := by
+  unfold transferGaussian timeCoupling
+  congr 1
+  -- The quadratic form is invariant under ψ ↦ -ψ.
+  simp [sq]
+
+omit [NeZero Ns] in
+/-- Symmetry of the transfer Gaussian difference kernel. -/
+theorem transferGaussian_sub_comm (x y : SpatialField Ns) :
+    transferGaussian Ns (x - y) = transferGaussian Ns (y - x) := by
+  have hneg : x - y = -(y - x) := by
+    ext i
+    simp
+  rw [hneg, transferGaussian_neg]
+
 /-! ## Proofs that weight is bounded and Gaussian is integrable -/
 
 /-- The spatial kinetic energy is continuous in the field configuration. -/
@@ -168,6 +186,62 @@ private theorem spatialAction_lower_bound (P : InteractionPolynomial) (a mass : 
           apply Finset.sum_le_sum; intro x _
           linarith [sq_nonneg (mass * ψ x), hA_bound (ψ x)]
   linarith
+
+/-- Quadratic coercive lower bound on the spatial action.
+
+Keeping the positive mass term gives:
+`spatialAction(ψ) ≥ (1/2) * mass^2 * ∑ x, ψ(x)^2 - Ns * A`.
+This is the bound needed to get Gaussian decay of the transfer weight. -/
+private theorem spatialAction_lower_bound_quadratic (P : InteractionPolynomial) (a mass : ℝ)
+    (_ha : 0 < a) (_hmass : 0 < mass) :
+    ∃ A : ℝ, 0 ≤ A ∧
+      ∀ ψ : SpatialField Ns,
+        (1 / 2) * mass ^ 2 * (∑ x : Fin Ns, (ψ x) ^ 2) - (↑Ns * A) ≤
+          spatialAction Ns P a mass (wickConstant 1 Ns a mass) ψ := by
+  obtain ⟨A0, hA0_nonneg, hA0_bound⟩ :=
+    wickPolynomial_bounded_below P (wickConstant 1 Ns a mass)
+  refine ⟨A0, le_of_lt hA0_nonneg, fun ψ => ?_⟩
+  unfold spatialAction
+  have hkin : 0 ≤ spatialKinetic Ns a ψ := by
+    unfold spatialKinetic
+    apply mul_nonneg (by norm_num)
+    exact Finset.sum_nonneg fun x _ => mul_nonneg (sq_nonneg _) (sq_nonneg _)
+  have hpot : (1 / 2) * mass ^ 2 * (∑ x : Fin Ns, (ψ x) ^ 2) - (↑Ns * A0) ≤
+      spatialPotential Ns P a mass (wickConstant 1 Ns a mass) ψ := by
+    unfold spatialPotential
+    calc
+      (1 / 2) * mass ^ 2 * (∑ x : Fin Ns, (ψ x) ^ 2) - (↑Ns * A0)
+          = ∑ x : Fin Ns, ((1 / 2) * mass ^ 2 * (ψ x) ^ 2 - A0) := by
+              simp [Finset.sum_sub_distrib, Finset.mul_sum, Finset.sum_const, nsmul_eq_mul]
+      _ ≤ ∑ x : Fin Ns, ((1 / 2) * mass ^ 2 * (ψ x) ^ 2 +
+            wickPolynomial P (wickConstant 1 Ns a mass) (ψ x)) := by
+            apply Finset.sum_le_sum
+            intro x _
+            linarith [hA0_bound (ψ x)]
+  linarith
+
+/-- Gaussian decay upper bound for the transfer weight.
+
+This is the key coercive estimate used in compactness heuristics:
+`w(ψ) ≤ exp((a/2) * Ns * A) * exp(-(a*mass^2/4) * ∑ x, ψ(x)^2)`. -/
+theorem transferWeight_gaussian_decay (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    ∃ A : ℝ, 0 ≤ A ∧ ∀ ψ : SpatialField Ns,
+      transferWeight Ns P a mass ψ ≤
+        Real.exp ((a / 2) * (↑Ns * A)) *
+          Real.exp (-(a * mass ^ 2 / 4) * (∑ x : Fin Ns, (ψ x) ^ 2)) := by
+  obtain ⟨A, hA_nonneg, hcoer⟩ := spatialAction_lower_bound_quadratic Ns P a mass ha hmass
+  refine ⟨A, hA_nonneg, fun ψ => ?_⟩
+  unfold transferWeight
+  have hcoerψ := hcoer ψ
+  have hlin :
+      -(a / 2) * spatialAction Ns P a mass (wickConstant 1 Ns a mass) ψ ≤
+        (a / 2) * (↑Ns * A) - (a * mass ^ 2 / 4) * (∑ x : Fin Ns, (ψ x) ^ 2) := by
+    nlinarith [hcoerψ, ha, sq_nonneg mass]
+  have hexp := Real.exp_le_exp.mpr hlin
+  -- Split the RHS as exp(u - v) = exp(u) * exp(-v)
+  simpa [sub_eq_add_neg, add_comm, add_left_comm, add_assoc, Real.exp_add, mul_comm, mul_left_comm,
+    mul_assoc] using hexp
 
 /-- The weight is essentially bounded: `‖w(ψ)‖ ≤ C` a.e.
 
@@ -270,9 +344,38 @@ Then: `⟨f, Tg⟩ = ⟨f, M_w(Conv_G(M_w g))⟩`
 **Proof strategy**: Prove self-adjointness of `mulCLM` (from real-valuedness
 of `w` and the L² inner product) and of `convCLM` (from symmetry of the
 Gaussian kernel), then compose. -/
-axiom transferOperator_isSelfAdjoint (P : InteractionPolynomial) (a mass : ℝ)
+theorem transferOperator_isSelfAdjoint (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    IsSelfAdjoint (transferOperatorCLM Ns P a mass ha hmass)
+    IsSelfAdjoint (transferOperatorCLM Ns P a mass ha hmass) := by
+  unfold transferOperatorCLM
+  let w := transferWeight Ns P a mass
+  let G := transferGaussian Ns
+  let hw_meas := transferWeight_measurable Ns P a mass
+  let C := (transferWeight_bound Ns P a mass ha hmass).choose
+  let hC := (transferWeight_bound Ns P a mass ha hmass).choose_spec.1
+  let hw_bound := (transferWeight_bound Ns P a mass ha hmass).choose_spec.2
+  let hG := transferGaussian_memLp Ns
+  let A : L2SpatialField Ns →L[ℝ] L2SpatialField Ns := mulCLM w hw_meas C hC hw_bound
+  let B : L2SpatialField Ns →L[ℝ] L2SpatialField Ns := convCLM G hG
+  have hA : IsSelfAdjoint A := mulCLM_isSelfAdjoint w hw_meas C hC hw_bound
+  have hB : IsSelfAdjoint B := by
+    refine convCLM_isSelfAdjoint_of_even G hG ?_
+    intro x
+    simpa [G] using transferGaussian_neg Ns x
+  rw [ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric]
+  intro f g
+  change @inner ℝ _ _ ((A.comp (B.comp A)) f) g = @inner ℝ _ _ f ((A.comp (B.comp A)) g)
+  simp only [ContinuousLinearMap.comp_apply]
+  have hA' : ∀ x y : L2SpatialField Ns, @inner ℝ _ _ (A x) y = @inner ℝ _ _ x (A y) := by
+    intro x y
+    exact hA.isSymmetric x y
+  have hB' : ∀ x y : L2SpatialField Ns, @inner ℝ _ _ (B x) y = @inner ℝ _ _ x (B y) := by
+    intro x y
+    exact hB.isSymmetric x y
+  calc
+    @inner ℝ _ _ (A (B (A f))) g = @inner ℝ _ _ (B (A f)) (A g) := hA' _ _
+    _ = @inner ℝ _ _ (A f) (B (A g)) := hB' _ _
+    _ = @inner ℝ _ _ f (A (B (A g))) := hA' _ _
 
 /-- The transfer operator is a *positive* operator: `⟨f, Tf⟩ ≥ 0` for all `f`.
 
@@ -294,15 +397,19 @@ axiom transferOperator_inner_nonneg (P : InteractionPolynomial) (a mass : ℝ)
 
 /-- The transfer operator is compact on L²(ℝ^Ns).
 
-The kernel satisfies T(ψ,ψ') ≤ exp(C) · exp(-½|ψ-ψ'|²), making the
-integral operator Hilbert-Schmidt (hence compact):
-  `∫∫ |T(ψ,ψ')|² dψ dψ' ≤ exp(2C) · ∫∫ exp(-|ψ-ψ'|²) dψ dψ' < ∞`.
+The naive translation-invariant bound
+`∫∫ exp(-‖ψ-ψ'‖²) dψ dψ' < ∞` is false on `ℝ^Ns × ℝ^Ns` (it diverges).
+Compactness comes from *both* Gaussian factors:
 
-In fact T is trace class: T = T^{1/2} · T^{1/2} where T^{1/2} is also
-Hilbert-Schmidt (by the same Gaussian bound on its kernel).
+- `G(ψ-ψ') ≤ 1`
+- `w(ψ)` decays Gaussianly in `ψ` (from `transferWeight_gaussian_decay`)
 
-**Proof strategy**: Bound the kernel by a Gaussian, compute the Hilbert-Schmidt
-norm explicitly, conclude compactness. -/
+For the kernel `K(ψ,ψ') = w(ψ) G(ψ-ψ') w(ψ')`, this gives
+`|K(ψ,ψ')|² ≤ w(ψ)² w(ψ')²`, so if `w ∈ L²`, then
+`K ∈ L²(ℝ^Ns × ℝ^Ns)` and the operator is Hilbert-Schmidt, hence compact.
+
+In this file we keep compactness axiomatic, since the required theorem
+"L²-kernel integral operator ⇒ compact CLM on L²" is not yet wired here. -/
 axiom transferOperator_isCompact (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     IsCompactOperator (transferOperatorCLM Ns P a mass ha hmass)
