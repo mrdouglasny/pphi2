@@ -1,7 +1,7 @@
 # pphi2 Axiom Proof Plans
 
 **Generated**: 2026-02-25 via Gemini deep think review
-**Total**: 46 axioms, 0 sorries (plus 5 Option B)
+**Total**: Active axiom count tracked in `status.md` (Option B moved to `Pphi2/Unused/` and excluded).
 
 > Update (2026-02-26): `transferOperator_isSelfAdjoint` is now proved in
 > `TransferMatrix/L2Operator.lean`. The remaining analytic gap is tracked as

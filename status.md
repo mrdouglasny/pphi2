@@ -11,12 +11,12 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 49 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 49 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
-The 5 "Option B" axioms in `HypercontractivityOptionB.lean` provide an alternative
-proof path via the Gross-Rothaus-Simon OU semigroup framework. They currently have
-placeholder (`True`) conclusions and are reserved for future work — they are not
-required for the main theorem. `schwinger2_convergence` was proved from
+`Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
+Gross-Rothaus-Simon OU semigroup route as inactive reference material.
+It is not imported and not counted in the active axiom inventory.
+`schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
 
 ## File inventory
@@ -44,7 +44,6 @@ required for the main theorem. `schwinger2_convergence` was proved from
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def) |
 | 4 | `ContinuumLimit/Hypercontractivity.lean` | 2 axioms |
-| 4 | `ContinuumLimit/HypercontractivityOptionB.lean` | 5 axioms (placeholder types, future work) |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 5 axioms, 2 proved theorems |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
@@ -263,11 +262,6 @@ refactoring (functionality consolidated into L2Operator axioms).
 | ~~`gaussian_hypercontractivity_continuum`~~ | Hypercontractivity | **Proved** | Gaussian hypercontractivity in continuum-embedded form. Proved from `gaussian_hypercontractive` (gaussian-field) via pushforward + `latticeEmbedLift_eval_eq`. |
 | `exponential_moment_bound` | Hypercontractivity | Hard | ∫ exp(-2V_a) dμ_{GFF} ≤ K uniformly in a. Deep stability estimate (cluster expansions, Glimm-Jaffe Thm 8.6.1). |
 | `interacting_moment_bound` | Hypercontractivity | Medium | Bounds interacting L^{pn} moments in terms of FREE Gaussian L^{2n} moments via Cauchy-Schwarz density transfer. RHS uses μ_{GFF}, not μ_a (converting back requires e^{+V_a} which diverges). |
-| `wick_is_eigenfunction` | Hypercontractivity | Medium | (Option B) Wick monomials :φ^n: are eigenfunctions of the number operator. |
-| `ou_semigroup_exists` | Hypercontractivity | Medium | (Option B) OU semigroup P_t exists on L²(μ_GFF) with Mehler formula. |
-| `ou_semigroup_eigenvalue` | Hypercontractivity | Medium | (Option B) P_t(:φ^n:) = e^{-nt}·:φ^n:. From Mehler kernel reproducing formula. |
-| `gross_theorem_lsi_to_hypercontractivity` | Hypercontractivity | Hard | (Option B) Gross's theorem: LSI ⟹ OU hypercontractivity via Rothaus-Simon ODE. |
-| `bakry_emery_gaussian_lsi` | Hypercontractivity | Medium | (Option B) Bakry-Émery Γ₂ criterion gives LSI(m²) for Gaussian. |
 | `prokhorov_configuration_sequential` | Convergence | Infrastructure | Sequential extraction axiom directly on `Configuration (ContinuumTestFunction d)`; avoids global Polish/Borel assumptions on full weak-* dual. |
 | ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — generic Polish-space sequential Prokhorov theorem (kept as theorem, not used by `continuumLimit`). |
 | `schwinger2_convergence` | Convergence | Med/Hard | 2-point Schwinger functions converge along subsequence. Prokhorov + uniform L² integrability. |

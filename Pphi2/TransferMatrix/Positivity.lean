@@ -34,7 +34,7 @@ exponential decay of correlations.
 - Reed-Simon, *Methods of Modern Mathematical Physics IV*, §XIII.12
 -/
 
-import Pphi2.TransferMatrix.L2Operator
+import Pphi2.TransferMatrix.Jentzsch
 
 noncomputable section
 

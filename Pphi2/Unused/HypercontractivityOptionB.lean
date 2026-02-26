@@ -148,7 +148,7 @@ Gross-Rothaus-Simon OU semigroup framework. -/
 theorem interacting_moment_bound_optionB (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ (C : ℝ), 0 < C ∧
-    ∀ (n : ℕ) (p : ℝ), 2 ≤ p →
+    ∀ (n : ℕ) (p : ℝ) (m : ℕ), 1 ≤ m → p = 2 * ↑m →
     ∀ (f : ContinuumTestFunction d) (a : ℝ) (ha : 0 < a), a ≤ 1 →
     ∫ ω : Configuration (ContinuumTestFunction d),
         |ω f| ^ (p * ↑n) ∂(continuumMeasure d N P a mass ha hmass) ≤

@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-02-25 (All sorries eliminated, 47 axioms)
-**pphi2**: 47 axioms, 0 sorries (+ 5 Option B) | **gaussian-field**: 9 axioms, 0 sorries | **Total**: 56 (+ 5 Option B)
+**pphi2**: 49 axioms, 0 sorries | **gaussian-field**: 2 axioms, 0 sorries | **Total**: 51
 
 ## Verification Sources
 
@@ -303,7 +303,7 @@ The following were previously axioms and are now theorems:
 | New (self-audit, likely correct) | 15 |
 | New (self-audit, overly strong) | 3 |
 | Proved (no longer axioms) | historical |
-| **Total active** | **53** (48 required + 5 Option B) |
+| **Total active** | **49** (Option B moved to `Pphi2/Unused/` and excluded) |
 
 ---
 

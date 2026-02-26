@@ -54,7 +54,7 @@ The construction proceeds in six phases:
 All six phases are structurally complete and the full project builds
 (`lake build`, 3512 jobs).
 
-- **pphi2:** 49 axioms, 0 sorries (plus 5 Option B axioms with placeholder types, for future work)
+- **pphi2:** 49 axioms, 0 sorries
 - **gaussian-field** (upstream dependency): 2 axioms, 0 sorries (none used by pphi2)
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
@@ -110,7 +110,7 @@ Pphi2/
     HadamardExp.lean                 -- Entrywise exponential preserves PSD/PD
     TimeTranslation.lean             -- Schwartz space time translation continuity
   ContinuumLimit/                    -- Phase 4: Embedding, tightness, convergence
-    Hypercontractivity.lean          -- Nelson's estimate (Option A: Holley-Stroock, Option B: Gross-Rothaus-Simon)
+    Hypercontractivity.lean          -- Nelson's estimate (Option A: Cauchy-Schwarz density transfer)
   GeneralResults/
     FunctionalAnalysis.lean          -- Pure Mathlib results: Cesàro, Schwartz Lp, trig identity
   OSAxioms.lean                      -- Phase 6: OS axiom definitions (matching OSforGFF)

@@ -377,24 +377,6 @@ theorem transferOperator_isSelfAdjoint (P : InteractionPolynomial) (a mass : ℝ
     _ = @inner ℝ _ _ (A f) (B (A g)) := hB' _ _
     _ = @inner ℝ _ _ f (A (B (A g))) := hA' _ _
 
-/-- The transfer operator is a *positive* operator: `⟨f, Tf⟩ ≥ 0` for all `f`.
-
-This is a consequence of the Perron-Frobenius theorem for the transfer
-matrix: the kernel `T(ψ,ψ') > 0` is strictly positive everywhere
-(`transferKernel_pos`), which implies the operator is positivity-improving.
-Combined with self-adjointness, all eigenvalues are nonneg, giving
-`⟨f, Tf⟩ = Σᵢ λᵢ |⟨eᵢ, f⟩|² ≥ 0`.
-
-**Proof strategy**: Use the spectral decomposition from
-`compact_selfAdjoint_spectral` and the Perron-Frobenius theorem
-to show all spectral values are nonneg.
-
-**References**: Reed-Simon IV, Theorem XIII.44; Simon P(φ)₂, §III.2. -/
-axiom transferOperator_inner_nonneg (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    ∀ (f : L2SpatialField Ns),
-      0 ≤ @inner ℝ _ _ f (transferOperatorCLM Ns P a mass ha hmass f)
-
 /-- The transfer operator is compact on L²(ℝ^Ns).
 
 The naive translation-invariant bound
@@ -439,65 +421,11 @@ theorem transferOperator_spectral (P : InteractionPolynomial) (a mass : ℝ)
 
 /-! ## Perron-Frobenius facts on spectral data
 
-We keep the spectral decomposition indexed by an arbitrary type `ι` (from
-`transferOperator_spectral`) and axiomatize only the Perron-Frobenius facts we
-need directly on that spectral data, without introducing a sorted sequence
-`ℕ → ℝ`. -/
-
-/-- All eigenvalues from a spectral decomposition are strictly positive.
-
-For any Hilbert basis `b` and eigenvalues `eigenval` satisfying
-`T(bᵢ) = eigenval(i) • bᵢ`, every eigenvalue is strictly positive.
-
-This is the Perron-Frobenius theorem for integral operators with strictly
-positive kernels: since T(ψ,ψ') > 0 for all ψ, ψ' (from `transferKernel_pos`),
-the operator T is positivity-improving, which forces all eigenvalues to
-be nonneg. Strict positivity follows from the stronger property that T
-is positivity-*improving* (maps nonneg nonzero functions to strictly positive
-functions), which implies no eigenvalue is zero.
-
-**References**: Reed-Simon IV, Theorem XIII.44; Simon, P(φ)₂, §III.2. -/
-axiom transferOperator_eigenvalues_pos (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass)
-    {ι : Type} (b : HilbertBasis ι ℝ (L2SpatialField Ns)) (eigenval : ι → ℝ)
-    (h_eigen : ∀ i, (transferOperatorCLM Ns P a mass ha hmass :
-        L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i)
-    (i : ι) : 0 < eigenval i
-
-/-- Ground-state simplicity and existence of first excited level.
-
-This is the Perron-Frobenius theorem for the transfer matrix: since the
-kernel T(ψ,ψ') > 0 everywhere, the operator is positivity-improving,
-so the top eigenvalue is simple and strictly greater than a first excited
-eigenvalue. The `i₁` index is maximal among excited indices.
-
-**References**: Reed-Simon IV, Theorem XIII.44 (Perron-Frobenius for
-positivity-improving operators); Glimm-Jaffe §6.1. -/
-axiom transferOperator_ground_simple (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    ∀ {ι : Type} (b : HilbertBasis ι ℝ (L2SpatialField Ns)) (eigenval : ι → ℝ)
-      (_h_eigen : ∀ i, (transferOperatorCLM Ns P a mass ha hmass :
-          L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i)
-      (_h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
-          (transferOperatorCLM Ns P a mass ha hmass x)),
-      ∃ i₀ i₁ : ι, i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ ∧
-        (∀ i : ι, i ≠ i₀ → eigenval i ≤ eigenval i₁)
-
-/-- Spectral data with distinguished ground and first excited levels. -/
-theorem transferOperator_ground_simple_spectral (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    ∃ (ι : Type) (b : HilbertBasis ι ℝ (L2SpatialField Ns)) (eigenval : ι → ℝ)
-      (i₀ i₁ : ι),
-      (∀ i, (transferOperatorCLM Ns P a mass ha hmass :
-          L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i) ∧
-      (∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
-          (transferOperatorCLM Ns P a mass ha hmass x)) ∧
-      i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ ∧
-      (∀ i : ι, i ≠ i₀ → eigenval i ≤ eigenval i₁) := by
-  rcases transferOperator_spectral Ns P a mass ha hmass with ⟨ι, b, eigenval, h_eigen, h_sum⟩
-  rcases transferOperator_ground_simple Ns P a mass ha hmass b eigenval h_eigen h_sum
-    with ⟨i₀, i₁, hi_ne, hlt, hmax⟩
-  exact ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt, hmax⟩
+The Perron-Frobenius properties (eigenvalue positivity, ground-state simplicity,
+spectral gap) are derived from Jentzsch's theorem in `Jentzsch.lean`.
+The names `transferOperator_eigenvalues_pos`, `transferOperator_ground_simple`,
+`transferOperator_inner_nonneg`, and `transferOperator_ground_simple_spectral`
+are defined there with the same signatures as the former axioms here. -/
 
 end Pphi2
 

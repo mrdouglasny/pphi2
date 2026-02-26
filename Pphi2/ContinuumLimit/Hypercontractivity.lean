@@ -220,7 +220,7 @@ FREE Gaussian measure μ_{GFF}:
 
   ∫ |ω(f)|^{pn} dμ_a ≤ C · (2p-1)^{pn/2} · (∫ |ω(f)|^{2n} dμ_{GFF})^{p/2}
 
-where C = K^{1/2}/Z_min is uniform in a, n, p, f.
+where C = K^{1/2}/Z_min is uniform in a, n, m, f and `p = 2m`.
 
 Proof:
   ∫ |ω(f)|^{pn} dμ_a = (1/Z_a) ∫ |ω(f)|^{pn} · e^{-V_a} dμ_{GFF}
@@ -245,7 +245,7 @@ axiom interacting_moment_bound
     (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ (C : ℝ), 0 < C ∧
-    ∀ (n : ℕ) (p : ℝ), 2 ≤ p →
+    ∀ (n : ℕ) (p : ℝ) (m : ℕ), 1 ≤ m → p = 2 * ↑m →
     ∀ (f : ContinuumTestFunction d) (a : ℝ) (ha : 0 < a), a ≤ 1 →
     ∫ ω : Configuration (ContinuumTestFunction d),
         |ω f| ^ (p * ↑n) ∂(continuumMeasure d N P a mass ha hmass) ≤
