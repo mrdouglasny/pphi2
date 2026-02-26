@@ -130,20 +130,120 @@ axiom transferOperator_strictly_positive_definite (P : InteractionPolynomial) (a
     ∀ (f : L2SpatialField Ns), f ≠ 0 →
       0 < @inner ℝ _ _ f (transferOperatorCLM Ns P a mass ha hmass f)
 
-/-! ## Axiom 4: L²(ℝ^Ns) Hilbert basis nontriviality
+/-! ## L²(ℝ^Ns) Hilbert basis nontriviality
 
-L²(ℝ^Ns, Lebesgue) is infinite-dimensional (it contains orthogonal Hermite
-functions, indicator functions of disjoint sets, etc.), so any Hilbert basis
-has at least 2 elements. -/
+L²(ℝ^Ns, Lebesgue) is infinite-dimensional (it contains orthogonal indicator
+functions of disjoint sets), so any Hilbert basis has at least 2 elements. -/
 
 /-- Any Hilbert basis of L²(ℝ^Ns) has at least 2 elements.
 
-L²(ℝ^Ns) with Lebesgue measure is infinite-dimensional (it contains
-the countably many orthogonal Hermite functions), so any orthonormal
-basis must be infinite. -/
-axiom l2SpatialField_hilbertBasis_nontrivial
+**Proof**: Construct two orthogonal nonzero elements using indicator functions
+of disjoint balls, then use the Hilbert basis expansion to derive that ι
+must have ≥ 2 elements. -/
+theorem l2SpatialField_hilbertBasis_nontrivial
     {ι : Type} (b : HilbertBasis ι ℝ (L2SpatialField Ns)) :
-    ∃ j k : ι, j ≠ k
+    ∃ j k : ι, j ≠ k := by
+  classical
+  -- Construct two disjoint balls with positive finite Lebesgue measure
+  let μ : Measure (Fin Ns → ℝ) := volume
+  let A := Metric.ball (0 : Fin Ns → ℝ) 1
+  let B := Metric.ball (fun _ : Fin Ns => (4 : ℝ)) 1
+  have hA_meas : MeasurableSet A := measurableSet_ball
+  have hB_meas : MeasurableSet B := measurableSet_ball
+  have hA_fin : μ A ≠ ⊤ := measure_ball_ne_top
+  have hB_fin : μ B ≠ ⊤ := measure_ball_ne_top
+  have hA_pos : μ A ≠ 0 := ne_of_gt (Metric.measure_ball_pos μ 0 one_pos)
+  have hB_pos : μ B ≠ 0 := ne_of_gt (Metric.measure_ball_pos μ _ one_pos)
+  -- Balls are disjoint via triangle inequality
+  have hAB : Disjoint A B := Set.disjoint_left.mpr fun x hxA hxB => by
+    have h1 : dist x 0 < 1 := Metric.mem_ball.mp hxA
+    have h2 : dist x (fun _ => (4:ℝ)) < 1 := Metric.mem_ball.mp hxB
+    have htri : dist (0 : Fin Ns → ℝ) (fun _ => (4:ℝ)) < 2 :=
+      calc dist 0 (fun _ => (4:ℝ))
+          ≤ dist (0 : Fin Ns → ℝ) x + dist x (fun _ => 4) := dist_triangle _ _ _
+        _ = dist x 0 + dist x (fun _ => 4) := by rw [dist_comm]
+        _ < 1 + 1 := add_lt_add h1 h2
+        _ = 2 := by ring
+    have hge : (4 : ℝ) ≤ dist (0 : Fin Ns → ℝ) (fun _ => (4:ℝ)) := by
+      have i₀ : Fin Ns := ⟨0, Fin.pos'⟩
+      have h1 : dist (0 : ℝ) 4 = 4 := by norm_num
+      have h2 : dist ((0 : Fin Ns → ℝ) i₀) ((fun _ => (4:ℝ)) i₀)
+          = dist (0 : ℝ) 4 := by simp
+      have h3 : dist ((0 : Fin Ns → ℝ) i₀) ((fun _ => (4:ℝ)) i₀)
+          ≤ dist (0 : Fin Ns → ℝ) (fun _ => (4:ℝ)) := by
+        exact dist_le_pi_dist (0 : Fin Ns → ℝ) (fun _ => (4:ℝ)) i₀
+      linarith
+    linarith
+  -- Construct indicator functions in L²
+  let f₁ := indicatorConstLp (E := ℝ) 2 hA_meas hA_fin 1
+  let f₂ := indicatorConstLp (E := ℝ) 2 hB_meas hB_fin 1
+  -- They are nonzero (norm > 0)
+  have hf₁_ne : f₁ ≠ 0 := by
+    intro h; have h1 := congr_arg (‖·‖) h
+    simp only [norm_zero] at h1
+    rw [show f₁ = indicatorConstLp 2 hA_meas hA_fin (1:ℝ) from rfl,
+      norm_indicatorConstLp (by norm_num) (by norm_num),
+      norm_one, one_mul] at h1
+    have : (0 : ℝ) < μ.real A := ENNReal.toReal_pos hA_pos hA_fin
+    linarith [Real.rpow_pos_of_pos this (1 / (2:ENNReal).toReal)]
+  have hf₂_ne : f₂ ≠ 0 := by
+    intro h; have h1 := congr_arg (‖·‖) h
+    simp only [norm_zero] at h1
+    rw [show f₂ = indicatorConstLp 2 hB_meas hB_fin (1:ℝ) from rfl,
+      norm_indicatorConstLp (by norm_num) (by norm_num),
+      norm_one, one_mul] at h1
+    have : (0 : ℝ) < μ.real B := ENNReal.toReal_pos hB_pos hB_fin
+    linarith [Real.rpow_pos_of_pos this (1 / (2:ENNReal).toReal)]
+  -- They are orthogonal (disjoint supports)
+  have h_orth : @inner ℝ _ _ f₁ f₂ = 0 := by
+    show @inner ℝ _ _ (indicatorConstLp 2 hA_meas hA_fin (1:ℝ))
+      (indicatorConstLp 2 hB_meas hB_fin (1:ℝ)) = 0
+    rw [MeasureTheory.L2.inner_indicatorConstLp_indicatorConstLp]
+    simp [hAB.inter_eq]
+  -- By contradiction: assume ι has < 2 elements
+  by_contra h_not
+  push_neg at h_not
+  -- h_not : ∀ j k : ι, j = k (ι is subsingleton)
+  by_cases hι : IsEmpty ι
+  · -- ι empty: b.repr maps to ℓ²(∅) = {0}, so f₁ = 0
+    exact hf₁_ne (b.repr.injective (by ext i; exact hι.elim i))
+  · -- ι has exactly one element j₀
+    rw [not_isEmpty_iff] at hι
+    obtain ⟨j₀⟩ := hι
+    -- Every vector is a scalar multiple of b j₀
+    have h_span : ∀ v : L2SpatialField Ns,
+        v = @inner ℝ _ _ (b j₀) v • b j₀ := by
+      intro v
+      have h_expand := b.hasSum_repr v
+      have h_repr_eq : ∀ i, b.repr v i = @inner ℝ _ _ (b i) v :=
+        fun i => b.repr_apply_apply v i
+      simp_rw [h_repr_eq] at h_expand
+      have heq : (fun i => @inner ℝ _ _ (b i) v • b i) =
+          (fun _ => @inner ℝ _ _ (b j₀) v • b j₀) :=
+        funext fun i => by rw [h_not i j₀]
+      rw [heq] at h_expand
+      have h_ite : HasSum (fun i => if i = j₀
+          then @inner ℝ _ _ (b j₀) v • (b j₀ : L2SpatialField Ns)
+          else 0) (@inner ℝ _ _ (b j₀) v • (b j₀ : L2SpatialField Ns)) := by
+        convert hasSum_ite_eq j₀ (@inner ℝ _ _ (b j₀) v • (b j₀ : L2SpatialField Ns))
+      have h_same : (fun _ : ι => @inner ℝ _ _ (b j₀) v • (b j₀ : L2SpatialField Ns))
+          = (fun i => if i = j₀
+            then @inner ℝ _ _ (b j₀) v • (b j₀ : L2SpatialField Ns)
+            else 0) :=
+        funext fun i => by simp [h_not i j₀]
+      rw [h_same] at h_expand
+      exact h_expand.unique h_ite
+    -- inner f₁ f₂ = c₁ * c₂
+    have h1 := h_span f₁
+    have h2 := h_span f₂
+    rw [h1, h2] at h_orth
+    simp only [inner_smul_left, inner_smul_right, star_trivial,
+      real_inner_self_eq_norm_sq, b.orthonormal.norm_eq_one j₀,
+      one_pow, mul_one] at h_orth
+    rcases mul_eq_zero.mp h_orth with hc | hc
+    · exact hf₂_ne (by rw [h2, hc, zero_smul])
+    · rw [starRingEnd_apply, star_trivial] at hc
+      exact hf₁_ne (by rw [h1, hc, zero_smul])
 
 /-! ## Derived theorems
 
