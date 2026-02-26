@@ -311,11 +311,12 @@ Schwartz-topology continuity of `t ↦ translate(t,0) g`.
 
 ---
 
-#### 18. `configuration_borelSpace` (moved upstream)
+#### 18. `prokhorov_configuration_sequential` (Convergence.lean)
 
-Now provided by `gaussian-field` as
-`GaussianField.configuration_borelSpace` in
-`GaussianField/ConfigurationTopology.lean`.
+**Statement**: Tight sequence of probability measures on
+`Configuration (ContinuumTestFunction d)` admits a weakly convergent subsequence.
+
+**Status**: Axiom (configuration-space extraction principle).
 
 ---
 
@@ -685,11 +686,11 @@ Now provided by `gaussian-field` as
 
 ---
 
-#### 41. `configuration_polishSpace` (moved upstream)
+#### 41. `configuration_polishSpace` (obsolete)
 
-Now provided by `gaussian-field` as
-`GaussianField.configuration_polishSpace` in
-`GaussianField/ConfigurationTopology.lean`.
+Removed from the active dependency chain. `continuumLimit` now uses
+`prokhorov_configuration_sequential` directly instead of introducing global
+Polish/Borel assumptions on `Configuration (ContinuumTestFunction d)`.
 
 ---
 
@@ -807,7 +808,7 @@ Now provided by `gaussian-field` as
 | 17a | `cesaro_set_integral_tendsto` | **PROVED** | — | Moved to GeneralResults/FunctionalAnalysis.lean |
 | 17b | `pphi2_generating_functional_real` | **PROVED** | — | From pphi2_measure_neg_invariant |
 | 17c | `generatingFunctional_translate_continuous` | **PROVED** | — | DCT + continuous_timeTranslationSchwartz |
-| 18 | `configuration_borelSpace` | **MOVED UPSTREAM** | — | Provided by `gaussian-field` (`ConfigurationTopology.lean`) |
+| 18 | `prokhorov_configuration_sequential` | Convergence | MEDIUM | Configuration-space sequential extraction (axiom) |
 | 19 | `schwinger_n_convergence` | Convergence | MEDIUM | Needs tightness |
 | 20 | `second_moment_uniform` | Tightness | MEDIUM | Lattice Green's function |
 | 21 | `moment_equicontinuity` | Tightness | MEDIUM | Sobolev spaces |
@@ -830,7 +831,7 @@ Now provided by `gaussian-field` as
 | 38 | `exponential_moment_schwartz_bound` | OS2_Ward | MEDIUM-HARD | Sobolev, GFF covariance |
 | 39 | `continuum_exponential_clustering` | OS2_Ward | HARD | Transfer matrix + spectral gap |
 | 40 | `os4_inheritance` | AxiomInheritance | MEDIUM-HARD | Needs spectral_gap_uniform |
-| 41 | `configuration_polishSpace` | **MOVED UPSTREAM** | — | Provided by `gaussian-field` (`ConfigurationTopology.lean`) |
+| 41 | `configuration_polishSpace` | **OBSOLETE** | — | Replaced in proof chain by `prokhorov_configuration_sequential` |
 | 42 | `continuumLimit_nontrivial` | Convergence | HARD | Correlation inequalities |
 | 43 | `continuumLimit_nonGaussian` | Convergence | HARD | Cluster expansion |
 | 44 | `continuumMeasures_tight` | Tightness | HARD | Mitoma's theorem |

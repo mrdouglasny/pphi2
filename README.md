@@ -52,10 +52,10 @@ The construction proceeds in six phases:
 ## Current status
 
 All six phases are structurally complete and the full project builds
-(`lake build`, 3141 jobs).
+(`lake build`, 3512 jobs).
 
-- **pphi2:** 48 axioms, 0 sorries (plus 5 Option B axioms with placeholder types, for future work)
-- **gaussian-field** (upstream dependency): 4 axioms, 0 sorries (2 used by pphi2: configuration topology in continuum-limit infrastructure)
+- **pphi2:** 49 axioms, 0 sorries (plus 5 Option B axioms with placeholder types, for future work)
+- **gaussian-field** (upstream dependency): 2 axioms, 0 sorries (none used by pphi2)
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.
@@ -71,6 +71,7 @@ Pphi2/
     L2Multiplication.lean            -- Multiplication operator M_w on L²
     L2Convolution.lean               -- Convolution operator Conv_G on L² (Young's inequality)
     L2Operator.lean                  -- Transfer operator T = M_w ∘ Conv_G ∘ M_w
+    Jentzsch.lean                    -- Jentzsch's theorem, Perron-Frobenius spectral properties
   OSProofs/
     OS3_RP_Lattice.lean              -- Phase 2: Reflection positivity on the lattice
     OS3_RP_Inheritance.lean          -- Phase 2: RP closed under weak limits

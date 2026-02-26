@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 48 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 4 axioms, 0 sorries (2 used by pphi2)**
+**pphi2: 49 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
 The 5 "Option B" axioms in `HypercontractivityOptionB.lean` provide an alternative
 proof path via the Gross-Rothaus-Simon OU semigroup framework. They currently have
@@ -34,7 +34,8 @@ required for the main theorem. `schwinger2_convergence` was proved from
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
 | 2 | `TransferMatrix/L2Convolution.lean` | 4 axioms (Young's inequality + even-kernel self-adjointness bridge) |
-| 2 | `TransferMatrix/L2Operator.lean` | 4 axioms (transfer operator via kernel factorization + Perron-Frobenius spectral data) |
+| 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (compactness) |
+| 2 | `TransferMatrix/Jentzsch.lean` | 4 axioms (Jentzsch + strict PD + positivity-improving + nontriviality) |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 3 axioms, 0 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
@@ -215,11 +216,15 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | `young_convolution_ae_add` | L2Convolution | Infrastructure | Convolution additive in second argument a.e.: `g ⋆ (f₁+f₂) =ᵐ g ⋆ f₁ + g ⋆ f₂`. |
 | `convCLM_isSelfAdjoint_of_even` | L2Convolution | Infrastructure | Self-adjointness of convolution by an even kernel on `L²`; isolates the current Fubini/integrability bridge in one place. |
 | ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | ✅ **Proved** | Self-adjointness of `A ∘ B ∘ A` from `mulCLM_isSelfAdjoint` and `convCLM_isSelfAdjoint_of_even` for the Gaussian kernel. |
-| `transferOperator_inner_nonneg` | L2Operator | Easy | ⟨f, Tf⟩ ≥ 0 from kernel positivity (exp > 0). |
 | `transferOperator_isCompact` | L2Operator | Medium | Compactness from Hilbert-Schmidt strategy using Gaussian decay of the weight (not the divergent translation-invariant bound). |
 | `transferOperator_spectral` | L2Operator | **Proved** | Spectral decomposition from `compact_selfAdjoint_spectral` (gaussian-field). |
-| `transferOperator_eigenvalues_pos` | L2Operator | Easy | Every eigenvalue in a spectral decomposition is strictly positive (Perron-Frobenius positivity-improving input). |
-| `transferOperator_ground_simple` | L2Operator | Medium | Ground-state simplicity and first excited level on spectral data (`∃ i₀ i₁, λᵢ₁ < λᵢ₀` with excited maximality). |
+| `jentzsch_theorem` | Jentzsch | Hard | ✅ Verified. Jentzsch's theorem for compact self-adjoint positivity-improving operators: ground eigenvalue simple, spectral gap, second eigenvalue attained. Reed-Simon IV, XIII.43–44. |
+| `transferOperator_positivityImproving` | Jentzsch | Medium | ✅ Verified. Transfer kernel K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ') > 0 everywhere, so T maps nonneg nonzero f to a.e. strictly positive Tf. |
+| `transferOperator_strictly_positive_definite` | Jentzsch | Medium | ✅ Verified. ⟨f, Tf⟩ > 0 for f ≠ 0. Gaussian kernel strictly PD by Bochner (Fourier transform > 0); w > 0 preserves strict PD. |
+| `l2SpatialField_hilbertBasis_nontrivial` | Jentzsch | Easy | ✅ Verified. Any Hilbert basis of L²(ℝ^Ns) has ≥ 2 elements (L² is infinite-dimensional). |
+| ~~`transferOperator_inner_nonneg`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ ≥ 0. Derived from strict PD (> 0 for f ≠ 0, = 0 for f = 0). |
+| ~~`transferOperator_eigenvalues_pos`~~ | Jentzsch | ✅ **Proved** | λᵢ > 0. From ⟨bᵢ, Tbᵢ⟩ = λᵢ‖bᵢ‖² > 0 by strict PD. |
+| ~~`transferOperator_ground_simple`~~ | Jentzsch | ✅ **Proved** | Ground-state simplicity. Derived from Jentzsch + eigenvalue positivity + nontriviality. |
 | `action_decomposition` | OS3_RP_Lattice | Medium | Lattice action decomposes as S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
 | `lattice_rp` | OS3_RP_Lattice | Medium | RP inequality for `interactingLatticeMeasure`. Fubini + perfect-square from action decomposition. |
 | `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. |
@@ -263,13 +268,12 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `ou_semigroup_eigenvalue` | Hypercontractivity | Medium | (Option B) P_t(:φ^n:) = e^{-nt}·:φ^n:. From Mehler kernel reproducing formula. |
 | `gross_theorem_lsi_to_hypercontractivity` | Hypercontractivity | Hard | (Option B) Gross's theorem: LSI ⟹ OU hypercontractivity via Rothaus-Simon ODE. |
 | `bakry_emery_gaussian_lsi` | Hypercontractivity | Medium | (Option B) Bakry-Émery Γ₂ criterion gives LSI(m²) for Gaussian. |
-| ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — Prokhorov's theorem (sequential version). Now a theorem with complete proof. |
+| `prokhorov_configuration_sequential` | Convergence | Infrastructure | Sequential extraction axiom directly on `Configuration (ContinuumTestFunction d)`; avoids global Polish/Borel assumptions on full weak-* dual. |
+| ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — generic Polish-space sequential Prokhorov theorem (kept as theorem, not used by `continuumLimit`). |
 | `schwinger2_convergence` | Convergence | Med/Hard | 2-point Schwinger functions converge along subsequence. Prokhorov + uniform L² integrability. |
 | `schwinger_n_convergence` | Convergence | Hard | n-point Schwinger functions converge along subsequence. Diagonal subsequence extraction. |
 | `continuumLimit_nontrivial` | Convergence | Hard | ∫ (ω f)² dμ > 0 for some f. Free field two-point function gives lower bound. |
 | `continuumLimit_nonGaussian` | Convergence | Hard | Connected 4-point function ≠ 0. Perturbation theory gives O(λ) contribution. |
-| `configuration_polishSpace` | *(moved upstream)* | Infrastructure | Now in `gaussian-field/GaussianField/ConfigurationTopology.lean`; consumed by `Convergence.lean`. |
-| `configuration_borelSpace` | *(moved upstream)* | Infrastructure | Now in `gaussian-field/GaussianField/ConfigurationTopology.lean`; consumed by `Convergence.lean`. |
 | `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
 | `os3_inheritance` | AxiomInheritance | Medium | Abstract RP: ∫ F(ω)·F(Θ*ω) dμ ≥ 0 for bounded continuous F. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
 | `os4_inheritance` | AxiomInheritance | Med/Hard | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
@@ -358,7 +362,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`energyLevel_gap`~~ | Positivity | **Proved** — E₁ > E₀ from transfer eigenvalue gap. |
 | ~~`rp_closed_under_weak_limit`~~ | OS3_RP_Inheritance | **Proved** — RP closed under weak limits. |
 | ~~`reflection_positivity_lattice`~~ | OS3_RP_Lattice | **Converted** to `lattice_rp` axiom. |
-| ~~`continuumLimit`~~ | Convergence | **Proved** — Apply Prokhorov to the tight family. Uses `prokhorov_sequential` + `continuumMeasures_tight`. PolishSpace/BorelSpace instances now axioms. |
+| ~~`continuumLimit`~~ | Convergence | **Proved** — Apply configuration-space sequential Prokhorov axiom to the tight family (`prokhorov_configuration_sequential` + `continuumMeasures_tight`). |
 | ~~`continuumTimeReflection`~~ | AxiomInheritance | **Proved** — defined via `compCLMOfContinuousLinearEquiv`. |
 | ~~`so2Generator`~~ | OS2_WardIdentity | **Proved** — SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ via `smulLeftCLM` + `lineDerivOpCLM`. |
 | ~~`pphi2_exists`~~ | OS2_WardIdentity | **Proved** — Main existence theorem. Uses `continuumLimit_satisfies_fullOS`. |
@@ -432,7 +436,8 @@ The following theorems have complete proofs (no sorry):
 | `continuumMeasure_isProbability` | Embedding | Pushforward of probability measure is probability measure |
 | `connectedTwoPoint_symm` | OS4_MassGap | Symmetry of connected 2-point function |
 | `energyLevel_gap` | Positivity | E₁ > E₀ from spectral-data ground/excited separation |
-| `prokhorov_sequential` | Convergence | Prokhorov's theorem (sequential version) — proved as theorem with proof |
+| `prokhorov_configuration_sequential` | Convergence | Sequential extraction on configuration space (axiom) |
+| `prokhorov_sequential` | Convergence | Generic Polish-space sequential Prokhorov theorem (proved) |
 | `wickPolynomial_bounded_below` | WickPolynomial | Wick polynomial bounded below — from leading term domination via `poly_even_degree_bounded_below` |
 | `poly_even_degree_bounded_below` | WickPolynomial | Even-degree polynomial with positive leading coeff is bounded below — `eval_eq_sum_range` + coefficient bound + `Continuous.exists_forall_le` |
 | `pphi2_generating_functional_real` | OS2_WardIdentity | Im(Z[f])=0 via conj(Z[f])=Z[f] from Z₂ symmetry |
@@ -445,7 +450,7 @@ The following theorems have complete proofs (no sorry):
 | `compTimeReflection2` | OSAxioms | Time reflection on Schwartz space — `compCLMOfContinuousLinearEquiv` with time reflection CLE |
 | `SchwartzMap.translate` | OSAxioms | Translation on Schwartz space — `compCLMOfAntilipschitz` with translation |
 | `so2Generator` | OS2_WardIdentity | SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ — `smulLeftCLM` + `lineDerivOpCLM` |
-| `continuumLimit` | Convergence | Continuum limit via Prokhorov — `prokhorov_sequential` + `continuumMeasures_tight` |
+| `continuumLimit` | Convergence | Continuum limit via configuration extraction axiom — `prokhorov_configuration_sequential` + `continuumMeasures_tight` |
 | `latticeEmbed` | Embedding | Lattice→S'(ℝ^d) embedding — `SchwartzMap.mkCLMtoNormedSpace` with `|ι(φ)(f)| ≤ (a^d·Σ|φ(x)|)·seminorm(0,0)(f)` |
 | `latticeEmbed_eval` | Embedding | Evaluation formula — `rfl` from construction |
 | `transferOperator_spectral` | L2Operator | Spectral decomposition — `compact_selfAdjoint_spectral` from gaussian-field |
@@ -462,9 +467,8 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **4 axioms and 0 sorries**.
-Two are used by pphi2 (`configuration_polishSpace`, `configuration_borelSpace`
-from `GaussianField/ConfigurationTopology.lean`). The other two are in
-`HeatKernel/PositionKernel.lean` (`mehlerKernel_eq_series`,
-`circleHeatKernel_pos`) and are not used by the pphi2 lattice route.
+The gaussian-field library (dependency) has **2 axioms and 0 sorries**.
+Both are in `HeatKernel/PositionKernel.lean`
+(`mehlerKernel_eq_series`, `circleHeatKernel_pos`) and are not used by the
+pphi2 lattice route.
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.

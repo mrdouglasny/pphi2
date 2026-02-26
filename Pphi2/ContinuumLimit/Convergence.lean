@@ -15,20 +15,18 @@ from the tight family of continuum-embedded measures.
 
 ## Mathematical background
 
-### Prokhorov's theorem
+### Prokhorov extraction on configuration space
 
-On a Polish space (complete separable metrizable), a family of probability
-measures is tight if and only if it is relatively sequentially compact in
-the topology of weak convergence.
-
-S'(ℝ^d) with its weak-* topology is a Polish space (it is the dual of a
-nuclear Fréchet space, hence metrizable and complete).
+The file contains:
+1. A proved generic sequential Prokhorov theorem on Polish spaces.
+2. A configuration-specific extraction axiom used for
+   `Configuration (ContinuumTestFunction d)`.
 
 ### Application
 
 From `continuumMeasures_tight`, the family {ν_a}_{a>0} is tight.
-By Prokhorov, any sequence ν_{a_n} with a_n → 0 has a weakly convergent
-subsequence ν_{a_{n_k}} ⇀ ν.
+By `prokhorov_configuration_sequential`, any sequence ν_{a_n} with a_n → 0
+has a weakly convergent subsequence ν_{a_{n_k}} ⇀ ν.
 
 The limit ν is the P(Φ)₂ Euclidean measure on S'(ℝ²).
 
@@ -52,7 +50,6 @@ This follows from:
 -/
 
 import Pphi2.ContinuumLimit.Tightness
-import GaussianField.ConfigurationTopology
 import Mathlib.MeasureTheory.Measure.Prokhorov
 import Mathlib.MeasureTheory.Measure.LevyProkhorovMetric
 import Mathlib.Topology.Sequences
@@ -158,6 +155,27 @@ theorem prokhorov_sequential {X : Type*} [TopologicalSpace X]
   -- The integrals match since f_bcf coerces to f
   convert this using 1 <;> · ext n; rfl
 
+/-! ## Prokhorov's theorem for configuration space
+
+`Configuration (ContinuumTestFunction d)` is modeled as a weak dual with
+cylindrical measurable structure. In this project we use a direct sequential
+extraction principle on this space, avoiding any global Polish-space claim for
+the full weak-* dual topology.
+-/
+
+/-- Sequential Prokhorov extraction directly on configuration space. -/
+axiom prokhorov_configuration_sequential
+    (μ : ℕ → Measure (Configuration (ContinuumTestFunction d)))
+    (hμ_prob : ∀ n, IsProbabilityMeasure (μ n))
+    (hμ_tight : ∀ ε : ℝ, 0 < ε →
+      ∃ K : Set (Configuration (ContinuumTestFunction d)), IsCompact K ∧
+      ∀ n, 1 - ε ≤ (μ n K).toReal) :
+    ∃ (φ : ℕ → ℕ) (ν : Measure (Configuration (ContinuumTestFunction d))),
+      StrictMono φ ∧ IsProbabilityMeasure ν ∧
+      ∀ (f : Configuration (ContinuumTestFunction d) → ℝ), Continuous f →
+        (∃ C, ∀ x, |f x| ≤ C) →
+        Tendsto (fun n => ∫ ω, f ω ∂(μ (φ n))) atTop (nhds (∫ ω, f ω ∂ν))
+
 /-! ## The continuum limit -/
 
 /-- **Existence of the P(Φ)₂ continuum limit.**
@@ -184,20 +202,12 @@ theorem continuumLimit (P : InteractionPolynomial)
         Tendsto (fun n => ∫ ω, f ω ∂(continuumMeasure d N P (a (φ n)) mass
           (ha_pos (φ n)) hmass))
           atTop (nhds (∫ ω, f ω ∂μ)) := by
-  -- S'(ℝ^d) is Polish (dual of nuclear Fréchet) — not yet in Mathlib
-  haveI : PolishSpace (Configuration (ContinuumTestFunction d)) :=
-    by
-      simpa [ContinuumTestFunction, GaussianField.ContinuumTestFunction] using
-        (GaussianField.configuration_polishSpace d)
-  haveI : BorelSpace (Configuration (ContinuumTestFunction d)) :=
-    by
-      simpa [ContinuumTestFunction, GaussianField.ContinuumTestFunction] using
-        (GaussianField.configuration_borelSpace d)
   -- Define the sequence of measures indexed by ℕ
   let ν : ℕ → Measure (Configuration (ContinuumTestFunction d)) :=
     fun n => continuumMeasure d N P (a n) mass (ha_pos n) hmass
-  -- Apply Prokhorov's theorem
-  obtain ⟨φ, μ, hφ, hμ_prob, hconv⟩ := prokhorov_sequential ν
+  -- Apply configuration-space sequential Prokhorov extraction
+  obtain ⟨φ, μ, hφ, hμ_prob, hconv⟩ :=
+    prokhorov_configuration_sequential (d := d) ν
     (fun n => continuumMeasure_isProbability d N P (a n) mass (ha_pos n) hmass)
     (fun ε hε => by
       obtain ⟨K, hK_compact, hK_bound⟩ := continuumMeasures_tight d N P mass hmass ε hε
