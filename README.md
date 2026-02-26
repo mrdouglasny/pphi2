@@ -77,7 +77,7 @@ Pphi2/
     OS4_MassGap.lean                 -- Phase 3: Clustering from spectral gap
     OS4_Ergodicity.lean              -- Phase 3: Ergodicity from mass gap
     OS2_WardIdentity.lean            -- Phase 5: Ward identity for rotation invariance
-  OSforGFF/                          -- Matrix positivity library (from OSforGFF-dimensions)
+  OSforGFF/                          -- Matrix positivity library (from OSforGFF)
     PositiveDefinite.lean            -- Positive definite functions
     FrobeniusPositivity.lean         -- Frobenius inner product positivity
     SchurProduct.lean                -- Schur (Hadamard) product theorem
@@ -134,8 +134,8 @@ lake build
 
 The files under `Pphi2/OSforGFF/` (PositiveDefinite, FrobeniusPositivity, SchurProduct,
 HadamardExp) are imported from the
-[OSforGFF-dimensions](https://github.com/mrdouglasny/OSforGFF-dimensions) project
-(dimension2 branch), authored by Michael R. Douglas, Sarah Hoback, Anna Mei, and
+[OSforGFF](https://github.com/mrdouglasny/OSforGFF) project, authored by
+Michael R. Douglas, Sarah Hoback, Anna Mei, and
 Ron Nissim. These provide the Schur product theorem and entrywise exponential
 positivity results used in the OS3 reflection positivity proof.
 
