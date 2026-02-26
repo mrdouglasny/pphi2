@@ -13,7 +13,7 @@ maxSynthPendingDepth = 3
 name = "GaussianField"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gaussian-field.git"
-rev = "3709aff"
+rev = "db62a1f"
 
 [[lean_lib]]
 name = "Pphi2"

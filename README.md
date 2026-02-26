@@ -55,7 +55,7 @@ All six phases are structurally complete and the full project builds
 (`lake build`, 3141 jobs).
 
 - **pphi2:** 52 axioms, 0 sorries (plus 5 Option B axioms with placeholder types, for future work)
-- **gaussian-field** (upstream dependency): 7 axioms, 0 sorries
+- **gaussian-field** (upstream dependency): 5 axioms, 0 sorries (none used by pphi2)
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.

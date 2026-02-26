@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 52 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 7 axioms, 0 sorries**
+**pphi2: 52 axioms, 0 sorries** (plus 5 Option B axioms with placeholder types, 1 unused computation in Unused/) | **gaussian-field (upstream): 5 axioms, 0 sorries (none used by pphi2)**
 
 The 5 "Option B" axioms in `HypercontractivityOptionB.lean` provide an alternative
 proof path via the Gross-Rothaus-Simon OU semigroup framework. They currently have
@@ -463,5 +463,11 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **7 axioms and 0 sorries**.
+The gaussian-field library (dependency) has **5 axioms and 0 sorries**.
+None of these 5 axioms are in the transitive dependency chain used by pphi2.
+The axioms are in `HeatKernel/PositionKernel.lean` (2: `mehlerKernel_eq_series`,
+`circleHeatKernel_pos`) and `Lattice/RapidDecayLattice.lean` (3: `latticeEnum_norm_bound`,
+`latticeEnum_index_bound`, `latticeRapidDecayEquiv`). pphi2 imports only
+`HypercontractiveNat`, `SpectralTheorem`, and `Construction`, which do not
+depend on either of these files.
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.

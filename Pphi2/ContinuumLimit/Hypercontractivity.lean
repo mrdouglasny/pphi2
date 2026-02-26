@@ -57,7 +57,7 @@ infrastructure for extensions beyond Wick monomials.
 -/
 
 import Pphi2.ContinuumLimit.Embedding
-import GaussianField.Hypercontractive
+import GaussianField.HypercontractiveNat
 
 noncomputable section
 
@@ -140,7 +140,8 @@ the abstract Gaussian hypercontractive bound.
 Reference: Gross (1975); gaussian-field/Hypercontractive.lean. -/
 theorem gaussian_hypercontractivity_continuum
     (mass : ℝ) (hmass : 0 < mass)
-    (n : ℕ) (p : ℝ) (hp : 2 ≤ p) (f : ContinuumTestFunction d)
+    (n : ℕ) (p : ℝ) (hp : 2 ≤ p) (m : ℕ) (hm : 1 ≤ m) (hp_eq : p = 2 * ↑m)
+    (f : ContinuumTestFunction d)
     (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1) :
     ∫ ω : Configuration (ContinuumTestFunction d),
         |ω f| ^ (p * ↑n) ∂(Measure.map (latticeEmbedLift d N a ha)
@@ -172,7 +173,7 @@ theorem gaussian_hypercontractivity_continuum
   -- μ = GaussianField.measure (latticeCovariance d N a mass ha hmass)
   have h_μ : μ = measure (latticeCovariance d N a mass ha hmass) := rfl
   rw [h_μ]
-  exact gaussian_hypercontractive (latticeCovariance d N a mass ha hmass) g_f n p hp
+  exact gaussian_hypercontractive (latticeCovariance d N a mass ha hmass) g_f n p hp m hm hp_eq
 
 /-! ## Step A2: Exponential moment bound for the interaction -/
 
