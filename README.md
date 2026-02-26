@@ -60,14 +60,30 @@ All six phases are structurally complete and the full project builds
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.
 
-For `ContinuumLimit/Convergence.lean`, the current extraction axiom
-`prokhorov_configuration_sequential` is intentionally temporary. The planned
-replacement is a weighted-Sobolev route: prove uniform interacting Sobolev
-moments by Holder/Cauchy-Schwarz transfer from the free Gaussian measure,
-derive tightness via Markov bounds and compact weighted embeddings, apply the
-already-proved Polish-space `prokhorov_sequential`, then lift back to
-configuration-space convergence. See
-`Pphi2/ContinuumLimit/SobolevProkhorovPlan.lean`.
+For [Convergence.lean](Pphi2/ContinuumLimit/Convergence.lean), the current
+extraction axiom `prokhorov_configuration_sequential` is intentionally
+temporary. The planned replacement is a weighted-Sobolev route: prove uniform
+interacting Sobolev moments by Holder/Cauchy-Schwarz transfer from the free
+Gaussian measure, derive tightness via Markov bounds and compact weighted
+embeddings, apply the already-proved Polish-space theorem
+`prokhorov_sequential`, then lift back to configuration-space convergence. See
+[SobolevProkhorovPlan.lean](Pphi2/ContinuumLimit/SobolevProkhorovPlan.lean).
+
+## Nontrivial infrastructure notes
+
+- **Configuration-space Prokhorov bridge**:
+  [SobolevProkhorovPlan.lean](Pphi2/ContinuumLimit/SobolevProkhorovPlan.lean)
+  records the staged theorem API to replace
+  `prokhorov_configuration_sequential`.
+- **Transfer-matrix spectral infrastructure (Jentzsch)**:
+  [Jentzsch.lean](Pphi2/TransferMatrix/Jentzsch.lean) contains the
+  positivity-improving/Perron-Frobenius spectral input used for mass-gap-level
+  statements.
+- **Convolution operator infrastructure**:
+  [L2Convolution.lean](Pphi2/TransferMatrix/L2Convolution.lean) centralizes
+  Young-type analytic dependencies for `L²` convolution operators.
+- **Global inventory and difficulty tracking**:
+  [status.md](status.md) and [docs/axiom_proof_plans.md](docs/axiom_proof_plans.md).
 
 ## File structure
 
