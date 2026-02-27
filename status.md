@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 44 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 42 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -33,7 +33,7 @@ It is not imported and not counted in the active axiom inventory.
 | 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
-| 2 | `TransferMatrix/L2Convolution.lean` | 3 axioms (Young's inequality + even-kernel self-adjointness bridge) |
+| 2 | `TransferMatrix/L2Convolution.lean` | 1 axiom (even-kernel self-adjointness bridge) |
 | 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (compactness) |
 | 2 | `TransferMatrix/Jentzsch.lean` | 1 axiom (Gaussian convolution strict PD — bridge from bochner project); Jentzsch + nontriviality + positivity-improving + strict PD proved |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
@@ -210,8 +210,8 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | ~~`transferOperatorCLM`~~ | L2Operator | ✅ **Defined** | Transfer matrix as `M_w ∘L Conv_G ∘L M_w` via kernel factorization. Uses `mulCLM` (L2Multiplication) and `convCLM` (L2Convolution). |
-| `young_convolution_memLp` | L2Convolution | Infrastructure | Young's inequality: `g ∈ L¹, f ∈ L² ⟹ g ⋆ f ∈ L²`. Standard (Reed-Simon II, §IX.4). Not yet in Mathlib. |
-| `young_convolution_bound` | L2Convolution | Infrastructure | Young's inequality norm bound: `‖g ⋆ f‖₂ ≤ ‖g‖₁ · ‖f‖₂`. |
+| ~~`young_convolution_memLp`~~ | L2Convolution | ✅ **Proved** | Via Cauchy-Schwarz + Tonelli + translation invariance of Haar measure. |
+| ~~`young_convolution_bound`~~ | L2Convolution | ✅ **Proved** | Young's inequality norm bound via `young_eLpNorm_bound`. |
 | ~~`young_convolution_ae_add`~~ | L2Convolution | ✅ **Proved** | Via Fubini on `‖g‖` × `fᵢ²` (both L¹), bound `ab ≤ a + ab²`, `ConvolutionExistsAt.distrib_add`. |
 | `convCLM_isSelfAdjoint_of_even` | L2Convolution | Infrastructure | Self-adjointness of convolution by an even kernel on `L²`; isolates the current Fubini/integrability bridge in one place. |
 | ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | ✅ **Proved** | Self-adjointness of `A ∘ B ∘ A` from `mulCLM_isSelfAdjoint` and `convCLM_isSelfAdjoint_of_even` for the Gaussian kernel. |
