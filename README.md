@@ -52,7 +52,7 @@ The construction proceeds in six phases:
 ## Current status
 
 All six phases are structurally complete and the full project builds
-(`lake build`, 3512 jobs).
+(`lake build`, 3513 jobs).
 
 - **pphi2:** 41 axioms, 0 sorries
 - **gaussian-field** (upstream dependency): 2 axioms, 0 sorries (none used by pphi2)

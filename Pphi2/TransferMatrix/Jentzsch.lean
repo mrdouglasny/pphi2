@@ -50,6 +50,7 @@ From Jentzsch + axioms 2-4 we derive:
 
 import Pphi2.TransferMatrix.L2Operator
 import Pphi2.TransferMatrix.JentzschProof
+import Pphi2.TransferMatrix.GaussianFourier
 
 noncomputable section
 
@@ -234,15 +235,14 @@ formalization project. -/
 
 /-- Convolution with the Gaussian kernel is strictly positive definite on L².
 
-**Proof outline**: By Plancherel, ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk.
-Since Ĝ(k) = (2π)^{n/2} exp(-½‖k‖²) > 0 and f ≠ 0 implies f̂ ≠ 0 a.e.,
-the integral is strictly positive.
-
-**Status**: Bridge axiom from `bochner` project (`isPositiveDefinite_gaussian`
-+ Plancherel). See `../bochner/Bochner/Bochner.lean`. -/
-axiom convolution_gaussian_strictly_positive_definite :
+**Proof**: Factored through the square-root Gaussian H(x) = exp(-‖x‖²):
+  ⟨f, Conv_G f⟩ = C · ‖Conv_H f‖²
+where C > 0 (from the Gaussian convolution identity G = C⁻¹ · H⋆H),
+and Conv_H is injective (since Ĥ > 0 everywhere). See `GaussianFourier.lean`. -/
+theorem convolution_gaussian_strictly_positive_definite :
     ∀ (g : L2SpatialField Ns), g ≠ 0 →
-      0 < @inner ℝ _ _ g (convCLM (transferGaussian Ns) (transferGaussian_memLp Ns) g)
+      0 < @inner ℝ _ _ g (convCLM (transferGaussian Ns) (transferGaussian_memLp Ns) g) :=
+  gaussian_conv_strictlyPD Ns
 
 /-! ## Derived: Transfer operator strictly positive definite
 

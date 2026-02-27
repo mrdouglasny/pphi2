@@ -5,7 +5,7 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3512 jobs).
+3513 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
@@ -35,7 +35,8 @@ It is not imported and not counted in the active axiom inventory.
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
 | 2 | `TransferMatrix/L2Convolution.lean` | 0 axioms (Fubini identity proved) |
 | 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (compactness) |
-| 2 | `TransferMatrix/Jentzsch.lean` | 1 axiom (Gaussian convolution strict PD — bridge from bochner project); Jentzsch + nontriviality + positivity-improving + strict PD proved |
+| 2 | `TransferMatrix/GaussianFourier.lean` | 1 axiom (Gaussian convolution strict PD); `fourier_gaussian_pos` proved |
+| 2 | `TransferMatrix/Jentzsch.lean` | 0 axioms; Jentzsch + nontriviality + positivity-improving + strict PD all proved |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 1 axiom, 0 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
