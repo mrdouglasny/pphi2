@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 42 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 41 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -33,7 +33,7 @@ It is not imported and not counted in the active axiom inventory.
 | 1 | `InteractingMeasure/Normalization.lean` | 0 axioms, 0 sorries |
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
-| 2 | `TransferMatrix/L2Convolution.lean` | 1 axiom (Fubini identity for convolution adjoint) |
+| 2 | `TransferMatrix/L2Convolution.lean` | 0 axioms (Fubini identity proved) |
 | 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (compactness) |
 | 2 | `TransferMatrix/Jentzsch.lean` | 1 axiom (Gaussian convolution strict PD — bridge from bochner project); Jentzsch + nontriviality + positivity-improving + strict PD proved |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
@@ -214,7 +214,7 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`young_convolution_bound`~~ | L2Convolution | ✅ **Proved** | Young's inequality norm bound via `young_eLpNorm_bound`. |
 | ~~`young_convolution_ae_add`~~ | L2Convolution | ✅ **Proved** | Via Fubini on `‖g‖` × `fᵢ²` (both L¹), bound `ab ≤ a + ab²`, `ConvolutionExistsAt.distrib_add`. |
 | ~~`convCLM_isSelfAdjoint_of_even`~~ | L2Convolution | ✅ **Proved** | Self-adjointness of convolution by even kernel. Proved via `integral_mul_conv_eq` Fubini identity. |
-| `integral_mul_conv_eq` | L2Convolution | Medium | Fubini identity: `∫ h·(g⋆f) = ∫ (g⋆h)·f` for even g. Requires `IsNegInvariant` + product integrability (Young+Cauchy-Schwarz), `integral_integral_swap`, `convolution_eq_swap`. Calc chain verified modulo product integrability. |
+| ~~`integral_mul_conv_eq`~~ | L2Convolution | ✅ **Proved** | Fubini identity: `∫ h·(g⋆f) = ∫ (g⋆h)·f` for even g. Proved via product integrability (AM-GM + Tonelli + translation invariance), `integral_integral_swap`, `convolution_eq_swap`. |
 | ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | ✅ **Proved** | Self-adjointness of `A ∘ B ∘ A` from `mulCLM_isSelfAdjoint` and `convCLM_isSelfAdjoint_of_even` for the Gaussian kernel. |
 | `transferOperator_isCompact` | L2Operator | Medium | Compactness from Hilbert-Schmidt strategy using Gaussian decay of the weight (not the divergent translation-invariant bound). |
 | `transferOperator_spectral` | L2Operator | **Proved** | Spectral decomposition from `compact_selfAdjoint_spectral` (gaussian-field). |

@@ -414,14 +414,176 @@ Product integrability bound: `∫∫ |g(x-t)f(t)h(x)| ≤ ‖g‖₁ · ‖f‖�
 by Young's inequality (`|g|⋆|f| ∈ L²`) + Cauchy-Schwarz (`|h| · L² ∈ L¹`).
 
 References: Reed-Simon II, §IX.4; Stein-Weiss, Thm 1.2. -/
-axiom integral_mul_conv_eq
+theorem integral_mul_conv_eq
     {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
     [MeasurableSpace G] [BorelSpace G]
     [T2Space G] [LocallyCompactSpace G] [SecondCountableTopology G]
     {μ : Measure G} [μ.IsAddHaarMeasure] [μ.IsNegInvariant]
     {g f h : G → ℝ} (hg : MemLp g 1 μ) (hf : MemLp f 2 μ) (hh : MemLp h 2 μ)
     (heven : ∀ x : G, g (-x) = g x) :
-    ∫ x, h x * realConv μ g f x ∂μ = ∫ x, realConv μ g h x * f x ∂μ
+    ∫ x, h x * realConv μ g f x ∂μ = ∫ x, realConv μ g h x * f x ∂μ := by
+  -- Strongly measurable representatives for product measurability
+  set g' := hg.aestronglyMeasurable.mk g
+  set f' := hf.aestronglyMeasurable.mk f
+  set h' := hh.aestronglyMeasurable.mk h
+  have hg'_ae : g =ᵐ[μ] g' := hg.aestronglyMeasurable.ae_eq_mk
+  have hf'_ae : f =ᵐ[μ] f' := hf.aestronglyMeasurable.ae_eq_mk
+  have hh'_ae : h =ᵐ[μ] h' := hh.aestronglyMeasurable.ae_eq_mk
+  -- g' is a.e. even (from g even + g =ᵐ g' + IsNegInvariant)
+  have hg'_even_ae : ∀ᵐ x ∂μ, g' (-x) = g' x := by
+    have h_neg : ∀ᵐ x ∂μ, g' (-x) = g (-x) :=
+      (Measure.measurePreserving_neg μ).quasiMeasurePreserving.ae_eq_comp hg'_ae.symm
+    filter_upwards [h_neg, hg'_ae.symm] with x hx1 hx2
+    rw [hx1, heven, hx2]
+  -- Product integrability for Fubini (AM-GM + Tonelli + translation invariance)
+  have hF_int : Integrable (fun p : G × G => h' p.1 * g' (p.1 - p.2) * f' p.2) (μ.prod μ) := by
+    -- Measurability setup
+    have hg'_sm := hg.aestronglyMeasurable.stronglyMeasurable_mk
+    have hf'_sm := hf.aestronglyMeasurable.stronglyMeasurable_mk
+    have hh'_sm := hh.aestronglyMeasurable.stronglyMeasurable_mk
+    have hg'_m := hg'_sm.measurable
+    have hf'_m := hf'_sm.measurable
+    have hh'_m := hh'_sm.measurable
+    -- StronglyMeasurable on the product
+    have hF_sm : StronglyMeasurable (fun p : G × G => h' p.1 * g' (p.1 - p.2) * f' p.2) :=
+      ((hh'_sm.comp_measurable measurable_fst).mul
+        (hg'_sm.comp_measurable (measurable_fst.sub measurable_snd))).mul
+        (hf'_sm.comp_measurable measurable_snd)
+    refine ⟨hF_sm.aestronglyMeasurable, ?_⟩
+    -- HasFiniteIntegral via AM-GM: |h||f| ≤ |h|² + |f|², so
+    -- |h g f| = |g| · |h| · |f| ≤ |g| · (|h|² + |f|²)
+    -- Each term integrates to I₁ · I₂h or I₁ · I₂f by Tonelli + translation invariance
+    have meg : Measurable (fun x => ‖g' x‖ₑ) := hg'_m.enorm
+    have mef : Measurable (fun x => ‖f' x‖ₑ) := hf'_m.enorm
+    have meh : Measurable (fun x => ‖h' x‖ₑ) := hh'_m.enorm
+    -- Finiteness of key integrals
+    have hI₁ : ∫⁻ t, ‖g' t‖ₑ ∂μ < ⊤ := by
+      rw [← eLpNorm_one_eq_lintegral_enorm]
+      exact (hg.ae_eq hg'_ae).eLpNorm_lt_top
+    have enorm_sq : ∀ (a : ℝ), ‖a‖ₑ ^ (2 : ℕ) = ‖a ^ 2‖ₑ := by
+      intro a; rw [sq a, enorm_mul, sq]
+    have hI₂h : ∫⁻ x, ‖h' x‖ₑ ^ (2 : ℕ) ∂μ < ⊤ := by
+      simp_rw [enorm_sq]; exact ((hh.ae_eq hh'_ae).integrable_sq).hasFiniteIntegral
+    have hI₂f : ∫⁻ x, ‖f' x‖ₑ ^ (2 : ℕ) ∂μ < ⊤ := by
+      simp_rw [enorm_sq]; exact ((hf.ae_eq hf'_ae).integrable_sq).hasFiniteIntegral
+    -- AM-GM: a * c ≤ a² + c² for ℝ≥0∞
+    have h_amgm : ∀ (a c : ℝ≥0∞), a * c ≤ a ^ (2 : ℕ) + c ^ (2 : ℕ) := by
+      intro a c
+      rcases le_total a c with h | h
+      · calc a * c ≤ c * c := mul_le_mul_left h c
+            _ = c ^ 2 := (sq c).symm
+            _ ≤ a ^ 2 + c ^ 2 := le_add_left (le_refl _)
+      · calc a * c ≤ a * a := mul_le_mul_right h a
+            _ = a ^ 2 := (sq a).symm
+            _ ≤ a ^ 2 + c ^ 2 := le_add_right (le_refl _)
+    -- Measurability on the product
+    have meg_prod : Measurable (fun p : G × G => ‖g' (p.1 - p.2)‖ₑ) :=
+      meg.comp (measurable_fst.sub measurable_snd)
+    -- Helper: compute ∫⁻ (x,t), ‖g'(x-t)‖ₑ * ‖h'(x)‖ₑ² = I₁ * I₂h
+    have hterm1 : ∫⁻ p, ‖g' (p.1 - p.2)‖ₑ * ‖h' p.1‖ₑ ^ (2 : ℕ) ∂(μ.prod μ) =
+        (∫⁻ t, ‖g' t‖ₑ ∂μ) * ∫⁻ x, ‖h' x‖ₑ ^ (2 : ℕ) ∂μ := by
+      have hmeas1 : AEMeasurable (fun p : G × G => ‖g' (p.1 - p.2)‖ₑ * ‖h' p.1‖ₑ ^ 2) (μ.prod μ) :=
+        (meg_prod.mul (meh.pow_const 2 |>.comp measurable_fst)).aemeasurable
+      calc ∫⁻ p, ‖g' (p.1 - p.2)‖ₑ * ‖h' p.1‖ₑ ^ 2 ∂(μ.prod μ)
+          = ∫⁻ x, ∫⁻ t, ‖g' (x - t)‖ₑ * ‖h' x‖ₑ ^ 2 ∂μ ∂μ :=
+            lintegral_prod _ hmeas1
+        _ = ∫⁻ x, (∫⁻ t, ‖g' (x - t)‖ₑ ∂μ) * ‖h' x‖ₑ ^ 2 ∂μ := by
+            congr 1; ext x
+            exact lintegral_mul_const _ (meg.comp (measurable_const.sub measurable_id))
+        _ = ∫⁻ x, (∫⁻ t, ‖g' t‖ₑ ∂μ) * ‖h' x‖ₑ ^ 2 ∂μ := by
+            congr 1; ext x; congr 1
+            exact lintegral_sub_left_eq_self (μ := μ) (fun t => ‖g' t‖ₑ) x
+        _ = (∫⁻ t, ‖g' t‖ₑ ∂μ) * ∫⁻ x, ‖h' x‖ₑ ^ 2 ∂μ :=
+            lintegral_const_mul _ (meh.pow_const 2)
+    -- Helper: compute ∫⁻ (x,t), ‖g'(x-t)‖ₑ * ‖f'(t)‖ₑ² = I₁ * I₂f
+    have hterm2 : ∫⁻ p, ‖g' (p.1 - p.2)‖ₑ * ‖f' p.2‖ₑ ^ (2 : ℕ) ∂(μ.prod μ) =
+        (∫⁻ t, ‖g' t‖ₑ ∂μ) * ∫⁻ x, ‖f' x‖ₑ ^ (2 : ℕ) ∂μ := by
+      have hmeas2 : AEMeasurable (fun p : G × G => ‖g' (p.1 - p.2)‖ₑ * ‖f' p.2‖ₑ ^ 2) (μ.prod μ) :=
+        (meg_prod.mul (mef.pow_const 2 |>.comp measurable_snd)).aemeasurable
+      -- Decompose as iterated, then swap integration order
+      calc ∫⁻ p, ‖g' (p.1 - p.2)‖ₑ * ‖f' p.2‖ₑ ^ 2 ∂(μ.prod μ)
+          = ∫⁻ x, ∫⁻ t, ‖g' (x - t)‖ₑ * ‖f' t‖ₑ ^ 2 ∂μ ∂μ :=
+            lintegral_prod _ hmeas2
+        _ = ∫⁻ t, ∫⁻ x, ‖g' (x - t)‖ₑ * ‖f' t‖ₑ ^ 2 ∂μ ∂μ :=
+            lintegral_lintegral_swap hmeas2
+        _ = ∫⁻ t, (∫⁻ x, ‖g' (x - t)‖ₑ ∂μ) * ‖f' t‖ₑ ^ 2 ∂μ := by
+            congr 1; ext t
+            exact lintegral_mul_const _ (meg.comp (measurable_id.sub measurable_const))
+        _ = ∫⁻ t, (∫⁻ x, ‖g' x‖ₑ ∂μ) * ‖f' t‖ₑ ^ 2 ∂μ := by
+            congr 1; ext t; congr 1
+            exact lintegral_sub_right_eq_self (μ := μ) (fun x => ‖g' x‖ₑ) t
+        _ = (∫⁻ t, ‖g' t‖ₑ ∂μ) * ∫⁻ t, ‖f' t‖ₑ ^ 2 ∂μ :=
+            lintegral_const_mul _ (mef.pow_const 2)
+    -- Main bound via calc chain
+    show ∫⁻ p, ‖h' p.1 * g' (p.1 - p.2) * f' p.2‖ₑ ∂(μ.prod μ) < ⊤
+    calc ∫⁻ p, ‖h' p.1 * g' (p.1 - p.2) * f' p.2‖ₑ ∂(μ.prod μ)
+        = ∫⁻ p, ‖h' p.1‖ₑ * ‖g' (p.1 - p.2)‖ₑ * ‖f' p.2‖ₑ ∂(μ.prod μ) := by
+          congr 1; ext p; simp [enorm_mul]
+      _ ≤ ∫⁻ p, ‖g' (p.1 - p.2)‖ₑ * (‖h' p.1‖ₑ ^ (2 : ℕ) + ‖f' p.2‖ₑ ^ (2 : ℕ)) ∂(μ.prod μ) := by
+          apply lintegral_mono; intro p
+          calc ‖h' p.1‖ₑ * ‖g' (p.1 - p.2)‖ₑ * ‖f' p.2‖ₑ
+              = ‖g' (p.1 - p.2)‖ₑ * (‖h' p.1‖ₑ * ‖f' p.2‖ₑ) := by ring
+            _ ≤ ‖g' (p.1 - p.2)‖ₑ * (‖h' p.1‖ₑ ^ (2 : ℕ) + ‖f' p.2‖ₑ ^ (2 : ℕ)) :=
+              mul_le_mul_right (h_amgm _ _) _
+      _ = ∫⁻ p, (‖g' (p.1 - p.2)‖ₑ * ‖h' p.1‖ₑ ^ (2 : ℕ) +
+                  ‖g' (p.1 - p.2)‖ₑ * ‖f' p.2‖ₑ ^ (2 : ℕ)) ∂(μ.prod μ) := by
+          congr 1; ext p; ring
+      _ = ∫⁻ p, ‖g' (p.1 - p.2)‖ₑ * ‖h' p.1‖ₑ ^ (2 : ℕ) ∂(μ.prod μ) +
+          ∫⁻ p, ‖g' (p.1 - p.2)‖ₑ * ‖f' p.2‖ₑ ^ (2 : ℕ) ∂(μ.prod μ) :=
+          lintegral_add_left (meg_prod.mul (meh.pow_const 2 |>.comp measurable_fst)) _
+      _ = (∫⁻ t, ‖g' t‖ₑ ∂μ) * (∫⁻ x, ‖h' x‖ₑ ^ (2 : ℕ) ∂μ) +
+          (∫⁻ t, ‖g' t‖ₑ ∂μ) * (∫⁻ x, ‖f' x‖ₑ ^ (2 : ℕ) ∂μ) := by
+          rw [hterm1, hterm2]
+      _ < ⊤ := ENNReal.add_lt_top.mpr
+          ⟨ENNReal.mul_lt_top hI₁ hI₂h, ENNReal.mul_lt_top hI₁ hI₂f⟩
+  -- Convolution reductions via convolution_congr
+  have hconv_gf : realConv μ g f = realConv μ g' f' :=
+    convolution_congr (lsmul ℝ ℝ) hg'_ae hf'_ae
+  have hconv_gh : realConv μ g h = realConv μ g' h' :=
+    convolution_congr (lsmul ℝ ℝ) hg'_ae hh'_ae
+  -- LHS step: h'(x) * (g'⋆f')(x) = ∫ h'(x) * g'(x-t) * f'(t) dt
+  have lhs_rw : ∀ x, h' x * realConv μ g' f' x =
+      ∫ t, h' x * g' (x - t) * f' t ∂μ := by
+    intro x
+    show h' x * convolution g' f' (lsmul ℝ ℝ) μ x = _
+    rw [convolution_eq_swap]; simp only [lsmul_apply, smul_eq_mul]
+    rw [← integral_const_mul (h' x) (fun t => g' (x - t) * f' t)]
+    congr 1; ext t; ring
+  -- RHS step: (g'⋆h')(t) * f'(t) = ∫ h'(x) * g'(x-t) * f'(t) dx
+  -- Key ae fact: g'(t-x) =ᵐ g'(x-t) from ae evenness of g'
+  have hg'_sub_comm : ∀ t : G, ∀ᵐ x ∂μ, g' (t - x) = g' (x - t) := by
+    intro t
+    have hqmp := quasiMeasurePreserving_sub_left_of_right_invariant μ t
+    have : ∀ᵐ x ∂μ, g' (-(t - x)) = g' (t - x) := hqmp.ae_eq_comp hg'_even_ae
+    filter_upwards [this] with x hx
+    rw [neg_sub] at hx; exact hx.symm
+  have rhs_rw : ∀ t, realConv μ g' h' t * f' t =
+      ∫ x, h' x * g' (x - t) * f' t ∂μ := by
+    intro t
+    show convolution g' h' (lsmul ℝ ℝ) μ t * f' t = _
+    rw [convolution_eq_swap]; simp only [lsmul_apply, smul_eq_mul]
+    -- Goal: (∫ g'(t-x)*h'(x) dx) * f'(t) = ∫ h'(x)*g'(x-t)*f'(t) dx
+    -- First use integral_congr_ae to replace g'(t-x) by g'(x-t) inside, then pull f'(t) in
+    conv_lhs =>
+      rw [show (∫ x, g' (t - x) * h' x ∂μ) = ∫ x, h' x * g' (x - t) ∂μ from
+        integral_congr_ae ((hg'_sub_comm t).mono fun x hx => by
+          show g' (t - x) * h' x = h' x * g' (x - t); rw [hx, mul_comm])]
+    -- Now: (∫ h'(x)*g'(x-t) dx) * f'(t) = ∫ h'(x)*g'(x-t)*f'(t) dx
+    rw [← integral_mul_const]
+  -- === Main calc chain ===
+  calc ∫ x, h x * realConv μ g f x ∂μ
+      = ∫ x, h' x * realConv μ g' f' x ∂μ := by
+        rw [hconv_gf]
+        exact integral_congr_ae (hh'_ae.mono fun x hx => by simp only [hx])
+    _ = ∫ x, ∫ t, h' x * g' (x - t) * f' t ∂μ ∂μ := by
+        congr 1; ext x; exact lhs_rw x
+    _ = ∫ t, ∫ x, h' x * g' (x - t) * f' t ∂μ ∂μ :=
+        integral_integral_swap hF_int
+    _ = ∫ t, realConv μ g' h' t * f' t ∂μ := by
+        congr 1; ext t; exact (rhs_rw t).symm
+    _ = ∫ x, realConv μ g h x * f x ∂μ := by
+        rw [hconv_gh]
+        exact (integral_congr_ae (hf'_ae.mono fun x hx => by simp only [hx])).symm
 
 /-- Convolution by an even kernel is self-adjoint on `L²`.
 
