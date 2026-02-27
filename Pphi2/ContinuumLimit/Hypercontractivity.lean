@@ -142,7 +142,7 @@ theorem gaussian_hypercontractivity_continuum
     (mass : ℝ) (hmass : 0 < mass)
     (n : ℕ) (p : ℝ) (hp : 2 ≤ p) (m : ℕ) (hm : 1 ≤ m) (hp_eq : p = 2 * ↑m)
     (f : ContinuumTestFunction d)
-    (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1) :
+    (a : ℝ) (ha : 0 < a) (_ha1 : a ≤ 1) :
     ∫ ω : Configuration (ContinuumTestFunction d),
         |ω f| ^ (p * ↑n) ∂(Measure.map (latticeEmbedLift d N a ha)
           (latticeGaussianMeasure d N a mass ha hmass)) ≤

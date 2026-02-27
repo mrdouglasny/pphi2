@@ -95,12 +95,12 @@ theorem wickMonomial_two (c x : ℝ) :
 @[simp]
 theorem wickMonomial_three (c x : ℝ) :
     wickMonomial 3 c x = x ^ 3 - 3 * c * x := by
-  simp [wickMonomial_succ_succ, wickMonomial_two]; ring
+  simp [wickMonomial_succ_succ]; ring
 
 @[simp]
 theorem wickMonomial_four (c x : ℝ) :
     wickMonomial 4 c x = x ^ 4 - 6 * c * x ^ 2 + 3 * c ^ 2 := by
-  simp [wickMonomial_succ_succ, wickMonomial_three]; ring
+  simp [wickMonomial_succ_succ]; ring
 
 /-! ## Connection to Hermite polynomials
 
@@ -330,7 +330,7 @@ theorem poly_even_degree_bounded_below (p : ℝ[X])
       have hp_eq : p.eval x = lc * x ^ n +
           (Finset.range n).sum (fun i => p.coeff i * x ^ i) := by
         simp only [eval_eq_sum_range, Finset.sum_range_succ]
-        show _ = p.leadingCoeff * x ^ p.natDegree + _
+        change _ = p.leadingCoeff * x ^ p.natDegree + _
         rw [Polynomial.leadingCoeff]; ring
       -- x^n = |x|^n (even degree)
       have hxn_eq : x ^ n = |x| ^ n := (hd_even.pow_abs x).symm
@@ -348,7 +348,7 @@ theorem poly_even_degree_bounded_below (p : ℝ[X])
                 (pow_le_pow_right₀ hx1 (by have := Finset.mem_range.mp hi; omega))
                 (abs_nonneg _)
           _ = C * |x| ^ (n - 1) := by
-              show _ = (Finset.range n).sum (fun i => |p.coeff i|) * _
+              change _ = (Finset.range n).sum (fun i => |p.coeff i|) * _
               rw [← Finset.sum_mul]
       -- lc * |x|^n = (lc * |x|) * |x|^(n-1)
       have hlead_split : lc * |x| ^ n = (lc * |x|) * |x| ^ (n - 1) := by

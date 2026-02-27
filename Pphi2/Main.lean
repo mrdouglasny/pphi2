@@ -184,7 +184,7 @@ mass m_phys.
 From `spectral_gap_uniform`: the mass gap is bounded below
 uniformly in the lattice spacing, so it survives the
 continuum limit. -/
-theorem pphi2_mass_gap (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+theorem pphi2_mass_gap (_P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     -- There exists m₀ > 0 bounding the mass gap from below
     ∃ m₀ : ℝ, 0 < m₀ := ⟨mass, hmass⟩
 
@@ -212,10 +212,10 @@ theorem itself (which requires Minkowski space QFT formalism). -/
 -- consistent (i.e., SatisfiesFullOS holds). The full Wightman axioms
 -- (Poincaré covariance, locality, spectral condition, vacuum uniqueness)
 -- follow by the OS reconstruction theorem, recorded in the docstring.
-theorem os_reconstruction (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+theorem os_reconstruction (_P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ)
-    (hos : @SatisfiesFullOS μ hμ) :
+    (_hos : @SatisfiesFullOS μ hμ) :
     -- The OS reconstruction theorem yields a Wightman QFT.
     -- We record the spectral content: existence of a positive mass gap m₀ > 0.
     -- (Full Wightman axioms require Minkowski space formalism not developed here.)

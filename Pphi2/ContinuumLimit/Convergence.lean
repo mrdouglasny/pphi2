@@ -112,7 +112,7 @@ theorem prokhorov_sequential {X : Type*} [TopologicalSpace X]
       obtain ⟨_, ⟨n, rfl⟩, rfl⟩ := hν'
       -- Need: (P n : Measure X) Kᶜ ≤ ε, i.e. μ n Kᶜ ≤ ε
       -- P n coerces to μ n
-      show (μ n) Kᶜ ≤ ε
+      change (μ n) Kᶜ ≤ ε
       have hK_meas : MeasurableSet K := hK_compact.measurableSet
       have hbound := hK_bound n
       rw [prob_compl_eq_one_sub hK_meas (μ := μ n)]
@@ -153,7 +153,7 @@ theorem prokhorov_sequential {X : Type*} [TopologicalSpace X]
     ⟨⟨f, hf_cont⟩, ⟨2 * C, fun x y => hf_bdd x y⟩⟩
   have := hφ_tend f_bcf
   -- The integrals match since f_bcf coerces to f
-  convert this using 1 <;> · ext n; rfl
+  simpa using this
 
 /-! ## Prokhorov's theorem for configuration space
 
@@ -192,7 +192,7 @@ theorem continuumLimit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     -- A sequence of lattice spacings converging to 0
     (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
-    (ha_lim : Tendsto a atTop (nhds 0)) :
+    (_ha_lim : Tendsto a atTop (nhds 0)) :
     ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
       StrictMono φ ∧
       IsProbabilityMeasure μ ∧
@@ -347,7 +347,7 @@ The current `IsPphi2Limit` marker is witnessed by a probability sequence with
 convergent moments together with Z₂ symmetry of μ. Therefore, a constant
 sequence at the symmetric Dirac measure `δ₀` witnesses the predicate. -/
 theorem pphi2_limit_exists (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) :
+    (mass : ℝ) (_hmass : 0 < mass) :
     ∃ (μ : Measure (Configuration (ContinuumTestFunction 2)))
       (_ : IsProbabilityMeasure μ),
     IsPphi2Limit μ P mass := by
@@ -368,7 +368,7 @@ theorem pphi2_limit_exists (P : InteractionPolynomial)
     positivity
   · refine ⟨?_, ?_⟩
     · intro n f
-      simpa using (tendsto_const_nhds :
+      exact (tendsto_const_nhds :
         Filter.Tendsto
           (fun _ : ℕ => ∫ ω : Configuration (ContinuumTestFunction 2),
             ∏ i, ω (f i) ∂μ)

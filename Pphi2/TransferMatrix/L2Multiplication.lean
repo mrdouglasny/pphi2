@@ -117,7 +117,9 @@ lemma mulCLM_spec {μ : Measure α}
     (hw_bound : ∀ᵐ x ∂μ, ‖w x‖ ≤ C)
     (f : Lp ℝ 2 μ) :
     (mulCLM w hw_meas C hC hw_bound f) =ᵐ[μ] fun x => w x * f x := by
-  simp [mulCLM]
+  let hw_mem : MemLp w ∞ μ := memLp_top_of_bound hw_meas.aestronglyMeasurable C hw_bound
+  change ((MemLp.mul (p := ∞) (q := 2) (r := 2) (Lp.memLp f) hw_mem).toLp (w * ⇑f)) =ᵐ[μ]
+    fun x => w x * f x
   exact MemLp.coeFn_toLp _
 
 /-- The operator norm of the multiplication operator satisfies `‖M_w f‖ ≤ C · ‖f‖`. -/

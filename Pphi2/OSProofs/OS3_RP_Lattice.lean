@@ -9,7 +9,7 @@ transfer matrix decomposition.
 
 ## Main definitions
 
-- `siteEquiv` — equivalence between `Fin N × Fin N` and `FinLatticeSites 2 N`
+- `siteEquiv` — equivalence between `ZMod N × ZMod N` and `FinLatticeSites 2 N`
 - `timeReflection2D` — reflection Θ across t=0
 - `positiveTimeSupported` — predicate for functions supported at t > 0
 - `lattice_rp_matrix` — the RP inequality on the lattice
@@ -25,7 +25,7 @@ where Θ is time reflection.
 
 ### Proof on the lattice
 
-On a square N × N lattice with sites (t, x) ∈ Fin N × Fin N,
+On a square N × N lattice with sites (t, x) ∈ ZMod N × ZMod N,
 take reflection Θ: t ↦ -t mod N.
 
 1. **Decompose** the field: φ = (φ⁺, φ⁰, φ⁻) where
@@ -63,44 +63,45 @@ open GaussianField MeasureTheory
 
 namespace Pphi2
 
-variable (N : ℕ) [NeZero N]
+variable (N : ℕ)
 
 /-! ## Site equivalence
 
 The gaussian-field library defines lattice sites as `FinLatticeSites 2 N = Fin 2 → Fin N`,
-while for the RP proof it is natural to use the product type `Fin N × Fin N` where
+while for the RP proof it is natural to use the product type `ZMod N × ZMod N` where
 the first component is time and the second is space. We define an equivalence
 between these representations. -/
 
-/-- Equivalence between `Fin N × Fin N` (time × space) and
+/-- Equivalence between `ZMod N × ZMod N` (time × space) and
 `FinLatticeSites 2 N = Fin 2 → Fin N` (function representation).
 
 Maps `(t, x)` to the function `![t, x]`. -/
-def siteEquiv : Fin N × Fin N ≃ FinLatticeSites 2 N where
+def siteEquiv : ZMod N × ZMod N ≃ FinLatticeSites 2 N where
   toFun := fun ⟨t, x⟩ => ![t, x]
   invFun := fun f => (f 0, f 1)
-  left_inv := fun ⟨t, x⟩ => by simp [Matrix.cons_val_zero, Matrix.cons_val_one]
+  left_inv := fun ⟨t, x⟩ => rfl
   right_inv := fun f => by
-    ext i; fin_cases i <;> simp [Matrix.cons_val_zero, Matrix.cons_val_one]
+    ext i
+    fin_cases i <;> rfl
 
-/-- Convert a field on `Fin N × Fin N` to a field on `FinLatticeSites 2 N`. -/
-def fieldToSites (φ : Fin N × Fin N → ℝ) : FinLatticeField 2 N :=
+/-- Convert a field on `ZMod N × ZMod N` to a field on `FinLatticeSites 2 N`. -/
+def fieldToSites (φ : ZMod N × ZMod N → ℝ) : FinLatticeField 2 N :=
   φ ∘ (siteEquiv N).symm
 
-/-- Convert a field on `FinLatticeSites 2 N` to a field on `Fin N × Fin N`. -/
-def fieldFromSites (φ : FinLatticeField 2 N) : Fin N × Fin N → ℝ :=
+/-- Convert a field on `FinLatticeSites 2 N` to a field on `ZMod N × ZMod N`. -/
+def fieldFromSites (φ : FinLatticeField 2 N) : ZMod N × ZMod N → ℝ :=
   φ ∘ (siteEquiv N)
 
 /-! ## Time reflection on the lattice
 
-On a 2D square lattice with sites (t, x) ∈ Fin N × Fin N, time reflection
+On a 2D square lattice with sites (t, x) ∈ ZMod N × ZMod N, time reflection
 is `Θ(t, x) = (-t, x)` where `-t` is computed mod N. -/
 
 /-- Time reflection on finite lattice sites: `Θ(t, x) = (-t mod N, x)`.
 
-This maps the 2D lattice site `(t, x) ∈ Fin N × Fin N` to `(-t, x)`,
+This maps the 2D lattice site `(t, x) ∈ ZMod N × ZMod N` to `(-t, x)`,
 implementing Euclidean time reflection. -/
-def timeReflection2D : Fin N × Fin N → Fin N × Fin N :=
+def timeReflection2D : ZMod N × ZMod N → ZMod N × ZMod N :=
   fun ⟨t, x⟩ => ⟨-t, x⟩
 
 /-- Time reflection is an involution: Θ² = id. -/
@@ -110,8 +111,8 @@ theorem timeReflection2D_involution :
   simp [timeReflection2D, neg_neg]
 
 /-- Time reflection on field configurations: `(Θφ)(t, x) = φ(-t, x)`. -/
-def fieldReflection2D (φ : Fin N × Fin N → ℝ) :
-    Fin N × Fin N → ℝ :=
+def fieldReflection2D (φ : ZMod N × ZMod N → ℝ) :
+    ZMod N × ZMod N → ℝ :=
   φ ∘ timeReflection2D N
 
 /-! ## Positive time support
@@ -121,10 +122,10 @@ field values at times t = 1, ..., N/2 - 1. -/
 
 /-- A function on the 2D field is supported at positive time if it depends
 only on field values φ(t, x) with 0 < t < N/2. -/
-def PositiveTimeSupported (F : (Fin N × Fin N → ℝ) → ℝ) : Prop :=
-  ∀ φ₁ φ₂ : Fin N × Fin N → ℝ,
-    (∀ t : Fin N, (0 < t.val ∧ t.val < N / 2) →
-      ∀ x : Fin N, φ₁ (t, x) = φ₂ (t, x)) →
+def PositiveTimeSupported (F : (ZMod N × ZMod N → ℝ) → ℝ) : Prop :=
+  ∀ φ₁ φ₂ : ZMod N × ZMod N → ℝ,
+    (∀ t : ZMod N, (0 < t.val ∧ t.val < N / 2) →
+      ∀ x : ZMod N, φ₁ (t, x) = φ₂ (t, x)) →
     F φ₁ = F φ₂
 
 /-! ## Action decomposition
@@ -132,7 +133,9 @@ def PositiveTimeSupported (F : (Fin N × Fin N → ℝ) → ℝ) : Prop :=
 The lattice action decomposes across the time-reflection hyperplane.
 This is the key structural property enabling the RP proof. -/
 
-/-- The lattice action on a 2D square lattice `Fin N × Fin N` decomposes as
+variable [NeZero N]
+
+/-- The lattice action on a 2D square lattice `ZMod N × ZMod N` decomposes as
 `S[φ] = S⁺[φ⁺, φ⁰] + S⁻[φ⁻, φ⁰]` where:
 - S⁺ depends on field values at t = 0, 1, ..., N/2
 - S⁻ depends on field values at t = 0, N/2, ..., N-1
@@ -142,12 +145,12 @@ This holds because the nearest-neighbor action couples only adjacent
 time slices, and the interaction is a sum over sites.
 
 The `fieldToSites` conversion connects the product representation
-`Fin N × Fin N → ℝ` to the function representation `FinLatticeField 2 N`
+`ZMod N × ZMod N → ℝ` to the function representation `FinLatticeField 2 N`
 used by `latticeInteraction`. -/
 theorem action_decomposition (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
-    ∃ (S_plus : (Fin N × Fin N → ℝ) → ℝ),
-    ∀ φ : Fin N × Fin N → ℝ,
+    (_ha : 0 < a) (_hmass : 0 < mass) :
+    ∃ (S_plus : (ZMod N × ZMod N → ℝ) → ℝ),
+    ∀ φ : ZMod N × ZMod N → ℝ,
       -- The lattice action (via site equivalence) equals S⁺ + S⁺ ∘ Θ
       latticeInteraction 2 N P a mass (fieldToSites N φ) =
         S_plus φ + S_plus (fieldReflection2D N φ) := by
@@ -194,7 +197,7 @@ through the boundary. The Fubini factorization plus time-reflection
 symmetry of S gives the perfect-square structure. -/
 axiom lattice_rp (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
-    (F : (Fin N × Fin N → ℝ) → ℝ)
+    (F : (ZMod N × ZMod N → ℝ) → ℝ)
     (hF : PositiveTimeSupported N F) :
     -- Reflection positivity: ∫ F(φ) · F(Θφ) dμ_a ≥ 0
     -- where Θ is time reflection and μ_a is the interacting lattice measure.
@@ -206,34 +209,34 @@ axiom lattice_rp (P : InteractionPolynomial) (a mass : ℝ)
       ∂(interactingLatticeMeasure 2 N P a mass ha hmass)
 
 /-- Pairing on finite lattice fields in product coordinates. -/
-def pairing2D (φ g : Fin N × Fin N → ℝ) : ℝ :=
-  ∑ tx : Fin N × Fin N, φ tx * g tx
+def pairing2D (φ g : ZMod N × ZMod N → ℝ) : ℝ :=
+  ∑ tx : ZMod N × ZMod N, φ tx * g tx
 
 /-- Lattice field extracted from `Configuration` in product coordinates. -/
-def evalField2D (ω : Configuration (FinLatticeField 2 N)) : Fin N × Fin N → ℝ :=
+def evalField2D (ω : Configuration (FinLatticeField 2 N)) : ZMod N × ZMod N → ℝ :=
   fieldFromSites N (fun x => ω (Pi.single x 1))
 
 /-- Finite cosine test functional used in matrix RP reduction. -/
-def Fcos (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (Fin N × Fin N → ℝ)) :
-    ((Fin N × Fin N → ℝ) → ℝ) :=
+def Fcos (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (ZMod N × ZMod N → ℝ)) :
+    ((ZMod N × ZMod N → ℝ) → ℝ) :=
   fun φ => ∑ i : Fin n, c i * Real.cos (pairing2D N φ (f i))
 
 /-- Finite sine test functional used in matrix RP reduction. -/
-def Fsin (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (Fin N × Fin N → ℝ)) :
-    ((Fin N × Fin N → ℝ) → ℝ) :=
+def Fsin (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (ZMod N × ZMod N → ℝ)) :
+    ((ZMod N × ZMod N → ℝ) → ℝ) :=
   fun φ => ∑ i : Fin n, c i * Real.sin (pairing2D N φ (f i))
 
 /-- If each `f i` is positive-time supported, then `Fcos` is positive-time supported. -/
 theorem positiveTimeSupported_Fcos
-    (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (Fin N × Fin N → ℝ))
-    (hf : ∀ i, ∀ tx : Fin N × Fin N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 → f i tx = 0) :
+    (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (ZMod N × ZMod N → ℝ))
+    (hf : ∀ i, ∀ tx : ZMod N × ZMod N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 → f i tx = 0) :
     PositiveTimeSupported N (Fcos N n c f) := by
   intro φ₁ φ₂ hEq
   unfold Fcos pairing2D
   apply Fintype.sum_congr
   intro i
-  have hpair : (∑ tx : Fin N × Fin N, φ₁ tx * f i tx) =
-      (∑ tx : Fin N × Fin N, φ₂ tx * f i tx) := by
+  have hpair : (∑ tx : ZMod N × ZMod N, φ₁ tx * f i tx) =
+      (∑ tx : ZMod N × ZMod N, φ₂ tx * f i tx) := by
     apply Fintype.sum_congr
     intro tx
     by_cases htx : tx.1.val = 0 ∨ tx.1.val ≥ N / 2
@@ -255,15 +258,15 @@ theorem positiveTimeSupported_Fcos
 
 /-- If each `f i` is positive-time supported, then `Fsin` is positive-time supported. -/
 theorem positiveTimeSupported_Fsin
-    (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (Fin N × Fin N → ℝ))
-    (hf : ∀ i, ∀ tx : Fin N × Fin N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 → f i tx = 0) :
+    (n : ℕ) (c : Fin n → ℝ) (f : Fin n → (ZMod N × ZMod N → ℝ))
+    (hf : ∀ i, ∀ tx : ZMod N × ZMod N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 → f i tx = 0) :
     PositiveTimeSupported N (Fsin N n c f) := by
   intro φ₁ φ₂ hEq
   unfold Fsin pairing2D
   apply Fintype.sum_congr
   intro i
-  have hpair : (∑ tx : Fin N × Fin N, φ₁ tx * f i tx) =
-      (∑ tx : Fin N × Fin N, φ₂ tx * f i tx) := by
+  have hpair : (∑ tx : ZMod N × ZMod N, φ₁ tx * f i tx) =
+      (∑ tx : ZMod N × ZMod N, φ₂ tx * f i tx) := by
     apply Fintype.sum_congr
     intro tx
     by_cases htx : tx.1.val = 0 ∨ tx.1.val ≥ N / 2
@@ -285,34 +288,34 @@ theorem positiveTimeSupported_Fsin
 
 /-- Reflection reindexing for finite pairings. -/
 theorem pairing_reflection_reindex
-    (φ g : Fin N × Fin N → ℝ) :
+    (φ g : ZMod N × ZMod N → ℝ) :
     pairing2D N (fieldReflection2D N φ) g =
       pairing2D N φ (g ∘ timeReflection2D N) := by
   unfold pairing2D fieldReflection2D
-  let θ : Fin N × Fin N → Fin N × Fin N := timeReflection2D N
+  let θ : ZMod N × ZMod N → ZMod N × ZMod N := timeReflection2D N
   have hθbij : Function.Bijective θ :=
     Function.Involutive.bijective (timeReflection2D_involution (N := N))
   calc
-    ∑ tx : Fin N × Fin N, (φ ∘ timeReflection2D N) tx * g tx
-        = ∑ tx : Fin N × Fin N, g tx * φ (timeReflection2D N tx) := by
+    ∑ tx : ZMod N × ZMod N, (φ ∘ timeReflection2D N) tx * g tx
+        = ∑ tx : ZMod N × ZMod N, g tx * φ (timeReflection2D N tx) := by
           simp [Function.comp, mul_comm]
-    _ = ∑ tx : Fin N × Fin N, g (θ tx) * φ (θ (θ tx)) := by
+    _ = ∑ tx : ZMod N × ZMod N, g (θ tx) * φ (θ (θ tx)) := by
           simpa [θ] using (Function.Bijective.sum_comp hθbij (fun tx => g tx * φ (θ tx))).symm
-    _ = ∑ tx : Fin N × Fin N, φ tx * g (timeReflection2D N tx) := by
-          have hθθ : ∀ tx : Fin N × Fin N, θ (θ tx) = tx := by
+    _ = ∑ tx : ZMod N × ZMod N, φ tx * g (timeReflection2D N tx) := by
+          have hθθ : ∀ tx : ZMod N × ZMod N, θ (θ tx) = tx := by
             intro tx
             simpa [θ] using (timeReflection2D_involution (N := N) tx)
           calc
-            ∑ tx : Fin N × Fin N, g (θ tx) * φ (θ (θ tx))
-                = ∑ tx : Fin N × Fin N, g (θ tx) * φ tx := by
+            ∑ tx : ZMod N × ZMod N, g (θ tx) * φ (θ (θ tx))
+                = ∑ tx : ZMod N × ZMod N, g (θ tx) * φ tx := by
                     apply Fintype.sum_congr
                     intro tx
                     simp [hθθ]
-            _ = ∑ tx : Fin N × Fin N, φ tx * g (timeReflection2D N tx) := by
+            _ = ∑ tx : ZMod N × ZMod N, φ tx * g (timeReflection2D N tx) := by
                   apply Fintype.sum_congr
                   intro tx
                   simp [θ, mul_comm]
-    _ = ∑ tx : Fin N × Fin N, φ tx * (g ∘ timeReflection2D N) tx := by rfl
+    _ = ∑ tx : ZMod N × ZMod N, φ tx * (g ∘ timeReflection2D N) tx := by rfl
 
 /-- Reduction theorem: matrix RP follows from scalar RP plus trigonometric
 expansion identity. -/
@@ -320,8 +323,8 @@ theorem lattice_rp_matrix_reduction
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (n : ℕ) (c : Fin n → ℝ)
-    (f : Fin n → (Fin N × Fin N → ℝ))
-    (hf : ∀ i, ∀ tx : Fin N × Fin N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 → f i tx = 0)
+    (f : Fin n → (ZMod N × ZMod N → ℝ))
+    (hf : ∀ i, ∀ tx : ZMod N × ZMod N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 → f i tx = 0)
     (h_expand :
       (∑ i : Fin n, ∑ j : Fin n, c i * c j *
         ∫ ω : Configuration (FinLatticeField 2 N),
@@ -362,7 +365,7 @@ theorem lattice_rp_matrix_reduction
   exact add_nonneg hcos hsin
 
 /-- Linearity of `pairing2D` in the second argument. -/
-private theorem pairing2D_sub (φ g h : Fin N × Fin N → ℝ) :
+private theorem pairing2D_sub (φ g h : ZMod N × ZMod N → ℝ) :
     pairing2D N φ (g - h) = pairing2D N φ g - pairing2D N φ h := by
   unfold pairing2D
   simp only [Pi.sub_apply, mul_sub, Finset.sum_sub_distrib]
@@ -374,7 +377,7 @@ For any field configuration φ:
 
 Uses `cos(u-v) = cos u cos v + sin u sin v` and the product-of-sums identity. -/
 private theorem rp_expansion_pointwise (n : ℕ) (c : Fin n → ℝ)
-    (f : Fin n → (Fin N × Fin N → ℝ)) (φ : Fin N × Fin N → ℝ) :
+    (f : Fin n → (ZMod N × ZMod N → ℝ)) (φ : ZMod N × ZMod N → ℝ) :
     ∑ i : Fin n, ∑ j : Fin n, c i * c j *
       Real.cos (pairing2D N φ (f i - f j ∘ timeReflection2D N))
     = Fcos N n c f φ * Fcos N n c f (fieldReflection2D N φ)
@@ -417,32 +420,32 @@ and apply `lattice_rp` to each square. -/
 theorem lattice_rp_matrix (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (n : ℕ) (c : Fin n → ℝ)
-    (f : Fin n → (Fin N × Fin N → ℝ))
+    (f : Fin n → (ZMod N × ZMod N → ℝ))
     -- Each fᵢ is supported at positive time
-    (hf : ∀ i, ∀ tx : Fin N × Fin N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 →
+    (hf : ∀ i, ∀ tx : ZMod N × ZMod N, tx.1.val = 0 ∨ tx.1.val ≥ N / 2 →
       f i tx = 0) :
     ∑ i : Fin n, ∑ j : Fin n, c i * c j *
       ∫ ω : Configuration (FinLatticeField 2 N),
-        Real.cos (∑ tx : Fin N × Fin N,
+        Real.cos (∑ tx : ZMod N × ZMod N,
           (fieldFromSites N (fun x => ω (Pi.single x 1)) tx) *
           (f i tx - (f j ∘ timeReflection2D N) tx))
         ∂(interactingLatticeMeasure 2 N P a mass ha hmass) ≥ 0 := by
   rw [ge_iff_le]
   -- The cosine argument matches pairing2D of evalField2D (definitionally)
-  show 0 ≤ ∑ i : Fin n, ∑ j : Fin n, c i * c j *
+  change 0 ≤ ∑ i : Fin n, ∑ j : Fin n, c i * c j *
     ∫ ω, Real.cos (pairing2D N (evalField2D N ω) (f i - f j ∘ timeReflection2D N))
       ∂(interactingLatticeMeasure 2 N P a mass ha hmass)
   apply lattice_rp_matrix_reduction N P a mass ha hmass n c f hf
   set μ := interactingLatticeMeasure 2 N P a mass ha hmass
   -- h_expand: ∑ij c_i c_j * ∫ cos dμ = ∫ Fcos·Fcos dμ + ∫ Fsin·Fsin dμ
   -- Measurability of evaluation maps
-  have heval_meas : ∀ tx : Fin N × Fin N,
+  have heval_meas : ∀ tx : ZMod N × ZMod N,
       @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
         (fun ω => evalField2D N ω tx) := by
     intro tx
     exact configuration_eval_measurable (Pi.single (siteEquiv N tx) 1)
   -- Measurability of pairing with a fixed test function
-  have hpair_meas : ∀ (g : Fin N × Fin N → ℝ),
+  have hpair_meas : ∀ (g : ZMod N × ZMod N → ℝ),
       @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
         (fun ω => pairing2D N (evalField2D N ω) g) := by
     intro g
@@ -450,11 +453,11 @@ theorem lattice_rp_matrix (P : InteractionPolynomial) (a mass : ℝ)
     exact Finset.measurable_sum Finset.univ
       (fun tx _ => (heval_meas tx).mul measurable_const)
   -- Measurability of cos(pairing) and sin(pairing)
-  have hcos_meas : ∀ (g : Fin N × Fin N → ℝ),
+  have hcos_meas : ∀ (g : ZMod N × ZMod N → ℝ),
       @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
         (fun ω => Real.cos (pairing2D N (evalField2D N ω) g)) :=
     fun g => Real.measurable_cos.comp (hpair_meas g)
-  have hsin_meas : ∀ (g : Fin N × Fin N → ℝ),
+  have hsin_meas : ∀ (g : ZMod N × ZMod N → ℝ),
       @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
         (fun ω => Real.sin (pairing2D N (evalField2D N ω) g)) :=
     fun g => Real.measurable_sin.comp (hpair_meas g)
@@ -491,7 +494,7 @@ theorem lattice_rp_matrix (P : InteractionPolynomial) (a mass : ℝ)
           rw [Real.norm_eq_abs, abs_mul]
           exact mul_le_of_le_one_right (abs_nonneg _) (Real.abs_sin_le_one _)
   -- Measurability of pairing with reflected field
-  have hpair_refl_meas : ∀ (g : Fin N × Fin N → ℝ),
+  have hpair_refl_meas : ∀ (g : ZMod N × ZMod N → ℝ),
       @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
         (fun ω => pairing2D N (fieldReflection2D N (evalField2D N ω)) g) := by
     intro g; unfold pairing2D fieldReflection2D
@@ -505,7 +508,7 @@ theorem lattice_rp_matrix (P : InteractionPolynomial) (a mass : ℝ)
         rw [abs_mul, sq]
         exact mul_le_mul (hFcos_bound _) (hFcos_bound _) (abs_nonneg _)
           (Finset.sum_nonneg fun i _ => abs_nonneg _)⟩
-    · show Measurable (fun ω => (∑ i, c i * Real.cos (pairing2D N (evalField2D N ω) (f i))) *
+    · change Measurable (fun ω => (∑ i, c i * Real.cos (pairing2D N (evalField2D N ω) (f i))) *
           (∑ i, c i * Real.cos (pairing2D N (fieldReflection2D N (evalField2D N ω)) (f i))))
       exact (Finset.measurable_sum Finset.univ
           (fun i _ => measurable_const.mul (hcos_meas _))).mul
@@ -518,7 +521,7 @@ theorem lattice_rp_matrix (P : InteractionPolynomial) (a mass : ℝ)
         rw [abs_mul, sq]
         exact mul_le_mul (hFsin_bound _) (hFsin_bound _) (abs_nonneg _)
           (Finset.sum_nonneg fun i _ => abs_nonneg _)⟩
-    · show Measurable (fun ω => (∑ i, c i * Real.sin (pairing2D N (evalField2D N ω) (f i))) *
+    · change Measurable (fun ω => (∑ i, c i * Real.sin (pairing2D N (evalField2D N ω) (f i))) *
           (∑ i, c i * Real.sin (pairing2D N (fieldReflection2D N (evalField2D N ω)) (f i))))
       exact (Finset.measurable_sum Finset.univ
           (fun i _ => measurable_const.mul (hsin_meas _))).mul

@@ -57,13 +57,13 @@ theorem InteractionPolynomial.eval_neg (P : InteractionPolynomial) (τ : ℝ) :
 /-- The Wick-ordered polynomial P(τ, c).
     P(τ, c) = Σ_{m=0}^n a_m Σ_{k=0}^{⌊m/2⌋} (-1)^k m!/(m-2k)!k!2^k c^k τ^{m-2k}.
     DDJ Eq. (2.4). -/
-def InteractionPolynomial.evalWick (P : InteractionPolynomial) (τ c : ℝ) : ℝ :=
+def InteractionPolynomial.evalWick (P : InteractionPolynomial) (τ _c : ℝ) : ℝ :=
   P.eval τ  -- Placeholder: should be the full Wick-ordered evaluation.
   -- The actual Wick ordering is implemented in WickPolynomial.lean as `wickPolynomial`.
   -- This definition exists for the DDJ reference; downstream code uses `wickPolynomial`.
 
 /-- Derivative P'(τ, c) = ∂_τ P(τ, c). Finite-difference approximation. -/
-def InteractionPolynomial.evalWick' (P : InteractionPolynomial) (τ c : ℝ) : ℝ :=
+def InteractionPolynomial.evalWick' (P : InteractionPolynomial) (τ _c : ℝ) : ℝ :=
   P.n * τ ^ (P.n - 1) + ∑ m : Fin P.n, (m : ℝ) * P.coeff m * τ ^ ((m : ℕ) - 1)
   -- Placeholder derivative of P.eval. The actual Wick-ordered derivative
   -- would use wickMonomial derivatives; not currently needed downstream.

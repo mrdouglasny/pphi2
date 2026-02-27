@@ -117,7 +117,7 @@ theorem os1_inheritance (_P : InteractionPolynomial)
     · exact ae_of_all μ (fun ω => abs_nonneg _)
     · exact integrable_const 1
     · exact ae_of_all μ (fun ω => Real.abs_cos_le_one _)
-  simp [measure_univ] at h2
+  simp at h2
   linarith
 
 /-! ## OS3: Reflection Positivity -/

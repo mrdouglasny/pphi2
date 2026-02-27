@@ -78,7 +78,7 @@ This is a symmetry of the square lattice action (nearest-neighbor
 interactions are invariant under the point group). -/
 def latticeRotation90 [NeZero N] :
     FinLatticeSites 2 N → FinLatticeSites 2 N :=
-  fun x => ![⟨(N - 1 - (x 1).val) % N, Nat.mod_lt _ (NeZero.pos N)⟩, x 0]
+  fun x => ![-(x 1) - (1 : ZMod N), x 0]
 
 /-- The lattice action is invariant under lattice translations.
 
@@ -88,7 +88,7 @@ Proof sketch: Both the kinetic term `Σ (φ(x+eᵢ)-φ(x))²` and the
 potential term `Σ P(φ(x))` are sums over all sites, so shifting by v
 just relabels the summation index. -/
 theorem latticeAction_translation_invariant (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) (v : FinLatticeSites d N) :
+    (_ha : 0 < a) (_hmass : 0 < mass) (v : FinLatticeSites d N) :
     ∀ φ : FinLatticeField d N,
     latticeInteraction d N P a mass (latticeTranslation d N v φ) =
     latticeInteraction d N P a mass φ := by
@@ -235,8 +235,8 @@ The leading correction `(a²/12) Σᵢ kᵢ⁴` is a dimension-4 operator.
 Since dim(O_break) = 4 > d = 2, this operator is **irrelevant** in the
 RG sense: its contribution to correlation functions is suppressed by
 a^{dim - d} = a² as a → 0. -/
-theorem anomaly_scaling_dimension (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
+theorem anomaly_scaling_dimension (_P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (_hmass : 0 < mass) :
     -- The lattice Laplacian dispersion relation differs from the continuum by O(a²):
     -- Σᵢ (2/a²)(1 - cos(a·kᵢ)) = ‖k‖² + O(a²·(Σkᵢ⁴ + Σkᵢ²))
     -- Uses cos_bound for |ak|≤1 (Taylor) and crude bound for |ak|>1.
@@ -421,6 +421,8 @@ private lemma generatingFunctional_re_eq_integral_cos
               Complex.cos_ofReal_re, Complex.sin_ofReal_re]
 
 set_option maxHeartbeats 800000 in
+-- Needed here because `simp_rw` plus repeated finite-sum rewrites in the RP expansion
+-- can exceed the default heartbeat budget.
 theorem os3_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
@@ -496,8 +498,8 @@ theorem os3_for_continuum_limit (P : InteractionPolynomial)
       intro ω
       have := rp_matrix_trig_identity c
         (fun i => ω (f i).val) (fun j => ω (compTimeReflection2 (f j).val))
-      simp only [distribTimeReflection_apply] at *
-      convert this using 2 <;> (ext j; congr 1; rfl)
+      simp only at *
+      convert this using 2
     simp_rw [h_trig]
     -- Integrability of F_trig · F_trig∘Θ: bounded measurable products
     have hm_trig_sum : ∀ (trig : ℝ → ℝ), Measurable trig →
@@ -769,39 +771,34 @@ theorem complex_gf_invariant_of_real_gf_invariant
   let ψ : ℂ → Fin 2 → ℂ := fun z => ![(1 : ℂ), z]
   let F : ℂ → ℂ := fun z => generatingFunctionalℂ μ (∑ i : Fin 2, (ψ z i) • JF i)
   let G : ℂ → ℂ := fun z => generatingFunctionalℂ μ (∑ i : Fin 2, (ψ z i) • JG i)
-
   have hψ_analytic : AnalyticOn ℂ ψ Set.univ := by
     refine AnalyticOn.pi (fun i => ?_)
     fin_cases i
     · simpa using (analyticOn_const : AnalyticOn ℂ (fun _ : ℂ => (1 : ℂ)) Set.univ)
     · simpa using (analyticOn_id : AnalyticOn ℂ (fun z : ℂ => z) Set.univ)
-
   have hF_analytic : AnalyticOn ℂ F Set.univ := by
     have hbase : AnalyticOn ℂ (fun w : Fin 2 → ℂ =>
         generatingFunctionalℂ μ (∑ i : Fin 2, w i • JF i)) Set.univ :=
       analyticOn_generatingFunctionalC μ h_moments 2 JF
     exact hbase.comp hψ_analytic (by intro z hz; simp [Set.mem_univ])
-
   have hG_analytic : AnalyticOn ℂ G Set.univ := by
     have hbase : AnalyticOn ℂ (fun w : Fin 2 → ℂ =>
         generatingFunctionalℂ μ (∑ i : Fin 2, w i • JG i)) Set.univ :=
       analyticOn_generatingFunctionalC μ h_moments 2 JG
     exact hbase.comp hψ_analytic (by intro z hz; simp [Set.mem_univ])
-
   have h_real_axis : ∀ r : ℝ, F r = G r := by
     intro r
     have hF_r : F r = generatingFunctional μ (schwartzRe J + r • schwartzIm J) := by
       simpa [F, ψ, JF, Fin.sum_univ_two] using
         (generatingFunctionalℂ_ofReal_add_real_smul μ (schwartzRe J) (schwartzIm J) r)
-    have hG_r : G r =
-        generatingFunctional μ (euclideanAction2 g (schwartzRe J) + r • euclideanAction2 g (schwartzIm J)) := by
+    have hG_r : G r = generatingFunctional μ
+        (euclideanAction2 g (schwartzRe J) + r • euclideanAction2 g (schwartzIm J)) := by
       simpa [G, ψ, JG, Fin.sum_univ_two] using
         (generatingFunctionalℂ_ofReal_add_real_smul μ
           (euclideanAction2 g (schwartzRe J)) (euclideanAction2 g (schwartzIm J)) r)
     rw [hF_r, hG_r]
     simpa [ContinuousLinearMap.map_add, ContinuousLinearMap.map_smul] using
       h_real (schwartzRe J + r • schwartzIm J)
-
   have hF_nhd : AnalyticOnNhd ℂ F Set.univ := (analyticOn_univ.mp hF_analytic)
   have hG_nhd : AnalyticOnNhd ℂ G Set.univ := (analyticOn_univ.mp hG_analytic)
   have hfreq : ∃ᶠ z : ℂ in nhdsWithin (0 : ℂ) ({0}ᶜ), F z = G z := by
@@ -820,15 +817,13 @@ theorem complex_gf_invariant_of_real_gf_invariant
     refine ⟨(ε / 2 : ℂ), ?_, ?_⟩
     · exact hUball ⟨hball, hne⟩
     · simpa using h_real_axis (ε / 2)
-
   have h_eq : Set.EqOn F G Set.univ := by
     simpa using
       hF_nhd.eqOn_of_preconnected_of_frequently_eq hG_nhd
         isPreconnected_univ (by simp : (0 : ℂ) ∈ Set.univ) hfreq
-
-  have hJ_decomp : J = schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J) :=
+  have hJ_decomp :
+      J = schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J) :=
     schwartz_decompose J
-
   have hJg_decomp : euclideanAction2ℂ g J =
       schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
       (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J)) := by
@@ -840,27 +835,22 @@ theorem complex_gf_invariant_of_real_gf_invariant
       _ = schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
           (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J)) := by
             simp
-
   have hF_I : F Complex.I = generatingFunctionalℂ μ
       (schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J)) := by
     simp [F, ψ, JF, Fin.sum_univ_two]
-
   have hG_I : G Complex.I = generatingFunctionalℂ μ
       (schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
         (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J))) := by
     simp [G, ψ, JG, Fin.sum_univ_two]
-
   have hGF_J : generatingFunctionalℂ μ J =
       generatingFunctionalℂ μ
         (schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J)) :=
     congrArg (generatingFunctionalℂ μ) hJ_decomp
-
   have hGF_gJ : generatingFunctionalℂ μ (euclideanAction2ℂ g J) =
       generatingFunctionalℂ μ
         (schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
           (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J))) :=
     congrArg (generatingFunctionalℂ μ) hJg_decomp
-
   calc
     generatingFunctionalℂ μ J = F Complex.I := hGF_J.trans hF_I.symm
     _ = G Complex.I := h_eq (by simp)
@@ -880,7 +870,6 @@ Proof chain to `OS2_EuclideanInvariance`:
    third by rotation invariance.)
 3. Extension from real to complex: `Z_ℂ[g · J]` for complex J = f + ig
    follows from the real case via `complex_gf_invariant_of_real_gf_invariant`. -/
-
 theorem os2_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
@@ -903,7 +892,7 @@ theorem os2_for_continuum_limit (P : InteractionPolynomial)
             ((euclideanAction2 ⟨g.R, 0⟩) f)) := h_trans g.t _
       _ = generatingFunctional μ ((euclideanAction2 g) f) := by
             congr 1; ext x
-            show f (g.R.symm ((x - g.t) - 0)) = f (g.R.symm (x - g.t))
+            change f (g.R.symm ((x - g.t) - 0)) = f (g.R.symm (x - g.t))
             simp [sub_zero]
   -- Step 2: Extend to complex test functions.
   -- Z_ℂ[J] = ∫ exp(i⟨ω, Re J⟩ - ⟨ω, Im J⟩) dμ. Under g ∈ E(2):
@@ -1011,7 +1000,7 @@ This follows from:
 Reference: Simon, *The P(φ)₂ Euclidean QFT*, §II.3;
 Glimm-Jaffe, *Quantum Physics*, §6.1. -/
 theorem pphi2_measure_neg_invariant (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
+    (mass : ℝ) (_hmass : 0 < mass)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (h_limit : IsPphi2Limit μ P mass) :
     Measure.map (Neg.neg : FieldConfig2 → FieldConfig2) μ = μ := by
@@ -1104,7 +1093,7 @@ theorem generatingFunctional_translate_continuous
     f + SchwartzMap.translate ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g with hh_def
   -- The generating functional is ∫ exp(i * ω(h(t))) dμ(ω)
   -- Apply DCT: F t ω = exp(i * ω(h(t))), bound = 1
-  show Continuous (fun t => ∫ ω : FieldConfig2, Complex.exp (Complex.I * ↑(ω (h t))) ∂μ)
+  change Continuous (fun t => ∫ ω : FieldConfig2, Complex.exp (Complex.I * ↑(ω (h t))) ∂μ)
   apply MeasureTheory.continuous_of_dominated
   -- 1. AEStronglyMeasurable for each t
   · intro t

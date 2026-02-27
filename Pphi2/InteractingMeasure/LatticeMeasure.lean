@@ -109,7 +109,7 @@ theorem interactionFunctional_measurable (P : InteractionPolynomial) (a mass : �
 
 /-- The interaction functional is bounded below (lifted from `latticeInteraction_bounded_below`). -/
 theorem interactionFunctional_bounded_below (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
+    (ha : 0 < a) (_hmass : 0 < mass) :
     ∃ B : ℝ, ∀ ω : Configuration (FinLatticeField d N),
     interactionFunctional d N P a mass ω ≥ -B := by
   obtain ⟨A, hA_pos, hA_bound⟩ := wickPolynomial_bounded_below P (wickConstant d N a mass)
@@ -124,7 +124,8 @@ theorem interactionFunctional_bounded_below (P : InteractionPolynomial) (a mass 
         intro x _
         exact hA_bound _
     _ = -(a ^ d * Fintype.card (FinLatticeSites d N) * A) := by
-        simp [Finset.sum_const, mul_comm, mul_assoc, neg_mul]; ring
+        simp [Finset.sum_const, mul_comm]
+        ring
 
 /-- The interaction functional is a sum of single-site functions.
 

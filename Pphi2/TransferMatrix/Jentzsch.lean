@@ -81,11 +81,11 @@ theorem jentzsch_theorem {n : ℕ}
     ∀ {ι : Type}
       (b : HilbertBasis ι ℝ (Lp ℝ 2 (volume : Measure (Fin n → ℝ))))
       (eigenval : ι → ℝ)
-      (h_eigen : ∀ i,
+      (_h_eigen : ∀ i,
         (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →ₗ[ℝ]
           Lp ℝ 2 (volume : Measure (Fin n → ℝ))) (b i) = eigenval i • b i)
-      (h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i) (T x))
-      (h_nt : ∃ j k : ι, j ≠ k),
+      (_h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i) (T x))
+      (_h_nt : ∃ j k : ι, j ≠ k),
     ∃ i₀ : ι,
       (0 < eigenval i₀) ∧
       (∀ i, eigenval i = eigenval i₀ → i = i₀) ∧
@@ -362,7 +362,7 @@ theorem l2SpatialField_hilbertBasis_nontrivial
     linarith [Real.rpow_pos_of_pos this (1 / (2:ENNReal).toReal)]
   -- They are orthogonal (disjoint supports)
   have h_orth : @inner ℝ _ _ f₁ f₂ = 0 := by
-    show @inner ℝ _ _ (indicatorConstLp 2 hA_meas hA_fin (1:ℝ))
+    change @inner ℝ _ _ (indicatorConstLp 2 hA_meas hA_fin (1:ℝ))
       (indicatorConstLp 2 hB_meas hB_fin (1:ℝ)) = 0
     rw [MeasureTheory.L2.inner_indicatorConstLp_indicatorConstLp]
     simp [hAB.inter_eq]
@@ -403,7 +403,7 @@ theorem l2SpatialField_hilbertBasis_nontrivial
     have h1 := h_span f₁
     have h2 := h_span f₂
     rw [h1, h2] at h_orth
-    simp only [inner_smul_left, inner_smul_right, star_trivial,
+    simp only [inner_smul_left, inner_smul_right,
       real_inner_self_eq_norm_sq, b.orthonormal.norm_eq_one j₀,
       one_pow, mul_one] at h_orth
     rcases mul_eq_zero.mp h_orth with hc | hc
@@ -465,9 +465,9 @@ nontriviality (to pick some i₁ ≠ i₀) and eigenvalue positivity
 theorem transferOperator_ground_simple (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     ∀ {ι : Type} (b : HilbertBasis ι ℝ (L2SpatialField Ns)) (eigenval : ι → ℝ)
-      (h_eigen : ∀ i, (transferOperatorCLM Ns P a mass ha hmass :
+      (_h_eigen : ∀ i, (transferOperatorCLM Ns P a mass ha hmass :
           L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i)
-      (h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
+      (_h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
           (transferOperatorCLM Ns P a mass ha hmass x)),
       ∃ i₀ i₁ : ι, i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ := by
   intro ι b eigenval h_eigen h_sum

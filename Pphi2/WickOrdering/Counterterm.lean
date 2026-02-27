@@ -76,7 +76,7 @@ theorem wickConstant_pos (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
 
 Each eigenvalue satisfies `λ_m ≥ m²`, so `1/λ_m ≤ 1/m²`, and the average
 of |Λ| terms each bounded by 1/m² gives c_a ≤ 1/m². -/
-theorem wickConstant_le_inv_mass_sq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
+theorem wickConstant_le_inv_mass_sq (a mass : ℝ) (_ha : 0 < a) (hmass : 0 < mass) :
     wickConstant d N a mass ≤ mass⁻¹ ^ 2 := by
   unfold wickConstant
   have hcard_pos : (0 : ℝ) < Fintype.card (FinLatticeSites d N) :=
@@ -90,7 +90,7 @@ theorem wickConstant_le_inv_mass_sq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mas
     unfold latticeEigenvalue
     split_ifs with h
     · have h_sin_nonneg : (0 : ℝ) ≤ ∑ i : Fin d,
-          sin (π * ↑((Fintype.equivFin (FinLatticeSites d N)).symm ⟨m, h⟩ i) / ↑N) ^ 2 :=
+          sin (π * ↑(ZMod.val ((Fintype.equivFin (FinLatticeSites d N)).symm ⟨m, h⟩ i)) / ↑N) ^ 2 :=
         Finset.sum_nonneg fun _ _ => sq_nonneg _
       linarith [mul_nonneg (div_nonneg (by norm_num : (0:ℝ) ≤ 4) (sq_nonneg a)) h_sin_nonneg]
     · exact le_refl _

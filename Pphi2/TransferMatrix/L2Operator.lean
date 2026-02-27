@@ -120,8 +120,8 @@ private theorem continuous_spatialKinetic (a : ℝ) :
 /-- The Wick monomial `:x^n:_c` is continuous in `x` (for fixed `n, c`). -/
 private theorem continuous_wickMonomial : ∀ (n : ℕ) (c : ℝ),
     Continuous (wickMonomial n c)
-  | 0, _ => by simp [wickMonomial]; exact continuous_const
-  | 1, _ => by simp [wickMonomial]; exact continuous_id
+  | 0, _ => by simpa [wickMonomial] using continuous_const
+  | 1, _ => by simpa [wickMonomial] using continuous_id
   | n + 2, c => by
     simp only [wickMonomial]
     exact ((continuous_id.mul (continuous_wickMonomial (n + 1) c)).sub

@@ -63,7 +63,7 @@ P and c_a. Therefore `V_a(φ) ≥ -A · a^d · |Λ|`.
 
 This is crucial for the well-definedness of `exp(-V_a)`. -/
 theorem latticeInteraction_bounded_below (P : InteractionPolynomial) (a mass : ℝ)
-    (ha : 0 < a) (hmass : 0 < mass) :
+    (ha : 0 < a) (_hmass : 0 < mass) :
     ∃ B : ℝ, ∀ φ : FinLatticeField d N,
     latticeInteraction d N P a mass φ ≥ -B := by
   obtain ⟨A, hA_pos, hA_bound⟩ := wickPolynomial_bounded_below P (wickConstant d N a mass)
@@ -77,7 +77,7 @@ theorem latticeInteraction_bounded_below (P : InteractionPolynomial) (a mass : �
         intro x _
         exact hA_bound (φ x)
     _ = -(a ^ d * Fintype.card (FinLatticeSites d N) * A) := by
-        simp [Finset.sum_const, mul_comm, mul_assoc, neg_mul]
+        simp [Finset.sum_const, mul_comm]
         ring
 
 /-- Each Wick monomial is continuous as a function of its real argument. -/
@@ -85,7 +85,7 @@ theorem wickMonomial_continuous : ∀ (n : ℕ) (c : ℝ), Continuous (wickMonom
   | 0, _ => continuous_const
   | 1, _ => continuous_id
   | n + 2, c => by
-    show Continuous fun x => x * wickMonomial (n + 1) c x - (↑n + 1) * c * wickMonomial n c x
+    change Continuous (fun x => x * wickMonomial (n + 1) c x - (↑n + 1) * c * wickMonomial n c x)
     exact ((continuous_id.mul (wickMonomial_continuous (n + 1) c)).sub
       (continuous_const.mul (wickMonomial_continuous n c)))
 

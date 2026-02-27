@@ -211,7 +211,7 @@ then |f| is also an eigenvector for lam₀. -/
 theorem abs_eigenvector_of_top_eigenvector {n : ℕ}
     (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
       Lp ℝ 2 (volume : Measure (Fin n → ℝ)))
-    (hT_compact : IsCompactOperator T)
+    (_hT_compact : IsCompactOperator T)
     (hT_sa : IsSelfAdjoint T)
     (hT_pp : IsPositivityPreserving T)
     (f : Lp ℝ 2 (volume : Measure (Fin n → ℝ)))
@@ -491,17 +491,17 @@ But ⟨e₀, g⟩ = 0 with e₀ > 0 and |g| > 0 contradicts constant sign.
 theorem spectral_gap {n : ℕ}
     (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →L[ℝ]
       Lp ℝ 2 (volume : Measure (Fin n → ℝ)))
-    (hT_compact : IsCompactOperator T)
+    (_hT_compact : IsCompactOperator T)
     (hT_sa : IsSelfAdjoint T)
     (hT_pi : IsPositivityImproving' T)
     (e₀ : Lp ℝ 2 (volume : Measure (Fin n → ℝ)))
-    (he₀_ne : e₀ ≠ 0)
+    (_he₀_ne : e₀ ≠ 0)
     (lam₀ : ℝ) (hlam₀ : 0 < lam₀)
-    (he₀_eigen : (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →ₗ[ℝ]
+    (_he₀_eigen : (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →ₗ[ℝ]
       Lp ℝ 2 (volume : Measure (Fin n → ℝ))) e₀ = lam₀ • e₀)
     (hlam₀_top : ∀ (g : Lp ℝ 2 (volume : Measure (Fin n → ℝ))),
       @inner ℝ _ _ g (T g) ≤ lam₀ * ‖g‖ ^ 2)
-    (hlam₀_simple : ∀ v, v ≠ 0 →
+    (_hlam₀_simple : ∀ v, v ≠ 0 →
       (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →ₗ[ℝ]
         Lp ℝ 2 (volume : Measure (Fin n → ℝ))) v = lam₀ • v →
       ∃ c : ℝ, v = c • e₀)
@@ -788,11 +788,11 @@ theorem jentzsch_theorem_proved {n : ℕ}
     ∀ {ι : Type}
       (b : HilbertBasis ι ℝ (Lp ℝ 2 (volume : Measure (Fin n → ℝ))))
       (eigenval : ι → ℝ)
-      (h_eigen : ∀ i,
+      (_h_eigen : ∀ i,
         (T : Lp ℝ 2 (volume : Measure (Fin n → ℝ)) →ₗ[ℝ]
           Lp ℝ 2 (volume : Measure (Fin n → ℝ))) (b i) = eigenval i • b i)
-      (h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i) (T x))
-      (h_nt : ∃ j k : ι, j ≠ k),
+      (_h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i) (T x))
+      (_h_nt : ∃ j k : ι, j ≠ k),
     ∃ i₀ : ι,
       (0 < eigenval i₀) ∧
       (∀ i, eigenval i = eigenval i₀ → i = i₀) ∧
@@ -957,12 +957,14 @@ theorem jentzsch_theorem_proved {n : ℕ}
     exact habs_ne ((Lp.norm_eq_zero_iff
       (by norm_num : (0 : ENNReal) < 2)).mp h_norm_zero)
   obtain ⟨j₀, hj₀_pos⟩ := h_some_pos
-  -- The set {i : eigenval i ≥ eigenval j₀} is finite (subset of {i : |eigenval i| > eigenval j₀ / 2})
+  -- The set `{i : eigenval i > eigenval j₀ / 2}` is finite by `h_finite_above`.
   have h_fin : Set.Finite {i : ι | eigenval j₀ / 2 < |eigenval i|} :=
     h_finite_above _ (by linarith)
   -- j₀ is in this finite set
   have hj₀_mem : j₀ ∈ {i : ι | eigenval j₀ / 2 < |eigenval i|} := by
-    simp; rw [abs_of_pos hj₀_pos]; linarith
+    simp only [Set.mem_setOf_eq]
+    rw [abs_of_pos hj₀_pos]
+    linarith
   -- Find the index with maximum eigenvalue in this finite set
   have h_fin_nonempty : (h_fin.toFinset).Nonempty := ⟨j₀, h_fin.mem_toFinset.mpr hj₀_mem⟩
   obtain ⟨i₀, hi₀_mem, hi₀_max⟩ := h_fin.toFinset.exists_max_image
@@ -1034,7 +1036,7 @@ theorem jentzsch_theorem_proved {n : ℕ}
       have h1 : @inner ℝ _ _ (T (b j)) v =
           eigenval j * @inner ℝ _ _ (b j) v := by
         rw [h_eigen_clm j, inner_smul_left]
-        simp [star_trivial, mul_comm]
+        simp
       -- inner (T (b j)) v = inner (b j) (T v) by self-adjointness
       --   = inner (b j) (eigenval i₀ • v) = eigenval i₀ * inner (b j) v
       have hTv' : T v = eigenval i₀ • v := by

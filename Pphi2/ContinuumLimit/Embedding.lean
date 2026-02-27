@@ -37,7 +37,7 @@ The pushforward `(ι_a)_* μ_a` is then a probability measure on
 -/
 
 import Pphi2.InteractingMeasure.LatticeMeasure
-import Mathlib.Analysis.Distribution.SchwartzSpace
+import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 import Mathlib.Analysis.Calculus.ContDiff.FTaylorSeries
 
 noncomputable section
@@ -72,7 +72,7 @@ For a site x = (x₁,...,x_d) with xᵢ ∈ Fin N, the physical position is
 `(a · x₁, ..., a · x_d) ∈ ℝ^d` where xᵢ is cast to ℝ. -/
 def physicalPosition (a : ℝ) (x : FinLatticeSites d N) :
     EuclideanSpace ℝ (Fin d) :=
-  (WithLp.equiv 2 (Fin d → ℝ)).symm (fun i => a * ((x i : ℕ) : ℝ))
+  (WithLp.equiv 2 (Fin d → ℝ)).symm (fun i => a * ((ZMod.val (x i) : ℕ) : ℝ))
 
 /-! ## The lattice-to-continuum embedding -/
 
@@ -112,7 +112,13 @@ theorem latticeEmbedEval_linear_phi (a : ℝ) (f : ContinuumTestFunction d)
       c₁ * (φ₁ x * evalAtSite d N a f x) + c₂ * (φ₂ x * evalAtSite d N a f x) :=
     fun x => by ring
   simp_rw [this, Finset.sum_add_distrib, mul_add, Finset.mul_sum]
-  congr 1 <;> (congr 1 <;> ext i <;> ring)
+  congr 1
+  · congr 1
+    ext i
+    ring
+  · congr 1
+    ext i
+    ring
 
 /-- The embedding is linear in f for each φ. -/
 theorem latticeEmbedEval_linear_f (a : ℝ) (φ : FinLatticeField d N)
@@ -138,13 +144,13 @@ def latticeEmbed (a : ℝ) (ha : 0 < a) (φ : FinLatticeField d N) :
   SchwartzMap.mkCLMtoNormedSpace
     (latticeEmbedEval d N a φ)
     (fun f g => by
-      show latticeEmbedEval d N a φ (f + g) =
+      change latticeEmbedEval d N a φ (f + g) =
         latticeEmbedEval d N a φ f + latticeEmbedEval d N a φ g
       simp only [latticeEmbedEval, evalAtSite, SchwartzMap.add_apply]
       rw [← mul_add, ← Finset.sum_add_distrib]
       congr 1; apply Finset.sum_congr rfl; intro x _; ring)
     (fun r f => by
-      show latticeEmbedEval d N a φ (r • f) = r * latticeEmbedEval d N a φ f
+      change latticeEmbedEval d N a φ (r • f) = r * latticeEmbedEval d N a φ f
       simp only [latticeEmbedEval, evalAtSite, SchwartzMap.smul_apply, smul_eq_mul]
       conv_rhs => rw [← mul_assoc, mul_comm r, mul_assoc, Finset.mul_sum]
       congr 1; apply Finset.sum_congr rfl; intro x _; ring)
@@ -173,7 +179,6 @@ theorem latticeEmbed_eval (a : ℝ) (ha : 0 < a)
     (latticeEmbed d N a ha φ) f = latticeEmbedEval d N a φ f :=
   rfl
 
-omit [NeZero N] in
 /-- The embedding is measurable (needed for pushforward measure).
 
 This holds because for each test function f, the map φ ↦ (ι_a φ)(f) is
@@ -186,7 +191,7 @@ theorem latticeEmbed_measurable (a : ℝ) (ha : 0 < a) :
   -- Goal: Measurable (fun φ => (latticeEmbed d N a ha φ) f)
   -- By latticeEmbed_eval, this is fun φ => a^d * Σ_x φ(x) * f(a·x)
   -- which is continuous (hence measurable) in φ
-  show Measurable (fun φ => latticeEmbedEval d N a φ f)
+  change Measurable (fun φ => latticeEmbedEval d N a φ f)
   exact (continuous_const.mul (continuous_finset_sum _ (fun x _ =>
     ((continuous_apply x).mul continuous_const)))).measurable
 
@@ -203,7 +208,6 @@ def latticeEmbedLift (a : ℝ) (ha : 0 < a)
     Configuration (ContinuumTestFunction d) :=
   latticeEmbed d N a ha (fun x => ω (Pi.single x 1))
 
-omit [NeZero N] in
 /-- The lifted embedding is measurable.
 
 Each evaluation `ω ↦ (latticeEmbedLift ω)(f)` is a finite sum of measurable
@@ -277,7 +281,7 @@ The definition is mirrored in `Bridge.lean` by `IsPphi2ContinuumLimit`, which
 uses the type aliases `FieldConfig` and `TestFun` for the d=2 case. -/
 def IsPphi2Limit {d : ℕ}
     (μ : Measure (Configuration (ContinuumTestFunction d)))
-    (P : InteractionPolynomial) (mass : ℝ) : Prop :=
+    (_P : InteractionPolynomial) (_mass : ℝ) : Prop :=
   ∃ (a : ℕ → ℝ) (ν : ℕ → Measure (Configuration (ContinuumTestFunction d))),
     (∀ k, IsProbabilityMeasure (ν k)) ∧
     Filter.Tendsto a Filter.atTop (nhds 0) ∧

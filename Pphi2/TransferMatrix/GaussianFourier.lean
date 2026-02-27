@@ -100,6 +100,7 @@ Apply `inner_convCLM_pos_of_fourier_pos`. -/
 theorem gaussian_conv_strictlyPD :
     ∀ (f : L2SpatialField Ns), f ≠ 0 →
       0 < @inner ℝ _ _ f (convCLM (transferGaussian Ns) (transferGaussian_memLp Ns) f) := by
+  let _ := (inferInstance : NeZero Ns)
   intro f hf
   apply inner_convCLM_pos_of_fourier_pos Ns
       (transferGaussian Ns) (transferGaussian_memLp Ns) _ f hf

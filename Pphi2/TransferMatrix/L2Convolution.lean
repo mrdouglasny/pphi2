@@ -515,7 +515,7 @@ theorem integral_mul_conv_eq
         _ = (∫⁻ t, ‖g' t‖ₑ ∂μ) * ∫⁻ t, ‖f' t‖ₑ ^ 2 ∂μ :=
             lintegral_const_mul _ (mef.pow_const 2)
     -- Main bound via calc chain
-    show ∫⁻ p, ‖h' p.1 * g' (p.1 - p.2) * f' p.2‖ₑ ∂(μ.prod μ) < ⊤
+    change ∫⁻ p, ‖h' p.1 * g' (p.1 - p.2) * f' p.2‖ₑ ∂(μ.prod μ) < ⊤
     calc ∫⁻ p, ‖h' p.1 * g' (p.1 - p.2) * f' p.2‖ₑ ∂(μ.prod μ)
         = ∫⁻ p, ‖h' p.1‖ₑ * ‖g' (p.1 - p.2)‖ₑ * ‖f' p.2‖ₑ ∂(μ.prod μ) := by
           congr 1; ext p; simp [enorm_mul]
@@ -545,7 +545,7 @@ theorem integral_mul_conv_eq
   have lhs_rw : ∀ x, h' x * realConv μ g' f' x =
       ∫ t, h' x * g' (x - t) * f' t ∂μ := by
     intro x
-    show h' x * convolution g' f' (lsmul ℝ ℝ) μ x = _
+    change h' x * convolution g' f' (lsmul ℝ ℝ) μ x = _
     rw [convolution_eq_swap]; simp only [lsmul_apply, smul_eq_mul]
     rw [← integral_const_mul (h' x) (fun t => g' (x - t) * f' t)]
     congr 1; ext t; ring
@@ -560,14 +560,15 @@ theorem integral_mul_conv_eq
   have rhs_rw : ∀ t, realConv μ g' h' t * f' t =
       ∫ x, h' x * g' (x - t) * f' t ∂μ := by
     intro t
-    show convolution g' h' (lsmul ℝ ℝ) μ t * f' t = _
+    change convolution g' h' (lsmul ℝ ℝ) μ t * f' t = _
     rw [convolution_eq_swap]; simp only [lsmul_apply, smul_eq_mul]
     -- Goal: (∫ g'(t-x)*h'(x) dx) * f'(t) = ∫ h'(x)*g'(x-t)*f'(t) dx
     -- First use integral_congr_ae to replace g'(t-x) by g'(x-t) inside, then pull f'(t) in
     conv_lhs =>
       rw [show (∫ x, g' (t - x) * h' x ∂μ) = ∫ x, h' x * g' (x - t) ∂μ from
         integral_congr_ae ((hg'_sub_comm t).mono fun x hx => by
-          show g' (t - x) * h' x = h' x * g' (x - t); rw [hx, mul_comm])]
+          change g' (t - x) * h' x = h' x * g' (x - t)
+          rw [hx, mul_comm])]
     -- Now: (∫ h'(x)*g'(x-t) dx) * f'(t) = ∫ h'(x)*g'(x-t)*f'(t) dx
     rw [← integral_mul_const]
   -- === Main calc chain ===

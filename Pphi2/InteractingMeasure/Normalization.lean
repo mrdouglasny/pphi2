@@ -120,7 +120,7 @@ theorem field_second_moment_finite (P : InteractionPolynomial) (a mass : ℝ)
       have h1 : 0 ≤ (ω δx) ^ 2 := sq_nonneg _
       have h2 : 0 < bw ω := boltzmannWeight_pos d N P a mass ω
       have h3 : bw ω ≤ Real.exp B := by
-        show Real.exp _ ≤ Real.exp B
+        change Real.exp (-interactionFunctional d N P a mass ω) ≤ Real.exp B
         exact Real.exp_le_exp_of_le (by linarith [hB ω])
       rw [abs_of_nonneg (mul_nonneg h1 (le_of_lt h2)),
           abs_of_nonneg (mul_nonneg h1 (le_of_lt (Real.exp_pos B)))]
@@ -217,7 +217,7 @@ theorem fkg_interacting (P : InteractionPolynomial) (a mass : ℝ)
     let μ := interactingLatticeMeasure d N P a mass ha hmass
     (∫ ω, F ω * G ω ∂μ) ≥ (∫ ω, F ω ∂μ) * (∫ ω, G ω ∂μ) := by
   -- Reduce let binding to explicit measure
-  show (∫ ω, F ω * G ω ∂interactingLatticeMeasure d N P a mass ha hmass) ≥
+  change (∫ ω, F ω * G ω ∂interactingLatticeMeasure d N P a mass ha hmass) ≥
     (∫ ω, F ω ∂interactingLatticeMeasure d N P a mass ha hmass) *
     (∫ ω, G ω ∂interactingLatticeMeasure d N P a mass ha hmass)
   -- Setup
@@ -330,7 +330,7 @@ theorem fkg_interacting (P : InteractionPolynomial) (a mass : ℝ)
     integral_congr_ae (Filter.Eventually.of_forall fun ω => by
       simp only [bw, boltzmannWeight]; ring)
   -- Goal has • (smul); for ℝ this is definitionally *
-  show Z⁻¹ * (∫ ω, bw ω * (F ω * G ω) ∂μ_GFF) ≥
+  change Z⁻¹ * (∫ ω, bw ω * (F ω * G ω) ∂μ_GFF) ≥
     (Z⁻¹ * (∫ ω, bw ω * F ω ∂μ_GFF)) *
     (Z⁻¹ * (∫ ω, bw ω * G ω ∂μ_GFF))
   -- Suffices to show the un-normalized FKG inequality
@@ -395,7 +395,7 @@ theorem generating_functional_bounded (P : InteractionPolynomial) (a mass : ℝ)
         · exact Filter.Eventually.of_forall (fun _ => norm_nonneg _)
         · exact integrable_const 1
         · exact Filter.Eventually.of_forall (fun ω => by
-            show ‖Real.cos (ω f)‖ ≤ 1
+            change ‖Real.cos (ω f)‖ ≤ 1
             rw [Real.norm_eq_abs]
             exact abs_le.mpr ⟨by linarith [Real.neg_one_le_cos (ω f)], Real.cos_le_one _⟩)
     _ = 1 := by rw [integral_const, smul_eq_mul, mul_one, probReal_univ]

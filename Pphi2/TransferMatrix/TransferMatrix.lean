@@ -73,7 +73,7 @@ def spatialKinetic (a : ℝ) (ψ : SpatialField Ns) : ℝ :=
 /-- Spatial potential energy: `Σ_x (½m²ψ(x)² + :P(ψ(x)):_c)`.
 
 The on-site potential including mass term and Wick-ordered interaction. -/
-def spatialPotential (P : InteractionPolynomial) (a mass : ℝ)
+def spatialPotential (P : InteractionPolynomial) (_a mass : ℝ)
     (c : ℝ) (ψ : SpatialField Ns) : ℝ :=
   ∑ x : Fin Ns, ((1 / 2) * mass ^ 2 * ψ x ^ 2 +
     wickPolynomial P c (ψ x))
@@ -103,6 +103,7 @@ def timeCoupling (ψ ψ' : SpatialField Ns) : ℝ :=
 /-- The time coupling is nonneg. -/
 theorem timeCoupling_nonneg (ψ ψ' : SpatialField Ns) :
     0 ≤ timeCoupling Ns ψ ψ' := by
+  let _ := (inferInstance : NeZero Ns)
   unfold timeCoupling
   apply mul_nonneg (by norm_num)
   apply Finset.sum_nonneg
@@ -112,6 +113,7 @@ theorem timeCoupling_nonneg (ψ ψ' : SpatialField Ns) :
 /-- The time coupling vanishes iff ψ = ψ'. -/
 theorem timeCoupling_eq_zero_iff (ψ ψ' : SpatialField Ns) :
     timeCoupling Ns ψ ψ' = 0 ↔ ψ = ψ' := by
+  let _ := (inferInstance : NeZero Ns)
   unfold timeCoupling
   rw [mul_eq_zero]
   constructor

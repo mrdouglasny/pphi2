@@ -196,9 +196,9 @@ def timeReflection2 (p : SpaceTime2) : SpaceTime2 :=
 /-- Time reflection is an involution: Θ² = id. -/
 theorem timeReflection2_involution (p : SpaceTime2) :
     timeReflection2 (timeReflection2 p) = p := by
-  simp [timeReflection2]
+  simp only [timeReflection2]
   ext i
-  simp [WithLp.equiv, Equiv.symm]
+  simp
   split <;> simp
 
 /-- Time reflection is a linear map on SpaceTime2. -/
@@ -206,11 +206,11 @@ def timeReflectionLinear : SpaceTime2 →ₗ[ℝ] SpaceTime2 where
   toFun := timeReflection2
   map_add' p q := by
     ext i
-    simp [timeReflection2, WithLp.equiv, Equiv.symm, Pi.add_apply]
+    simp [timeReflection2, WithLp.equiv, Equiv.symm]
     split <;> ring
   map_smul' c p := by
     ext i
-    simp [timeReflection2, WithLp.equiv, Equiv.symm, Pi.smul_apply, smul_eq_mul]
+    simp [timeReflection2, WithLp.equiv, Equiv.symm, smul_eq_mul]
 
 /-- Time reflection as a continuous linear equivalence (it's an involution). -/
 noncomputable def timeReflectionCLE : SpaceTime2 ≃L[ℝ] SpaceTime2 :=
@@ -357,7 +357,8 @@ def OS4_Ergodicity
   ∀ (f g : TestFunction2),
     Filter.Tendsto
       (fun T : ℝ => (1 / T) * ∫ t in Set.Icc (0 : ℝ) T,
-        (generatingFunctional μ (f + SchwartzMap.translate ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g)).re)
+        (generatingFunctional μ
+          (f + SchwartzMap.translate ((WithLp.equiv 2 (Fin 2 → ℝ)).symm ![t, 0]) g)).re)
       Filter.atTop
       (nhds ((generatingFunctional μ f).re * (generatingFunctional μ g).re))
 

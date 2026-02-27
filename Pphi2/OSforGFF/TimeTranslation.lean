@@ -119,7 +119,8 @@ lemma timeShift_contDiff (s : ℝ) : ContDiff ℝ (⊤ : ℕ∞) (timeShift (d :
   intro i
   have hcoord : ContDiff ℝ (⊤ : ℕ∞) (fun x : SpaceTime d => x.ofLp i) :=
     (contDiff_apply ℝ ℝ i).comp PiLp.contDiff_ofLp
-  show ContDiff ℝ (⊤ : ℕ∞) (fun x : SpaceTime d => if i.val = 0 then x.ofLp i + s else x.ofLp i)
+  change ContDiff ℝ (⊤ : ℕ∞)
+    (fun x : SpaceTime d => if i.val = 0 then x.ofLp i + s else x.ofLp i)
   split_ifs with h
   · exact hcoord.add contDiff_const
   · exact hcoord
@@ -158,12 +159,17 @@ lemma timeShift_eq_add_const (s : ℝ) (u : SpaceTime d) :
 
 /-- Time shift has temperate growth (key for Schwartz composition).
     This follows because timeShift is an affine map (id + constant). -/
-lemma timeShift_hasTemperateGrowth (s : ℝ) : Function.HasTemperateGrowth (timeShift (d := d) s) := by
+lemma timeShift_hasTemperateGrowth (s : ℝ) :
+    Function.HasTemperateGrowth (timeShift (d := d) s) := by
   -- The derivative is constant (= id), so has temperate growth
-  have h_fderiv_temperate : Function.HasTemperateGrowth (fderiv ℝ (timeShift (d := d) s)) := by
-    have h_eq : fderiv ℝ (timeShift (d := d) s) = fun _ => ContinuousLinearMap.id ℝ (SpaceTime d) := by
+  have h_fderiv_temperate :
+      Function.HasTemperateGrowth (fderiv ℝ (timeShift (d := d) s)) := by
+    have h_eq :
+        fderiv ℝ (timeShift (d := d) s) = fun _ => ContinuousLinearMap.id ℝ (SpaceTime d) := by
       ext x v
-      have h : timeShift (d := d) s = fun u => u + timeShiftConst s := funext (timeShift_eq_add_const s)
+      have h :
+          timeShift (d := d) s = fun u => u + timeShiftConst s :=
+        funext (timeShift_eq_add_const s)
       rw [h]
       simp only [fderiv_add_const, fderiv_id', ContinuousLinearMap.id_apply]
     rw [h_eq]
@@ -171,11 +177,15 @@ lemma timeShift_hasTemperateGrowth (s : ℝ) : Function.HasTemperateGrowth (time
   -- timeShift is differentiable
   have h_diff : Differentiable ℝ (timeShift (d := d) s) := by
     intro x
-    have h : timeShift (d := d) s = fun u => u + timeShiftConst s := funext (timeShift_eq_add_const s)
+    have h :
+        timeShift (d := d) s = fun u => u + timeShiftConst s :=
+      funext (timeShift_eq_add_const s)
     rw [h]
     exact differentiableAt_id.add_const _
   -- Polynomial bound: ‖timeShift s x‖ ≤ C * (1 + ‖x‖)^k
-  have h_bound : ∀ x : SpaceTime d, ‖timeShift s x‖ ≤ (1 + ‖timeShiftConst (d := d) s‖) * (1 + ‖x‖) ^ 1 := by
+  have h_bound :
+      ∀ x : SpaceTime d,
+        ‖timeShift s x‖ ≤ (1 + ‖timeShiftConst (d := d) s‖) * (1 + ‖x‖) ^ 1 := by
     intro x
     rw [timeShift_eq_add_const, pow_one]
     calc ‖x + timeShiftConst s‖
@@ -230,7 +240,8 @@ lemma timeTranslationSchwartz_apply (s : ℝ) (f : TestFunction d) (u : SpaceTim
 
 /-- Time translation is a group homomorphism: T_{s+t} = T_s ∘ T_t -/
 lemma timeTranslationSchwartz_add (s t : ℝ) (f : TestFunction d) :
-    timeTranslationSchwartz (s + t) f = timeTranslationSchwartz s (timeTranslationSchwartz t f) := by
+    timeTranslationSchwartz (s + t) f =
+      timeTranslationSchwartz s (timeTranslationSchwartz t f) := by
   ext u
   simp only [timeTranslationSchwartz_apply, timeShift_add, timeShift_comm]
 
@@ -245,7 +256,8 @@ lemma timeTranslationSchwartz_zero (f : TestFunction d) :
 
 /-- Time translation preserves addition of Schwartz functions -/
 lemma timeTranslationSchwartz_add_fun (s : ℝ) (f g : TestFunction d) :
-    timeTranslationSchwartz s (f + g) = timeTranslationSchwartz s f + timeTranslationSchwartz s g := by
+    timeTranslationSchwartz s (f + g) =
+      timeTranslationSchwartz s f + timeTranslationSchwartz s g := by
   ext u
   simp only [timeTranslationSchwartz_apply, SchwartzMap.add_apply]
 
@@ -296,7 +308,8 @@ lemma peetre_weight_bound (x y : SpaceTime d) (k : ℕ) :
 
 /-- The iterated derivative commutes with time translation.
     D^n(T_h f)(x) = D^n f(x + h·e₀) -/
-lemma iteratedFDeriv_timeTranslationSchwartz (n : ℕ) (h : ℝ) (f : TestFunction d) (x : SpaceTime d) :
+lemma iteratedFDeriv_timeTranslationSchwartz
+    (n : ℕ) (h : ℝ) (f : TestFunction d) (x : SpaceTime d) :
     iteratedFDeriv ℝ n (timeTranslationSchwartz h f) x =
     iteratedFDeriv ℝ n f (x + h • unitTimeDir) := by
   -- timeTranslationSchwartz h f = f ∘ (· + h • unitTimeDir)
@@ -316,11 +329,16 @@ lemma iteratedFDeriv_timeTranslationSchwartz (n : ℕ) (h : ℝ) (f : TestFuncti
   have h_eq : ∀ z, timeTranslationSchwartz h f z = f (z + h • unitTimeDir) := by
     intro z
     rw [timeTranslationSchwartz_apply, timeShift_eq_add_const, h_shift_eq]
-  conv_lhs => rw [show (timeTranslationSchwartz h f : SpaceTime d → ℝ) = fun z => f (z + h • unitTimeDir)
-    from funext h_eq]
+  have hfun :
+      (timeTranslationSchwartz h f : SpaceTime d → ℝ) =
+        fun z => f (z + h • unitTimeDir) :=
+    funext h_eq
+  conv_lhs => rw [hfun]
   exact iteratedFDeriv_comp_add_right n _ x
 
 set_option maxHeartbeats 400000 in
+-- The MVT/Schwartz-seminorm bound proof below uses large `simp`/`linarith` chains
+-- and needs a larger heartbeat budget to finish reliably.
 /-- **Locally Uniform Lipschitz Bound for Time Translation.**
 
     For any Schwartz function f and time shift h, the seminorm of T_h f - f
@@ -426,22 +444,16 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
   -- For each t ∈ [0,1], let w_t = x + t•y. We bound the weighted derivative.
   let C := |h| * (1 + |h|) ^ k *
     ((SchwartzMap.seminorm ℝ k (n + 1)) f + (SchwartzMap.seminorm ℝ 0 (n + 1)) f + 1)
-
   -- Step 2: Show ‖g 1 - g 0‖ ≤ |h| * sup_t ‖D^{n+1} f(w_t)‖
   -- This uses MVT + chain rule + currying
-
   -- For now, we use a bound via the seminorms
   -- The key observation: (1+‖w_t‖)^k * ‖D^{n+1} f(w_t)‖ is bounded by seminorms
-
   -- Case split: if ‖w_t‖ ≥ 1, use seminorm k; if ‖w_t‖ < 1, use seminorm 0
   -- In either case: (1+‖w_t‖)^k * ‖D^{n+1} f(w_t)‖ ≤ 2^k * (seminorm k + seminorm 0 + 1)
-
   -- Then from Peetre: ‖x‖^k ≤ (1+|h|)^k * (1+‖w_t‖)^k
   -- So: ‖x‖^k * ‖D^{n+1} f(w_t)‖ ≤ (1+|h|)^k * 2^k * (seminorm k + seminorm 0 + 1)
-
   -- MVT gives ‖g 1 - g 0‖ ≤ |h| * sup_t ‖D^{n+1} f(w_t)‖
   -- Combining: ‖x‖^k * ‖g 1 - g 0‖ ≤ |h| * (1+|h|)^k * (seminorm k + seminorm 0 + 1)
-
   -- MVT + derivative bound step using chain rule and currying
   -- The key technical step is computing the derivative norm using fderiv_iteratedFDeriv
   have h_mvt_bound : ‖g 1 - g 0‖ ≤ |h| * ⨆ t ∈ Set.Icc (0 : ℝ) 1,
@@ -453,7 +465,6 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
     -- Define the derivative bound
     let D := fun (t : ℝ) => ‖iteratedFDeriv ℝ (n + 1) f (x + t • y)‖
     let C := |h| * ⨆ t ∈ Set.Icc (0 : ℝ) 1, D t
-
     -- g is differentiable everywhere (not just on the interval)
     have hg_diff_at : ∀ t, DifferentiableAt ℝ g t := by
       intro t
@@ -461,12 +472,12 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
       · exact (f.smooth (n + 1)).differentiable_iteratedFDeriv
           (by exact mod_cast Nat.lt_succ_self n) |>.differentiableAt
       · exact (differentiableAt_const _).add (differentiableAt_id.smul_const y)
-
     -- Key: bound on deriv g at each point
     have h_deriv_bound : ∀ t ∈ Set.Icc (0 : ℝ) 1, ‖deriv g t‖ ≤ C := by
       intro t ht
       -- The derivative of g at t is: fderiv (iteratedFDeriv n f) (x+t•y) applied to y
-      -- deriv g t = fderiv g t 1 = fderiv (iter ∘ path) t 1 = fderiv iter (path t) (fderiv path t 1)
+      -- deriv g t = fderiv g t 1 = fderiv (iter ∘ path) t 1
+      --   = fderiv iter (path t) (fderiv path t 1)
 
       -- Compute deriv g using chain rule
       have h_deriv_eq : deriv g t = (fderiv ℝ (iteratedFDeriv ℝ n f) (x + t • y)) y := by
@@ -501,13 +512,13 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
         simp only [ContinuousLinearMap.smulRight_apply, ContinuousLinearMap.id_apply, one_smul]
         rfl  -- iter = iteratedFDeriv ℝ n f by definition
 
-      -- Use fderiv_iteratedFDeriv: fderiv (iteratedFDeriv n f) = curryLeftEquiv ∘ iteratedFDeriv (n+1) f
+      -- Use fderiv_iteratedFDeriv:
+      -- fderiv (iteratedFDeriv n f) = curryLeftEquiv ∘ iteratedFDeriv (n+1) f
       have h_fderiv_iter : fderiv ℝ (iteratedFDeriv ℝ n (f : SpaceTime d → ℝ)) (x + t • y) =
           (continuousMultilinearCurryLeftEquiv ℝ (fun _ : Fin (n + 1) => SpaceTime d) ℝ)
             (iteratedFDeriv ℝ (n + 1) f (x + t • y)) := by
         have := @fderiv_iteratedFDeriv ℝ _ (SpaceTime d) _ _ ℝ _ _ f n
         exact congrFun this (x + t • y)
-
       rw [h_deriv_eq, h_fderiv_iter]
       -- Now bound using CLM.le_opNorm and the fact that curryLeftEquiv is norm-preserving
       calc ‖(continuousMultilinearCurryLeftEquiv ℝ (fun _ : Fin (n + 1) => SpaceTime d) ℝ)
@@ -542,7 +553,6 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
             rw [h_eq]
             exact le_ciSup h_bdd ⟨t, ht⟩
         _ = C := rfl
-
     -- Apply MVT using Convex.norm_image_sub_le_of_norm_deriv_le
     have h_mvt := Convex.norm_image_sub_le_of_norm_deriv_le
       (s := Set.Icc (0 : ℝ) 1)
@@ -553,16 +563,13 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
       (Set.right_mem_Icc.mpr zero_le_one)
     simp only [sub_zero, Real.norm_eq_abs, abs_one, mul_one] at h_mvt
     exact h_mvt
-
   -- Step 3: Bound using Peetre and seminorms (simplified approach)
   -- Key insight: We bound ‖x‖^k * ‖g 1 - g 0‖ directly without using supremum
   -- For each point on the path, the weighted derivative is bounded by the seminorms
-
   -- Abbreviations for seminorms
   let S_k := (SchwartzMap.seminorm ℝ k (n + 1)) f
   let S_0 := (SchwartzMap.seminorm ℝ 0 (n + 1)) f
   let RHS := (1 + |h|) ^ k * (2 : ℝ) ^ k * (S_k + S_0 + 1)
-
   -- The pointwise weighted bound for any point on the path
   have h_pointwise : ∀ t ∈ Set.Icc (0 : ℝ) 1,
       ‖x‖ ^ k * ‖iteratedFDeriv ℝ (n + 1) f (x + t • y)‖ ≤ RHS := by
@@ -590,7 +597,6 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
         _ ≤ (1 + |h|) ^ k * (1 + ‖w‖) ^ k := by
             have hw_pos : 0 ≤ (1 + ‖w‖) ^ k := pow_nonneg (by linarith [norm_nonneg w]) k
             nlinarith
-
     -- Step 2: Bound (1+‖w‖)^k * ‖D^{n+1} f(w)‖ using seminorms
     have h_weighted_deriv : (1 + ‖w‖) ^ k * ‖iteratedFDeriv ℝ (n + 1) f w‖ ≤
         (2 : ℝ) ^ k * (S_k + S_0 + 1) := by
@@ -615,8 +621,8 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
           exact h2
       -- Use seminorm bounds
       have h_S0 : ‖iteratedFDeriv ℝ (n + 1) f w‖ ≤ S_0 := by
-        have := SchwartzMap.le_seminorm ℝ 0 (n + 1) f w
-        simp at this; exact this
+        have h_semi := SchwartzMap.le_seminorm ℝ 0 (n + 1) f w
+        simpa using h_semi
       have h_Sk : ‖w‖ ^ k * ‖iteratedFDeriv ℝ (n + 1) f w‖ ≤ S_k :=
         SchwartzMap.le_seminorm ℝ k (n + 1) f w
       -- Combine
@@ -624,20 +630,24 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
         ≤ (2 : ℝ) ^ k * max 1 (‖w‖ ^ k) * ‖iteratedFDeriv ℝ (n + 1) f w‖ := by
             apply mul_le_mul_of_nonneg_right h_one_plus (norm_nonneg _)
         _ = (2 : ℝ) ^ k * (max 1 (‖w‖ ^ k) * ‖iteratedFDeriv ℝ (n + 1) f w‖) := by ring
-        _ ≤ (2 : ℝ) ^ k * (‖iteratedFDeriv ℝ (n + 1) f w‖ + ‖w‖ ^ k * ‖iteratedFDeriv ℝ (n + 1) f w‖) := by
+        _ ≤ (2 : ℝ) ^ k *
+            (‖iteratedFDeriv ℝ (n + 1) f w‖ + ‖w‖ ^ k * ‖iteratedFDeriv ℝ (n + 1) f w‖) := by
             apply mul_le_mul_of_nonneg_left _ (pow_nonneg (by norm_num) k)
-            have := max_le_add_of_nonneg (by positivity : 0 ≤ (1 : ℝ)) (pow_nonneg (norm_nonneg w) k)
+            have := max_le_add_of_nonneg
+              (by positivity : 0 ≤ (1 : ℝ))
+              (pow_nonneg (norm_nonneg w) k)
             calc max 1 (‖w‖ ^ k) * ‖iteratedFDeriv ℝ (n + 1) f w‖
               ≤ (1 + ‖w‖ ^ k) * ‖iteratedFDeriv ℝ (n + 1) f w‖ := by
                   apply mul_le_mul_of_nonneg_right this (norm_nonneg _)
-              _ = ‖iteratedFDeriv ℝ (n + 1) f w‖ + ‖w‖ ^ k * ‖iteratedFDeriv ℝ (n + 1) f w‖ := by ring
+              _ = ‖iteratedFDeriv ℝ (n + 1) f w‖ +
+                  ‖w‖ ^ k * ‖iteratedFDeriv ℝ (n + 1) f w‖ := by
+                  ring
         _ ≤ (2 : ℝ) ^ k * (S_0 + S_k) := by
             apply mul_le_mul_of_nonneg_left _ (pow_nonneg (by norm_num) k)
             linarith
         _ ≤ (2 : ℝ) ^ k * (S_k + S_0 + 1) := by
             apply mul_le_mul_of_nonneg_left _ (pow_nonneg (by norm_num) k)
             linarith
-
     -- Combine Peetre and weighted deriv bounds
     calc ‖x‖ ^ k * ‖iteratedFDeriv ℝ (n + 1) f w‖
       ≤ (1 + |h|) ^ k * (1 + ‖w‖) ^ k * ‖iteratedFDeriv ℝ (n + 1) f w‖ := by
@@ -647,7 +657,6 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
           apply mul_le_mul_of_nonneg_left h_weighted_deriv
           exact pow_nonneg (by linarith [abs_nonneg h]) k
       _ = RHS := by ring
-
   -- Direct bound: Use h_mvt_bound and h_pointwise to bound everything
   -- Since the bound RHS is uniform over t, we can bound ‖x‖^k * ‖g 1 - g 0‖ directly
   have h_weighted_bound : ‖x‖ ^ k * ‖g 1 - g 0‖ ≤ |h| * RHS := by
@@ -657,7 +666,8 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
     calc ‖x‖ ^ k * ‖g 1 - g 0‖
       ≤ ‖x‖ ^ k * (|h| * ⨆ t ∈ Set.Icc (0 : ℝ) 1, ‖iteratedFDeriv ℝ (n + 1) f (x + t • y)‖) := by
           apply mul_le_mul_of_nonneg_left h_mvt_bound (pow_nonneg (norm_nonneg _) _)
-      _ = |h| * (‖x‖ ^ k * ⨆ t ∈ Set.Icc (0 : ℝ) 1, ‖iteratedFDeriv ℝ (n + 1) f (x + t • y)‖) := by ring
+      _ = |h| * (‖x‖ ^ k * ⨆ t ∈ Set.Icc (0 : ℝ) 1,
+          ‖iteratedFDeriv ℝ (n + 1) f (x + t • y)‖) := by ring
       _ ≤ |h| * RHS := by
           apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
           -- We need: ‖x‖^k * sup_t A_t ≤ RHS
@@ -672,8 +682,8 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
                 ‖iteratedFDeriv ℝ (n + 1) f (x + t.1 • y)‖) := by
               use S_0
               rintro v ⟨⟨t, ht⟩, rfl⟩
-              have := SchwartzMap.le_seminorm ℝ 0 (n + 1) f (x + t • y)
-              simp at this; exact this
+              have h_semi := SchwartzMap.le_seminorm ℝ 0 (n + 1) f (x + t • y)
+              simpa using h_semi
             -- BddAbove for the product sup
             have h_bdd_prod : BddAbove (Set.range fun t : ↑(Set.Icc (0 : ℝ) 1) =>
                 ‖x‖ ^ k * ‖iteratedFDeriv ℝ (n + 1) f (x + t.1 • y)‖) := by
@@ -704,7 +714,6 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
             apply ciSup_le
             intro ⟨t, ht⟩
             exact h_pointwise t ht
-
   -- Step 4: Use h_weighted_bound directly
   calc ‖x‖ ^ k * ‖g 1 - g 0‖
     _ ≤ |h| * RHS := h_weighted_bound
@@ -754,7 +763,8 @@ lemma continuous_timeTranslationSchwartz (f : TestFunction d) :
     funext h_group
   rw [h_eq]
   -- Now use that T_{s₀} is continuous
-  have h_cont : Continuous (timeTranslationSchwartzCLM (d := d) s₀) := (timeTranslationSchwartzCLM (d := d) s₀).continuous
+  have h_cont : Continuous (timeTranslationSchwartzCLM (d := d) s₀) :=
+    (timeTranslationSchwartzCLM (d := d) s₀).continuous
   -- It suffices to show: T_{s-s₀} f → T_0 f = f as s → s₀
   apply Filter.Tendsto.comp h_cont.continuousAt
   -- Now prove: T_{s-s₀} f → f as s → s₀ (equivalently, T_h f → f as h → 0)
@@ -780,7 +790,8 @@ lemma continuous_timeTranslationSchwartz (f : TestFunction d) :
   rw [Metric.tendsto_nhds]
   intro ε hε
   -- Mean Value estimate: ‖T_h f - f‖_{k,n} ≤ |h| · L where L depends on f's seminorms
-  -- The Lipschitz bound: seminorm ≤ |h| * (1+|h|)^k * 2^k * (seminorm k (n+1) + seminorm 0 (n+1) + 1)
+  -- The Lipschitz bound:
+  -- seminorm ≤ |h| * (1+|h|)^k * 2^k * (seminorm k (n+1) + seminorm 0 (n+1) + 1)
   -- For |h| ≤ 1: (1+|h|)^k ≤ 2^k, so total factor is 4^k
   let k := i.1
   let n := i.2
