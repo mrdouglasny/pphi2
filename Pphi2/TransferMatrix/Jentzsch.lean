@@ -102,10 +102,124 @@ variable (Ns : ℕ) [NeZero Ns]
 The kernel `T(ψ,ψ') = exp(-(a/2)h(ψ)) · exp(-½‖ψ-ψ'‖²) · exp(-(a/2)h(ψ')) > 0`
 is strictly positive for all ψ, ψ'. For f ≥ 0, f ≠ 0, the set
 S = {ψ' : f(ψ') > 0} has positive measure, so
-(Tf)(ψ) = ∫ T(ψ,ψ') f(ψ') dψ' ≥ ∫_S T(ψ,ψ') f(ψ') dψ' > 0. -/
-axiom transferOperator_positivityImproving (P : InteractionPolynomial) (a mass : ℝ)
+(Tf)(ψ) = ∫ T(ψ,ψ') f(ψ') dψ' ≥ ∫_S T(ψ,ψ') f(ψ') dψ' > 0.
+
+**Proof**: Uses the factorization T = M_w ∘ Conv_G ∘ M_w where w > 0 (exp) and G > 0 (exp).
+Multiplication by w > 0 preserves nonneg/nonzero. Convolution with the strictly positive
+Gaussian kernel maps nonneg nonzero functions to ae strictly positive functions (by
+`integral_pos_iff_support_of_nonneg_ae` and translation invariance of Lebesgue measure).
+Final multiplication by w > 0 preserves ae strict positivity. -/
+theorem transferOperator_positivityImproving (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    IsPositivityImproving (transferOperatorCLM Ns P a mass ha hmass)
+    IsPositivityImproving (transferOperatorCLM Ns P a mass ha hmass) := by
+  intro f hf_nonneg hf_nonzero
+  -- Abbreviations for the building blocks
+  set w := transferWeight Ns P a mass
+  set G := transferGaussian Ns
+  set hw_meas := transferWeight_measurable Ns P a mass
+  set C := (transferWeight_bound Ns P a mass ha hmass).choose
+  set hC := (transferWeight_bound Ns P a mass ha hmass).choose_spec.1
+  set hw_bound := (transferWeight_bound Ns P a mass ha hmass).choose_spec.2
+  set hG := transferGaussian_memLp Ns
+  -- Key positivity facts
+  have hw_pos : ∀ ψ, 0 < w ψ := transferWeight_pos Ns P a mass
+  have hG_pos : ∀ ψ, 0 < G ψ := transferGaussian_pos Ns
+  -- T f = M_w (Conv_G (M_w f))
+  -- Step 1: g := M_w f satisfies g ≥ 0 ae, g ≢ 0 ae
+  set g := mulCLM w hw_meas C hC hw_bound f with hg_def
+  have hg_spec := mulCLM_spec w hw_meas C hC hw_bound f
+  have hg_nonneg : ∀ᵐ x ∂(volume : Measure (SpatialField Ns)), 0 ≤ (g : SpatialField Ns → ℝ) x := by
+    filter_upwards [hg_spec, hf_nonneg] with x hx hfx
+    rw [hx]; exact mul_nonneg (le_of_lt (hw_pos x)) hfx
+  have hg_nonzero : ¬ (g : SpatialField Ns → ℝ) =ᵐ[volume] 0 := by
+    intro h_absurd
+    apply hf_nonzero
+    -- g =ᵐ 0 and g =ᵐ w * f, so w * f =ᵐ 0, so f =ᵐ 0 (since w > 0)
+    have h_wf_zero : (fun x => w x * (f : SpatialField Ns → ℝ) x) =ᵐ[volume] 0 := by
+      filter_upwards [h_absurd, hg_spec] with x hx1 hx2
+      rwa [← hx2]
+    filter_upwards [h_wf_zero] with x hx
+    exact (mul_eq_zero.mp hx).resolve_left (ne_of_gt (hw_pos x))
+  -- Step 2: h := Conv_G g satisfies h > 0 ae
+  set h := convCLM G hG g with hh_def
+  have hh_spec := convCLM_spec G hG g
+  -- The convolution ∫ G(t) · g(x-t) dt is > 0 because G > 0 and g ≥ 0 ae, g ≢ 0 ae
+  have hh_pos : ∀ᵐ x ∂(volume : Measure (SpatialField Ns)),
+      0 < (h : SpatialField Ns → ℝ) x := by
+    -- Use convCLM_spec: ↑↑h =ᵐ realConv vol G ⇑g
+    -- Then show realConv vol G ⇑g x = ∫ G(t) * ⇑g(x-t) dt > 0 for all x
+    -- by integral_pos_iff_support_of_nonneg_ae
+    filter_upwards [hh_spec] with x hx
+    rw [hx]
+    -- Goal: 0 < realConv volume G ⇑g x = ∫ G(t) * ⇑g(x-t) dt
+    -- Helper: the map t ↦ x - t preserves Lebesgue measure (neg + left translation)
+    have h_mp : MeasurePreserving (fun t : SpatialField Ns => x - t) volume volume :=
+      (measurePreserving_add_left volume x).comp (Measure.measurePreserving_neg volume)
+    -- Step 2a: the integrand t ↦ G(t) * ⇑g(x-t) is nonneg ae
+    have h_integrand_nonneg : ∀ᵐ t ∂(volume : Measure (SpatialField Ns)),
+        0 ≤ G t * (g : SpatialField Ns → ℝ) (x - t) := by
+      have h_trans : ∀ᵐ t ∂volume, 0 ≤ (g : SpatialField Ns → ℝ) (x - t) := by
+        rw [ae_iff] at hg_nonneg ⊢
+        -- volume {t | ¬0 ≤ g(x-t)} = volume (f⁻¹'S) ≤ volume S = 0
+        exact le_antisymm (hg_nonneg ▸ h_mp.measure_preimage_le _) (zero_le _)
+      filter_upwards [h_trans] with t ht
+      exact mul_nonneg (le_of_lt (hG_pos t)) ht
+    -- Step 2b: the integrand is integrable (L² × L² → L¹ by Cauchy-Schwarz)
+    have h_integrand_int : Integrable (fun t => G t * (g : SpatialField Ns → ℝ) (x - t))
+        (volume : Measure (SpatialField Ns)) := by
+      -- Both G and g(x-·) are in L², use integrable_inner from L2Space
+      have hG2 : MemLp G 2 volume := transferGaussian_memLp_two Ns
+      have hgx : MemLp ((↑↑g : SpatialField Ns → ℝ) ∘ (x - ·)) 2 volume :=
+        (Lp.memLp g).comp_measurePreserving h_mp
+      set G' := hG2.toLp G
+      set gx' := hgx.toLp _
+      refine (L2.integrable_inner (𝕜 := ℝ) G' gx').congr ?_
+      filter_upwards [hG2.coeFn_toLp, hgx.coeFn_toLp] with t hGt hgxt
+      -- Goal: ⟪G'(t), gx'(t)⟫_ℝ = G t * g(x-t)
+      -- For ℝ: ⟪a, b⟫ = b * conj a = b * a
+      rw [RCLike.inner_apply, starRingEnd_apply, star_trivial]
+      simp only [Function.comp_apply] at hgxt
+      rw [hGt, hgxt, mul_comm]
+    -- Step 2c: the support of the integrand has positive measure
+    have h_support_pos : 0 < (volume : Measure (SpatialField Ns))
+        (Function.support (fun t => G t * (g : SpatialField Ns → ℝ) (x - t))) := by
+      -- Support of G*g(x-·) ⊇ (x-·)⁻¹'(support g), both have same measure
+      have h_subset : (fun t => x - t) ⁻¹'
+            (Function.support (g : SpatialField Ns → ℝ)) ⊆
+          Function.support (fun t => G t * (g : SpatialField Ns → ℝ) (x - t)) := by
+        intro t ht
+        simp only [Function.mem_support, Set.mem_preimage] at ht ⊢
+        exact mul_ne_zero (ne_of_gt (hG_pos t)) ht
+      have h_g_support : 0 < volume (Function.support (g : SpatialField Ns → ℝ)) := by
+        rw [pos_iff_ne_zero]
+        intro h_eq
+        exact hg_nonzero (ae_iff.mpr h_eq)
+      calc volume (Function.support fun t => G t * (g : SpatialField Ns → ℝ) (x - t))
+          ≥ volume ((fun t => x - t) ⁻¹'
+              Function.support (g : SpatialField Ns → ℝ)) :=
+            measure_mono h_subset
+        _ = volume (Function.support (g : SpatialField Ns → ℝ)) :=
+            h_mp.measure_preimage
+              (measurableSet_support
+                (Lp.stronglyMeasurable g).measurable).nullMeasurableSet
+        _ > 0 := h_g_support
+    -- Combine using integral_pos_iff_support_of_nonneg_ae
+    rw [show realConv volume G (⇑g) x =
+        ∫ t, G t * (g : SpatialField Ns → ℝ) (x - t) ∂volume from by
+      simp [realConv, convolution, ContinuousLinearMap.lsmul_apply]]
+    exact (integral_pos_iff_support_of_nonneg_ae h_integrand_nonneg h_integrand_int).mpr
+      h_support_pos
+  -- Step 3: T f = M_w h, and M_w maps ae positive to ae positive
+  -- transferOperatorCLM f = mulCLM w ... (convCLM G ... (mulCLM w ... f)) = mulCLM w ... h
+  have hTf_coercion : (transferOperatorCLM Ns P a mass ha hmass f : SpatialField Ns → ℝ) =
+      (mulCLM w hw_meas C hC hw_bound h : SpatialField Ns → ℝ) :=
+    congr_arg (fun e : L2SpatialField Ns => (e : SpatialField Ns → ℝ))
+      (show transferOperatorCLM Ns P a mass ha hmass f =
+        mulCLM w hw_meas C hC hw_bound h from rfl)
+  have hresult_spec := mulCLM_spec w hw_meas C hC hw_bound h
+  simp only [hTf_coercion]
+  filter_upwards [hresult_spec, hh_pos] with x hx hhx
+  rw [hx]; exact mul_pos (hw_pos x) hhx
 
 /-! ## Axiom 3: Strictly positive definite kernel
 

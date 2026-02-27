@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 47 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 46 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -35,7 +35,7 @@ It is not imported and not counted in the active axiom inventory.
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
 | 2 | `TransferMatrix/L2Convolution.lean` | 4 axioms (Young's inequality + even-kernel self-adjointness bridge) |
 | 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (compactness) |
-| 2 | `TransferMatrix/Jentzsch.lean` | 2 axioms (strict PD + positivity-improving); Jentzsch + nontriviality proved |
+| 2 | `TransferMatrix/Jentzsch.lean` | 1 axiom (strict PD); Jentzsch + nontriviality + positivity-improving proved |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 0 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
@@ -218,7 +218,7 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | `transferOperator_isCompact` | L2Operator | Medium | Compactness from Hilbert-Schmidt strategy using Gaussian decay of the weight (not the divergent translation-invariant bound). |
 | `transferOperator_spectral` | L2Operator | **Proved** | Spectral decomposition from `compact_selfAdjoint_spectral` (gaussian-field). |
 | ~~`jentzsch_theorem`~~ | Jentzsch | ✅ **Proved** | Jentzsch's theorem for compact self-adjoint positivity-improving operators: ground eigenvalue simple with strict spectral gap. Reed-Simon IV, XIII.43–44. Full proof in `JentzschProof.lean`, bridge via `IsPositivityImproving.toPI'`. |
-| `transferOperator_positivityImproving` | Jentzsch | Medium | ✅ Verified. Transfer kernel K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ') > 0 everywhere, so T maps nonneg nonzero f to a.e. strictly positive Tf. |
+| ~~`transferOperator_positivityImproving`~~ | Jentzsch | ✅ **Proved** | Transfer kernel K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ') > 0 everywhere, so T maps nonneg nonzero f to a.e. strictly positive Tf. Proved via T = M_w ∘ Conv_G ∘ M_w factorization, Cauchy-Schwarz for L² integrability, measure-preserving translation, and `integral_pos_iff_support_of_nonneg_ae`. |
 | `transferOperator_strictly_positive_definite` | Jentzsch | Medium | ✅ Verified. ⟨f, Tf⟩ > 0 for f ≠ 0. Gaussian kernel strictly PD by Bochner (Fourier transform > 0); w > 0 preserves strict PD. |
 | ~~`l2SpatialField_hilbertBasis_nontrivial`~~ | Jentzsch | ✅ **Proved** | Any Hilbert basis of L²(ℝ^Ns) has ≥ 2 elements. Proved via indicator functions on disjoint balls + orthogonality. |
 | ~~`transferOperator_inner_nonneg`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ ≥ 0. Derived from strict PD (> 0 for f ≠ 0, = 0 for f = 0). |

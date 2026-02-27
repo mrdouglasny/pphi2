@@ -293,6 +293,43 @@ theorem transferGaussian_memLp :
   exact MeasureTheory.Integrable.fintype_prod
     (fun i => integrable_exp_neg_mul_sq (by norm_num : (0 : ℝ) < 1/2))
 
+/-- The transfer weight is strictly positive everywhere (exponential is always positive). -/
+theorem transferWeight_pos (P : InteractionPolynomial) (a mass : ℝ)
+    (ψ : SpatialField Ns) : 0 < transferWeight Ns P a mass ψ :=
+  Real.exp_pos _
+
+omit [NeZero Ns] in
+/-- The Gaussian kernel is strictly positive everywhere. -/
+theorem transferGaussian_pos (ψ : SpatialField Ns) :
+    0 < transferGaussian Ns ψ :=
+  Real.exp_pos _
+
+omit [NeZero Ns] in
+/-- The transfer Gaussian is in L²(ℝ^Ns).
+
+Since G(ψ) = exp(-½‖ψ‖²), we have G² = exp(-‖ψ‖²) = ∏ᵢ exp(-ψᵢ²),
+a product of 1D Gaussians, each integrable by `integrable_exp_neg_mul_sq`. -/
+theorem transferGaussian_memLp_two :
+    MemLp (transferGaussian Ns) 2 (volume : Measure (SpatialField Ns)) := by
+  rw [memLp_two_iff_integrable_sq (transferGaussian_memLp Ns).1]
+  -- G(ψ)² = ∏ᵢ exp(-(ψ i)²), a product of 1D Gaussians
+  have hfact : (fun ψ : SpatialField Ns => transferGaussian Ns ψ ^ 2) =
+      fun ψ => ∏ x : Fin Ns, Real.exp (-1 * (ψ x) ^ 2) := by
+    ext ψ
+    simp only [transferGaussian, timeCoupling]
+    rw [show (0 : SpatialField Ns) = fun _ => (0 : ℝ) from rfl]
+    simp only [zero_sub, neg_sq]
+    rw [← Real.exp_nat_mul, ← Real.exp_sum Finset.univ]
+    congr 1
+    push_cast
+    have : (2 : ℝ) * -(1 / 2 * ∑ x : Fin Ns, ψ x ^ 2) = -(∑ x, ψ x ^ 2) := by ring
+    rw [this, ← Finset.sum_neg_distrib]
+    congr 1; ext; ring
+  rw [hfact, show (volume : Measure (SpatialField Ns)) =
+      Measure.pi (fun _ : Fin Ns => (volume : Measure ℝ)) from rfl]
+  exact MeasureTheory.Integrable.fintype_prod
+    (fun _ => integrable_exp_neg_mul_sq (by norm_num : (0 : ℝ) < 1))
+
 /-! ## Transfer operator definition
 
 The transfer operator is defined as `T = M_w ∘ Conv_G ∘ M_w`, where
