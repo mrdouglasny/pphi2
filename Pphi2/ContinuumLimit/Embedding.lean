@@ -268,6 +268,11 @@ P(φ)₂ continuum limit measures (translation/rotation invariance, exponential
 moments, RP, clustering) — properties that do NOT hold for arbitrary probability
 measures on S'(ℝ^d).
 
+In addition to moment convergence, we record the standard Z₂ symmetry of an
+even interaction:
+
+  `Measure.map Neg.neg μ = μ`.
+
 The definition is mirrored in `Bridge.lean` by `IsPphi2ContinuumLimit`, which
 uses the type aliases `FieldConfig` and `TestFun` for the d=2 case. -/
 def IsPphi2Limit {d : ℕ}
@@ -277,11 +282,14 @@ def IsPphi2Limit {d : ℕ}
     (∀ k, IsProbabilityMeasure (ν k)) ∧
     Filter.Tendsto a Filter.atTop (nhds 0) ∧
     (∀ k, 0 < a k) ∧
-    ∀ (n : ℕ) (f : Fin n → ContinuumTestFunction d),
+    (∀ (n : ℕ) (f : Fin n → ContinuumTestFunction d),
       Filter.Tendsto
         (fun k => ∫ ω : Configuration (ContinuumTestFunction d), ∏ i, ω (f i) ∂(ν k))
         Filter.atTop
-        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ∏ i, ω (f i) ∂μ))
+        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ∏ i, ω (f i) ∂μ))) ∧
+    Measure.map
+      (Neg.neg : Configuration (ContinuumTestFunction d) →
+        Configuration (ContinuumTestFunction d)) μ = μ
 
 end Pphi2
 

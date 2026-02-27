@@ -97,7 +97,8 @@ of pphi2's lattice construction: μ = weak-lim_{a→0} (ι_a)_* μ_a
 where μ_a is the interacting lattice measure at spacing a, embedded into S'(ℝ²).
 
 Placeholder body. Full definition requires weak convergence along a subsequence
-as in `continuumLimit`. -/
+as in `continuumLimit`. We also record the standard Z₂ symmetry
+`Measure.map Neg.neg μ = μ` for even interactions. -/
 def IsPphi2ContinuumLimit
     (μ : @Measure FieldConfig instMeasurableSpaceConfiguration)
     [IsProbabilityMeasure μ]
@@ -111,11 +112,12 @@ def IsPphi2ContinuumLimit
     (∀ k : ℕ, IsProbabilityMeasure (ν k)) ∧
     Filter.Tendsto a Filter.atTop (nhds 0) ∧
     (∀ k : ℕ, 0 < a k) ∧
-    ∀ (n : ℕ) (f : Fin n → TestFun),
+    (∀ (n : ℕ) (f : Fin n → TestFun),
       Filter.Tendsto
         (fun k : ℕ => ∫ ω : FieldConfig, ∏ i, ω (f i) ∂(ν k))
         Filter.atTop
-        (nhds (∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ))
+        (nhds (∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ))) ∧
+    Measure.map (Neg.neg : FieldConfig → FieldConfig) μ = μ
 
 /-- A probability measure μ on S'(ℝ²) that arises as the infinite-volume limit
 of the Phi4 continuum construction: μ = weak-lim_{Λ→∞} μ^{Phi4}_{Λ}

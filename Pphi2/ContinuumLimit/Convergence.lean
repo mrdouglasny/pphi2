@@ -343,10 +343,9 @@ axiom continuumLimit_nonGaussian (P : InteractionPolynomial)
 There exists a probability measure μ on S'(ℝ²) that satisfies the marker
 predicate `IsPphi2Limit μ P mass`.
 
-The current `IsPphi2Limit` definition only asks for existence of some
-probability sequence with convergent moments and does not require explicit
-identification with the lattice family. Therefore, a constant sequence at any
-probability measure witnesses the predicate. -/
+The current `IsPphi2Limit` marker is witnessed by a probability sequence with
+convergent moments together with Z₂ symmetry of μ. Therefore, a constant
+sequence at the symmetric Dirac measure `δ₀` witnesses the predicate. -/
 theorem pphi2_limit_exists (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ (μ : Measure (Configuration (ContinuumTestFunction 2)))
@@ -367,14 +366,24 @@ theorem pphi2_limit_exists (P : InteractionPolynomial)
         Tendsto (fun n : ℕ => 1 / (n + 1 : ℝ)) Filter.atTop (nhds 0))
   · intro k
     positivity
-  · intro n f
-    simpa using (tendsto_const_nhds :
-      Filter.Tendsto
-        (fun _ : ℕ => ∫ ω : Configuration (ContinuumTestFunction 2),
-          ∏ i, ω (f i) ∂μ)
-        Filter.atTop
-        (nhds (∫ ω : Configuration (ContinuumTestFunction 2),
-          ∏ i, ω (f i) ∂μ)))
+  · refine ⟨?_, ?_⟩
+    · intro n f
+      simpa using (tendsto_const_nhds :
+        Filter.Tendsto
+          (fun _ : ℕ => ∫ ω : Configuration (ContinuumTestFunction 2),
+            ∏ i, ω (f i) ∂μ)
+          Filter.atTop
+          (nhds (∫ ω : Configuration (ContinuumTestFunction 2),
+            ∏ i, ω (f i) ∂μ)))
+    · -- Z₂ symmetry holds for δ₀ since negation fixes 0.
+      have hneg_meas :
+          Measurable (Neg.neg :
+            Configuration (ContinuumTestFunction 2) →
+              Configuration (ContinuumTestFunction 2)) := by
+        exact configuration_measurable_of_eval_measurable _
+          (fun f => (configuration_eval_measurable f).neg)
+      simpa [μ] using
+        (Measure.map_dirac hneg_meas (0 : Configuration (ContinuumTestFunction 2)))
 
 end Pphi2
 
