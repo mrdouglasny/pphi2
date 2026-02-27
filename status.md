@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 48 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 47 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -37,7 +37,7 @@ It is not imported and not counted in the active axiom inventory.
 | 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (compactness) |
 | 2 | `TransferMatrix/Jentzsch.lean` | 2 axioms (strict PD + positivity-improving); Jentzsch + nontriviality proved |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
-| 2 | `OSProofs/OS3_RP_Lattice.lean` | 3 axioms, 0 sorries |
+| 2 | `OSProofs/OS3_RP_Lattice.lean` | 2 axioms, 0 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
 | 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
 | 3 | `OSProofs/OS4_MassGap.lean` | 2 axioms, 0 sorries |
@@ -226,7 +226,7 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`transferOperator_ground_simple`~~ | Jentzsch | ✅ **Proved** | Ground-state simplicity. Derived from Jentzsch + eigenvalue positivity + nontriviality. |
 | `action_decomposition` | OS3_RP_Lattice | Medium | Lattice action decomposes as S = S⁺ + S⁻ across time-reflection plane. Standard for nearest-neighbor actions. |
 | `lattice_rp` | OS3_RP_Lattice | Medium | RP inequality for `interactingLatticeMeasure`. Fubini + perfect-square from action decomposition. |
-| `lattice_rp_matrix` | OS3_RP_Lattice | Medium | Matrix form of RP: Σᵢⱼ cᵢc̄ⱼ Z[fᵢ-Θfⱼ] ≥ 0. Equivalent to lattice_rp. |
+| ~~`lattice_rp_matrix`~~ | OS3_RP_Lattice | ✅ **Proved** | Matrix form of RP via cos(u-v) expansion + `lattice_rp`. |
 | ~~`rp_from_transfer_positivity`~~ | OS3_RP_Lattice | ✅ **Proved** | ⟨f, T^n f⟩ ≥ 0 via `transferOperatorCLM`. |
 
 ### Phase 3: Spectral gap and clustering

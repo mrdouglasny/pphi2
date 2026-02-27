@@ -55,6 +55,7 @@ take reflection Θ: t ↦ -t mod N.
 
 import Pphi2.TransferMatrix.Positivity
 import Pphi2.InteractingMeasure.LatticeMeasure
+import Pphi2.InteractingMeasure.Normalization
 
 noncomputable section
 
@@ -341,6 +342,44 @@ theorem lattice_rp_matrix_reduction
   rw [h_expand]
   exact add_nonneg hcos hsin
 
+/-- Linearity of `pairing2D` in the second argument. -/
+private theorem pairing2D_sub (φ g h : Fin N × Fin N → ℝ) :
+    pairing2D N φ (g - h) = pairing2D N φ g - pairing2D N φ h := by
+  unfold pairing2D
+  simp only [Pi.sub_apply, mul_sub, Finset.sum_sub_distrib]
+
+/-- Pointwise trigonometric expansion identity for the RP matrix.
+
+For any field configuration φ:
+  `Σᵢⱼ cᵢcⱼ cos(⟨φ, fᵢ - fⱼ∘Θ⟩) = Fcos(φ)·Fcos(Θφ) + Fsin(φ)·Fsin(Θφ)`
+
+Uses `cos(u-v) = cos u cos v + sin u sin v` and the product-of-sums identity. -/
+private theorem rp_expansion_pointwise (n : ℕ) (c : Fin n → ℝ)
+    (f : Fin n → (Fin N × Fin N → ℝ)) (φ : Fin N × Fin N → ℝ) :
+    ∑ i : Fin n, ∑ j : Fin n, c i * c j *
+      Real.cos (pairing2D N φ (f i - f j ∘ timeReflection2D N))
+    = Fcos N n c f φ * Fcos N n c f (fieldReflection2D N φ)
+    + Fsin N n c f φ * Fsin N n c f (fieldReflection2D N φ) := by
+  -- Rewrite pairing of difference as difference of pairings
+  simp_rw [pairing2D_sub]
+  -- Use pairing_reflection_reindex to rewrite pairing with reflected test function
+  simp_rw [show ∀ j, pairing2D N φ (f j ∘ timeReflection2D N)
+      = pairing2D N (fieldReflection2D N φ) (f j)
+    from fun j => (pairing_reflection_reindex N φ (f j)).symm]
+  -- Apply cos(u - v) = cos u · cos v + sin u · sin v
+  simp_rw [Real.cos_sub]
+  -- Split the double sum over the addition
+  simp_rw [mul_add, Finset.sum_add_distrib]
+  -- Factor each double sum as a product of sums:
+  -- ∑ij c_i c_j (cos_i * cos_j) = (∑i c_i cos_i)(∑j c_j cos_j)
+  unfold Fcos Fsin
+  congr 1 <;> {
+    rw [Finset.sum_mul]
+    apply Fintype.sum_congr; intro i
+    rw [Finset.mul_sum]
+    apply Fintype.sum_congr; intro j
+    ring }
+
 /-- **Reflection positivity for the interacting measure** (matrix form).
 
 For test functions f₁,...,fₙ supported at positive time and
@@ -351,8 +390,12 @@ coefficients c₁,...,cₙ ∈ ℝ:
 This is the form of OS3 that passes to the continuum limit.
 The integral is over the interacting lattice measure μ_a, and the
 inner product ⟨φ, f⟩ = Σ_{t,x} φ(t,x) · f(t,x) is the standard
-lattice pairing. -/
-axiom lattice_rp_matrix (P : InteractionPolynomial) (a mass : ℝ)
+lattice pairing.
+
+**Proof**: Expand `cos(⟨φ,fᵢ⟩ - ⟨Θφ,fⱼ⟩)` via addition formula,
+factor the double sum as `(Σᵢ cᵢ cos⟨φ,fᵢ⟩)² + (Σᵢ cᵢ sin⟨φ,fᵢ⟩)²`,
+and apply `lattice_rp` to each square. -/
+theorem lattice_rp_matrix (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (n : ℕ) (c : Fin n → ℝ)
     (f : Fin n → (Fin N × Fin N → ℝ))
@@ -364,7 +407,111 @@ axiom lattice_rp_matrix (P : InteractionPolynomial) (a mass : ℝ)
         Real.cos (∑ tx : Fin N × Fin N,
           (fieldFromSites N (fun x => ω (Pi.single x 1)) tx) *
           (f i tx - (f j ∘ timeReflection2D N) tx))
-        ∂(interactingLatticeMeasure 2 N P a mass ha hmass) ≥ 0
+        ∂(interactingLatticeMeasure 2 N P a mass ha hmass) ≥ 0 := by
+  rw [ge_iff_le]
+  -- The cosine argument matches pairing2D of evalField2D (definitionally)
+  show 0 ≤ ∑ i : Fin n, ∑ j : Fin n, c i * c j *
+    ∫ ω, Real.cos (pairing2D N (evalField2D N ω) (f i - f j ∘ timeReflection2D N))
+      ∂(interactingLatticeMeasure 2 N P a mass ha hmass)
+  apply lattice_rp_matrix_reduction N P a mass ha hmass n c f hf
+  set μ := interactingLatticeMeasure 2 N P a mass ha hmass
+  -- h_expand: ∑ij c_i c_j * ∫ cos dμ = ∫ Fcos·Fcos dμ + ∫ Fsin·Fsin dμ
+  -- Measurability of evaluation maps
+  have heval_meas : ∀ tx : Fin N × Fin N,
+      @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
+        (fun ω => evalField2D N ω tx) := by
+    intro tx
+    exact configuration_eval_measurable (Pi.single (siteEquiv N tx) 1)
+  -- Measurability of pairing with a fixed test function
+  have hpair_meas : ∀ (g : Fin N × Fin N → ℝ),
+      @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
+        (fun ω => pairing2D N (evalField2D N ω) g) := by
+    intro g
+    unfold pairing2D
+    exact Finset.measurable_sum Finset.univ
+      (fun tx _ => (heval_meas tx).mul measurable_const)
+  -- Measurability of cos(pairing) and sin(pairing)
+  have hcos_meas : ∀ (g : Fin N × Fin N → ℝ),
+      @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
+        (fun ω => Real.cos (pairing2D N (evalField2D N ω) g)) :=
+    fun g => Real.measurable_cos.comp (hpair_meas g)
+  have hsin_meas : ∀ (g : Fin N × Fin N → ℝ),
+      @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
+        (fun ω => Real.sin (pairing2D N (evalField2D N ω) g)) :=
+    fun g => Real.measurable_sin.comp (hpair_meas g)
+  -- Integrability of c_i * c_j * cos(pairing(...))
+  have hint : ∀ i j, Integrable
+      (fun ω => c i * c j *
+        Real.cos (pairing2D N (evalField2D N ω) (f i - f j ∘ timeReflection2D N))) μ := by
+    intro i j
+    apply bounded_integrable_interacting (d := 2) (N := N) P a mass ha hmass
+    · exact ⟨|c i * c j|, fun ω => by
+        rw [abs_mul]
+        exact mul_le_of_le_one_right (abs_nonneg _) (Real.abs_cos_le_one _)⟩
+    · exact measurable_const.mul (hcos_meas _)
+  -- Integrability of ∑ j, c_i * c_j * cos(...)
+  have hint_sum : ∀ i, Integrable
+      (fun ω => ∑ j : Fin n, c i * c j *
+        Real.cos (pairing2D N (evalField2D N ω) (f i - f j ∘ timeReflection2D N))) μ :=
+    fun i => integrable_finset_sum Finset.univ (fun j _ => hint i j)
+  -- Bounds for |Fcos φ| and |Fsin φ| for any φ
+  have hFcos_bound : ∀ φ, |Fcos N n c f φ| ≤ ∑ i : Fin n, |c i| := by
+    intro φ; unfold Fcos
+    calc |∑ i, c i * Real.cos (pairing2D N φ (f i))|
+        = ‖∑ i, c i * Real.cos (pairing2D N φ (f i))‖ := (Real.norm_eq_abs _).symm
+      _ ≤ ∑ i, ‖c i * Real.cos (pairing2D N φ (f i))‖ := norm_sum_le Finset.univ _
+      _ ≤ ∑ i : Fin n, |c i| := Finset.sum_le_sum fun i _ => by
+          rw [Real.norm_eq_abs, abs_mul]
+          exact mul_le_of_le_one_right (abs_nonneg _) (Real.abs_cos_le_one _)
+  have hFsin_bound : ∀ φ, |Fsin N n c f φ| ≤ ∑ i : Fin n, |c i| := by
+    intro φ; unfold Fsin
+    calc |∑ i, c i * Real.sin (pairing2D N φ (f i))|
+        = ‖∑ i, c i * Real.sin (pairing2D N φ (f i))‖ := (Real.norm_eq_abs _).symm
+      _ ≤ ∑ i, ‖c i * Real.sin (pairing2D N φ (f i))‖ := norm_sum_le Finset.univ _
+      _ ≤ ∑ i : Fin n, |c i| := Finset.sum_le_sum fun i _ => by
+          rw [Real.norm_eq_abs, abs_mul]
+          exact mul_le_of_le_one_right (abs_nonneg _) (Real.abs_sin_le_one _)
+  -- Measurability of pairing with reflected field
+  have hpair_refl_meas : ∀ (g : Fin N × Fin N → ℝ),
+      @Measurable _ _ instMeasurableSpaceConfiguration (borel ℝ)
+        (fun ω => pairing2D N (fieldReflection2D N (evalField2D N ω)) g) := by
+    intro g; unfold pairing2D fieldReflection2D
+    exact Finset.measurable_sum Finset.univ
+      (fun tx _ => (heval_meas (timeReflection2D N tx)).mul measurable_const)
+  -- Integrability of Fcos * Fcos and Fsin * Fsin
+  have hint_cos_prod : Integrable (fun ω => Fcos N n c f (evalField2D N ω) *
+      Fcos N n c f (fieldReflection2D N (evalField2D N ω))) μ := by
+    apply bounded_integrable_interacting (d := 2) (N := N) P a mass ha hmass
+    · exact ⟨(∑ i : Fin n, |c i|) ^ 2, fun ω => by
+        rw [abs_mul, sq]
+        exact mul_le_mul (hFcos_bound _) (hFcos_bound _) (abs_nonneg _)
+          (Finset.sum_nonneg fun i _ => abs_nonneg _)⟩
+    · show Measurable (fun ω => (∑ i, c i * Real.cos (pairing2D N (evalField2D N ω) (f i))) *
+          (∑ i, c i * Real.cos (pairing2D N (fieldReflection2D N (evalField2D N ω)) (f i))))
+      exact (Finset.measurable_sum Finset.univ
+          (fun i _ => measurable_const.mul (hcos_meas _))).mul
+        (Finset.measurable_sum Finset.univ
+          (fun i _ => measurable_const.mul (Real.measurable_cos.comp (hpair_refl_meas _))))
+  have hint_sin_prod : Integrable (fun ω => Fsin N n c f (evalField2D N ω) *
+      Fsin N n c f (fieldReflection2D N (evalField2D N ω))) μ := by
+    apply bounded_integrable_interacting (d := 2) (N := N) P a mass ha hmass
+    · exact ⟨(∑ i : Fin n, |c i|) ^ 2, fun ω => by
+        rw [abs_mul, sq]
+        exact mul_le_mul (hFsin_bound _) (hFsin_bound _) (abs_nonneg _)
+          (Finset.sum_nonneg fun i _ => abs_nonneg _)⟩
+    · show Measurable (fun ω => (∑ i, c i * Real.sin (pairing2D N (evalField2D N ω) (f i))) *
+          (∑ i, c i * Real.sin (pairing2D N (fieldReflection2D N (evalField2D N ω)) (f i))))
+      exact (Finset.measurable_sum Finset.univ
+          (fun i _ => measurable_const.mul (hsin_meas _))).mul
+        (Finset.measurable_sum Finset.univ
+          (fun i _ => measurable_const.mul (Real.measurable_sin.comp (hpair_refl_meas _))))
+  -- Main calculation: RHS → single integral → rewrite integrand → split sums out
+  symm
+  rw [← integral_add hint_cos_prod hint_sin_prod]
+  simp_rw [← rp_expansion_pointwise N n c f]
+  simp_rw [integral_finset_sum Finset.univ (fun i _ => hint_sum i)]
+  simp_rw [integral_finset_sum Finset.univ (fun j _ => hint _ j)]
+  simp_rw [integral_const_mul]
 
 /-! ## Transfer matrix connection
 

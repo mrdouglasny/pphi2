@@ -54,7 +54,7 @@ The construction proceeds in six phases:
 All six phases are structurally complete and the full project builds
 (`lake build`, 3511 jobs).
 
-- **pphi2:** 48 axioms, 0 sorries
+- **pphi2:** 47 axioms, 0 sorries
 - **gaussian-field** (upstream dependency): 2 axioms, 0 sorries (none used by pphi2)
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
