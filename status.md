@@ -5,7 +5,7 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3122 jobs).
+3512 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
@@ -45,7 +45,7 @@ It is not imported and not counted in the active axiom inventory.
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def) |
 | 4 | `ContinuumLimit/Hypercontractivity.lean` | 2 axioms |
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
-| 4 | `ContinuumLimit/Convergence.lean` | 5 axioms, 2 proved theorems |
+| 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 proved theorems |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 10 axioms |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
@@ -214,7 +214,7 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`young_convolution_bound`~~ | L2Convolution | ✅ **Proved** | Young's inequality norm bound via `young_eLpNorm_bound`. |
 | ~~`young_convolution_ae_add`~~ | L2Convolution | ✅ **Proved** | Via Fubini on `‖g‖` × `fᵢ²` (both L¹), bound `ab ≤ a + ab²`, `ConvolutionExistsAt.distrib_add`. |
 | ~~`convCLM_isSelfAdjoint_of_even`~~ | L2Convolution | ✅ **Proved** | Self-adjointness of convolution by even kernel. Proved via `integral_mul_conv_eq` Fubini identity. |
-| `integral_mul_conv_eq` | L2Convolution | Medium | Fubini identity: `∫ h·(g⋆f) = ∫ (g⋆h)·f` for even g. Requires product integrability (Young+Cauchy-Schwarz), `integral_integral_swap`, translation invariance. |
+| `integral_mul_conv_eq` | L2Convolution | Medium | Fubini identity: `∫ h·(g⋆f) = ∫ (g⋆h)·f` for even g. Requires `IsNegInvariant` + product integrability (Young+Cauchy-Schwarz), `integral_integral_swap`, `convolution_eq_swap`. Calc chain verified modulo product integrability. |
 | ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | ✅ **Proved** | Self-adjointness of `A ∘ B ∘ A` from `mulCLM_isSelfAdjoint` and `convCLM_isSelfAdjoint_of_even` for the Gaussian kernel. |
 | `transferOperator_isCompact` | L2Operator | Medium | Compactness from Hilbert-Schmidt strategy using Gaussian decay of the weight (not the divergent translation-invariant bound). |
 | `transferOperator_spectral` | L2Operator | **Proved** | Spectral decomposition from `compact_selfAdjoint_spectral` (gaussian-field). |

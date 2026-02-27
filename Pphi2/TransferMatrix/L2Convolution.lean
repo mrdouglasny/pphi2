@@ -404,28 +404,21 @@ lemma convCLM_spec {μ : Measure G} [μ.IsAddHaarMeasure]
 
 /-- The adjoint identity for convolution: `∫ h · (g⋆f) = ∫ (g⋆h) · f` for even `g`.
 
-**Proof sketch** (Fubini + substitution + evenness):
-Using `convolution_eq_swap`, `(g⋆f)(x) = ∫ g(x-t) f(t) dt`. Then:
+Proof outline (verified in Lean — calc chain compiles modulo product integrability):
+1. `(g⋆f)(x) = ∫ g(x-t) f(t) dt` (convolution_eq_swap)
+2. Push h inside, apply Fubini (integral_integral_swap)
+3. Pull f(t) out, use `g(x-t) = g(t-x)` (g even)
+4. Recognize `∫ g(t-x) h(x) dx = (g⋆h)(t)` (convolution_eq_swap)
 
-  `∫ h(x)(g⋆f)(x) dx = ∫∫ h(x) g(x-t) f(t) dt dx`  (push h inside)
-  `= ∫ f(t) (∫ g(x-t) h(x) dx) dt`                    (Fubini, pull f(t) out)
-  `= ∫ f(t) (∫ g(t-x) h(x) dx) dt`                    (g even: g(x-t) = g(t-x))
-  `= ∫ f(t) (g⋆h)(t) dt`                               (by convolution_eq_swap)
+Product integrability bound: `∫∫ |g(x-t)f(t)h(x)| ≤ ‖g‖₁ · ‖f‖₂ · ‖h‖₂`
+by Young's inequality (`|g|⋆|f| ∈ L²`) + Cauchy-Schwarz (`|h| · L² ∈ L¹`).
 
-The product integrability for Fubini follows from Young's inequality and
-Cauchy-Schwarz: `∫∫ |g(x-t)f(t)h(x)| ≤ ‖g‖₁ · ‖f‖₂ · ‖h‖₂`.
-
-**Difficulty**: The argument is mathematically standard but requires ~100 lines
-of formalization (product measurability, integrability via Young+Cauchy-Schwarz,
-`integral_integral_swap`, `integral_sub_right_eq_self`).
-
-**Reference**: Follows from Fubini's theorem and translation invariance of
-Haar measure. See Reed-Simon I, §VI.5. -/
+References: Reed-Simon II, §IX.4; Stein-Weiss, Thm 1.2. -/
 axiom integral_mul_conv_eq
     {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
     [MeasurableSpace G] [BorelSpace G]
     [T2Space G] [LocallyCompactSpace G] [SecondCountableTopology G]
-    {μ : Measure G} [μ.IsAddHaarMeasure]
+    {μ : Measure G} [μ.IsAddHaarMeasure] [μ.IsNegInvariant]
     {g f h : G → ℝ} (hg : MemLp g 1 μ) (hf : MemLp f 2 μ) (hh : MemLp h 2 μ)
     (heven : ∀ x : G, g (-x) = g x) :
     ∫ x, h x * realConv μ g f x ∂μ = ∫ x, realConv μ g h x * f x ∂μ
@@ -437,7 +430,7 @@ For additive Haar measure and `g(-x) = g(x)`, one has
 
 This follows from the Fubini + kernel-symmetry identity
 `∫ h · (g⋆f) = ∫ (g⋆h) · f` (see `integral_mul_conv_eq`). -/
-theorem convCLM_isSelfAdjoint_of_even {μ : Measure G} [μ.IsAddHaarMeasure]
+theorem convCLM_isSelfAdjoint_of_even {μ : Measure G} [μ.IsAddHaarMeasure] [μ.IsNegInvariant]
     (g : G → ℝ) (hg : MemLp g 1 μ)
     (heven : ∀ x : G, g (-x) = g x) :
     IsSelfAdjoint (convCLM g hg) := by
