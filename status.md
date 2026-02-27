@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 40 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 39 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -48,7 +48,7 @@ It is not imported and not counted in the active axiom inventory.
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 proved theorems |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 9 axioms |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 8 axioms |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |

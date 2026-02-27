@@ -44,6 +44,7 @@ group of the lattice. Full invariance is restored in the continuum limit:
 import Pphi2.OSAxioms
 import Pphi2.GeneralResults.FunctionalAnalysis
 import Pphi2.OSforGFF.TimeTranslation
+import Pphi2.OSforGFF.ComplexTestFunction
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 
 noncomputable section
@@ -744,25 +745,126 @@ theorem os1_for_continuum_limit (P : InteractionPolynomial)
 /-- **Complex generating functional invariance from real invariance.**
 
 If the real generating functional is g-invariant for all real test functions,
-then the complex generating functional is also g-invariant. This follows from
-the fact that the characteristic functional `Z[f] = ∫ exp(i⟨ω,f⟩) dμ`
-determines the joint distributions of `(ω(f₁), ..., ω(fₙ))` uniquely:
+then the complex generating functional is also g-invariant.
 
-1. `∀ real f, Z[f] = Z[g·f]` implies the 2D characteristic function of
-   `(ω(Re J), ω(Im J))` equals that of `(ω(g·Re J), ω(g·Im J))`.
-   (Take `f = s · Re J + t · Im J` and use linearity of the E(2) action.)
-
-2. Equal joint distributions ⟹ equal integrals of any measurable function,
-   in particular `exp(i·(ω(Re J) + i·ω(Im J)))`.
-
-References: Cramér-Wold theorem; Lévy uniqueness for characteristic functions. -/
-axiom complex_gf_invariant_of_real_gf_invariant
+**Proof**: Define analytic families `F(z) = Z_ℂ[Re(J) + z·Im(J)]` and
+`G(z) = Z_ℂ[g·Re(J) + z·g·Im(J)]`. Both are entire (from exponential
+moments via `analyticOn_generatingFunctionalC`). They agree on ℝ (reduces
+to real GF invariance). By the identity theorem for analytic functions,
+`F = G` on all of ℂ. Evaluating at `z = i` gives `Z_ℂ[J] = Z_ℂ[g·J]`. -/
+theorem complex_gf_invariant_of_real_gf_invariant
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_moments : ∀ (f : TestFunction2) (c : ℝ), 0 < c →
+      Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ)
     (g : E2)
     (h_real : ∀ f : TestFunction2,
       generatingFunctional μ f = generatingFunctional μ (euclideanAction2 g f))
     (J : TestFunction2ℂ) :
-    generatingFunctionalℂ μ J = generatingFunctionalℂ μ (euclideanAction2ℂ g J)
+    generatingFunctionalℂ μ J = generatingFunctionalℂ μ (euclideanAction2ℂ g J) := by
+  let JF : Fin 2 → TestFunction2ℂ :=
+    ![schwartzOfReal (schwartzRe J), schwartzOfReal (schwartzIm J)]
+  let JG : Fin 2 → TestFunction2ℂ :=
+    ![schwartzOfReal (euclideanAction2 g (schwartzRe J)),
+      schwartzOfReal (euclideanAction2 g (schwartzIm J))]
+  let ψ : ℂ → Fin 2 → ℂ := fun z => ![(1 : ℂ), z]
+  let F : ℂ → ℂ := fun z => generatingFunctionalℂ μ (∑ i : Fin 2, (ψ z i) • JF i)
+  let G : ℂ → ℂ := fun z => generatingFunctionalℂ μ (∑ i : Fin 2, (ψ z i) • JG i)
+
+  have hψ_analytic : AnalyticOn ℂ ψ Set.univ := by
+    refine AnalyticOn.pi (fun i => ?_)
+    fin_cases i
+    · simpa using (analyticOn_const : AnalyticOn ℂ (fun _ : ℂ => (1 : ℂ)) Set.univ)
+    · simpa using (analyticOn_id : AnalyticOn ℂ (fun z : ℂ => z) Set.univ)
+
+  have hF_analytic : AnalyticOn ℂ F Set.univ := by
+    have hbase : AnalyticOn ℂ (fun w : Fin 2 → ℂ =>
+        generatingFunctionalℂ μ (∑ i : Fin 2, w i • JF i)) Set.univ :=
+      analyticOn_generatingFunctionalC μ h_moments 2 JF
+    exact hbase.comp hψ_analytic (by intro z hz; simp [Set.mem_univ])
+
+  have hG_analytic : AnalyticOn ℂ G Set.univ := by
+    have hbase : AnalyticOn ℂ (fun w : Fin 2 → ℂ =>
+        generatingFunctionalℂ μ (∑ i : Fin 2, w i • JG i)) Set.univ :=
+      analyticOn_generatingFunctionalC μ h_moments 2 JG
+    exact hbase.comp hψ_analytic (by intro z hz; simp [Set.mem_univ])
+
+  have h_real_axis : ∀ r : ℝ, F r = G r := by
+    intro r
+    have hF_r : F r = generatingFunctional μ (schwartzRe J + r • schwartzIm J) := by
+      simpa [F, ψ, JF, Fin.sum_univ_two] using
+        (generatingFunctionalℂ_ofReal_add_real_smul μ (schwartzRe J) (schwartzIm J) r)
+    have hG_r : G r =
+        generatingFunctional μ (euclideanAction2 g (schwartzRe J) + r • euclideanAction2 g (schwartzIm J)) := by
+      simpa [G, ψ, JG, Fin.sum_univ_two] using
+        (generatingFunctionalℂ_ofReal_add_real_smul μ
+          (euclideanAction2 g (schwartzRe J)) (euclideanAction2 g (schwartzIm J)) r)
+    rw [hF_r, hG_r]
+    simpa [ContinuousLinearMap.map_add, ContinuousLinearMap.map_smul] using
+      h_real (schwartzRe J + r • schwartzIm J)
+
+  have hF_nhd : AnalyticOnNhd ℂ F Set.univ := (analyticOn_univ.mp hF_analytic)
+  have hG_nhd : AnalyticOnNhd ℂ G Set.univ := (analyticOn_univ.mp hG_analytic)
+  have hfreq : ∃ᶠ z : ℂ in nhdsWithin (0 : ℂ) ({0}ᶜ), F z = G z := by
+    rw [Filter.frequently_iff]
+    intro U hU
+    rcases Metric.mem_nhdsWithin_iff.mp hU with ⟨ε, hε, hUball⟩
+    have hball : (ε / 2 : ℂ) ∈ Metric.ball (0 : ℂ) ε := by
+      rw [Metric.mem_ball, Complex.dist_eq, sub_zero]
+      have hnorm : ‖(ε / 2 : ℂ)‖ = |ε| / 2 := by simp
+      rw [hnorm]
+      have hεabs : |ε| = ε := abs_of_pos hε
+      rw [hεabs]
+      linarith
+    have hne : (ε / 2 : ℂ) ≠ 0 := by
+      exact_mod_cast (show (ε / 2 : ℝ) ≠ 0 by linarith)
+    refine ⟨(ε / 2 : ℂ), ?_, ?_⟩
+    · exact hUball ⟨hball, hne⟩
+    · simpa using h_real_axis (ε / 2)
+
+  have h_eq : Set.EqOn F G Set.univ := by
+    simpa using
+      hF_nhd.eqOn_of_preconnected_of_frequently_eq hG_nhd
+        isPreconnected_univ (by simp : (0 : ℂ) ∈ Set.univ) hfreq
+
+  have hJ_decomp : J = schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J) :=
+    schwartz_decompose J
+
+  have hJg_decomp : euclideanAction2ℂ g J =
+      schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
+      (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J)) := by
+    calc
+      euclideanAction2ℂ g J
+          = schwartzOfReal (schwartzRe (euclideanAction2ℂ g J)) +
+              (Complex.I : ℂ) • schwartzOfReal (schwartzIm (euclideanAction2ℂ g J)) :=
+            schwartz_decompose (euclideanAction2ℂ g J)
+      _ = schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
+          (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J)) := by
+            simp
+
+  have hF_I : F Complex.I = generatingFunctionalℂ μ
+      (schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J)) := by
+    simp [F, ψ, JF, Fin.sum_univ_two]
+
+  have hG_I : G Complex.I = generatingFunctionalℂ μ
+      (schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
+        (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J))) := by
+    simp [G, ψ, JG, Fin.sum_univ_two]
+
+  have hGF_J : generatingFunctionalℂ μ J =
+      generatingFunctionalℂ μ
+        (schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J)) :=
+    congrArg (generatingFunctionalℂ μ) hJ_decomp
+
+  have hGF_gJ : generatingFunctionalℂ μ (euclideanAction2ℂ g J) =
+      generatingFunctionalℂ μ
+        (schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
+          (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J))) :=
+    congrArg (generatingFunctionalℂ μ) hJg_decomp
+
+  calc
+    generatingFunctionalℂ μ J = F Complex.I := hGF_J.trans hF_I.symm
+    _ = G Complex.I := h_eq (by simp)
+    _ = generatingFunctionalℂ μ (euclideanAction2ℂ g J) := hG_I.trans hGF_gJ.symm
 
 /-- **OS2 for the continuum limit** from translation + rotation invariance.
 
@@ -808,8 +910,9 @@ theorem os2_for_continuum_limit (P : InteractionPolynomial)
   -- ⟨ω, Re(g·J)⟩ = ⟨g⁻¹·ω, Re J⟩ and ⟨ω, Im(g·J)⟩ = ⟨g⁻¹·ω, Im J⟩.
   -- Since μ is g-invariant (from Step 1), substituting ω' = g⁻¹·ω gives
   -- Z_ℂ[g·J] = Z_ℂ[J].
+  have h_moments := continuum_exponential_moments P mass hmass μ h_limit
   intro g J
-  exact complex_gf_invariant_of_real_gf_invariant μ g (h_real_invariance g) J
+  exact complex_gf_invariant_of_real_gf_invariant μ h_moments g (h_real_invariance g) J
 
 /-- **Exponential clustering of the continuum limit** from spectral gap.
 

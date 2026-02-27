@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-27 (All sorries eliminated, 41 axioms)
-**pphi2**: 41 axioms, 0 sorries | **gaussian-field**: 2 axioms, 0 sorries | **Total**: 43
+**Updated**: 2026-02-27 (All sorries eliminated, 39 axioms)
+**pphi2**: 39 axioms, 0 sorries | **gaussian-field**: 2 axioms, 0 sorries | **Total**: 41
 
 ## Verification Sources
 
@@ -68,7 +68,7 @@
 | 22b | ~~`IsPphi2Limit`~~ | Embedding:271 | ✅ **DEFINED** | SA 2026-02-25 | Converted from axiom to `def`: ∃ (a, ν) with Schwinger function convergence. Mirrors `IsPphi2ContinuumLimit` in Bridge.lean. |
 | 22c | `pphi2_limit_exists` | Convergence | ⚠️ Likely correct | SA 2026-02-25 | ∃ μ `IsPphi2Limit`. Prokhorov + tightness + diagonal argument. Moved from OS2_WardIdentity to Convergence. |
 
-### Phase 5: OS2 Ward Identity and Proof Chain (12 axioms)
+### Phase 5: OS2 Ward Identity and Proof Chain (8 axioms)
 
 All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 6 axioms were overly strong, quantifying over arbitrary μ instead of P(φ)₂ limits).
@@ -82,7 +82,7 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 | 26 | `continuum_exponential_moments` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Now requires `IsPphi2Limit`. Fernique + Nelson. Feeds OS0+OS1. |
 | 27 | `analyticOn_generatingFunctionalC` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Exp moments → joint analyticity (Hartogs + dominated convergence). |
 | 28 | `exponential_moment_schwartz_bound` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `∫ exp(\|ω g\|) ≤ exp(c·(‖g‖₁+‖g‖₂²))`. Non-standard norm formulation. |
-| 29 | `complex_gf_invariant_of_real_gf_invariant` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Real Z invariance → complex Z invariance (Cramér-Wold + Lévy uniqueness). |
+| ~~29~~ | ~~`complex_gf_invariant_of_real_gf_invariant`~~ | OS2_WardIdentity | **Proved** | | Identity theorem for analytic functions: F(z)=G(z) on ℝ → F=G on ℂ, evaluate at z=i. |
 | 30 | `continuum_exponential_clustering` | OS2_WardIdentity | ⚠️ Likely correct | DT 2026-02-25 | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Now requires `IsPphi2Limit`. Spectral gap. |
 | 31 | `cesaro_set_integral_tendsto` | **PROVED** → `GeneralResults/FunctionalAnalysis.lean` | ✅ Proved | 2026-02-25 | Continuous Cesàro convergence. Moved to GeneralResults as pure Mathlib result. |
 | 32 | `pphi2_generating_functional_real` | **PROVED** from `pphi2_measure_neg_invariant` | ✅ Proved | 2026-02-25 | Im(Z[f])=0 via conj(Z[f])=Z[f] from Z₂ symmetry. |
