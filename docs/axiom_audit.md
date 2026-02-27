@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-25 (All sorries eliminated, 47 axioms)
-**pphi2**: 49 axioms, 0 sorries | **gaussian-field**: 2 axioms, 0 sorries | **Total**: 51
+**Updated**: 2026-02-27 (All sorries eliminated, 41 axioms)
+**pphi2**: 41 axioms, 0 sorries | **gaussian-field**: 2 axioms, 0 sorries | **Total**: 43
 
 ## Verification Sources
 
@@ -28,19 +28,19 @@
 | 1 | ~~`wickMonomial_eq_hermite`~~ | WickPolynomial:113 | ✅ **PROVED** | SA 2026-02-24 | Via `wick_eq_hermiteR_rpow` from gaussian-field HermiteWick. |
 | 2 | `wickConstant_log_divergence` | Counterterm:146 | ✅ Standard | GR Group 5 | c_a ~ (2π)⁻¹ log(1/a). Standard lattice Green's function asymptotics. |
 
-### Phase 2: Transfer Matrix and RP (9 axioms)
+### Phase 2: Transfer Matrix and RP (2 active axioms, 7 proved)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 3 | `transferOperatorCLM` | L2Operator | ⚠️ Likely correct | SA | Transfer matrix as CLM on L²(ℝ^Ns). Integral operator with Gaussian-bounded kernel. NEW. |
-| 4 | `transferOperator_isSelfAdjoint` | L2Operator | ✅ Standard | SA | Self-adjoint from kernel symmetry. NEW. |
-| 5 | `transferOperator_isCompact` | L2Operator | ⚠️ Likely correct | SA | Compact from Hilbert-Schmidt (Gaussian kernel decay). NEW. |
-| 6 | `transferEigenvalue` | L2Operator | ⚠️ Likely correct | DT 2026-02-24 | Sorted eigenvalue sequence. Connected to spectral theorem via `transferOperator_spectral` (proved). |
-| 7 | `transferEigenvalue_pos` | L2Operator | ✅ Standard | GR Group 3 | All eigenvalues > 0. Perron-Frobenius for strictly positive kernel. |
-| 8 | `transferEigenvalue_antitone` | L2Operator | ✅ Standard | GR Group 3 | Eigenvalues decreasing. Standard spectral ordering (min-max). |
-| 9 | `transferEigenvalue_ground_simple` | L2Operator | ✅ Standard | GR Group 3 | λ₀ > λ₁. Perron-Frobenius for positivity-improving operators. Reed-Simon IV Thm XIII.44. |
-| 10 | `action_decomposition` | OS3_RP_Lattice | ⚠️ Likely correct | GR Group 5 | S = S⁺ + S⁻ across time-reflection plane. Now uses `siteEquiv` + `fieldToSites` to connect `Fin N × Fin N` to `FinLatticeSites 2 N`. |
-| 11 | `lattice_rp_matrix` | OS3_RP_Lattice | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ ∫ cos(⟨φ, fᵢ-Θfⱼ⟩) dμ_a ≥ 0. New partial formalization in-file: helper lemmas + `lattice_rp_matrix_reduction`; remaining gap is explicit trig/sum expansion identity. |
+| 3 | ~~`transferOperatorCLM`~~ | L2Operator | ✅ **DEFINED** | SA | Transfer matrix defined as `M_w ∘L Conv_G ∘L M_w` (no longer axiom). |
+| 4 | ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | ✅ **PROVED** | SA | Self-adjoint from self-adjointness of M_w and Conv_G. |
+| 5 | `transferOperator_isCompact` | L2Operator | ⚠️ Likely correct | SA | Compact from Hilbert-Schmidt (Gaussian kernel decay). |
+| 6 | ~~`transferEigenvalue`~~ | L2Operator | ✅ **PROVED** | DT 2026-02-24 | Sorted eigenvalue sequence via spectral theorem. |
+| 7 | ~~`transferEigenvalue_pos`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | All eigenvalues > 0. Derived from Jentzsch theorem. |
+| 8 | ~~`transferEigenvalue_antitone`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | Eigenvalues decreasing. Derived from spectral ordering. |
+| 9 | ~~`transferEigenvalue_ground_simple`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | λ₀ > λ₁. Derived from Jentzsch/Perron-Frobenius. |
+| 10 | ~~`action_decomposition`~~ | OS3_RP_Lattice | ✅ **PROVED** | GR Group 5 | S = S⁺ + S⁻ via `Fintype.sum_equiv` + `Involutive.toPerm`. |
+| 11 | `lattice_rp_matrix` | OS3_RP_Lattice | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ ∫ cos(⟨φ, fᵢ-Θfⱼ⟩) dμ_a ≥ 0. Partial formalization: helper lemmas + `lattice_rp_matrix_reduction`; remaining gap is explicit trig/sum expansion identity. |
 
 ### Phase 3: Spectral Gap (2 axioms)
 
@@ -113,13 +113,13 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 
 | Status | Count |
 |--------|-------|
-| Verified (GR or DT) | 35 |
-| Self-audit only | 2 |
-| Proved/Defined (no longer axioms) | 8 |
-| **Total active** | **54** |
+| Active axioms | 41 |
+| Proved/Defined (no longer axioms) | 19+ |
+| Verified (GR or DT) among active | 35+ |
+| Self-audit only | 1 |
 
-35 of 54 active axioms verified by GR or DT.
-2 self-audit only: `pphi2_limit_exists` (Prokhorov existence), `transferOperatorCLM` (CLM construction).
+Most active axioms verified by GR or DT.
+1 self-audit only: `pphi2_limit_exists` (Prokhorov existence).
 
 ### Notes from DT review (2026-02-25)
 
@@ -132,9 +132,9 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 
 ---
 
-## gaussian-field Axioms (18 active, 2 sorries)
+## gaussian-field Axioms (2 active, 0 sorries — table below is stale)
 
-*Updated 2026-02-25 (rev 567851c). See gemini_review.md Group 1-2 for original review; DT 2026-02-25 for new axioms.*
+*Updated 2026-02-25 (rev 567851c). Many axioms have since been proved upstream. Current count per `count_axioms.sh`: 2 axioms in `HeatKernel/PositionKernel.lean`, 0 sorries.*
 
 | File | Axioms | Sorries | Verified | Notes |
 |------|--------|---------|----------|-------|
