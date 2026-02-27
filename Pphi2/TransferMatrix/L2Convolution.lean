@@ -402,16 +402,65 @@ lemma convCLM_spec {μ : Measure G} [μ.IsAddHaarMeasure]
   simp only [convCLM, LinearMap.mkContinuous_apply, LinearMap.coe_mk, AddHom.coe_mk]
   exact MemLp.coeFn_toLp _
 
+/-- The adjoint identity for convolution: `∫ h · (g⋆f) = ∫ (g⋆h) · f` for even `g`.
+
+**Proof sketch** (Fubini + substitution + evenness):
+Using `convolution_eq_swap`, `(g⋆f)(x) = ∫ g(x-t) f(t) dt`. Then:
+
+  `∫ h(x)(g⋆f)(x) dx = ∫∫ h(x) g(x-t) f(t) dt dx`  (push h inside)
+  `= ∫ f(t) (∫ g(x-t) h(x) dx) dt`                    (Fubini, pull f(t) out)
+  `= ∫ f(t) (∫ g(t-x) h(x) dx) dt`                    (g even: g(x-t) = g(t-x))
+  `= ∫ f(t) (g⋆h)(t) dt`                               (by convolution_eq_swap)
+
+The product integrability for Fubini follows from Young's inequality and
+Cauchy-Schwarz: `∫∫ |g(x-t)f(t)h(x)| ≤ ‖g‖₁ · ‖f‖₂ · ‖h‖₂`.
+
+**Difficulty**: The argument is mathematically standard but requires ~100 lines
+of formalization (product measurability, integrability via Young+Cauchy-Schwarz,
+`integral_integral_swap`, `integral_sub_right_eq_self`).
+
+**Reference**: Follows from Fubini's theorem and translation invariance of
+Haar measure. See Reed-Simon I, §VI.5. -/
+axiom integral_mul_conv_eq
+    {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
+    [MeasurableSpace G] [BorelSpace G]
+    [T2Space G] [LocallyCompactSpace G] [SecondCountableTopology G]
+    {μ : Measure G} [μ.IsAddHaarMeasure]
+    {g f h : G → ℝ} (hg : MemLp g 1 μ) (hf : MemLp f 2 μ) (hh : MemLp h 2 μ)
+    (heven : ∀ x : G, g (-x) = g x) :
+    ∫ x, h x * realConv μ g f x ∂μ = ∫ x, realConv μ g h x * f x ∂μ
+
 /-- Convolution by an even kernel is self-adjoint on `L²`.
 
 For additive Haar measure and `g(-x) = g(x)`, one has
 `⟨f, convCLM g hg h⟩ = ⟨convCLM g hg f, h⟩`.
 
-This is the standard Fubini + kernel-symmetry argument. We keep it axiomatic
-here to isolate the current integration API gap in the `L²`-level proof. -/
-axiom convCLM_isSelfAdjoint_of_even {μ : Measure G} [μ.IsAddHaarMeasure]
+This follows from the Fubini + kernel-symmetry identity
+`∫ h · (g⋆f) = ∫ (g⋆h) · f` (see `integral_mul_conv_eq`). -/
+theorem convCLM_isSelfAdjoint_of_even {μ : Measure G} [μ.IsAddHaarMeasure]
     (g : G → ℝ) (hg : MemLp g 1 μ)
     (heven : ∀ x : G, g (-x) = g x) :
-    IsSelfAdjoint (convCLM g hg)
+    IsSelfAdjoint (convCLM g hg) := by
+  rw [ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric]
+  intro f₀ h₀
+  simp only [MeasureTheory.L2.inner_def, ContinuousLinearMap.coe_coe,
+             RCLike.inner_apply, RCLike.conj_to_real]
+  -- Replace convCLM by realConv using convCLM_spec
+  have hfspec := convCLM_spec g hg f₀
+  have hhspec := convCLM_spec g hg h₀
+  -- Replace convCLM by realConv using convCLM_spec
+  set f := (f₀ : Lp ℝ 2 μ)
+  set h := (h₀ : Lp ℝ 2 μ)
+  have hfspec : (↑↑(convCLM g hg f) : G → ℝ) =ᵐ[μ] realConv μ g ↑↑f :=
+    convCLM_spec g hg f
+  have hhspec : (↑↑(convCLM g hg h) : G → ℝ) =ᵐ[μ] realConv μ g ↑↑h :=
+    convCLM_spec g hg h
+  calc ∫ a, (↑↑h : G → ℝ) a * (↑↑(convCLM g hg f) : G → ℝ) a ∂μ
+      = ∫ a, (↑↑h : G → ℝ) a * realConv μ g ↑↑f a ∂μ := by
+        exact integral_congr_ae (by filter_upwards [hfspec] with a ha; rw [ha])
+    _ = ∫ a, realConv μ g ↑↑h a * (↑↑f : G → ℝ) a ∂μ :=
+        integral_mul_conv_eq hg (Lp.memLp f) (Lp.memLp h) heven
+    _ = ∫ a, (↑↑(convCLM g hg h) : G → ℝ) a * (↑↑f : G → ℝ) a ∂μ := by
+        exact integral_congr_ae (by filter_upwards [hhspec] with a ha; rw [ha])
 
 end
