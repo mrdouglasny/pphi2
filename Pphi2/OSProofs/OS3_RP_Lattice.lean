@@ -144,13 +144,32 @@ time slices, and the interaction is a sum over sites.
 The `fieldToSites` conversion connects the product representation
 `Fin N × Fin N → ℝ` to the function representation `FinLatticeField 2 N`
 used by `latticeInteraction`. -/
-axiom action_decomposition (P : InteractionPolynomial) (a mass : ℝ)
+theorem action_decomposition (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     ∃ (S_plus : (Fin N × Fin N → ℝ) → ℝ),
     ∀ φ : Fin N × Fin N → ℝ,
       -- The lattice action (via site equivalence) equals S⁺ + S⁺ ∘ Θ
       latticeInteraction 2 N P a mass (fieldToSites N φ) =
-        S_plus φ + S_plus (fieldReflection2D N φ)
+        S_plus φ + S_plus (fieldReflection2D N φ) := by
+  -- Take S_plus = V/2
+  refine ⟨fun φ => (1/2) * latticeInteraction 2 N P a mass (fieldToSites N φ), fun φ => ?_⟩
+  -- Suffices to show V(Θφ) = V(φ), then V = V/2 + V/2
+  suffices h : latticeInteraction 2 N P a mass (fieldToSites N (fieldReflection2D N φ)) =
+               latticeInteraction 2 N P a mass (fieldToSites N φ) by linarith
+  -- The interaction is a sum over all sites; time reflection is a bijection on sites
+  unfold latticeInteraction
+  congr 1
+  -- Define the site-reflection equivalence σ on FinLatticeSites 2 N
+  let σ : FinLatticeSites 2 N ≃ FinLatticeSites 2 N :=
+    (siteEquiv N).symm.trans
+      (((timeReflection2D_involution N).toPerm (timeReflection2D N)).trans
+       (siteEquiv N))
+  -- Reindex the sum: Σ_x f(Θx) = Σ_x f(x) since σ is a bijection
+  apply Fintype.sum_equiv σ
+  intro x
+  -- Both sides reduce to wickPolynomial P c (φ (timeReflection2D N ((siteEquiv N).symm x)))
+  simp only [fieldToSites, fieldReflection2D, Function.comp_apply, σ, Equiv.trans_apply,
+             Function.Involutive.coe_toPerm, Equiv.symm_apply_apply]
 
 /-! ## Reflection positivity on the lattice -/
 
