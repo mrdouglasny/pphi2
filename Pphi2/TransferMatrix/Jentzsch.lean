@@ -221,28 +221,80 @@ theorem transferOperator_positivityImproving (P : InteractionPolynomial) (a mass
   filter_upwards [hresult_spec, hh_pos] with x hx hhx
   rw [hx]; exact mul_pos (hw_pos x) hhx
 
-/-! ## Axiom 3: Strictly positive definite kernel
+/-! ## Axiom 3: Gaussian convolution is strictly positive definite
 
-The Gaussian kernel exp(-½‖x-y‖²) is strictly positive definite: its Fourier
-transform is (2π)^{n/2} exp(-½‖k‖²) > 0 everywhere, so by Bochner's theorem
-G is strictly PD on L². The full kernel K(x,y) = w(x)G(x-y)w(y) with
-w = exp(-(a/2)h) > 0 preserves strict PD (Schur product with w⊗w), giving
-⟨f, Tf⟩ = ∫∫ K(x,y) f(x) f(y) dx dy > 0 for all nonzero f ∈ L². -/
+The Gaussian kernel G(x) = exp(-½‖x‖²) has Fourier transform
+Ĝ(k) = (2π)^{n/2} exp(-½‖k‖²) > 0 everywhere. By Bochner's theorem and
+Plancherel, convolution by G is strictly positive definite on L²:
+
+  ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk > 0  for f ≠ 0.
+
+This is the bridge axiom from the [bochner](https://github.com/mrdouglasny/bochner)
+formalization project. -/
+
+/-- Convolution with the Gaussian kernel is strictly positive definite on L².
+
+**Proof outline**: By Plancherel, ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk.
+Since Ĝ(k) = (2π)^{n/2} exp(-½‖k‖²) > 0 and f ≠ 0 implies f̂ ≠ 0 a.e.,
+the integral is strictly positive.
+
+**Status**: Bridge axiom from `bochner` project (`isPositiveDefinite_gaussian`
++ Plancherel). See `../bochner/Bochner/Bochner.lean`. -/
+axiom convolution_gaussian_strictly_positive_definite :
+    ∀ (g : L2SpatialField Ns), g ≠ 0 →
+      0 < @inner ℝ _ _ g (convCLM (transferGaussian Ns) (transferGaussian_memLp Ns) g)
+
+/-! ## Derived: Transfer operator strictly positive definite
+
+From the factorization T = M_w ∘ Conv_G ∘ M_w with M_w self-adjoint:
+  ⟨f, Tf⟩ = ⟨M_w f, Conv_G(M_w f)⟩ > 0
+since w > 0 makes M_w injective (f ≠ 0 → M_w f ≠ 0) and Conv_G is
+strictly PD by the axiom above. -/
 
 /-- The transfer operator is strictly positive definite: ⟨f, Tf⟩ > 0 for
 all nonzero f ∈ L².
 
-This follows from:
-1. The Gaussian kernel G(x-y) = exp(-½‖x-y‖²) is strictly PD
-   (Bochner's theorem: Fourier transform is strictly positive).
-2. K(x,y) = w(x)·G(x-y)·w(y) with w > 0 is strictly PD.
-3. ⟨f, Tf⟩ = ∫∫ K(x,y) f(x) f(y) dx dy > 0 for f ≠ 0.
-
-**References**: Reed-Simon I, §VI.5; Stein-Shakarchi, *Real Analysis*, Ch. 6. -/
-axiom transferOperator_strictly_positive_definite (P : InteractionPolynomial) (a mass : ℝ)
+**Proof**: Uses self-adjointness of M_w to rewrite
+⟨f, M_w(Conv_G(M_w f))⟩ = ⟨M_w f, Conv_G(M_w f)⟩,
+injectivity of M_w (from w > 0) to show M_w f ≠ 0,
+and the Gaussian convolution strict PD axiom. -/
+theorem transferOperator_strictly_positive_definite (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     ∀ (f : L2SpatialField Ns), f ≠ 0 →
-      0 < @inner ℝ _ _ f (transferOperatorCLM Ns P a mass ha hmass f)
+      0 < @inner ℝ _ _ f (transferOperatorCLM Ns P a mass ha hmass f) := by
+  intro f hf
+  -- Abbreviations for the building blocks
+  set w := transferWeight Ns P a mass
+  set G := transferGaussian Ns
+  set hw_meas := transferWeight_measurable Ns P a mass
+  set C := (transferWeight_bound Ns P a mass ha hmass).choose
+  set hC := (transferWeight_bound Ns P a mass ha hmass).choose_spec.1
+  set hw_bound := (transferWeight_bound Ns P a mass ha hmass).choose_spec.2
+  set hG := transferGaussian_memLp Ns
+  set A := mulCLM w hw_meas C hC hw_bound
+  set B := convCLM G hG
+  -- Self-adjointness of M_w
+  have hA_sa : IsSelfAdjoint A := mulCLM_isSelfAdjoint w hw_meas C hC hw_bound
+  -- Step 1: ⟨f, Tf⟩ = ⟨f, A(B(Af))⟩ = ⟨Af, B(Af)⟩
+  have hT_eq : transferOperatorCLM Ns P a mass ha hmass f = A (B (A f)) := rfl
+  rw [hT_eq, show @inner ℝ _ _ f (A (B (A f))) = @inner ℝ _ _ (A f) (B (A f))
+    from (hA_sa.isSymmetric f (B (A f))).symm]
+  -- Step 2: M_w f ≠ 0 (since w > 0 and f ≠ 0)
+  have hw_pos : ∀ ψ, 0 < w ψ := transferWeight_pos Ns P a mass
+  have hAf_ne : A f ≠ 0 := by
+    intro h_absurd
+    apply hf
+    -- A f = 0 in L² means w * f = 0 a.e., and w > 0, so f = 0 a.e.
+    have hAf_spec := mulCLM_spec w hw_meas C hC hw_bound f
+    have hAf_zero : (A f : SpatialField Ns → ℝ) =ᵐ[volume] 0 := by
+      rw [h_absurd]; exact Lp.coeFn_zero _ _ _
+    have hf_ae_zero : (f : SpatialField Ns → ℝ) =ᵐ[volume] 0 := by
+      filter_upwards [hAf_spec, hAf_zero] with x hx1 hx2
+      have : w x * (f : SpatialField Ns → ℝ) x = 0 := by rwa [← hx1]
+      exact (mul_eq_zero.mp this).resolve_left (ne_of_gt (hw_pos x))
+    exact Lp.eq_zero_iff_ae_eq_zero.mpr hf_ae_zero
+  -- Step 3: Apply Gaussian convolution strict PD
+  exact convolution_gaussian_strictly_positive_definite Ns (A f) hAf_ne
 
 /-! ## L²(ℝ^Ns) Hilbert basis nontriviality
 
