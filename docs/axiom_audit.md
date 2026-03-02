@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-02-27 (All sorries eliminated, 39 axioms)
-**pphi2**: 39 axioms, 0 sorries | **gaussian-field**: 2 axioms, 0 sorries | **Total**: 41
+**Updated**: 2026-03-02 (GaussianContinuumLimit module added, 41 axioms)
+**pphi2**: 41 axioms, 3 sorries | **gaussian-field**: 2 axioms, 0 sorries | **Total**: 43
 
 ## Verification Sources
 
@@ -68,6 +68,19 @@
 | 22b | ~~`IsPphi2Limit`~~ | Embedding:271 | ✅ **DEFINED** | SA 2026-02-25 | Converted from axiom to `def`: ∃ (a, ν) with Schwinger function convergence. Mirrors `IsPphi2ContinuumLimit` in Bridge.lean. |
 | 22c | `pphi2_limit_exists` | Convergence | ⚠️ Likely correct | SA 2026-02-25 | ∃ μ `IsPphi2Limit`. Prokhorov + tightness + diagonal argument. Moved from OS2_WardIdentity to Convergence. |
 
+### Phase 4G: Gaussian Continuum Limit (3 axioms, 3 sorries)
+
+| # | Name | File:Line | Rating | Verified | Notes |
+|---|------|----------|--------|----------|-------|
+| G1 | `propagator_convergence` | PropagatorConvergence | ✅ Standard | **(NOT VERIFIED)** | Lattice propagator Riemann sum → continuum Green's function. Standard Fourier analysis + dominated convergence with Schwartz decay. Glimm-Jaffe §6.1. |
+| G2 | `gaussianContinuumMeasures_tight` | GaussianTightness | ✅ Standard | **(NOT VERIFIED)** | Tightness of embedded GFF measures via Mitoma criterion + Chebyshev from uniform second moments. Mitoma (1983), Simon §V.1. |
+| G3 | `gaussianLimit_isGaussian` | GaussianLimit | ✅ Standard | **(NOT VERIFIED)** | Weak limits of Gaussian measures are Gaussian. Bochner-Minlos: pointwise convergence of exp(-½σ²_n(f)) → limit is Gaussian. Fernique §III.4. |
+
+**Sorries (provable, not axioms):**
+- `embeddedTwoPoint_eq_latticeSum` — Pushforward integral → lattice double sum. Fubini + Gaussian cross moment.
+- `embeddedTwoPoint_uniform_bound` — E[Φ_a(f)²] ≤ C. All eigenvalues ≥ m² + Riemann sum bounded.
+- `continuumGreenBilinear_pos` — G(f,f) > 0. Fourier injectivity on Schwartz space.
+
 ### Phase 5: OS2 Ward Identity and Proof Chain (8 axioms)
 
 All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
@@ -98,7 +111,7 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 - `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance
 - `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (**fully proved**)
 
-### Phase 6: Bridge (6 axioms)
+### Phase 6: Bridge (5 axioms)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|---------|
@@ -108,13 +121,13 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 | 36 | `schwinger_agreement` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | n-point Schwinger function equality at weak coupling. |
 | 37 | `same_continuum_measure` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Fixed: requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
 | 38 | `os2_from_phi4` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Fixed: requires `IsPhi4ContinuumLimit`. |
-| 39 | `os3_from_pphi2` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Fixed: requires `IsPphi2ContinuumLimit`. |
+| 39 | ~~`os3_from_pphi2`~~ | Bridge | ✅ **PROVED** | SA 2026-02-27 | Replaced axiom with theorem: `exact os3_for_continuum_limit ... (IsPphi2ContinuumLimit.toIsPphi2Limit h)`. |
 
 ### Verification Summary (pphi2)
 
 | Status | Count |
 |--------|-------|
-| Active axioms | 41 |
+| Active axioms | 38 |
 | Proved/Defined (no longer axioms) | 19+ |
 | Verified (GR or DT) among active | 35+ |
 | Self-audit only | 1 |

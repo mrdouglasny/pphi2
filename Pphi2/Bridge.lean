@@ -338,12 +338,14 @@ The pphi2 continuum limit satisfies reflection positivity. This follows from:
 1. `lattice_rp`: RP on the lattice via transfer matrix positivity
 2. `rp_closed_under_weak_limit`: RP passes to weak limits (proved abstractly)
 3. The continuum limit is a weak limit of the RP lattice measures -/
-axiom os3_from_pphi2
+theorem os3_from_pphi2
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ_latt : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ_latt : IsProbabilityMeasure μ_latt)
     (hμ_latt_limit : @IsPphi2ContinuumLimit μ_latt hμ_latt P mass) :
-    @OS3_ReflectionPositivity μ_latt hμ_latt
+    @OS3_ReflectionPositivity μ_latt hμ_latt := by
+  exact Pphi2.os3_for_continuum_limit P mass hmass μ_latt hμ_latt
+    (IsPphi2ContinuumLimit.toIsPphi2Limit hμ_latt_limit)
 
 /-- **OS3 transferred to Phi4's continuum measure.**
 

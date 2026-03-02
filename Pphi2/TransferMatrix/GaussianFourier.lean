@@ -28,6 +28,93 @@ namespace Pphi2
 
 variable (Ns : ℕ) [NeZero Ns]
 
+/-! ## Fourier strictness helper on complex L² -/
+
+set_option maxHeartbeats 800000 in
+-- This proof can exceed the default heartbeat budget because elaborating
+-- `Lp.fourierTransformₗᵢ` and related coercions is expensive.
+/-- If `f ∈ L²(ℝⁿ, ℂ)` is nonzero, then its Fourier transform is not a.e. zero.
+
+This is the strictness step used in positivity arguments:
+Plancherel gives `𝓕` as a linear isometric equivalence on `L²`,
+so `𝓕 f = 0` implies `f = 0`. -/
+private theorem fourier_ae_nonzero_of_nonzero
+    {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [FiniteDimensional ℝ E] [MeasurableSpace E] [BorelSpace E]
+    (f : Lp (α := E) ℂ 2) (hf : f ≠ 0) :
+    ¬ (∀ᵐ x, ((Lp.fourierTransformₗᵢ E ℂ f : Lp (α := E) ℂ 2) x) = 0) := by
+  intro h_ae
+  have hFzero : (Lp.fourierTransformₗᵢ E ℂ f : Lp (α := E) ℂ 2) = 0 := by
+    exact Lp.eq_zero_iff_ae_eq_zero.mpr h_ae
+  have hfzero : f = 0 := by
+    have hInv :
+        (Lp.fourierTransformₗᵢ E ℂ).symm (Lp.fourierTransformₗᵢ E ℂ f) =
+        (0 : Lp (α := E) ℂ 2) := by
+      simp [hFzero]
+    simpa using hInv
+  exact hf hfzero
+
+/-! ## Transport from real `L²(SpatialField)` to complex `L²(EuclideanSpace)` -/
+
+/-- Real-to-complex embedding on `L²(SpatialField Ns)`. -/
+private noncomputable def toComplexSpatialL2CLM :
+    L2SpatialField Ns →L[ℝ] Lp (α := SpatialField Ns) ℂ 2 :=
+  ContinuousLinearMap.compLpL (p := (2 : ENNReal))
+    (μ := (volume : Measure (SpatialField Ns))) (@RCLike.ofRealCLM ℂ _)
+
+/-- Pullback along `WithLp.ofLp : EuclideanSpace → SpatialField` as an `L²` isometry. -/
+private noncomputable def pullToEuclideanL2 :
+    Lp (α := SpatialField Ns) ℂ 2 →ₗᵢ[ℝ] Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+  Lp.compMeasurePreservingₗᵢ (𝕜 := ℝ) (p := (2 : ENNReal))
+    (WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns)
+    (PiLp.volume_preserving_ofLp (ι := Fin Ns))
+
+/-- The complex Euclidean `L²` representative associated to `f : L2SpatialField Ns`. -/
+private noncomputable def toEuclideanComplexL2 (f : L2SpatialField Ns) :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+  (pullToEuclideanL2 Ns) ((toComplexSpatialL2CLM Ns) f)
+
+/-- The real-to-complex `L²` embedding is injective. -/
+private theorem toComplexSpatialL2CLM_ne_zero
+    (f : L2SpatialField Ns) (hf : f ≠ 0) :
+    (toComplexSpatialL2CLM Ns f) ≠ 0 := by
+  intro h0
+  have h_ae0 : ∀ᵐ x : SpatialField Ns ∂volume, (toComplexSpatialL2CLM Ns f) x = 0 := by
+    exact Lp.eq_zero_iff_ae_eq_zero.mp h0
+  have hco :
+      (toComplexSpatialL2CLM Ns f) =ᵐ[volume] fun x => ((f x : ℝ) : ℂ) := by
+    simpa [toComplexSpatialL2CLM] using
+      (ContinuousLinearMap.coeFn_compLpL (p := (2 : ENNReal))
+        (μ := (volume : Measure (SpatialField Ns))) (@RCLike.ofRealCLM ℂ _) f)
+  have hf_ae0 : ∀ᵐ x : SpatialField Ns ∂volume, f x = 0 := by
+    filter_upwards [h_ae0, hco] with x hx0 hxc
+    have : ((f x : ℝ) : ℂ) = 0 := by simpa [hxc] using hx0
+    exact_mod_cast this
+  exact hf (Lp.eq_zero_iff_ae_eq_zero.mpr hf_ae0)
+
+/-- The transported Euclidean complex `L²` function is nonzero if `f` is nonzero. -/
+private theorem toEuclideanComplexL2_ne_zero
+    (f : L2SpatialField Ns) (hf : f ≠ 0) :
+    toEuclideanComplexL2 Ns f ≠ 0 := by
+  intro h0
+  have hnorm :
+      ‖toEuclideanComplexL2 Ns f‖ = ‖toComplexSpatialL2CLM Ns f‖ :=
+    Lp.norm_compMeasurePreserving (p := (2 : ENNReal)) (toComplexSpatialL2CLM Ns f)
+      (PiLp.volume_preserving_ofLp (ι := Fin Ns))
+  have hnorm0 : ‖toEuclideanComplexL2 Ns f‖ = 0 := by simpa [h0]
+  have hnorm0' : ‖toComplexSpatialL2CLM Ns f‖ = 0 := by simpa [hnorm] using hnorm0
+  exact (toComplexSpatialL2CLM_ne_zero (Ns := Ns) f hf) (norm_eq_zero.mp hnorm0')
+
+/-- Nonzero `f : L2SpatialField Ns` has Fourier transform not a.e. zero after transport
+to complex `L²(EuclideanSpace)`. -/
+private theorem fourier_ae_nonzero_of_spatial_nonzero
+    (f : L2SpatialField Ns) (hf : f ≠ 0) :
+    ¬ ∀ᵐ w : EuclideanSpace ℝ (Fin Ns) ∂volume,
+      ((Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ
+        (toEuclideanComplexL2 Ns f) : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w) = 0 := by
+  exact fourier_ae_nonzero_of_nonzero
+    (toEuclideanComplexL2 Ns f) (toEuclideanComplexL2_ne_zero (Ns := Ns) f hf)
+
 /-! ## Gaussian Fourier transform is strictly positive -/
 
 /-- The Fourier transform of `exp(-b‖x‖²)` is a positive real for `b > 0`. -/

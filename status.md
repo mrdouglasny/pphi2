@@ -5,13 +5,13 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3513 jobs).
+3516 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 39 axioms, 0 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 41 axioms, 3 sorries** (plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -48,12 +48,16 @@ It is not imported and not counted in the active axiom inventory.
 | 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
 | 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 proved theorems |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
+| 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 1 sorry |
+| 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 2 sorries |
+| 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 1 axiom, 0 sorries |
+| 4G | `GaussianContinuumLimit/GaussianLimit.lean` | 1 axiom, 0 sorries |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 8 axioms |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
-| 6 | `Bridge.lean` | 5 axioms, 0 sorries |
+| 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
@@ -276,6 +280,27 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `os4_inheritance` | AxiomInheritance | Med/Hard | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | ~~`continuumLimit_satisfies_os0134`~~ | AxiomInheritance | **Theorem** | Assembly of os0/os1/os3/os4 inheritance results. |
 
+### Phase 4G: Gaussian continuum limit
+
+| Axiom | File | Difficulty | Description |
+|-------|------|-----------|-------------|
+| `propagator_convergence` | PropagatorConvergence | Medium | Lattice Riemann sum of Green's function → continuum Fourier integral. Dominated convergence + Schwartz decay. |
+| `gaussianContinuumMeasures_tight` | GaussianTightness | Medium | Tightness of embedded GFF measures via Mitoma criterion + Chebyshev from uniform second moments. |
+| `gaussianLimit_isGaussian` | GaussianLimit | Medium | Weak limits of Gaussian measures are Gaussian. Bochner-Minlos + pointwise convergence of characteristic functionals. |
+
+**Proved theorems (GaussianContinuumLimit/):**
+- `gaussianContinuumMeasure_isProbability`: Pushforward of probability measure is probability.
+- `embeddedTwoPoint_eq_covariance`: Change-of-variables reducing pushforward integral to lattice GFF.
+- `gaussian_second_moment_uniform`: Uniform second moment bound from `embeddedTwoPoint_uniform_bound`.
+- `gaussianContinuumLimit_exists`: Subsequential weak limit via Prokhorov extraction.
+- `gaussianContinuumLimit_nontrivial`: `∫ (ω f)² dμ > 0` from `continuumGreenBilinear_pos`.
+- `gaussian_feeds_interacting_tightness`: Bridge — Gaussian bound feeds Cauchy-Schwarz density transfer.
+
+**Sorries (provable):**
+- `embeddedTwoPoint_eq_latticeSum`: Pushforward integral → lattice double sum (Fubini + Gaussian integration).
+- `embeddedTwoPoint_uniform_bound`: `E[Φ_a(f)²] ≤ C` from eigenvalue bound + Riemann sum.
+- `continuumGreenBilinear_pos`: `G(f,f) > 0` from Fourier injectivity on Schwartz space.
+
 Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially since |cos(·)| ≤ 1.
 
 ### Phase 5: Euclidean invariance (OS2) and OS proof chains
@@ -323,7 +348,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`wick_constant_comparison`~~ | ~~Bridge~~ | — | **Removed** — duplicate of `wickConstant_log_divergence`, moved to Unused/. |
 | `same_continuum_measure` | Bridge | Medium | pphi2 and Phi4 constructions agree at weak coupling. Requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
 | `os2_from_phi4` | Bridge | Medium | OS2 for Phi4 continuum limit. Requires `IsPhi4ContinuumLimit` hypothesis. |
-| `os3_from_pphi2` | Bridge | Medium | OS3 for pphi2 continuum limit. Requires `IsPphi2ContinuumLimit` hypothesis. |
+| ~~`os3_from_pphi2`~~ | Bridge | ✅ **Proved** | From `os3_for_continuum_limit` + `IsPphi2ContinuumLimit.toIsPphi2Limit`. |
 | `schwinger_agreement` | Bridge | Very Hard | Schwinger function agreement at weak coupling. Cluster expansion (Guerra-Rosen-Simon). |
 
 ---
