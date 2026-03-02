@@ -41,6 +41,11 @@ The construction proceeds in six phases:
 4. **Continuum limit** — Embed lattice measures into S'(ℝ²), prove tightness
    (Mitoma + Nelson's hypercontractive estimate), extract a convergent
    subsequence by Prokhorov. OS0, OS1, OS3, OS4 transfer to the limit.
+   The free (Gaussian) case is handled separately in `GaussianContinuumLimit/`:
+   the lattice GFF measures are tight (Mitoma criterion with uniform m⁻²
+   second-moment bound from the spectral gap of −Δ_a + m²), their weak
+   limits are Gaussian (Bochner-Minlos), and the covariance converges to
+   the continuum Green's function G(f,g) = ∫ f̂(k)ĝ(k)/(|k|²+m²) dk/(2π)².
 
 5. **Euclidean invariance** — Restore full E(2) symmetry via a Ward identity
    argument. The rotation-breaking operator has scaling dimension 4 > d = 2,
@@ -111,6 +116,11 @@ Pphi2/
     TimeTranslation.lean             -- Schwartz space time translation continuity
   ContinuumLimit/                    -- Phase 4: Embedding, tightness, convergence
     Hypercontractivity.lean          -- Nelson's estimate (Option A: Cauchy-Schwarz density transfer)
+  GaussianContinuumLimit/            -- Phase 4G: Free GFF continuum limit (reusable infrastructure)
+    EmbeddedCovariance.lean          -- gaussianContinuumMeasure, embeddedTwoPoint, continuumGreenBilinear
+    PropagatorConvergence.lean       -- Lattice propagator → continuum Green's function; uniform bound
+    GaussianTightness.lean           -- Tightness of {ν_{GFF,a}} via Mitoma criterion
+    GaussianLimit.lean               -- Existence + Gaussianity of the limit; IsGaussianContinuumLimit
   GeneralResults/
     FunctionalAnalysis.lean          -- Pure Mathlib results: Cesàro, Schwartz Lp, trig identity
   OSAxioms.lean                      -- Phase 6: OS axiom definitions (matching OSforGFF)
