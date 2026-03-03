@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 45 axioms, 3 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 48 axioms, 5 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -61,7 +61,7 @@ It is not imported and not counted in the active axiom inventory.
 | 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 2 sorries |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
-| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 1 axiom, 0 sorries |
+| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 4 axioms, 2 sorries |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 1 axiom, 0 sorries |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 
@@ -315,7 +315,10 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 |-------|------|-----------|-------------|
 | `torus_propagator_convergence` | TorusPropagatorConvergence | Medium | Lattice eigenvalues `(4N²/L²)sin²(πn/N) + m²` → continuum `(2πn/L)² + m²`. Pure UV limit, dominated convergence with rapid Fourier decay. |
 | `torusContinuumMeasures_tight` | TorusTightness | Medium | Tightness via Mitoma criterion on torus. Finite volume makes this cleaner than S'(ℝ^d). |
+| `torusGaussianMeasure_isGaussian` | TorusGaussianLimit | Easy | Lattice GFF pushforward is Gaussian. MGF: `E[e^{ω(f)}] = exp(½ E[ω(f)²])`. |
 | `torusGaussianLimit_isGaussian` | TorusGaussianLimit | Medium | Weak limits of Gaussians on torus are Gaussian. Bochner-Minlos + characteristic functionals. |
+| `torusLimit_covariance_eq` | TorusGaussianLimit | Medium | Weak convergence transfers second moments. Uniform integrability from `torusEmbeddedTwoPoint_uniform_bound`. |
+| `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Medium | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness. |
 | `torus_interacting_tightness` | TorusInteractingLimit | Medium | Cauchy-Schwarz density transfer from Gaussian tightness. Nelson's estimate + hypercontractivity. |
 
 **Proved theorems (TorusContinuumLimit/):**
@@ -323,6 +326,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `torusContinuumMeasure_isProbability`: Pushforward of probability measure is probability.
 - `torus_second_moment_uniform`: Uniform second moment bound from `torusEmbeddedTwoPoint_uniform_bound`.
 - `torusGaussianLimit_exists`: **PROVED** — Prokhorov extraction on Polish torus (no `prokhorov_configuration_sequential` axiom needed).
+- `torusGaussianLimit_converges`: **PROVED** — Full sequence convergence (not just subsequential). From Gaussianity + covariance uniqueness.
 - `torusGaussianLimit_nontrivial`: `∫ (ω f)² dμ > 0` from `torusContinuumGreen_pos`.
 - `torusInteractingMeasure_isProbability`: Interacting pushforward is probability.
 - `torusInteractingLimit_exists`: **PROVED** — Prokhorov extraction for interacting measures.
@@ -331,6 +335,8 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `torusContinuumGreen`: Continuum Green's function definition (will be `greenFunctionBilinear` from gaussian-field).
 - `torusEmbeddedTwoPoint_uniform_bound`: `E[Φ_N(f)²] ≤ C` from eigenvalue bound λ ≥ m².
 - `torusContinuumGreen_pos`: `G(f,f) > 0` from Fourier injectivity on C∞(T²).
+- Z₂ symmetry of the limit (in `torusGaussianLimit_converges`): Lattice GFF is Z₂-symmetric, transfers to limit.
+- Full sequence convergence step (in `torusGaussianLimit_converges`): Standard subsequential uniqueness argument.
 
 ### Phase 5: Euclidean invariance (OS2) and OS proof chains
 
