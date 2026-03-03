@@ -10,7 +10,7 @@ Green's function on T²_L converges to the continuum Green's function as N → �
 ## Main results
 
 - `torus_propagator_convergence` — (axiom) lattice eigenvalues → continuum eigenvalues
-- `torusEmbeddedTwoPoint_uniform_bound` — `E[Φ_N(f)²] ≤ C/m²·‖f‖²` uniformly in N
+- `torusEmbeddedTwoPoint_uniform_bound` — (axiom) `E[Φ_N(f)²] ≤ C/m²·‖f‖²` uniformly in N
 - `torusContinuumGreen_pos` — `G_L(f,f) > 0` for f ≠ 0
 
 ## Mathematical background
@@ -77,19 +77,22 @@ axiom torus_propagator_convergence
   `E[Φ_N(f)²] ≤ C(f, L, m)` uniformly in N ≥ 1
 
 This follows from:
-1. All eigenvalues of `-Δ_{lat} + m²` satisfy `λ_k ≥ m²`.
-2. The Riemann sum `(L/N)² Σ_x |f(xL/N)|²` is bounded by `‖f‖²_{L²(T²_L)}` + O(1/N).
-3. Combined: `E[Φ_N(f)²] ≤ (1/m²) · C_f` uniformly.
+1. **Eigenvalue lower bound:** All eigenvalues of `-Δ_{lat} + m²` satisfy `λ_k ≥ m²`
+   (since the discrete Laplacian is nonneg-definite), so `λ_k⁻¹ ≤ 1/m²`.
+2. **Parseval:** `Σ_k ⟨e_k, ι*f⟩² = ‖ι*f‖²` (lattice eigenvectors are orthonormal).
+3. **Riemann sum bound:** `‖ι*f‖² = (L/N)² Σ_x |f(xL/N)|²` is a Riemann sum for
+   `‖f‖²_{L²(T²_L)}` of a continuous function on the compact torus, hence bounded
+   uniformly in N.
+4. **Combined:** `E[Φ_N(f)²] = Σ_k λ_k⁻¹ ⟨e_k, ι*f⟩² ≤ (1/m²) · C_f`.
 
 The key advantage over S'(ℝ^d): finite volume means the Riemann sum is over
-a finite domain, eliminating any IR contribution. -/
-theorem torusEmbeddedTwoPoint_uniform_bound (mass : ℝ) (hmass : 0 < mass)
+a finite domain, eliminating any IR contribution.
+
+Reference: Glimm-Jaffe §6.1 (lattice propagator bounds). -/
+axiom torusEmbeddedTwoPoint_uniform_bound (mass : ℝ) (hmass : 0 < mass)
     (f : TorusTestFunction L) :
     ∃ C : ℝ, 0 < C ∧ ∀ (N : ℕ) [NeZero N],
-    torusEmbeddedTwoPoint L N mass hmass f f ≤ C := by
-  -- The bound follows from eigenvalue lower bound λ ≥ m² and
-  -- finite Riemann sum bound on the torus (analogous to schwartz_riemann_sum_bound)
-  sorry
+    torusEmbeddedTwoPoint L N mass hmass f f ≤ C
 
 /-! ## Positivity of the continuum Green's function -/
 

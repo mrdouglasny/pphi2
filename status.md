@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 51 axioms, 1 sorry** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 1 axiom, 8 sorries (none used by pphi2)**
+**pphi2: 52 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 1 axiom, 8 sorries (none used by pphi2)**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -58,7 +58,7 @@ It is not imported and not counted in the active axiom inventory.
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
-| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 1 sorry |
+| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 2 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
 | 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 7 axioms, 0 sorries |
@@ -314,6 +314,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | `torus_propagator_convergence` | TorusPropagatorConvergence | Medium | Lattice eigenvalues `(4N²/L²)sin²(πn/N) + m²` → continuum `(2πn/L)² + m²`. Pure UV limit, dominated convergence with rapid Fourier decay. |
+| `torusEmbeddedTwoPoint_uniform_bound` | TorusPropagatorConvergence | Easy | `E[Φ_N(f)²] ≤ C` uniformly in N. Eigenvalue lower bound `λ_k ≥ m²` + Parseval + Riemann sum bound on compact torus. |
 | `torusContinuumMeasures_tight` | TorusTightness | Medium | Tightness via Mitoma criterion on torus. Finite volume makes this cleaner than S'(ℝ^d). |
 | `torusGaussianMeasure_isGaussian` | TorusGaussianLimit | Easy | Lattice GFF pushforward is Gaussian. MGF: `E[e^{ω(f)}] = exp(½ E[ω(f)²])`. |
 | `torusGaussianLimit_isGaussian` | TorusGaussianLimit | Medium | Weak limits of Gaussians on torus are Gaussian. Bochner-Minlos + characteristic functionals. |
