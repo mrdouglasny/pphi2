@@ -6,9 +6,9 @@ The torus continuum limit isolates the UV limit (a = L/N → 0) from IR issues
 by fixing the physical volume L. The pipeline handles both Gaussian and
 interacting (P(φ)₂) measures.
 
-**Current state (2026-03-02):** 6 files in `TorusContinuumLimit/`, 7 torus
-axioms, 5 sorries (2 in TorusGaussianLimit, 2 in TorusPropagatorConvergence,
-1 in TorusEmbedding).
+**Current state (2026-03-03):** 7 files in `TorusContinuumLimit/`, 15 torus
+axioms, 2 sorries (both in TorusOSAxioms). OS0–OS3 defined for the torus
+Gaussian continuum limit; OS2 + OS3 proved, OS0 + OS1 sorry'd.
 
 ## Architecture
 
@@ -16,14 +16,20 @@ axioms, 5 sorries (2 in TorusGaussianLimit, 2 in TorusPropagatorConvergence,
 gaussian-field (upstream)                    pphi2 (downstream)
 ─────────────────────────                    ──────────────────
 NuclearTensorProduct.evalCLM ──────────────→ TorusEmbedding.lean
-HeatKernel/Bilinear.lean    ──────────────→   torusContinuumGreen (def)
+HeatKernel/Bilinear.lean    ──────────────→   torusContinuumGreen = greenFunctionBilinear
   HasLaplacianEigenvalues                      torusContinuumMeasure
   heatKernelBilinear                           torusEmbeddedTwoPoint
   greenFunctionBilinear
+Torus/Symmetry.lean         ──────────────→ TorusOSAxioms.lean
+  torusTranslation                             torusGeneratingFunctional
+  torusSwap                                    TorusOS0 (sorry)
+  torusTimeReflection                          TorusOS1 (sorry)
+  torusConfigReflection                        TorusOS2_Translation (PROVED)
+                                               TorusOS2_D4 (PROVED)
                                              TorusPropagatorConvergence.lean
                                                torus_propagator_convergence (axiom)
-                                               torusEmbeddedTwoPoint_uniform_bound (sorry)
-                                               torusContinuumGreen_pos (sorry)
+                                               torusEmbeddedTwoPoint_uniform_bound (axiom)
+                                               torusContinuumGreen_pos (PROVED)
 
                                              TorusTightness.lean
                                                torusContinuumMeasures_tight (axiom)
@@ -36,228 +42,124 @@ HeatKernel/Bilinear.lean    ──────────────→   toru
                                                torusGaussianMeasure_isGaussian (axiom)
                                                torusLimit_covariance_eq (axiom)
                                                gaussian_measure_unique_of_covariance (axiom)
-                                               torusGaussianLimit_converges (PROVED, 2 sorries)
+                                               torusGaussianMeasure_z2_symmetric (axiom)
+                                               z2_symmetric_of_weakLimit (axiom)
+                                               torusGaussianLimit_fullConvergence (axiom)
+                                               torusGaussianLimit_converges (PROVED)
+                                               torusGaussianLimit_nontrivial (PROVED)
+
+                                             TorusOSAxioms.lean
+                                               torusGaussianLimit_characteristic_functional (axiom)
+                                               torusContinuumGreen_translation_invariant (axiom)
+                                               torusContinuumGreen_pointGroup_invariant (axiom)
+                                               torusLattice_rp (axiom)
+                                               torusGaussianLimit_os0 (sorry)
+                                               torusGaussianLimit_os1 (sorry)
+                                               torusGaussianLimit_os2_translation (PROVED)
+                                               torusGaussianLimit_os2_D4 (PROVED)
+                                               torusGaussianLimit_os3 (PROVED)
+                                               torusGaussianLimit_satisfies_OS (PROVED)
 
                                              TorusInteractingLimit.lean
                                                torus_interacting_tightness (axiom)
                                                torusInteractingLimit_exists (PROVED)
 ```
 
-## Tier 1: Definitions and Infrastructure
-
-These are prerequisite definitions in gaussian-field that pphi2 needs.
-
-### 1a. `evalCLM` in gaussian-field
-
-Already on the torus branch as a sorry. Provides the evaluation CLM:
-```
-evalCLM φ₁ φ₂ (pure e₁ e₂) = φ₁(e₁) · φ₂(e₂)
-```
-Extends linearly to the full tensor product. Used by `torusEmbedCLM`.
-
-### 1b. `HeatKernel/Bilinear.lean` in gaussian-field
-
-New file implementing heat kernel and Green's function on any
-`DyninMityaginSpace` with `HasLaplacianEigenvalues`.
-
-**Key definitions:**
-- `HasLaplacianEigenvalues E (μ : ℕ → ℝ)` — eigenvalues of -Δ (mass-free, ≥ 0)
-- `heatKernelBilinear E t f g = Σ_m e^{-tμ_m} coeff_m(f) coeff_m(g)`
-- `greenFunctionBilinear E mass f g = ∫₀^∞ e^{-tm²} K_t(f,g) dt`
-  = `Σ_m coeff_m(f) coeff_m(g) / (μ_m + mass²)`
-
-**Key properties:**
-- `heatKernelBilinear_tensor` — K_{t,E₁⊗E₂} = K_{t,E₁} ⊗ K_{t,E₂}
-- `heatKernelBilinear_tendsto_l2` — K_t(f,g) → ⟨f,g⟩_{L²} as t → 0⁺
-- `greenFunctionBilinear_pos` — G(f,f) > 0 for f ≠ 0
-
-Once this is implemented, `torusContinuumGreen` in pphi2 becomes:
-```lean
-def torusContinuumGreen ... := greenFunctionBilinear (TorusTestFunction L) mass hmass f g
-```
-
-### 1c. `torusGaussianMeasure_isGaussian` (axiom → provable?)
-
-Currently an axiom stating the lattice GFF pushforward is Gaussian. With
-proper infrastructure (Gaussian pushforward under linear maps), this could
-become a theorem. Low priority for now.
-
-**Dependency:** None (standalone axiom about lattice GFF).
-
-## Tier 2: Provable Sorries
-
-These are sorries where the proof strategy is clear and no new axioms are
-needed.
-
-### 2a. `torusContinuumGreen` definition (TorusEmbedding.lean)
-
-Currently `sorry`. Replace with `greenFunctionBilinear` once Tier 1b is done.
-
-**Blocked by:** Tier 1b (HeatKernel/Bilinear.lean in gaussian-field).
-
-### 2b. `torusContinuumGreen_pos` (TorusPropagatorConvergence.lean)
-
-Currently `sorry`. Once `torusContinuumGreen` is defined via
-`greenFunctionBilinear`, this follows from `greenFunctionBilinear_pos`
-(Fourier coefficients of nonzero f can't all vanish).
-
-**Blocked by:** Tier 2a.
-
-### 2c. `torusEmbeddedTwoPoint_uniform_bound` (TorusPropagatorConvergence.lean)
-
-Currently `sorry`. Proof: all eigenvalues of -Δ_lat + m² satisfy λ ≥ m²,
-so E[Φ_N(f)²] ≤ (1/m²)·‖f‖². The Riemann sum over the finite torus is
-bounded by ‖f‖²_{L²(T²)} + O(1/N).
-
-**Blocked by:** Tier 2a (need the definition to state the bound precisely).
-Can also be proved directly from the spectral representation.
-
-### 2d. Z₂ symmetry sorry (TorusGaussianLimit.lean, line 236)
-
-Currently `sorry` inside `torusGaussianLimit_converges`. The lattice GFF
-is Z₂-symmetric (Gaussian is even), and Z₂ symmetry is preserved under
-weak limits (preimage of measurable sets under negation).
-
-**Blocked by:** Nothing — provable from existing API.
-
-### 2e. Full sequence convergence sorry (TorusGaussianLimit.lean, line 246)
-
-Currently `sorry`. Standard topology argument: if every subsequence has a
-further subsequence converging to the same limit (by Gaussian uniqueness),
-then the full sequence converges.
-
-**Proof strategy:** By contradiction. If the full sequence doesn't converge
-to μ, there exists ε > 0 and a subsequence staying ε-away. But that
-subsequence has a further convergent subsequence (by tightness + Prokhorov),
-which must converge to μ (by uniqueness), contradiction.
-
-**Blocked by:** Nothing — pure topology, provable from existing API.
-
-## Tier 3: Core Analytical Axioms
-
-These are the mathematically substantive axioms that require real analytical
-arguments. They are correctly formulated and could be proved with sufficient
-Mathlib infrastructure.
-
-### 3a. `torus_propagator_convergence` (1 axiom)
-
-Lattice eigenvalues `(4N²/L²) sin²(πn/N) + m²` converge to continuum
-eigenvalues `(2πn/L)² + m²` for each mode. Combined with rapid decay of
-smooth Fourier coefficients, dominated convergence gives the result.
-
-**Difficulty:** Medium. Pure UV limit, no IR subtlety. The mode-by-mode
-convergence is elementary (sin(x)/x → 1). The dominated convergence
-argument needs uniform bounds on the partial sums.
-
-**References:** Glimm-Jaffe §6.1, Simon Ch. I.
-
-### 3b. `torusContinuumMeasures_tight` (1 axiom)
-
-Tightness of {ν_N} on Configuration(TorusTestFunction L). Uses Mitoma
-criterion: tightness of 1D marginals (each is N(0, σ²_N) with σ² bounded
-by `torusEmbeddedTwoPoint_uniform_bound`).
-
-**Difficulty:** Medium. The Mitoma criterion reduces to 1D Gaussian
-tightness, which is elementary (bounded variance ⇒ tight).
-
-**References:** Mitoma (1983), Fernique (1975).
-
-### 3c. `torusGaussianLimit_isGaussian` (1 axiom)
-
-Weak limits of Gaussian measures are Gaussian. Characteristic functionals
-converge pointwise (weak convergence), and the Gaussian form exp(-½σ²)
-is preserved in the limit by continuity.
-
-**Difficulty:** Medium. Standard but requires Bochner-Minlos on nuclear
-Fréchet spaces.
-
-**References:** Fernique §III.4, Simon Ch. I.
-
-### 3d. `torusLimit_covariance_eq` (1 axiom)
-
-Weak convergence transfers second moments when they're uniformly bounded.
-This is uniform integrability + weak convergence ⇒ moment convergence.
-
-**Difficulty:** Easy-Medium. Standard measure theory (Vitali convergence
-theorem or direct uniform integrability argument).
-
-### 3e. `gaussian_measure_unique_of_covariance` (1 axiom)
-
-Gaussian measures on nuclear spaces are determined by their covariance.
-Follows from Bochner-Minlos: the characteristic functional exp(-½C(f,f))
-determines the measure.
-
-**Difficulty:** Easy (given Bochner-Minlos). The uniqueness statement is
-essentially the injectivity of the Fourier transform on measures.
-
-## Tier 4: Interacting Extension
-
-### 4a. `torus_interacting_tightness` (1 axiom)
-
-The interacting measures μ_{P,N} = (1/Z_N) e^{-V_N} dμ_{GFF,N} are tight.
-
-**Proof strategy:** Cauchy-Schwarz density transfer.
-E_P[|ω(f)|²] ≤ (1/Z)·E_GFF[|ω(f)|⁴]^{1/2} · E_GFF[e^{-2V}]^{1/2}.
-- GFF 4th moment: controlled (Gaussian Wick formula)
-- E_GFF[e^{-2V}]: bounded by Nelson's hypercontractive estimate
-- Combined with Gaussian tightness ⇒ interacting tightness
-
-**Difficulty:** Hard. Requires Nelson's estimate (hypercontractivity) and
-careful bounds on the partition function.
-
-**References:** Simon Ch. V, Nelson (1973), Guerra-Rosen-Simon.
-
-### 4b. `torusInteractingLimit_exists` (PROVED)
-
-Already proved from tightness + Polish + Prokhorov. No further work needed.
-
-## Dependency Graph
-
-```
-Tier 1b (HeatKernel)
-  └→ Tier 2a (torusContinuumGreen def)
-       ├→ Tier 2b (Green positivity)
-       └→ Tier 2c (uniform bound)
-            └→ Tier 3b (tightness)  ←── already used via axiom
-
-Tier 1a (evalCLM)  ←── already used via sorry
-
-Tier 2d (Z₂ symmetry)     ←── independent
-Tier 2e (full convergence) ←── independent
-
-Tier 3a (propagator convergence)  ←── independent
-Tier 3c (Gaussianity of limit)    ←── independent
-Tier 3d (covariance transfer)     ←── independent
-Tier 3e (Gaussian uniqueness)     ←── independent
-
-Tier 4a (interacting tightness)   ←── depends on Tier 3b conceptually
-```
-
-## Implementation Order
-
-**Phase A — gaussian-field infrastructure:**
-1. Complete `evalCLM` (fill sorry on torus branch)
-2. Create `HeatKernel/Bilinear.lean` with definitions + key properties
-3. Build and test gaussian-field
-
-**Phase B — pphi2 definitions:**
-4. Replace `torusContinuumGreen` sorry with `greenFunctionBilinear`
-5. Prove `torusContinuumGreen_pos` from `greenFunctionBilinear_pos`
-6. Prove `torusEmbeddedTwoPoint_uniform_bound`
-
-**Phase C — pphi2 topology:**
-7. Prove Z₂ symmetry sorry
-8. Prove full sequence convergence sorry
-
-**Phase D — axiom reduction (ongoing):**
-9. Attempt to prove analytical axioms as infrastructure matures
-10. Priority order: 3e (uniqueness) > 3d (covariance) > 3c (Gaussianity)
-    > 3a (propagator) > 3b (tightness) > 4a (interacting)
+## Current Status by File
+
+| File | Axioms | Sorries | Proved |
+|------|--------|---------|--------|
+| TorusEmbedding | 0 | 0 | `torusEmbedLift_measurable`, `torusContinuumMeasure_isProbability` |
+| TorusPropagatorConvergence | 2 | 0 | `torusContinuumGreen_pos` |
+| TorusTightness | 1 | 0 | `torus_second_moment_uniform` |
+| TorusConvergence | 0 | 0 | `torusGaussianLimit_exists` |
+| TorusGaussianLimit | 7 | 0 | `torusGaussianLimit_converges`, `torusGaussianLimit_nontrivial` |
+| TorusOSAxioms | 4 | 2 | `os2_translation`, `os2_D4`, `os3`, `satisfies_OS` |
+| TorusInteractingLimit | 1 | 0 | `torusInteractingLimit_exists` |
+| **Total** | **15** | **2** | |
+
+## Next Steps: Fill the 2 Sorries
+
+### `torusGaussianLimit_os1` (OS1, easy)
+
+**Statement:** `‖torusGeneratingFunctional L μ f‖ ≤ 1`
+
+**Proof:** `|E[e^{iωf}]| ≤ E[|e^{iωf}|] = E[1] = 1` by norm_integral_le_integral_norm
++ `‖exp(ix)‖ = 1` + probability measure has total mass 1.
+
+This is the same argument as the proved `norm_generatingFunctional_le_one` in
+OS2_WardIdentity.lean — just for torus test functions instead of Schwartz.
+
+**Blocked by:** Nothing.
+
+### `torusGaussianLimit_os0` (OS0, straightforward)
+
+**Statement:** `Re(Z[Σ zᵢJᵢ])` is real-analytic on ℝⁿ.
+
+**Proof:** By `torusGaussianLimit_characteristic_functional`, Z[f] = exp(-½G(f,f)).
+So Z[Σ zᵢJᵢ] = exp(-½ Σᵢⱼ zᵢzⱼ G(Jᵢ,Jⱼ)), a composition of a polynomial (the
+bilinear form) with exp, which is entire. Take Re to get a real-analytic function.
+
+**Blocked by:** `torusGaussianLimit_characteristic_functional` axiom (needed in proof).
+
+## Axiom Inventory (15 axioms)
+
+### Tier A: Convergence Infrastructure (7 axioms in TorusGaussianLimit)
+
+| Axiom | Difficulty | Description |
+|-------|-----------|-------------|
+| `torusGaussianLimit_isGaussian` | Medium | Weak limits of Gaussians are Gaussian (Bochner-Minlos) |
+| `torusGaussianMeasure_isGaussian` | Easy | Lattice GFF pushforward is Gaussian (linear pushforward of Gaussian) |
+| `torusLimit_covariance_eq` | Easy-Med | Weak convergence transfers second moments (uniform integrability) |
+| `gaussian_measure_unique_of_covariance` | Easy | Gaussian determined by covariance (Bochner-Minlos uniqueness) |
+| `torusGaussianMeasure_z2_symmetric` | Easy | Centered Gaussian is Z₂-symmetric |
+| `z2_symmetric_of_weakLimit` | Easy | Z₂ symmetry preserved under weak limits (homeomorphism) |
+| `torusGaussianLimit_fullConvergence` | Medium | Full sequence convergence from uniqueness |
+
+### Tier B: UV Convergence (3 axioms)
+
+| Axiom | Difficulty | Description |
+|-------|-----------|-------------|
+| `torus_propagator_convergence` | Medium | Lattice eigenvalues → continuum eigenvalues |
+| `torusEmbeddedTwoPoint_uniform_bound` | Easy | E[Φ_N(f)²] ≤ C uniformly (λ ≥ m²) |
+| `torusContinuumMeasures_tight` | Medium | Tightness via Mitoma criterion |
+
+### Tier C: OS Axiom Support (4 axioms in TorusOSAxioms)
+
+| Axiom | Difficulty | Description |
+|-------|-----------|-------------|
+| `torusGaussianLimit_characteristic_functional` | Easy-Med | Z[f] = exp(-½G(f,f)) from MGF → CF analytic continuation |
+| `torusContinuumGreen_translation_invariant` | Easy | G_L(Tf,Tg) = G_L(f,g) — phase cancellation in Fourier |
+| `torusContinuumGreen_pointGroup_invariant` | Easy | G_L is D4-invariant — eigenvalue symmetry |
+| `torusLattice_rp` | Medium | Lattice GFF is RP (transfer matrix H ≥ 0) |
+
+### Tier D: Interacting Extension (1 axiom)
+
+| Axiom | Difficulty | Description |
+|-------|-----------|-------------|
+| `torus_interacting_tightness` | Hard | Cauchy-Schwarz density transfer + Nelson |
+
+## Priority for Axiom Reduction
+
+1. **`torusGaussianMeasure_z2_symmetric`** (Easy) — centered Gaussian is even
+2. **`z2_symmetric_of_weakLimit`** (Easy) — negation is a homeomorphism
+3. **`torusGaussianMeasure_isGaussian`** (Easy) — linear pushforward of Gaussian
+4. **`torusContinuumGreen_translation_invariant`** (Easy) — spectral argument
+5. **`torusContinuumGreen_pointGroup_invariant`** (Easy) — eigenvalue symmetry
+6. **`torusEmbeddedTwoPoint_uniform_bound`** (Easy) — λ ≥ m² + Parseval
+7. **`gaussian_measure_unique_of_covariance`** (Easy) — Fourier transform injectivity
+8. **`torusLimit_covariance_eq`** (Easy-Med) — uniform integrability
+9. **`torusGaussianLimit_characteristic_functional`** (Easy-Med) — Wick rotation
+10. **`torusGaussianLimit_isGaussian`** (Medium) — Bochner-Minlos
+11. **`torus_propagator_convergence`** (Medium) — dominated convergence
+12. **`torusContinuumMeasures_tight`** (Medium) — Mitoma criterion
+13. **`torusGaussianLimit_fullConvergence`** (Medium) — subsequential uniqueness
+14. **`torusLattice_rp`** (Medium) — transfer matrix argument
+15. **`torus_interacting_tightness`** (Hard) — Nelson + hypercontractivity
 
 ## Success Criteria
 
-- All 5 current sorries filled (Tier 2)
-- `torusContinuumGreen` has a real definition (not sorry)
+- 2 sorries filled (OS0 + OS1)
+- `torusGaussianLimit_satisfies_OS` compiles with no sorry
 - `lake build` passes with no regressions
-- Axiom count ideally decreases (some Tier 3 axioms proved)
-- Interacting limit exists on torus (Tier 4)
+- Axiom count ideally decreases (easy axioms proved)
