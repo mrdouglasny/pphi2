@@ -74,6 +74,7 @@ private noncomputable def toEuclideanComplexL2 (f : L2SpatialField Ns) :
     Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
   (pullToEuclideanL2 Ns) ((toComplexSpatialL2CLM Ns) f)
 
+omit [NeZero Ns] in
 /-- The real-to-complex `L²` embedding is injective. -/
 private theorem toComplexSpatialL2CLM_ne_zero
     (f : L2SpatialField Ns) (hf : f ≠ 0) :
@@ -92,6 +93,7 @@ private theorem toComplexSpatialL2CLM_ne_zero
     exact_mod_cast this
   exact hf (Lp.eq_zero_iff_ae_eq_zero.mpr hf_ae0)
 
+omit [NeZero Ns] in
 /-- The transported Euclidean complex `L²` function is nonzero if `f` is nonzero. -/
 private theorem toEuclideanComplexL2_ne_zero
     (f : L2SpatialField Ns) (hf : f ≠ 0) :
@@ -101,10 +103,11 @@ private theorem toEuclideanComplexL2_ne_zero
       ‖toEuclideanComplexL2 Ns f‖ = ‖toComplexSpatialL2CLM Ns f‖ :=
     Lp.norm_compMeasurePreserving (p := (2 : ENNReal)) (toComplexSpatialL2CLM Ns f)
       (PiLp.volume_preserving_ofLp (ι := Fin Ns))
-  have hnorm0 : ‖toEuclideanComplexL2 Ns f‖ = 0 := by simpa [h0]
+  have hnorm0 : ‖toEuclideanComplexL2 Ns f‖ = 0 := by simp [h0]
   have hnorm0' : ‖toComplexSpatialL2CLM Ns f‖ = 0 := by simpa [hnorm] using hnorm0
   exact (toComplexSpatialL2CLM_ne_zero (Ns := Ns) f hf) (norm_eq_zero.mp hnorm0')
 
+omit [NeZero Ns] in
 /-- Nonzero `f : L2SpatialField Ns` has Fourier transform not a.e. zero after transport
 to complex `L²(EuclideanSpace)`. -/
 private theorem fourier_ae_nonzero_of_spatial_nonzero
