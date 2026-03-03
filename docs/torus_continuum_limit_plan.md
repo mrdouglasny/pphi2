@@ -33,7 +33,7 @@ different proof paths.
     Gaussian proof path                  Interacting proof path
     ───────────────────                  ──────────────────────
     OS0: exp(-½Q) entire                 OS0: exponential moments
-    OS1: |E[e^{iX}]| ≤ 1  (shared)      OS1: |E[e^{iX}]| ≤ 1  (shared)
+    OS1: ‖Z[J]‖ ≤ exp(c·q(J))           OS1: ‖Z[J]‖ ≤ exp(c·q(J))
     OS2: G_L invariance                  OS2: V_a invariance
     OS3: rp_closed_under_weak_limit      OS3: rp_closed_under_weak_limit
          + torusLattice_rp                    + interacting lattice RP
@@ -42,13 +42,14 @@ different proof paths.
 
 ## Phase 1: Complete Gaussian OS (fill 2 sorries)
 
-### 1a. `torusGaussianLimit_os1` — OS1 (easy, no axioms)
+### 1a. `torusGaussianLimit_os1` — OS1 (needs characteristic functional axiom)
 
-`‖Z[f]‖ ≤ 1` for any probability measure. Proof:
-`|E[e^{iωf}]| ≤ E[|e^{iωf}|] = E[1] = 1` via `norm_integral_le_integral_norm`
-+ `Complex.abs_exp_ofReal_mul_I` + `measure_univ`.
+The complex generating functional `Z[f_re, f_im] = ∫ exp(iω(f_re) - ω(f_im)) dμ`
+satisfies `‖Z[f_re, f_im]‖ ≤ exp(c · (q(f_re) + q(f_im)))` for a continuous
+seminorm `q` on the torus test function space.
 
-Same as the proved `norm_generatingFunctional_le_one` in OS2_WardIdentity.lean.
+For Gaussian μ with covariance G_L, the bound holds with `q(f) = G_L(f,f)` and
+`c = ½`, since `|exp(-½ G_L(f_re+if_im, f_re+if_im))| ≤ exp(½ G_L(f_im,f_im))`.
 
 ### 1b. `torusGaussianLimit_os0` — OS0 (straightforward, uses char. func. axiom)
 
@@ -88,8 +89,10 @@ sequence convergence.
 
 ## Phase 3: Interacting OS1 (Regularity)
 
-`‖Z[f]‖ ≤ 1` — identical proof to the Gaussian case. The bound
-`|E[e^{iX}]| ≤ 1` holds for any probability measure.
+`‖Z[f_re, f_im]‖ ≤ exp(c · (q(f_re) + q(f_im)))` for a continuous seminorm q.
+For the interacting case, the bound follows from Nelson's hypercontractive estimate,
+which controls exponential moments of the field. Needs an axiom for interacting
+exponential moments (similar to `continuum_exponential_moments`).
 
 ## Phase 4: Interacting OS2 (Symmetry)
 
@@ -175,24 +178,25 @@ theorem torusInteractingOS_exists (P : InteractionPolynomial)
 | Axiom | Difficulty | Phase |
 |-------|-----------|-------|
 | Interacting lattice RP | Easy-Med | 2a |
+| Interacting exponential moments (torus) | Med | 3 |
 | Interacting translation invariance (lattice) | Easy | 4a |
 | Interacting D4 invariance (lattice) | Easy | 4b |
-| Interacting exponential moments (continuum) | Med-Hard | 5 |
+| Interacting exponential moments (continuum transfer) | Med-Hard | 5 |
 
-Total: ~4 new axioms for the interacting case.
+Total: ~5 new axioms for the interacting case.
 
 ## Dependency Graph
 
 ```
 Phase 1 (Gaussian sorries)         independent, do first
-  ├─ 1a: OS1 (easy)
-  └─ 1b: OS0 (straightforward)
+  ├─ 1a: OS1 (straightforward, uses char. func. axiom)
+  └─ 1b: OS0 (straightforward, uses char. func. axiom)
 
 Phase 2 (Interacting OS3)          needs: interacting lattice RP axiom
   ├─ 2a: interacting lattice RP
   └─ 2b: thread subsequence
 
-Phase 3 (Interacting OS1)          trivial, same as Gaussian
+Phase 3 (Interacting OS1)          needs exponential moment axiom
 
 Phase 4 (Interacting OS2)          needs: lattice symmetry axioms
   ├─ 4a: translation invariance
@@ -207,10 +211,10 @@ Phase 6 (Assembly)                 depends on all above
 
 ## Implementation Order
 
-1. Fill Gaussian OS1 sorry (Phase 1a) — easy win
+1. Fill Gaussian OS1 sorry (Phase 1a) — straightforward
 2. Fill Gaussian OS0 sorry (Phase 1b) — straightforward
 3. Add interacting lattice RP axiom + prove OS3 (Phase 2)
-4. Prove interacting OS1 (Phase 3) — trivial
+4. Prove interacting OS1 (Phase 3) — needs exponential moment axiom
 5. Add symmetry axioms + prove OS2 (Phase 4)
 6. Add moment axiom + prove OS0 (Phase 5)
 7. Assembly + master theorem (Phase 6)

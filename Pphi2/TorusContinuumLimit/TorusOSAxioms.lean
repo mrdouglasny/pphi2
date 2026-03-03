@@ -10,7 +10,7 @@ torus Gaussian continuum limit measure.
 ## Main results
 
 - `TorusOS0_Analyticity` — characteristic functional is analytic
-- `TorusOS1_Regularity` — |E[e^{iωf}]| ≤ 1
+- `TorusOS1_Regularity` — ‖Z[f_re, f_im]‖ ≤ exp(c·(q(f_re)+q(f_im)))
 - `TorusOS2_TranslationInvariance` — invariance under (ℝ/Lℤ)² translations
 - `TorusOS2_D4Invariance` — invariance under D4 point group
 - `TorusOS3_ReflectionPositivity` — RP for bounded continuous observables
@@ -21,7 +21,7 @@ torus Gaussian continuum limit measure.
 
 The torus T²_L has:
 - **OS0**: Z[f] = exp(-½ G_L(f,f)) is entire since G_L is bilinear.
-- **OS1**: |E[e^{iωf}]| ≤ E[|e^{iωf}|] = 1 by Jensen's inequality.
+- **OS1**: ‖Z[f_re,f_im]‖ ≤ exp(c·(q(f_re)+q(f_im))) for continuous seminorm q.
 - **OS2**: G_L is translation-invariant (spectral argument: translation
   acts by phase on Fourier modes) and D4-invariant (eigenvalues are D4-symmetric).
 - **OS3**: Lattice GFF is RP (Gaussian with (-Δ+m²)⁻¹ covariance); RP is
@@ -46,7 +46,7 @@ namespace Pphi2
 
 variable (L : ℝ) [hL : Fact (0 < L)]
 
-/-! ## Generating functional -/
+/-! ## Generating functionals -/
 
 /-- The generating functional (characteristic functional) on the torus.
 
@@ -59,19 +59,47 @@ def torusGeneratingFunctional
   ∫ ω : Configuration (TorusTestFunction L),
     Complex.exp (Complex.I * ↑(ω f)) ∂μ
 
+/-- The complex generating functional on the torus.
+
+For a "complex test function" represented by a pair (f_re, f_im) of real
+torus test functions, the complex pairing is:
+
+  `⟨ω, J⟩_ℂ = ω(f_re) + i · ω(f_im)`
+
+and the generating functional is:
+
+  `Z[J] = E[exp(i ⟨ω, J⟩_ℂ)] = ∫ exp(i ω(f_re) - ω(f_im)) dμ(ω)`
+
+Note: `exp(-ω(f_im))` is unbounded, so `‖Z[J]‖ ≤ 1` does NOT hold
+for complex test functions. This is why OS1 requires exponential bounds.
+
+We represent complex torus test functions as pairs since `TorusTestFunction L`
+is real-valued. This matches the pattern in `generatingFunctionalℂ` from
+`OSAxioms.lean`. -/
+def torusGeneratingFunctionalℂ
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ] (f_re f_im : TorusTestFunction L) : ℂ :=
+  ∫ ω : Configuration (TorusTestFunction L),
+    Complex.exp (Complex.I * ((ω f_re : ℂ) + Complex.I * (ω f_im : ℂ))) ∂μ
+
 /-! ## OS0: Analyticity -/
 
 /-- **OS0: Analyticity of the generating functional.**
 
-The Schwinger functions (moments of the measure) extend analytically.
-Equivalently, the characteristic functional `f ↦ E[e^{iωf}]` is analytic
-as a function of real parameters when expanded along test functions. -/
+The generating functional `Z[Σ zᵢJᵢ]` is entire analytic as a function
+of z = (z₁,...,zₙ) ∈ ℂⁿ, for any choice of (real) test functions Jᵢ.
+
+This is the torus analogue of `OS0_Analyticity` in `OSAxioms.lean`.
+Since `TorusTestFunction L` is real-valued, we use real test functions
+as the basis directions and allow complex coefficients zᵢ ∈ ℂ: the
+"complex test function" is Σ zᵢ Jᵢ = Σ (Re zᵢ) Jᵢ + i Σ (Im zᵢ) Jᵢ. -/
 def TorusOS0_Analyticity
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ] : Prop :=
   ∀ (n : ℕ) (J : Fin n → TorusTestFunction L),
-    AnalyticOn ℝ (fun z : Fin n → ℝ =>
-      (torusGeneratingFunctional L μ (∑ i, z i • J i)).re) Set.univ
+    AnalyticOn ℂ (fun z : Fin n → ℂ =>
+      torusGeneratingFunctionalℂ L μ
+        (∑ i, (z i).re • J i) (∑ i, (z i).im • J i)) Set.univ
 
 /-- **Characteristic functional of the Gaussian continuum limit.**
 
@@ -92,36 +120,68 @@ axiom torusGaussianLimit_characteristic_functional
     torusGeneratingFunctional L μ f =
     Complex.exp ((-1 / 2) * ↑(torusContinuumGreen L mass hmass f f))
 
-/-- OS0 for the torus Gaussian continuum limit. -/
+/-- OS0 for the torus Gaussian continuum limit.
+
+For Gaussian μ with covariance G_L, the complex generating functional is:
+  `Z[f_re, f_im] = exp(-½ G_L(f_re + if_im, f_re + if_im))`
+where G_L extends bilinearly. This is entire in the coefficients zᵢ since
+it is the composition of a polynomial (the bilinear form) with exp. -/
 theorem torusGaussianLimit_os0
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
     (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass) :
     TorusOS0_Analyticity L μ := by
-  -- exp(-½ Q(f)) where Q is a bilinear form is entire
   sorry
 
 /-! ## OS1: Regularity -/
 
-/-- **OS1: Regularity (boundedness) of the generating functional.**
+/-- **OS1: Regularity of the complex generating functional.**
 
-  `|Z_μ(f)| ≤ 1` for all test functions f.
+The complex generating functional satisfies exponential bounds:
 
-This follows from `|E[e^{iX}]| ≤ E[|e^{iX}|] = E[1] = 1`. -/
+  `‖Z[f_re, f_im]‖ ≤ exp(c · (q(f_re) + q(f_im)))`
+
+for some continuous seminorm `q` on the torus test function space
+and constant `c > 0`.
+
+This is the torus analogue of `OS1_Regularity` in `OSAxioms.lean`,
+adapted to the abstract nuclear Fréchet test function space where
+spatial Lᵖ norms are not directly available. The continuous seminorm
+formulation is the standard OS1 for nuclear test function spaces and
+subsumes the `L¹ + Lᵖ` form used in the infinite-volume case.
+
+The bound controls the growth of Z when the imaginary part of the
+test function (which produces the unbounded factor `exp(-ω(f_im))`)
+is nonzero.
+
+For a Gaussian with covariance G_L, the bound holds with
+`q(f) = G_L(f,f)` (the RKHS norm squared). For the interacting
+case, Nelson's hypercontractive estimate gives the bound via
+a Sobolev-type seminorm. -/
 def TorusOS1_Regularity
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ] : Prop :=
-  ∀ (f : TorusTestFunction L),
-    ‖torusGeneratingFunctional L μ f‖ ≤ 1
+  ∃ (q : TorusTestFunction L → ℝ) (_ : Continuous q) (c : ℝ), c > 0 ∧
+    ∀ (f_re f_im : TorusTestFunction L),
+      ‖torusGeneratingFunctionalℂ L μ f_re f_im‖ ≤
+        Real.exp (c * (q f_re + q f_im))
 
-/-- OS1 for any probability measure on the torus (no axioms needed). -/
+/-- OS1 for the torus Gaussian continuum limit.
+
+For Gaussian μ with covariance G_L:
+  `‖Z[f_re, f_im]‖ = |exp(-½ G_L(f_re+if_im, f_re+if_im))|`
+  `= exp(½ (G_L(f_im,f_im) - G_L(f_re,f_re)))`
+  `≤ exp(½ G_L(f_im, f_im))`
+  `≤ exp(½ (G_L(f_re,f_re) + G_L(f_im,f_im)))`
+
+This gives the bound with `q(f) = G_L(f,f)` and `c = ½`. -/
 theorem torusGaussianLimit_os1
+    (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
-    [IsProbabilityMeasure μ] :
+    [IsProbabilityMeasure μ]
+    (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass) :
     TorusOS1_Regularity L μ := by
-  intro f
-  -- |E[e^{iωf}]| ≤ E[|e^{iωf}|] = E[1] = 1
   sorry
 
 /-! ## OS2: Euclidean invariance (translation + D4) -/
@@ -312,8 +372,8 @@ structure SatisfiesTorusOS
 /-- **The torus Gaussian continuum limit satisfies OS0–OS3.**
 
 The proof uses the Gaussian structure (characteristic functional = exp(-½G))
-to establish OS0 and OS2. OS1 holds for any probability measure. OS3 is
-inherited from lattice RP via weak limits. -/
+to establish OS0, OS1, and OS2. OS3 is inherited from lattice RP via
+weak limits. -/
 theorem torusGaussianLimit_satisfies_OS
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
@@ -321,7 +381,7 @@ theorem torusGaussianLimit_satisfies_OS
     (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass) :
     SatisfiesTorusOS L μ where
   os0 := torusGaussianLimit_os0 L mass hmass μ hGCL
-  os1 := torusGaussianLimit_os1 L μ
+  os1 := torusGaussianLimit_os1 L mass hmass μ hGCL
   os2_translation := torusGaussianLimit_os2_translation L mass hmass μ hGCL
   os2_D4 := torusGaussianLimit_os2_D4 L mass hmass μ hGCL
   os3 := torusGaussianLimit_os3 L mass hmass μ hGCL

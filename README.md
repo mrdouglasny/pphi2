@@ -198,6 +198,8 @@ lake build
   (pphi2 + gaussian-field) with correctness ratings
 - [docs/gemini_review.md](docs/gemini_review.md) — External review of axioms
   with references and proof strategies
+- [docs/torus_continuum_limit_plan.md](docs/torus_continuum_limit_plan.md) —
+  Plan for torus OS axioms (Gaussian + interacting P(φ)₂)
 - [docs/os_axioms_lattice_plan.md](docs/os_axioms_lattice_plan.md) — Design
   notes for OS axiom formulations
 
@@ -223,6 +225,19 @@ positivity results used in the OS3 reflection positivity proof.
 
 - Xi Yin, [Phi4](https://github.com/xiyin137/Phi4) — Formalization of φ⁴ quantum
   field theory in Lean 4
+
+## Future projects
+
+- **Unified OS axiom framework.** Currently the infinite-volume OS axioms
+  (`OSAxioms.lean`) and torus OS axioms (`TorusOSAxioms.lean`) are defined
+  separately. These should be unified into a single parametric `SatisfiesOS`
+  structure taking a `SpaceTime` parameter that encodes the geometry:
+  whether space is compact (torus vs ℝ², controlling ergodicity/clustering),
+  whether a distinguished time direction exists (enabling reflection positivity),
+  the symmetry group (E(2) vs translations × D4), and so on. The OS axioms
+  and other consistency tests (e.g. moment bounds, support properties) would
+  then be stated once and instantiated for each spacetime. Both the Gaussian
+  and interacting measures would be verified against the same axiom bundle.
 
 ## License
 
