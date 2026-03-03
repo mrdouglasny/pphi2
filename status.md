@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 48 axioms, 5 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 2 axioms, 0 sorries (none used by pphi2)**
+**pphi2: 51 axioms, 1 sorry** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 1 axiom, 8 sorries (none used by pphi2)**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -57,11 +57,11 @@ It is not imported and not counted in the active axiom inventory.
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
-| 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 1 sorry (`torusContinuumGreen`) |
-| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 2 sorries |
+| 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
+| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 1 sorry |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
-| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 4 axioms, 2 sorries |
+| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 7 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 1 axiom, 0 sorries |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 
@@ -319,6 +319,9 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | `torusGaussianLimit_isGaussian` | TorusGaussianLimit | Medium | Weak limits of Gaussians on torus are Gaussian. Bochner-Minlos + characteristic functionals. |
 | `torusLimit_covariance_eq` | TorusGaussianLimit | Medium | Weak convergence transfers second moments. Uniform integrability from `torusEmbeddedTwoPoint_uniform_bound`. |
 | `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Medium | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness. |
+| `torusGaussianMeasure_z2_symmetric` | TorusGaussianLimit | Easy | Lattice GFF pushforward is Z₂-symmetric: `μ_N` is invariant under φ ↦ -φ. |
+| `z2_symmetric_of_weakLimit` | TorusGaussianLimit | Medium | Z₂ symmetry transfers through weak limits. |
+| `torusGaussianLimit_fullConvergence` | TorusGaussianLimit | Medium | Full sequence convergence (not just subsequential) from Gaussianity + covariance uniqueness + Z₂ symmetry. |
 | `torus_interacting_tightness` | TorusInteractingLimit | Medium | Cauchy-Schwarz density transfer from Gaussian tightness. Nelson's estimate + hypercontractivity. |
 
 **Proved theorems (TorusContinuumLimit/):**
@@ -332,11 +335,13 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `torusInteractingLimit_exists`: **PROVED** — Prokhorov extraction for interacting measures.
 
 **Sorries (provable):**
-- `torusContinuumGreen`: Continuum Green's function definition (will be `greenFunctionBilinear` from gaussian-field).
 - `torusEmbeddedTwoPoint_uniform_bound`: `E[Φ_N(f)²] ≤ C` from eigenvalue bound λ ≥ m².
-- `torusContinuumGreen_pos`: `G(f,f) > 0` from Fourier injectivity on C∞(T²).
-- Z₂ symmetry of the limit (in `torusGaussianLimit_converges`): Lattice GFF is Z₂-symmetric, transfers to limit.
-- Full sequence convergence step (in `torusGaussianLimit_converges`): Standard subsequential uniqueness argument.
+
+**Former sorries (now resolved):**
+- ~~`torusContinuumGreen`~~: Now defined as `greenFunctionBilinear` from gaussian-field `HeatKernel/Bilinear.lean`.
+- ~~`torusContinuumGreen_pos`~~: Now proved from `greenFunctionBilinear_pos`.
+- ~~Z₂ symmetry~~: Now axiomatized as `torusGaussianMeasure_z2_symmetric` + `z2_symmetric_of_weakLimit`.
+- ~~Full sequence convergence~~: Now axiomatized as `torusGaussianLimit_fullConvergence`.
 
 ### Phase 5: Euclidean invariance (OS2) and OS proof chains
 
@@ -524,8 +529,9 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **2 axioms and 0 sorries**.
-Both are in `HeatKernel/PositionKernel.lean`
-(`mehlerKernel_eq_series`, `circleHeatKernel_pos`) and are not used by the
-pphi2 lattice route.
+The gaussian-field library (dependency) has **1 axiom and 8 sorries**.
+The axiom is in `HeatKernel/PositionKernel.lean`
+(`circleHeatKernel_pos`) and is not used by the
+pphi2 lattice route. The 8 sorries are in `HeatKernel/Bilinear.lean`
+(Green's function bilinear form infrastructure).
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.

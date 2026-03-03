@@ -174,6 +174,71 @@ axiom gaussian_measure_unique_of_covariance
       ∫ ω : Configuration (TorusTestFunction L), (ω f) ^ 2 ∂μ₂) :
     μ₁ = μ₂
 
+/-! ## Z₂ symmetry of lattice GFF -/
+
+/-- **The lattice GFF continuum measure is Z₂-symmetric.**
+
+The lattice GFF μ_{GFF,N} is a centered Gaussian, hence Z₂-symmetric
+(invariant under φ ↦ -φ). The pushforward ν_{GFF,N} = (ι̃_N)_* μ_{GFF,N}
+inherits this symmetry since the embedding is linear. -/
+axiom torusGaussianMeasure_z2_symmetric (N : ℕ) [NeZero N]
+    (mass : ℝ) (hmass : 0 < mass) :
+    Measure.map (Neg.neg : Configuration (TorusTestFunction L) →
+      Configuration (TorusTestFunction L))
+      (torusContinuumMeasure L N mass hmass) =
+    torusContinuumMeasure L N mass hmass
+
+/-- **Z₂ symmetry is preserved under weak limits.**
+
+If each μ_n is Z₂-symmetric (invariant under negation) and μ_n → μ weakly,
+then μ is Z₂-symmetric. This follows because negation is a homeomorphism,
+so weak convergence of μ_n implies weak convergence of (neg)_* μ_n,
+and both limits must agree. -/
+axiom z2_symmetric_of_weakLimit
+    (μ_seq : ℕ → Measure (Configuration (TorusTestFunction L)))
+    (hμ_symm : ∀ n, Measure.map
+      (Neg.neg : Configuration (TorusTestFunction L) →
+        Configuration (TorusTestFunction L)) (μ_seq n) = μ_seq n)
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ]
+    (hconv : ∀ (g : Configuration (TorusTestFunction L) → ℝ),
+      Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Tendsto (fun n => ∫ ω, g ω ∂(μ_seq n)) atTop (nhds (∫ ω, g ω ∂μ))) :
+    Measure.map (Neg.neg : Configuration (TorusTestFunction L) →
+      Configuration (TorusTestFunction L)) μ = μ
+
+/-! ## Full convergence from Gaussian uniqueness -/
+
+/-- **Full sequence convergence of torus Gaussian measures.**
+
+Combines three ingredients:
+1. Tightness (`torusContinuumMeasures_tight`): any subsequence has a
+   further weakly convergent subsequence (Prokhorov).
+2. Gaussianity (`torusGaussianLimit_isGaussian`): any such limit is Gaussian.
+3. Uniqueness (`gaussian_measure_unique_of_covariance`): a Gaussian on a
+   nuclear space is determined by its covariance.
+
+Together: every subsequential limit is the unique Gaussian with covariance
+`torusContinuumGreen`, so the full sequence converges.
+
+This is the standard "subsequential compactness + unique limit ⇒ convergence"
+argument from point-set topology. -/
+axiom torusGaussianLimit_fullConvergence
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ]
+    (hμ_gauss : ∀ (f : TorusTestFunction L),
+      ∫ ω : Configuration (TorusTestFunction L),
+        Real.exp (ω f) ∂μ =
+      Real.exp ((1 / 2) * ∫ ω, (ω f) ^ 2 ∂μ))
+    (hcov : ∀ (f : TorusTestFunction L),
+      ∫ ω : Configuration (TorusTestFunction L), (ω f) ^ 2 ∂μ =
+      torusContinuumGreen L mass hmass f f) :
+    ∀ (g : Configuration (TorusTestFunction L) → ℝ),
+      Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Tendsto (fun N => ∫ ω, g ω ∂(torusContinuumMeasure L (N + 1) mass hmass))
+        atTop (nhds (∫ ω, g ω ∂μ))
+
 /-! ## Full sequence convergence -/
 
 /-- **The full sequence of torus Gaussian measures converges.**
@@ -231,19 +296,17 @@ theorem torusGaussianLimit_converges
     isGaussian := hμ_gauss
     covariance_eq := hcov
     z2_symmetric := by
-      -- Z₂ symmetry: The lattice GFF measures are all Z₂-symmetric
-      -- (the Gaussian is even), so the weak limit is too.
-      sorry
+      exact z2_symmetric_of_weakLimit L
+        (fun n => torusContinuumMeasure L (φ n + 1) mass hmass)
+        (fun n => torusGaussianMeasure_z2_symmetric L (φ n + 1) mass hmass)
+        μ hconv
   }
   -- Step 5: Full sequence convergence
   -- Every subsequential limit is the unique Gaussian with this covariance.
   -- Standard topology argument: if every subsequence has a further subsequence
   -- converging to the same point, then the full sequence converges.
-  refine ⟨μ, hμ_prob, hGCL, fun g hg_cont hg_bdd => ?_⟩
-  -- Use the fact that every subsequential limit equals μ
-  -- (by Gaussianity + covariance uniqueness)
-  -- to promote subsequential convergence to full convergence.
-  sorry
+  exact ⟨μ, hμ_prob, hGCL,
+    torusGaussianLimit_fullConvergence L mass hmass μ hμ_gauss hcov⟩
 
 /-! ## Nontriviality -/
 

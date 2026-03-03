@@ -59,8 +59,8 @@ The construction proceeds in six phases:
 All six phases are structurally complete and the full project builds
 (`lake build`, 3516 jobs).
 
-- **pphi2:** 48 axioms, 5 sorries
-- **gaussian-field** (upstream dependency): 2 axioms, 0 sorries (none used by pphi2)
+- **pphi2:** 51 axioms, 1 sorry
+- **gaussian-field** (upstream dependency): 1 axiom, 8 sorries (none used by pphi2)
 
 The torus continuum limit (`TorusContinuumLimit/`) provides a cleaner alternative
 to the S'(ℝ^d) approach: by fixing the physical volume L and taking only N→∞,

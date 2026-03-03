@@ -103,7 +103,8 @@ at least one n since f̂ ≠ 0 (Fourier transform is injective on C∞(T²)). -/
 theorem torusContinuumGreen_pos (mass : ℝ) (hmass : 0 < mass)
     (f : TorusTestFunction L) (hf : f ≠ 0) :
     0 < torusContinuumGreen L mass hmass f f := by
-  sorry
+  unfold torusContinuumGreen
+  exact greenFunctionBilinear_pos mass hmass f hf
 
 end Pphi2
 

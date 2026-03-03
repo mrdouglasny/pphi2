@@ -37,6 +37,7 @@ The continuum Green's function on the torus has discrete Fourier modes:
 
 import Pphi2.InteractingMeasure.LatticeMeasure
 import Torus.Evaluation
+import SmoothCircle.Eigenvalues
 
 noncomputable section
 
@@ -117,14 +118,12 @@ where `μ_m` are the Laplacian eigenvalues on T²_L (via Cantor pairing:
 Schauder coefficients from `DyninMityaginSpace`.
 
 This is the spectral sum representation of the Green's function `(-Δ + m²)⁻¹`
-on the torus, which equals the Laplace transform of the heat kernel:
-`G_mass(f,g) = ∫₀^∞ e^{-t·mass²} K_t(f,g) dt`.
-
-When `HeatKernel/Bilinear.lean` is implemented in gaussian-field, this will
-be replaced by `greenFunctionBilinear mass hmass f g`. -/
+on the torus, defined via `greenFunctionBilinear` from `HeatKernel/Bilinear.lean`.
+The `HasLaplacianEigenvalues` instance for the torus is inherited automatically
+from the circle instance via `tensorProductHasLaplacianEigenvalues`. -/
 def torusContinuumGreen (mass : ℝ) (hmass : 0 < mass)
     (f g : TorusTestFunction L) : ℝ :=
-  sorry -- Will be greenFunctionBilinear from gaussian-field HeatKernel/Bilinear.lean
+  greenFunctionBilinear mass hmass f g
 
 end Pphi2
 
