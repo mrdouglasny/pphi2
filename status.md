@@ -5,7 +5,7 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3532 jobs).
+3534 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
@@ -230,7 +230,7 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`jentzsch_theorem`~~ | Jentzsch | ✅ **Proved** | Jentzsch's theorem for compact self-adjoint positivity-improving operators: ground eigenvalue simple with strict spectral gap. Reed-Simon IV, XIII.43–44. Full proof in `JentzschProof.lean`, bridge via `IsPositivityImproving.toPI'`. |
 | ~~`transferOperator_positivityImproving`~~ | Jentzsch | ✅ **Proved** | Transfer kernel K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ') > 0 everywhere, so T maps nonneg nonzero f to a.e. strictly positive Tf. Proved via T = M_w ∘ Conv_G ∘ M_w factorization, Cauchy-Schwarz for L² integrability, measure-preserving translation, and `integral_pos_iff_support_of_nonneg_ae`. |
 | ~~`transferOperator_strictly_positive_definite`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ > 0 for f ≠ 0. Proved via self-adjointness of M_w (⟨f, M_w(Conv_G(M_w f))⟩ = ⟨M_w f, Conv_G(M_w f)⟩), injectivity of M_w (w > 0), and Gaussian convolution strict PD axiom. |
-| `convolution_gaussian_strictly_positive_definite` | Jentzsch | Medium | Bridge axiom from bochner project. Convolution with Gaussian exp(-½‖·‖²) is strictly PD on L²: ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk > 0. Bochner's theorem + Plancherel. |
+| `inner_convCLM_pos_of_fourier_pos` | GaussianFourier | Medium | Convolution with Gaussian exp(-½‖·‖²) is strictly PD on L²: ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk > 0. Bochner's theorem + Plancherel. |
 | ~~`l2SpatialField_hilbertBasis_nontrivial`~~ | Jentzsch | ✅ **Proved** | Any Hilbert basis of L²(ℝ^Ns) has ≥ 2 elements. Proved via indicator functions on disjoint balls + orthogonality. |
 | ~~`transferOperator_inner_nonneg`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ ≥ 0. Derived from strict PD (> 0 for f ≠ 0, = 0 for f = 0). |
 | ~~`transferOperator_eigenvalues_pos`~~ | Jentzsch | ✅ **Proved** | λᵢ > 0. From ⟨bᵢ, Tbᵢ⟩ = λᵢ‖bᵢ‖² > 0 by strict PD. |
@@ -275,7 +275,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `interacting_moment_bound` | Hypercontractivity | Medium | Bounds interacting L^{pn} moments in terms of FREE Gaussian L^{2n} moments via Cauchy-Schwarz density transfer. RHS uses μ_{GFF}, not μ_a (converting back requires e^{+V_a} which diverges). |
 | `prokhorov_configuration_sequential` | Convergence | Infrastructure | Sequential extraction axiom directly on `Configuration (ContinuumTestFunction d)`; avoids global Polish/Borel assumptions on full weak-* dual. |
 | ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — generic Polish-space sequential Prokhorov theorem (kept as theorem, not used by `continuumLimit`). |
-| `schwinger2_convergence` | Convergence | Med/Hard | 2-point Schwinger functions converge along subsequence. Prokhorov + uniform L² integrability. |
+| ~~`schwinger2_convergence`~~ | Convergence | **PROVED** | 2-point Schwinger functions converge. Proved from `schwinger_n_convergence`. |
 | `schwinger_n_convergence` | Convergence | Hard | n-point Schwinger functions converge along subsequence. Diagonal subsequence extraction. |
 | `continuumLimit_nontrivial` | Convergence | Hard | ∫ (ω f)² dμ > 0 for some f. Free field two-point function gives lower bound. |
 | `continuumLimit_nonGaussian` | Convergence | Hard | Connected 4-point function ≠ 0. Perturbation theory gives O(λ) contribution. |
@@ -326,7 +326,9 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 
 | ~~`torusGaussianLimit_characteristic_functional`~~ | TorusOSAxioms | **PROVED** | CF `E[e^{iωf}] = exp(-½G(f,f))` from MGF via `complexMGF` analytic continuation + `charFun_gaussianReal`. |
 | `torusPositiveTimeSubmodule` | TorusOSAxioms | Infrastructure | Submodule of torus test functions with time support in (0, L/2). Nuclear tensor product lacks pointwise evaluation, so submodule axiomatized. |
-| `torusGaussianLimit_complex_cf_quadratic` | TorusOSAxioms | Standard | Complex CF of Gaussian = exp(-½ ∑ᵢⱼ zᵢzⱼ G(Jᵢ,Jⱼ)). Multivariate complex MGF of joint Gaussian vector. Used to prove OS0 analyticity. |
+| ~~`torusGaussianLimit_complex_cf_quadratic`~~ | TorusOSAxioms | **PROVED** | Complex CF of Gaussian = exp(-½ ∑ᵢⱼ zᵢzⱼ G(Jᵢ,Jⱼ)). Proved via `torusGeneratingFunctionalℂ_analyticOnNhd` + `analyticOnNhd_eq_of_eqOn_reals`. |
+| `torusGeneratingFunctionalℂ_analyticOnNhd` | TorusOSAxioms | Medium | Analyticity of complex generating functional on ℂⁿ. Needed for identity theorem argument in OS0. |
+| `torusLattice_rp` | TorusOSAxioms | Medium | Matrix-form reflection positivity for lattice GFF on torus. For positive-time test functions, Σᵢⱼ cᵢcⱼ Re(Z[fᵢ - Θfⱼ]) ≥ 0. Fubini + perfect-square argument. |
 | ~~`torusGaussianLimit_complex_cf_norm`~~ | TorusOSAxioms | **ELIMINATED** | Axiom eliminated: OS1 proved directly via triangle inequality `‖Z_ℂ‖ ≤ ∫ exp(-ω(f_im)) dμ = exp(½G₂₂)` without needing exact norm. |
 | ~~`torusContinuumGreen_continuous_diag`~~ | TorusOSAxioms | **PROVED** | Proved via `greenFunctionBilinear_continuous_diag` in gaussian-field. Locally uniform convergence of partial sums (Weierstrass M-test + coeff_decay). |
 
@@ -367,7 +369,12 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`generatingFunctional_translate_continuous`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — via DCT (bound 1) + `continuous_timeTranslationSchwartz` from TimeTranslation.lean. |
 | ~~`norm_generatingFunctional_le_one`~~ | OS2_WardIdentity | ✅ **Proved** | ‖Z[f]‖ ≤ 1 from norm_integral ≤ ∫ norm + ‖exp(ix)‖=1. |
 | ~~`os4_clustering_implies_ergodicity`~~ | OS2_WardIdentity | ✅ **Proved** | OS4_Clustering → OS4_Ergodicity via reality of Z + Cesàro convergence. |
+| `latticeMeasure_translation_invariant` | OS2_WardIdentity | Medium | Lattice interacting measure is translation-invariant: `Z_a[τ_k f] = Z_a[f]` for lattice shifts k. Relabeling argument. |
+| `translation_invariance_continuum` | OS2_WardIdentity | Medium | Continuum limit generating functional is translation-invariant: `Z[τ_a f] = Z[f]`. Follows from lattice translation invariance + weak convergence. |
+| `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Hard | Super-renormalizability gives `‖Z_a[R·f] - Z_a[f]‖ ≤ C·a²`. No logarithmic corrections in d=2. Key input for Ward identity. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Hard | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson, transferred to limit. Feeds OS0 + OS1. |
+| `analyticOn_generatingFunctionalC` | OS2_WardIdentity | Medium | Analyticity of complex generating functional. From exponential moments via Morera's theorem. |
+| `exponential_moment_schwartz_bound` | OS2_WardIdentity | Medium | Exponential moment bound in Schwartz seminorms: `∫ exp(c·\|ω f\|) dμ ≤ exp(C·p(f)^q)`. For OS1 regularity. |
 | `rotation_invariance_continuum` | OS2_WardIdentity | Hard | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + anomaly irrelevance. Feeds OS2. |
 | `continuum_exponential_clustering` | OS2_WardIdentity | Hard | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap → exp clustering. Feeds OS4. |
 
@@ -396,7 +403,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`pphi2_nontrivial`~~ | Main | **Proved** | Uses `pphi2_nontriviality` axiom. |
 | ~~`pphi2_nonGaussian`~~ | Main | **Proved** | Uses `pphi2_nonGaussianity` axiom. |
 | `pphi2_nontriviality` | Main | Hard | ∫ (ω f)² dμ > 0 for all f ≠ 0. Correlation inequalities (Griffiths, FKG). |
-| `pphi2_nonGaussianity` | Main | Hard | ∫ (ω f)⁴ dμ − 3(∫ (ω f)² dμ)² ≠ 0. Perturbation theory, O(λ) at weak coupling. |
+| ~~`pphi2_nonGaussianity`~~ | Main | **PROVED** | Proved from `continuumLimit_nonGaussian` by providing a fixed sequence `aₙ = 1/(n+1)`. |
 | `measure_determined_by_schwinger` | Bridge | Medium | Moment determinacy on S'(ℝ²) with exponential (Fernique-type) moment bound. |
 | ~~`wick_constant_comparison`~~ | ~~Bridge~~ | — | **Removed** — duplicate of `wickConstant_log_divergence`, moved to Unused/. |
 | `same_continuum_measure` | Bridge | Medium | pphi2 and Phi4 constructions agree at weak coupling. Requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
@@ -543,52 +550,62 @@ The following theorems have complete proofs (no sorry):
 ## Provability assessment (ranked by difficulty)
 
 Axioms ranked by feasibility of proving them with current Lean/Mathlib
-infrastructure. Assessment date: 2026-03-03.
+infrastructure. Assessment date: 2026-03-04.
 
-### Tier 1: Easy (provable now)
+### Tier 1: Recently proved
+
+| Axiom | File | Status |
+|-------|------|--------|
+| ~~`torusContinuumGreen_continuous_diag`~~ | TorusOSAxioms | **PROVED.** Via `greenFunctionBilinear_continuous_diag` in gaussian-field. |
+| ~~`torusEmbeddedTwoPoint_uniform_bound`~~ | TorusPropagatorConvergence | **PROVED.** DM expansion + Fourier basis bounds. |
+| ~~`torusGaussianMeasure_z2_symmetric`~~ | TorusGaussianLimit | **PROVED.** Gaussian uniqueness via same covariance. |
+| ~~`z2_symmetric_of_weakLimit`~~ | TorusGaussianLimit | **PROVED.** `ext_of_forall_integral_eq_of_IsFiniteMeasure` + uniqueness of limits. |
+| ~~`torusGaussianMeasure_isGaussian`~~ | TorusGaussianLimit | **PROVED.** Lattice GFF pushforward is Gaussian via `pairing_is_gaussian`. |
+| ~~`torusGaussianLimit_isGaussian`~~ | TorusGaussianLimit | **PROVED.** MGF matching → complexMGF extension → measure equality + `weakLimit_centered_gaussianReal`. |
+| ~~`torusGaussianLimit_complex_cf_quadratic`~~ | TorusOSAxioms | **PROVED.** Via `torusGeneratingFunctionalℂ_analyticOnNhd` + identity theorem. |
+| ~~`torusContinuumGreen_translation_invariant`~~ | TorusOSAxioms | **PROVED.** Via `greenFunctionBilinear_translation_invariant` in gaussian-field. |
+| ~~`torusContinuumGreen_pointGroup_invariant`~~ | TorusOSAxioms | **PROVED.** Via `greenFunctionBilinear_swap_invariant` + `_timeReflection_invariant`. |
+| ~~`schwinger2_convergence`~~ | Convergence | **PROVED.** From `schwinger_n_convergence`. |
+| ~~`pphi2_nonGaussianity`~~ | Main | **PROVED.** From `continuumLimit_nonGaussian` with `aₙ = 1/(n+1)`. |
+
+### Tier 2: Easy (provable now)
 
 | Axiom | File | Strategy |
 |-------|------|----------|
-| ~~`torusContinuumGreen_continuous_diag`~~ | TorusOSAxioms | **PROVED.** Via `greenFunctionBilinear_continuous_diag` in gaussian-field (Weierstrass M-test + coeff_decay). |
-| ~~`torusEmbeddedTwoPoint_uniform_bound`~~ | TorusPropagatorConvergence | **PROVED.** `E[Φ_N(f)²] ≤ C` from eigenvalue lower bound `λ_k ≥ m²` + Parseval + `latticeTestFn_norm_sq_bounded` (DM expansion + Fourier basis bounds). |
-| `torusGaussianMeasure_z2_symmetric` | TorusGaussianLimit | **PROVED.** Both `neg_* ν` and `ν` are Gaussian with same covariance → equal by `gaussian_measure_unique_of_covariance`. |
-
-### Tier 2: Easy-Moderate (clear strategy, some work)
-
-| Axiom | File | Strategy |
-|-------|------|----------|
-| `torus_propagator_convergence` | TorusPropagatorConvergence | Lattice eigenvalues `(4N²/L²)sin²(πn/N) + m²` → continuum `(2πn/L)² + m²`. Mode-by-mode Taylor `sin(x)/x → 1` + dominated convergence with `1/(m² + k²)` domination + Schwartz rapid decay. |
-| `z2_symmetric_of_weakLimit` | TorusGaussianLimit | **PROVED.** Uses `ext_of_forall_integral_eq_of_IsFiniteMeasure` + uniqueness of limits for weak convergence. |
-| `torusGaussianMeasure_isGaussian` | TorusGaussianLimit | Lattice GFF pushforward is Gaussian. MGF: `E[e^{ω(f)}] = exp(½ E[ω(f)²])` from independence of Fourier modes + Gaussian MGF. |
-| `latticeMeasure_translation_invariant` | OS2_WardIdentity | Lattice measure invariant under cyclic translation. Finite-dimensional change of variables with Jacobian = 1 (translation on torus). |
+| `weakLimit_centered_gaussianReal` | TorusGaussianLimit | Weak limits of centered Gaussians on ℝ are Gaussian. CF convergence + `ext_of_charFun`. |
+| `torus_propagator_convergence` | TorusPropagatorConvergence | Mode-by-mode `sin(x)/x → 1` + dominated convergence with `1/(m² + k²)` domination + Schwartz rapid decay. |
+| `latticeMeasure_translation_invariant` | OS2_WardIdentity | Lattice measure invariant under cyclic translation. Finite-dimensional change of variables with Jacobian = 1. |
 
 ### Tier 3: Moderate (nontrivial but standard)
 
 | Axiom | File | Strategy |
 |-------|------|----------|
-| `torusGaussianLimit_complex_cf_quadratic` | TorusOSAxioms | Complex CF of Gaussian = exp(-½ ∑ zᵢzⱼ Gᵢⱼ). Requires bilinearity of Green's function (from linearity of DMS coefficients) + multivariate complex MGF (analytic continuation of real MGF). |
-| ~~`torusContinuumGreen_translation_invariant`~~ | TorusOSAxioms | **PROVED.** Via `greenFunctionBilinear_translation_invariant` in gaussian-field. Translation acts by SO(2) rotation on paired cos/sin Fourier modes; paired product invariant from cos²+sin²=1. |
-| ~~`torusContinuumGreen_pointGroup_invariant`~~ | TorusOSAxioms | **PROVED.** Via `greenFunctionBilinear_swap_invariant` (reindex n₁↔n₂) and `greenFunctionBilinear_timeReflection_invariant` (reflection acts ±1 on modes, (±1)²=1). |
 | `torusLimit_covariance_eq` | TorusGaussianLimit | Weak convergence transfers second moments. Uniform integrability from `torusEmbeddedTwoPoint_uniform_bound` + Vitali convergence. |
-| `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness: characteristic functional `exp(-½C(f,f))` determines the measure. |
-| ~~`torusGaussianLimit_isGaussian`~~ | TorusGaussianLimit | **PROVED.** Via MGF matching → complexMGF extension → measure equality (`pushforward_eval_gaussianReal`) + `weakLimit_centered_gaussianReal`. |
-| `weakLimit_centered_gaussianReal` | TorusGaussianLimit | Weak limits of centered Gaussians on ℝ are centered Gaussian. CF convergence + `ext_of_charFun`. |
-| `torusContinuumMeasures_tight` | TorusTightness | Mitoma criterion on torus + Chebyshev from uniform second moments. Finite volume simplifies vs S'(ℝ^d). |
-| `lattice_rp` | OS3_RP_Lattice | RP inequality for `interactingLatticeMeasure`. Fubini factorization across time-0 plane + perfect-square argument. Glimm-Jaffe Ch. 6.1. |
-| `transferOperator_isCompact` | L2Operator | Hilbert-Schmidt strategy: kernel `K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ')` with Gaussian decay of weight makes `∫∫ K² < ∞`. |
-| `os3_inheritance` | AxiomInheritance | RP transfers through weak limits. Follows from `lattice_rp_matrix` + `rp_closed_under_weak_limit` (proved). |
+| `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness. |
+| `torusContinuumMeasures_tight` | TorusTightness | Mitoma criterion on torus + Chebyshev from uniform second moments. |
+| `torusPositiveTimeSubmodule` | TorusOSAxioms | Submodule of positive-time test functions. Infrastructure axiom. |
+| `torusGeneratingFunctionalℂ_analyticOnNhd` | TorusOSAxioms | Analyticity of complex generating functional. From exponential moments via Morera. |
+| `torusLattice_rp` | TorusOSAxioms | Matrix-form RP for lattice GFF on torus. Fubini + perfect-square argument. |
+| `lattice_rp` | OS3_RP_Lattice | RP inequality for `interactingLatticeMeasure`. Fubini + perfect-square. Glimm-Jaffe Ch. 6.1. |
+| `transferOperator_isCompact` | L2Operator | Hilbert-Schmidt: kernel `K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ')` with Gaussian decay → `∫∫ K² < ∞`. |
+| `translation_invariance_continuum` | OS2_WardIdentity | Continuum translation invariance from lattice + weak convergence. |
+| `analyticOn_generatingFunctionalC` | OS2_WardIdentity | Analyticity of complex generating functional from exponential moments via Morera. |
+| `exponential_moment_schwartz_bound` | OS2_WardIdentity | Exponential moment bound in Schwartz seminorms for OS1. |
+| `os3_inheritance` | AxiomInheritance | RP transfers through weak limits. From `lattice_rp_matrix` + `rp_closed_under_weak_limit` (proved). |
 | `os0_inheritance` | AxiomInheritance | Uniform moment bounds + pointwise convergence → limit has all moments finite. |
+| `torus_interacting_tightness` | TorusInteractingLimit | Cauchy-Schwarz density transfer from Gaussian tightness. |
 
 ### Tier 4: Hard (deep analytic results)
 
 | Axiom | File | Strategy |
 |-------|------|----------|
-| `gaussian_conv_strictlyPD` | GaussianFourier | `⟨f, G⋆f⟩ > 0` for f ≠ 0. Bochner's theorem + Plancherel: `∫ Ĝ|f̂|² dk > 0` since `Ĝ > 0` (`fourier_gaussian_pos` already proved). Needs Plancherel for convolution inner product. |
-| `propagator_convergence` | PropagatorConvergence | Lattice Riemann sum → continuum Fourier integral on ℝ^d. Dominated convergence with Schwartz decay. Harder than torus version (infinite volume). |
+| `inner_convCLM_pos_of_fourier_pos` | GaussianFourier | `⟨f, G⋆f⟩ > 0` for f ≠ 0. Bochner + Plancherel: `∫ Ĝ\|f̂\|² dk > 0` since `Ĝ > 0` (proved). |
+| `propagator_convergence` | PropagatorConvergence | Lattice Riemann sum → continuum Fourier integral on ℝ^d. Dominated convergence + Schwartz decay. |
 | `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
+| `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Super-renormalizability gives a² Ward identity bound. No log corrections in d=2. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Fernique + Nelson hypercontractive estimate transferred to limit. |
-| `exponential_moment_bound` | Hypercontractivity | `∫ exp(-2V_a) dμ_{GFF} ≤ K` uniformly. Deep stability (cluster expansions, Glimm-Jaffe Thm 8.6.1). |
-| `spectral_gap_uniform` | SpectralGap | Uniform mass gap. Central result of Glimm-Jaffe. Very hard. |
+| `exponential_moment_bound` | Hypercontractivity | `∫ exp(-2V_a) dμ_{GFF} ≤ K` uniformly. Deep stability (cluster expansions, Glimm-Jaffe 8.6.1). |
+| `interacting_moment_bound` | Hypercontractivity | Cauchy-Schwarz density transfer of moments. |
 | `rotation_invariance_continuum` | OS2_WardIdentity | Ward identity + anomaly irrelevance for O(2). |
 | `continuum_exponential_clustering` | OS2_WardIdentity | Spectral gap → exponential clustering in continuum. |
 
@@ -596,16 +613,30 @@ infrastructure. Assessment date: 2026-03-03.
 
 | Axiom | File | Strategy |
 |-------|------|----------|
-| `prokhorov_configuration_sequential` | Convergence | Sequential extraction on `Configuration (ContinuumTestFunction d)`. Needs Polish space structure on S'(ℝ²) — blocked by Mathlib nuclear space gap. (Not needed for torus path.) |
-| `schwinger_agreement` | Bridge | Cluster expansion uniqueness at weak coupling (Guerra-Rosen-Simon 1975). |
+| `spectral_gap_uniform` | SpectralGap | Uniform mass gap. Central result of Glimm-Jaffe. |
 | `spectral_gap_lower_bound` | SpectralGap | Quantitative mass gap bound. |
+| `prokhorov_configuration_sequential` | Convergence | Sequential extraction on S'(ℝ²). Blocked by Mathlib nuclear space gap. (Not needed for torus path.) |
 | `continuumLimit_nonGaussian` | Convergence | Nonzero 4th cumulant via perturbation theory. |
+| `continuumLimit_nontrivial` | Convergence | Two-point function > 0. Correlation inequalities (Griffiths, FKG). |
+| `schwinger_n_convergence` | Convergence | n-point Schwinger functions converge. Diagonal subsequence extraction. |
+| `pphi2_nontriviality` | Main | ∫ (ω f)² dμ > 0 for all f ≠ 0. Correlation inequalities. |
+| `schwinger_agreement` | Bridge | Cluster expansion uniqueness (Guerra-Rosen-Simon). |
+| `same_continuum_measure` | Bridge | pphi2 and Phi4 agree at weak coupling. |
+| `os2_from_phi4` | Bridge | OS2 for Phi4 continuum limit. |
+| `measure_determined_by_schwinger` | Bridge | Moment determinacy on S'(ℝ²). |
+| `two_point_clustering_from_spectral_gap` | OS4_MassGap | 2-point clustering from mass gap. |
+| `general_clustering_from_spectral_gap` | OS4_MassGap | General n-point clustering from mass gap. |
+| `second_moment_uniform` | Tightness | Uniform second moments for interacting measure. |
+| `moment_equicontinuity` | Tightness | Equicontinuity of moments in f. |
+| `continuumMeasures_tight` | Tightness | Tightness via Mitoma for interacting measures on S'(ℝ²). |
+| `gaussianContinuumMeasures_tight` | GaussianTightness | Tightness of embedded GFF measures via Mitoma. |
+| `gaussianLimit_isGaussian` | GaussianLimit | Weak limits of Gaussians are Gaussian (S'(ℝ²) version). |
 
 ### Recommended attack order
 
-1. **Torus tier 1**: ~~`torusContinuumGreen_continuous_diag`~~ (PROVED), ~~`torusEmbeddedTwoPoint_uniform_bound`~~ (PROVED), `torusGaussianMeasure_z2_symmetric` — each provable in a single session
-2. **Torus tier 2**: `torus_propagator_convergence`, `z2_symmetric_of_weakLimit`, `torusGaussianMeasure_isGaussian` — clear strategies, moderate work
-3. **Transfer matrix**: `transferOperator_isCompact`, `gaussian_conv_strictlyPD` — unlocks full spectral theory
+1. **Easy wins**: `weakLimit_centered_gaussianReal`, `torus_propagator_convergence`, `latticeMeasure_translation_invariant`
+2. **Torus infrastructure**: `torusLimit_covariance_eq`, `gaussian_measure_unique_of_covariance`, `torusContinuumMeasures_tight`, `torusLattice_rp`
+3. **Transfer matrix**: `transferOperator_isCompact`, `inner_convCLM_pos_of_fourier_pos` — unlocks spectral theory
 4. **OS inheritance**: `lattice_rp`, `os3_inheritance`, `os0_inheritance` — fills the RP chain
 5. **Hard analysis**: spectral gap, clustering, exponential moments — the deep results
 
