@@ -35,6 +35,7 @@ the S'(ℝ^d) approach, but on the torus configuration space.
 -/
 
 import Pphi2.TorusContinuumLimit.TorusConvergence
+import Mathlib.MeasureTheory.Measure.HasOuterApproxClosed
 
 noncomputable section
 
@@ -174,19 +175,115 @@ axiom gaussian_measure_unique_of_covariance
       ∫ ω : Configuration (TorusTestFunction L), (ω f) ^ 2 ∂μ₂) :
     μ₁ = μ₂
 
+/-! ## Z₂ symmetry helpers -/
+
+/-- Negation on Configuration is measurable w.r.t. the cylindrical σ-algebra.
+
+Each evaluation `ω ↦ (-ω)(f) = -(ω f)` is measurable since `ω ↦ ω f` is
+measurable and negation on ℝ is measurable. -/
+theorem configuration_neg_measurable :
+    @Measurable _ _ instMeasurableSpaceConfiguration instMeasurableSpaceConfiguration
+      (Neg.neg : Configuration (TorusTestFunction L) →
+        Configuration (TorusTestFunction L)) := by
+  apply configuration_measurable_of_eval_measurable
+  intro f
+  -- (-ω)(f) = -(ω f), and ω ↦ ω f is measurable, negation is measurable
+  change @Measurable _ _ instMeasurableSpaceConfiguration _ (fun ω => (-ω) f)
+  have h_eq : (fun ω : Configuration (TorusTestFunction L) => (-ω) f) =
+      (fun ω => -(ω f)) := by
+    ext ω; exact ContinuousLinearMap.neg_apply ω f
+  rw [h_eq]
+  exact (configuration_eval_measurable f).neg
+
+/-- Negation on `(-ω)(f) = -(ω f)` for configurations. -/
+theorem configuration_neg_apply (ω : Configuration (TorusTestFunction L))
+    (f : TorusTestFunction L) : (-ω) f = -(ω f) :=
+  ContinuousLinearMap.neg_apply ω f
+
 /-! ## Z₂ symmetry of lattice GFF -/
 
 /-- **The lattice GFF continuum measure is Z₂-symmetric.**
 
 The lattice GFF μ_{GFF,N} is a centered Gaussian, hence Z₂-symmetric
 (invariant under φ ↦ -φ). The pushforward ν_{GFF,N} = (ι̃_N)_* μ_{GFF,N}
-inherits this symmetry since the embedding is linear. -/
-axiom torusGaussianMeasure_z2_symmetric (N : ℕ) [NeZero N]
+inherits this symmetry since the embedding is linear.
+
+**Proof strategy:** Both `neg_* ν` and `ν` are Gaussian probability measures
+with the same covariance (since `((-ω)f)² = (ω f)²`), hence equal by
+`gaussian_measure_unique_of_covariance`. -/
+theorem torusGaussianMeasure_z2_symmetric (N : ℕ) [NeZero N]
     (mass : ℝ) (hmass : 0 < mass) :
     Measure.map (Neg.neg : Configuration (TorusTestFunction L) →
       Configuration (TorusTestFunction L))
       (torusContinuumMeasure L N mass hmass) =
-    torusContinuumMeasure L N mass hmass
+    torusContinuumMeasure L N mass hmass := by
+  set ν := torusContinuumMeasure L N mass hmass
+  set ν' := Measure.map (Neg.neg : Configuration (TorusTestFunction L) →
+    Configuration (TorusTestFunction L)) ν
+  have hneg_meas := configuration_neg_measurable L
+  -- ν' is a probability measure
+  haveI hν_prob : IsProbabilityMeasure ν := torusContinuumMeasure_isProbability L N mass hmass
+  haveI hν'_prob : IsProbabilityMeasure ν' :=
+    Measure.isProbabilityMeasure_map hneg_meas.aemeasurable
+  -- Helper: (-ω)(f) = -(ω f)
+  have neg_eval : ∀ (ω : Configuration (TorusTestFunction L)) (f : TorusTestFunction L),
+      (-ω) f = -(ω f) := fun ω f => ContinuousLinearMap.neg_apply ω f
+  -- Helper: ∫ g(ω) d(neg_* ν) = ∫ g(-ω) dν for measurable g
+  -- We use integral_map_of_stronglyMeasurable which requires StronglyMeasurable g.
+  -- For the specific integrands we need (exp and pow of evaluation), we prove
+  -- measurability from composition with configuration_eval_measurable.
+  -- Helper for measurability: ω ↦ (ω f)^2 is strongly measurable
+  have eval_sq_sm : ∀ (f : TorusTestFunction L),
+      StronglyMeasurable (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 2) := by
+    intro f
+    exact ((configuration_eval_measurable f).pow_const 2).stronglyMeasurable
+  -- Helper for measurability: ω ↦ exp(ω f) is strongly measurable
+  have eval_exp_sm : ∀ (f : TorusTestFunction L),
+      StronglyMeasurable (fun ω : Configuration (TorusTestFunction L) => Real.exp (ω f)) := by
+    intro f
+    exact (Real.measurable_exp.comp (configuration_eval_measurable f)).stronglyMeasurable
+  -- Covariance of ν': ∫ (ω f)² dν' = ∫ (ω f)² dν
+  have hν'_cov : ∀ (f : TorusTestFunction L),
+      ∫ ω : Configuration (TorusTestFunction L), (ω f) ^ 2 ∂ν' =
+      ∫ ω : Configuration (TorusTestFunction L), (ω f) ^ 2 ∂ν := by
+    intro f
+    rw [integral_map_of_stronglyMeasurable hneg_meas (eval_sq_sm f)]
+    congr 1; funext ω; rw [neg_eval]; ring
+  -- ν' is Gaussian: ∫ exp(ω f) dν' = exp(½ ∫ (ω f)² dν')
+  have hν'_gauss : ∀ (f : TorusTestFunction L),
+      ∫ ω : Configuration (TorusTestFunction L),
+        Real.exp (ω f) ∂ν' =
+      Real.exp ((1 / 2) * ∫ ω, (ω f) ^ 2 ∂ν') := by
+    intro f
+    -- ∫ exp(ω f) dν' = ∫ exp((-ω) f) dν  (change of variables)
+    rw [integral_map_of_stronglyMeasurable hneg_meas (eval_exp_sm f)]
+    -- Rewrite the integrand: exp((-ω) f) = exp(-(ω f)) = exp(ω(-f))
+    have h_eq : (fun ω : Configuration (TorusTestFunction L) =>
+        Real.exp ((-ω) f)) = (fun ω => Real.exp (ω (-f))) := by
+      funext ω; congr 1; rw [neg_eval]; simp [map_neg]
+    rw [h_eq]
+    -- Apply Gaussianity at -f: ∫ exp(ω(-f)) dν = exp(½ · twoPoint(-f,-f))
+    rw [torusGaussianMeasure_isGaussian L N mass hmass (-f)]
+    congr 1; congr 1
+    -- twoPoint(-f,-f) = ∫ (ω f)² dν'
+    simp only [torusEmbeddedTwoPoint]
+    have h1 : (fun ω : Configuration (TorusTestFunction L) =>
+        ω (-f) * ω (-f)) = (fun ω => (ω f) ^ 2) := by
+      funext ω; simp [map_neg]; ring
+    rw [integral_congr_ae (ae_of_all _ (fun ω => congr_fun h1 ω))]
+    exact (hν'_cov f).symm
+  -- Gaussianity of ν in the right form
+  have hν_gauss : ∀ (f : TorusTestFunction L),
+      ∫ ω : Configuration (TorusTestFunction L),
+        Real.exp (ω f) ∂ν =
+      Real.exp ((1 / 2) * ∫ ω, (ω f) ^ 2 ∂ν) := by
+    intro f
+    rw [torusGaussianMeasure_isGaussian L N mass hmass f]
+    congr 1; congr 1
+    simp only [torusEmbeddedTwoPoint]
+    congr 1; funext ω; ring
+  -- Apply Gaussian uniqueness: same Gaussianity + same covariance → equal
+  exact gaussian_measure_unique_of_covariance L ν' ν hν'_gauss hν_gauss hν'_cov
 
 /-- **Z₂ symmetry is preserved under weak limits.**
 
@@ -194,7 +291,7 @@ If each μ_n is Z₂-symmetric (invariant under negation) and μ_n → μ weakly
 then μ is Z₂-symmetric. This follows because negation is a homeomorphism,
 so weak convergence of μ_n implies weak convergence of (neg)_* μ_n,
 and both limits must agree. -/
-axiom z2_symmetric_of_weakLimit
+theorem z2_symmetric_of_weakLimit
     (μ_seq : ℕ → Measure (Configuration (TorusTestFunction L)))
     (hμ_symm : ∀ n, Measure.map
       (Neg.neg : Configuration (TorusTestFunction L) →
@@ -205,7 +302,48 @@ axiom z2_symmetric_of_weakLimit
       Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
       Tendsto (fun n => ∫ ω, g ω ∂(μ_seq n)) atTop (nhds (∫ ω, g ω ∂μ))) :
     Measure.map (Neg.neg : Configuration (TorusTestFunction L) →
-      Configuration (TorusTestFunction L)) μ = μ
+      Configuration (TorusTestFunction L)) μ = μ := by
+  -- We use the measure extensionality theorem for finite Borel measures.
+  haveI := configuration_torus_borelSpace L
+  haveI := configuration_torus_polish L
+  have hneg_meas := configuration_neg_measurable L
+  haveI : IsProbabilityMeasure (Measure.map
+      (Neg.neg : Configuration (TorusTestFunction L) →
+        Configuration (TorusTestFunction L)) μ) :=
+    Measure.isProbabilityMeasure_map hneg_meas.aemeasurable
+  -- It suffices to show integrals agree on all bounded continuous functions
+  apply ext_of_forall_integral_eq_of_IsFiniteMeasure
+  intro f
+  -- ∫ f d(neg_* μ) = ∫ (f ∘ neg) dμ  (change of variables)
+  -- With BorelSpace, continuous functions are AEStronglyMeasurable
+  have hf_aesm : ∀ (ν : Measure (Configuration (TorusTestFunction L))),
+      AEStronglyMeasurable (fun ω => (f : Configuration (TorusTestFunction L) → ℝ) ω) ν :=
+    fun ν => f.continuous.aestronglyMeasurable
+  rw [integral_map hneg_meas.aemeasurable (hf_aesm _)]
+  -- Need to show: ∫ f(-ω) dμ = ∫ f(ω) dμ
+  -- g := ω ↦ f(-ω) is bounded continuous
+  set g : Configuration (TorusTestFunction L) → ℝ :=
+    fun ω => (f : Configuration (TorusTestFunction L) → ℝ) (-ω) with hg_def
+  have hg_cont : Continuous g := f.continuous.comp continuous_neg
+  have hbnd : ∀ x : Configuration (TorusTestFunction L),
+      |(f : Configuration (TorusTestFunction L) → ℝ) x| ≤ ‖f‖ := by
+    intro x; rw [← Real.norm_eq_abs]; exact f.norm_coe_le_norm x
+  have hg_bdd : ∃ C, ∀ x, |g x| ≤ C := ⟨‖f‖, fun x => hbnd (-x)⟩
+  have hf_bdd : ∃ C, ∀ x,
+      |(f : Configuration (TorusTestFunction L) → ℝ) x| ≤ C := ⟨‖f‖, hbnd⟩
+  -- ∫ g dμ_n → ∫ g dμ  (weak convergence)
+  have hconv_g := hconv g hg_cont hg_bdd
+  -- ∫ f dμ_n → ∫ f dμ  (weak convergence)
+  have hconv_f := hconv _ f.continuous hf_bdd
+  -- But ∫ g dμ_n = ∫ f(-ω) dμ_n = ∫ f(ω) d(neg_* μ_n) = ∫ f(ω) dμ_n
+  have h_eq_n : (fun n => ∫ ω, g ω ∂(μ_seq n)) =
+      (fun n => ∫ ω, (f : Configuration (TorusTestFunction L) → ℝ) ω ∂(μ_seq n)) := by
+    funext n
+    show ∫ ω, (f : Configuration (TorusTestFunction L) → ℝ) (-ω) ∂(μ_seq n) =
+        ∫ ω, (f : Configuration (TorusTestFunction L) → ℝ) ω ∂(μ_seq n)
+    rw [← integral_map hneg_meas.aemeasurable (hf_aesm _), hμ_symm n]
+  -- Since the sequences are equal, their limits are equal
+  exact tendsto_nhds_unique (h_eq_n ▸ hconv_g) hconv_f
 
 /-! ## Full convergence from Gaussian uniqueness -/
 

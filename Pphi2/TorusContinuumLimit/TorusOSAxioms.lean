@@ -202,16 +202,14 @@ axiom torusGaussianLimit_complex_cf_norm
 
   `f ↦ G_L(f, f)` is continuous on `TorusTestFunction L`.
 
-`G_L` is a continuous bilinear form on the nuclear Fréchet space
-`TorusTestFunction L` (its spectral sum `Σ |ĉ_m(f)|²/(μ_m+m²)` converges
-uniformly on bounded sets because `1/(μ_m+m²) ≤ 1/m²` and coefficients
-are rapidly decreasing). The diagonal restriction of a continuous bilinear
-form is continuous.
-
-Reference: Trèves, *Topological Vector Spaces*, Ch. 50. -/
-axiom torusContinuumGreen_continuous_diag
+The proof uses `greenFunctionBilinear_continuous_diag` from gaussian-field,
+which shows that the spectral sum `Σ (coeff_m f)² / (μ_m + mass²)` converges
+locally uniformly (via the Weierstrass M-test with the `coeff_decay` bound
+from `DyninMityaginSpace`). -/
+theorem torusContinuumGreen_continuous_diag
     (mass : ℝ) (hmass : 0 < mass) :
-    Continuous (fun f : TorusTestFunction L => torusContinuumGreen L mass hmass f f)
+    Continuous (fun f : TorusTestFunction L => torusContinuumGreen L mass hmass f f) :=
+  GaussianField.greenFunctionBilinear_continuous_diag mass hmass
 
 /-- OS1 for the torus Gaussian continuum limit.
 

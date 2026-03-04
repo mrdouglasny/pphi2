@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 59 axioms, 2 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 10 axioms, 1 sorry**
+**pphi2: 55 axioms, 3 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 10 axioms, 1 sorry**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -58,12 +58,12 @@ It is not imported and not counted in the active axiom inventory.
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 1 axiom, 1 sorry |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
-| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 2 axioms, 0 sorries |
+| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 1 sorry (`latticeTestFn_norm_sq_bounded`) |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
-| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 7 axioms, 0 sorries |
+| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 5 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 1 axiom, 0 sorries |
-| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 7 axioms, 1 sorry (OS0–OS3; OS1+OS2+OS3 proved) |
+| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 6 axioms, 1 sorry (OS0–OS3; OS1+OS2+OS3 proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
@@ -321,14 +321,14 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | `torusGaussianLimit_isGaussian` | TorusGaussianLimit | Medium | Weak limits of Gaussians on torus are Gaussian. Bochner-Minlos + characteristic functionals. |
 | `torusLimit_covariance_eq` | TorusGaussianLimit | Medium | Weak convergence transfers second moments. Uniform integrability from `torusEmbeddedTwoPoint_uniform_bound`. |
 | `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Medium | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness. |
-| `torusGaussianMeasure_z2_symmetric` | TorusGaussianLimit | Easy | Lattice GFF pushforward is Z₂-symmetric: `μ_N` is invariant under φ ↦ -φ. |
-| `z2_symmetric_of_weakLimit` | TorusGaussianLimit | Medium | Z₂ symmetry transfers through weak limits. |
+| `torusGaussianMeasure_z2_symmetric` | TorusGaussianLimit | **PROVED** | Lattice GFF pushforward is Z₂-symmetric: both `neg_* ν` and `ν` are Gaussian with same covariance, hence equal by `gaussian_measure_unique_of_covariance`. |
+| `z2_symmetric_of_weakLimit` | TorusGaussianLimit | **PROVED** | Z₂ symmetry transfers through weak limits. Uses `ext_of_forall_integral_eq_of_IsFiniteMeasure` (Mathlib) + `configuration_torus_borelSpace` (axiom in gaussian-field). |
 | `torusGaussianLimit_fullConvergence` | TorusGaussianLimit | Medium | Full sequence convergence (not just subsequential) from Gaussianity + covariance uniqueness + Z₂ symmetry. |
 | `torus_interacting_tightness` | TorusInteractingLimit | Medium | Cauchy-Schwarz density transfer from Gaussian tightness. Nelson's estimate + hypercontractivity. |
 
 | `torusPositiveTimeSubmodule` | TorusOSAxioms | Infrastructure | Submodule of torus test functions with time support in (0, L/2). Nuclear tensor product lacks pointwise evaluation, so submodule axiomatized. |
 | `torusGaussianLimit_complex_cf_norm` | TorusOSAxioms | Easy | ✅ Verified (Gemini). ‖Z_ℂ[f_re,f_im]‖ = exp(½(G(f_im,f_im)-G(f_re,f_re))). Gaussian MGF with complex coefficients (t₁=i, t₂=-1). Fernique §III.4. |
-| `torusContinuumGreen_continuous_diag` | TorusOSAxioms | Easy | ✅ Verified (Gemini). f ↦ G_L(f,f) continuous. G_L is a continuous bilinear form on nuclear Fréchet space; diagonal restriction is continuous. Trèves Ch. 50. |
+| ~~`torusContinuumGreen_continuous_diag`~~ | TorusOSAxioms | **PROVED** | Proved via `greenFunctionBilinear_continuous_diag` in gaussian-field. Locally uniform convergence of partial sums (Weierstrass M-test + coeff_decay). |
 
 **Proved theorems (TorusContinuumLimit/):**
 - `torusEmbedLift_measurable`: Measurability of torus embedding lift.
@@ -340,6 +340,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `torusInteractingMeasure_isProbability`: Interacting pushforward is probability.
 - `torusInteractingLimit_exists`: **PROVED** — Prokhorov extraction for interacting measures.
 - `torusContinuumGreen_nonneg`: `G_L(f,f) ≥ 0` from `greenFunctionBilinear_nonneg` (proved in gaussian-field).
+- `torusContinuumGreen_continuous_diag`: **PROVED** — f ↦ G_L(f,f) continuous. Via `greenFunctionBilinear_continuous_diag` in gaussian-field (Weierstrass M-test + coeff_decay + locally uniform convergence).
 - `torusGaussianLimit_os1`: **PROVED** — OS1 regularity with q(f)=G_L(f,f), c=½. From `torusGaussianLimit_complex_cf_norm` + `torusContinuumGreen_nonneg`.
 - `torusMatrixRP_of_weakLimit`: **PROVED** — Matrix RP transfers through weak limits via Re(Z[g]) = ∫ cos(ω(g)) dμ (bounded continuous) + `tendsto_finset_sum` + `ge_of_tendsto'`.
 - `torusGaussianLimit_os3`: **PROVED** — OS3 reflection positivity from `torusMatrixRP_of_weakLimit` + `torusLattice_rp` + `torusGaussianLimit_fullConvergence`.
@@ -546,16 +547,16 @@ infrastructure. Assessment date: 2026-03-03.
 
 | Axiom | File | Strategy |
 |-------|------|----------|
-| `torusContinuumGreen_continuous_diag` | TorusOSAxioms | Diagonal of continuous bilinear form `greenFunctionBilinear` is continuous. Direct from bilinearity + `ContinuousLinearMap.continuous`. |
+| ~~`torusContinuumGreen_continuous_diag`~~ | TorusOSAxioms | **PROVED.** Via `greenFunctionBilinear_continuous_diag` in gaussian-field (Weierstrass M-test + coeff_decay). |
 | `torusEmbeddedTwoPoint_uniform_bound` | TorusPropagatorConvergence | `E[Φ_N(f)²] ≤ C` from eigenvalue lower bound `λ_k ≥ m²` + Parseval on compact torus. Finite sum, no limiting argument. |
-| `torusGaussianMeasure_z2_symmetric` | TorusGaussianLimit | Lattice GFF pushforward invariant under φ ↦ -φ. Centered Gaussian is symmetric; pushforward commutes with negation via linearity of embedding. |
+| `torusGaussianMeasure_z2_symmetric` | TorusGaussianLimit | **PROVED.** Both `neg_* ν` and `ν` are Gaussian with same covariance → equal by `gaussian_measure_unique_of_covariance`. |
 
 ### Tier 2: Easy-Moderate (clear strategy, some work)
 
 | Axiom | File | Strategy |
 |-------|------|----------|
 | `torus_propagator_convergence` | TorusPropagatorConvergence | Lattice eigenvalues `(4N²/L²)sin²(πn/N) + m²` → continuum `(2πn/L)² + m²`. Mode-by-mode Taylor `sin(x)/x → 1` + dominated convergence with `1/(m² + k²)` domination + Schwartz rapid decay. |
-| `z2_symmetric_of_weakLimit` | TorusGaussianLimit | Z₂ symmetry transfers through weak limits. Negation is continuous on `Configuration`; if `μ_n` are symmetric and `μ_n ⇒ μ`, then `μ` is symmetric. Use `MeasureTheory.Measure.tendsto_map_of_tendsto_of_continuous`. |
+| `z2_symmetric_of_weakLimit` | TorusGaussianLimit | **PROVED.** Uses `ext_of_forall_integral_eq_of_IsFiniteMeasure` + uniqueness of limits for weak convergence. |
 | `torusGaussianMeasure_isGaussian` | TorusGaussianLimit | Lattice GFF pushforward is Gaussian. MGF: `E[e^{ω(f)}] = exp(½ E[ω(f)²])` from independence of Fourier modes + Gaussian MGF. |
 | `latticeMeasure_translation_invariant` | OS2_WardIdentity | Lattice measure invariant under cyclic translation. Finite-dimensional change of variables with Jacobian = 1 (translation on torus). |
 
@@ -598,7 +599,7 @@ infrastructure. Assessment date: 2026-03-03.
 
 ### Recommended attack order
 
-1. **Torus tier 1**: `torusContinuumGreen_continuous_diag`, `torusEmbeddedTwoPoint_uniform_bound`, `torusGaussianMeasure_z2_symmetric` — each provable in a single session
+1. **Torus tier 1**: ~~`torusContinuumGreen_continuous_diag`~~ (PROVED), `torusEmbeddedTwoPoint_uniform_bound`, `torusGaussianMeasure_z2_symmetric` — each provable in a single session
 2. **Torus tier 2**: `torus_propagator_convergence`, `z2_symmetric_of_weakLimit`, `torusGaussianMeasure_isGaussian` — clear strategies, moderate work
 3. **Transfer matrix**: `transferOperator_isCompact`, `gaussian_conv_strictlyPD` — unlocks full spectral theory
 4. **OS inheritance**: `lattice_rp`, `os3_inheritance`, `os0_inheritance` — fills the RP chain
