@@ -13,7 +13,7 @@ torus Gaussian continuum limit measure.
 - `TorusOS1_Regularity` — ‖Z[f_re, f_im]‖ ≤ exp(c·(q(f_re)+q(f_im)))
 - `TorusOS2_TranslationInvariance` — invariance under (ℝ/Lℤ)² translations
 - `TorusOS2_D4Invariance` — invariance under D4 point group
-- `TorusOS3_ReflectionPositivity` — RP for bounded continuous observables
+- `TorusOS3_ReflectionPositivity` — RP matrix positive semidefinite
 - `SatisfiesTorusOS` — bundled structure for all torus OS axioms
 - `torusGaussianLimit_satisfies_OS` — main theorem
 
@@ -24,8 +24,17 @@ The torus T²_L has:
 - **OS1**: ‖Z[f_re,f_im]‖ ≤ exp(c·(q(f_re)+q(f_im))) for continuous seminorm q.
 - **OS2**: G_L is translation-invariant (spectral argument: translation
   acts by phase on Fourier modes) and D4-invariant (eigenvalues are D4-symmetric).
-- **OS3**: Lattice GFF is RP (Gaussian with (-Δ+m²)⁻¹ covariance); RP is
-  preserved under weak limits by `rp_closed_under_weak_limit`.
+- **OS3**: For positive-time test functions f₁,...,fₙ, the RP matrix
+  `Mᵢⱼ = Re(Z[fᵢ - Θfⱼ])` is positive semidefinite. Uses the
+  generating-functional matrix form matching `OS3_ReflectionPositivity`
+  in `OSAxioms.lean`.
+
+## Warmup for cylinder S¹ × ℝ
+
+This torus formulation prepares for the cylinder S¹ × ℝ, where
+"positive time" is the clean half-line {t > 0} and OS reconstruction
+applies directly. On the torus (ℝ/Lℤ)², positive time means
+t ∈ (0, L/2), which is the correct half for RP with periodic BCs.
 
 ## References
 
@@ -36,7 +45,6 @@ The torus T²_L has:
 
 import Pphi2.TorusContinuumLimit.TorusGaussianLimit
 import Pphi2.TorusContinuumLimit.TorusPropagatorConvergence
-import Pphi2.OSProofs.OS3_RP_Inheritance
 import Torus.Symmetry
 
 noncomputable section
@@ -327,77 +335,202 @@ theorem torusGaussianLimit_os2_D4
 
 /-! ## OS3: Reflection positivity -/
 
-/-- The set of "admissible" observables for reflection positivity:
-bounded continuous functions on configuration space.
+/-! ### Positive-time test functions on the torus -/
 
-In the full OS framework, these should be restricted to functions depending
-only on the "positive-time" field configurations. For the single-function
-formulation `∫ F · (ΘF) dμ ≥ 0` used in `IsRP`, the positive-time support
-condition is automatically enforced: the product `F(ω) · F(Θω)` involves
-both F and its reflection, so the inequality is nontrivial only when F
-depends on "future" fields. For a Gaussian measure with covariance C,
-the transfer matrix argument gives `∫ F · (ΘF) = ⟨F, e^{-aH} F⟩_L² ≥ 0`
-since `H ≥ 0`. -/
-def torusRP_admissible :
-    Set (Configuration (TorusTestFunction L) → ℝ) :=
-  {F | Continuous F ∧ ∃ C, ∀ x, |F x| ≤ C}
+/-- **Submodule of torus test functions supported at positive time (0, L/2).**
 
-/-- **OS3: Reflection positivity for the torus measure.**
+Since `TorusTestFunction L` is a nuclear tensor product `C∞(ℝ/Lℤ) ⊗̂ C∞(ℝ/Lℤ)`
+without direct pointwise evaluation, we axiomatize the submodule structure.
 
-A measure μ on Configuration(TorusTestFunction L) is RP with respect to
-time reflection Θ if for all bounded continuous observables F:
+Mathematically, this is the subspace of test functions whose support in the
+first (time) coordinate lies in the open interval (0, L/2) ⊂ ℝ/Lℤ. This is
+the correct "positive-time" half for RP with periodic boundary conditions:
+the reflection t ↦ -t maps (0, L/2) to (L/2, L), so positive-time and
+negative-time supports are disjoint. -/
+axiom torusPositiveTimeSubmodule :
+    Submodule ℝ (TorusTestFunction L)
 
-  `∫ F(ω) · F(Θ_*ω) dμ(ω) ≥ 0`
+/-- Positive-time test functions on the torus. -/
+abbrev TorusPositiveTimeTestFunction :=
+    torusPositiveTimeSubmodule L
 
-Here Θ_* = torusConfigReflection is the dual action of the OS time
-reflection (t,x) ↦ (-t,x) on the configuration space. -/
+/-! ### Helper lemmas for weak-limit RP transfer -/
+
+/-- `ω ↦ cos(ω(g))` is continuous on configuration space. -/
+private lemma torusCosEval_continuous (g : TorusTestFunction L) :
+    Continuous (fun ω : Configuration (TorusTestFunction L) => Real.cos (ω g)) :=
+  Real.continuous_cos.comp (WeakDual.eval_continuous g)
+
+/-- `ω ↦ cos(ω(g))` is bounded by 1. -/
+private lemma torusCosEval_bounded (g : TorusTestFunction L) :
+    ∃ C : ℝ, ∀ ω : Configuration (TorusTestFunction L), |Real.cos (ω g)| ≤ C :=
+  ⟨1, fun ω => Real.abs_cos_le_one (ω g)⟩
+
+/-- `ω ↦ exp(i·ω(g))` is AE strongly measurable w.r.t. the cylindrical σ-algebra.
+Uses `configuration_eval_measurable` (not topology, since the measurable space
+on Configuration is cylindrical, not Borel). -/
+private lemma torusExpEval_aestronglyMeasurable
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    (g : TorusTestFunction L) :
+    AEStronglyMeasurable (fun ω : Configuration (TorusTestFunction L) =>
+      Complex.exp (Complex.I * ↑(ω g))) μ :=
+  (Complex.continuous_exp.measurable.comp
+    (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
+      (configuration_eval_measurable g)))).aestronglyMeasurable
+
+/-- `ω ↦ exp(i·ω(g))` is integrable w.r.t. any probability measure.
+Bounded by 1 since `‖exp(ix)‖ = 1` for real `x`. -/
+private lemma torusExpEval_integrable
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
+    Integrable (fun ω : Configuration (TorusTestFunction L) =>
+      Complex.exp (Complex.I * ↑(ω g))) μ := by
+  apply (integrable_const (1 : ℂ)).mono
+  · exact torusExpEval_aestronglyMeasurable L μ g
+  · apply ae_of_all
+    intro ω
+    simp only [norm_one]
+    rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
+    exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
+
+/-- **Re(Z_μ[g]) = ∫ cos(ω(g)) dμ(ω).**
+
+Connects the generating functional to the cos integral. This is the key
+bridge to apply weak convergence (which works for bounded continuous
+real-valued functions) to the complex generating functional.
+
+Proof: `Re(∫ exp(i·ω(g)) dμ) = ∫ Re(exp(i·ω(g))) dμ = ∫ cos(ω(g)) dμ`,
+using `ContinuousLinearMap.integral_comp_comm` (Re commutes with integration
+for integrable functions) and Euler's formula `Re(exp(ix)) = cos(x)`. -/
+private lemma torusGeneratingFunctional_re_eq_integral_cos
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
+    (torusGeneratingFunctional L μ g).re =
+    ∫ ω : Configuration (TorusTestFunction L), Real.cos (ω g) ∂μ := by
+  unfold torusGeneratingFunctional
+  -- Move .re inside the integral using Complex.reCLM
+  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re =
+    Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl,
+    ← ContinuousLinearMap.integral_comp_comm Complex.reCLM
+      (torusExpEval_integrable L μ g)]
+  congr 1 with ω
+  -- Re(exp(I * r)) = cos(r) by Euler's formula
+  simp only [Complex.reCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
+    Complex.add_re, Complex.mul_re, Complex.I_re, mul_zero,
+    Complex.sin_ofReal_im, Complex.I_im, mul_one, sub_self, add_zero]
+  exact Complex.cos_ofReal_re (ω g)
+
+/-! ### OS3 definition (matrix form) -/
+
+/-- **OS3: Reflection positivity for the torus measure (matrix form).**
+
+For any finite collection of positive-time test functions f₁,...,fₙ and
+real coefficients c₁,...,cₙ, the RP matrix is positive semidefinite:
+
+  `Σᵢⱼ cᵢ cⱼ · Re(Z[fᵢ - Θfⱼ]) ≥ 0`
+
+where Θ = `torusTimeReflection` is the time reflection on test functions.
+
+This matches the generating-functional matrix form used in
+`OS3_ReflectionPositivity` in `OSAxioms.lean`. The positive-time support
+condition prevents the counterexample F(ω) = tanh(ω(f) - ω(Θf)) that
+invalidates the single-function form `∫ F·(ΘF) ≥ 0` for all bounded F.
+
+Reference: Osterwalder-Schrader (1973), Axiom (A3). -/
 def TorusOS3_ReflectionPositivity
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ] : Prop :=
-  IsRP μ (torusConfigReflection L) (torusRP_admissible L)
+  ∀ (n : ℕ) (f : Fin n → TorusPositiveTimeTestFunction L) (c : Fin n → ℝ),
+    0 ≤ ∑ i, ∑ j, c i * c j *
+      (torusGeneratingFunctional L μ
+        ((f i).val - torusTimeReflection L (f j).val)).re
 
-/-- **The lattice GFF on the torus satisfies reflection positivity.**
+/-- **The lattice GFF on the torus satisfies reflection positivity (matrix form).**
 
-The lattice Gaussian free field with covariance (-Δ_lattice + m²)⁻¹ is RP
-because the transfer matrix `e^{-aH}` has `H ≥ 0`, giving nonneg inner
-products `⟨F, e^{-aH}F⟩_{L²} ≥ 0`.
+For positive-time test functions f₁,...,fₙ, the RP matrix
+`Mᵢⱼ = Re(Z_N[fᵢ - Θfⱼ])` is positive semidefinite for each lattice
+approximation N.
 
-More precisely: the lattice action decomposes as `S = S_+ + S_- + S_interaction`
-where `S_+` depends on future fields, `S_-` on past fields, and `S_interaction`
-couples only across the reflection plane. The Gaussian structure ensures that
-the coupling term has the form `⟨φ_+, Tφ_-⟩` with `T ≥ 0`, which gives RP.
+The proof uses the transfer matrix decomposition: the lattice action
+decomposes as `S = S_+ + S_- + S_interaction` where `S_+` depends on
+future (positive-time) fields, `S_-` on past fields, and `S_interaction`
+couples only across the reflection plane. For Gaussian measures, the
+coupling has the form `⟨φ_+, Tφ_-⟩` with `T ≥ 0`. The positive-time
+support condition ensures test functions only see φ_+, giving
+`Σᵢⱼ cᵢcⱼ Re(Z_N[fᵢ - Θfⱼ]) = ⟨Σ cᵢ e^{iφ(fᵢ)}, e^{-aH} Σ cⱼ e^{iφ(fⱼ)}⟩ ≥ 0`.
 
 Reference: Glimm-Jaffe, *Quantum Physics*, §6.3; Simon, *P(φ)₂*, Ch. II. -/
 axiom torusLattice_rp (N : ℕ) [NeZero N]
     (mass : ℝ) (hmass : 0 < mass) :
-    IsRP (torusContinuumMeasure L N mass hmass) (torusConfigReflection L)
-      (torusRP_admissible L)
+    TorusOS3_ReflectionPositivity L (torusContinuumMeasure L N mass hmass)
+
+/-! ### Matrix RP closure under weak limits -/
+
+/-- **Matrix form of RP is preserved under weak limits.**
+
+This is the generating-functional analogue of `rp_closed_under_weak_limit`.
+The proof uses that each RP matrix entry `Re(Z_μ[g]) = ∫ cos(ω(g)) dμ`
+is a bounded continuous functional of the measure, so weak convergence
+gives pointwise convergence of the RP matrix. A finite sum of limits of
+nonneg quantities is nonneg.
+
+This lemma is geometry-independent: it applies equally to the torus,
+cylinder S¹ × ℝ, or any space where the generating functional is
+`Z[g] = ∫ exp(iω(g)) dμ`. -/
+theorem torusMatrixRP_of_weakLimit
+    (μ_seq : ℕ → Measure (Configuration (TorusTestFunction L)))
+    [∀ k, IsProbabilityMeasure (μ_seq k)]
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ]
+    (h_weak : ∀ g : Configuration (TorusTestFunction L) → ℝ,
+      Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Tendsto (fun k => ∫ ω, g ω ∂(μ_seq k)) atTop (nhds (∫ ω, g ω ∂μ)))
+    (h_rp : ∀ k, TorusOS3_ReflectionPositivity L (μ_seq k)) :
+    TorusOS3_ReflectionPositivity L μ := by
+  intro n f c
+  -- The RP sum Σᵢⱼ cᵢcⱼ Re(Z_k[gᵢⱼ]) converges to Σᵢⱼ cᵢcⱼ Re(Z[gᵢⱼ]),
+  -- and each partial sum is ≥ 0. So the limit is ≥ 0.
+  have h_tendsto : Tendsto
+      (fun k => ∑ i : Fin n, ∑ j : Fin n, c i * c j *
+        (torusGeneratingFunctional L (μ_seq k)
+          ((f i).val - torusTimeReflection L (f j).val)).re)
+      atTop
+      (nhds (∑ i : Fin n, ∑ j : Fin n, c i * c j *
+        (torusGeneratingFunctional L μ
+          ((f i).val - torusTimeReflection L (f j).val)).re)) := by
+    apply tendsto_finset_sum
+    intro i _
+    apply tendsto_finset_sum
+    intro j _
+    -- c i * c j * Re(Z_k[g_ij]) → c i * c j * Re(Z[g_ij])
+    apply Filter.Tendsto.const_mul
+    -- Re(Z_k[g_ij]) → Re(Z[g_ij])
+    -- Rewrite Re(Z) = ∫ cos(ω(g)) dμ, then apply weak convergence
+    simp_rw [torusGeneratingFunctional_re_eq_integral_cos L]
+    exact h_weak _ (torusCosEval_continuous L _) (torusCosEval_bounded L _)
+  exact ge_of_tendsto' h_tendsto (fun k => h_rp k n f c)
 
 /-- **OS3 for the torus Gaussian continuum limit.**
 
-Proved by combining:
+Proved by applying `torusMatrixRP_of_weakLimit` with the lattice measures
+as the approximating sequence:
 1. Each lattice measure is RP (`torusLattice_rp`)
 2. The full sequence converges weakly (`torusGaussianLimit_fullConvergence`)
-3. RP is closed under weak limits (`rp_closed_under_weak_limit`)
-4. `torusConfigReflection` is continuous -/
+3. Matrix RP is preserved under weak limits (`torusMatrixRP_of_weakLimit`) -/
 theorem torusGaussianLimit_os3
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
     (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass) :
     TorusOS3_ReflectionPositivity L μ := by
-  -- Apply RP closure under weak limits
-  apply rp_closed_under_weak_limit
-    (Θ := torusConfigReflection L)
-    (hΘ := torusConfigReflection_continuous L)
-    (S := torusRP_admissible L)
-    (hS_bdd := fun F hF => hF.2)
-    (hS_cont := fun F hF => hF.1)
-    (μ := fun N => torusContinuumMeasure L (N + 1) mass hmass)
-    (h_rp := fun N => torusLattice_rp L (N + 1) mass hmass)
-  -- Weak convergence of the full sequence
-  exact torusGaussianLimit_fullConvergence L mass hmass μ
-    hGCL.isGaussian hGCL.covariance_eq
+  apply torusMatrixRP_of_weakLimit L
+    (μ_seq := fun k => torusContinuumMeasure L (k + 1) mass hmass)
+  · -- Weak convergence of the full sequence
+    exact torusGaussianLimit_fullConvergence L mass hmass μ
+      hGCL.isGaussian hGCL.covariance_eq
+  · -- Each lattice measure is RP
+    intro k
+    exact torusLattice_rp L (k + 1) mass hmass
 
 /-! ## Bundle and main theorem -/
 

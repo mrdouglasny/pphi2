@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 58 axioms, 2 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 5 axioms, 14 sorries**
+**pphi2: 59 axioms, 2 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 10 axioms, 1 sorry**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -63,7 +63,7 @@ It is not imported and not counted in the active axiom inventory.
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
 | 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 7 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 1 axiom, 0 sorries |
-| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 6 axioms, 1 sorry (OS0–OS3; OS1+OS2+OS3 proved) |
+| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 7 axioms, 1 sorry (OS0–OS3; OS1+OS2+OS3 proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
@@ -326,6 +326,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | `torusGaussianLimit_fullConvergence` | TorusGaussianLimit | Medium | Full sequence convergence (not just subsequential) from Gaussianity + covariance uniqueness + Z₂ symmetry. |
 | `torus_interacting_tightness` | TorusInteractingLimit | Medium | Cauchy-Schwarz density transfer from Gaussian tightness. Nelson's estimate + hypercontractivity. |
 
+| `torusPositiveTimeSubmodule` | TorusOSAxioms | Infrastructure | Submodule of torus test functions with time support in (0, L/2). Nuclear tensor product lacks pointwise evaluation, so submodule axiomatized. |
 | `torusGaussianLimit_complex_cf_norm` | TorusOSAxioms | Easy | ✅ Verified (Gemini). ‖Z_ℂ[f_re,f_im]‖ = exp(½(G(f_im,f_im)-G(f_re,f_re))). Gaussian MGF with complex coefficients (t₁=i, t₂=-1). Fernique §III.4. |
 | `torusContinuumGreen_continuous_diag` | TorusOSAxioms | Easy | ✅ Verified (Gemini). f ↦ G_L(f,f) continuous. G_L is a continuous bilinear form on nuclear Fréchet space; diagonal restriction is continuous. Trèves Ch. 50. |
 
@@ -340,6 +341,8 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `torusInteractingLimit_exists`: **PROVED** — Prokhorov extraction for interacting measures.
 - `torusContinuumGreen_nonneg`: `G_L(f,f) ≥ 0` from `greenFunctionBilinear_nonneg` (proved in gaussian-field).
 - `torusGaussianLimit_os1`: **PROVED** — OS1 regularity with q(f)=G_L(f,f), c=½. From `torusGaussianLimit_complex_cf_norm` + `torusContinuumGreen_nonneg`.
+- `torusMatrixRP_of_weakLimit`: **PROVED** — Matrix RP transfers through weak limits via Re(Z[g]) = ∫ cos(ω(g)) dμ (bounded continuous) + `tendsto_finset_sum` + `ge_of_tendsto'`.
+- `torusGaussianLimit_os3`: **PROVED** — OS3 reflection positivity from `torusMatrixRP_of_weakLimit` + `torusLattice_rp` + `torusGaussianLimit_fullConvergence`.
 
 **Sorries (provable):**
 - `torusEmbeddedTwoPoint_uniform_bound`: `E[Φ_N(f)²] ≤ C` from eigenvalue bound λ ≥ m².
@@ -536,9 +539,11 @@ The following theorems have complete proofs (no sorry):
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **5 axioms and 14 sorries**.
+The gaussian-field library (dependency) has **10 axioms and 1 sorry**.
+- `GaussianField/Support.lean`: 2 axioms
 - `HeatKernel/PositionKernel.lean`: 1 axiom (`circleHeatKernel_pos`)
-- `HeatKernel/Bilinear.lean`: 0 axioms, 8 sorries (Green's function infrastructure; `greenFunctionBilinear_nonneg` proved)
+- `HeatKernel/Bilinear.lean`: 0 axioms, 1 sorry (Green's function infrastructure; `greenFunctionBilinear_nonneg` proved)
 - `Torus/Restriction.lean`: 2 axioms
-- `Torus/Symmetry.lean`: 2 axioms, 6 sorries (nuclear tensor product CLM lifting)
+- `SmoothCircle/Basic.lean`: 1 axiom
+- `Nuclear/TensorProductFunctorAxioms.lean`: 4 axioms
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.

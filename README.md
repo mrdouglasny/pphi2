@@ -123,8 +123,8 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`, 3530 jobs).
 
-- **pphi2:** 58 axioms, 2 sorries
-- **gaussian-field** (upstream dependency): 5 axioms, 14 sorries
+- **pphi2:** 59 axioms, 2 sorries
+- **gaussian-field** (upstream dependency): 10 axioms, 1 sorry
 
 The torus continuum limit (`TorusContinuumLimit/`) provides a cleaner alternative
 to the S'(ℝ^d) approach: by fixing the physical volume L and taking only N→∞,
@@ -133,8 +133,10 @@ torus configuration space is **proved** (not axiomatized). The same pipeline
 handles both Gaussian and interacting (P(φ)₂) measures via Cauchy-Schwarz
 density transfer. The torus Gaussian continuum limit satisfies OS axioms
 OS0–OS3 (`TorusOSAxioms.lean`), with OS1 (regularity), OS2 (translation +
-D4 invariance), and OS3 (reflection positivity) **proved** from Green's function
-axioms and the weak-limit RP inheritance theorem.
+D4 invariance), and OS3 (reflection positivity) **proved**. OS3 uses the
+matrix/generating-functional form matching `OSAxioms.lean`, with
+positive-time test function support; the proof transfers lattice RP through
+weak limits via `torusMatrixRP_of_weakLimit`.
 
 See [status.md](status.md) for a complete inventory of all axioms and sorries,
 organized by difficulty and priority.

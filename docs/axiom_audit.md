@@ -336,9 +336,10 @@ The following were previously axioms and are now theorems:
 | 3 | `torusGaussianLimit_characteristic_functional` | ✅ Standard | ✅ DT 2026-03-03: definition of Gaussian characteristic functional, Fernique §III.4 |
 | 4 | `torusContinuumGreen_translation_invariant` | ✅ Standard | ✅ DT 2026-03-03: translation acts by phase in Fourier space |
 | 5 | `torusContinuumGreen_pointGroup_invariant` | ✅ Standard | ✅ DT 2026-03-03: D4 symmetry of Laplacian eigenvalues |
-| 6 | `torusLattice_rp` | ⚠️ Likely correct | ✅ DT 2026-03-03: correct for transfer matrix factorization; note: uses all bounded continuous F, mathematically RP requires positive-time support restriction which is enforced by the single-function formulation |
-| 7 | `torusGaussianLimit_complex_cf_norm` | ✅ Standard | ✅ DT 2026-03-03: Gaussian MGF with complex coefficients (t₁=i, t₂=-1), norm eliminates imaginary phase. Fernique §III.4, Simon P(φ)₂ Ch.I |
-| 8 | `torusContinuumGreen_continuous_diag` | ✅ Standard | ✅ DT 2026-03-03: diagonal restriction of continuous bilinear form is continuous. G_L bounded by (L²/m²)·p₀²(f). Reed-Simon I, Trèves Ch.50 |
+| 6 | `torusPositiveTimeSubmodule` | ✅ Infrastructure | Submodule of torus test functions with time support in (0, L/2). Nuclear tensor product lacks pointwise evaluation, so axiomatized. |
+| 7 | `torusLattice_rp` | ✅ Standard | Matrix form: Σᵢⱼ cᵢcⱼ Re(Z_N[fᵢ - Θfⱼ]) ≥ 0 for positive-time test functions. Correct by transfer matrix factorization with H ≥ 0. Replaces incorrect single-function form (counterexample: F(ω) = tanh(ω(f) - ω(Θf))). |
+| 8 | `torusGaussianLimit_complex_cf_norm` | ✅ Standard | ✅ DT 2026-03-03: Gaussian MGF with complex coefficients (t₁=i, t₂=-1), norm eliminates imaginary phase. Fernique §III.4, Simon P(φ)₂ Ch.I |
+| 9 | `torusContinuumGreen_continuous_diag` | ✅ Standard | ✅ DT 2026-03-03: diagonal restriction of continuous bilinear form is continuous. G_L bounded by (L²/m²)·p₀²(f). Reed-Simon I, Trèves Ch.50 |
 
 ---
 
