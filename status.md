@@ -58,7 +58,7 @@ progressively fill in the axioms with full proofs.
 | 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 0 sorries (`latticeTestFn_norm_sq_bounded` proved) |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
-| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 3 axioms, 0 sorries |
+| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 3 axioms, 0 sorries (`torusGaussianLimit_isGaussian` proved via MGF/complexMGF route) |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 3 axioms, 0 sorries (OS0–OS3 all proved; translation + D4 Green's invariance proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
@@ -314,8 +314,9 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | `torus_propagator_convergence` | TorusPropagatorConvergence | Medium | Lattice eigenvalues `(4N²/L²)sin²(πn/N) + m²` → continuum `(2πn/L)² + m²`. Pure UV limit, dominated convergence with rapid Fourier decay. |
 | ~~`torusEmbeddedTwoPoint_uniform_bound`~~ | TorusPropagatorConvergence | **PROVED** | `E[Φ_N(f)²] ≤ C` uniformly in N. Eigenvalue lower bound `λ_k ≥ m²` + Parseval + Riemann sum bound on compact torus. |
 | `torusContinuumMeasures_tight` | TorusTightness | Medium | Tightness via Mitoma criterion on torus. Finite volume makes this cleaner than S'(ℝ^d). |
-| `torusGaussianMeasure_isGaussian` | TorusGaussianLimit | Easy | Lattice GFF pushforward is Gaussian. MGF: `E[e^{ω(f)}] = exp(½ E[ω(f)²])`. |
-| `torusGaussianLimit_isGaussian` | TorusGaussianLimit | Medium | Weak limits of Gaussians on torus are Gaussian. Bochner-Minlos + characteristic functionals. |
+| ~~`torusGaussianMeasure_isGaussian`~~ | TorusGaussianLimit | **PROVED** | Lattice GFF pushforward is Gaussian. MGF: `E[e^{ω(f)}] = exp(½ E[ω(f)²])`. |
+| ~~`torusGaussianLimit_isGaussian`~~ | TorusGaussianLimit | **PROVED** | Weak limits of Gaussians on torus are Gaussian. Proved via `pushforward_eval_gaussianReal` (MGF matching → complexMGF extension → measure equality) + `weakLimit_centered_gaussianReal`. |
+| `weakLimit_centered_gaussianReal` | TorusGaussianLimit | Easy | Weak limits of centered Gaussians on ℝ are centered Gaussian. CF convergence + Lévy continuity + `ext_of_charFun`. |
 | `torusLimit_covariance_eq` | TorusGaussianLimit | Medium | Weak convergence transfers second moments. Uniform integrability from `torusEmbeddedTwoPoint_uniform_bound`. |
 | `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Medium | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness. |
 | `torusGaussianMeasure_z2_symmetric` | TorusGaussianLimit | **PROVED** | Lattice GFF pushforward is Z₂-symmetric: both `neg_* ν` and `ν` are Gaussian with same covariance, hence equal by `gaussian_measure_unique_of_covariance`. |
@@ -570,7 +571,8 @@ infrastructure. Assessment date: 2026-03-03.
 | ~~`torusContinuumGreen_pointGroup_invariant`~~ | TorusOSAxioms | **PROVED.** Via `greenFunctionBilinear_swap_invariant` (reindex n₁↔n₂) and `greenFunctionBilinear_timeReflection_invariant` (reflection acts ±1 on modes, (±1)²=1). |
 | `torusLimit_covariance_eq` | TorusGaussianLimit | Weak convergence transfers second moments. Uniform integrability from `torusEmbeddedTwoPoint_uniform_bound` + Vitali convergence. |
 | `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness: characteristic functional `exp(-½C(f,f))` determines the measure. |
-| `torusGaussianLimit_isGaussian` | TorusGaussianLimit | Weak limits of Gaussians are Gaussian. Pointwise convergence of characteristic functionals `exp(-½σ²_n(f)) → exp(-½σ²(f))` + Lévy continuity. |
+| ~~`torusGaussianLimit_isGaussian`~~ | TorusGaussianLimit | **PROVED.** Via MGF matching → complexMGF extension → measure equality (`pushforward_eval_gaussianReal`) + `weakLimit_centered_gaussianReal`. |
+| `weakLimit_centered_gaussianReal` | TorusGaussianLimit | Weak limits of centered Gaussians on ℝ are centered Gaussian. CF convergence + `ext_of_charFun`. |
 | `torusContinuumMeasures_tight` | TorusTightness | Mitoma criterion on torus + Chebyshev from uniform second moments. Finite volume simplifies vs S'(ℝ^d). |
 | `lattice_rp` | OS3_RP_Lattice | RP inequality for `interactingLatticeMeasure`. Fubini factorization across time-0 plane + perfect-square argument. Glimm-Jaffe Ch. 6.1. |
 | `transferOperator_isCompact` | L2Operator | Hilbert-Schmidt strategy: kernel `K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ')` with Gaussian decay of weight makes `∫∫ K² < ∞`. |

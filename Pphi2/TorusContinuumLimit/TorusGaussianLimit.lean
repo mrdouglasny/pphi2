@@ -9,7 +9,7 @@ measure with the correct covariance (the torus continuum Green's function).
 
 ## Main results
 
-- `torusGaussianLimit_isGaussian` — (axiom) weak limits of Gaussians are Gaussian
+- `torusGaussianLimit_isGaussian` — (theorem) weak limits of Gaussians are Gaussian
 - `IsTorusGaussianContinuumLimit` — predicate for the Gaussian continuum limit on torus
 
 ## Mathematical background
@@ -41,6 +41,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 noncomputable section
 
 open GaussianField MeasureTheory Filter ProbabilityTheory
+open scoped NNReal
 
 namespace Pphi2
 
@@ -48,18 +49,100 @@ variable (L : ℝ) [hL : Fact (0 < L)]
 
 /-! ## Gaussianity of the torus limit -/
 
+/-- **Each 1D pushforward of a Gaussian measure is a real Gaussian.**
+
+From the MGF identity `∫ exp(ω f) dμ = exp(½ ∫ (ω f)² dμ)` for all test functions f,
+substituting `t • f` gives `mgf (eval_f) μ t = exp(σ² t² / 2)`, which matches the MGF
+of `gaussianReal 0 σ²`. By complex MGF extension (`eqOn_complexMGF_of_mgf`) and
+measure uniqueness (`ext_of_complexMGF_eq`), the pushforward equals `gaussianReal 0 σ²`. -/
+private theorem pushforward_eval_gaussianReal
+    (μ_seq : ℕ → Measure (Configuration (TorusTestFunction L)))
+    (hμ_prob : ∀ n, IsProbabilityMeasure (μ_seq n))
+    (hμ_gauss : ∀ n (f : TorusTestFunction L),
+      ∫ ω : Configuration (TorusTestFunction L),
+        Real.exp (ω f) ∂(μ_seq n) =
+      Real.exp ((1 / 2) * ∫ ω, (ω f) ^ 2 ∂(μ_seq n)))
+    (f : TorusTestFunction L) (n : ℕ) :
+    (μ_seq n).map (fun ω : Configuration (TorusTestFunction L) => ω f) =
+    gaussianReal 0 (∫ ω, (ω f) ^ 2 ∂(μ_seq n)).toNNReal := by
+  haveI := hμ_prob n
+  set eval_f := fun ω : Configuration (TorusTestFunction L) => ω f
+  set σ_sq := ∫ ω, (ω f) ^ 2 ∂(μ_seq n)
+  set v := σ_sq.toNNReal
+  have h_σ_nonneg : 0 ≤ σ_sq := integral_nonneg (fun ω => sq_nonneg _)
+  have h_σ_cast : (v : ℝ) = σ_sq := Real.coe_toNNReal _ h_σ_nonneg
+  -- Step 1: The exp(t * ω f) integrand is integrable for all t
+  have h_integrable : ∀ t, Integrable (fun ω => Real.exp (t * eval_f ω)) (μ_seq n) := by
+    intro t
+    by_contra h_not_int
+    have h_zero := integral_undef h_not_int
+    have h := hμ_gauss n (t • f)
+    simp only [show ∀ ω : Configuration (TorusTestFunction L), ω (t • f) = t * ω f
+      from fun ω => ContinuousLinearMap.map_smul_of_tower ω t f] at h
+    linarith [Real.exp_pos ((1 / 2) * ∫ ω, (t * ω f) ^ 2 ∂(μ_seq n))]
+  -- Step 2: Match MGFs
+  have h_mgf_eq : mgf eval_f (μ_seq n) = mgf id (gaussianReal 0 v) := by
+    funext t
+    -- Both sides equal exp(σ_sq * t² / 2)
+    -- LHS from hypothesis:
+    have h_lhs : mgf eval_f (μ_seq n) t = Real.exp (σ_sq * t ^ 2 / 2) := by
+      simp only [mgf]
+      have h := hμ_gauss n (t • f)
+      simp only [show ∀ ω : Configuration (TorusTestFunction L), ω (t • f) = t * ω f
+        from fun ω => ContinuousLinearMap.map_smul_of_tower ω t f] at h
+      simp_rw [show ∀ ω : Configuration (TorusTestFunction L),
+        (t * ω f) ^ 2 = t ^ 2 * (ω f) ^ 2 from fun ω => by ring,
+        integral_const_mul] at h
+      rw [h]; congr 1; ring
+    -- RHS from Gaussian MGF:
+    have h_rhs : mgf id (gaussianReal 0 v) t = Real.exp (σ_sq * t ^ 2 / 2) := by
+      rw [congr_fun mgf_id_gaussianReal t]
+      congr 1; simp only [zero_mul, zero_add]; rw [h_σ_cast]
+    rw [h_lhs, h_rhs]
+  -- Step 3: integrableExpSet is all of ℝ
+  have h_exp_set : integrableExpSet eval_f (μ_seq n) = Set.univ := by
+    ext t; simp only [integrableExpSet, Set.mem_setOf_eq, Set.mem_univ, iff_true]
+    exact h_integrable t
+  -- Step 4: complexMGF equality (from mgf equality + full strip)
+  have h_cmgf_eq : complexMGF eval_f (μ_seq n) = complexMGF id (gaussianReal 0 v) := by
+    have h_eqon := eqOn_complexMGF_of_mgf h_mgf_eq
+    rw [h_exp_set, interior_univ] at h_eqon
+    funext z
+    exact h_eqon (Set.mem_univ z)
+  -- Step 5: Measure equality
+  have h_map_eq := Measure.ext_of_complexMGF_eq
+    (configuration_eval_measurable f).aemeasurable aemeasurable_id h_cmgf_eq
+  rwa [Measure.map_id] at h_map_eq
+
+/-- **Weak limits of centered Gaussians on ℝ are centered Gaussian.**
+
+If `ν_n = gaussianReal 0 v_n` and `ν_n → ν` weakly, then `ν = gaussianReal 0 v` for some v.
+
+Proof: characteristic functions converge pointwise (cos/sin are bounded continuous).
+The CF of N(0, v_n) at t is exp(-v_n t²/2). By dominated convergence, the CF of ν
+is continuous at 0 with CF(0) = 1, so the limit can't be 0, forcing v_n → v.
+By `ext_of_charFun`, the limit measure is identified. -/
+axiom weakLimit_centered_gaussianReal
+    (ν_seq : ℕ → Measure ℝ) (v_seq : ℕ → ℝ≥0)
+    (hν_prob : ∀ n, IsProbabilityMeasure (ν_seq n))
+    (hν_gauss : ∀ n, ν_seq n = gaussianReal 0 (v_seq n))
+    (ν : Measure ℝ) [IsProbabilityMeasure ν]
+    (hconv : ∀ (g : ℝ → ℝ), Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Tendsto (fun n => ∫ x, g x ∂(ν_seq n)) atTop (nhds (∫ x, g x ∂ν))) :
+    ∃ v : ℝ≥0, ν = gaussianReal 0 v
+
 /-- **Weak limits of Gaussian measures on the torus are Gaussian.**
 
 If {μ_n} is a sequence of centered Gaussian measures on Configuration(TorusTestFunction L)
 that converges weakly to μ, then μ is also a centered Gaussian measure.
 
-The characteristic functional of μ_n is `exp(-½ σ²_n(f))` where σ²_n(f)
-is the variance. Weak convergence implies pointwise convergence of
-characteristic functionals to `exp(-½ σ²(f))`, which is Gaussian by
-the Bochner-Minlos theorem on the nuclear Fréchet space C∞(T²_L).
+Proof: For each test function f, the 1D pushforward `μ_n.map (ω ↦ ω f)` is
+`gaussianReal 0 σ_n²` (by `pushforward_eval_gaussianReal`). Weak convergence
+transfers to pushforwards (ω ↦ ω f is continuous). By `weakLimit_centered_gaussianReal`,
+the limit pushforward is Gaussian. The MGF identity follows from Gaussian properties.
 
 Reference: Fernique (1975), §III.4; Simon, *The P(φ)₂ Euclidean QFT* Ch. I. -/
-axiom torusGaussianLimit_isGaussian
+theorem torusGaussianLimit_isGaussian
     (μ_seq : ℕ → Measure (Configuration (TorusTestFunction L)))
     (hμ_prob : ∀ n, IsProbabilityMeasure (μ_seq n))
     -- Each μ_n is Gaussian
@@ -77,7 +160,59 @@ axiom torusGaussianLimit_isGaussian
     ∀ (f : TorusTestFunction L),
       ∫ ω : Configuration (TorusTestFunction L),
         Real.exp (ω f) ∂μ =
-      Real.exp ((1 / 2) * ∫ ω, (ω f) ^ 2 ∂μ)
+      Real.exp ((1 / 2) * ∫ ω, (ω f) ^ 2 ∂μ) := by
+  intro f
+  set eval_f := fun ω : Configuration (TorusTestFunction L) => ω f
+  have h_eval_meas : Measurable eval_f := configuration_eval_measurable f
+  -- Step 1: Each pushforward (μ_seq n).map eval_f is gaussianReal 0 (σ_n²)
+  have h_push_gauss : ∀ n, (μ_seq n).map eval_f =
+      gaussianReal 0 (∫ ω, (ω f) ^ 2 ∂(μ_seq n)).toNNReal :=
+    fun n => pushforward_eval_gaussianReal L μ_seq hμ_prob hμ_gauss f n
+  -- Step 2: Weak convergence of pushforwards on ℝ
+  have h_push_conv : ∀ (g : ℝ → ℝ), Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Tendsto (fun n => ∫ x, g x ∂((μ_seq n).map eval_f))
+        atTop (nhds (∫ x, g x ∂(μ.map eval_f))) := by
+    intro g hg_cont hg_bdd
+    simp_rw [integral_map h_eval_meas.aemeasurable hg_cont.measurable.aestronglyMeasurable]
+    exact hconv (g ∘ eval_f)
+      (hg_cont.comp (WeakDual.eval_continuous f))
+      (by obtain ⟨C, hC⟩ := hg_bdd; exact ⟨C, fun x => hC (x f)⟩)
+  -- Step 3: Limit pushforward is Gaussian
+  haveI : IsProbabilityMeasure (μ.map eval_f) :=
+    Measure.isProbabilityMeasure_map h_eval_meas.aemeasurable
+  obtain ⟨v, hv⟩ := weakLimit_centered_gaussianReal
+    (fun n => (μ_seq n).map eval_f)
+    (fun n => (∫ ω, (ω f) ^ 2 ∂(μ_seq n)).toNNReal)
+    (fun n => by dsimp; rw [h_push_gauss n]; infer_instance)
+    h_push_gauss (μ.map eval_f) h_push_conv
+  -- Step 4: Extract the identity
+  -- ∫ exp(ω f) dμ = ∫ exp(x) d(gaussianReal 0 v)
+  have h_integral_exp : ∫ ω, Real.exp (eval_f ω) ∂μ =
+      ∫ x, Real.exp x ∂(gaussianReal 0 v) := by
+    rw [← integral_map h_eval_meas.aemeasurable
+        Real.measurable_exp.aestronglyMeasurable, hv]
+  -- ∫ exp(x) d(gaussianReal 0 v) = exp(v/2)
+  have h_exp_val : ∫ x, Real.exp x ∂(gaussianReal 0 v) = Real.exp (↑v / 2) := by
+    have := congr_fun (mgf_id_gaussianReal (μ := 0) (v := v)) 1
+    simp only [mgf, one_mul, zero_add, one_pow, mul_one, id] at this
+    exact this
+  -- ∫ (ω f)² dμ = v
+  have h_second_moment : ∫ ω, (eval_f ω) ^ 2 ∂μ = ↑v := by
+    have h1 : ∫ ω, (eval_f ω) ^ 2 ∂μ = ∫ x, x ^ 2 ∂(μ.map eval_f) :=
+      (integral_map h_eval_meas.aemeasurable
+        (continuous_pow 2).aestronglyMeasurable).symm
+    rw [h1, hv]
+    have h_mean : ∫ x, x ∂(gaussianReal (0 : ℝ) v) = 0 := integral_id_gaussianReal
+    have h_var := variance_of_integral_eq_zero
+      (measurable_id.aemeasurable (μ := gaussianReal (0 : ℝ) v)) h_mean
+    -- h_var : Var[id; gaussianReal 0 v] = ∫ x, id x ^ 2 d(gaussianReal 0 v)
+    simp only [id] at h_var
+    -- h_var : Var[fun x ↦ x; ...] = ∫ x, x ^ 2 d(...)
+    rw [← h_var]
+    exact variance_fun_id_gaussianReal
+  -- Combine: exp(½ ∫ (ω f)² dμ) = exp(½ v) = exp(v/2)
+  rw [h_integral_exp, h_exp_val, h_second_moment]
+  congr 1; ring
 
 /-! ## Gaussian continuum limit predicate -/
 
