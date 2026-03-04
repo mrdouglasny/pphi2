@@ -537,13 +537,84 @@ The following theorems have complete proofs (no sorry):
 
 ---
 
+## Provability assessment (ranked by difficulty)
+
+Axioms ranked by feasibility of proving them with current Lean/Mathlib
+infrastructure. Assessment date: 2026-03-03.
+
+### Tier 1: Easy (provable now)
+
+| Axiom | File | Strategy |
+|-------|------|----------|
+| `torusContinuumGreen_continuous_diag` | TorusOSAxioms | Diagonal of continuous bilinear form `greenFunctionBilinear` is continuous. Direct from bilinearity + `ContinuousLinearMap.continuous`. |
+| `torusEmbeddedTwoPoint_uniform_bound` | TorusPropagatorConvergence | `E[Φ_N(f)²] ≤ C` from eigenvalue lower bound `λ_k ≥ m²` + Parseval on compact torus. Finite sum, no limiting argument. |
+| `torusGaussianMeasure_z2_symmetric` | TorusGaussianLimit | Lattice GFF pushforward invariant under φ ↦ -φ. Centered Gaussian is symmetric; pushforward commutes with negation via linearity of embedding. |
+
+### Tier 2: Easy-Moderate (clear strategy, some work)
+
+| Axiom | File | Strategy |
+|-------|------|----------|
+| `torus_propagator_convergence` | TorusPropagatorConvergence | Lattice eigenvalues `(4N²/L²)sin²(πn/N) + m²` → continuum `(2πn/L)² + m²`. Mode-by-mode Taylor `sin(x)/x → 1` + dominated convergence with `1/(m² + k²)` domination + Schwartz rapid decay. |
+| `z2_symmetric_of_weakLimit` | TorusGaussianLimit | Z₂ symmetry transfers through weak limits. Negation is continuous on `Configuration`; if `μ_n` are symmetric and `μ_n ⇒ μ`, then `μ` is symmetric. Use `MeasureTheory.Measure.tendsto_map_of_tendsto_of_continuous`. |
+| `torusGaussianMeasure_isGaussian` | TorusGaussianLimit | Lattice GFF pushforward is Gaussian. MGF: `E[e^{ω(f)}] = exp(½ E[ω(f)²])` from independence of Fourier modes + Gaussian MGF. |
+| `latticeMeasure_translation_invariant` | OS2_WardIdentity | Lattice measure invariant under cyclic translation. Finite-dimensional change of variables with Jacobian = 1 (translation on torus). |
+
+### Tier 3: Moderate (nontrivial but standard)
+
+| Axiom | File | Strategy |
+|-------|------|----------|
+| `torusContinuumGreen_translation_invariant` | TorusOSAxioms | Green's function bilinear form invariant under torus translation. Translation acts by phase multiplication on Fourier modes; `|e^{ikx}|² = 1` preserves eigenvalues. |
+| `torusContinuumGreen_pointGroup_invariant` | TorusOSAxioms | D₄ symmetry of Laplacian eigenvalues `(2πn₁/L)² + (2πn₂/L)²` under coordinate permutation and reflection. |
+| `torusLimit_covariance_eq` | TorusGaussianLimit | Weak convergence transfers second moments. Uniform integrability from `torusEmbeddedTwoPoint_uniform_bound` + Vitali convergence. |
+| `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness: characteristic functional `exp(-½C(f,f))` determines the measure. |
+| `torusGaussianLimit_isGaussian` | TorusGaussianLimit | Weak limits of Gaussians are Gaussian. Pointwise convergence of characteristic functionals `exp(-½σ²_n(f)) → exp(-½σ²(f))` + Lévy continuity. |
+| `torusContinuumMeasures_tight` | TorusTightness | Mitoma criterion on torus + Chebyshev from uniform second moments. Finite volume simplifies vs S'(ℝ^d). |
+| `lattice_rp` | OS3_RP_Lattice | RP inequality for `interactingLatticeMeasure`. Fubini factorization across time-0 plane + perfect-square argument. Glimm-Jaffe Ch. 6.1. |
+| `transferOperator_isCompact` | L2Operator | Hilbert-Schmidt strategy: kernel `K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ')` with Gaussian decay of weight makes `∫∫ K² < ∞`. |
+| `os3_inheritance` | AxiomInheritance | RP transfers through weak limits. Follows from `lattice_rp_matrix` + `rp_closed_under_weak_limit` (proved). |
+| `os0_inheritance` | AxiomInheritance | Uniform moment bounds + pointwise convergence → limit has all moments finite. |
+
+### Tier 4: Hard (deep analytic results)
+
+| Axiom | File | Strategy |
+|-------|------|----------|
+| `gaussian_conv_strictlyPD` | GaussianFourier | `⟨f, G⋆f⟩ > 0` for f ≠ 0. Bochner's theorem + Plancherel: `∫ Ĝ|f̂|² dk > 0` since `Ĝ > 0` (`fourier_gaussian_pos` already proved). Needs Plancherel for convolution inner product. |
+| `propagator_convergence` | PropagatorConvergence | Lattice Riemann sum → continuum Fourier integral on ℝ^d. Dominated convergence with Schwartz decay. Harder than torus version (infinite volume). |
+| `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
+| `continuum_exponential_moments` | OS2_WardIdentity | Fernique + Nelson hypercontractive estimate transferred to limit. |
+| `exponential_moment_bound` | Hypercontractivity | `∫ exp(-2V_a) dμ_{GFF} ≤ K` uniformly. Deep stability (cluster expansions, Glimm-Jaffe Thm 8.6.1). |
+| `spectral_gap_uniform` | SpectralGap | Uniform mass gap. Central result of Glimm-Jaffe. Very hard. |
+| `rotation_invariance_continuum` | OS2_WardIdentity | Ward identity + anomaly irrelevance for O(2). |
+| `continuum_exponential_clustering` | OS2_WardIdentity | Spectral gap → exponential clustering in continuum. |
+
+### Tier 5: Very hard / infrastructure gaps
+
+| Axiom | File | Strategy |
+|-------|------|----------|
+| `prokhorov_configuration_sequential` | Convergence | Sequential extraction on `Configuration (ContinuumTestFunction d)`. Needs Polish space structure on S'(ℝ²) — blocked by Mathlib nuclear space gap. (Not needed for torus path.) |
+| `schwinger_agreement` | Bridge | Cluster expansion uniqueness at weak coupling (Guerra-Rosen-Simon 1975). |
+| `spectral_gap_lower_bound` | SpectralGap | Quantitative mass gap bound. |
+| `continuumLimit_nonGaussian` | Convergence | Nonzero 4th cumulant via perturbation theory. |
+
+### Recommended attack order
+
+1. **Torus tier 1**: `torusContinuumGreen_continuous_diag`, `torusEmbeddedTwoPoint_uniform_bound`, `torusGaussianMeasure_z2_symmetric` — each provable in a single session
+2. **Torus tier 2**: `torus_propagator_convergence`, `z2_symmetric_of_weakLimit`, `torusGaussianMeasure_isGaussian` — clear strategies, moderate work
+3. **Transfer matrix**: `transferOperator_isCompact`, `gaussian_conv_strictlyPD` — unlocks full spectral theory
+4. **OS inheritance**: `lattice_rp`, `os3_inheritance`, `os0_inheritance` — fills the RP chain
+5. **Hard analysis**: spectral gap, clustering, exponential moments — the deep results
+
+---
+
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **10 axioms and 1 sorry**.
-- `GaussianField/Support.lean`: 2 axioms
-- `HeatKernel/PositionKernel.lean`: 1 axiom (`circleHeatKernel_pos`)
-- `HeatKernel/Bilinear.lean`: 0 axioms, 1 sorry (Green's function infrastructure; `greenFunctionBilinear_nonneg` proved)
-- `Torus/Restriction.lean`: 2 axioms
-- `SmoothCircle/Basic.lean`: 1 axiom
-- `Nuclear/TensorProductFunctorAxioms.lean`: 4 axioms
+The gaussian-field library (dependency) has **5 axioms (+1 skipped), 1 sorry** (per gaussian-field's own count; pphi2's pinned version may differ).
+- `GaussianField/Support.lean`: 2 axioms (`not_supported_of_not_hilbertSchmidt`, `supportHilbertSpace_exists`)
+- `HeatKernel/PositionKernel.lean`: 1 axiom (`mehlerKernel_eq_series`)
+- `HeatKernel/Bilinear.lean`: 0 axioms, 1 sorry (`heatKernelBilinear_tensorProduct`)
+- `Torus/Restriction.lean`: 2 axioms (`configuration_torus_polish`, `configuration_torus_borelSpace`)
+- `Lattice/FKG.lean`: 0 axioms (all proved: Ahlswede-Daykin, AD marginal preservation, truncation DCT)
+- `Lattice/SpectralCovariance.lean`: 0 axioms
+- `GaussianField/Density.lean`: 0 axioms (master density theorem proved)
+- `GaussianField/Hypercontractive.lean`: 0 axioms (moment ratio bound proved)
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.
