@@ -521,7 +521,7 @@ theorem z2_symmetric_of_weakLimit
   have h_eq_n : (fun n => ∫ ω, g ω ∂(μ_seq n)) =
       (fun n => ∫ ω, (f : Configuration (TorusTestFunction L) → ℝ) ω ∂(μ_seq n)) := by
     funext n
-    show ∫ ω, (f : Configuration (TorusTestFunction L) → ℝ) (-ω) ∂(μ_seq n) =
+    change ∫ ω, (f : Configuration (TorusTestFunction L) → ℝ) (-ω) ∂(μ_seq n) =
         ∫ ω, (f : Configuration (TorusTestFunction L) → ℝ) ω ∂(μ_seq n)
     rw [← integral_map hneg_meas.aemeasurable (hf_aesm _), hμ_symm n]
   -- Since the sequences are equal, their limits are equal

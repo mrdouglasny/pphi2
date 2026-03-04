@@ -261,7 +261,7 @@ spacing. Therefore any continuum limit of one parametrization is also a
 continuum limit of the other. -/
 theorem mass_reparametrization_invariance
     (P : InteractionPolynomial) (mass mass' : ℝ)
-    (hmass : 0 < mass) (hmass' : 0 < mass')
+    (_hmass : 0 < mass) (_hmass' : 0 < mass')
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (h_limit : IsPphi2Limit μ P mass) :
     IsPphi2Limit μ (P.shiftQuadratic (mass ^ 2 / 2 - mass' ^ 2 / 2)) mass' :=

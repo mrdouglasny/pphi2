@@ -156,8 +156,12 @@ theorem massEigenvalues_ge_mass_sq (N : ℕ) [NeZero N] (a mass : ℝ)
     conv_lhs => arg 2; ext x; rw [hQv x]
     -- Now goal is: Σ_x v(x) * (λ_k * v(x)) = λ_k
     have : ∀ x : FinLatticeSites 2 N,
-        (v : EuclideanSpace ℝ _) x * (massEigenvalues 2 N a mass k * (v : EuclideanSpace ℝ _) x) =
-        massEigenvalues 2 N a mass k * ((v : EuclideanSpace ℝ _) x * (v : EuclideanSpace ℝ _) x) := by
+        (v : EuclideanSpace ℝ _) x *
+          (massEigenvalues 2 N a mass k *
+            (v : EuclideanSpace ℝ _) x) =
+        massEigenvalues 2 N a mass k *
+          ((v : EuclideanSpace ℝ _) x *
+            (v : EuclideanSpace ℝ _) x) := by
       intro x; ring
     simp_rw [this, ← Finset.mul_sum, hv_sum_sq, mul_one]
   -- Also: ⟨v, Qv⟩ = ⟨v, -Δv⟩ + m²⟨v, v⟩
@@ -204,7 +208,8 @@ theorem covariance_inner_le_mass_inv_sq_norm_sq
       (latticeCovariance 2 N a mass ha hmass g)
     ≤ mass⁻¹ ^ 2 * ∑ x : FinLatticeSites 2 N, g x ^ 2 := by
   -- Rewrite LHS using spectral decomposition
-  rw [show latticeCovariance 2 N a mass ha hmass = spectralLatticeCovariance 2 N a mass ha hmass from rfl]
+  rw [show latticeCovariance 2 N a mass ha hmass =
+    spectralLatticeCovariance 2 N a mass ha hmass from rfl]
   rw [spectralLatticeCovariance_norm_sq]
   -- LHS = Σ_k (massEigenvalues k)⁻¹ * c_k(g)²
   -- Bound: (massEigenvalues k)⁻¹ ≤ mass⁻²
@@ -249,14 +254,14 @@ for `SmoothMap_Circle`. -/
 private theorem smoothCircle_coeff_basis (m n : ℕ) :
     DyninMityaginSpace.coeff m (DyninMityaginSpace.basis n : SmoothMap_Circle L ℝ) =
     if m = n then 1 else 0 := by
-  show (RapidDecaySeq.coeffCLM m).comp
+  change (RapidDecaySeq.coeffCLM m).comp
     (SmoothMap_Circle.smoothCircleRapidDecayEquiv (L := L)).toContinuousLinearMap
     ((SmoothMap_Circle.smoothCircleRapidDecayEquiv (L := L)).symm (RapidDecaySeq.basisVec n)) =
     if m = n then 1 else 0
   simp only [ContinuousLinearMap.comp_apply,
     RapidDecaySeq.coeffCLM, ContinuousLinearMap.coe_mk', RapidDecaySeq.coeffLM,
     LinearMap.coe_mk, AddHom.coe_mk]
-  show (SmoothMap_Circle.smoothCircleRapidDecayEquiv (L := L)
+  change (SmoothMap_Circle.smoothCircleRapidDecayEquiv (L := L)
     ((SmoothMap_Circle.smoothCircleRapidDecayEquiv (L := L)).symm
       (RapidDecaySeq.basisVec n))).val m = if m = n then 1 else 0
   rw [ContinuousLinearEquiv.apply_symm_apply]; simp [RapidDecaySeq.basisVec]
@@ -272,14 +277,17 @@ private theorem pure_basis_eq_basisVec_pair (i j : ℕ) :
   simp only [NuclearTensorProduct.pure_val, RapidDecaySeq.basisVec]
   rw [smoothCircle_coeff_basis L (Nat.unpair m).1 i,
       smoothCircle_coeff_basis L (Nat.unpair m).2 j]
-  by_cases h1 : (Nat.unpair m).1 = i <;> by_cases h2 : (Nat.unpair m).2 = j <;> simp [h1, h2]
+  by_cases h1 : (Nat.unpair m).1 = i <;> by_cases h2 : (Nat.unpair m).2 = j <;>
+    simp only [h1, h2, ↓reduceIte, mul_one, mul_zero,
+      left_eq_ite_iff, right_eq_ite_iff, one_ne_zero,
+      zero_ne_one, imp_false, Decidable.not_not]
   · conv_lhs => rw [← Nat.pair_unpair m]; rw [h1, h2]
   · intro h; exact h2 (by have := congr_arg (fun p => (Nat.unpair p).2) h
-                          simpa [Nat.unpair_pair] using this)
+                          simpa only [Nat.unpair_pair] using this)
   · intro h; exact h1 (by have := congr_arg (fun p => (Nat.unpair p).1) h
-                          simpa [Nat.unpair_pair] using this)
+                          simpa only [Nat.unpair_pair] using this)
   · intro h; exact h1 (by have := congr_arg (fun p => (Nat.unpair p).1) h
-                          simpa [Nat.unpair_pair] using this)
+                          simpa only [Nat.unpair_pair] using this)
 
 /-- Evaluation of a torus test function at a lattice site, applied to a basis vector,
 equals the product of circle restrictions applied to each component. -/
@@ -294,7 +302,7 @@ private theorem evalTorusAtSite_basisVec (N : ℕ) [NeZero N]
       (DyninMityaginSpace.basis (Nat.unpair m).1 : SmoothMap_Circle L ℝ)
       (DyninMityaginSpace.basis (Nat.unpair m).2 : SmoothMap_Circle L ℝ) from by
     rw [pure_basis_eq_basisVec_pair, Nat.pair_unpair]]
-  show NuclearTensorProduct.evalCLM _ _ _ = _
+  change NuclearTensorProduct.evalCLM _ _ _ = _
   rw [NuclearTensorProduct.evalCLM_pure]
   simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply]
 
@@ -305,7 +313,7 @@ private theorem dm_basis_eq_fourierBasis (m : ℕ) :
   apply SmoothMap_Circle.ext; intro x
   change (SmoothMap_Circle.fromRapidDecay (RapidDecaySeq.basisVec m) : ℝ → ℝ) x =
     SmoothMap_Circle.fourierBasisFun m x
-  show ∑' n, (RapidDecaySeq.basisVec m).val n *
+  change ∑' n, (RapidDecaySeq.basisVec m).val n *
     SmoothMap_Circle.fourierBasisFun (L := L) n x = SmoothMap_Circle.fourierBasisFun m x
   rw [tsum_eq_single m]
   · simp [RapidDecaySeq.basisVec]
@@ -327,7 +335,7 @@ theorem latticeTestFn_norm_sq_bounded (f : TorusTestFunction L) :
     SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := L) 0
   have hC₀ : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := L) 0
       (SmoothMap_Circle.fourierBasis n) ≤ C₀ := fun n => by
-    specialize hC₀_bound n; simp at hC₀_bound; exact hC₀_bound
+    specialize hC₀_bound n; simp only [pow_zero, mul_one] at hC₀_bound; exact hC₀_bound
   -- Step 2: Set up the witness for the bound.
   set p₀f := RapidDecaySeq.rapidDecaySeminorm 0 f
   refine ⟨L ^ 2 * C₀ ^ 4 * p₀f ^ 2 + 1, by positivity, fun N _ => ?_⟩
@@ -388,7 +396,7 @@ theorem latticeTestFn_norm_sq_bounded (f : TorusTestFunction L) :
       _ = L / ↑N * C₀ ^ 2 * ∑' m, |f.val m| := by rw [tsum_mul_right]; ring
       _ = L / ↑N * C₀ ^ 2 * p₀f := by
           congr 1
-          show ∑' m, |f.val m| = ∑' m, |f.val m| * (1 + (m : ℝ)) ^ 0
+          change ∑' m, |f.val m| = ∑' m, |f.val m| * (1 + (m : ℝ)) ^ 0
           simp
   -- Step 7: Sum of squares over lattice sites.
   -- N² * (L/N)² * C₀⁴ * p₀f² = L² * C₀⁴ * p₀f² (the N cancels)
