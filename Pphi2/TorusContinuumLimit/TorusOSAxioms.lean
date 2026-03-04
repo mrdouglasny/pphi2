@@ -46,10 +46,11 @@ t ∈ (0, L/2), which is the correct half for RP with periodic BCs.
 import Pphi2.TorusContinuumLimit.TorusGaussianLimit
 import Pphi2.TorusContinuumLimit.TorusPropagatorConvergence
 import Torus.Symmetry
+import Mathlib.Probability.Moments.ComplexMGF
 
 noncomputable section
 
-open GaussianField MeasureTheory Filter
+open GaussianField MeasureTheory Filter ProbabilityTheory
 
 namespace Pphi2
 
@@ -120,14 +121,58 @@ This connects the moment generating function (real exponential, given by
 (imaginary exponential) via analytic continuation `t → it`.
 
 Reference: Fernique (1975), §III.4; Reed-Simon I, Thm V.8. -/
-axiom torusGaussianLimit_characteristic_functional
+theorem torusGaussianLimit_characteristic_functional
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
     (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass)
     (f : TorusTestFunction L) :
     torusGeneratingFunctional L μ f =
-    Complex.exp ((-1 / 2) * ↑(torusContinuumGreen L mass hmass f f))
+    Complex.exp ((-1 / 2) * ↑(torusContinuumGreen L mass hmass f f)) := by
+  -- Setup: X = evaluation at f, G_ff = continuum Green's function diagonal
+  set X : Configuration (TorusTestFunction L) → ℝ := fun ω => ω f with hX_def
+  set G_ff := torusContinuumGreen L mass hmass f f
+  set v : NNReal := G_ff.toNNReal with hv_def
+  have hG_nonneg : 0 ≤ G_ff := torusContinuumGreen_nonneg L mass hmass f
+  have hv_coe : (v : ℝ) = G_ff := Real.coe_toNNReal _ hG_nonneg
+  -- Step 1: Show MGF of X under μ equals MGF of N(0, G_ff)
+  have h_mgf_eq : mgf X μ = mgf id (ProbabilityTheory.gaussianReal 0 v) := by
+    ext t
+    -- LHS: use Gaussian hypothesis at t • f
+    change ∫ ω, Real.exp (t * ω f) ∂μ = _
+    have h1 := hGCL.isGaussian (t • f)
+    -- ω(t • f) = t * ω(f) by linearity
+    simp_rw [show ∀ ω : Configuration (TorusTestFunction L), ω (t • f) = t * ω f from
+      fun ω => map_smul ω t f] at h1
+    -- (t * ω f)² = t² * (ω f)²; pull constant out of integral
+    have h2 : ∫ ω : Configuration (TorusTestFunction L), (t * ω f) ^ 2 ∂μ =
+        t ^ 2 * ∫ ω, (ω f) ^ 2 ∂μ := by
+      simp_rw [mul_pow]; exact integral_const_mul _ _
+    rw [h2, hGCL.covariance_eq f] at h1
+    rw [h1]
+    -- RHS: mgf id (gaussianReal 0 v) t = exp(v * t²/2)
+    suffices h : mgf id (gaussianReal 0 v) t = Real.exp ((v : ℝ) * t ^ 2 / 2) by
+      rw [h, hv_coe]; congr 1; ring
+    simp only [mgf_id_gaussianReal, zero_mul, zero_add]
+  -- Step 2: Show I.re = 0 ∈ interior(integrableExpSet X μ)
+  have h_in_domain : Complex.I.re ∈ interior (integrableExpSet X μ) := by
+    rw [integrableExpSet_eq_of_mgf h_mgf_eq, integrableExpSet_id_gaussianReal,
+        interior_univ, Complex.I_re]
+    exact Set.mem_univ 0
+  -- Step 3: complexMGF agrees at I
+  have h_eq_at_I := eqOn_complexMGF_of_mgf h_mgf_eq h_in_domain
+  -- Step 4: LHS = torusGeneratingFunctional
+  have h_lhs : complexMGF X μ Complex.I = torusGeneratingFunctional L μ f := by
+    simp only [complexMGF, torusGeneratingFunctional, hX_def]
+  -- Step 5: RHS = exp(-G_ff/2)
+  have h_rhs : complexMGF id (ProbabilityTheory.gaussianReal 0 v) Complex.I =
+      Complex.exp ((-1 / 2) * ↑G_ff) := by
+    rw [show Complex.I = (1 : ℝ) * Complex.I from by norm_num, complexMGF_id_mul_I,
+        charFun_gaussianReal]
+    congr 1
+    rw [show (v : ℝ) = G_ff from hv_coe]; push_cast; ring
+  -- Combine
+  rw [← h_lhs, h_eq_at_I, h_rhs]
 
 /-- OS0 for the torus Gaussian continuum limit.
 
