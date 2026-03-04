@@ -49,6 +49,7 @@ import Torus.Symmetry
 import Mathlib.Probability.Moments.ComplexMGF
 import Mathlib.Analysis.Analytic.Constructions
 import Mathlib.Analysis.Analytic.Linear
+import Mathlib.Analysis.Analytic.IsolatedZeros
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 
 noncomputable section
@@ -177,6 +178,104 @@ theorem torusGaussianLimit_characteristic_functional
   -- Combine
   rw [← h_lhs, h_eq_at_I, h_rhs]
 
+/-! ### Multi-variable identity theorem helper -/
+
+/-- Real nonzero numbers cluster at 0 in ℂ (used for the identity theorem). -/
+private lemma frequently_real_near_zero_complex :
+    ∃ᶠ w : ℂ in nhdsWithin (0 : ℂ) {(0 : ℂ)}ᶜ, w.im = 0 := by
+  rw [Filter.Frequently]; intro hev
+  rw [eventually_nhdsWithin_iff, eventually_iff_exists_mem] at hev
+  obtain ⟨s, hs_nhds, hs⟩ := hev
+  obtain ⟨t, ht_sub, ht_open, ht_mem⟩ := mem_nhds_iff.mp hs_nhds
+  obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp ht_open 0 ht_mem
+  exact hs _ (ht_sub (hball (by
+    rw [Metric.mem_ball, Complex.dist_eq, sub_zero, Complex.norm_real,
+        Real.norm_eq_abs, abs_of_pos (by linarith : ε / 2 > 0)]; linarith)))
+    (Set.mem_compl_singleton_iff.mpr (by
+      intro h; have := congr_arg Complex.re h; simp at this; linarith))
+    (by simp)
+
+/-- `Function.update z k ·` is analytic in the updated value. -/
+private lemma update_analyticAt {n : ℕ} (z : Fin n → ℂ) (k : Fin n) (w₀ : ℂ) :
+    AnalyticAt ℂ (fun w : ℂ => Function.update z k w) w₀ := by
+  rw [analyticAt_pi_iff]; intro i
+  by_cases h : i = k
+  · have : (fun w => Function.update z k w i) = id := by
+      ext w; subst h; simp [Function.update_self]
+    rw [this]; exact analyticAt_id
+  · have : (fun w => Function.update z k w i) = fun _ => z i := by
+      ext w; simp [Function.update_of_ne h]
+    rw [this]; exact analyticAt_const
+
+/-- **Multi-variable identity theorem for entire functions.**
+
+If two entire analytic functions `(Fin n → ℂ) → ℂ` agree on `ℝⁿ ⊂ ℂⁿ`,
+then they agree on all of `ℂⁿ`.
+
+The proof proceeds by induction on the number of variables that have been
+extended from ℝ to ℂ, using the 1-variable identity theorem
+(`AnalyticOnNhd.eqOn_of_preconnected_of_frequently_eq`) at each step. -/
+private theorem analyticOnNhd_eq_of_eqOn_reals {n : ℕ}
+    {f g : (Fin n → ℂ) → ℂ}
+    (hf : AnalyticOnNhd ℂ f Set.univ) (hg : AnalyticOnNhd ℂ g Set.univ)
+    (h_eq : ∀ x : Fin n → ℝ, f (fun i => (x i : ℂ)) = g (fun i => (x i : ℂ))) :
+    f = g := by
+  suffices key : ∀ k : ℕ, k ≤ n →
+      ∀ w : Fin n → ℂ, (∀ i : Fin n, k ≤ i.val → (w i).im = 0) → f w = g w by
+    ext z; exact key n le_rfl z (fun i hi => absurd hi (Nat.not_le.mpr i.isLt))
+  intro k
+  induction k with
+  | zero =>
+    intro _ w hw
+    convert h_eq (fun i => (w i).re) using 1 <;>
+    · congr 1; ext i; simp [Complex.ext_iff, hw i (Nat.zero_le _)]
+  | succ k ih =>
+    intro hk w hw
+    have hk' : k < n := Nat.lt_of_succ_le hk
+    set j₀ : Fin n := ⟨k, hk'⟩
+    have hφ : AnalyticOnNhd ℂ (fun t => f (Function.update w j₀ t)) Set.univ :=
+      fun t _ => (hf _ (Set.mem_univ _)).comp (update_analyticAt w j₀ t)
+    have hψ : AnalyticOnNhd ℂ (fun t => g (Function.update w j₀ t)) Set.univ :=
+      fun t _ => (hg _ (Set.mem_univ _)).comp (update_analyticAt w j₀ t)
+    have h_agree : ∀ t : ℝ, f (Function.update w j₀ (t : ℂ)) =
+        g (Function.update w j₀ (t : ℂ)) := by
+      intro t; apply ih (Nat.le_of_lt hk'); intro i hi
+      by_cases h : i = j₀
+      · subst h; simp [Function.update_self]
+      · rw [Function.update_of_ne h]
+        exact hw i (by have : i.val ≠ k := fun heq => h (Fin.ext heq); omega)
+    have h_id := AnalyticOnNhd.eqOn_of_preconnected_of_frequently_eq hφ hψ
+      isPreconnected_univ (Set.mem_univ 0)
+      (frequently_real_near_zero_complex.mono (fun t ht => by
+        rw [show t = (t.re : ℂ) from Complex.ext (by simp) (by simp [ht])]
+        exact h_agree t.re))
+    rw [show w = Function.update w j₀ (w j₀) from (Function.update_eq_self j₀ w).symm]
+    exact h_id (Set.mem_univ _)
+
+/-- **Analyticity of the complex generating functional.**
+
+The map `z ↦ Z_ℂ(∑ Re(zᵢ)·Jᵢ, ∑ Im(zᵢ)·Jᵢ)` is entire analytic in `z ∈ ℂⁿ`.
+
+For each fixed configuration ω, the integrand `exp(∑ I·zᵢ·ω(Jᵢ))` is entire in z
+(it is `exp` composed with a ℂ-linear function). The domination bound
+`‖exp(∑ I·zᵢ·ω(Jᵢ))‖ ≤ exp(∑ |zᵢ|·|ω(Jᵢ)|)` is integrable by the Gaussian
+moment bound. By Morera's theorem (holomorphic dependence on parameters),
+the integral is entire.
+
+Reference: Reed-Simon I, Thm VI.1 (analytic families of integrands);
+Fernique (1975), §III.4. -/
+axiom torusGeneratingFunctionalℂ_analyticOnNhd
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ]
+    (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass)
+    (n : ℕ) (J : Fin n → TorusTestFunction L) :
+    AnalyticOnNhd ℂ (fun z : Fin n → ℂ =>
+      torusGeneratingFunctionalℂ L μ
+        (∑ i, (z i).re • J i) (∑ i, (z i).im • J i)) Set.univ
+
+/-! ### Complex generating functional = exp(quadratic) -/
+
 /-- **Complex generating functional of a torus Gaussian as exp of a quadratic form.**
 
 For a Gaussian measure μ with covariance G_L, the complex generating functional
@@ -184,22 +283,17 @@ evaluated on `f_re = ∑ Re(zᵢ) Jᵢ, f_im = ∑ Im(zᵢ) Jᵢ` simplifies to:
 
   `Z_ℂ[z] = exp(-½ ∑ᵢⱼ zᵢ zⱼ G_L(Jᵢ, Jⱼ))`
 
-**Derivation:** The integrand is `exp(I ω(f_re) - ω(f_im))` where by linearity:
-- `ω(f_re) = ∑ Re(zᵢ) ω(Jᵢ)` and `ω(f_im) = ∑ Im(zᵢ) ω(Jᵢ)`
-- `I·Re(z) - Im(z) = I·z` (for each complex zᵢ)
-- So the exponent is `I ∑ zᵢ ω(Jᵢ)`
-
-The vector `(ω(J₁), ..., ω(Jₙ))` is jointly Gaussian with covariance matrix
-`Σᵢⱼ = G_L(Jᵢ, Jⱼ)`. The complex MGF of a centered Gaussian vector X at
-complex argument t is `E[exp(⟨t,X⟩)] = exp(½ ⟨t, Σt⟩)`.
-With `t = I·z`: `E[exp(I ∑ zᵢ Xᵢ)] = exp(-½ ∑ zᵢzⱼ Σᵢⱼ)`.
-
-This requires:
-1. Bilinearity of G_L (from linearity of DMS coefficients)
-2. Complex MGF of multivariate Gaussian (analytic continuation of real MGF)
+**Proof:** Both sides are entire analytic functions of z ∈ ℂⁿ (LHS by
+`torusGeneratingFunctionalℂ_analyticOnNhd`, RHS by exp ∘ quadratic polynomial).
+For z ∈ ℝⁿ, Im(zᵢ) = 0, so the LHS reduces to the characteristic functional
+`Z(∑ xᵢ·Jᵢ) = exp(-½ G(∑ xᵢ·Jᵢ, ∑ xⱼ·Jⱼ))` (proved), and the RHS reduces to
+`exp(-½ ∑ xᵢxⱼGᵢⱼ) = exp(-½ G(∑ xᵢ·Jᵢ, ∑ xⱼ·Jⱼ))` by bilinearity
+(`greenFunctionBilinear_finset_sum`). Agreement on ℝⁿ plus analyticity on ℂⁿ
+gives equality by the multi-variable identity principle
+(`analyticOnNhd_eq_of_eqOn_reals`).
 
 Reference: Fernique (1975), §III.4; Simon, *P(φ)₂ QFT*, Ch. I. -/
-axiom torusGaussianLimit_complex_cf_quadratic
+theorem torusGaussianLimit_complex_cf_quadratic
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
@@ -209,7 +303,45 @@ axiom torusGaussianLimit_complex_cf_quadratic
     torusGeneratingFunctionalℂ L μ
       (∑ i, (z i).re • J i) (∑ i, (z i).im • J i) =
     Complex.exp ((-1 / 2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
+      z i * z j * (torusContinuumGreen L mass hmass (J i) (J j) : ℂ)) := by
+  -- Apply the multi-variable identity theorem: both sides are entire analytic
+  -- functions of z that agree on ℝⁿ.
+  set F := fun z : Fin n → ℂ =>
+    torusGeneratingFunctionalℂ L μ (∑ i, (z i).re • J i) (∑ i, (z i).im • J i)
+  set G := fun z : Fin n → ℂ =>
+    Complex.exp ((-1 / 2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
       z i * z j * (torusContinuumGreen L mass hmass (J i) (J j) : ℂ))
+  -- F is entire analytic: the integrand ω ↦ exp(∑ I*zᵢ*ω(Jᵢ)) is entire in z
+  -- for each fixed ω (exp of a ℂ-linear function), bounded by exp(∑|zᵢ|*|ω(Jᵢ)|)
+  -- which is integrable. By holomorphic dependence on parameters, F is entire.
+  have hF_an : AnalyticOnNhd ℂ F Set.univ :=
+    torusGeneratingFunctionalℂ_analyticOnNhd L mass hmass μ hGCL n J
+  have hG_an : AnalyticOnNhd ℂ G Set.univ := by
+    intro z _; apply AnalyticAt.cexp'
+    apply AnalyticAt.mul analyticAt_const
+    apply Finset.univ.analyticAt_fun_sum; intro i _
+    apply Finset.univ.analyticAt_fun_sum; intro j _
+    exact ((ContinuousLinearMap.proj (R := ℂ) (φ := fun _ : Fin n => ℂ) i).analyticAt z |>.mul
+      ((ContinuousLinearMap.proj (R := ℂ) (φ := fun _ : Fin n => ℂ) j).analyticAt z)).mul
+      analyticAt_const
+  -- They agree on ℝⁿ
+  have h_eq_real : ∀ x : Fin n → ℝ, F (fun i => (x i : ℂ)) = G (fun i => (x i : ℂ)) := by
+    intro x
+    -- LHS: Z_ℂ(∑ xᵢ•Jᵢ, 0) = Z(∑ xᵢ•Jᵢ) = exp(-½ G(f,f))
+    simp only [F, G, Complex.ofReal_re, Complex.ofReal_im]
+    rw [show (∑ i : Fin n, (0 : ℝ) • J i) = (0 : TorusTestFunction L) from by simp]
+    rw [show torusGeneratingFunctionalℂ L μ (∑ i, x i • J i) 0 =
+        torusGeneratingFunctional L μ (∑ i, x i • J i) from by
+      simp [torusGeneratingFunctionalℂ, torusGeneratingFunctional, map_zero]]
+    rw [torusGaussianLimit_characteristic_functional L mass hmass μ hGCL]
+    congr 1; congr 1
+    -- ∑ᵢⱼ xᵢxⱼGᵢⱼ = G(∑ xᵢ•Jᵢ, ∑ xⱼ•Jⱼ)
+    simp only [torusContinuumGreen]
+    rw [greenFunctionBilinear_finset_sum mass hmass Finset.univ Finset.univ x x J J]
+    push_cast; ring
+  -- Apply the identity theorem
+  have := analyticOnNhd_eq_of_eqOn_reals hF_an hG_an h_eq_real
+  exact congr_fun this z
 
 /-- OS0 for the torus Gaussian continuum limit.
 
