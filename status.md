@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 52 axioms, 2 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 10 axioms, 1 sorry**
+**pphi2: 51 axioms, 1 sorry** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit; plus 1 unused computation and 1 unused Option B file in `Unused/`) | **gaussian-field (upstream): 10 axioms, 1 sorry**
 
 `Pphi2/Unused/HypercontractivityOptionB.lean` preserves an optional
 Gross-Rothaus-Simon OU semigroup route as inactive reference material.
@@ -56,14 +56,14 @@ It is not imported and not counted in the active axiom inventory.
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
-| 6 | `Main.lean` | 1 axiom, 1 sorry |
+| 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
 | 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 0 sorries (`latticeTestFn_norm_sq_bounded` proved) |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
 | 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 5 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 1 axiom, 0 sorries |
-| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 5 axioms, 1 sorry (OS0–OS3; OS1+OS2+OS3 proved) |
+| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 4 axioms, 1 sorry (OS0–OS3; OS1+OS2+OS3 proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
@@ -328,7 +328,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 
 | ~~`torusGaussianLimit_characteristic_functional`~~ | TorusOSAxioms | **PROVED** | CF `E[e^{iωf}] = exp(-½G(f,f))` from MGF via `complexMGF` analytic continuation + `charFun_gaussianReal`. |
 | `torusPositiveTimeSubmodule` | TorusOSAxioms | Infrastructure | Submodule of torus test functions with time support in (0, L/2). Nuclear tensor product lacks pointwise evaluation, so submodule axiomatized. |
-| `torusGaussianLimit_complex_cf_norm` | TorusOSAxioms | Easy | ✅ Verified (Gemini). ‖Z_ℂ[f_re,f_im]‖ = exp(½(G(f_im,f_im)-G(f_re,f_re))). Gaussian MGF with complex coefficients (t₁=i, t₂=-1). Fernique §III.4. |
+| ~~`torusGaussianLimit_complex_cf_norm`~~ | TorusOSAxioms | **ELIMINATED** | Axiom eliminated: OS1 proved directly via triangle inequality `‖Z_ℂ‖ ≤ ∫ exp(-ω(f_im)) dμ = exp(½G₂₂)` without needing exact norm. |
 | ~~`torusContinuumGreen_continuous_diag`~~ | TorusOSAxioms | **PROVED** | Proved via `greenFunctionBilinear_continuous_diag` in gaussian-field. Locally uniform convergence of partial sums (Weierstrass M-test + coeff_decay). |
 
 **Proved theorems (TorusContinuumLimit/):**
@@ -343,7 +343,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `torusContinuumGreen_nonneg`: `G_L(f,f) ≥ 0` from `greenFunctionBilinear_nonneg` (proved in gaussian-field).
 - `torusContinuumGreen_continuous_diag`: **PROVED** — f ↦ G_L(f,f) continuous. Via `greenFunctionBilinear_continuous_diag` in gaussian-field (Weierstrass M-test + coeff_decay + locally uniform convergence).
 - `torusGaussianLimit_characteristic_functional`: **PROVED** — CF formula `E[e^{iωf}] = exp(-½G(f,f))`. From MGF agreement → `eqOn_complexMGF_of_mgf` → `charFun_gaussianReal` (Mathlib Gaussian CF).
-- `torusGaussianLimit_os1`: **PROVED** — OS1 regularity with q(f)=G_L(f,f), c=½. From `torusGaussianLimit_complex_cf_norm` + `torusContinuumGreen_nonneg`.
+- `torusGaussianLimit_os1`: **PROVED** — OS1 regularity with q(f)=G_L(f,f), c=½. Triangle inequality: `‖Z_ℂ‖ ≤ ∫ exp(-ω(f_im)) dμ = exp(½G₂₂) ≤ exp(½(G₁₁+G₂₂))` via `norm_integral_le`, `Complex.norm_exp`, Gaussian MGF, and `torusContinuumGreen_nonneg`.
 - `torusMatrixRP_of_weakLimit`: **PROVED** — Matrix RP transfers through weak limits via Re(Z[g]) = ∫ cos(ω(g)) dμ (bounded continuous) + `tendsto_finset_sum` + `ge_of_tendsto'`.
 - `torusGaussianLimit_os3`: **PROVED** — OS3 reflection positivity from `torusMatrixRP_of_weakLimit` + `torusLattice_rp` + `torusGaussianLimit_fullConvergence`.
 

@@ -221,28 +221,6 @@ def TorusOS1_Regularity
       ‖torusGeneratingFunctionalℂ L μ f_re f_im‖ ≤
         Real.exp (c * (q f_re + q f_im))
 
-/-- **Norm of the complex characteristic functional for Gaussian measures.**
-
-For the Gaussian measure with covariance G_L, the MGF formula with complex
-coefficients (t₁ = i for ω(f_re), t₂ = -1 for ω(f_im)) gives:
-
-  `Z_ℂ[f_re, f_im] = exp(½(G(f_im,f_im) - G(f_re,f_re)) - i·G(f_re,f_im))`
-
-Taking the norm eliminates the imaginary phase:
-
-  `‖Z_ℂ[f_re, f_im]‖ = exp(½(G(f_im,f_im) - G(f_re,f_re)))`
-
-Reference: Fernique (1975), §III.4; cf. Gaussian MGF E[exp(Σ tᵢXᵢ)] = exp(½ Σ tᵢtⱼCᵢⱼ). -/
-axiom torusGaussianLimit_complex_cf_norm
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (TorusTestFunction L)))
-    [IsProbabilityMeasure μ]
-    (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass)
-    (f_re f_im : TorusTestFunction L) :
-    ‖torusGeneratingFunctionalℂ L μ f_re f_im‖ =
-    Real.exp ((1 / 2) * (torusContinuumGreen L mass hmass f_im f_im -
-                          torusContinuumGreen L mass hmass f_re f_re))
-
 /-- **Continuity of the Green's function diagonal.**
 
   `f ↦ G_L(f, f)` is continuous on `TorusTestFunction L`.
@@ -258,11 +236,13 @@ theorem torusContinuumGreen_continuous_diag
 
 /-- OS1 for the torus Gaussian continuum limit.
 
-For Gaussian μ with covariance G_L:
-  `‖Z[f_re, f_im]‖ = exp(½ (G_L(f_im,f_im) - G_L(f_re,f_re)))`
+For Gaussian μ with covariance G_L, the triangle inequality gives:
+  `‖Z_ℂ[f_re, f_im]‖ ≤ ∫ ‖exp(i(ω(f_re) + iω(f_im)))‖ dμ`
+  `= ∫ exp(-ω(f_im)) dμ = exp(½ G_L(f_im,f_im))`
   `≤ exp(½ (G_L(f_re,f_re) + G_L(f_im,f_im)))`
 
-since `-G_L(f_re,f_re) ≤ G_L(f_re,f_re)` (using `G_L(f,f) ≥ 0`).
+using `‖exp(-y + ix)‖ = exp(-y)` and the Gaussian MGF
+`E[exp(-ω(f_im))] = E[exp(ω(-f_im))] = exp(½ G(f_im,f_im))`.
 
 This gives the bound with `q(f) = G_L(f,f)` and `c = 1/2`. -/
 theorem torusGaussianLimit_os1
@@ -275,11 +255,43 @@ theorem torusGaussianLimit_os1
           torusContinuumGreen_continuous_diag L mass hmass,
           1 / 2, by norm_num, ?_⟩
   intro f_re f_im
-  rw [torusGaussianLimit_complex_cf_norm L mass hmass μ hGCL f_re f_im]
-  simp only
-  gcongr
-  have h_nonneg := torusContinuumGreen_nonneg L mass hmass f_re
-  linarith
+  -- Triangle inequality: ‖Z_ℂ‖ ≤ ∫ ‖exp(I*(ω(f_re) + I*ω(f_im)))‖ dμ
+  have h_tri : ‖torusGeneratingFunctionalℂ L μ f_re f_im‖ ≤
+      ∫ ω, ‖Complex.exp (Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)))‖ ∂μ :=
+    norm_integral_le_integral_norm _
+  -- ‖exp(I*(x + Iy))‖ = exp(-y), since I*(x+Iy) = -y + Ix has real part -y
+  have h_norm : ∀ ω : Configuration (TorusTestFunction L),
+      ‖Complex.exp (Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)))‖ =
+      Real.exp (-(ω f_im)) := by
+    intro ω
+    rw [Complex.norm_exp]
+    congr 1
+    have : Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)) =
+        -↑(ω f_im) + ↑(ω f_re) * Complex.I := by
+      rw [mul_add, ← mul_assoc, Complex.I_mul_I, neg_one_mul]; ring
+    rw [this, Complex.add_re, Complex.neg_re, Complex.ofReal_re,
+        Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im, mul_zero, zero_mul, sub_zero, add_zero]
+  -- Gaussian MGF: ∫ exp(-ω(f_im)) dμ = exp(½ G(f_im,f_im))
+  have h_mgf : ∫ ω : Configuration (TorusTestFunction L),
+      Real.exp (-(ω f_im)) ∂μ =
+      Real.exp ((1 / 2) * torusContinuumGreen L mass hmass f_im f_im) := by
+    simp_rw [show ∀ ω : Configuration (TorusTestFunction L),
+        -(ω f_im) = ω (-f_im) from fun ω => (map_neg ω f_im).symm]
+    rw [hGCL.isGaussian (-f_im)]
+    congr 1; congr 1
+    simp_rw [show ∀ ω : Configuration (TorusTestFunction L),
+        (ω (-f_im)) ^ 2 = (ω f_im) ^ 2 from fun ω => by rw [map_neg]; ring]
+    exact hGCL.covariance_eq f_im
+  -- Combine: ‖Z_ℂ‖ ≤ exp(½ G_im) ≤ exp(½ (G_re + G_im))
+  calc ‖torusGeneratingFunctionalℂ L μ f_re f_im‖
+      ≤ ∫ ω, ‖Complex.exp (Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)))‖ ∂μ := h_tri
+    _ = ∫ ω, Real.exp (-(ω f_im)) ∂μ := by simp_rw [h_norm]
+    _ = Real.exp ((1 / 2) * torusContinuumGreen L mass hmass f_im f_im) := h_mgf
+    _ ≤ Real.exp (1 / 2 * (torusContinuumGreen L mass hmass f_re f_re +
+                            torusContinuumGreen L mass hmass f_im f_im)) := by
+        gcongr
+        linarith [torusContinuumGreen_nonneg L mass hmass f_re]
 
 /-! ## OS2: Euclidean invariance (translation + D4) -/
 

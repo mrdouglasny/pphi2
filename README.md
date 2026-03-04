@@ -123,7 +123,7 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`, 3530 jobs).
 
-- **pphi2:** 52 axioms, 2 sorries
+- **pphi2:** 51 axioms, 1 sorry
 - **gaussian-field** (upstream dependency): 10 axioms, 1 sorry
 
 The torus continuum limit (`TorusContinuumLimit/`) provides a cleaner alternative
