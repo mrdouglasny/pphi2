@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 44 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 21 axioms, 0 sorries**
+**pphi2: 43 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 22 axioms, 0 sorries**
 
 `schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
@@ -58,7 +58,7 @@ progressively fill in the axioms with full proofs.
 | 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 0 sorries (`latticeTestFn_norm_sq_bounded` proved) |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
-| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 3 axioms, 0 sorries (`torusGaussianLimit_isGaussian` proved via MGF/complexMGF route) |
+| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 2 axioms, 0 sorries (`weakLimit_centered_gaussianReal` proved via charFun convergence + `ext_of_charFun`) |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 3 axioms, 0 sorries (OS0–OS3 all proved; translation + D4 Green's invariance proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
@@ -316,7 +316,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | `torusContinuumMeasures_tight` | TorusTightness | Medium | Tightness via Mitoma criterion on torus. Finite volume makes this cleaner than S'(ℝ^d). |
 | ~~`torusGaussianMeasure_isGaussian`~~ | TorusGaussianLimit | **PROVED** | Lattice GFF pushforward is Gaussian. MGF: `E[e^{ω(f)}] = exp(½ E[ω(f)²])`. |
 | ~~`torusGaussianLimit_isGaussian`~~ | TorusGaussianLimit | **PROVED** | Weak limits of Gaussians on torus are Gaussian. Proved via `pushforward_eval_gaussianReal` (MGF matching → complexMGF extension → measure equality) + `weakLimit_centered_gaussianReal`. |
-| `weakLimit_centered_gaussianReal` | TorusGaussianLimit | Easy | Weak limits of centered Gaussians on ℝ are centered Gaussian. CF convergence + Lévy continuity + `ext_of_charFun`. |
+| ~~`weakLimit_centered_gaussianReal`~~ | TorusGaussianLimit | **PROVED** | Weak limits of centered Gaussians on ℝ are centered Gaussian. Proved via charFun decomposition into cos/sin integrals, variance extraction from log limit, and `Measure.ext_of_charFun`. |
 | `torusLimit_covariance_eq` | TorusGaussianLimit | Medium | Weak convergence transfers second moments. Uniform integrability from `torusEmbeddedTwoPoint_uniform_bound`. |
 | `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Medium | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness. |
 | `torusGaussianMeasure_z2_symmetric` | TorusGaussianLimit | **PROVED** | Lattice GFF pushforward is Z₂-symmetric: both `neg_* ν` and `ν` are Gaussian with same covariance, hence equal by `gaussian_measure_unique_of_covariance`. |
@@ -572,7 +572,7 @@ infrastructure. Assessment date: 2026-03-04.
 
 | Axiom | File | Strategy |
 |-------|------|----------|
-| `weakLimit_centered_gaussianReal` | TorusGaussianLimit | Weak limits of centered Gaussians on ℝ are Gaussian. CF convergence + `ext_of_charFun`. |
+| ~~`weakLimit_centered_gaussianReal`~~ | TorusGaussianLimit | **PROVED.** CharFun decomposition into cos/sin integrals + variance extraction via log + `Measure.ext_of_charFun`. |
 | `torus_propagator_convergence` | TorusPropagatorConvergence | Mode-by-mode `sin(x)/x → 1` + dominated convergence with `1/(m² + k²)` domination + Schwartz rapid decay. |
 | `latticeMeasure_translation_invariant` | OS2_WardIdentity | Lattice measure invariant under cyclic translation. Finite-dimensional change of variables with Jacobian = 1. |
 
@@ -644,7 +644,8 @@ infrastructure. Assessment date: 2026-03-04.
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **21 axioms (+1 skipped), 0 sorries**.
+The gaussian-field library (dependency) has **22 axioms (+1 skipped), 0 sorries**.
+- `GaussianField/Properties.lean`: 1 axiom (`measure_unique_of_charFun` — Gaussian measure uniqueness via Minlos)
 - `GaussianField/Support.lean`: 2 axioms (`not_supported_of_not_hilbertSchmidt`, `supportHilbertSpace_exists`)
 - `HeatKernel/PositionKernel.lean`: 1 axiom (`mehlerKernel_eq_series`)
 - `HeatKernel/Bilinear.lean`: 0 axioms, 0 sorries (all proved)
@@ -654,6 +655,8 @@ The gaussian-field library (dependency) has **21 axioms (+1 skipped), 0 sorries*
 - `SmoothCircle/FourierTranslation.lean`: 6 axioms (Fourier coefficient transformation under translation + reflection)
 - `Nuclear/TensorProductFunctorAxioms.lean`: 6 axioms (tensor product functor + pure tensor specifications)
 - `Lattice/FKG.lean`: 0 axioms (all proved)
+- `Lattice/HeatKernel.lean`: 0 axioms (heat kernel via matrix exponential, all proved)
+- `Lattice/Symmetry.lean`: 0 axioms (translation/reflection commutation, all proved)
 - `GaussianField/Density.lean`: 0 axioms (master density theorem proved)
 - `GaussianField/Hypercontractive.lean`: 0 axioms (moment ratio bound proved)
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.
