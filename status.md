@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 42 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 25 axioms, 0 sorries**
+**pphi2: 42 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 23 axioms, 0 sorries**
 
 `schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
@@ -644,7 +644,7 @@ infrastructure. Assessment date: 2026-03-04.
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **25 axioms (+1 skipped), 0 sorries**.
+The gaussian-field library (dependency) has **23 axioms (+1 skipped), 0 sorries**.
 - `GaussianField/Properties.lean`: 1 axiom (`measure_unique_of_charFun` — Gaussian measure uniqueness via Minlos)
 - `GaussianField/Support.lean`: 2 axioms (`not_supported_of_not_hilbertSchmidt`, `supportHilbertSpace_exists`)
 - `HeatKernel/PositionKernel.lean`: 1 axiom (`mehlerKernel_eq_series`)
@@ -655,7 +655,7 @@ The gaussian-field library (dependency) has **25 axioms (+1 skipped), 0 sorries*
 - `SmoothCircle/FourierTranslation.lean`: 6 axioms (Fourier coefficient transformation under translation + reflection)
 - `Nuclear/TensorProductFunctorAxioms.lean`: 6 axioms (tensor product functor + pure tensor specifications)
 - `Lattice/Convergence.lean`: 1 axiom (`lattice_green_tendsto_continuum`)
-- `Lattice/HeatKernelConvergence1d.lean`: 3 axioms (spectral expansion, DFT convergence, uniform bound; eigenvalues/basis now explicit defs)
+- `Lattice/HeatKernelConvergence1d.lean`: 1 axiom (spectral expansion; DFT convergence proved via Riemann sums, uniform bound eliminated via eigenvalue decay)
 - `Lattice/HeatKernel.lean`: 0 axioms (heat kernel via matrix exponential, all proved)
 - `Lattice/Symmetry.lean`: 0 axioms (translation/reflection commutation, all proved)
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.
