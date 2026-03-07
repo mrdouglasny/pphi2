@@ -5,15 +5,16 @@
 ### 1. Lattice reflection positivity (eliminates 2 axioms)
 
 Target axioms:
-- `gaussian_rp_with_boundary_weight` (OSProofs/OS3_RP_Lattice) — Medium
+- `gaussian_density_rp` (OSProofs/OS3_RP_Lattice) — Medium
 - `torusLattice_rp` (TorusContinuumLimit/TorusOSAxioms) — Medium
 
-`lattice_rp` is now **proved** from `gaussian_rp_with_boundary_weight` via
-time-slice decomposition V=V₊+V₀+V₋, reflection symmetry V₋(φ)=V₊(Θφ),
-and integrand factorization as G·G∘Θ·w. The remaining axiom is the core
-Gaussian RP with boundary weight: ∫ G(φ)·G(Θφ)·w(φ) dμ_GFF ≥ 0, which
-follows from the Gaussian Markov property (conditional independence of
-positive/negative time fields given boundary).
+`lattice_rp` is now **proved** from `gaussian_rp_with_boundary_weight`,
+which itself is **proved** from `gaussian_density_rp` via the
+`evalMapMeasurableEquiv` density bridge (no measurability on integrands).
+The remaining axiom is the density-level RP:
+∫ G(φ)·G(Θφ)·w(φ)·ρ(φ) dφ ≥ 0, which follows from the Gaussian Markov
+property (conditional independence of positive/negative time fields given
+boundary) directly on Lebesgue integrals.
 
 ### 2. Transfer operator compactness (eliminates 1 axiom)
 

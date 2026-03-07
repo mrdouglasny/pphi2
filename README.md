@@ -121,7 +121,7 @@ consistency checks:
 ## Current status
 
 All six phases are structurally complete and the full project builds
-(`lake build`, 3535 jobs).
+(`lake build`, 3540 jobs).
 
 - **pphi2:** 42 axioms, 0 sorries
 - **gaussian-field** (upstream dependency): 19 axioms, 0 sorries

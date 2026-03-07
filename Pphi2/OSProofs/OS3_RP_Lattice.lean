@@ -410,7 +410,26 @@ factors as
   `∫ w(φ₀) · [∫ G(φ₊,φ₀) dμ₊|φ₀]² dμ₀ ≥ 0`
 
 Reference: Glimm-Jaffe Ch. 6.1, Osterwalder-Seiler (1978). -/
-axiom gaussian_rp_with_boundary_weight (a mass : ℝ)
+axiom gaussian_density_rp (a mass : ℝ)
+    (G : (ZMod N × ZMod N → ℝ) → ℝ)
+    (hG : PositiveTimeSupported N G)
+    (w : (ZMod N × ZMod N → ℝ) → ℝ)
+    (hw_nonneg : ∀ φ, 0 ≤ w φ)
+    (hw_boundary : BoundarySupported N w) :
+    0 ≤ ∫ φ : FinLatticeField 2 N,
+      G (fieldFromSites N φ) *
+      G (fieldReflection2D N (fieldFromSites N φ)) *
+      w (fieldFromSites N φ) *
+      gaussianDensity 2 N a mass φ
+
+/-- **Core Gaussian RP as a measure integral.**
+
+Derived from `gaussian_density_rp` via the density bridge:
+  `∫ F(evalMap ω) dμ = (∫ F · ρ dφ) / (∫ ρ dφ)`
+
+The numerator ≥ 0 by `gaussian_density_rp` and the denominator > 0
+by `gaussianDensity_integral_pos`, so the ratio ≥ 0. -/
+theorem gaussian_rp_with_boundary_weight (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
     (G : (ZMod N × ZMod N → ℝ) → ℝ)
     (hG : PositiveTimeSupported N G)
@@ -421,7 +440,24 @@ axiom gaussian_rp_with_boundary_weight (a mass : ℝ)
       (G (evalField2D N ω)) *
       (G (fieldReflection2D N (evalField2D N ω))) *
       (w (evalField2D N ω))
-      ∂(latticeGaussianMeasure 2 N a mass ha hmass)
+      ∂(latticeGaussianMeasure 2 N a mass ha hmass) := by
+  -- evalField2D N ω = fieldFromSites N (evalMap 2 N ω) by definition
+  have heval : ∀ ω : Configuration (FinLatticeField 2 N),
+      evalField2D N ω = fieldFromSites N (evalMap 2 N ω) := by
+    intro ω; simp only [evalField2D]; congr 1; funext x
+    simp only [evalMap]; congr 1; ext y
+    simp [finLatticeDelta, Pi.single_apply, eq_comm]
+  simp_rw [heval]
+  -- Apply the density bridge: ∫ F(evalMap ω) dμ = (∫ F·ρ dφ) / (∫ ρ dφ)
+  set F : FinLatticeField 2 N → ℝ := fun φ =>
+    G (fieldFromSites N φ) * G (fieldReflection2D N (fieldFromSites N φ)) *
+      w (fieldFromSites N φ) with hF_def
+  change 0 ≤ ∫ ω, F (evalMap 2 N ω) ∂(latticeGaussianMeasure 2 N a mass ha hmass)
+  rw [latticeGaussianMeasure_density_integral' 2 N a mass ha hmass]
+  -- Ratio ≥ 0: numerator ≥ 0 from gaussian_density_rp, denominator > 0
+  apply div_nonneg
+  · exact gaussian_density_rp N a mass G hG w hw_nonneg hw_boundary
+  · exact le_of_lt (gaussianDensity_integral_pos 2 N a mass ha hmass)
 
 /-- **Reflection positivity for the interacting lattice measure** (OS3).
 

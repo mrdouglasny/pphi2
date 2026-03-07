@@ -5,13 +5,13 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3535 jobs).
+3540 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 42 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 25 axioms, 0 sorries**
+**pphi2: 42 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 19 axioms, 0 sorries**
 
 `schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
@@ -237,7 +237,8 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`transferOperator_ground_simple`~~ | Jentzsch | ✅ **Proved** | Ground-state simplicity. Derived from Jentzsch + eigenvalue positivity + nontriviality. |
 | ~~`action_decomposition`~~ | OS3_RP_Lattice | ✅ **Proved** | S_plus = V/2, using sum-reindexing by site-reflection bijection (timeReflection2D is involution). |
 | ~~`lattice_rp`~~ | OS3_RP_Lattice | ✅ **Proved** | RP inequality for `interactingLatticeMeasure`. Proved from `gaussian_rp_with_boundary_weight` via time-slice decomposition V=V₊+V₀+V₋, reflection symmetry V₋(φ)=V₊(Θφ), and integrand factorization. |
-| `gaussian_rp_with_boundary_weight` | OS3_RP_Lattice | Medium | Core Gaussian RP with boundary weight: ∫ G(φ)·G(Θφ)·w(φ) dμ_GFF ≥ 0 for G positive-time-supported, w ≥ 0 boundary-supported. Gaussian Markov property + conditional independence. |
+| ~~`gaussian_rp_with_boundary_weight`~~ | OS3_RP_Lattice | ✅ **Proved** | Derived from `gaussian_density_rp` via `evalMapMeasurableEquiv` density bridge: `∫ F(evalMap ω) dμ = (∫ F·ρ) / (∫ ρ)`, ratio ≥ 0. |
+| `gaussian_density_rp` | OS3_RP_Lattice | Medium | Core Gaussian RP at density level: ∫ G(φ)·G(Θφ)·w(φ)·ρ(φ) dφ ≥ 0. Gaussian Markov property + conditional independence factorization. |
 | ~~`lattice_rp_matrix`~~ | OS3_RP_Lattice | ✅ **Proved** | Matrix form of RP via cos(u-v) expansion + `lattice_rp`. |
 | ~~`rp_from_transfer_positivity`~~ | OS3_RP_Lattice | ✅ **Proved** | ⟨f, T^n f⟩ ≥ 0 via `transferOperatorCLM`. |
 

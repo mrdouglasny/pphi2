@@ -222,7 +222,8 @@ meaningful mathematical types.
 
 ### OS3: Reflection Positivity
 - `lattice_rp` — **PROVED** from `gaussian_rp_with_boundary_weight` via time-slice decomposition
-- `gaussian_rp_with_boundary_weight` — Core Gaussian RP: ∫ G·G∘Θ·w dμ_GFF ≥ 0 (axiom, Gaussian Markov property)
+- `gaussian_rp_with_boundary_weight` — **PROVED** from `gaussian_density_rp` via `evalMapMeasurableEquiv` density bridge
+- `gaussian_density_rp` — Core Gaussian RP at density level: ∫ G·G∘Θ·w·ρ dφ ≥ 0 (axiom, Gaussian Markov property)
 - `rp_from_transfer_positivity` — **PROVED** $⟨f, T^n f⟩_{L²} ≥ 0$ via `transferOperatorCLM`
 
 ### OS4: Clustering & Ergodicity
@@ -307,7 +308,7 @@ The following were previously axioms and are now theorems:
 | 41 | `schwinger_n_convergence` | Convergence | ⚠️ Likely correct | Diagonal subsequence extraction for n-pt functions. Standard. |
 | 42 | `continuumLimit_nontrivial` | Convergence | ⚠️ Likely correct | ∃ f with ∫(ω f)² > 0. Free field gives lower bound via Griffiths inequalities. |
 | 43 | `continuumLimit_nonGaussian` | Convergence | ⚠️ Likely correct | Nonzero 4th cumulant. InteractionPolynomial requires degree ≥ 4 with lead coeff 1/n, so interaction is always nontrivial. O(λ) perturbative bound. |
-| 44 | `gaussian_rp_with_boundary_weight` | OS3_RP_Lattice | ✅ Standard | Core Gaussian RP with boundary weight. Gaussian Markov property (Glimm-Jaffe Ch. 6.1). `lattice_rp` now proved from this. |
+| 44 | `gaussian_density_rp` | OS3_RP_Lattice | ✅ Standard | Core Gaussian RP at density level: ∫ G·G∘Θ·w·ρ dφ ≥ 0. Gaussian Markov property (Glimm-Jaffe Ch. 6.1). `gaussian_rp_with_boundary_weight` proved from this via density bridge. |
 | 45 | `schwinger_agreement` | Bridge | ⚠️ Likely correct | Cluster expansion uniqueness at weak coupling. Properly constrained with `isPhi4`, `IsWeakCoupling` hypotheses. Very deep result (Guerra-Rosen-Simon 1975). |
 | 46 | `pphi2_nontriviality` | Main | ⚠️ Likely correct | ∃ μ, ∀ f ≠ 0, ∫(ω f)² > 0. Griffiths/FKG correlation inequality. The ∃ μ is existential (finds a good measure, not Measure.dirac 0). |
 | 47 | `pphi2_nonGaussianity` | Main | ⚠️ Likely correct | ∃ μ with nonzero 4th cumulant. Same ∃ μ pattern. |
