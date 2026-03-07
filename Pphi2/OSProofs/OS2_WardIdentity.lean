@@ -45,6 +45,7 @@ import Pphi2.OSAxioms
 import Pphi2.GeneralResults.FunctionalAnalysis
 import Pphi2.OSforGFF.TimeTranslation
 import Pphi2.OSforGFF.ComplexTestFunction
+import Lattice.Symmetry
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
 
 noncomputable section
@@ -102,17 +103,96 @@ theorem latticeAction_translation_invariant (P : InteractionPolynomial) (a mass 
   simp only [Equiv.subRight, Equiv.coe_fn_mk]
   congr 1
 
+/-! ### Helper lemmas for translation invariance -/
+
+omit [NeZero N] in
+/-- `latticeTranslation` is definitionally `latticeTranslationFun` from gaussian-field. -/
+private lemma latticeTranslation_eq (v : FinLatticeSites d N) (φ : FinLatticeField d N) :
+    latticeTranslation d N v φ = latticeTranslationFun d N v φ := rfl
+
+/-- The mass operator commutes with lattice translation.
+`Q(T_v φ) = T_v(Q φ)` because both -Δ and m² commute with translation. -/
+private lemma massOperator_translation_commute (a mass : ℝ) (v : FinLatticeSites d N)
+    (φ : FinLatticeField d N) :
+    massOperator d N a mass (latticeTranslation d N v φ) =
+    latticeTranslation d N v (massOperator d N a mass φ) := by
+  have hΔ := finiteLaplacian_translation_commute d N a v φ
+  ext x
+  simp only [massOperator, ContinuousLinearMap.add_apply, ContinuousLinearMap.neg_apply,
+    ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply,
+    Pi.add_apply, Pi.neg_apply, Pi.smul_apply, smul_eq_mul,
+    latticeTranslation_eq, latticeTranslationFun]
+  have h := congr_fun hΔ x
+  simp only [latticeTranslationFun] at h
+  linarith
+
+/-- The Gaussian density `ρ(φ) = exp(-½⟨φ, Qφ⟩)` is translation-invariant.
+
+The quadratic form `∑_x φ(x)·(Qφ)(x)` is invariant because Q commutes
+with translation and the sum over all lattice sites is relabeling-invariant. -/
+private lemma gaussianDensity_translation_invariant (a mass : ℝ) (v : FinLatticeSites d N)
+    (φ : FinLatticeField d N) :
+    gaussianDensity d N a mass (latticeTranslation d N v φ) =
+    gaussianDensity d N a mass φ := by
+  unfold gaussianDensity
+  congr 1; congr 1
+  -- Show: ∑ x, (T_v φ)(x) * (Q(T_v φ))(x) = ∑ x, φ(x) * (Qφ)(x)
+  have hcomm := massOperator_translation_commute d N a mass v φ
+  simp_rw [show ∀ x, massOperator d N a mass (latticeTranslation d N v φ) x =
+    latticeTranslation d N v (massOperator d N a mass φ) x from fun x => congr_fun hcomm x]
+  -- Relabel x ↦ x - v using Equiv.subRight
+  apply Fintype.sum_equiv (Equiv.subRight v)
+  intro x; rfl
+
+/-- `latticeTranslation d N v` as a `MeasurableEquiv` on `FinLatticeField d N`. -/
+private noncomputable def latticeTranslationEquiv (v : FinLatticeSites d N) :
+    FinLatticeField d N ≃ᵐ FinLatticeField d N :=
+  MeasurableEquiv.piCongrLeft (fun _ : FinLatticeSites d N => ℝ) (Equiv.addRight v)
+
+omit [NeZero N] in
+private lemma latticeTranslationEquiv_eq (v : FinLatticeSites d N)
+    (φ : FinLatticeField d N) :
+    latticeTranslationEquiv d N v φ = latticeTranslation d N v φ := by
+  ext x
+  change (Equiv.piCongrLeft (fun _ => ℝ) (Equiv.addRight v)) φ x = φ (fun i => x i - v i)
+  conv_lhs => rw [show x = (Equiv.addRight v) (x - v) from (sub_add_cancel x v).symm]
+  rw [Equiv.piCongrLeft_apply_apply]; rfl
+
+/-- `latticeTranslation d N v` preserves Lebesgue measure on `FinLatticeField d N`. -/
+private lemma latticeTranslation_volume_preserving (v : FinLatticeSites d N) :
+    MeasurePreserving (latticeTranslationEquiv d N v)
+      (volume : Measure (FinLatticeField d N)) volume :=
+  volume_measurePreserving_piCongrLeft _ _
+
+/-- Evaluating `evalMapInv φ` at a delta function `δ_x` returns `φ x`. -/
+private lemma evalInv_delta (φ : FinLatticeField d N) (x : FinLatticeSites d N) :
+    (evalMapMeasurableEquiv d N).symm φ (finLatticeDelta d N x) = φ x :=
+  congr_fun ((evalMapMeasurableEquiv d N).apply_symm_apply φ) x
+
+omit [NeZero N] in
+/-- Translating a delta function shifts its support: `T_v(δ_x) = δ_{x+v}`. -/
+private lemma latticeTranslation_delta (v : FinLatticeSites d N) (x : FinLatticeSites d N) :
+    latticeTranslation d N v (finLatticeDelta d N x) = finLatticeDelta d N (x + v) := by
+  ext z
+  simp only [latticeTranslation, finLatticeDelta]
+  have : ((fun i => z i - v i) = x) ↔ (z = x + v) := by
+    change z - v = x ↔ z = x + v; exact sub_eq_iff_eq_add
+  simp [this]
+
 /-- The interacting lattice measure is invariant under lattice translations.
 
-This follows from:
-1. The Gaussian measure is translation-invariant (stationary process on the torus).
-2. The interaction V_a is translation-invariant (`latticeAction_translation_invariant`).
-3. Hence exp(-V_a) dμ_GFF is invariant, and so is (1/Z) exp(-V_a) dμ_GFF.
-4. The change of variables formula on the finite-dimensional lattice space
-   gives `∫ F(T_v ω) dμ = ∫ F(ω) dμ` for any integrable F.
+**Proof:** Both sides reduce (via the density bridge) to ratios of Lebesgue
+integrals on `FinLatticeField d N`. The numerator integrand factors as
+`(F ∘ evalMapInv)(φ) · BW_field(φ) · ρ(φ)`, where:
+- `BW_field` is invariant under `T_v` (`latticeAction_translation_invariant`)
+- `ρ` is invariant under `T_v` (`gaussianDensity_translation_invariant`)
+- `T_v` preserves Lebesgue measure (`latticeTranslation_volume_preserving`)
+
+A change of variables `φ → T_{-v}(φ)` then shows the LHS numerator equals
+the RHS numerator.
 
 Reference: Glimm-Jaffe §8.1 (translation invariance of lattice measures). -/
-axiom latticeMeasure_translation_invariant (P : InteractionPolynomial)
+theorem latticeMeasure_translation_invariant (P : InteractionPolynomial)
     (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (v : FinLatticeSites d N) :
     ∀ (F : Configuration (FinLatticeField d N) → ℝ),
@@ -123,7 +203,124 @@ axiom latticeMeasure_translation_invariant (P : InteractionPolynomial)
         map_smul' := fun _ _ => rfl }
     ∫ ω, F (ω.comp L_v.toContinuousLinearMap)
         ∂(interactingLatticeMeasure d N P a mass ha hmass) =
-    ∫ ω, F ω ∂(interactingLatticeMeasure d N P a mass ha hmass)
+    ∫ ω, F ω ∂(interactingLatticeMeasure d N P a mass ha hmass) := by
+  intro F _hFi
+  -- Setup notation
+  set mu_GFF := latticeGaussianMeasure d N a mass ha hmass
+  set bw := boltzmannWeight d N P a mass
+  set ρ := gaussianDensity d N a mass
+  set L_v : FinLatticeField d N →ₗ[ℝ] FinLatticeField d N :=
+    { toFun := latticeTranslation d N v
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  -- Step 1: Unfold the interacting measure = Z⁻¹ • μ_GFF.withDensity(bw)
+  unfold interactingLatticeMeasure
+  simp_rw [integral_smul_measure]
+  congr 1  -- Z⁻¹ factor is the same on both sides
+  -- Step 2: Convert withDensity integrals to μ_GFF integrals
+  set bw_nn := fun ω : Configuration (FinLatticeField d N) => Real.toNNReal (bw ω)
+  have hbw_nn_meas : Measurable bw_nn :=
+    Measurable.real_toNNReal
+      ((interactionFunctional_measurable d N P a mass).neg.exp)
+  change ∫ ω, F (ω.comp L_v.toContinuousLinearMap)
+      ∂(mu_GFF.withDensity (fun ω => ↑(bw_nn ω))) =
+    ∫ ω, F ω ∂(mu_GFF.withDensity (fun ω => ↑(bw_nn ω)))
+  rw [integral_withDensity_eq_integral_smul hbw_nn_meas,
+      integral_withDensity_eq_integral_smul hbw_nn_meas]
+  -- Simplify NNReal.smul to real multiplication
+  have hbw_simp : ∀ ω : Configuration (FinLatticeField d N),
+      (bw_nn ω : ℝ) = bw ω := fun ω =>
+    Real.coe_toNNReal _ (le_of_lt (boltzmannWeight_pos d N P a mass ω))
+  -- Step 3: Express integrands as functions of evalMap ω
+  -- LHS integrand: bw(ω) * F(ω.comp L_v) = G_L(evalMap ω)
+  -- RHS integrand: bw(ω) * F(ω) = G_R(evalMap ω)
+  -- Since ω = evalMapInv(evalMap ω), both factor through evalMap
+  set evalInv := (evalMapMeasurableEquiv d N).symm
+  -- Key: ω.comp L_v = evalMapInv(T_{-v}(evalMap ω))
+  -- and ω = evalMapInv(evalMap ω)
+  have hcomp : ∀ ω : Configuration (FinLatticeField d N),
+      ω.comp L_v.toContinuousLinearMap = evalInv (latticeTranslation d N (-v) (evalMap d N ω)) := by
+    intro ω
+    -- It suffices to show evalMap of both sides are equal
+    have hinj := (evalMapMeasurableEquiv d N).injective
+    apply hinj
+    simp only [evalInv, MeasurableEquiv.apply_symm_apply]
+    ext x
+    -- LHS: evalMap(ω.comp L_v.toCLM)(x) = ω(T_v(δ_x))
+    -- RHS: T_{-v}(evalMap ω)(x) = ω(δ_{x+v})
+    -- Equal because T_v(δ_x) = δ_{x+v}
+    change (ω.comp L_v.toContinuousLinearMap) (finLatticeDelta d N x) =
+           latticeTranslation d N (-v) (fun y => ω (finLatticeDelta d N y)) x
+    rw [ContinuousLinearMap.comp_apply, LinearMap.coe_toContinuousLinearMap']
+    simp only [L_v, LinearMap.coe_mk, AddHom.coe_mk,
+      latticeTranslation_delta d N v x, latticeTranslation]
+    -- Goal: ω(δ_{x+v}) = ω(δ_{fun i => x i - (-v) i})
+    -- x + v = fun i => x i + v i = fun i => x i - (-v) i (definitionally)
+    show ω (finLatticeDelta d N (x + v)) =
+         ω (finLatticeDelta d N (fun i => x i - (-v) i))
+    congr 2; ext i; simp [Pi.add_apply, sub_neg_eq_add]
+  have hid : ∀ ω : Configuration (FinLatticeField d N),
+      ω = evalInv (evalMap d N ω) := by
+    intro ω; exact ((evalMapMeasurableEquiv d N).symm_apply_apply ω).symm
+  -- Rewrite both integrands using evalMap
+  simp_rw [NNReal.smul_def, smul_eq_mul, hbw_simp]
+  -- LHS: ∫ bw(ω) * F(ω.comp L_v) dμ_GFF
+  -- RHS: ∫ bw(ω) * F(ω) dμ_GFF
+  -- Define field-level functions
+  set G_L := fun φ : FinLatticeField d N =>
+    bw (evalInv φ) * F (evalInv (latticeTranslation d N (-v) φ))
+  set G_R := fun φ : FinLatticeField d N =>
+    bw (evalInv φ) * F (evalInv φ)
+  -- Show integrands match G_L(evalMap ω) and G_R(evalMap ω)
+  have hL : ∀ ω, bw ω * F (ω.comp L_v.toContinuousLinearMap) = G_L (evalMap d N ω) := by
+    intro ω
+    simp only [G_L, hcomp, ← hid ω]
+  have hR : ∀ ω, bw ω * F ω = G_R (evalMap d N ω) := by
+    intro ω; simp only [G_R, ← hid ω]
+  simp_rw [hL, hR]
+  -- Step 4: Apply the density bridge to both sides
+  rw [latticeGaussianMeasure_density_integral' d N a mass ha hmass G_L,
+      latticeGaussianMeasure_density_integral' d N a mass ha hmass G_R]
+  -- Denominators are equal; show numerators are equal
+  congr 1
+  -- Step 5: Change of variables on the Lebesgue integral
+  -- LHS numerator: ∫ G_L(φ) * ρ(φ) dφ = ∫ bw(evalInv φ) * F(evalInv(T_{-v} φ)) * ρ(φ) dφ
+  -- RHS numerator: ∫ G_R(φ) * ρ(φ) dφ = ∫ bw(evalInv φ) * F(evalInv φ) * ρ(φ) dφ
+  -- Show LHS = ∫ (G_R * ρ)(T_{-v} φ) dφ = ∫ (G_R * ρ)(φ) dφ = RHS
+  -- using: bw(evalInv(T_{-v} φ)) = bw(evalInv φ) and ρ(T_{-v} φ) = ρ(φ)
+  -- BW invariance: interactionFunctional factors through evalMap, and latticeInteraction is T-invariant
+  have hBW_inv : ∀ φ, bw (evalInv (latticeTranslation d N (-v) φ)) = bw (evalInv φ) := by
+    intro φ
+    -- suffices: interactionFunctional is invariant
+    suffices h : interactionFunctional d N P a mass (evalInv (latticeTranslation d N (-v) φ)) =
+                 interactionFunctional d N P a mass (evalInv φ) by
+      simp only [bw, boltzmannWeight, h]
+    simp only [interactionFunctional]
+    congr 1
+    -- ∑_x WM(evalInv(T_{-v} φ)(δ_x)) = ∑_x WM(evalInv φ (δ_x))
+    -- evalInv(T_{-v} φ)(δ_x) = (T_{-v} φ)(x) = φ(x+v) by evalInv_delta
+    -- evalInv(φ)(δ_{x+v}) = φ(x+v) by evalInv_delta
+    -- Relabel x ↦ x + v
+    apply Fintype.sum_equiv (Equiv.addRight v)
+    intro x; congr 1
+    rw [evalInv_delta, evalInv_delta]
+    simp only [latticeTranslation, Equiv.addRight]
+    congr 1; ext i; simp [Pi.neg_apply, Pi.add_apply, sub_neg_eq_add]
+  have hρ_inv : ∀ φ, ρ (latticeTranslation d N (-v) φ) = ρ φ :=
+    gaussianDensity_translation_invariant d N a mass (-v)
+  -- Now: G_L(φ) * ρ(φ) = G_R(T_{-v} φ) * ρ(T_{-v} φ)
+  -- Change of variables: ∫ (G_R ∘ T_{-v}) * (ρ ∘ T_{-v}) dφ = ∫ G_R * ρ dφ
+  -- Change of variables: show LHS = ∫ (G_R * ρ) ∘ T_{-v} dφ = ∫ G_R * ρ dφ = RHS
+  have hkey : ∀ φ, G_L φ * ρ φ =
+      G_R (latticeTranslation d N (-v) φ) * ρ (latticeTranslation d N (-v) φ) := by
+    intro φ; dsimp only [G_L, G_R]; rw [hBW_inv, hρ_inv]
+  have hkey2 : (fun φ => G_L φ * ρ φ) =
+      (fun φ => G_R (latticeTranslationEquiv d N (-v) φ) *
+                ρ (latticeTranslationEquiv d N (-v) φ)) := by
+    ext φ; rw [hkey, latticeTranslationEquiv_eq]
+  rw [hkey2]
+  exact (latticeTranslation_volume_preserving d N (-v)).integral_comp'
+    (fun ψ => G_R ψ * ρ ψ)
 
 /-! ## Translation invariance in the continuum -/
 

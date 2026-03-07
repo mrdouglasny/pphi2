@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 42 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 19 axioms, 0 sorries**
+**pphi2: 41 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 19 axioms, 0 sorries**
 
 `schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
@@ -49,7 +49,7 @@ progressively fill in the axioms with full proofs.
 | 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom + 1 private axiom (`schwartz_riemann_sum_bound`), 0 sorries |
 | 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 1 axiom, 0 sorries |
 | 4G | `GaussianContinuumLimit/GaussianLimit.lean` | 1 axiom, 0 sorries |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 8 axioms |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 7 axioms |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
@@ -371,7 +371,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`generatingFunctional_translate_continuous`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — via DCT (bound 1) + `continuous_timeTranslationSchwartz` from TimeTranslation.lean. |
 | ~~`norm_generatingFunctional_le_one`~~ | OS2_WardIdentity | ✅ **Proved** | ‖Z[f]‖ ≤ 1 from norm_integral ≤ ∫ norm + ‖exp(ix)‖=1. |
 | ~~`os4_clustering_implies_ergodicity`~~ | OS2_WardIdentity | ✅ **Proved** | OS4_Clustering → OS4_Ergodicity via reality of Z + Cesàro convergence. |
-| `latticeMeasure_translation_invariant` | OS2_WardIdentity | Medium | Lattice interacting measure is translation-invariant: `Z_a[τ_k f] = Z_a[f]` for lattice shifts k. Relabeling argument. |
+| ~~`latticeMeasure_translation_invariant`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — density bridge + change of variables. BW and ρ invariant under translation, Lebesgue measure preserved by `piCongrLeft`. |
 | `translation_invariance_continuum` | OS2_WardIdentity | Medium | Continuum limit generating functional is translation-invariant: `Z[τ_a f] = Z[f]`. Follows from lattice translation invariance + weak convergence. |
 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Hard | Super-renormalizability gives `‖Z_a[R·f] - Z_a[f]‖ ≤ C·a²`. No logarithmic corrections in d=2. Key input for Ward identity. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Hard | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson, transferred to limit. Feeds OS0 + OS1. |
@@ -576,7 +576,7 @@ infrastructure. Assessment date: 2026-03-04.
 |-------|------|----------|
 | ~~`weakLimit_centered_gaussianReal`~~ | TorusGaussianLimit | **PROVED.** CharFun decomposition into cos/sin integrals + variance extraction via log + `Measure.ext_of_charFun`. |
 | ~~`torus_propagator_convergence`~~ | TorusPropagatorConvergence | **PROVED.** Via gaussian-field `lattice_green_tendsto_continuum` axiom. |
-| `latticeMeasure_translation_invariant` | OS2_WardIdentity | Lattice measure invariant under cyclic translation. Finite-dimensional change of variables with Jacobian = 1. |
+| ~~`latticeMeasure_translation_invariant`~~ | OS2_WardIdentity | **Proved** — density bridge + change of variables. |
 
 ### Tier 3: Moderate (nontrivial but standard)
 
