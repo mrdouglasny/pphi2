@@ -5,7 +5,7 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3540 jobs).
+3541 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and

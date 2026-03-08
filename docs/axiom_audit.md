@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-03-07 (Convergence.lean tensor product route)
-**pphi2**: 42 axioms, 0 sorries | **gaussian-field**: 25 axioms, 0 sorries | **Total**: 67
+**Updated**: 2026-03-07
+**pphi2**: 40 axioms, 0 sorries | **gaussian-field**: 19 axioms, 0 sorries | **Total**: 59
 
 ## Verification Sources
 
