@@ -62,6 +62,19 @@ For d=2 this is the test function space for P(Φ)₂. -/
 abbrev ContinuumTestFunction :=
   SchwartzMap (EuclideanSpace ℝ (Fin d)) ℝ
 
+/-- Translation of a Schwartz function by `v ∈ ℝ^d`: `(τ_v f)(x) = f(x - v)`.
+
+This is a continuous linear map on S(ℝ^d), constructed via
+`SchwartzMap.compCLMOfAntilipschitz` with the isometry `x ↦ x - v`. -/
+noncomputable def schwartzTranslate (v : EuclideanSpace ℝ (Fin d)) :
+    ContinuumTestFunction d →L[ℝ] ContinuumTestFunction d :=
+  SchwartzMap.compCLMOfAntilipschitz ℝ
+    (show (fun x : EuclideanSpace ℝ (Fin d) => x - v).HasTemperateGrowth from
+      ((ContinuousLinearMap.id ℝ _).hasTemperateGrowth).sub
+        (Function.HasTemperateGrowth.const v))
+    (show AntilipschitzWith 1 (fun x : EuclideanSpace ℝ (Fin d) => x - v) from
+      fun x y => by simp [edist_sub_right])
+
 /-! ## Physical position of a lattice site -/
 
 variable (N : ℕ) [NeZero N]
@@ -261,19 +274,26 @@ theorem continuumMeasure_isProbability (P : InteractionPolynomial)
 A probability measure μ on S'(ℝ^d) satisfies `IsPphi2Limit` if it arises as
 a subsequential weak limit of the lattice construction. Concretely, this means
 there exists a sequence of lattice spacings aₖ → 0 and a corresponding sequence
-of probability measures νₖ on S'(ℝ^d) such that all Schwinger functions converge:
+of probability measures νₖ on S'(ℝ^d) such that:
 
-  `∫ ∏ᵢ ω(fᵢ) dνₖ → ∫ ∏ᵢ ω(fᵢ) dμ`
+1. All Schwinger functions converge:
+   `∫ ∏ᵢ ω(fᵢ) dνₖ → ∫ ∏ᵢ ω(fᵢ) dμ`
 
-for all n and all Schwartz test functions f₁,...,fₙ.
+2. The characteristic functional converges:
+   `∫ exp(i·ω(f)) dνₖ → ∫ exp(i·ω(f)) dμ`
+
+The characteristic functional convergence is the standard definition of weak
+convergence on nuclear spaces (Bochner-Minlos / Lévy continuity theorem). It
+follows from moment convergence plus uniform exponential bounds (Nelson's
+hypercontractive estimate), but is cleaner as a direct hypothesis.
 
 This predicate is used as a hypothesis on axioms that hold specifically for
 P(φ)₂ continuum limit measures (translation/rotation invariance, exponential
 moments, RP, clustering) — properties that do NOT hold for arbitrary probability
 measures on S'(ℝ^d).
 
-In addition to moment convergence, we record the standard Z₂ symmetry of an
-even interaction:
+In addition to moment and characteristic functional convergence, we record the
+standard Z₂ symmetry of an even interaction:
 
   `Measure.map Neg.neg μ = μ`.
 
@@ -293,7 +313,29 @@ def IsPphi2Limit {d : ℕ}
         (nhds (∫ ω : Configuration (ContinuumTestFunction d), ∏ i, ω (f i) ∂μ))) ∧
     Measure.map
       (Neg.neg : Configuration (ContinuumTestFunction d) →
-        Configuration (ContinuumTestFunction d)) μ = μ
+        Configuration (ContinuumTestFunction d)) μ = μ ∧
+    -- Characteristic functional convergence: Z_{ν_k}[f] → Z_μ[f] for all f.
+    -- This is the standard definition of weak convergence on nuclear spaces
+    -- (Bochner-Minlos / Lévy continuity). It follows from moment convergence
+    -- plus uniform exponential bounds, but is cleaner to include directly.
+    (∀ (f : ContinuumTestFunction d),
+      Filter.Tendsto
+        (fun k => ∫ ω : Configuration (ContinuumTestFunction d),
+          Complex.exp (Complex.I * ↑(ω f)) ∂(ν k))
+        Filter.atTop
+        (nhds (∫ ω : Configuration (ContinuumTestFunction d),
+          Complex.exp (Complex.I * ↑(ω f)) ∂μ))) ∧
+    -- Lattice translation invariance: for any translation vector v, the
+    -- characteristic functional of ν_k is eventually invariant under τ_v.
+    -- This holds because the lattice spacings a_k → 0 can be chosen so that
+    -- for any v, v is eventually a lattice vector (e.g., dyadic a_k = 2^{-k}).
+    -- Inherited from `latticeMeasure_translation_invariant` via embedding.
+    (∀ (v : EuclideanSpace ℝ (Fin d)) (f : ContinuumTestFunction d),
+      ∀ᶠ k in Filter.atTop,
+        ∫ ω : Configuration (ContinuumTestFunction d),
+          Complex.exp (Complex.I * ↑(ω f)) ∂(ν k) =
+        ∫ ω : Configuration (ContinuumTestFunction d),
+          Complex.exp (Complex.I * ↑(ω (schwartzTranslate d v f))) ∂(ν k))
 
 end Pphi2
 

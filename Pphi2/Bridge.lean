@@ -117,7 +117,16 @@ def IsPphi2ContinuumLimit
         (fun k : ℕ => ∫ ω : FieldConfig, ∏ i, ω (f i) ∂(ν k))
         Filter.atTop
         (nhds (∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ))) ∧
-    Measure.map (Neg.neg : FieldConfig → FieldConfig) μ = μ
+    Measure.map (Neg.neg : FieldConfig → FieldConfig) μ = μ ∧
+    (∀ (f : TestFun),
+      Filter.Tendsto
+        (fun k => ∫ ω : FieldConfig, Complex.exp (Complex.I * ↑(ω f)) ∂(ν k))
+        Filter.atTop
+        (nhds (∫ ω : FieldConfig, Complex.exp (Complex.I * ↑(ω f)) ∂μ))) ∧
+    (∀ (v : EuclideanSpace ℝ (Fin 2)) (f : TestFun),
+      ∀ᶠ k in Filter.atTop,
+        ∫ ω : FieldConfig, Complex.exp (Complex.I * ↑(ω f)) ∂(ν k) =
+        ∫ ω : FieldConfig, Complex.exp (Complex.I * ↑(ω (schwartzTranslate 2 v f))) ∂(ν k))
 
 /-- A probability measure μ on S'(ℝ²) that arises as the infinite-volume limit
 of the Phi4 continuum construction: μ = weak-lim_{Λ→∞} μ^{Phi4}_{Λ}

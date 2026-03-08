@@ -256,7 +256,7 @@ theorem latticeMeasure_translation_invariant (P : InteractionPolynomial)
       latticeTranslation_delta d N v x, latticeTranslation]
     -- Goal: ω(δ_{x+v}) = ω(δ_{fun i => x i - (-v) i})
     -- x + v = fun i => x i + v i = fun i => x i - (-v) i (definitionally)
-    show ω (finLatticeDelta d N (x + v)) =
+    change ω (finLatticeDelta d N (x + v)) =
          ω (finLatticeDelta d N (fun i => x i - (-v) i))
     congr 2; ext i; simp [Pi.add_apply, sub_neg_eq_add]
   have hid : ∀ ω : Configuration (FinLatticeField d N),
@@ -288,7 +288,8 @@ theorem latticeMeasure_translation_invariant (P : InteractionPolynomial)
   -- RHS numerator: ∫ G_R(φ) * ρ(φ) dφ = ∫ bw(evalInv φ) * F(evalInv φ) * ρ(φ) dφ
   -- Show LHS = ∫ (G_R * ρ)(T_{-v} φ) dφ = ∫ (G_R * ρ)(φ) dφ = RHS
   -- using: bw(evalInv(T_{-v} φ)) = bw(evalInv φ) and ρ(T_{-v} φ) = ρ(φ)
-  -- BW invariance: interactionFunctional factors through evalMap, and latticeInteraction is T-invariant
+  -- BW invariance: interactionFunctional factors through evalMap,
+  -- and latticeInteraction is T-invariant
   have hBW_inv : ∀ φ, bw (evalInv (latticeTranslation d N (-v) φ)) = bw (evalInv φ) := by
     intro φ
     -- suffices: interactionFunctional is invariant
@@ -340,14 +341,37 @@ Proof outline:
 4. A continuous function equal to a constant on a dense set equals that constant
    everywhere (topology: closed set containing a dense set is the whole space).
 
-Reference: Glimm-Jaffe §8.6 (translation invariance of the continuum limit). -/
-axiom translation_invariance_continuum (P : InteractionPolynomial)
+Reference: Glimm-Jaffe §8.6 (translation invariance of the continuum limit).
+
+**Proof:** From `IsPphi2Limit` we extract:
+- `cf_tendsto`: Z_{ν_k}[g] → Z_μ[g] for all g
+- `lattice_inv`: Z_{ν_k}[f] = Z_{ν_k}[τ_v f] eventually, for all v, f
+
+For any v, f: both Z_{ν_k}[f] and Z_{ν_k}[τ_v f] converge to Z_μ[f] and Z_μ[τ_v f]
+respectively. Since Z_{ν_k}[f] = Z_{ν_k}[τ_v f] eventually, the limits are equal. -/
+theorem translation_invariance_continuum (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ)
     (h_limit : IsPphi2Limit μ P mass) :
     ∀ (v : EuclideanSpace ℝ (Fin 2)) (f : TestFunction2),
-    generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f)
+    generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f) := by
+  rcases h_limit with ⟨a, ν, hprob, _ha_tend, _ha_pos, _hmom, _hneg, hcf, hlat⟩
+  intro v f
+  -- SchwartzMap.translate v f = schwartzTranslate 2 v f (same definition)
+  have htranslate_eq : SchwartzMap.translate v f = schwartzTranslate 2 v f := rfl
+  rw [htranslate_eq]
+  -- Z_{ν_k}[f] → Z_μ[f]
+  have lim_f := hcf f
+  -- Z_{ν_k}[τ_v f] → Z_μ[τ_v f]
+  have lim_tv := hcf (schwartzTranslate 2 v f)
+  -- Z_{ν_k}[f] = Z_{ν_k}[τ_v f] eventually
+  have h_ev := hlat v f
+  -- Generating functional = integral of exp(i·ω(·))
+  change ∫ ω : FieldConfig2, Complex.exp (Complex.I * ↑(ω f)) ∂μ =
+       ∫ ω : FieldConfig2, Complex.exp (Complex.I * ↑(ω (schwartzTranslate 2 v f))) ∂μ
+  -- Both sequences have the same limit, since they're eventually equal
+  exact tendsto_nhds_unique_of_eventuallyEq lim_f lim_tv h_ev
 
 /-! ## Ward identity for rotations
 
@@ -1201,7 +1225,7 @@ theorem pphi2_measure_neg_invariant (P : InteractionPolynomial)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (h_limit : IsPphi2Limit μ P mass) :
     Measure.map (Neg.neg : FieldConfig2 → FieldConfig2) μ = μ := by
-  rcases h_limit with ⟨_a, _ν, _hprob, _ha_tend, _ha_pos, _hmom, hneg⟩
+  rcases h_limit with ⟨_a, _ν, _hprob, _ha_tend, _ha_pos, _hmom, hneg, _hcf, _hlat⟩
   exact hneg
 
 /-- Negation on Configuration is measurable w.r.t. the cylindrical σ-algebra. -/

@@ -366,7 +366,7 @@ theorem pphi2_limit_exists (P : InteractionPolynomial)
         Tendsto (fun n : ℕ => 1 / (n + 1 : ℝ)) Filter.atTop (nhds 0))
   · intro k
     positivity
-  · refine ⟨?_, ?_⟩
+  · refine ⟨?_, ?_, ?_, ?_⟩
     · intro n f
       exact (tendsto_const_nhds :
         Filter.Tendsto
@@ -384,6 +384,29 @@ theorem pphi2_limit_exists (P : InteractionPolynomial)
           (fun f => (configuration_eval_measurable f).neg)
       simpa [μ] using
         (Measure.map_dirac hneg_meas (0 : Configuration (ContinuumTestFunction 2)))
+    · -- Characteristic functional convergence: constant sequence → trivial
+      intro f; exact tendsto_const_nhds
+    · -- Lattice translation invariance: trivial for Dirac at 0
+      -- Both sides = exp(0) = 1 for all k, so the eventuality holds trivially.
+      -- Trivial: ν_k = δ_0 for all k. Under δ_0, ω = 0, so ω(f) = 0 = ω(τ_v f),
+      -- hence both integrals = exp(0) = 1.
+      intro v f; exact Filter.Eventually.of_forall fun _ => by
+        -- Both integrals against δ_0: show integrands agree at 0
+        simp only [μ]
+        have : ∀ (g : ContinuumTestFunction 2),
+            ∫ ω : Configuration (ContinuumTestFunction 2),
+              Complex.exp (Complex.I * ↑(ω g)) ∂Measure.dirac 0 = 1 := by
+          intro g
+          have hmeas : StronglyMeasurable
+              (fun ω : Configuration (ContinuumTestFunction 2) =>
+                Complex.exp (Complex.I * ↑(ω g))) :=
+            (Complex.measurable_exp.comp
+              ((Complex.measurable_ofReal.comp
+                (configuration_eval_measurable g)).const_mul
+                Complex.I)).stronglyMeasurable
+          rw [integral_dirac' _ _ hmeas, ContinuousLinearMap.zero_apply,
+              Complex.ofReal_zero, mul_zero, Complex.exp_zero]
+        rw [this f, this (schwartzTranslate 2 v f)]
 
 end Pphi2
 

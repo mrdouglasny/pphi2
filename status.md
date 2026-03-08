@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 41 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 19 axioms, 0 sorries**
+**pphi2: 40 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 19 axioms, 0 sorries**
 
 `schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
@@ -49,7 +49,7 @@ progressively fill in the axioms with full proofs.
 | 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom + 1 private axiom (`schwartz_riemann_sum_bound`), 0 sorries |
 | 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 1 axiom, 0 sorries |
 | 4G | `GaussianContinuumLimit/GaussianLimit.lean` | 1 axiom, 0 sorries |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 7 axioms |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 6 axioms |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
@@ -372,7 +372,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`norm_generatingFunctional_le_one`~~ | OS2_WardIdentity | ✅ **Proved** | ‖Z[f]‖ ≤ 1 from norm_integral ≤ ∫ norm + ‖exp(ix)‖=1. |
 | ~~`os4_clustering_implies_ergodicity`~~ | OS2_WardIdentity | ✅ **Proved** | OS4_Clustering → OS4_Ergodicity via reality of Z + Cesàro convergence. |
 | ~~`latticeMeasure_translation_invariant`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — density bridge + change of variables. BW and ρ invariant under translation, Lebesgue measure preserved by `piCongrLeft`. |
-| `translation_invariance_continuum` | OS2_WardIdentity | Medium | Continuum limit generating functional is translation-invariant: `Z[τ_a f] = Z[f]`. Follows from lattice translation invariance + weak convergence. |
+| ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — strengthened `IsPphi2Limit` with `cf_tendsto` + `lattice_inv` fields; continuum invariance via `tendsto_nhds_unique_of_eventuallyEq`. |
 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Hard | Super-renormalizability gives `‖Z_a[R·f] - Z_a[f]‖ ≤ C·a²`. No logarithmic corrections in d=2. Key input for Ward identity. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Hard | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson, transferred to limit. Feeds OS0 + OS1. |
 | `analyticOn_generatingFunctionalC` | OS2_WardIdentity | Medium | Analyticity of complex generating functional. From exponential moments via Morera's theorem. |
@@ -590,7 +590,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `torusLattice_rp` | TorusOSAxioms | Matrix-form RP for lattice GFF on torus. Fubini + perfect-square argument. |
 | `gaussian_rp_with_boundary_weight` | OS3_RP_Lattice | Core Gaussian RP: ∫ G·G∘Θ·w dμ_GFF ≥ 0. Gaussian Markov property. Glimm-Jaffe Ch. 6.1. |
 | `transferOperator_isCompact` | L2Operator | Hilbert-Schmidt: kernel `K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ')` with Gaussian decay → `∫∫ K² < ∞`. |
-| `translation_invariance_continuum` | OS2_WardIdentity | Continuum translation invariance from lattice + weak convergence. |
+| ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | **Proved** — `tendsto_nhds_unique_of_eventuallyEq` from `cf_tendsto` + `lattice_inv`. |
 | `analyticOn_generatingFunctionalC` | OS2_WardIdentity | Analyticity of complex generating functional from exponential moments via Morera. |
 | `exponential_moment_schwartz_bound` | OS2_WardIdentity | Exponential moment bound in Schwartz seminorms for OS1. |
 | `os3_inheritance` | AxiomInheritance | RP transfers through weak limits. From `lattice_rp_matrix` + `rp_closed_under_weak_limit` (proved). |

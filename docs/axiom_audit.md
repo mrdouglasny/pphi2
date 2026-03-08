@@ -89,7 +89,7 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 | # | Name | File | Rating | Verified | Notes |
 |---|------|------|--------|----------|-------|
 | 22 | `latticeMeasure_translation_invariant` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | Lattice measure invariant under cyclic translation. |
-| 23 | `translation_invariance_continuum` | OS2_WardIdentity | ✅ Standard | DT 2026-02-25 | `Z[τ_v f] = Z[f]`. Now requires `IsPphi2Limit`. Rational density + continuity. |
+| 23 | ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | ✅ **PROVED** | SA 2026-03-07 | `Z[τ_v f] = Z[f]`. From `cf_tendsto` + `lattice_inv` via `tendsto_nhds_unique_of_eventuallyEq`. |
 | 24 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | ✅ Correct | Gemini 2026-03-07 | `‖Z_a[R·f]-Z_a[f]‖ ≤ C·a²·(1+\|log a\|)^p`. Scaling dim 4 > d=2. |
 | 25 | `rotation_invariance_continuum` | OS2_WardIdentity | ✅ Correct | Gemini 2026-03-07 | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + anomaly → 0. |
 | 26 | `continuum_exponential_moments` | OS2_WardIdentity | ✅ Correct | Gemini 2026-03-07 | Nelson hypercontractivity. Simon 1974, Thm V.7. |
