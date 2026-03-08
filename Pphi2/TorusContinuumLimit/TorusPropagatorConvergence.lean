@@ -506,7 +506,7 @@ theorem torus_propagator_convergence
     rfl
   simp_rw [h_eq]
   -- The target is greenFunctionBilinear
-  show Tendsto _ atTop (nhds (greenFunctionBilinear mass hmass f g))
+  change Tendsto _ atTop (nhds (greenFunctionBilinear mass hmass f g))
   exact lattice_green_tendsto_continuum L mass hmass f g
 
 /-! ## Uniform bound on the embedded two-point function -/

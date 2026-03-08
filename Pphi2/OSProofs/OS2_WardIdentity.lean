@@ -350,7 +350,7 @@ Reference: Glimm-Jaffe §8.6 (translation invariance of the continuum limit).
 For any v, f: both Z_{ν_k}[f] and Z_{ν_k}[τ_v f] converge to Z_μ[f] and Z_μ[τ_v f]
 respectively. Since Z_{ν_k}[f] = Z_{ν_k}[τ_v f] eventually, the limits are equal. -/
 theorem translation_invariance_continuum (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
+    (mass : ℝ) (_hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ)
     (h_limit : IsPphi2Limit μ P mass) :
