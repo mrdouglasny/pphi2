@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-03-07
-**pphi2**: 40 axioms, 0 sorries | **gaussian-field**: 19 axioms, 0 sorries | **Total**: 59
+**pphi2**: 40 axioms, 0 sorries | **gaussian-field**: 14 axioms, 0 sorries | **Total**: 54
 
 ## Verification Sources
 

@@ -5,13 +5,13 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3541 jobs).
+3542 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 40 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 19 axioms, 0 sorries**
+**pphi2: 40 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 14 axioms, 0 sorries**
 
 `schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
@@ -646,18 +646,14 @@ infrastructure. Assessment date: 2026-03-04.
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **23 axioms (+1 skipped), 0 sorries**.
-- `GaussianField/Properties.lean`: 1 axiom (`measure_unique_of_charFun` — Gaussian measure uniqueness via Minlos)
+The gaussian-field library (dependency) has **14 axioms, 0 sorries**.
+- `GaussianField/Properties.lean`: 1 axiom (`measure_unique_of_charFun`)
 - `GaussianField/Support.lean`: 2 axioms (`not_supported_of_not_hilbertSchmidt`, `supportHilbertSpace_exists`)
 - `HeatKernel/PositionKernel.lean`: 1 axiom (`mehlerKernel_eq_series`)
-- `HeatKernel/Bilinear.lean`: 0 axioms, 0 sorries (all proved)
-- `HeatKernel/GreenInvariance.lean`: 3 axioms (Green's function invariance on pure tensors + extension principle)
+- `HeatKernel/GreenInvariance.lean`: 0 axioms (all 3 proved via pure tensor extension)
 - `Torus/Restriction.lean`: 2 axioms (`configuration_torus_polish`, `configuration_torus_borelSpace`)
-- `SmoothCircle/Basic.lean`: 0 axioms (`sobolevSeminorm_affine_precomp_le` proved)
-- `SmoothCircle/FourierTranslation.lean`: 6 axioms (Fourier coefficient transformation under translation + reflection)
-- `Nuclear/TensorProductFunctorAxioms.lean`: 6 axioms (tensor product functor + pure tensor specifications)
-- `Lattice/Convergence.lean`: 3 axioms (`lattice_covariance_pure_eq_2d_spectral`, `latticeDFTCoeff1d_quadratic_bound`, `lattice_green_tendsto_continuum`), 1 proved theorem (`lattice_green_tendsto_continuum_pure` via Tannery)
-- `Lattice/HeatKernelConvergence1d.lean`: 1 axiom (spectral expansion; DFT convergence proved via Riemann sums, uniform bound eliminated via eigenvalue decay)
-- `Lattice/HeatKernel.lean`: 0 axioms (heat kernel via matrix exponential, all proved)
-- `Lattice/Symmetry.lean`: 0 axioms (translation/reflection commutation, all proved)
+- `SmoothCircle/FourierTranslation.lean`: 0 axioms (all 6 proved)
+- `Nuclear/TensorProductFunctorAxioms.lean`: 6 axioms (tensor product functor)
+- `Lattice/Convergence.lean`: 2 axioms (`lattice_covariance_pure_eq_2d_spectral`, `lattice_green_tendsto_continuum`)
+- `Lattice/HeatKernelConvergence1d.lean`: 0 axioms (spectral expansion proved via matrix exponential)
 See [gaussian-field status](../gaussian-field/status.md) for the full inventory.
