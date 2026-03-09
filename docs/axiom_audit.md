@@ -1,7 +1,10 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-03-07
-**pphi2**: 40 axioms, 0 sorries | **gaussian-field**: 14 axioms, 0 sorries | **Total**: 54
+**Updated**: 2026-03-08
+**pphi2**: 41 axioms, 0 sorries | **gaussian-field**: 14 axioms, 0 sorries | **Total**: 55
+
+Note: pphi2 count includes 2 private axioms (`schwartz_riemann_sum_bound`,
+`fourier_representation_convolution`) previously missed by the counting script.
 
 ## Verification Sources
 
@@ -39,7 +42,8 @@
 | 7 | ~~`transferEigenvalue_pos`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | All eigenvalues > 0. Derived from Jentzsch theorem. |
 | 8 | ~~`transferEigenvalue_antitone`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | Eigenvalues decreasing. Derived from spectral ordering. |
 | 9 | ~~`transferEigenvalue_ground_simple`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | λ₀ > λ₁. Derived from Jentzsch/Perron-Frobenius. |
-| 9a | `gaussian_conv_strictlyPD` | GaussianFourier | ✅ Standard | SA 2026-02-27 | ⟨f, G⋆f⟩ > 0 for f ≠ 0. Fourier: ∫ Ĝ\|f̂\|² > 0 since Ĝ > 0 (`fourier_gaussian_pos` proved). Folland §8.3. |
+| 9a | ~~`gaussian_conv_strictlyPD`~~ | GaussianFourier | ✅ **PROVED** | SA 2026-02-27 | ⟨f, G⋆f⟩ > 0 for f ≠ 0. Proved from `inner_convCLM_pos_of_fourier_pos` (also proved) via `fourier_representation_convolution` axiom + `fourier_gaussian_pos` + Plancherel injectivity. |
+| 9b | `fourier_representation_convolution` | GaussianFourier | ✅ Standard | SA 2026-03-08 | ⟨f, g⋆f⟩ = ∫ Re(ĝ)·‖f̂‖². L² Fourier representation identity. Proof via Schwartz density (convolution theorem for integrable+continuous + Parseval). Blocked by L² convolution theorem not yet in Mathlib. Private axiom. Folland §8.3, Reed-Simon I §IX.4. |
 | 10 | ~~`action_decomposition`~~ | OS3_RP_Lattice | ✅ **PROVED** | GR Group 5 | S = S⁺ + S⁻ via `Fintype.sum_equiv` + `Involutive.toPerm`. |
 | 11 | `lattice_rp_matrix` | OS3_RP_Lattice | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ ∫ cos(⟨φ, fᵢ-Θfⱼ⟩) dμ_a ≥ 0. Partial formalization: helper lemmas + `lattice_rp_matrix_reduction`; remaining gap is explicit trig/sum expansion identity. |
 

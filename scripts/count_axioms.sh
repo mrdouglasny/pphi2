@@ -52,7 +52,7 @@ count_in_dir() {
         for file in "${files[@]}"; do
             local rel="${file#$dir/}"
             local axioms
-            axioms=$(count_file "$file" '^axiom ')
+            axioms=$(count_file "$file" '^\(private \)\?axiom ')
             local sorries
             sorries=$(count_file "$file" 'sorry')
 

@@ -102,6 +102,21 @@ theorem transferGaussian_sub_comm (x y : SpatialField Ns) :
     simp
   rw [hneg, transferGaussian_neg]
 
+omit [NeZero Ns] in
+/-- The transfer Gaussian is continuous: `exp(-½‖ψ‖²)` is smooth. -/
+theorem continuous_transferGaussian :
+    Continuous (transferGaussian Ns) := by
+  unfold transferGaussian timeCoupling
+  apply Real.continuous_exp.comp
+  apply Continuous.neg
+  apply Continuous.mul continuous_const
+  apply continuous_finset_sum
+  intro x _
+  apply Continuous.pow
+  apply Continuous.sub
+  · exact continuous_const
+  · exact continuous_apply x
+
 /-! ## Proofs that weight is bounded and Gaussian is integrable -/
 
 /-- The spatial kinetic energy is continuous in the field configuration. -/

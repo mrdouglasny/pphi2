@@ -1,25 +1,32 @@
-# Proof Guide: `inner_convCLM_pos_of_fourier_pos`
+# Proof Guide: `fourier_representation_convolution`
+
+## Status
+
+**`inner_convCLM_pos_of_fourier_pos` is PROVED** as a theorem, using the
+Fourier representation axiom + `fourier_gaussian_pos` + Plancherel injectivity.
+
+The remaining axiom is `fourier_representation_convolution` (private, in
+`GaussianFourier.lean`).
 
 ## The axiom to prove
 
-In `Pphi2/TransferMatrix/GaussianFourier.lean` (line 81):
+In `Pphi2/TransferMatrix/GaussianFourier.lean`:
 
 ```lean
-axiom inner_convCLM_pos_of_fourier_pos
+private axiom fourier_representation_convolution
     (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
-    (hĝ_pos : ∀ w : EuclideanSpace ℝ (Fin Ns),
-      0 < (𝓕 (fun (v : EuclideanSpace ℝ (Fin Ns)) =>
-        (g ((WithLp.equiv 2 _) v) : ℂ)) w).re)
-    (f : L2SpatialField Ns) (hf : f ≠ 0) :
-    0 < @inner ℝ _ _ f (convCLM g hg f)
+    (hg_cont : Continuous g) (f : L2SpatialField Ns) :
+    @inner ℝ _ _ f (convCLM g hg f) =
+    ∫ w : EuclideanSpace ℝ (Fin Ns),
+      (gHat Ns g w).re *
+      ‖(fHat Ns f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2
 ```
 
-**In words:** For `g ∈ L¹(ℝⁿ, ℝ)` whose ℂ-valued Fourier transform has
-`Re(ĝ_ℂ(k)) > 0` for all k, the quadratic form `⟨f, g⋆f⟩` is strictly
-positive for all nonzero `f ∈ L²(ℝⁿ, ℝ)`.
+**In words:** The Fourier representation of the convolution quadratic form:
+`⟨f, g⋆f⟩_ℝ = ∫ Re(ĝ_ℂ(w)) · ‖f̂_ℂ(w)‖² dw`.
 
-**Verification:** Gemini Deep Think confirmed mathematical correctness
-(Folland §8.3, Reed-Simon I §IX.4, Rudin Functional Analysis Ch. 1).
+**Verification:** Standard result in Fourier analysis. See Folland §8.3,
+Reed-Simon I §IX.4.
 
 ## Type system context
 
@@ -67,75 +74,40 @@ Given the identity:
   set of positive measure
 - Therefore ∫ Re(ĝ_ℂ(k)) · |f̂_ℂ(k)|² dk > 0
 
-## Strategy options
+## What was done (Option 2 from original guide)
 
-There are two main approaches. Both are valid; choose based on what you find
-tractable in Lean.
+The original `inner_convCLM_pos_of_fourier_pos` axiom was decomposed:
 
-### Option 1: Full Lean proof via Schwartz density (hard, ~300-500 lines)
+1. **`fourier_representation_convolution`** — Fourier representation identity (axiom)
+2. **`fourier_ae_nonzero_of_nonzero`** — Plancherel injectivity (proved)
+3. **`toEuclideanComplexL2_ne_zero`** — R→C embedding injectivity (proved)
+4. **`inner_convCLM_pos_of_fourier_pos`** — Strict positivity (proved from above)
 
-Prove the identity in Phase A for Schwartz functions, then extend to L² by
-density.
+The only remaining axiom is `fourier_representation_convolution`.
 
-**Step 1:** For Schwartz s ∈ 𝓢(ℝⁿ, ℂ), prove:
-```
-⟨s, ĝ_ℂ · s⟩_ℂ = ∫ ĝ_ℂ(k) · |ŝ(k)|² dk
-```
-Using `SchwartzMap.integral_sesq_fourier_fourier` and
-`SchwartzMap.fourier_convolution`.
+## Strategy to prove the remaining axiom
 
-**Step 2:** Show LHS `f ↦ ⟨f, Conv_g f⟩` is continuous on L² (bilinear form
-of a bounded operator — automatic from `convCLM` being a CLM).
+### Schwartz density via `DenseRange.equalizer` (~300-500 lines)
 
-**Step 3:** Show RHS `f ↦ ∫ Re(ĝ_ℂ(k)) · |f̂_ℂ(k)|² dk` is continuous on
-L² (Fourier isometry + ĝ bounded since g ∈ L¹ + Hölder).
+**Step 1:** Show LHS `f ↦ ⟨f, Conv_g f⟩` is continuous on L²
+(already proved as `convQuadForm_continuous`).
 
-**Step 4:** Both agree on Schwartz (dense in L²), so agree on all of L².
-Use `DenseRange.equalizer` or `ContinuousLinearMap.ext_of_denseRange`.
+**Step 2:** Show RHS `f ↦ ∫ Re(ĝ_ℂ(k)) · ‖f̂_ℂ(k)‖² dk` is continuous on L².
+Argument: `|Re(ĝ)| ≤ ‖g‖₁` (bounded), Fourier is isometry, so
+`|Q(f₁) - Q(f₂)| ≤ ‖g‖₁ · (‖f₁‖ + ‖f₂‖) · ‖f₁ - f₂‖`.
 
-**Step 5:** Apply the identity + Phase B for strict positivity.
+**Step 3:** For Schwartz `s`, prove the identity using:
+- `Real.fourier_smul_convolution_eq` (convolution theorem for integrable+continuous)
+- `SchwartzMap.integral_sesq_fourier_fourier` (Parseval for Schwartz)
 
-**Key difficulty:** Wiring the ℝ→ℂ embedding. Our L² is ℝ-valued but Mathlib's
-Fourier is ℂ-valued. Need:
-- `⟨f, g⟩_ℝ = Re(⟨f_ℂ, g_ℂ⟩_ℂ)` where f_ℂ = ofReal ∘ f
-- The embedding L²(ℝ) ↪ L²(ℂ) as a CLM
-- Convolution commutes with this embedding
+**Step 4:** Apply `DenseRange.equalizer` with `SchwartzMap.denseRange_toLpCLM`.
 
-### Option 2: Decompose into simpler sub-axioms (moderate, ~100-200 lines)
-
-Replace the single axiom with 2-3 more elementary axioms that are each
-individually more "textbook":
-
-**Sub-axiom A:** Fourier representation identity (on L²):
-```lean
-axiom fourier_representation_convolution
-    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
-    (f : L2SpatialField Ns) :
-    @inner ℝ _ _ f (convCLM g hg f) =
-    ∫ w, (𝓕 (fun v => (g (WithLp.equiv 2 _ v) : ℂ)) w).re *
-         ‖𝓕 (fun v => (f (WithLp.equiv 2 _ v) : ℂ)) w‖ ^ 2 ∂volume
-```
-
-**Sub-axiom B:** Plancherel injectivity for the ℝ→ℂ embedding:
-```lean
-axiom plancherel_injective_ofReal
-    (f : L2SpatialField Ns) (hf : f ≠ 0) :
-    ¬(∀ᵐ w ∂volume, 𝓕 (fun v => (f (WithLp.equiv 2 _ v) : ℂ)) w = 0)
-```
-
-Then prove the main theorem from A + B + positivity of the integrand.
-This is conceptually cleaner and each sub-axiom is more self-contained.
-
-**I recommend Option 2** unless you have strong Mathlib Fourier-L² experience.
-
-### Option 3: Direct proof via measure-theoretic positivity (moderate)
-
-Skip the Fourier representation entirely. Instead use:
-1. The self-adjointness of convCLM (already proved: `convCLM_isSelfAdjoint_of_even`)
-2. The operator square root or spectral theory
-3. The fact that convolution by a PD kernel is a positive operator
-
-This avoids the ℝ→ℂ bridge entirely but requires different infrastructure.
+**Main blocker:** The L² convolution theorem is not yet in Mathlib. The
+Schwartz density approach works because the convolution theorem IS available
+for integrable+continuous functions (`Real.fourier_smul_convolution_eq`).
+The density argument extends this to L². Formalizing this requires ~300+ lines
+of type-theoretic plumbing between SpatialField, EuclideanSpace, real L², and
+complex L².
 
 ## Available Mathlib API
 
@@ -206,12 +178,13 @@ This avoids the ℝ→ℂ bridge entirely but requires different infrastructure.
 
 ## Project conventions
 
-- After proving, change `axiom` to `theorem` in GaussianFourier.lean
+- After proving, change `private axiom` to `private theorem` in GaussianFourier.lean
 - Run `lake build` to verify the full project compiles
 - Run `./scripts/count_axioms.sh` to confirm axiom count decreased
-- Update `status.md`, `README.md`, `docs/axiom_audit.md` with new counts
-- The `gaussian_conv_strictlyPD` theorem (line 100) already uses this axiom
-  and is fully proved — it will continue to work once the axiom becomes a theorem
+- Update `status.md`, `README.md` with new counts
+- All downstream theorems (`inner_convCLM_pos_of_fourier_pos`,
+  `gaussian_conv_strictlyPD`, spectral gap) are already proved and will
+  continue to work once the axiom becomes a theorem
 
 ## Build and test
 

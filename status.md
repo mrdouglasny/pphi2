@@ -11,7 +11,10 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 40 axioms, 0 sorries** (plus 1 private axiom `schwartz_riemann_sum_bound` in GaussianContinuumLimit) | **gaussian-field (upstream): 14 axioms, 0 sorries**
+**pphi2: 41 axioms, 0 sorries** | **gaussian-field (upstream): 14 axioms, 0 sorries**
+
+Note: Two axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConvergence)
+and `fourier_representation_convolution` (GaussianFourier).
 
 `schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
@@ -32,7 +35,7 @@ progressively fill in the axioms with full proofs.
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
 | 2 | `TransferMatrix/L2Convolution.lean` | 0 axioms (Fubini identity proved) |
 | 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (compactness) |
-| 2 | `TransferMatrix/GaussianFourier.lean` | 1 axiom (Gaussian convolution strict PD); `fourier_gaussian_pos` proved |
+| 2 | `TransferMatrix/GaussianFourier.lean` | 1 private axiom (`fourier_representation_convolution`); `inner_convCLM_pos_of_fourier_pos` proved from axiom; `fourier_gaussian_pos` proved |
 | 2 | `TransferMatrix/Jentzsch.lean` | 0 axioms; Jentzsch + nontriviality + positivity-improving + strict PD all proved |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 1 axiom, 0 sorries |
@@ -230,7 +233,8 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`jentzsch_theorem`~~ | Jentzsch | ✅ **Proved** | Jentzsch's theorem for compact self-adjoint positivity-improving operators: ground eigenvalue simple with strict spectral gap. Reed-Simon IV, XIII.43–44. Full proof in `JentzschProof.lean`, bridge via `IsPositivityImproving.toPI'`. |
 | ~~`transferOperator_positivityImproving`~~ | Jentzsch | ✅ **Proved** | Transfer kernel K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ') > 0 everywhere, so T maps nonneg nonzero f to a.e. strictly positive Tf. Proved via T = M_w ∘ Conv_G ∘ M_w factorization, Cauchy-Schwarz for L² integrability, measure-preserving translation, and `integral_pos_iff_support_of_nonneg_ae`. |
 | ~~`transferOperator_strictly_positive_definite`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ > 0 for f ≠ 0. Proved via self-adjointness of M_w (⟨f, M_w(Conv_G(M_w f))⟩ = ⟨M_w f, Conv_G(M_w f)⟩), injectivity of M_w (w > 0), and Gaussian convolution strict PD axiom. |
-| `inner_convCLM_pos_of_fourier_pos` | GaussianFourier | Medium | Convolution with Gaussian exp(-½‖·‖²) is strictly PD on L²: ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk > 0. Bochner's theorem + Plancherel. |
+| ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** | Convolution with Gaussian exp(-½‖·‖²) is strictly PD on L²: ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk > 0. Proved via Fourier representation axiom + `fourier_gaussian_pos` + Plancherel injectivity. |
+| `fourier_representation_convolution` | GaussianFourier | Medium | L² Fourier representation: ⟨f, g⋆f⟩ = ∫ Re(ĝ)·‖f̂‖². Proof via Schwartz density (`DenseRange.equalizer`): both sides continuous, agree on Schwartz by `Real.fourier_smul_convolution_eq` + Parseval. Blocked by L² convolution theorem not yet in Mathlib. |
 | ~~`l2SpatialField_hilbertBasis_nontrivial`~~ | Jentzsch | ✅ **Proved** | Any Hilbert basis of L²(ℝ^Ns) has ≥ 2 elements. Proved via indicator functions on disjoint balls + orthogonality. |
 | ~~`transferOperator_inner_nonneg`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ ≥ 0. Derived from strict PD (> 0 for f ≠ 0, = 0 for f = 0). |
 | ~~`transferOperator_eigenvalues_pos`~~ | Jentzsch | ✅ **Proved** | λᵢ > 0. From ⟨bᵢ, Tbᵢ⟩ = λᵢ‖bᵢ‖² > 0 by strict PD. |
@@ -601,7 +605,8 @@ infrastructure. Assessment date: 2026-03-04.
 
 | Axiom | File | Strategy |
 |-------|------|----------|
-| `inner_convCLM_pos_of_fourier_pos` | GaussianFourier | `⟨f, G⋆f⟩ > 0` for f ≠ 0. Bochner + Plancherel: `∫ Ĝ\|f̂\|² dk > 0` since `Ĝ > 0` (proved). |
+| ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** from `fourier_representation_convolution` axiom. |
+| `fourier_representation_convolution` | GaussianFourier | L² Fourier representation identity. Schwartz density + L² convolution theorem (not yet in Mathlib). |
 | `propagator_convergence` | PropagatorConvergence | Lattice Riemann sum → continuum Fourier integral on ℝ^d. Dominated convergence + Schwartz decay. |
 | `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Super-renormalizability gives a² Ward identity bound. No log corrections in d=2. |
@@ -638,7 +643,7 @@ infrastructure. Assessment date: 2026-03-04.
 
 1. **Easy wins**: `weakLimit_centered_gaussianReal`, `torus_propagator_convergence`, `latticeMeasure_translation_invariant`
 2. **Torus infrastructure**: `torusLimit_covariance_eq`, `gaussian_measure_unique_of_covariance`, `torusContinuumMeasures_tight`, `torusLattice_rp`
-3. **Transfer matrix**: `transferOperator_isCompact`, `inner_convCLM_pos_of_fourier_pos` — unlocks spectral theory
+3. **Transfer matrix**: `transferOperator_isCompact`, `fourier_representation_convolution` — unlocks spectral theory
 4. **OS inheritance**: `gaussian_rp_with_boundary_weight`, `os3_inheritance`, `os0_inheritance` — fills the RP chain
 5. **Hard analysis**: spectral gap, clustering, exponential moments — the deep results
 

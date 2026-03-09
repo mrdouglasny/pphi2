@@ -8,8 +8,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Proves `⟨f, G⋆f⟩ > 0` for nonzero `f ∈ L²(ℝⁿ)` by:
 1. Proving `Ĝ(k) > 0` for all k (Gaussian FT is positive)
-2. Axiomatizing the Fourier representation `⟨f, G⋆f⟩ = ∫ Ĝ(k) ‖f̂(k)‖² dk`
+2. Using the Fourier representation `⟨f, G⋆f⟩ = ∫ Ĝ(k) ‖f̂(k)‖² dk`
 3. Deriving strict positivity from (1) + (2) + Plancherel injectivity
+
+The main theorem `inner_convCLM_pos_of_fourier_pos` is fully proved modulo
+`fourier_representation_convolution` (the Fourier representation identity,
+which requires the L² convolution theorem not yet in Mathlib).
 
 ## References
 
@@ -18,11 +22,13 @@ Proves `⟨f, G⋆f⟩ > 0` for nonzero `f ∈ L²(ℝⁿ)` by:
 
 import Pphi2.TransferMatrix.L2Operator
 import Mathlib.Analysis.Fourier.LpSpace
+import Mathlib.Analysis.Fourier.Convolution
 import Mathlib.Analysis.SpecialFunctions.Gaussian.FourierTransform
+import Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 
 noncomputable section
 
-open MeasureTheory Complex FourierTransform
+open MeasureTheory Complex FourierTransform SchwartzMap
 
 namespace Pphi2
 
@@ -140,36 +146,142 @@ theorem fourier_gaussian_pos {V : Type*} [NormedAddCommGroup V] [InnerProductSpa
 
 /-! ## Strict positive definiteness from Fourier positivity
 
-The axiom states that for an L¹ kernel g whose Fourier transform
-(viewed as ℂ-valued) has strictly positive real part everywhere,
-the convolution quadratic form ⟨f, g⋆f⟩ is strictly positive for f ≠ 0.
-
 This follows from the Fourier representation:
-  ⟨f, g⋆f⟩ = ∫ Re(ĝ_ℂ(k)) · ‖f̂_ℂ(k)‖² dk
+  `⟨f, g⋆f⟩ = ∫ Re(ĝ_ℂ(k)) · ‖f̂_ℂ(k)‖² dk`
 
-The proof uses: ℝ→ℂ embedding, convolution theorem on Schwartz,
-Parseval identity, density of Schwartz in L², and Plancherel injectivity.
-All ingredients are in Mathlib; the axiom packages the density argument. -/
+The proof uses: R-to-C embedding, convolution theorem on Schwartz,
+Parseval identity, density of Schwartz in L2, and Plancherel injectivity.
 
-/-- **Convolution PD from Fourier positivity** (Folland §8.3, Reed-Simon I §IX.4).
+References: Folland, *Real Analysis*, 8.3; Reed-Simon I, IX.4. -/
 
-For `g ∈ L¹` with `Re(ĝ_ℂ(k)) > 0` for all k, and `f ∈ L²` with `f ≠ 0`:
-  `⟨f, g⋆f⟩ > 0`.
+-- Abbreviation for readability
+private abbrev gHat (g : SpatialField Ns → ℝ) : EuclideanSpace ℝ (Fin Ns) → ℂ :=
+  𝓕 (fun (v : EuclideanSpace ℝ (Fin Ns)) => (g ((WithLp.equiv 2 _) v) : ℂ))
 
-**Proof**: The Fourier representation gives
-`⟨f, g⋆f⟩ = ∫ Re(ĝ(k)) ‖f̂(k)‖² dk`. Since Re(ĝ) > 0 pointwise
-and f ≠ 0 implies f̂ ≠ 0 a.e. (Plancherel), the integral is positive.
+private abbrev fHat (f : L2SpatialField Ns) :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+  Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ (toEuclideanComplexL2 Ns f)
 
-The Fourier representation itself follows from:
-1. Embed f into L²(ℂ) via ofReal
-2. Convolution theorem on Schwartz: `𝓕(g⋆s) = ĝ · ŝ`
-3. Parseval: `⟨s, g⋆s⟩ = ∫ ĝ(k)|ŝ(k)|² dk`
-4. Density extension: both sides continuous on L², agree on dense 𝓢
+-- The convolution quadratic form is continuous
+private theorem convQuadForm_continuous
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Continuous (fun f : L2SpatialField Ns => @inner ℝ _ _ f (convCLM g hg f)) :=
+  Continuous.inner continuous_id (convCLM g hg).continuous
 
-**Mathlib deps**: `fourier_mul_convolution_eq`, `integral_inner_fourier_fourier`,
-`denseRange_toLpCLM`, `Lp.inner_fourier_eq`. -/
-axiom inner_convCLM_pos_of_fourier_pos
+-- The Fourier quadratic form is continuous.
+-- Key bound: |∫ Re(ĝ) · ‖ĥ‖²| ≤ ‖g‖₁ · ‖h‖₂², so the quadratic form
+-- is dominated by ‖g‖₁ · ‖f‖₂², giving continuity.
+-- The map f ↦ fHat(f) is continuous (composition of CLM, isometry, isometry)
+set_option maxHeartbeats 800000 in
+private theorem fHat_continuous :
+    Continuous (fun f : L2SpatialField Ns => fHat Ns f) :=
+  (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ).continuous.comp
+    ((pullToEuclideanL2 Ns).continuous.comp (toComplexSpatialL2CLM Ns).continuous)
+
+set_option maxHeartbeats 800000 in
+/-- The Fourier representation of the convolution quadratic form:
+  `⟨f, g⋆f⟩_ℝ = ∫ Re(ĝ_ℂ(w)) · ‖f̂_ℂ(w)‖² dw`
+
+This is the L² generalization of the standard identity that, for Schwartz functions,
+follows from the convolution theorem (`Real.fourier_smul_convolution_eq`) and
+Parseval's identity (`SchwartzMap.integral_sesq_fourier_fourier`).
+
+**Proof strategy** (Schwartz density, `DenseRange.equalizer`):
+1. Both sides are continuous functions `L² → ℝ`:
+   - LHS: `f ↦ ⟨f, g⋆f⟩` is continuous since `convCLM` is a CLM and inner is continuous.
+   - RHS: `f ↦ ∫ Re(ĝ)·‖f̂‖²` is continuous since `|Re(ĝ)| ≤ ‖g‖₁` (bounded multiplier)
+     and `f ↦ f̂` is an isometry (Plancherel).
+2. For Schwartz `s`, `g` (continuous+integrable) and `s` (Schwartz ⊂ continuous ∩ integrable)
+   satisfy `Real.fourier_smul_convolution_eq`, giving `𝓕(g_ℂ ⋆ s_ℂ) = ĝ_ℂ · ŝ_ℂ` pointwise.
+3. Combined with Parseval, the identity holds for Schwartz functions.
+4. By `SchwartzMap.denseRange_toLpCLM` + `DenseRange.equalizer`, it extends to L².
+
+This requires the L² convolution theorem, which is a standard result not yet in Mathlib.
+See the TODO at `Mathlib.Analysis.Convolution` and Folland §8.3.
+
+References: Folland, *Real Analysis*, §8.3; Reed-Simon I, §IX.4. -/
+private axiom fourier_representation_convolution
     (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (hg_cont : Continuous g) (f : L2SpatialField Ns) :
+    @inner ℝ _ _ f (convCLM g hg f) =
+    ∫ w : EuclideanSpace ℝ (Fin Ns),
+      (gHat Ns g w).re *
+      ‖(fHat Ns f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2
+
+set_option maxHeartbeats 800000 in
+/-- The Fourier transform of g_C (the complex-valued lift of g) is continuous.
+Needed for measurability of the Fourier representation integrand. -/
+private theorem ghat_continuous
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Continuous (𝓕 (fun (v : EuclideanSpace ℝ (Fin Ns)) =>
+      (g ((WithLp.equiv 2 _) v) : ℂ))) := by
+  set g_ℂ : EuclideanSpace ℝ (Fin Ns) → ℂ := fun v => (g ((WithLp.equiv 2 _) v) : ℂ)
+  have hg_int : Integrable g (volume : Measure (SpatialField Ns)) :=
+    memLp_one_iff_integrable.mp hg
+  have hmp : MeasurePreserving (WithLp.equiv 2 (SpatialField Ns))
+      (volume : Measure (EuclideanSpace ℝ (Fin Ns)))
+      (volume : Measure (SpatialField Ns)) :=
+    PiLp.volume_preserving_ofLp (ι := Fin Ns)
+  have h1 : Integrable (g ∘ (WithLp.equiv 2 _))
+      (volume : Measure (EuclideanSpace ℝ (Fin Ns))) :=
+    hmp.integrable_comp_of_integrable hg_int
+  have h_g_int : Integrable g_ℂ volume := h1.ofReal
+  exact VectorFourier.fourierIntegral_continuous Real.continuous_fourierChar
+    continuous_inner h_g_int
+
+/-- The integrand `Re(ĝ(w)) * ‖f̂(w)‖²` in the Fourier representation is integrable.
+
+Since `g ∈ L¹` implies `|Re(ĝ(w))| ≤ ‖ĝ(w)‖ ≤ ‖g‖₁` (bounded pointwise),
+and `f̂ ∈ L²` implies `‖f̂(w)‖²` is integrable, the product is dominated by
+`‖g‖₁ · ‖f̂(w)‖²` and hence integrable. -/
+private theorem integrand_integrable
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (f : L2SpatialField Ns) :
+    Integrable (fun w : EuclideanSpace ℝ (Fin Ns) =>
+      (𝓕 (fun (v : EuclideanSpace ℝ (Fin Ns)) =>
+        (g ((WithLp.equiv 2 _) v) : ℂ)) w).re *
+      ‖(Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ
+        (toEuclideanComplexL2 Ns f) : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2) := by
+  exact integrand_integrable_aux g hg _
+where
+  /-- Helper: for any h in L2(C) on EuclideanSpace, Re(g-hat) * ||h||^2 is integrable. -/
+  integrand_integrable_aux
+      (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+      (h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2
+          (volume : Measure (EuclideanSpace ℝ (Fin Ns)))) :
+      Integrable (fun w : EuclideanSpace ℝ (Fin Ns) =>
+        (𝓕 (fun (v : EuclideanSpace ℝ (Fin Ns)) =>
+          (g ((WithLp.equiv 2 _) v) : ℂ)) w).re *
+        ‖(h : EuclideanSpace ℝ (Fin Ns) → ℂ) w‖ ^ 2)
+        (volume : Measure (EuclideanSpace ℝ (Fin Ns))) := by
+    set g_ℂ : EuclideanSpace ℝ (Fin Ns) → ℂ := fun v => (g ((WithLp.equiv 2 _) v) : ℂ)
+    -- ‖h(w)‖² is integrable since h ∈ L²
+    have h_normsq_int : Integrable (fun w => ‖(h : EuclideanSpace ℝ (Fin Ns) → ℂ) w‖ ^ 2)
+        (volume : Measure (EuclideanSpace ℝ (Fin Ns))) :=
+      (memLp_two_iff_integrable_sq_norm (Lp.memLp h).1).mp (Lp.memLp h)
+    -- |Re(ĝ(w))| ≤ ∫ ‖g_ℂ‖
+    set C := ∫ v : EuclideanSpace ℝ (Fin Ns), ‖g_ℂ v‖
+    have h_bound : ∀ w, |(𝓕 g_ℂ w).re| ≤ C := fun w =>
+      (abs_re_le_norm _).trans (VectorFourier.norm_fourierIntegral_le_integral_norm _ _ _ _ w)
+    -- Measurability
+    have h_ghat_cont := ghat_continuous Ns g hg
+    have h_meas : AEStronglyMeasurable
+        (fun w => (𝓕 g_ℂ w).re * ‖(h : EuclideanSpace ℝ (Fin Ns) → ℂ) w‖ ^ 2)
+        (volume : Measure (EuclideanSpace ℝ (Fin Ns))) :=
+      (continuous_re.comp h_ghat_cont).aestronglyMeasurable.mul
+        ((Lp.memLp h).1.norm.pow 2)
+    -- Domination by C * ‖h(w)‖²
+    refine (h_normsq_int.const_mul C).mono' h_meas (ae_of_all _ fun w => ?_)
+    have h2 : (0 : ℝ) ≤ ‖(h : EuclideanSpace ℝ (Fin Ns) → ℂ) w‖ ^ 2 := sq_nonneg _
+    calc ‖(𝓕 g_ℂ w).re * ‖(h : EuclideanSpace ℝ (Fin Ns) → ℂ) w‖ ^ 2‖
+        = |(𝓕 g_ℂ w).re| * ‖(h : EuclideanSpace ℝ (Fin Ns) → ℂ) w‖ ^ 2 := by
+          rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg h2]
+      _ ≤ C * ‖(h : EuclideanSpace ℝ (Fin Ns) → ℂ) w‖ ^ 2 :=
+          mul_le_mul_of_nonneg_right (h_bound w) h2
+
+theorem inner_convCLM_pos_of_fourier_pos
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (hg_cont : Continuous g)
     -- ĝ_ℂ has positive real part everywhere, where ĝ is computed on
     -- EuclideanSpace ℝ (Fin Ns) (which has the inner product structure
     -- needed for the Fourier transform)
@@ -177,7 +289,55 @@ axiom inner_convCLM_pos_of_fourier_pos
       0 < (𝓕 (fun (v : EuclideanSpace ℝ (Fin Ns)) =>
         (g ((WithLp.equiv 2 _) v) : ℂ)) w).re)
     (f : L2SpatialField Ns) (hf : f ≠ 0) :
-    0 < @inner ℝ _ _ f (convCLM g hg f)
+    0 < @inner ℝ _ _ f (convCLM g hg f) := by
+  -- Step 1: Use the Fourier representation identity
+  rw [fourier_representation_convolution Ns g hg hg_cont f]
+  -- Abbreviations for readability
+  let ghat_re : EuclideanSpace ℝ (Fin Ns) → ℝ := fun w =>
+    (𝓕 (fun (v : EuclideanSpace ℝ (Fin Ns)) =>
+      (g ((WithLp.equiv 2 _) v) : ℂ)) w).re
+  let fhat : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+    Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ (toEuclideanComplexL2 Ns f)
+  -- The integrand
+  let integrand : EuclideanSpace ℝ (Fin Ns) → ℝ := fun w =>
+    ghat_re w * ‖(fhat : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2
+  -- Step 2: The integrand is nonneg
+  have h_nonneg : ∀ w, 0 ≤ integrand w :=
+    fun w => mul_nonneg (hĝ_pos w).le (sq_nonneg _)
+  -- Step 3: f != 0 implies f-hat not ae zero (Plancherel injectivity)
+  have h_ft_nz := fourier_ae_nonzero_of_spatial_nonzero Ns f hf
+  -- Convert "not ae zero" to "support has positive measure"
+  set_option maxHeartbeats 400000 in
+  have h_support_pos :
+      0 < volume (Function.support fun w =>
+        (fhat : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w) := by
+    rw [pos_iff_ne_zero]
+    intro h_zero
+    apply h_ft_nz
+    -- volume(support fhat) = 0 means fhat = 0 ae
+    rw [ae_iff]
+    -- Goal: volume {w | fhat(w) ≠ 0} = 0
+    -- This is exactly volume(support fhat) = 0
+    exact h_zero
+  -- Step 4: The support of the integrand equals the support of f-hat
+  -- (since Re(g-hat(w)) > 0, the product vanishes iff ||f-hat(w)||^2 = 0)
+  have h_support_eq : Function.support integrand =
+      Function.support fun w =>
+        (fhat : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w := by
+    ext w
+    simp only [Function.mem_support, ne_eq, integrand, ghat_re]
+    constructor
+    · intro h hfw; exact h (by simp [hfw])
+    · intro h hprod
+      rcases mul_eq_zero.mp hprod with h1 | h1
+      · exact absurd h1 (ne_of_gt (hĝ_pos w))
+      · exact h (by rwa [sq_eq_zero_iff, norm_eq_zero] at h1)
+  -- Step 5: Conclude positivity
+  change 0 < ∫ w, integrand w
+  rw [integral_pos_iff_support_of_nonneg_ae (ae_of_all _ h_nonneg)]
+  · rwa [h_support_eq]
+  · -- Integrability of integrand
+    exact integrand_integrable Ns g hg f
 
 /-! ## Gaussian convolution is strictly PD -/
 
@@ -193,7 +353,7 @@ theorem gaussian_conv_strictlyPD :
   let _ := (inferInstance : NeZero Ns)
   intro f hf
   apply inner_convCLM_pos_of_fourier_pos Ns
-      (transferGaussian Ns) (transferGaussian_memLp Ns) _ f hf
+      (transferGaussian Ns) (transferGaussian_memLp Ns) (continuous_transferGaussian Ns) _ f hf
   -- Need: ∀ w, 0 < Re(𝓕(G_ℂ)(w))
   -- transferGaussian Ns ψ = exp(- timeCoupling Ns 0 ψ) = exp(-½ Σᵢ ψᵢ²)
   -- On EuclideanSpace: G(v) = exp(-½‖v‖²) = exp(-(1/2)‖v‖²)
