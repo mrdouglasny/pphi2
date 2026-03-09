@@ -236,6 +236,8 @@ lake build
 - [docs/plan.md](docs/plan.md) — Development roadmap and construction outline
 - [docs/axiom_audit.md](docs/axiom_audit.md) — Self-audit of all axioms
   (pphi2 + gaussian-field) with correctness ratings
+- [docs/mathlib_candidates.md](docs/mathlib_candidates.md) — Standard results
+  suitable for Mathlib contribution (~50 across pphi2 + gaussian-field)
 - [docs/gemini_review.md](docs/gemini_review.md) — External review of axioms
   with references and proof strategies
 - [docs/torus_continuum_limit_plan.md](docs/torus_continuum_limit_plan.md) —
