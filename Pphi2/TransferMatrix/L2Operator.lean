@@ -319,6 +319,14 @@ theorem transferGaussian_pos (ψ : SpatialField Ns) :
     0 < transferGaussian Ns ψ :=
   Real.exp_pos _
 
+/-- The Gaussian kernel is bounded by 1: `G(ψ) = exp(-½‖ψ‖²) ≤ 1`.
+
+Since `timeCoupling Ns 0 ψ ≥ 0` (sum of squares), the exponent is `≤ 0`. -/
+theorem transferGaussian_norm_le_one (ψ : SpatialField Ns) :
+    ‖transferGaussian Ns ψ‖ ≤ 1 := by
+  rw [Real.norm_eq_abs, abs_of_pos (transferGaussian_pos Ns ψ)]
+  exact Real.exp_le_one_iff.mpr (neg_nonpos.mpr (timeCoupling_nonneg Ns 0 ψ))
+
 omit [NeZero Ns] in
 /-- The transfer Gaussian is in L²(ℝ^Ns).
 
@@ -344,6 +352,57 @@ theorem transferGaussian_memLp_two :
       Measure.pi (fun _ : Fin Ns => (volume : Measure ℝ)) from rfl]
   exact MeasureTheory.Integrable.fintype_prod
     (fun _ => integrable_exp_neg_mul_sq (by norm_num : (0 : ℝ) < 1))
+
+/-- The transfer weight is in L²(ℝ^Ns).
+
+From `transferWeight_gaussian_decay`, `w(ψ) ≤ C · exp(-α ∑ ψ(x)²)` where
+`α = a·mass²/4 > 0`. Therefore `w(ψ)² ≤ C² · ∏ₓ exp(-2α · ψ(x)²)`, a product
+of 1D Gaussians, each integrable by `integrable_exp_neg_mul_sq`. -/
+theorem transferWeight_memLp_two (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    MemLp (transferWeight Ns P a mass) 2 (volume : Measure (SpatialField Ns)) := by
+  rw [memLp_two_iff_integrable_sq
+    (transferWeight_measurable Ns P a mass).aestronglyMeasurable]
+  -- Get the Gaussian decay bound
+  obtain ⟨A, hA_nonneg, hbound⟩ := transferWeight_gaussian_decay Ns P a mass ha hmass
+  set K := Real.exp ((a / 2) * (↑Ns * A))
+  set β := a * mass ^ 2 / 4
+  have hβ : 0 < β := by positivity
+  -- The dominating function: K² * ∏ exp(-2β * (ψ x)²)
+  set domFn : SpatialField Ns → ℝ :=
+    fun ψ => K ^ 2 * ∏ x : Fin Ns, Real.exp (-(2 * β) * (ψ x) ^ 2)
+  -- Bound: w(ψ)² ≤ domFn(ψ)
+  have h_sq_bound : ∀ ψ : SpatialField Ns,
+      transferWeight Ns P a mass ψ ^ 2 ≤ domFn ψ := by
+    intro ψ
+    have hw := hbound ψ
+    have hw_pos : 0 ≤ transferWeight Ns P a mass ψ := le_of_lt (transferWeight_pos Ns P a mass ψ)
+    have hK_pos : 0 ≤ K := le_of_lt (Real.exp_pos _)
+    have hD_pos : 0 ≤ Real.exp (-β * (∑ x : Fin Ns, (ψ x) ^ 2)) := le_of_lt (Real.exp_pos _)
+    calc transferWeight Ns P a mass ψ ^ 2
+        ≤ (K * Real.exp (-β * (∑ x : Fin Ns, (ψ x) ^ 2))) ^ 2 :=
+          sq_le_sq' (by linarith) hw
+      _ = K ^ 2 * (Real.exp (-β * (∑ x : Fin Ns, (ψ x) ^ 2))) ^ 2 := by ring
+      _ = K ^ 2 * Real.exp (-(2 * β) * (∑ x : Fin Ns, (ψ x) ^ 2)) := by
+          congr 1; rw [← Real.exp_nat_mul]; push_cast; ring_nf
+      _ = K ^ 2 * Real.exp (∑ x : Fin Ns, (-(2 * β) * (ψ x) ^ 2)) := by
+          congr 2; rw [Finset.mul_sum]
+      _ = domFn ψ := by
+          congr 1; rw [Real.exp_sum]
+  -- The dominating function is integrable
+  have h_dom : Integrable domFn volume := by
+    apply Integrable.const_mul
+    rw [show (volume : Measure (SpatialField Ns)) =
+        Measure.pi (fun _ : Fin Ns => (volume : Measure ℝ)) from rfl]
+    exact MeasureTheory.Integrable.fintype_prod
+      (fun _ => integrable_exp_neg_mul_sq (by positivity : (0 : ℝ) < 2 * β))
+  -- Conclude by domination
+  exact h_dom.mono
+    ((transferWeight_measurable Ns P a mass).pow_const 2).aestronglyMeasurable
+    (ae_of_all _ (fun ψ => by
+      rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _),
+          Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+      exact h_sq_bound ψ))
 
 /-! ## Transfer operator definition
 
@@ -429,24 +488,49 @@ theorem transferOperator_isSelfAdjoint (P : InteractionPolynomial) (a mass : ℝ
     _ = @inner ℝ _ _ (A f) (B (A g)) := hB' _ _
     _ = @inner ℝ _ _ f (A (B (A g))) := hA' _ _
 
+/-- Hilbert-Schmidt operators are compact: if `w ∈ L² ∩ L∞` and `g ∈ L¹` with
+`‖g‖_∞ ≤ 1`, then `M_w ∘ Conv_g ∘ M_w` is compact on `L²`.
+
+The kernel `K(x,y) = w(x) · g(x-y) · w(y)` satisfies
+`∫∫ |K(x,y)|² dx dy ≤ (∫ w²)² < ∞` (since `|g| ≤ 1`),
+so the operator is Hilbert-Schmidt, hence compact.
+
+**Reference**: Reed-Simon I, Theorem VI.23. -/
+axiom hilbert_schmidt_isCompact
+    {n : ℕ} [NeZero n]
+    (w : (Fin n → ℝ) → ℝ) (hw_meas : Measurable w) (C : ℝ) (hC : 0 < C)
+    (hw_bound : ∀ᵐ x ∂(volume : Measure (Fin n → ℝ)), ‖w x‖ ≤ C)
+    (hw_l2 : MemLp w 2 (volume : Measure (Fin n → ℝ)))
+    (g : (Fin n → ℝ) → ℝ) (hg_l1 : MemLp g 1 (volume : Measure (Fin n → ℝ)))
+    (hg_le_one : ∀ x, ‖g x‖ ≤ 1) :
+    IsCompactOperator (mulCLM w hw_meas C hC hw_bound
+      ∘L convCLM g hg_l1
+      ∘L mulCLM w hw_meas C hC hw_bound)
+
 /-- The transfer operator is compact on L²(ℝ^Ns).
 
-The naive translation-invariant bound
-`∫∫ exp(-‖ψ-ψ'‖²) dψ dψ' < ∞` is false on `ℝ^Ns × ℝ^Ns` (it diverges).
-Compactness comes from *both* Gaussian factors:
+The kernel `K(ψ,ψ') = w(ψ) G(ψ-ψ') w(ψ')` satisfies
+`|K(ψ,ψ')|² ≤ w(ψ)² w(ψ')²` (since `G ≤ 1`), and `w ∈ L²`
+(from Gaussian decay, `transferWeight_memLp_two`), so `K ∈ L²(ℝ^Ns × ℝ^Ns)`
+and the operator is Hilbert-Schmidt, hence compact.
 
-- `G(ψ-ψ') ≤ 1`
-- `w(ψ)` decays Gaussianly in `ψ` (from `transferWeight_gaussian_decay`)
-
-For the kernel `K(ψ,ψ') = w(ψ) G(ψ-ψ') w(ψ')`, this gives
-`|K(ψ,ψ')|² ≤ w(ψ)² w(ψ')²`, so if `w ∈ L²`, then
-`K ∈ L²(ℝ^Ns × ℝ^Ns)` and the operator is Hilbert-Schmidt, hence compact.
-
-In this file we keep compactness axiomatic, since the required theorem
-"L²-kernel integral operator ⇒ compact CLM on L²" is not yet wired here. -/
-axiom transferOperator_isCompact (P : InteractionPolynomial) (a mass : ℝ)
+**Proof**: Verified hypotheses of `hilbert_schmidt_isCompact`:
+- `w = transferWeight` is measurable, essentially bounded, and in L²
+- `G = transferGaussian` is in L¹ and satisfies `‖G‖_∞ ≤ 1` -/
+theorem transferOperator_isCompact (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
-    IsCompactOperator (transferOperatorCLM Ns P a mass ha hmass)
+    IsCompactOperator (transferOperatorCLM Ns P a mass ha hmass) := by
+  unfold transferOperatorCLM
+  exact hilbert_schmidt_isCompact
+    (transferWeight Ns P a mass)
+    (transferWeight_measurable Ns P a mass)
+    (transferWeight_bound Ns P a mass ha hmass).choose
+    (transferWeight_bound Ns P a mass ha hmass).choose_spec.1
+    (transferWeight_bound Ns P a mass ha hmass).choose_spec.2
+    (transferWeight_memLp_two Ns P a mass ha hmass)
+    (transferGaussian Ns)
+    (transferGaussian_memLp Ns)
+    (transferGaussian_norm_le_one Ns)
 
 /-! ## Spectral decomposition
 

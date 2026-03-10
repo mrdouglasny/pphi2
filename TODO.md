@@ -16,19 +16,16 @@ The remaining axiom is the density-level RP:
 property (conditional independence of positive/negative time fields given
 boundary) directly on Lebesgue integrals.
 
-### 2. Transfer operator compactness (eliminates 1 axiom)
+### 2. ~~Transfer operator compactness~~ (DONE — proved `transferOperator_isCompact`)
 
-Target axiom:
-- `transferOperator_isCompact` (TransferMatrix/L2Operator) — Medium
+`transferOperator_isCompact` is now a **theorem** proved from:
+- `hilbert_schmidt_isCompact` (new axiom): general HS → compact for M_w ∘ Conv_g ∘ M_w
+- `transferWeight_memLp_two` (proved): w ∈ L² from Gaussian decay
+- `transferGaussian_norm_le_one` (proved): ‖G‖ ≤ 1
 
-Strategy: T = M_w . Conv_G . M_w where w has Gaussian decay and G is
-Gaussian. The integral kernel K(psi, psi') = w(psi) G(psi-psi') w(psi')
-has Gaussian decay in both arguments, so it is Hilbert-Schmidt, hence compact.
-
-What to build:
-- Hilbert-Schmidt criterion for integral operators on L^2(R^n)
-- Or: direct proof that M_w . Conv_G . M_w is compact from Conv_G compact
-  (Gaussian convolution is compact on L^2) and M_w bounded
+Remaining: prove `hilbert_schmidt_isCompact` (Reed-Simon I, Thm VI.23).
+Strategy: expand L² kernel in ONB, finite-rank approximation, use
+`isCompactOperator_of_tendsto` from Mathlib.
 
 ### 3. Tightness via Mitoma criterion (eliminates ~3 axioms)
 

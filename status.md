@@ -5,13 +5,13 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3542 jobs).
+3543 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 41 axioms, 0 sorries** | **gaussian-field (upstream): 14 axioms, 0 sorries**
+**pphi2: 41 axioms, 0 sorries** | **gaussian-field (upstream): 6 axioms, 0 sorries**
 
 Note: Two axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConvergence)
 and `fourier_representation_convolution` (GaussianFourier).
@@ -34,7 +34,7 @@ and `fourier_representation_convolution` (GaussianFourier).
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
 | 2 | `TransferMatrix/L2Convolution.lean` | 0 axioms (Fubini identity proved) |
-| 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (compactness) |
+| 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (Hilbert-Schmidt → compact); `transferOperator_isCompact` proved |
 | 2 | `TransferMatrix/GaussianFourier.lean` | 1 private axiom (`fourier_representation_convolution`); `inner_convCLM_pos_of_fourier_pos` proved from axiom; `fourier_gaussian_pos` proved |
 | 2 | `TransferMatrix/Jentzsch.lean` | 0 axioms; Jentzsch + nontriviality + positivity-improving + strict PD all proved |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
@@ -228,7 +228,8 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`convCLM_isSelfAdjoint_of_even`~~ | L2Convolution | ✅ **Proved** | Self-adjointness of convolution by even kernel. Proved via `integral_mul_conv_eq` Fubini identity. |
 | ~~`integral_mul_conv_eq`~~ | L2Convolution | ✅ **Proved** | Fubini identity: `∫ h·(g⋆f) = ∫ (g⋆h)·f` for even g. Proved via product integrability (AM-GM + Tonelli + translation invariance), `integral_integral_swap`, `convolution_eq_swap`. |
 | ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | ✅ **Proved** | Self-adjointness of `A ∘ B ∘ A` from `mulCLM_isSelfAdjoint` and `convCLM_isSelfAdjoint_of_even` for the Gaussian kernel. |
-| `transferOperator_isCompact` | L2Operator | Medium | Compactness from Hilbert-Schmidt strategy using Gaussian decay of the weight (not the divergent translation-invariant bound). |
+| ~~`transferOperator_isCompact`~~ | L2Operator | ✅ **Proved** | Compactness from `hilbert_schmidt_isCompact` axiom + `transferWeight_memLp_two` (w ∈ L²) + `transferGaussian_norm_le_one` (‖G‖ ≤ 1). |
+| `hilbert_schmidt_isCompact` | L2Operator | Medium | L² kernel integral operators are compact (Hilbert-Schmidt). If w ∈ L² ∩ L∞ and g ∈ L¹ with ‖g‖_∞ ≤ 1, then M_w ∘ Conv_g ∘ M_w is compact. Reed-Simon I, Thm VI.23. |
 | `transferOperator_spectral` | L2Operator | **Proved** | Spectral decomposition from `compact_selfAdjoint_spectral` (gaussian-field). |
 | ~~`jentzsch_theorem`~~ | Jentzsch | ✅ **Proved** | Jentzsch's theorem for compact self-adjoint positivity-improving operators: ground eigenvalue simple with strict spectral gap. Reed-Simon IV, XIII.43–44. Full proof in `JentzschProof.lean`, bridge via `IsPositivityImproving.toPI'`. |
 | ~~`transferOperator_positivityImproving`~~ | Jentzsch | ✅ **Proved** | Transfer kernel K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ') > 0 everywhere, so T maps nonneg nonzero f to a.e. strictly positive Tf. Proved via T = M_w ∘ Conv_G ∘ M_w factorization, Cauchy-Schwarz for L² integrability, measure-preserving translation, and `integral_pos_iff_support_of_nonneg_ae`. |
@@ -548,6 +549,9 @@ The following theorems have complete proofs (no sorry):
 | `transferWeight_measurable` | L2Operator | Transfer weight w(ψ) = exp(-(a/2)·h(ψ)) is measurable — continuity chain via `wickMonomial_continuous` |
 | `transferWeight_bound` | L2Operator | Transfer weight is essentially bounded — from `wickPolynomial_bounded_below` + exponentiation |
 | `transferGaussian_memLp` | L2Operator | Gaussian kernel ∈ L¹ — product factorization + `integrable_exp_neg_mul_sq` |
+| `transferGaussian_norm_le_one` | L2Operator | ‖G(ψ)‖ ≤ 1 — `exp_le_one_iff` + `timeCoupling_nonneg` |
+| `transferWeight_memLp_two` | L2Operator | Transfer weight ∈ L² — Gaussian decay bound + product factorization |
+| `transferOperator_isCompact` | L2Operator | Compactness of T — from `hilbert_schmidt_isCompact` + w ∈ L² + ‖G‖ ≤ 1 |
 | `mulCLM` | L2Multiplication | Multiplication by bounded function as CLM on L² — Hölder (∞,2,2) |
 | `convCLM` | L2Convolution | Convolution with L¹ function as CLM on L² — Young's inequality |
 
@@ -593,7 +597,8 @@ infrastructure. Assessment date: 2026-03-04.
 | `torusGeneratingFunctionalℂ_analyticOnNhd` | TorusOSAxioms | Analyticity of complex generating functional. From exponential moments via Morera. |
 | `torusLattice_rp` | TorusOSAxioms | Matrix-form RP for lattice GFF on torus. Fubini + perfect-square argument. |
 | `gaussian_rp_with_boundary_weight` | OS3_RP_Lattice | Core Gaussian RP: ∫ G·G∘Θ·w dμ_GFF ≥ 0. Gaussian Markov property. Glimm-Jaffe Ch. 6.1. |
-| `transferOperator_isCompact` | L2Operator | Hilbert-Schmidt: kernel `K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ')` with Gaussian decay → `∫∫ K² < ∞`. |
+| ~~`transferOperator_isCompact`~~ | L2Operator | **PROVED** from `hilbert_schmidt_isCompact` + `transferWeight_memLp_two` + `transferGaussian_norm_le_one`. |
+| `hilbert_schmidt_isCompact` | L2Operator | General HS theorem: L² kernel → compact. Reed-Simon I, Thm VI.23. |
 | ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | **Proved** — `tendsto_nhds_unique_of_eventuallyEq` from `cf_tendsto` + `lattice_inv`. |
 | `analyticOn_generatingFunctionalC` | OS2_WardIdentity | Analyticity of complex generating functional from exponential moments via Morera. |
 | `exponential_moment_schwartz_bound` | OS2_WardIdentity | Exponential moment bound in Schwartz seminorms for OS1. |
@@ -643,7 +648,7 @@ infrastructure. Assessment date: 2026-03-04.
 
 1. **Easy wins**: `weakLimit_centered_gaussianReal`, `torus_propagator_convergence`, `latticeMeasure_translation_invariant`
 2. **Torus infrastructure**: `torusLimit_covariance_eq`, `gaussian_measure_unique_of_covariance`, `torusContinuumMeasures_tight`, `torusLattice_rp`
-3. **Transfer matrix**: `transferOperator_isCompact`, `fourier_representation_convolution` — unlocks spectral theory
+3. **Transfer matrix**: `hilbert_schmidt_isCompact` — general HS theorem (Reed-Simon I, Thm VI.23)
 4. **OS inheritance**: `gaussian_rp_with_boundary_weight`, `os3_inheritance`, `os0_inheritance` — fills the RP chain
 5. **Hard analysis**: spectral gap, clustering, exponential moments — the deep results
 

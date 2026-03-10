@@ -37,7 +37,8 @@ Note: pphi2 count includes 2 private axioms (`schwartz_riemann_sum_bound`,
 |---|------|----------|--------|----------|-------|
 | 3 | ~~`transferOperatorCLM`~~ | L2Operator | ✅ **DEFINED** | SA | Transfer matrix defined as `M_w ∘L Conv_G ∘L M_w` (no longer axiom). |
 | 4 | ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | ✅ **PROVED** | SA | Self-adjoint from self-adjointness of M_w and Conv_G. |
-| 5 | `transferOperator_isCompact` | L2Operator | ✅ Correct | Gemini 2026-03-07 | Compact from Hilbert-Schmidt. InteractionPolynomial enforces w ∈ L². |
+| 5 | ~~`transferOperator_isCompact`~~ | L2Operator | ✅ **PROVED** | CC 2026-03-09 | Proved from `hilbert_schmidt_isCompact` + `transferWeight_memLp_two` + `transferGaussian_norm_le_one`. |
+| 5a | `hilbert_schmidt_isCompact` | L2Operator | ✅ Correct | Gemini 2026-03-07 | General HS theorem: M_w ∘ Conv_g ∘ M_w compact when w ∈ L² ∩ L∞, ‖g‖_∞ ≤ 1. Reed-Simon I, Thm VI.23. |
 | 6 | ~~`transferEigenvalue`~~ | L2Operator | ✅ **PROVED** | DT 2026-02-24 | Sorted eigenvalue sequence via spectral theorem. |
 | 7 | ~~`transferEigenvalue_pos`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | All eigenvalues > 0. Derived from Jentzsch theorem. |
 | 8 | ~~`transferEigenvalue_antitone`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | Eigenvalues decreasing. Derived from spectral ordering. |
