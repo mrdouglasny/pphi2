@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 40 axioms, 1 sorry** | **gaussian-field (upstream): 6 axioms, 4 sorries**
+**pphi2: 40 axioms, 1 sorry** | **gaussian-field (upstream): 1 axiom, 0 sorries**
 
 Note: Two axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConvergence)
 and `fourier_representation_convolution` (GaussianFourier).
@@ -279,7 +279,8 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
 | ~~`gaussian_hypercontractivity_continuum`~~ | Hypercontractivity | **Proved** | Gaussian hypercontractivity in continuum-embedded form. Proved from `gaussian_hypercontractive` (gaussian-field) via pushforward + `latticeEmbedLift_eval_eq`. |
 | `exponential_moment_bound` | Hypercontractivity | Hard | ∫ exp(-2V_a) dμ_{GFF} ≤ K uniformly in a. Deep stability estimate (cluster expansions, Glimm-Jaffe Thm 8.6.1). |
-| `interacting_moment_bound` | Hypercontractivity | Medium | Bounds interacting L^{pn} moments in terms of FREE Gaussian L^{2n} moments via Cauchy-Schwarz density transfer. RHS uses μ_{GFF}, not μ_a (converting back requires e^{+V_a} which diverges). |
+| ~~`interacting_moment_bound`~~ | Hypercontractivity | **Proved** | Bounds interacting L^{pn} moments in terms of FREE Gaussian L^{2n} moments via Cauchy-Schwarz density transfer. Proved from `exponential_moment_bound`, `partitionFunction_ge_one`, `pairing_memLp`, and Hölder/Cauchy-Schwarz. |
+| `partitionFunction_ge_one` | Hypercontractivity | Medium | Z_a = ∫ exp(-V) dμ_GFF ≥ 1 for all a. Jensen's inequality + Wick ordering mean zero (Hermite polynomial orthogonality). Simon §I.3, Glimm-Jaffe §1.3. |
 | `prokhorov_configuration_sequential` | Convergence | Infrastructure | Sequential extraction axiom directly on `Configuration (ContinuumTestFunction d)`; avoids global Polish/Borel assumptions on full weak-* dual. |
 | ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — generic Polish-space sequential Prokhorov theorem (kept as theorem, not used by `continuumLimit`). |
 | ~~`schwinger2_convergence`~~ | Convergence | **PROVED** | 2-point Schwinger functions converge. Proved from `schwinger_n_convergence`. |
@@ -469,7 +470,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 
 ### Tier 2: Core analytic results (the hard axioms)
 
-5. **Hypercontractivity axioms** (`exponential_moment_bound`, `interacting_moment_bound`) — Cauchy-Schwarz density transfer approach. `gaussian_hypercontractivity_continuum` proved from gaussian-field.
+5. **Hypercontractivity axioms** (`exponential_moment_bound`, `partitionFunction_ge_one`) — Cauchy-Schwarz density transfer approach. `gaussian_hypercontractivity_continuum` proved from gaussian-field. `interacting_moment_bound` proved from these two axioms + Hölder/Cauchy-Schwarz + `pairing_memLp`.
 6. **`second_moment_uniform` + `continuumMeasures_tight`** — Tightness argument. Depends on Nelson.
 7. **`spectral_gap_uniform`** — Uniform mass gap. Kato-Rellich perturbation theory.
 8. **`ward_identity_lattice` + `anomaly_vanishes`** — Ward identity + power counting for rotation invariance.
@@ -617,7 +618,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Super-renormalizability gives a² Ward identity bound. No log corrections in d=2. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Fernique + Nelson hypercontractive estimate transferred to limit. |
 | `exponential_moment_bound` | Hypercontractivity | `∫ exp(-2V_a) dμ_{GFF} ≤ K` uniformly. Deep stability (cluster expansions, Glimm-Jaffe 8.6.1). |
-| `interacting_moment_bound` | Hypercontractivity | Cauchy-Schwarz density transfer of moments. |
+| `partitionFunction_ge_one` | Hypercontractivity | Z_a ≥ 1 by Jensen + Wick ordering mean zero. |
 | `rotation_invariance_continuum` | OS2_WardIdentity | Ward identity + anomaly irrelevance for O(2). |
 | `continuum_exponential_clustering` | OS2_WardIdentity | Spectral gap → exponential clustering in continuum. |
 
