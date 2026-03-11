@@ -32,6 +32,10 @@ structure InteractionPolynomial where
   coeff : Fin n → ℝ
   /-- Odd-power coefficients vanish: P is an even function. -/
   coeff_odd_eq_zero : ∀ m : Fin n, Odd (m : ℕ) → coeff m = 0
+  /-- Constant coefficient is nonpositive: ensures ∫ V dμ_{GFF} ≤ 0.
+  Standard examples: P = λφ⁴ has coeff₀ = 0; P = λφ⁴ + μφ² has coeff₀ = 0;
+  P = λφ⁴ - E₀ (vacuum energy subtraction) has coeff₀ = -E₀ ≤ 0. -/
+  coeff_zero_nonpos : coeff ⟨0, by omega⟩ ≤ 0
 
 /-- Evaluate P(τ) = (1/n)τⁿ + Σ_{m<n} a_m τᵐ. -/
 def InteractionPolynomial.eval (P : InteractionPolynomial) (τ : ℝ) : ℝ :=
@@ -75,6 +79,10 @@ def InteractionPolynomial.shiftQuadratic (P : InteractionPolynomial) (δ : ℝ) 
       intro h; rw [h] at hm; revert hm; decide
     rw [if_neg hne]
     exact P.coeff_odd_eq_zero m hm
+  coeff_zero_nonpos := by
+    show (if (⟨0, _⟩ : Fin P.n).val = 2 then _ else _) ≤ 0
+    rw [if_neg (by omega : (0 : ℕ) ≠ 2)]
+    exact P.coeff_zero_nonpos
 
 /-- The Wick-ordered polynomial P(τ, c).
     P(τ, c) = Σ_{m=0}^n a_m Σ_{k=0}^{⌊m/2⌋} (-1)^k m!/(m-2k)!k!2^k c^k τ^{m-2k}.

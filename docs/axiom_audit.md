@@ -239,10 +239,12 @@ meaningful mathematical types.
 
 ### Continuum Limit & Convergence
 - ~~`gaussian_hypercontractivity_continuum`~~ — **PROVED** from `gaussian_hypercontractive` via pushforward + `latticeEmbedLift_eval_eq`
-- `exponential_moment_bound` — Deep stability estimate: $∫ e^{-2V_a} dμ_{GFF} ≤ K$ uniformly in $a$ (axiom)
+- `wickMonomial_latticeGaussian` — ✅ Verified (Gemini). Hermite orthogonality: $∫ :τ^n:_c \, dμ_{GFF} = 0$ for $n ≥ 1$. Defining property of Wick ordering. Glimm-Jaffe Ch. 6, Simon §III.1. (axiom)
+- `wickPolynomial_uniform_bounded_below` — ✅ Verified (Gemini). Wick polynomial $P(c,x) ≥ -A$ uniformly for $c ∈ [0,C]$. Leading term $(1/n)x^n$ with $n ≥ 4$ even dominates for large $|x|$; Extreme Value Theorem on compact remainder. Glimm-Jaffe Thm 8.1.1, Simon Ch. VIII. (axiom)
+- ~~`exponential_moment_bound`~~ — **PROVED** from `wickPolynomial_uniform_bounded_below` + pointwise exp bound on probability measure
 - ~~`interacting_moment_bound`~~ — **PROVED** from `exponential_moment_bound`, `partitionFunction_ge_one`, `pairing_memLp`, and Hölder/Cauchy-Schwarz density transfer
 - ~~`partitionFunction_ge_one`~~ — **PROVED** from Jensen's inequality (`ConvexOn.map_integral_le`) + `interactionFunctional_mean_nonpos`
-- `interactionFunctional_mean_nonpos` — $∫ V dμ_{GFF} ≤ 0$: Wick ordering mean property + integrability of V (axiom)
+- ~~`interactionFunctional_mean_nonpos`~~ — **PROVED** from `wickMonomial_latticeGaussian` (Hermite orthogonality) + linearity + `P.coeff_zero_nonpos`
 - `os4_inheritance` — Exponential clustering of connected 2-point functions (sorry)
 - `schwinger2_convergence` — 2-point Schwinger function convergence along subsequence (sorry)
 - `schwinger_n_convergence` — n-point Schwinger function convergence along subsequence (sorry)

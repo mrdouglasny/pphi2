@@ -5,7 +5,7 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3543 jobs).
+3544 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
@@ -278,10 +278,12 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
 | ~~`gaussian_hypercontractivity_continuum`~~ | Hypercontractivity | **Proved** | Gaussian hypercontractivity in continuum-embedded form. Proved from `gaussian_hypercontractive` (gaussian-field) via pushforward + `latticeEmbedLift_eval_eq`. |
-| `exponential_moment_bound` | Hypercontractivity | Hard | ∫ exp(-2V_a) dμ_{GFF} ≤ K uniformly in a. Deep stability estimate (cluster expansions, Glimm-Jaffe Thm 8.6.1). |
+| `wickMonomial_latticeGaussian` | Hypercontractivity | Medium | Hermite orthogonality: ∫ :τⁿ:_c dμ_GFF = 0 for n ≥ 1. Defining property of Wick ordering. Simon §I.3. |
+| `wickPolynomial_uniform_bounded_below` | Hypercontractivity | Medium | Wick polynomial P(c,x) ≥ -A uniformly for c ∈ [0,C]. Degree ≥ 4 with positive leading coeff → bounded below. |
+| ~~`exponential_moment_bound`~~ | Hypercontractivity | **Proved** | ∫ exp(-2V_a) dμ_{GFF} ≤ K. Proved from `wickPolynomial_uniform_bounded_below` + pointwise exp bound + probability measure. |
 | ~~`interacting_moment_bound`~~ | Hypercontractivity | **Proved** | Bounds interacting L^{pn} moments in terms of FREE Gaussian L^{2n} moments via Cauchy-Schwarz density transfer. Proved from `exponential_moment_bound`, `partitionFunction_ge_one`, `pairing_memLp`, and Hölder/Cauchy-Schwarz. |
 | ~~`partitionFunction_ge_one`~~ | Hypercontractivity | **Proved** | Z_a ≥ 1 by Jensen's inequality (`ConvexOn.map_integral_le`) + `interactionFunctional_mean_nonpos`. |
-| `interactionFunctional_mean_nonpos` | Hypercontractivity | Medium | ∫ V dμ_GFF ≤ 0: Wick ordering mean property. Wick monomials have zero mean under the reference Gaussian (Hermite polynomial orthogonality). Simon §I.3, Glimm-Jaffe §1.3. |
+| ~~`interactionFunctional_mean_nonpos`~~ | Hypercontractivity | **Proved** | ∫ V dμ_GFF ≤ 0. Proved from `wickMonomial_latticeGaussian` (Hermite orthogonality) + linearity + `P.coeff_zero_nonpos`. |
 | `prokhorov_configuration_sequential` | Convergence | Infrastructure | Sequential extraction axiom directly on `Configuration (ContinuumTestFunction d)`; avoids global Polish/Borel assumptions on full weak-* dual. |
 | ~~`prokhorov_sequential`~~ | Convergence | ~~Infrastructure~~ | **Proved** — generic Polish-space sequential Prokhorov theorem (kept as theorem, not used by `continuumLimit`). |
 | ~~`schwinger2_convergence`~~ | Convergence | **PROVED** | 2-point Schwinger functions converge. Proved from `schwinger_n_convergence`. |
@@ -471,7 +473,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 
 ### Tier 2: Core analytic results (the hard axioms)
 
-5. **Hypercontractivity axioms** (`exponential_moment_bound`, `interactionFunctional_mean_nonpos`) — Cauchy-Schwarz density transfer approach. `gaussian_hypercontractivity_continuum` proved from gaussian-field. `partitionFunction_ge_one` proved from Jensen + Wick ordering mean. `interacting_moment_bound` proved from these + Hölder/Cauchy-Schwarz + `pairing_memLp`.
+5. **Hypercontractivity axioms** (`wickMonomial_latticeGaussian`, `wickPolynomial_uniform_bounded_below`) — Hermite orthogonality and uniform bounded-below. `exponential_moment_bound` proved from bounded-below + probability measure. `interactionFunctional_mean_nonpos` proved from Hermite orthogonality + linearity + `P.coeff_zero_nonpos`. `partitionFunction_ge_one` proved from Jensen + mean nonpos. `interacting_moment_bound` proved from these + Hölder/Cauchy-Schwarz + `pairing_memLp`.
 6. **`second_moment_uniform` + `continuumMeasures_tight`** — Tightness argument. Depends on Nelson.
 7. **`spectral_gap_uniform`** — Uniform mass gap. Kato-Rellich perturbation theory.
 8. **`ward_identity_lattice` + `anomaly_vanishes`** — Ward identity + power counting for rotation invariance.
@@ -618,8 +620,8 @@ infrastructure. Assessment date: 2026-03-04.
 | `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Super-renormalizability gives a² Ward identity bound. No log corrections in d=2. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Fernique + Nelson hypercontractive estimate transferred to limit. |
-| `exponential_moment_bound` | Hypercontractivity | `∫ exp(-2V_a) dμ_{GFF} ≤ K` uniformly. Deep stability (cluster expansions, Glimm-Jaffe 8.6.1). |
-| `interactionFunctional_mean_nonpos` | Hypercontractivity | ∫ V dμ_GFF ≤ 0 by Wick ordering (Hermite orthogonality). |
+| `wickMonomial_latticeGaussian` | Hypercontractivity | Hermite orthogonality: ∫ :τⁿ:_c dμ_GFF = 0 for n ≥ 1. Defining property of Wick ordering. |
+| `wickPolynomial_uniform_bounded_below` | Hypercontractivity | Wick polynomial uniformly bounded below for c ∈ [0,C]. Degree ≥ 4 + positive leading coeff. |
 | `rotation_invariance_continuum` | OS2_WardIdentity | Ward identity + anomaly irrelevance for O(2). |
 | `continuum_exponential_clustering` | OS2_WardIdentity | Spectral gap → exponential clustering in continuum. |
 

@@ -176,6 +176,48 @@ theorem gaussian_hypercontractivity_continuum
   rw [h_μ]
   exact gaussian_hypercontractive (latticeCovariance d N a mass ha hmass) g_f n p hp m hm hp_eq
 
+/-! ## Textbook axioms
+
+These axioms replace the compound axioms `exponential_moment_bound` and
+`interactionFunctional_mean_nonpos` with cleaner, elementary statements. -/
+
+/-- **Hermite orthogonality for the lattice Gaussian measure.**
+
+Wick monomials `:x^n:_c` of order n ≥ 1 have zero mean under the Gaussian
+measure with matching variance parameter c = wickConstant. This combines:
+1. The variance of `ω(δ_x)` under `μ_{GFF}` equals `wickConstant`
+   (the diagonal of the lattice Green's function)
+2. Hermite polynomial orthogonality: `∫ He_n(t/√c) dN(0,c)(t) = 0` for n ≥ 1
+
+Also states integrability, which holds because all Gaussian moments are finite
+(polynomial of a Gaussian random variable).
+
+Reference: Simon (1974), §I.3; Glimm-Jaffe (1987), §1.3. -/
+axiom wickMonomial_latticeGaussian (d N : ℕ) [NeZero N]
+    (n : ℕ) (hn : 1 ≤ n) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (x : FinLatticeSites d N) :
+    Integrable (fun ω : Configuration (FinLatticeField d N) =>
+        wickMonomial n (wickConstant d N a mass) (ω (finLatticeDelta d N x)))
+      (latticeGaussianMeasure d N a mass ha hmass) ∧
+    ∫ ω, wickMonomial n (wickConstant d N a mass) (ω (finLatticeDelta d N x))
+      ∂(latticeGaussianMeasure d N a mass ha hmass) = 0
+
+/-- **Uniform lower bound on the Wick polynomial.**
+
+For any even-degree polynomial P with positive leading coefficient and any
+bound C on the variance parameter c, the Wick polynomial `:P(x):_c` is
+bounded below uniformly over c ∈ [0, C] and x ∈ ℝ.
+
+The bound holds because the leading term `(1/n)x^n` (independent of c)
+dominates for large |x|, and on bounded |x| the polynomial is continuous
+with coefficients varying continuously in c.
+
+Reference: Elementary real analysis (even-degree monic polynomial). -/
+axiom wickPolynomial_uniform_bounded_below
+    (P : InteractionPolynomial) (C : ℝ) (hC : 0 ≤ C) :
+    ∃ A : ℝ, 0 < A ∧ ∀ (c : ℝ), 0 ≤ c → c ≤ C → ∀ x : ℝ,
+    wickPolynomial P c x ≥ -A
+
 /-! ## Step A2: Exponential moment bound for the interaction -/
 
 /-- **Exponential moment bound** for the Wick-ordered interaction.
@@ -188,54 +230,174 @@ Gaussian free field measure:
 for all a ∈ (0, 1], where K depends on the polynomial P and mass m
 but not on a.
 
-**Important:** Only the NEGATIVE exponential exp(-s·V_a) is bounded.
-The positive exponential exp(+c·|V_a|) ≈ exp(+c·φ⁴) diverges when
-integrated against the Gaussian measure, because V_a ~ φ⁴ grows faster
-than the Gaussian e^{-φ²} suppression.
+Proof: On a fixed lattice (d, N fixed), the wickConstant ≤ mass⁻², so
+by `wickPolynomial_uniform_bounded_below`, V_a(ω) ≥ -(a^d · |Λ| · A).
+For a ≤ 1, exp(-2V) ≤ exp(2 · |Λ| · A). Integrating over the probability
+measure gives K = exp(2 · |Λ| · A).
 
-This is a deep stability estimate from the Glimm-Jaffe program. The uniform-
-in-a bound requires cluster expansions and chessboard estimates because:
-- The Wick constant c_a ~ (1/2π)log(1/a) diverges as a → 0
-- The lower bound on V_a depends on c_a, hence on a
-- The number of lattice sites |Λ| ~ 1/a² grows as a → 0
-- So the naive bound V_a ≥ -B with B uniform is FALSE
-
-Reference: Simon (1974), §V.1, Theorem V.1; Glimm-Jaffe (1987), §19.1,
-Theorem 8.6.1. -/
-axiom exponential_moment_bound (P : InteractionPolynomial)
+Note: In the full continuum limit (N ~ 1/a → ∞), this simple argument
+fails and one needs cluster expansions (Simon §V.1, Glimm-Jaffe §19.1).
+For fixed (d, N), the bound is elementary. -/
+theorem exponential_moment_bound (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
     ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-    -- The Boltzmann weight exp(-V_a) has uniformly bounded L² norm
-    -- w.r.t. the Gaussian measure. This is the key estimate.
     ∫ ω : Configuration (FinLatticeField d N),
         (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
+  -- Step 1: Get uniform lower bound on wickPolynomial for c ∈ [0, mass⁻²]
+  obtain ⟨A, hA_pos, hA_bound⟩ :=
+    wickPolynomial_uniform_bounded_below P (mass⁻¹ ^ 2) (by positivity)
+  -- Step 2: K = exp(2 · |Λ| · A) works uniformly
+  set Λ := Fintype.card (FinLatticeSites d N)
+  refine ⟨Real.exp (2 * ↑Λ * A), Real.exp_pos _, fun a ha ha1 => ?_⟩
+  set μ := latticeGaussianMeasure d N a mass ha hmass
+  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability d N a mass ha hmass
+  -- Step 3: V(ω) ≥ -(a^d · |Λ| · A) for all ω
+  have hc_nn : 0 ≤ wickConstant d N a mass :=
+    le_of_lt (wickConstant_pos d N a mass ha hmass)
+  have hc_le : wickConstant d N a mass ≤ mass⁻¹ ^ 2 :=
+    wickConstant_le_inv_mass_sq d N a mass ha hmass
+  have h_wp_bound : ∀ (ω : Configuration (FinLatticeField d N)),
+      interactionFunctional d N P a mass ω ≥ -(↑Λ * A) := by
+    intro ω
+    unfold interactionFunctional
+    have ha_pow : (0 : ℝ) ≤ a ^ d := pow_nonneg (le_of_lt ha) d
+    calc a ^ d * ∑ x : FinLatticeSites d N,
+          wickPolynomial P (wickConstant d N a mass) (ω (finLatticeDelta d N x))
+        ≥ a ^ d * ∑ _x : FinLatticeSites d N, (-A) := by
+          apply mul_le_mul_of_nonneg_left _ ha_pow
+          exact Finset.sum_le_sum fun x _ => hA_bound _ hc_nn hc_le _
+      _ = a ^ d * (-(↑Λ * A)) := by
+          congr 1; rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]; ring
+      _ ≥ -(↑Λ * A) := by
+          have had : a ^ d ≤ 1 := pow_le_one₀ (le_of_lt ha) ha1
+          nlinarith [mul_nonneg (Nat.cast_nonneg' Λ) (le_of_lt hA_pos)]
+  -- Step 4: exp(-2V) ≤ exp(2 · |Λ| · A) pointwise
+  have h_exp_bound : ∀ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2 ≤
+      Real.exp (2 * ↑Λ * A) := by
+    intro ω
+    -- (exp x)^2 = exp(2x)
+    rw [sq, ← Real.exp_add, show -interactionFunctional d N P a mass ω +
+        (-interactionFunctional d N P a mass ω) =
+        -2 * interactionFunctional d N P a mass ω from by ring]
+    exact Real.exp_le_exp_of_le (by linarith [h_wp_bound ω])
+  -- Step 5: Integrate the pointwise bound
+  calc ∫ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2 ∂μ
+      ≤ ∫ _ω, Real.exp (2 * ↑Λ * A) ∂μ := by
+        apply integral_mono_of_nonneg (ae_of_all _ fun ω => sq_nonneg _)
+          (integrable_const _) (ae_of_all _ h_exp_bound)
+    _ = Real.exp (2 * ↑Λ * A) := by
+        simp [integral_const]
 
 /-! ## Step A3: Cauchy-Schwarz density transfer -/
+
+/-- Helper: integrability and integral computation for a single-site
+Wick polynomial under the lattice Gaussian.
+
+`∫ :P(ω(δ_x)):_c dμ_{GFF} = P.coeff₀` because all Wick monomials of
+order ≥ 1 have zero Gaussian mean, and `:x^0:_c = 1`. -/
+private lemma wickPolynomial_integral_eq_coeff_zero
+    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (x : FinLatticeSites d N) :
+    Integrable (fun ω : Configuration (FinLatticeField d N) =>
+        wickPolynomial P (wickConstant d N a mass) (ω (finLatticeDelta d N x)))
+      (latticeGaussianMeasure d N a mass ha hmass) ∧
+    ∫ ω, wickPolynomial P (wickConstant d N a mass) (ω (finLatticeDelta d N x))
+      ∂(latticeGaussianMeasure d N a mass ha hmass) = P.coeff ⟨0, by have := P.hn_ge; omega⟩ := by
+  set μ := latticeGaussianMeasure d N a mass ha hmass
+  set c := wickConstant d N a mass
+  set δx := finLatticeDelta d N x
+  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability d N a mass ha hmass
+  -- Integrability of each term
+  have h_lead_int : Integrable (fun ω : Configuration (FinLatticeField d N) =>
+      (1 / P.n : ℝ) * wickMonomial P.n c (ω δx)) μ :=
+    (wickMonomial_latticeGaussian d N P.n (by have := P.hn_ge; omega)
+      a mass ha hmass x).1.const_mul _
+  have h_term_int : ∀ m : Fin P.n, Integrable (fun ω : Configuration (FinLatticeField d N) =>
+      P.coeff m * wickMonomial (m : ℕ) c (ω δx)) μ := by
+    intro m
+    by_cases hm : (m : ℕ) = 0
+    · have : (fun ω : Configuration (FinLatticeField d N) =>
+          P.coeff m * wickMonomial (m : ℕ) c (ω δx)) = fun _ => P.coeff m := by
+        ext ω; simp [hm]
+      rw [this]; exact integrable_const _
+    · exact ((wickMonomial_latticeGaussian d N m (by omega) a mass ha hmass x).1).const_mul _
+  have h_sum_int : Integrable (fun ω : Configuration (FinLatticeField d N) =>
+      ∑ m : Fin P.n, P.coeff m * wickMonomial (m : ℕ) c (ω δx)) μ :=
+    integrable_finset_sum _ fun m _ => h_term_int m
+  constructor
+  · -- Integrability of wickPolynomial = leading + sum
+    show Integrable (fun ω => (1 / P.n : ℝ) * wickMonomial P.n c (ω δx) +
+      ∑ m : Fin P.n, P.coeff m * wickMonomial (m : ℕ) c (ω δx)) μ
+    exact h_lead_int.add h_sum_int
+  · -- Integral = P.coeff 0
+    show ∫ ω, ((1 / P.n : ℝ) * wickMonomial P.n c (ω δx) +
+      ∑ m : Fin P.n, P.coeff m * wickMonomial (m : ℕ) c (ω δx)) ∂μ = _
+    rw [integral_add h_lead_int h_sum_int,
+        integral_const_mul,
+        (wickMonomial_latticeGaussian d N P.n (by have := P.hn_ge; omega)
+          a mass ha hmass x).2,
+        mul_zero, zero_add,
+        integral_finset_sum _ (fun m _ => h_term_int m)]
+    simp_rw [integral_const_mul]
+    -- Each integral: ∫ wM_m = 1 if m=0, 0 if m≥1
+    have h_wm_eval : ∀ m : Fin P.n,
+        ∫ ω, wickMonomial (↑m) c (ω δx) ∂μ = if (m : ℕ) = 0 then 1 else 0 := by
+      intro m
+      by_cases hm : (m : ℕ) = 0
+      · simp_rw [if_pos hm, hm, wickMonomial_zero]
+        simp [integral_const]
+      · rw [if_neg hm, (wickMonomial_latticeGaussian d N m (by omega) a mass ha hmass x).2]
+    simp_rw [h_wm_eval, mul_ite, mul_one, mul_zero]
+    -- ∑ (if m.val = 0 then coeff m else 0) = coeff ⟨0, _⟩
+    rw [Finset.sum_ite, Finset.sum_const_zero, add_zero]
+    -- The filter picks out exactly ⟨0, _⟩
+    have : Finset.univ.filter (fun m : Fin P.n => (m : ℕ) = 0) =
+        {⟨0, by have := P.hn_ge; omega⟩} := by
+      ext m; simp [Fin.ext_iff]
+    rw [this, Finset.sum_singleton]
 
 /-- **Wick ordering mean property**: the mean of the interaction functional
 under the GFF is nonpositive.
 
-Mathematically, `∫ V dμ_{GFF} = a^d · |Λ| · P.coeff₀` where `P.coeff₀` is
-the constant coefficient. For standard P(φ)₂ polynomials (quartic + mass
-term), `P.coeff₀ = 0` so the mean is exactly zero.
+`∫ V dμ_{GFF} = a^d · |Λ| · P.coeff₀ ≤ 0` since `P.coeff₀ ≤ 0`.
 
-The proof uses three ingredients:
-1. The pushforward of μ_{GFF} by `ω ↦ ω(δ_x)` is `gaussianReal 0 c`
-   (from `pairing_is_gaussian`), where `c = wickConstant`.
-2. Wick monomials have zero mean: `∫ :x^n:_c dN(0,c) = 0` for `n ≥ 1`.
-   This is the defining property of Wick ordering / Hermite polynomial
-   orthogonality under the Gaussian weight.
-3. Linearity of integration + finite lattice sum.
+Proved from `wickMonomial_latticeGaussian` (Hermite orthogonality),
+`wickMonomial 0 c x = 1`, and `P.coeff_zero_nonpos`.
 
 Reference: Simon (1974), §I.3; Glimm-Jaffe (1987), §1.3. -/
-axiom interactionFunctional_mean_nonpos (d N : ℕ) [NeZero N]
+theorem interactionFunctional_mean_nonpos (d N : ℕ) [NeZero N]
     (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
     Integrable (interactionFunctional d N P a mass)
       (latticeGaussianMeasure d N a mass ha hmass) ∧
     ∫ ω, interactionFunctional d N P a mass ω
-      ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ 0
+      ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ 0 := by
+  set μ := latticeGaussianMeasure d N a mass ha hmass
+  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability d N a mass ha hmass
+  -- Get per-site integrability and integral from helper
+  have h_site : ∀ x : FinLatticeSites d N,
+      Integrable (fun ω : Configuration (FinLatticeField d N) =>
+        wickPolynomial P (wickConstant d N a mass) (ω (finLatticeDelta d N x))) μ ∧
+      ∫ ω, wickPolynomial P (wickConstant d N a mass) (ω (finLatticeDelta d N x)) ∂μ =
+        P.coeff ⟨0, by have := P.hn_ge; omega⟩ :=
+    fun x => wickPolynomial_integral_eq_coeff_zero d N P a mass ha hmass x
+  set c := wickConstant d N a mass
+  -- Integrability of each site term
+  have h_wp_int : ∀ x : FinLatticeSites d N,
+      Integrable (fun ω : Configuration (FinLatticeField d N) =>
+        wickPolynomial P c (ω (finLatticeDelta d N x))) μ := fun x => (h_site x).1
+  constructor
+  · -- Integrability of V = a^d * Σ_x wP(ω(δ_x))
+    unfold interactionFunctional
+    exact (integrable_finset_sum _ fun x _ => h_wp_int x).const_mul _
+  · -- Mean ≤ 0: ∫ V = a^d * |Λ| * P.coeff 0 ≤ 0
+    unfold interactionFunctional
+    rw [integral_const_mul, integral_finset_sum _ (fun x _ => h_wp_int x)]
+    simp_rw [(h_site _).2, Finset.sum_const, nsmul_eq_mul]
+    apply mul_nonpos_of_nonneg_of_nonpos (pow_nonneg (le_of_lt ha) d)
+    exact mul_nonpos_of_nonneg_of_nonpos (by exact_mod_cast Fintype.card_pos.le)
+      P.coeff_zero_nonpos
 
 /-- **Partition function lower bound**: Z_a ≥ 1 for all a.
 
