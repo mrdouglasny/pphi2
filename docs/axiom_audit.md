@@ -86,6 +86,13 @@ Note: pphi2 count includes 2 private axioms (`schwartz_riemann_sum_bound`,
 - `embeddedTwoPoint_uniform_bound` — E[Φ_a(f)²] ≤ C. All eigenvalues ≥ m² + Riemann sum bounded.
 - `continuumGreenBilinear_pos` — G(f,f) > 0. Fourier injectivity on Schwartz space.
 
+### Phase 4T: Torus Continuum Limit (7 axioms)
+
+| # | Name | File | Rating | Verified | Notes |
+|---|------|------|--------|----------|-------|
+| T1 | `configuration_tight_of_uniform_second_moments` | TorusTightness | ✅ Standard | ✅ DT 2026-03-11: Mitoma (1983) + Chebyshev. Nuclearity essential (ℓ² counterexample). | Mitoma-Chebyshev criterion for nuclear Fréchet duals (`DyninMityaginSpace`). Uniform 2nd moments ⟹ tightness. |
+| ~~T2~~ | ~~`torusContinuumMeasures_tight`~~ | TorusTightness | ✅ **PROVED** | 2026-03-11 | From `configuration_tight_of_uniform_second_moments` + `torus_second_moment_uniform`. |
+
 ### Phase 5: OS2 Ward Identity and Proof Chain (8 axioms)
 
 All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:

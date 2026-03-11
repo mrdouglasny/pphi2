@@ -326,7 +326,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`torus_propagator_convergence`~~ | TorusPropagatorConvergence | **PROVED** | Proved via gaussian-field `lattice_green_tendsto_continuum` axiom. Chain: `torusEmbeddedTwoPoint` → `lattice_cross_moment` → `covariance` → axiom. |
 | ~~`torusEmbeddedTwoPoint_uniform_bound`~~ | TorusPropagatorConvergence | **PROVED** | `E[Φ_N(f)²] ≤ C` uniformly in N. Eigenvalue lower bound `λ_k ≥ m²` + Parseval + Riemann sum bound on compact torus. |
 | ~~`torusContinuumMeasures_tight`~~ | TorusTightness | **PROVED** | Proved from `configuration_tight_of_uniform_second_moments` (Mitoma-Chebyshev axiom) + `torus_second_moment_uniform`. |
-| `configuration_tight_of_uniform_second_moments` | TorusTightness | Medium | Mitoma-Chebyshev: on nuclear dual (`DyninMityaginSpace`), uniform 2nd moments ⟹ tightness. Mitoma (1983), Simon §V.1. |
+| `configuration_tight_of_uniform_second_moments` | TorusTightness | Medium | ✅ Verified (DT 2026-03-11). Mitoma-Chebyshev: on nuclear dual (`DyninMityaginSpace`), uniform 2nd moments ⟹ tightness. Mitoma (1983), Simon §V.1. Nuclearity essential (ℓ² counterexample). |
 | ~~`torusGaussianMeasure_isGaussian`~~ | TorusGaussianLimit | **PROVED** | Lattice GFF pushforward is Gaussian. MGF: `E[e^{ω(f)}] = exp(½ E[ω(f)²])`. |
 | ~~`torusGaussianLimit_isGaussian`~~ | TorusGaussianLimit | **PROVED** | Weak limits of Gaussians on torus are Gaussian. Proved via `pushforward_eval_gaussianReal` (MGF matching → complexMGF extension → measure equality) + `weakLimit_centered_gaussianReal`. |
 | ~~`weakLimit_centered_gaussianReal`~~ | TorusGaussianLimit | **PROVED** | Weak limits of centered Gaussians on ℝ are centered Gaussian. Proved via charFun decomposition into cos/sin integrals, variance extraction from log limit, and `Measure.ext_of_charFun`. |
@@ -599,7 +599,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `torusLimit_covariance_eq` | TorusGaussianLimit | Weak convergence transfers second moments. Uniform integrability from `torusEmbeddedTwoPoint_uniform_bound` + Vitali convergence. |
 | `gaussian_measure_unique_of_covariance` | TorusGaussianLimit | Gaussian on nuclear space determined by covariance. Bochner-Minlos uniqueness. |
 | ~~`torusContinuumMeasures_tight`~~ | TorusTightness | **PROVED** from `configuration_tight_of_uniform_second_moments` + `torus_second_moment_uniform`. |
-| `configuration_tight_of_uniform_second_moments` | TorusTightness | Mitoma-Chebyshev criterion for nuclear duals. Mitoma (1983) + Chebyshev. Requires `DyninMityaginSpace`. |
+| `configuration_tight_of_uniform_second_moments` | TorusTightness | ✅ Verified (DT 2026-03-11). Mitoma-Chebyshev for nuclear duals. Mitoma (1983) + Chebyshev. Nuclearity essential. |
 | `torusPositiveTimeSubmodule` | TorusOSAxioms | Submodule of positive-time test functions. Infrastructure axiom. |
 | `torusGeneratingFunctionalℂ_analyticOnNhd` | TorusOSAxioms | Analyticity of complex generating functional. From exponential moments via Morera. |
 | `torusLattice_rp` | TorusOSAxioms | Matrix-form RP for lattice GFF on torus. Fubini + perfect-square argument. |
