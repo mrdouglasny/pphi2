@@ -240,7 +240,7 @@ meaningful mathematical types.
 ### Continuum Limit & Convergence
 - ~~`gaussian_hypercontractivity_continuum`~~ — **PROVED** from `gaussian_hypercontractive` via pushforward + `latticeEmbedLift_eval_eq`
 - `wickMonomial_latticeGaussian` — ✅ Verified (Gemini). Hermite orthogonality: $∫ :τ^n:_c \, dμ_{GFF} = 0$ for $n ≥ 1$. Defining property of Wick ordering. Glimm-Jaffe Ch. 6, Simon §III.1. (axiom)
-- `wickPolynomial_uniform_bounded_below` — ✅ Verified (Gemini). Wick polynomial $P(c,x) ≥ -A$ uniformly for $c ∈ [0,C]$. Leading term $(1/n)x^n$ with $n ≥ 4$ even dominates for large $|x|$; Extreme Value Theorem on compact remainder. Glimm-Jaffe Thm 8.1.1, Simon Ch. VIII. (axiom)
+- ~~`wickPolynomial_uniform_bounded_below`~~ — **PROVED** in WickPolynomial.lean via coefficient continuity + compactness + leading term dominance
 - ~~`exponential_moment_bound`~~ — **PROVED** from `wickPolynomial_uniform_bounded_below` + pointwise exp bound on probability measure
 - ~~`interacting_moment_bound`~~ — **PROVED** from `exponential_moment_bound`, `partitionFunction_ge_one`, `pairing_memLp`, and Hölder/Cauchy-Schwarz density transfer
 - ~~`partitionFunction_ge_one`~~ — **PROVED** from Jensen's inequality (`ConvexOn.map_integral_le`) + `interactionFunctional_mean_nonpos`

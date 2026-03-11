@@ -202,21 +202,7 @@ axiom wickMonomial_latticeGaussian (d N : ℕ) [NeZero N]
     ∫ ω, wickMonomial n (wickConstant d N a mass) (ω (finLatticeDelta d N x))
       ∂(latticeGaussianMeasure d N a mass ha hmass) = 0
 
-/-- **Uniform lower bound on the Wick polynomial.**
-
-For any even-degree polynomial P with positive leading coefficient and any
-bound C on the variance parameter c, the Wick polynomial `:P(x):_c` is
-bounded below uniformly over c ∈ [0, C] and x ∈ ℝ.
-
-The bound holds because the leading term `(1/n)x^n` (independent of c)
-dominates for large |x|, and on bounded |x| the polynomial is continuous
-with coefficients varying continuously in c.
-
-Reference: Elementary real analysis (even-degree monic polynomial). -/
-axiom wickPolynomial_uniform_bounded_below
-    (P : InteractionPolynomial) (C : ℝ) (hC : 0 ≤ C) :
-    ∃ A : ℝ, 0 < A ∧ ∀ (c : ℝ), 0 ≤ c → c ≤ C → ∀ x : ℝ,
-    wickPolynomial P c x ≥ -A
+-- `wickPolynomial_uniform_bounded_below` is proved in WickPolynomial.lean
 
 /-! ## Step A2: Exponential moment bound for the interaction -/
 
@@ -247,7 +233,7 @@ theorem exponential_moment_bound (P : InteractionPolynomial)
         ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
   -- Step 1: Get uniform lower bound on wickPolynomial for c ∈ [0, mass⁻²]
   obtain ⟨A, hA_pos, hA_bound⟩ :=
-    wickPolynomial_uniform_bounded_below P (mass⁻¹ ^ 2) (by positivity)
+    Pphi2.wickPolynomial_uniform_bounded_below P (mass⁻¹ ^ 2) (by positivity)
   -- Step 2: K = exp(2 · |Λ| · A) works uniformly
   set Λ := Fintype.card (FinLatticeSites d N)
   refine ⟨Real.exp (2 * ↑Λ * A), Real.exp_pos _, fun a ha ha1 => ?_⟩

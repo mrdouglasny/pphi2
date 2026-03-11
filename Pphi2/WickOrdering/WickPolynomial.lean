@@ -410,6 +410,185 @@ theorem wickPolynomial_bounded_below (P : InteractionPolynomial) (c : ℝ) :
     apply div_pos one_pos
     exact_mod_cast (show (0 : ℕ) < P.n by have := P.hn_ge; omega)
 
+/-! ## Joint continuity in (c, x) -/
+
+/-- Wick monomials are jointly continuous in (c, x). -/
+theorem wickMonomial_continuous₂ : ∀ (n : ℕ),
+    Continuous (fun p : ℝ × ℝ => wickMonomial n p.1 p.2)
+  | 0 => by simp [wickMonomial]; exact continuous_const
+  | 1 => by simp [wickMonomial]; exact continuous_snd
+  | n + 2 => by
+    change Continuous (fun p : ℝ × ℝ =>
+      p.2 * wickMonomial (n + 1) p.1 p.2 -
+      (↑n + 1) * p.1 * wickMonomial n p.1 p.2)
+    exact (continuous_snd.mul (wickMonomial_continuous₂ (n + 1))).sub
+      ((continuous_const.mul continuous_fst).mul (wickMonomial_continuous₂ n))
+
+/-- Wick polynomial is jointly continuous in (c, x). -/
+theorem wickPolynomial_continuous₂ (P : InteractionPolynomial) :
+    Continuous (fun p : ℝ × ℝ => wickPolynomial P p.1 p.2) := by
+  unfold wickPolynomial
+  apply Continuous.add
+  · exact continuous_const.mul (wickMonomial_continuous₂ P.n)
+  · apply continuous_finset_sum; intro m _
+    exact continuous_const.mul (wickMonomial_continuous₂ m)
+
+/-! ## Coefficient continuity -/
+
+/-- Each coefficient of `wickMonomialPoly n c` is continuous in `c`.
+This is because the recurrence involves only polynomial operations in `c`. -/
+private theorem wickMonomialPoly_coeff_continuous : ∀ (n i : ℕ),
+    Continuous (fun c : ℝ => (wickMonomialPoly n c).coeff i)
+  | 0, i => by simp [wickMonomialPoly]; exact continuous_const
+  | 1, i => by simp [wickMonomialPoly]; exact continuous_const
+  | n + 2, i => by
+    simp only [wickMonomialPoly, Polynomial.coeff_sub, Polynomial.coeff_C_mul]
+    apply Continuous.sub
+    · -- coeff i (X * wickMonomialPoly (n+1) c)
+      cases i with
+      | zero =>
+        simp only [Polynomial.coeff_X_mul_zero]
+        exact continuous_const
+      | succ j =>
+        simp only [Polynomial.coeff_X_mul]
+        exact wickMonomialPoly_coeff_continuous (n + 1) j
+    · -- ((n+1) * c) * coeff i (wickMonomialPoly n c)
+      exact (continuous_const.mul continuous_id).mul
+        (wickMonomialPoly_coeff_continuous n i)
+
+/-- Each coefficient of `wickPolynomialPoly P c` is continuous in `c`. -/
+private theorem wickPolynomialPoly_coeff_continuous (P : InteractionPolynomial)
+    (i : ℕ) : Continuous (fun c : ℝ => (wickPolynomialPoly P c).coeff i) := by
+  -- Extract the coefficient as an explicit expression
+  have h_eq : ∀ c, (wickPolynomialPoly P c).coeff i =
+      (1 / P.n : ℝ) * (wickMonomialPoly P.n c).coeff i +
+      ∑ m : Fin P.n, P.coeff m * (wickMonomialPoly (↑m) c).coeff i := by
+    intro c; unfold wickPolynomialPoly
+    simp [Polynomial.coeff_add, Polynomial.coeff_C_mul]
+  simp_rw [h_eq]
+  apply Continuous.add
+  · exact continuous_const.mul (wickMonomialPoly_coeff_continuous P.n i)
+  · apply continuous_finset_sum; intro m _
+    exact continuous_const.mul (wickMonomialPoly_coeff_continuous m i)
+
+/-! ## Uniform bounded below -/
+
+/-- The Wick polynomial is uniformly bounded below for c in a bounded interval.
+
+For large |x|, the leading term (1/n)x^n dominates regardless of c (the
+sub-leading coefficients are bounded on [0,C] by coefficient continuity).
+On the compact remainder [0,C] × [-R,R], joint continuity gives a finite
+minimum. -/
+theorem wickPolynomial_uniform_bounded_below
+    (P : InteractionPolynomial) (C : ℝ) (hC : 0 ≤ C) :
+    ∃ A : ℝ, 0 < A ∧ ∀ (c : ℝ), 0 ≤ c → c ≤ C → ∀ x : ℝ,
+    wickPolynomial P c x ≥ -A := by
+  set n := P.n with hn_def
+  have hn_ge : 4 ≤ n := P.hn_ge
+  have hn_even : Even n := P.hn_even
+  have hn_pos : 0 < n := by omega
+  set lc : ℝ := 1 / n
+  have hlc_pos : 0 < lc := div_pos one_pos (by exact_mod_cast hn_pos)
+  -- Step 1: Uniform bound on sub-leading coefficient sum
+  have hcoeff_sum_cont : Continuous (fun c : ℝ =>
+      (Finset.range n).sum (fun i => |(wickPolynomialPoly P c).coeff i|)) :=
+    continuous_finset_sum _ fun i _ =>
+      (wickPolynomialPoly_coeff_continuous P i).abs
+  obtain ⟨c₀, hc₀_mem, hc₀_max⟩ := isCompact_Icc.exists_isMaxOn
+    (Set.nonempty_Icc.mpr hC) hcoeff_sum_cont.continuousOn
+  set Mcoeff : ℝ :=
+    (Finset.range n).sum (fun i => |(wickPolynomialPoly P c₀).coeff i|)
+  have hM_bound : ∀ c ∈ Set.Icc 0 C,
+      (Finset.range n).sum (fun i => |(wickPolynomialPoly P c).coeff i|) ≤
+        Mcoeff :=
+    fun c hc => hc₀_max hc
+  have hM_nonneg : 0 ≤ Mcoeff := Finset.sum_nonneg fun i _ => abs_nonneg _
+  -- Step 2: For |x| ≥ R, wickPolynomial P c x ≥ 0 (uniformly in c ∈ [0, C])
+  set R : ℝ := max 1 (Mcoeff / lc + 1)
+  have hR_ge1 : 1 ≤ R := le_max_left 1 _
+  have hR_pos : 0 < R := lt_of_lt_of_le one_pos hR_ge1
+  have hMR : Mcoeff < lc * R := by
+    have : Mcoeff / lc < R :=
+      lt_of_lt_of_le (by linarith) (le_max_right 1 _)
+    rwa [div_lt_iff₀ hlc_pos, mul_comm] at this
+  have hclaim : ∀ c ∈ Set.Icc 0 C, ∀ x : ℝ, R ≤ |x| →
+      0 ≤ wickPolynomial P c x := by
+    intro c hc x hxR
+    have hx1 : 1 ≤ |x| := le_trans hR_ge1 hxR
+    rw [← wickPolynomialPoly_eval]
+    set p := wickPolynomialPoly P c
+    -- Decompose p.eval x = lc * x^n + Σ_{i<n} p.coeff i * x^i
+    have hp_deg : p.natDegree = n := wickPolynomialPoly_natDegree P c
+    have hp_lc : p.leadingCoeff = lc := wickPolynomialPoly_leadingCoeff P c
+    have hcn : p.coeff n = lc := by
+      rw [show n = p.natDegree from hp_deg.symm]; exact hp_lc
+    have hp_eq : p.eval x = lc * x ^ n +
+        (Finset.range n).sum (fun i => p.coeff i * x ^ i) := by
+      simp only [eval_eq_sum_range, Finset.sum_range_succ, hp_deg]
+      rw [hcn]; ring
+    have hxn_eq : x ^ n = |x| ^ n := (hn_even.pow_abs x).symm
+    -- |Σ rest| ≤ Mcoeff * |x|^(n-1)
+    have hrest_bound : |(Finset.range n).sum (fun i => p.coeff i * x ^ i)|
+        ≤ Mcoeff * |x| ^ (n - 1) := by
+      calc |(Finset.range n).sum fun i => p.coeff i * x ^ i|
+          ≤ (Finset.range n).sum fun i => |p.coeff i| * |x| ^ i := by
+            calc _ ≤ (Finset.range n).sum fun i => |p.coeff i * x ^ i| :=
+                  Finset.abs_sum_le_sum_abs _ _
+              _ = _ := by congr 1; ext i; rw [abs_mul, abs_pow]
+        _ ≤ (Finset.range n).sum fun i => |p.coeff i| * |x| ^ (n - 1) := by
+            apply Finset.sum_le_sum; intro i hi
+            exact mul_le_mul_of_nonneg_left
+              (pow_le_pow_right₀ hx1 (by
+                have := Finset.mem_range.mp hi; omega))
+              (abs_nonneg _)
+        _ = ((Finset.range n).sum fun i => |p.coeff i|) * |x| ^ (n - 1) :=
+            (Finset.sum_mul ..).symm
+        _ ≤ Mcoeff * |x| ^ (n - 1) :=
+            mul_le_mul_of_nonneg_right (hM_bound c hc)
+              (pow_nonneg (abs_nonneg x) _)
+    -- lc * |x|^n = (lc * |x|) * |x|^(n-1)
+    have hlead_split : lc * |x| ^ n = (lc * |x|) * |x| ^ (n - 1) := by
+      have : |x| ^ n = |x| ^ (n - 1) * |x| := by
+        conv_lhs => rw [show n = (n - 1) + 1 by omega, pow_succ]
+      rw [this]; ring
+    have hlcx_bound : Mcoeff ≤ lc * |x| :=
+      le_of_lt (lt_of_lt_of_le hMR
+        (mul_le_mul_of_nonneg_left hxR (le_of_lt hlc_pos)))
+    -- Combine
+    have hxn1 : 0 ≤ |x| ^ (n - 1) := pow_nonneg (abs_nonneg x) _
+    have hrest_lower : -(Mcoeff * |x| ^ (n - 1)) ≤
+        (Finset.range n).sum (fun i => p.coeff i * x ^ i) :=
+      neg_le_of_abs_le hrest_bound
+    rw [hp_eq, hxn_eq, hlead_split]
+    nlinarith [mul_le_mul_of_nonneg_right hlcx_bound hxn1]
+  -- Step 3: On [0,C] × [-R,R], use compactness for a finite minimum
+  set K := Set.Icc 0 C ×ˢ Set.Icc (-R) R
+  have hK_compact : IsCompact K := isCompact_Icc.prod isCompact_Icc
+  have hK_ne : K.Nonempty :=
+    ⟨⟨0, 0⟩, Set.mk_mem_prod (Set.left_mem_Icc.mpr hC)
+      ⟨by linarith, by linarith⟩⟩
+  set f : ℝ × ℝ → ℝ := fun p => wickPolynomial P p.1 p.2
+  have hf_cont : Continuous f := wickPolynomial_continuous₂ P
+  obtain ⟨p₀, hp₀_mem, hp₀_min⟩ := hK_compact.exists_isMinOn hK_ne
+    hf_cont.continuousOn
+  -- Take A = |f(p₀)| + 1
+  refine ⟨|f p₀| + 1, by positivity, fun c hc0 hcC x => ?_⟩
+  by_cases hx : R ≤ |x|
+  · -- Large |x|: wickPolynomial ≥ 0 ≥ -A
+    have := hclaim c ⟨hc0, hcC⟩ x hx
+    linarith [abs_nonneg (f p₀)]
+  · -- Bounded |x|: wickPolynomial ≥ f(p₀) ≥ -|f(p₀)| ≥ -A
+    push_neg at hx
+    have hx_bound : x ∈ Set.Icc (-R) R := by
+      rw [Set.mem_Icc]; constructor
+      · linarith [(abs_lt.mp hx).1]
+      · linarith [(abs_lt.mp hx).2]
+    have hmem : (c, x) ∈ K := Set.mk_mem_prod ⟨hc0, hcC⟩ hx_bound
+    have h_min : f p₀ ≤ f (c, x) := hp₀_min hmem
+    -- f (c, x) = wickPolynomial P c x
+    change wickPolynomial P p₀.1 p₀.2 ≤ wickPolynomial P c x at h_min
+    linarith [neg_abs_le (f p₀)]
+
 end Pphi2
 
 end
