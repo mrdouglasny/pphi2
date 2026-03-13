@@ -40,6 +40,7 @@ The proofs follow the same structure as the torus case:
 import Cylinder.GreenFunction
 import Cylinder.PositiveTime
 import Mathlib.Probability.Moments.ComplexMGF
+import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Analysis.Analytic.Constructions
 import Mathlib.Analysis.Analytic.Linear
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
@@ -144,14 +145,55 @@ def CylinderOS1_Regularity
 
 /-- OS1 for the Gaussian cylinder measure.
 
-The bound holds with `q(f) = G_L(f,f)` and `c = 1/2`, by the same
-triangle inequality + Gaussian MGF argument as the torus case. -/
-axiom cylinderGaussian_os1
+The bound holds with `q(f) = G_L(f,f)` and `c = 1/2`:
+
+  `‖Z_ℂ[f_re, f_im]‖ ≤ exp(½ · (G(f_re,f_re) + G(f_im,f_im)))`
+
+Proof: By the triangle inequality for complex integrals,
+`‖∫ exp(i(ω(f_re)+iω(f_im))) dμ‖ ≤ ∫ ‖exp(iω(f_re)-ω(f_im))‖ dμ = ∫ exp(-ω(f_im)) dμ`.
+The Gaussian MGF gives `∫ exp(-ω(f_im)) dμ = exp(½G(f_im,f_im))`. -/
+theorem cylinderGaussian_os1
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (CylinderTestFunction L)))
     [IsProbabilityMeasure μ]
     (hG : IsCylinderGaussian L μ mass hmass) :
-    CylinderOS1_Regularity L μ
+    CylinderOS1_Regularity L μ := by
+  refine ⟨fun f => cylinderGreen L mass hmass f f,
+    cylinderGreen_continuous_diag L mass hmass,
+    1 / 2, by norm_num, fun f_re f_im => ?_⟩
+  unfold cylinderGeneratingFunctionalℂ
+  -- Step 1: ‖exp(i(x+iy))‖ = exp(-y)
+  have norm_bound : ∀ ω : Configuration (CylinderTestFunction L),
+      ‖Complex.exp (Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)))‖ =
+      Real.exp (-(ω f_im)) := by
+    intro ω
+    rw [Complex.norm_exp]
+    congr 1
+    simp only [Complex.mul_re, Complex.add_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, Complex.mul_im, Complex.add_im]
+    ring
+  -- Step 2: Gaussian MGF gives ∫ exp(-ω(f_im)) dμ = exp(½G(f_im,f_im))
+  have mgf_eq : ∫ ω : Configuration (CylinderTestFunction L),
+      Real.exp (-(ω f_im)) ∂μ =
+      Real.exp ((1 / 2) * cylinderGreen L mass hmass f_im f_im) := by
+    have h := hG.isGaussian (-f_im)
+    simp only [map_neg, neg_sq] at h
+    rw [h, hG.covariance_eq f_im]
+  -- Step 3: Combine via triangle inequality + monotonicity of exp
+  calc ‖∫ ω, Complex.exp
+        (Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im))) ∂μ‖
+      ≤ ∫ ω, ‖Complex.exp
+        (Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)))‖ ∂μ :=
+        norm_integral_le_integral_norm _
+    _ = ∫ ω, Real.exp (-(ω f_im)) ∂μ := by
+        congr 1; ext ω; exact norm_bound ω
+    _ = Real.exp ((1 / 2) * cylinderGreen L mass hmass f_im f_im) :=
+        mgf_eq
+    _ ≤ Real.exp (1 / 2 * (cylinderGreen L mass hmass f_re f_re +
+          cylinderGreen L mass hmass f_im f_im)) := by
+        apply Real.exp_le_exp_of_le
+        have := cylinderGreen_nonneg L mass hmass f_re
+        linarith
 
 /-! ## OS2: Euclidean invariance -/
 
@@ -192,31 +234,112 @@ def CylinderOS2_TimeReflectionInvariance
     cylinderGeneratingFunctional L μ f =
     cylinderGeneratingFunctional L μ (cylinderTimeReflection L f)
 
+/-- **Gaussian characteristic function formula.**
+
+For a measure μ satisfying `IsCylinderGaussian`, the generating functional
+(characteristic functional) has the explicit form:
+
+  `Z(f) = E[exp(iω(f))] = exp(-½G(f,f))`
+
+Proved by analytic continuation of the complex MGF from the real axis to ℂ.
+The real MGF `E[exp(tω(f))] = exp(½t²G(f,f))` matches that of
+`gaussianReal 0 G(f,f)`. By `eqOn_complexMGF_of_mgf`, the complex MGFs agree
+on the strip `{z | z.re ∈ interior(integrableExpSet)}`, which equals all of ℂ
+since the exponential moments exist for all real t. Evaluating at z = i and
+using `complexMGF_id_gaussianReal` yields the result. -/
+theorem cylinderGaussian_charFun
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure (Configuration (CylinderTestFunction L)))
+    [IsProbabilityMeasure μ]
+    (hG : IsCylinderGaussian L μ mass hmass)
+    (f : CylinderTestFunction L) :
+    cylinderGeneratingFunctional L μ f =
+    Complex.exp (-(1 / 2) * ↑(cylinderGreen L mass hmass f f)) := by
+  -- Setup: NNReal variance for gaussianReal
+  set G := cylinderGreen L mass hmass f f with hG_def
+  set v : NNReal := ⟨G, cylinderGreen_nonneg L mass hmass f⟩
+  have hv_val : (v : ℝ) = G := rfl
+  -- Step 1: Compute real MGF of ω(f) from isGaussian
+  have h_mgf : ∀ t : ℝ, mgf (fun ω : Configuration (CylinderTestFunction L) => ω f) μ t =
+      Real.exp (G * t ^ 2 / 2) := by
+    intro t
+    change ∫ ω, Real.exp (t * ω f) ∂μ = _
+    have h := hG.isGaussian (t • f)
+    simp_rw [show ∀ ω : Configuration (CylinderTestFunction L),
+      ω (t • f) = t * ω f from fun ω => by rw [map_smul, smul_eq_mul]] at h
+    simp_rw [mul_pow] at h
+    rw [integral_const_mul, hG.covariance_eq] at h
+    rw [h]; congr 1; ring
+  -- Step 2: MGF equals that of gaussianReal 0 v
+  have h_mgf_eq : mgf (fun ω : Configuration (CylinderTestFunction L) => ω f) μ =
+      mgf id (gaussianReal (0 : ℝ) v) := by
+    ext t; rw [h_mgf, congr_fun (@mgf_id_gaussianReal (0 : ℝ) v) t]
+    simp only [zero_mul, zero_add, hv_val]
+  -- Step 3: integrableExpSet is all of ℝ (exponential moments exist for all t)
+  have h_ies : integrableExpSet (fun ω : Configuration (CylinderTestFunction L) => ω f) μ =
+      Set.univ := by
+    ext t; simp only [integrableExpSet, Set.mem_setOf_eq, Set.mem_univ, iff_true]
+    exact mgf_pos_iff.mp (by rw [h_mgf]; exact Real.exp_pos _)
+  -- Step 4: Analytic continuation — complexMGF agrees on all of ℂ
+  have h_eqOn := eqOn_complexMGF_of_mgf h_mgf_eq
+  rw [h_ies, interior_univ] at h_eqOn
+  -- Step 5: Evaluate at z = i
+  have h_I := h_eqOn (show Complex.I ∈ {z : ℂ | z.re ∈ (Set.univ : Set ℝ)} by simp)
+  -- Step 6: LHS = cylinderGeneratingFunctional (definitional equality)
+  change cylinderGeneratingFunctional L μ f = Complex.exp (-(1 / 2) * ↑G)
+  change complexMGF (fun ω : Configuration (CylinderTestFunction L) => ω f) μ Complex.I =
+    Complex.exp (-(1 / 2) * ↑G)
+  -- Step 7: Use analytic continuation + gaussianReal formula
+  rw [h_I, complexMGF_id_gaussianReal]
+  congr 1
+  simp only [Complex.ofReal_zero, mul_zero, zero_add, Complex.I_sq, hv_val]; ring
+
 /-- OS2 (spatial translation) for the Gaussian cylinder measure.
 
-For Gaussian μ: `Z(T_v f) = exp(-½G(T_v f, T_v f)) = exp(-½G(f,f)) = Z(f)`. -/
-axiom cylinderGaussian_os2_spatial
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (CylinderTestFunction L)))
-    [IsProbabilityMeasure μ]
-    (hG : IsCylinderGaussian L μ mass hmass) :
-    CylinderOS2_SpatialTranslationInvariance L μ
+  `Z(T_v f) = exp(-½G(T_v f, T_v f)) = exp(-½G(f,f)) = Z(f)`
 
-/-- OS2 (time translation) for the Gaussian cylinder measure. -/
-axiom cylinderGaussian_os2_time
+Proved from the Gaussian characteristic function formula and
+spatial translation invariance of the Green's function. -/
+theorem cylinderGaussian_os2_spatial
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (CylinderTestFunction L)))
     [IsProbabilityMeasure μ]
     (hG : IsCylinderGaussian L μ mass hmass) :
-    CylinderOS2_TimeTranslationInvariance L μ
+    CylinderOS2_SpatialTranslationInvariance L μ := by
+  intro v f
+  simp only [cylinderGaussian_charFun L mass hmass μ hG]
+  congr 1
+  rw [cylinderGreen_spatialTranslation_invariant L mass hmass v f f]
 
-/-- OS2 (time reflection) for the Gaussian cylinder measure. -/
-axiom cylinderGaussian_os2_reflection
+/-- OS2 (time translation) for the Gaussian cylinder measure.
+
+Proved from the Gaussian characteristic function formula and
+time translation invariance of the Green's function. -/
+theorem cylinderGaussian_os2_time
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (CylinderTestFunction L)))
     [IsProbabilityMeasure μ]
     (hG : IsCylinderGaussian L μ mass hmass) :
-    CylinderOS2_TimeReflectionInvariance L μ
+    CylinderOS2_TimeTranslationInvariance L μ := by
+  intro τ f
+  simp only [cylinderGaussian_charFun L mass hmass μ hG]
+  congr 1
+  rw [cylinderGreen_timeTranslation_invariant L mass hmass τ f f]
+
+/-- OS2 (time reflection) for the Gaussian cylinder measure.
+
+Proved from the Gaussian characteristic function formula and
+time reflection invariance of the Green's function. -/
+theorem cylinderGaussian_os2_reflection
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure (Configuration (CylinderTestFunction L)))
+    [IsProbabilityMeasure μ]
+    (hG : IsCylinderGaussian L μ mass hmass) :
+    CylinderOS2_TimeReflectionInvariance L μ := by
+  intro f
+  simp only [cylinderGaussian_charFun L mass hmass μ hG]
+  congr 1
+  rw [cylinderGreen_timeReflection_invariant L mass hmass f f]
 
 /-! ## OS3: Reflection positivity -/
 
@@ -358,23 +481,22 @@ structure SatisfiesCylinderOS
 
 /-- **The Gaussian measure on the cylinder satisfies OS0–OS3.**
 
-OS0, OS1, OS2 follow from the Gaussian structure (characteristic
-functional = exp(-½G)). OS3 is inherited from lattice RP via weak limits.
-
-Note: OS3 requires the lattice RP axiom `cylinderLattice_rp` and
-weak convergence of the lattice measures. For a fully rigorous proof,
-one would also need:
-- Tightness of the lattice measures (Mitoma-Chebyshev)
-- Prokhorov extraction on the cylinder configuration space
-- Identification of the limit as Gaussian with covariance G_L
-
-These mirror the torus proofs in `TorusGaussianLimit.lean`. -/
-axiom cylinderGaussian_satisfies_OS
+OS0: from `cylinderGeneratingFunctionalℂ_analyticOnNhd` (axiom)
+OS1: from `cylinderGaussian_os1` (proved via triangle inequality + MGF)
+OS2: from `cylinderGaussian_os2_*` (proved via charFun + Green's invariance)
+OS3: from `cylinderLattice_rp` (axiom for lattice RP) -/
+theorem cylinderGaussian_satisfies_OS
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (CylinderTestFunction L)))
     [IsProbabilityMeasure μ]
     (hG : IsCylinderGaussian L μ mass hmass) :
-    SatisfiesCylinderOS L μ
+    SatisfiesCylinderOS L μ where
+  os0 n J := (cylinderGeneratingFunctionalℂ_analyticOnNhd L mass hmass μ hG n J).analyticOn
+  os1 := cylinderGaussian_os1 L mass hmass μ hG
+  os2_spatial := cylinderGaussian_os2_spatial L mass hmass μ hG
+  os2_time := cylinderGaussian_os2_time L mass hmass μ hG
+  os2_reflection := cylinderGaussian_os2_reflection L mass hmass μ hG
+  os3 := cylinderLattice_rp L 1 mass hmass μ
 
 end Pphi2
 
