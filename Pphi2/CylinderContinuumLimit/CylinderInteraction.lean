@@ -238,4 +238,46 @@ theorem cylinderSchwinger2_eq_free_expectation
     (cylinderInteractionFunctional_measurable L P Λ T mass hT hmass)
     (cylinderInteractionFunctional_bounded_below L P Λ T mass hT hmass) f g
 
+/-- The two-point Schwinger function is nonneg: `S₂(f, f) ≥ 0` (from general framework). -/
+theorem cylinderSchwinger2_nonneg
+    (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
+    (hT : 0 < T) (hmass : 0 < mass)
+    (f : CylinderTestFunction L) :
+    0 ≤ cylinderSchwinger2 L P Λ T mass hT hmass f f :=
+  schwinger2_nonneg _ _ f
+
+/-- **n-point cylinder Schwinger function** (from general framework). -/
+abbrev cylinderSchwingerN
+    (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
+    (hT : 0 < T) (hmass : 0 < mass)
+    {n : ℕ} (f : Fin n → CylinderTestFunction L) : ℝ :=
+  schwingerN (cylinderV L P Λ T mass hT hmass)
+    (cylinderFreeMeasure L mass hmass) f
+
+/-- The 0-point cylinder Schwinger function equals 1 (from general framework). -/
+theorem cylinderSchwingerN_zero
+    (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
+    (hT : 0 < T) (hmass : 0 < mass) :
+    cylinderSchwingerN L P Λ T mass hT hmass Fin.elim0 = 1 :=
+  schwingerN_zero _ _
+    (cylinderInteractionFunctional_measurable L P Λ T mass hT hmass)
+    (cylinderInteractionFunctional_bounded_below L P Λ T mass hT hmass)
+
+/-- The n-point Schwinger function is permutation-invariant (from general framework). -/
+theorem cylinderSchwingerN_perm
+    (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
+    (hT : 0 < T) (hmass : 0 < mass)
+    {n : ℕ} (f : Fin n → CylinderTestFunction L) (σ : Equiv.Perm (Fin n)) :
+    cylinderSchwingerN L P Λ T mass hT hmass (f ∘ σ) =
+    cylinderSchwingerN L P Λ T mass hT hmass f :=
+  schwingerN_perm _ _ f σ
+
+/-- The interacting measure is absolutely continuous w.r.t. the free measure. -/
+theorem cylinderInteractingMeasure_absolutelyContinuous
+    (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
+    (hT : 0 < T) (hmass : 0 < mass) :
+    cylinderInteractingMeasure L P Λ T mass hT hmass ≪
+    cylinderFreeMeasure L mass hmass :=
+  interactingMeasure_absolutelyContinuous _ _
+
 end Pphi2
