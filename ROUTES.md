@@ -88,10 +88,10 @@ Gaussian limit identified with torus Green's function.
 - Discrete spatial spectrum (periodic boundary)
 - No rotation invariance needed
 
-### Status: 7 axioms, 1 sorry
+### Status: 7 axioms, 0 sorries
 Main theorem: `torusInteractingLimit_exists`
 Note: `torus_interacting_tightness` converted from axiom to theorem via
-`nelson_exponential_estimate` + Mitoma-Chebyshev. Sorry in density transfer step.
+`nelson_exponential_estimate` + Mitoma-Chebyshev + density transfer + hypercontractivity.
 
 ---
 
