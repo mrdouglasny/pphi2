@@ -45,6 +45,10 @@ import Pphi2.TorusContinuumLimit.TorusOSAxioms
 
 -- Phase 4c: Cylinder continuum limit (Gaussian + interacting)
 import Pphi2.CylinderContinuumLimit.CylinderInteraction
+import Pphi2.CylinderContinuumLimit.CylinderHypercontractivity
+import Pphi2.CylinderContinuumLimit.CylinderUVRemoval
+import Pphi2.CylinderContinuumLimit.CylinderIRRemoval
+import Pphi2.CylinderContinuumLimit.CylinderInteractingOS
 import Pphi2.CylinderContinuumLimit.CylinderOSAxioms
 
 -- Phase 5: Euclidean invariance (OS2)
