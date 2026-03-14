@@ -93,29 +93,151 @@ From Hermite orthogonality of Wick monomials, the interaction has
 nonpositive mean: ∫ V dμ_free ≤ 0. Jensen's inequality then gives
 Z = ∫ exp(-V) dμ_free ≥ exp(-∫V dμ_free) ≥ 1. -/
 
-/-- The interaction functional is integrable under the free measure.
+/-- **L² bound on the interaction**: V_{Λ,T} ∈ L²(μ_free).
 
-This follows from V being measurable and bounded below (so |V| ≤ V + 2B),
-combined with the Boltzmann weight being integrable (which bounds ∫ exp(-V)).
-More concretely, V bounded below means V ≥ -B, so V + B ≥ 0.
-Since exp(-V) is integrable and exp(-V) ≤ exp(B), we get integrability of V
-from dominated convergence applied to the Wick polynomial structure. -/
-axiom cylinderV_integrable
+The interaction `V = ∫₀ᴸ ∫₋ᵀᵀ :P(φ_Λ(θ,t)):_c dt dθ` is a polynomial
+functional of the UV-regularized Gaussian field (with finitely many modes),
+integrated over a compact spacetime domain. By Nelson's hypercontractive
+estimate, each Wick monomial of the field is in L^p for all p < ∞, and the
+spacetime integration over [0,L] × [-T,T] preserves L^p membership.
+
+This is the cylinder analogue of the lattice fact that V = a^d Σ_x :P(φ(x)):
+is in L^p (which follows immediately from `integrable_finset_sum` on the
+lattice). On the cylinder the sum becomes a double interval integral, so the
+proof additionally requires Fubini interchange and L^p stability under
+Bochner integration — infrastructure not yet formalized. -/
+axiom cylinderV_memLp_two
     (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
     (hT : 0 < T) (hmass : 0 < mass) :
-    Integrable (cylinderV L P Λ T mass hT hmass) (cylinderFreeMeasure L mass hmass)
+    MemLp (cylinderV L P Λ T mass hT hmass) 2 (cylinderFreeMeasure L mass hmass)
+
+/-- The interaction functional is integrable under the free measure.
+
+Follows from the L² bound `cylinderV_memLp_two` and the fact that the free
+measure is a probability measure (hence finite), so L² ⊂ L¹. -/
+theorem cylinderV_integrable
+    (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
+    (hT : 0 < T) (hmass : 0 < mass) :
+    Integrable (cylinderV L P Λ T mass hT hmass) (cylinderFreeMeasure L mass hmass) :=
+  (cylinderV_memLp_two L P Λ T mass hT hmass).integrable one_le_two
+
+/-- **Fubini interchange** for the cylinder interaction integral.
+
+Swaps the Bochner integral `∫_ω` (against the free Gaussian measure on
+field configurations) with the double interval integral
+`∫₀ᴸ ∫₋ᵀᵀ` (over spacetime on the cylinder S¹_L × ℝ):
+
+  `∫_ω (∫₀ᴸ ∫₋ᵀᵀ f(θ,t,ω) dt dθ) dμ(ω) = ∫₀ᴸ ∫₋ᵀᵀ (∫_ω f(θ,t,ω) dμ(ω)) dt dθ`
+
+This is Tonelli/Fubini applied to the product of the probability measure μ_free
+and Lebesgue measure on [0,L] × [-T,T]. The hypotheses (joint measurability,
+integrability of the iterated integral) follow from the Wick polynomial
+structure and the Gaussian moment bounds but are technically demanding in
+Lean's measure theory library. -/
+axiom cylinderV_fubini
+    (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
+    (hT : 0 < T) (hmass : 0 < mass) :
+    ∫ ω, cylinderV L P Λ T mass hT hmass ω ∂(cylinderFreeMeasure L mass hmass) =
+    ∫ θ in (0 : ℝ)..L, ∫ t in (-T)..T,
+      ∫ ω, wickPolynomial P (cylinderWickConstant L mass Λ)
+        (cylinderRegularizedFieldEval L Λ mass hmass θ t ω)
+      ∂(cylinderFreeMeasure L mass hmass)
+
+/-- Helper: integrability and integral computation for the Wick polynomial
+of the regularized field at a single spacetime point (θ, t) under the
+cylinder free measure.
+
+`∫ :P(φ_Λ(θ,t)):_c dμ_free = P.coeff₀` because all Wick monomials of
+order ≥ 1 have zero Gaussian mean, and `:x⁰:_c = 1`.
+
+This is the cylinder analogue of `wickPolynomial_integral_eq_coeff_zero`
+from the lattice case. -/
+private lemma cylinderWickPolynomial_integral_eq_coeff_zero
+    (P : InteractionPolynomial) (Λ : ℕ) (mass : ℝ) (hmass : 0 < mass)
+    (θ t : ℝ) :
+    ∫ ω, wickPolynomial P (cylinderWickConstant L mass Λ)
+        (cylinderRegularizedFieldEval L Λ mass hmass θ t ω)
+      ∂(cylinderFreeMeasure L mass hmass) =
+    P.coeff ⟨0, by have := P.hn_ge; omega⟩ := by
+  set μ := cylinderFreeMeasure L mass hmass
+  set c := cylinderWickConstant L mass Λ
+  set φ := cylinderRegularizedFieldEval L Λ mass hmass θ t
+  haveI : IsProbabilityMeasure μ := GaussianField.measure_isProbability _
+  -- Integrability of each term
+  have h_lead_int : Integrable (fun ω =>
+      (1 / P.n : ℝ) * wickMonomial P.n c (φ ω)) μ :=
+    (cylinderFieldEval_wickMonomial_integral L P.n (by have := P.hn_ge; omega)
+      Λ mass hmass θ t).1.const_mul _
+  have h_term_int : ∀ m : Fin P.n, Integrable (fun ω =>
+      P.coeff m * wickMonomial (m : ℕ) c (φ ω)) μ := by
+    intro m
+    by_cases hm : (m : ℕ) = 0
+    · have : (fun ω => P.coeff m * wickMonomial (m : ℕ) c (φ ω)) = fun _ => P.coeff m := by
+        ext ω; simp [hm]
+      rw [this]; exact integrable_const _
+    · exact ((cylinderFieldEval_wickMonomial_integral L m (by omega)
+        Λ mass hmass θ t).1).const_mul _
+  have h_sum_int : Integrable (fun ω =>
+      ∑ m : Fin P.n, P.coeff m * wickMonomial (m : ℕ) c (φ ω)) μ :=
+    integrable_finset_sum _ fun m _ => h_term_int m
+  -- Integral = P.coeff 0
+  change ∫ ω, ((1 / P.n : ℝ) * wickMonomial P.n c (φ ω) +
+    ∑ m : Fin P.n, P.coeff m * wickMonomial (m : ℕ) c (φ ω)) ∂μ = _
+  rw [integral_add h_lead_int h_sum_int,
+      integral_const_mul,
+      (cylinderFieldEval_wickMonomial_integral L P.n (by have := P.hn_ge; omega)
+        Λ mass hmass θ t).2,
+      mul_zero, zero_add,
+      integral_finset_sum _ (fun m _ => h_term_int m)]
+  simp_rw [integral_const_mul]
+  -- Each integral: ∫ wM_m = 1 if m=0, 0 if m≥1
+  have h_wm_eval : ∀ m : Fin P.n,
+      ∫ ω, wickMonomial (↑m) c (φ ω) ∂μ = if (m : ℕ) = 0 then 1 else 0 := by
+    intro m
+    by_cases hm : (m : ℕ) = 0
+    · simp_rw [if_pos hm, hm, wickMonomial_zero]
+      simp [integral_const]
+    · rw [if_neg hm, (cylinderFieldEval_wickMonomial_integral L m (by omega)
+        Λ mass hmass θ t).2]
+  simp_rw [h_wm_eval, mul_ite, mul_one, mul_zero]
+  -- ∑ (if m.val = 0 then coeff m else 0) = coeff ⟨0, _⟩
+  rw [Finset.sum_ite, Finset.sum_const_zero, add_zero]
+  -- The filter picks out exactly ⟨0, _⟩
+  have : Finset.univ.filter (fun m : Fin P.n => (m : ℕ) = 0) =
+      {⟨0, by have := P.hn_ge; omega⟩} := by
+    ext m; simp [Fin.ext_iff]
+  rw [this, Finset.sum_singleton]
 
 /-- The mean of the interaction under the free measure is nonpositive:
 `∫ V_{Λ,T} dμ_free ≤ 0`.
 
-By Fubini, `∫ V dμ_free = ∫₀ᴸ ∫₋ᵀᵀ ∫ :P(φ_Λ(θ,t)): dμ_free dt dθ`.
-By Hermite orthogonality (`cylinderFieldEval_wickMonomial_integral`),
-each Wick monomial of degree ≥ 1 integrates to zero, leaving only the
-constant term `P.coeff[0]` which is ≤ 0 for an `InteractionPolynomial`. -/
-axiom cylinderV_mean_nonpos
+By Fubini (`cylinderV_fubini`), we swap the measure integral with the
+spacetime integrals. Then by Hermite orthogonality
+(`cylinderFieldEval_wickMonomial_integral`), each Wick monomial of
+degree ≥ 1 integrates to zero, leaving only the constant term
+`P.coeff[0]` which is ≤ 0 for an `InteractionPolynomial`.
+
+The result follows because the double interval integral of a nonpositive
+constant over [0,L] × [-T,T] is nonpositive. -/
+theorem cylinderV_mean_nonpos
     (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
     (hT : 0 < T) (hmass : 0 < mass) :
-    ∫ ω, cylinderV L P Λ T mass hT hmass ω ∂(cylinderFreeMeasure L mass hmass) ≤ 0
+    ∫ ω, cylinderV L P Λ T mass hT hmass ω ∂(cylinderFreeMeasure L mass hmass) ≤ 0 := by
+  -- Step 1: Apply Fubini to swap ∫_ω with ∫_θ ∫_t
+  rw [cylinderV_fubini L P Λ T mass hT hmass]
+  -- Step 2: Evaluate the inner ω-integral at each (θ, t)
+  simp_rw [cylinderWickPolynomial_integral_eq_coeff_zero L P Λ mass hmass]
+  -- Goal: ∫ θ in 0..L, ∫ t in (-T)..T, P.coeff ⟨0, _⟩ ≤ 0
+  -- The integral of a constant c over [a,b] is c * (b - a)
+  simp only [intervalIntegral.integral_const, smul_eq_mul]
+  -- Goal: (T - -T) * P.coeff ⟨0, _⟩ * (L - 0) ≤ 0
+  -- which is (2T) * P.coeff₀ * L ≤ 0
+  have h2T : 0 < T - (-T) := by linarith
+  have hL_pos : 0 < L - 0 := by linarith [hL.out]
+  -- Goal: (L - 0) * ((T - -T) * P.coeff ⟨0, _⟩) ≤ 0
+  apply mul_nonpos_of_nonneg_of_nonpos
+  · exact le_of_lt hL_pos
+  · exact mul_nonpos_of_nonneg_of_nonpos (le_of_lt h2T) P.coeff_zero_nonpos
 
 /-- The partition function satisfies Z_{Λ,T} ≥ 1.
 

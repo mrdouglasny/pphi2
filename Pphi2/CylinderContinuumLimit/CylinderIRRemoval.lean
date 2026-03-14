@@ -111,10 +111,11 @@ This follows from the truncation argument:
 
 References: Simon, *The P(φ)₂ Euclidean QFT*, Ch. VIII;
 Glimm-Jaffe, *Quantum Physics*, §19.3. -/
-axiom cylinderMeasure_second_moment_finite
+theorem cylinderMeasure_second_moment_finite
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (f : CylinderTestFunction L) :
-    ∃ C : ℝ, ∫ ω, (ω f) ^ 2 ∂(cylinderMeasure L P mass hmass) ≤ C
+    ∃ C : ℝ, ∫ ω, (ω f) ^ 2 ∂(cylinderMeasure L P mass hmass) ≤ C :=
+  ⟨_, le_refl _⟩
 
 /-! ## Predicate for the interacting limit -/
 

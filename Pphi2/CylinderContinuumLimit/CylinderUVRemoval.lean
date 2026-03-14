@@ -47,6 +47,79 @@ namespace Pphi2
 
 variable (L : ℝ) [hL : Fact (0 < L)]
 
+/-- **Integrability of (ω f)^2 under the cutoff interacting measure.**
+
+Since the interacting measure μ_{Λ,T} = (1/Z)·exp(-V)·dμ_free has density bounded
+by exp(B)/Z ≤ exp(B) w.r.t. the free Gaussian measure (where V ≥ -B), and (ω f)^2 is
+integrable under μ_free (by Gaussian all-moments / pairing_memLp at p = 2), the function
+(ω f)^2 is also integrable under μ_{Λ,T}.
+
+This is used in the truncation argument for `cylinderUVLimit_second_moment_finite`. -/
+theorem cylinderInteracting_sq_integrable
+    (P : InteractionPolynomial) (Λ : ℕ) (T mass : ℝ)
+    (hT : 0 < T) (hmass : 0 < mass)
+    (f : CylinderTestFunction L) :
+    Integrable (fun ω : Configuration (CylinderTestFunction L) => (ω f) ^ 2)
+      (cylinderInteractingMeasure L P Λ T mass hT hmass) := by
+  -- Setup: abbreviations for the key objects
+  set V := cylinderV L P Λ T mass hT hmass with hV_def
+  set μ := cylinderFreeMeasure L mass hmass with hμ_def
+  set bw := interactingBoltzmannWeight V with hbw_def
+  set Z := interactingPartitionFunction V μ with hZ_def
+  -- Key properties of V
+  have hV_meas : Measurable V :=
+    cylinderInteractionFunctional_measurable L P Λ T mass hT hmass
+  have hV_below : ∃ B : ℝ, ∀ ω, V ω ≥ -B :=
+    cylinderInteractionFunctional_bounded_below L P Λ T mass hT hmass
+  -- Z > 0
+  have hZ_pos : 0 < Z := interactingPartitionFunction_pos V μ hV_meas hV_below
+  -- Step 1: Reduce from interacting measure = (Z⁻¹) • μ.withDensity(bw) to withDensity
+  -- The interacting measure is (ENNReal.ofReal Z)⁻¹ • μ.withDensity(ENNReal.ofReal ∘ bw)
+  suffices h : Integrable (fun ω : Configuration (CylinderTestFunction L) => (ω f) ^ 2)
+      (μ.withDensity (fun ω => ENNReal.ofReal (bw ω))) by
+    change Integrable _ (interactingMeasure V μ)
+    simp only [interactingMeasure]
+    exact h.smul_measure (ENNReal.inv_ne_top.mpr ((ENNReal.ofReal_pos.mpr hZ_pos).ne'))
+  -- Step 2: Reduce withDensity to multiplicative weight under free Gaussian
+  -- Using integrable_withDensity_iff
+  have hbw_meas : Measurable (fun ω : Configuration (CylinderTestFunction L) =>
+      ENNReal.ofReal (bw ω)) :=
+    interactingBoltzmannWeight_ennreal_measurable V hV_meas
+  apply (integrable_withDensity_iff hbw_meas
+    (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mpr
+  -- Simplify toReal ∘ ofReal since bw > 0
+  have hbw_simp : ∀ ω : Configuration (CylinderTestFunction L),
+      (ENNReal.ofReal (bw ω)).toReal = bw ω :=
+    fun ω => ENNReal.toReal_ofReal (le_of_lt (interactingBoltzmannWeight_pos V ω))
+  simp_rw [hbw_simp]
+  -- Goal: Integrable (fun ω => (ω f)^2 * bw ω) μ
+  -- Step 3: Get Gaussian integrability of (ω f)²
+  -- From pairing_memLp at p = 2: ω f ∈ L²(μ_free), so (ω f)² is integrable
+  have h_sq_int : Integrable (fun ω : Configuration (CylinderTestFunction L) =>
+      (ω f) ^ 2) μ := by
+    have h2 : MemLp (fun ω : Configuration (CylinderTestFunction L) => ω f)
+        2 μ := by
+      exact_mod_cast pairing_memLp (cylinderMassOperator L mass hmass) f 2
+    exact h2.integrable_sq
+  -- Step 4: Dominate (ω f)² * bw ω by (ω f)² * exp(B) pointwise
+  -- Since V ≥ -B, we have bw ω = exp(-V ω) ≤ exp(B)
+  obtain ⟨B, hB⟩ := hV_below
+  apply (h_sq_int.mul_const (Real.exp B)).mono
+  · -- AEStronglyMeasurable of (ω f)² * bw ω
+    exact ((configuration_eval_measurable f).pow_const 2).aestronglyMeasurable.mul
+      hV_meas.neg.exp.aestronglyMeasurable
+  · -- Pointwise norm bound: ‖(ω f)² * bw ω‖ ≤ ‖(ω f)² * exp(B)‖
+    exact Filter.Eventually.of_forall fun ω => by
+      simp only [Real.norm_eq_abs]
+      have h1 : 0 ≤ (ω f) ^ 2 := sq_nonneg _
+      have h2 : 0 < bw ω := interactingBoltzmannWeight_pos V ω
+      have h3 : bw ω ≤ Real.exp B := by
+        change Real.exp (-(V ω)) ≤ Real.exp B
+        exact Real.exp_le_exp_of_le (by linarith [hB ω])
+      rw [abs_of_nonneg (mul_nonneg h1 (le_of_lt h2)),
+          abs_of_nonneg (mul_nonneg h1 (le_of_lt (Real.exp_pos B)))]
+      exact mul_le_mul_of_nonneg_left h3 h1
+
 /-! ## UV limit measure
 
 The UV limit measure μ_T is the weak limit of the cutoff measures μ_{Λ,T}
@@ -130,19 +203,99 @@ The proof uses weak convergence + truncation + monotone convergence:
 4. Therefore ∫ g_M dμ_T ≤ C for all M
 5. By monotone convergence (g_M ↑ (ω f)²), we get ∫ (ω f)² dμ_T ≤ C
 
-This argument is mathematically straightforward but requires significant Lean
-infrastructure (min continuity, monotone convergence for Bochner integrals,
-connecting Filter.Tendsto bounds to pointwise bounds). We take it as an axiom.
-
 **Key inputs:** `cylinderInteracting_second_moment_bound`, `cylinderUVLimit_weakLimit`
 **References:** Simon, *P(φ)₂*, Ch. VIII; see also Billingsley, *Convergence of
 Probability Measures*, Theorem 5.4 (Fatou for weak convergence) -/
-axiom cylinderUVLimit_second_moment_finite
+theorem cylinderUVLimit_second_moment_finite
     (P : InteractionPolynomial) (T mass : ℝ)
     (hT : 0 < T) (hmass : 0 < mass)
     (f : CylinderTestFunction L) :
     ∃ C : ℝ, ∫ ω, (ω f) ^ 2
-      ∂(cylinderUVLimitMeasure L P T mass hT hmass) ≤ C
+      ∂(cylinderUVLimitMeasure L P T mass hT hmass) ≤ C := by
+  -- Abbreviations
+  set μ_T := cylinderUVLimitMeasure L P T mass hT hmass with hμ_T_def
+  set μ_Λ := fun Λ => cylinderInteractingMeasure L P Λ T mass hT hmass with hμ_Λ_def
+  -- μ_T is a probability measure
+  have hprob : IsProbabilityMeasure μ_T :=
+    cylinderUVLimitMeasure_isProbability L P T mass hT hmass
+  -- Step 1: Get uniform bound C₀ on second moments under cutoff measures
+  obtain ⟨C₀, hC₀⟩ := cylinderInteracting_second_moment_bound L P T mass hT hmass f
+  -- Use max C₀ 0 to ensure nonneg bound
+  set C := max C₀ 0 with hC_def
+  have hC_nn : (0 : ℝ) ≤ C := le_max_right _ _
+  refine ⟨C, ?_⟩
+  -- Step 2: Continuity of evaluation and squaring
+  have heval_cont : Continuous (fun ω : Configuration (CylinderTestFunction L) => ω f) :=
+    WeakDual.eval_continuous f
+  have hsq_cont : Continuous (fun ω : Configuration (CylinderTestFunction L) => (ω f) ^ 2) :=
+    heval_cont.pow 2
+  -- Step 3: For each M : ℕ, g_M(ω) = min((ω f)², ↑M) is bounded continuous.
+  -- Its integral under the UV limit measure is ≤ C.
+  have htrunc_bound : ∀ M : ℕ,
+      ∫ ω, min ((ω f) ^ 2) (↑M) ∂μ_T ≤ C := by
+    intro M
+    -- g_M is continuous and bounded
+    have hgM_cont : Continuous (fun ω : Configuration (CylinderTestFunction L) =>
+        min ((ω f) ^ 2) (↑M : ℝ)) := hsq_cont.min continuous_const
+    have hgM_nn : ∀ ω : Configuration (CylinderTestFunction L),
+        0 ≤ min ((ω f) ^ 2) (↑M : ℝ) :=
+      fun ω => le_min (sq_nonneg _) (Nat.cast_nonneg M)
+    have hgM_bound : ∃ B : ℝ, ∀ ω : Configuration (CylinderTestFunction L),
+        |min ((ω f) ^ 2) (↑M : ℝ)| ≤ B :=
+      ⟨M, fun ω => by rw [abs_of_nonneg (hgM_nn ω)]; exact min_le_right _ _⟩
+    -- By weak convergence: ∫ g_M dμ_{Λ,T} → ∫ g_M dμ_T as Λ → ∞
+    have hconv := cylinderUVLimit_weakLimit L P T mass hT hmass
+      (fun ω => min ((ω f) ^ 2) (↑M : ℝ)) hgM_cont hgM_bound
+    -- Each ∫ g_M dμ_{Λ,T} ≤ C: since 0 ≤ g_M ≤ (ω f)² pointwise, and
+    -- (ω f)² is integrable under μ_{Λ,T} (by cylinderInteracting_sq_integrable),
+    -- integral_mono_of_nonneg gives ∫ g_M ≤ ∫ (ω f)² ≤ C₀ ≤ C.
+    have hterms_le : ∀ Λ : ℕ,
+        ∫ ω, min ((ω f) ^ 2) (↑M : ℝ) ∂(μ_Λ Λ) ≤ C := fun Λ =>
+      calc ∫ ω, min ((ω f) ^ 2) (↑M : ℝ) ∂(μ_Λ Λ)
+          ≤ ∫ ω, (ω f) ^ 2 ∂(μ_Λ Λ) := by
+            exact integral_mono_of_nonneg
+              (Filter.Eventually.of_forall hgM_nn)
+              (cylinderInteracting_sq_integrable L P Λ T mass hT hmass f)
+              (Filter.Eventually.of_forall fun ω => min_le_left _ _)
+        _ ≤ C₀ := hC₀ Λ
+        _ ≤ C := le_max_left _ _
+    -- By le_of_tendsto': the limit of a convergent sequence ≤ C is itself ≤ C
+    exact le_of_tendsto' hconv hterms_le
+  -- Step 4: Conclude from truncation bounds.
+  -- If (ω f)² is not integrable, ∫ (ω f)² dμ_T = 0 by Lean convention, and 0 ≤ C.
+  -- If integrable, use monotone convergence: min((ω f)², M) ↑ (ω f)² gives
+  --   ∫ (ω f)² dμ_T = lim_M ∫ min((ω f)², M) dμ_T ≤ C.
+  by_cases hint : Integrable (fun ω => (ω f) ^ 2) μ_T
+  · -- Integrable case: monotone convergence for truncation
+    have hmono_conv : Filter.Tendsto
+        (fun M : ℕ => ∫ ω, min ((ω f) ^ 2) (↑M : ℝ) ∂μ_T)
+        Filter.atTop (nhds (∫ ω, (ω f) ^ 2 ∂μ_T)) := by
+      apply integral_tendsto_of_tendsto_of_monotone
+      · -- Each g_M is integrable (bounded on probability space)
+        intro n
+        -- Measurability: (ω f)^2 is measurable (cylindrical σ-algebra), and min with
+        -- a constant preserves measurability.
+        have hgn_meas : Measurable (fun ω : Configuration (CylinderTestFunction L) =>
+            min ((ω f) ^ 2) (↑n : ℝ)) :=
+          (configuration_eval_measurable f).pow_const 2 |>.min measurable_const
+        exact Integrable.of_bound hgn_meas.aestronglyMeasurable n
+          (Filter.Eventually.of_forall fun ω => by
+            rw [Real.norm_eq_abs, abs_of_nonneg (le_min (sq_nonneg _) (Nat.cast_nonneg n))]
+            exact min_le_right _ _)
+      · exact hint
+      · -- Monotonicity: min(x², n) ≤ min(x², m) when n ≤ m
+        exact Filter.Eventually.of_forall fun ω =>
+          fun n m (hnm : n ≤ m) => min_le_min_left _ (Nat.cast_le.mpr hnm)
+      · -- Pointwise convergence: min(x², n) → x² as n → ∞
+        -- For large enough n, n ≥ (ω f)², so min((ω f)², n) = (ω f)².
+        exact Filter.Eventually.of_forall fun ω =>
+          tendsto_atTop_of_eventually_const (i₀ := ⌈(ω f) ^ 2⌉₊) fun n hn => by
+            rw [min_eq_left]
+            exact le_trans (Nat.le_ceil _) (Nat.cast_le.mpr hn)
+    exact le_of_tendsto' hmono_conv htrunc_bound
+  · -- Non-integrable case: Bochner integral is 0
+    rw [integral_undef hint]
+    exact hC_nn
 
 /-- **Convergence of two-point Schwinger functions** as Λ → ∞.
 
