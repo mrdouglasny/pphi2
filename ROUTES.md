@@ -81,23 +81,29 @@ Gaussian limit identified with torus Green's function.
 | OS0 (Analyticity) | axiom | Same as Route A |
 | OS1 (Regularity) | proved | Moment bounds |
 | OS2 (Translation) | proved | Manifest from lattice periodicity |
-| OS3 (RP) | axiom | Inherited from lattice |
+| OS3 (RP) | dropped | Natural on cylinder S¹×ℝ, not torus T² |
 
 ### Spacetime dependence
 - Finite volume: no IR divergences, simpler analysis
 - Discrete spatial spectrum (periodic boundary)
 - No rotation invariance needed
+- No natural time reflection (periodic time) → OS3 deferred to cylinder
 
-### Status: 6 axioms, 0 sorries
+### Status: 3 axioms, 0 sorries (+ Nelson estimate in progress)
 Main theorem: `torusInteractingLimit_exists`
-Note: `configuration_tight_of_uniform_second_moments` proved in gaussian-field
-(`GaussianField.Tightness`), reducing from 7 to 6 axioms. Remaining:
+
+**Proved (formerly axioms):**
+- `configuration_tight_of_uniform_second_moments` → theorem in gaussian-field (`GaussianField.Tightness`)
+- `torusLimit_covariance_eq` → theorem via Gaussian characteristic function
+
+**Dropped (OS3 not on torus):**
+- `torusPositiveTimeSubmodule`, `torusLattice_rp` — unused, OS3 comes from cylinder
+
+**Remaining 3 axioms:**
 1. `nelson_exponential_estimate` — uniform-in-N L² bound on Boltzmann weight
+   (proof skeleton in `Pphi2/NelsonEstimate/`: heat kernel splitting + dynamic cutoff, 7 sorries)
 2. `torusGeneratingFunctionalℂ_analyticOnNhd` — OS0 analyticity
-3. `torusPositiveTimeSubmodule` — OS3 positive-time structure
-4. `torusLattice_rp` — lattice reflection positivity (uniform in N)
-5. `torusLimit_covariance_eq` — limit covariance = continuum covariance
-6. `gaussian_measure_unique_of_covariance` — Gaussian uniqueness (Bochner-Minlos)
+3. `gaussian_measure_unique_of_covariance` — Gaussian uniqueness (Bochner-Minlos, belongs in gaussian-field)
 
 ---
 
@@ -169,16 +175,18 @@ Main theorem: `cylinderInteracting_satisfies_OS`
 
 | | Route A (ℝ²) | Route B (T²) | Route C (S¹×ℝ) |
 |--|--|--|--|
-| **Purpose** | Main theorem | Warm-up | OS reconstruction |
+| **Purpose** | Main theorem (OS0–OS4) | UV limit warm-up (OS0–OS2) | OS reconstruction (OS3 natural here) |
 | **Configurations** | Functions (lattice) | Functions (lattice) | Distributions (continuum) |
 | **Field at a point** | `φ(x)` (trivial) | `φ(x)` (trivial) | sorry (isonormal) |
 | **Limit type** | a → 0 (single) | N → ∞ (single) | Λ→∞ then T→∞ (two-step) |
-| **OS proved** | OS1–OS4 | OS1–OS2 | none (all axiom'd) |
-| **OS axiom'd** | OS0 | OS0, OS3 | OS0–OS3 |
-| **Axioms** | 25 | 6 | 23 + 1 sorry |
+| **OS proved** | OS1–OS4 | OS0–OS2 | none (all axiom'd) |
+| **OS axiom'd** | OS0 | OS0 only | OS0–OS3 |
+| **OS3 strategy** | Transfer matrix | Dropped (→ cylinder) | Laplace factorization |
+| **Axioms** | 25 | **3** (+2 unused) | 23 + 1 sorry |
 
-### Upstream (gaussian-field repo): 13 axioms
-Key axioms: `cylinderMassOperator`, `cylinderGreen_pos`,
-`cylinderMassOperator_equivariant_of_heat_comm`, resolvent multiplier properties.
+### Upstream (gaussian-field repo, cylinder branch): 12 axioms
+Cylinder module: `cylinderMassOperator`, `cylinderGreen_pos`,
+`cylinderMassOperator_equivariant_of_heat_comm`, Fourier multiplier + RP axioms.
+Tightness: `configuration_tight_of_uniform_second_moments` proved (0 sorries on cylinder).
 
-### Grand total: 59 axioms + 1 sorry (pphi2) + 13 axioms (gaussian-field)
+### Grand total: ~58 axioms + 1 sorry (pphi2) + 12 axioms (gaussian-field cylinder)

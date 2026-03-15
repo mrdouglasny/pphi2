@@ -54,21 +54,37 @@ The construction proceeds in six phases:
 
 6. **Assembly** — Combine all axioms into the main theorem.
 
-## Spacetimes
+## Three routes (spacetimes)
 
-The construction is carried out on two spacetimes:
+The construction is carried out on three spacetimes, each targeting different
+OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 
-- **ℝ²** (infinite volume) — The full construction targets S'(ℝ²) and proves
-  all five OS axioms OS0–OS4, including clustering (OS4) from the spectral gap.
-  The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
+### Route A: ℝ² (Euclidean plane) — OS0–OS4
+The full construction targets S'(ℝ²) and proves all five OS axioms.
+The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
+**25 axioms, 0 sorries.**
 
-- **T²_L = (ℝ/Lℤ)²** (torus, fixed volume L) — A cleaner alternative that
-  isolates the UV limit by fixing the physical volume. The lattice is
-  (ℤ/Nℤ)² with spacing a = L/N → 0. Configuration space is Polish (proved),
-  enabling direct Prokhorov extraction without axioms. OS0–OS3 are proved for
-  the Gaussian continuum limit; the interacting case is in progress.
-  On the compact torus there is no clustering axiom (OS4), but there is also
-  no IR divergence.
+### Route B: T²_L (torus) — OS0–OS2 (**3 axioms**)
+Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
+spacing a = L/N → 0. The interacting continuum limit exists (proved via
+Mitoma-Chebyshev tightness from gaussian-field + Nelson's exponential estimate).
+OS3 (reflection positivity) is dropped here — it's more natural on the cylinder.
+**3 axioms, 0 sorries** (+ Nelson estimate proof skeleton: 7 sub-sorries).
+
+### Route C: S¹_L × ℝ (cylinder) — OS0–OS3
+Direct Nelson/Simon construction with natural time axis ℝ for OS reconstruction.
+The field is a distribution (not a function), requiring isonormal Gaussian extension.
+OS3 uses Laplace factorization of the cylinder Green's function.
+**23 axioms + 1 sorry.**
+
+### Which OS axiom comes from which route?
+| OS axiom | Best route | Why |
+|----------|-----------|-----|
+| OS0 (Analyticity) | Any | Exponential moment bounds |
+| OS1 (Regularity) | B (torus) | Clean moment bounds, no IR |
+| OS2 (Symmetry) | A (ℝ²) | Full E(2) symmetry |
+| OS3 (RP) | C (cylinder) | Natural time half-space ℝ₊ |
+| OS4 (Clustering) | A (ℝ²) | Transfer matrix spectral gap |
 
 ## Construction parameters and renormalization
 
