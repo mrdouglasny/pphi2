@@ -355,7 +355,69 @@ theorem torus_interacting_tightness
     (fun ⟨N, hN⟩ => by haveI : NeZero N := ⟨by omega⟩; infer_instance)
     (fun f ⟨N, hN⟩ => by  -- integrability of (ω f)² w.r.t. interacting measure
       haveI : NeZero N := ⟨by omega⟩
-      sorry) -- from density_transfer_bound + pairing_memLp
+      -- Push through Measure.map to reduce to lattice integrability
+      show Integrable (fun ω => (ω f) ^ 2) (torusInteractingMeasure L N P mass hmass)
+      unfold torusInteractingMeasure
+      rw [integrable_map_measure
+        ((configuration_eval_measurable f).pow_const 2).aestronglyMeasurable
+        (torusEmbedLift_measurable L N).aemeasurable]
+      -- Rewrite composition using torusEmbedLift_eval_eq
+      have h_eq : (fun ω => (ω f) ^ 2) ∘ (torusEmbedLift L N) =
+          fun ω => (ω (latticeTestFn L N f)) ^ 2 := by
+        ext ω; simp [Function.comp, torusEmbedLift_eval_eq L N f ω]
+      rw [h_eq]
+      -- Now show: Integrable (fun ω => (ω g)²) (interactingLatticeMeasure ...)
+      -- Decompose interacting measure = (1/Z) • μ_GFF.withDensity(bw)
+      set g := latticeTestFn L N f
+      set μ_GFF := latticeGaussianMeasure 2 N (circleSpacing L N) mass
+        (circleSpacing_pos L N) hmass
+      set bw := boltzmannWeight 2 N P (circleSpacing L N) mass
+      obtain ⟨B, hB⟩ := interactionFunctional_bounded_below 2 N P
+        (circleSpacing L N) mass (circleSpacing_pos L N) hmass
+      have hZ := partitionFunction_pos 2 N P (circleSpacing L N) mass
+        (circleSpacing_pos L N) hmass
+      -- Step 1: Reduce to withDensity measure
+      suffices h : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+          (ω g) ^ 2)
+          (μ_GFF.withDensity (fun ω => ENNReal.ofReal (bw ω))) by
+        unfold interactingLatticeMeasure
+        exact h.smul_measure (ENNReal.inv_ne_top.mpr ((ENNReal.ofReal_pos.mpr hZ).ne'))
+      -- Step 2: Use integrable_withDensity_iff
+      have hf_meas : Measurable (fun ω : Configuration (FinLatticeField 2 N) =>
+          ENNReal.ofReal (bw ω)) :=
+        ENNReal.measurable_ofReal.comp
+          ((interactionFunctional_measurable 2 N P (circleSpacing L N) mass).neg.exp)
+      apply (integrable_withDensity_iff hf_meas
+        (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mpr
+      -- Simplify toReal ∘ ofReal
+      have hbw_simp : ∀ ω : Configuration (FinLatticeField 2 N),
+          (ENNReal.ofReal (bw ω)).toReal = bw ω :=
+        fun ω => ENNReal.toReal_ofReal
+          (le_of_lt (boltzmannWeight_pos 2 N P (circleSpacing L N) mass ω))
+      simp_rw [hbw_simp]
+      -- Goal: Integrable (fun ω => (ω g)^2 * bw ω) μ_GFF
+      -- Step 3: Gaussian integrability of (ω g)²
+      have h_sq_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+          (ω g) ^ 2) μ_GFF :=
+        (pairing_memLp (latticeCovariance 2 N (circleSpacing L N) mass
+          (circleSpacing_pos L N) hmass) g 2).integrable_sq
+      -- Step 4: Dominate (ω g)² * bw ω by (ω g)² * exp(B)
+      apply (h_sq_int.mul_const (Real.exp B)).mono
+      · exact ((configuration_eval_measurable g).pow_const 2).aestronglyMeasurable.mul
+          ((interactionFunctional_measurable 2 N P (circleSpacing L N) mass)
+            .neg.exp.aestronglyMeasurable)
+      · exact Filter.Eventually.of_forall fun ω => by
+          simp only [Real.norm_eq_abs]
+          have h1 : 0 ≤ (ω g) ^ 2 := sq_nonneg _
+          have h2 : 0 < bw ω :=
+            boltzmannWeight_pos 2 N P (circleSpacing L N) mass ω
+          have h3 : bw ω ≤ Real.exp B := by
+            change Real.exp (-interactionFunctional 2 N P (circleSpacing L N) mass ω)
+              ≤ Real.exp B
+            exact Real.exp_le_exp_of_le (by linarith [hB ω])
+          rw [abs_of_nonneg (mul_nonneg h1 (le_of_lt h2)),
+              abs_of_nonneg (mul_nonneg h1 (le_of_lt (Real.exp_pos B)))]
+          exact mul_le_mul_of_nonneg_left h3 h1)
     (fun f => by
       obtain ⟨C, _, hC_bound⟩ := torus_interacting_second_moment_uniform L P mass hmass f
       exact ⟨C, fun ⟨N, hN⟩ => by haveI : NeZero N := ⟨by omega⟩; exact hC_bound N⟩)

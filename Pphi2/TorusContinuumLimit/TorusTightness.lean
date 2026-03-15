@@ -98,9 +98,24 @@ theorem torusContinuumMeasures_tight
     (fun ⟨N, hN⟩ => haveI : NeZero N := ⟨by omega⟩;
       torusContinuumMeasure L N mass hmass)
     (fun ⟨N, hN⟩ => by haveI : NeZero N := ⟨by omega⟩; exact inferInstance)
-    (fun f ⟨N, hN⟩ => by  -- integrability of (ω f)² w.r.t. Gaussian measure
+    (fun f ⟨N, hN⟩ => by  -- integrability of (ω f)² w.r.t. torus Gaussian
       haveI : NeZero N := ⟨by omega⟩
-      sorry) -- from pairing_memLp: Gaussian pairings have all moments
+      -- torusContinuumMeasure = map torusEmbedLift (latticeGaussianMeasure ...)
+      -- Push through Measure.map to reduce to lattice integrability
+      show Integrable (fun ω => (ω f) ^ 2) (torusContinuumMeasure L N mass hmass)
+      unfold torusContinuumMeasure
+      rw [integrable_map_measure
+        ((configuration_eval_measurable f).pow_const 2).aestronglyMeasurable
+        (torusEmbedLift_measurable L N).aemeasurable]
+      -- Goal: Integrable ((fun ω => (ω f) ^ 2) ∘ torusEmbedLift L N) (latticeGaussianMeasure ...)
+      -- Rewrite using torusEmbedLift_eval_eq: (torusEmbedLift L N ω) f = ω (latticeTestFn L N f)
+      have h_eq : (fun ω => (ω f) ^ 2) ∘ (torusEmbedLift L N) =
+          fun ω => (ω (latticeTestFn L N f)) ^ 2 := by
+        ext ω; simp [Function.comp, torusEmbedLift_eval_eq L N f ω]
+      rw [h_eq]
+      -- (ω g)² is integrable under the lattice Gaussian = GaussianField.measure T
+      exact (pairing_memLp (latticeCovariance 2 N (circleSpacing L N) mass
+        (circleSpacing_pos L N) hmass) (latticeTestFn L N f) 2).integrable_sq)
     (fun f => by
       obtain ⟨C, _, hC_bound⟩ := torus_second_moment_uniform L mass hmass f
       exact ⟨C, fun ⟨N, hN⟩ => by haveI : NeZero N := ⟨by omega⟩; exact hC_bound N⟩)
