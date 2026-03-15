@@ -32,6 +32,7 @@ The torus approach makes tightness significantly easier than on S'(ℝ^d):
 -/
 
 import Pphi2.TorusContinuumLimit.TorusPropagatorConvergence
+import GaussianField.Tightness
 
 noncomputable section
 
@@ -62,41 +63,11 @@ theorem torus_second_moment_uniform (mass : ℝ) (hmass : 0 < mass)
   rw [this]
   exact hC_bound N
 
-/-! ## Mitoma-Chebyshev tightness criterion -/
+/-! ## Mitoma-Chebyshev tightness criterion
 
-/-- **Tightness from uniform second moments on nuclear duals (Mitoma-Chebyshev).**
-
-On the weak dual of a nuclear Fréchet space (encoded by `DyninMityaginSpace`),
-a family of probability measures is tight if the second moments of all 1D
-marginals are uniformly bounded.
-
-This combines two classical results:
-
-1. **Mitoma's criterion** (1983): For nuclear E, tightness on E' (= Configuration E)
-   reduces to tightness of 1D marginals `(ev_f)_* μ_i` for each `f ∈ E`.
-
-2. **Chebyshev's inequality**: Uniform variance bounds `sup_i E_i[(ω f)²] ≤ C(f)`
-   give `P_i(|ω(f)| > R) ≤ C(f)/R²`, hence 1D tightness.
-
-The nuclearity of E (encoded by `DyninMityaginSpace`) is essential: the
-counterexample E = ℓ² (non-nuclear, but E' = ℓ² is Polish) shows that
-uniform second moment bounds alone do NOT imply tightness without nuclearity.
-
-**References**: Mitoma (1983), Simon §V.1, Gel'fand-Vilenkin Vol. 4 Ch. IV,
-Bogachev *Gaussian Measures* Ch. 3. -/
-axiom configuration_tight_of_uniform_second_moments
-    {E : Type*} [AddCommGroup E] [Module ℝ E] [TopologicalSpace E]
-    [IsTopologicalAddGroup E] [ContinuousSMul ℝ E]
-    [DyninMityaginSpace E]
-    [PolishSpace (Configuration E)] [BorelSpace (Configuration E)]
-    {ι : Type*}
-    (μ : ι → Measure (Configuration E))
-    (hprob : ∀ i, IsProbabilityMeasure (μ i))
-    (h_moments : ∀ f : E, ∃ C : ℝ, ∀ i,
-      ∫ ω : Configuration E, (ω f) ^ 2 ∂(μ i) ≤ C) :
-    ∀ ε : ℝ, 0 < ε →
-    ∃ K : Set (Configuration E),
-      IsCompact K ∧ ∀ i, 1 - ε ≤ (μ i K).toReal
+Imported from `GaussianField.Tightness` (gaussian-field repo).
+The theorem `configuration_tight_of_uniform_second_moments` is now proved
+(modulo 2 sorry's: BaireSpace instance + lower semicontinuity via Fatou). -/
 
 /-! ## Tightness of torus Gaussian measures -/
 
@@ -127,6 +98,9 @@ theorem torusContinuumMeasures_tight
     (fun ⟨N, hN⟩ => haveI : NeZero N := ⟨by omega⟩;
       torusContinuumMeasure L N mass hmass)
     (fun ⟨N, hN⟩ => by haveI : NeZero N := ⟨by omega⟩; exact inferInstance)
+    (fun f ⟨N, hN⟩ => by  -- integrability of (ω f)² w.r.t. Gaussian measure
+      haveI : NeZero N := ⟨by omega⟩
+      sorry) -- from pairing_memLp: Gaussian pairings have all moments
     (fun f => by
       obtain ⟨C, _, hC_bound⟩ := torus_second_moment_uniform L mass hmass f
       exact ⟨C, fun ⟨N, hN⟩ => by haveI : NeZero N := ⟨by omega⟩; exact hC_bound N⟩)

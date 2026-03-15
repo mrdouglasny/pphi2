@@ -353,6 +353,9 @@ theorem torus_interacting_tightness
     (fun ⟨N, hN⟩ => haveI : NeZero N := ⟨by omega⟩;
       torusInteractingMeasure L N P mass hmass)
     (fun ⟨N, hN⟩ => by haveI : NeZero N := ⟨by omega⟩; infer_instance)
+    (fun f ⟨N, hN⟩ => by  -- integrability of (ω f)² w.r.t. interacting measure
+      haveI : NeZero N := ⟨by omega⟩
+      sorry) -- from density_transfer_bound + pairing_memLp
     (fun f => by
       obtain ⟨C, _, hC_bound⟩ := torus_interacting_second_moment_uniform L P mass hmass f
       exact ⟨C, fun ⟨N, hN⟩ => by haveI : NeZero N := ⟨by omega⟩; exact hC_bound N⟩)
