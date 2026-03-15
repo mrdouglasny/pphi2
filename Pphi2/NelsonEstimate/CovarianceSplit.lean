@@ -97,8 +97,10 @@ theorem smoothVariance_le_log (hd : d = 2) (T : ℝ) (hT : 0 < T)
   have h_le : ∀ m ∈ range (Fintype.card (FinLatticeSites d N)),
       smoothCovEigenvalue d N a mass T m ≤ (latticeEigenvalue d N a mass m)⁻¹ := by
     intro m _
-    -- exp(-Tλ)/λ ≤ 1/λ = λ⁻¹ since exp(-Tλ) ≤ 1 for T > 0, λ > 0
-    sorry
+    unfold smoothCovEigenvalue
+    have hev := latticeEigenvalue_pos d N a mass ha hmass m
+    rw [inv_eq_one_div]
+    exact div_le_div_of_nonneg_right (Real.exp_le_one_iff.mpr (by nlinarith)) hev.le
   calc (1 / ↑(Fintype.card (FinLatticeSites d N))) *
       ∑ m ∈ range (Fintype.card (FinLatticeSites d N)), smoothCovEigenvalue d N a mass T m
       ≤ wickConstant d N a mass := by
