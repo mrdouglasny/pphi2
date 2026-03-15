@@ -25,6 +25,7 @@ GFF covariance into smooth and rough parts, and proves the key variance bounds.
 -/
 
 import Pphi2.InteractingMeasure.LatticeMeasure
+import Mathlib.Analysis.Complex.Exponential
 
 noncomputable section
 
@@ -97,15 +98,63 @@ Averaging: Σ C_R² / |Λ| ≤ T · c_a ≤ T/m². -/
 theorem roughCovEigenvalue_le_T (T : ℝ) (hT : 0 ≤ T) (m : ℕ)
     (ha : 0 < a) (hmass : 0 < mass) :
     roughCovEigenvalue d N a mass T m ≤ T := by
-  sorry
+  unfold roughCovEigenvalue
+  have hev := latticeEigenvalue_pos d N a mass ha hmass m
+  rw [div_le_iff₀ hev]
+  -- Need: 1 - exp(-Tλ) ≤ T·λ
+  -- From add_one_le_exp(-x): -x + 1 ≤ exp(-x), so 1 - exp(-x) ≤ x
+  have h := Real.add_one_le_exp (-(T * latticeEigenvalue d N a mass m))
+  -- h: -(T * λ) + 1 ≤ Real.exp (-(T * λ))
+  -- goal: 1 - Real.exp (-T * λ) ≤ T * λ
+  -- The key: -T * λ = -(T * λ), normalize via ring_nf
+  have : Real.exp (-(T * latticeEigenvalue d N a mass m)) =
+         Real.exp (-T * latticeEigenvalue d N a mass m) := by ring_nf
+  linarith
 
-theorem roughCovariance_sq_summable (hd : d = 2) (T : ℝ) (hT : 0 < T)
+theorem roughCovEigenvalue_le_inv (T : ℝ) (m : ℕ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    roughCovEigenvalue d N a mass T m ≤ (latticeEigenvalue d N a mass m)⁻¹ := by
+  unfold roughCovEigenvalue
+  have hev := latticeEigenvalue_pos d N a mass ha hmass m
+  rw [inv_eq_one_div]
+  apply div_le_div_of_nonneg_right _ hev.le
+  linarith [Real.exp_nonneg (-T * latticeEigenvalue d N a mass m)]
+
+theorem roughCovariance_sq_summable (T : ℝ) (hT : 0 < T)
     (ha : 0 < a) (hmass : 0 < mass) :
     (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
     ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
       roughCovEigenvalue d N a mass T m ^ 2 ≤
     T * wickConstant d N a mass := by
-  sorry
+  -- C_R(k)² ≤ C_R(k) · T ≤ (1/λ_k) · T
+  have h_le : ∀ m ∈ range (Fintype.card (FinLatticeSites d N)),
+      roughCovEigenvalue d N a mass T m ^ 2 ≤
+      T * (latticeEigenvalue d N a mass m)⁻¹ := by
+    intro m _
+    have hR_nn : 0 ≤ roughCovEigenvalue d N a mass T m := by
+      unfold roughCovEigenvalue; apply div_nonneg
+      · have hev := latticeEigenvalue_pos d N a mass ha hmass m
+        have hTlam : 0 < T * latticeEigenvalue d N a mass m := mul_pos hT hev
+        have : Real.exp (-T * latticeEigenvalue d N a mass m) ≤ 1 := by
+          apply Real.exp_le_one_iff.mpr; linarith
+        linarith
+      · exact (latticeEigenvalue_pos d N a mass ha hmass m).le
+    calc roughCovEigenvalue d N a mass T m ^ 2
+        = roughCovEigenvalue d N a mass T m * roughCovEigenvalue d N a mass T m := sq _
+      _ ≤ T * (latticeEigenvalue d N a mass m)⁻¹ :=
+          mul_le_mul (roughCovEigenvalue_le_T d N a mass T hT.le m ha hmass)
+            (roughCovEigenvalue_le_inv d N a mass T m ha hmass) hR_nn hT.le
+  calc (1 / ↑(Fintype.card (FinLatticeSites d N))) *
+      ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
+        roughCovEigenvalue d N a mass T m ^ 2
+      ≤ (1 / ↑(Fintype.card (FinLatticeSites d N))) *
+        ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
+          T * (latticeEigenvalue d N a mass m)⁻¹ := by
+        apply mul_le_mul_of_nonneg_left (Finset.sum_le_sum h_le) (by positivity)
+    _ = T * wickConstant d N a mass := by
+        unfold wickConstant
+        rw [← Finset.mul_sum]
+        ring
 
 /-! ## Positivity -/
 
