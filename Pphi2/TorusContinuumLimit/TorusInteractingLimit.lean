@@ -404,8 +404,8 @@ theorem torus_interacting_tightness
       -- Step 4: Dominate (ω g)² * bw ω by (ω g)² * exp(B)
       apply (h_sq_int.mul_const (Real.exp B)).mono
       · exact ((configuration_eval_measurable g).pow_const 2).aestronglyMeasurable.mul
-          ((interactionFunctional_measurable 2 N P (circleSpacing L N) mass)
-            .neg.exp.aestronglyMeasurable)
+          (Measurable.aestronglyMeasurable
+            (interactionFunctional_measurable 2 N P (circleSpacing L N) mass).neg.exp)
       · exact Filter.Eventually.of_forall fun ω => by
           simp only [Real.norm_eq_abs]
           have h1 : 0 ≤ (ω g) ^ 2 := sq_nonneg _
