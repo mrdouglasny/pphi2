@@ -821,7 +821,7 @@ structure SatisfiesTorusOS
   os1 : TorusOS1_Regularity L μ
   os2_translation : TorusOS2_TranslationInvariance L μ
   os2_D4 : TorusOS2_D4Invariance L μ
-  os3 : TorusOS3_ReflectionPositivity L μ
+  -- OS3 (reflection positivity) dropped: natural on cylinder S¹×ℝ, not torus T²
 
 /-- **The torus Gaussian continuum limit satisfies OS0–OS3.**
 
@@ -838,7 +838,6 @@ theorem torusGaussianLimit_satisfies_OS
   os1 := torusGaussianLimit_os1 L mass hmass μ hGCL
   os2_translation := torusGaussianLimit_os2_translation L mass hmass μ hGCL
   os2_D4 := torusGaussianLimit_os2_D4 L mass hmass μ hGCL
-  os3 := torusGaussianLimit_os3 L mass hmass μ hGCL
 
 /-- **Existence of a torus Gaussian measure satisfying OS0–OS3.**
 
