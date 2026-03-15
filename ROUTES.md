@@ -88,10 +88,16 @@ Gaussian limit identified with torus Green's function.
 - Discrete spatial spectrum (periodic boundary)
 - No rotation invariance needed
 
-### Status: 7 axioms, 0 sorries
+### Status: 6 axioms, 0 sorries
 Main theorem: `torusInteractingLimit_exists`
-Note: `torus_interacting_tightness` converted from axiom to theorem via
-`nelson_exponential_estimate` + Mitoma-Chebyshev + density transfer + hypercontractivity.
+Note: `configuration_tight_of_uniform_second_moments` proved in gaussian-field
+(`GaussianField.Tightness`), reducing from 7 to 6 axioms. Remaining:
+1. `nelson_exponential_estimate` — uniform-in-N L² bound on Boltzmann weight
+2. `torusGeneratingFunctionalℂ_analyticOnNhd` — OS0 analyticity
+3. `torusPositiveTimeSubmodule` — OS3 positive-time structure
+4. `torusLattice_rp` — lattice reflection positivity (uniform in N)
+5. `torusLimit_covariance_eq` — limit covariance = continuum covariance
+6. `gaussian_measure_unique_of_covariance` — Gaussian uniqueness (Bochner-Minlos)
 
 ---
 
@@ -169,10 +175,10 @@ Main theorem: `cylinderInteracting_satisfies_OS`
 | **Limit type** | a → 0 (single) | N → ∞ (single) | Λ→∞ then T→∞ (two-step) |
 | **OS proved** | OS1–OS4 | OS1–OS2 | none (all axiom'd) |
 | **OS axiom'd** | OS0 | OS0, OS3 | OS0–OS3 |
-| **Axioms** | 25 | 7 | 23 + 1 sorry |
+| **Axioms** | 25 | 6 | 23 + 1 sorry |
 
 ### Upstream (gaussian-field repo): 13 axioms
 Key axioms: `cylinderMassOperator`, `cylinderGreen_pos`,
 `cylinderMassOperator_equivariant_of_heat_comm`, resolvent multiplier properties.
 
-### Grand total: 60 axioms + 1 sorry (pphi2) + 13 axioms (gaussian-field)
+### Grand total: 59 axioms + 1 sorry (pphi2) + 13 axioms (gaussian-field)
