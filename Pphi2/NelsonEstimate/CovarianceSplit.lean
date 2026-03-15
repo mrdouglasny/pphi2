@@ -105,8 +105,6 @@ theorem roughCovariance_sq_summable (hd : d = 2) (T : ℝ) (hT : 0 < T)
     ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
       roughCovEigenvalue d N a mass T m ^ 2 ≤
     T * wickConstant d N a mass := by
-  -- C_R(k)² ≤ T · C_R(k) ≤ T · (1/λ_k)
-  -- Σ C_R²/|Λ| ≤ T · Σ(1/λ_k)/|Λ| = T · wickConstant
   sorry
 
 /-! ## Positivity -/

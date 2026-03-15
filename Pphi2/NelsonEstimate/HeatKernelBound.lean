@@ -150,7 +150,34 @@ private lemma sum_exp_neg_mul_sq_le_integral (α : ℝ) (hα : 0 < α) (M : ℕ)
 private lemma sum_Icc_neg_pos_split (M : ℕ) (f : ℤ → ℝ) :
     ∑ k ∈ Finset.Icc (-(M : ℤ)) M, f k =
     f 0 + ∑ k ∈ Finset.Icc (1 : ℤ) M, f k + ∑ k ∈ Finset.Icc (1 : ℤ) M, f (-k) := by
-  sorry
+  -- Split Icc (-M) M into Icc (-M) (-1) ∪ {0} ∪ Icc 1 M
+  have h0 : (0 : ℤ) ∈ Finset.Icc (-(M : ℤ)) M := by simp
+  rw [← Finset.add_sum_erase _ _ h0]
+  congr 1
+  -- The erased set is Icc (-M) M \ {0}
+  -- Split it into negative and positive parts
+  have h_eq : (Finset.Icc (-(M : ℤ)) M).erase 0 =
+      Finset.Icc (-(M : ℤ)) (-1) ∪ Finset.Icc (1 : ℤ) M := by
+    ext k
+    simp only [Finset.mem_erase, Finset.mem_Icc, Finset.mem_union]
+    omega
+  rw [h_eq]
+  have h_disj : Disjoint (Finset.Icc (-(M : ℤ)) (-1)) (Finset.Icc (1 : ℤ) M) := by
+    rw [Finset.disjoint_left]
+    intro k hk1 hk2
+    simp only [Finset.mem_Icc] at hk1 hk2
+    omega
+  rw [Finset.sum_union h_disj, add_comm]
+  congr 1
+  -- Show sum over Icc (-M) (-1) = sum over Icc 1 M of f(-k)
+  rw [show Finset.Icc (-(M : ℤ)) (-1) = (Finset.Icc (1 : ℤ) M).map
+    ⟨fun k => -k, Int.neg_injective⟩ from by
+    ext k; simp only [Finset.mem_Icc, Finset.mem_map, Function.Embedding.coeFn_mk]
+    constructor
+    · intro ⟨h1, h2⟩; exact ⟨-k, ⟨by omega, by omega⟩, by omega⟩
+    · intro ⟨a, ⟨ha1, ha2⟩, hak⟩; omega]
+  rw [Finset.sum_map]
+  simp only [Function.Embedding.coeFn_mk]
 
 /-- Helper: for an even function, the sum over negative indices equals the sum over positive. -/
 private lemma sum_neg_eq_sum_pos (M : ℕ) (f : ℤ → ℝ) (hf : ∀ k, f (-k) = f k) :
