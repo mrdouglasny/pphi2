@@ -71,7 +71,11 @@ def roughWickConstant (T : ℝ) : ℝ :=
 theorem wickConstant_split (T : ℝ) :
     wickConstant d N a mass =
     smoothWickConstant d N a mass T + roughWickConstant d N a mass T := by
-  sorry
+  unfold wickConstant smoothWickConstant roughWickConstant
+  rw [← mul_add, ← Finset.sum_add_distrib]
+  congr 1
+  apply Finset.sum_congr rfl; intro m _
+  exact covariance_split d N a mass T m
 
 /-! ## Variance bounds -/
 
