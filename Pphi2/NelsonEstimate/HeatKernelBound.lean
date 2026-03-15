@@ -54,10 +54,22 @@ theorem schwinger_smooth (lam : ℝ) (hlam : 0 < lam) (T : ℝ) (hT : 0 ≤ T) :
 
 /-- Schwinger identity for the rough covariance:
 `(1 - exp(-T·λ)) / λ = ∫₀ᵀ exp(-t·λ) dt` for λ > 0, T ≥ 0. -/
+theorem schwinger_rough_interval (lam : ℝ) (hlam : 0 < lam) (T : ℝ) (hT : 0 ≤ T) :
+    (1 - exp (-T * lam)) / lam = ∫ t in (0)..T, exp (-t * lam) := by
+  have hlam_ne : lam ≠ 0 := ne_of_gt hlam
+  set F := fun t => -exp (-t * lam) / lam
+  have h_cont : ContinuousOn (fun t => exp (-t * lam)) (Set.uIcc 0 T) :=
+    (Real.continuous_exp.comp (continuous_neg.mul continuous_const)).continuousOn
+  have h_ftc : ∫ t in (0 : ℝ)..T, exp (-t * lam) = F T - F 0 :=
+    intervalIntegral.integral_eq_sub_of_hasDerivAt
+      (fun t _ => hasDerivAt_neg_exp_div lam hlam_ne t)
+      h_cont.intervalIntegrable
+  rw [h_ftc]; simp only [F, neg_zero, zero_mul, exp_zero]; field_simp; ring
+
 theorem schwinger_rough (lam : ℝ) (hlam : 0 < lam) (T : ℝ) (hT : 0 ≤ T) :
     (1 - exp (-T * lam)) / lam = ∫ t in Set.Icc 0 T, exp (-t * lam) := by
-  -- FTC: ∫_0^T f'(t) dt = F(T) - F(0) where F(t) = -exp(-tλ)/λ
-  sorry -- needs: convert Set.Icc integral to intervalIntegral, then apply FTC
+  -- Follows from schwinger_rough_interval + Icc = uIcc conversion
+  sorry
 
 /-! ## Elementary bounds -/
 
