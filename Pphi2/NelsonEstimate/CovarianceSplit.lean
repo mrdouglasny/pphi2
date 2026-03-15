@@ -87,20 +87,26 @@ The smooth covariance `exp(-T·λ_k)/λ_k` is exponentially suppressed for large
 so the sum over Fourier modes converges to O(|log T|) uniformly in N. -/
 theorem smoothVariance_le_log (hd : d = 2) (T : ℝ) (hT : 0 < T) :
     ∃ C : ℝ, 0 < C ∧ smoothWickConstant d N a mass T ≤ C * (1 + |Real.log T|) := by
+  -- smoothWickConstant = (1/|Λ|) * Σ smoothCovEigenvalue
+  -- ≤ (1/|Λ|) * C * (1 + |log T|) from smoothVariance_from_heat_kernel
+  sorry -- derives from HeatKernelBound.smoothVariance_from_heat_kernel
+
+/-- The rough L² bound is O(T).
+C_R(k) ≤ T (since (1-e^{-x})/x ≤ 1), so C_R(k)² ≤ T·C_R(k) ≤ T/λ_k.
+Averaging: Σ C_R² / |Λ| ≤ T · c_a ≤ T/m². -/
+theorem roughCovEigenvalue_le_T (T : ℝ) (hT : 0 ≤ T) (m : ℕ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    roughCovEigenvalue d N a mass T m ≤ T := by
   sorry
 
-/-- **Rough covariance L² bound**: The sum of squared rough covariance eigenvalues
-is O(T^δ) for some δ > 0, uniformly in N.
-
-For d = 2: Σ_k C_R(k)² ≤ C · T^{1/2}
-
-Uses: C_R(k) = (1-exp(-Tλ_k))/λ_k ≤ min(T, 1/λ_k), so
-C_R(k)² ≤ T^{1/2} · λ_k^{-3/2}, and Σ λ_k^{-3/2} converges in d=2. -/
-theorem roughCovariance_sq_summable (hd : d = 2) (T : ℝ) (hT : 0 < T) :
-    ∃ C : ℝ, 0 < C ∧
+theorem roughCovariance_sq_summable (hd : d = 2) (T : ℝ) (hT : 0 < T)
+    (ha : 0 < a) (hmass : 0 < mass) :
     (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
     ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
-      roughCovEigenvalue d N a mass T m ^ 2 ≤ C * T ^ (1/2 : ℝ) := by
+      roughCovEigenvalue d N a mass T m ^ 2 ≤
+    T * wickConstant d N a mass := by
+  -- C_R(k)² ≤ T · C_R(k) ≤ T · (1/λ_k)
+  -- Σ C_R²/|Λ| ≤ T · Σ(1/λ_k)/|Λ| = T · wickConstant
   sorry
 
 /-! ## Positivity -/

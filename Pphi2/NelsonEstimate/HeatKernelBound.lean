@@ -26,6 +26,9 @@ roughCovariance_sq_summable) to elementary 1D calculus.
 
 import Pphi2.NelsonEstimate.CovarianceSplit
 import Pphi2.InteractingMeasure.LatticeMeasure
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
+import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
+import Mathlib.Analysis.SumIntegralComparisons
 
 noncomputable section
 
@@ -102,14 +105,103 @@ theorem schwinger_rough (lam : ℝ) (hlam : 0 < lam) (T : ℝ) (hT : 0 ≤ T) :
 Equivalently: `sin(x) ≥ 2x/π` on [0, π/2] (Jordan's inequality). -/
 theorem sin_sq_lower_bound (x : ℝ) (hx : |x| ≤ π / 2) :
     (2 / π) ^ 2 * x ^ 2 ≤ sin x ^ 2 := by
+  -- From Mathlib's Jordan inequality: 2/π * |x| ≤ |sin x| for |x| ≤ π/2
+  have h := Real.mul_abs_le_abs_sin hx
+  -- Square both sides (both are nonneg)
+  have h1 : (2 / π) ^ 2 * x ^ 2 = (2 / π * |x|) ^ 2 := by
+    rw [mul_pow]; congr 1; rw [sq_abs]
+  rw [h1]
+  have h2 : sin x ^ 2 = |sin x| ^ 2 := by rw [sq_abs]
+  rw [h2]
+  exact pow_le_pow_left₀ (by positivity) h 2
+
+/-- Helper: exp(-α*x²) is antitone on [0, ∞) for α > 0. -/
+private lemma antitoneOn_exp_neg_mul_sq (α : ℝ) (hα : 0 < α) :
+    AntitoneOn (fun x : ℝ => exp (-α * x ^ 2)) (Set.Ici 0) := by
+  intro x hx y hy hxy
+  apply exp_le_exp.mpr
+  -- Need: -α * y² ≤ -α * x², i.e., α * x² ≤ α * y²
+  have hx' := Set.mem_Ici.mp hx
+  linarith [mul_le_mul_of_nonneg_left (sq_le_sq' (by linarith : -y ≤ x) hxy) hα.le]
+
+/-- Helper: the sum over positive integers is bounded by the half-line Gaussian integral. -/
+private lemma sum_exp_neg_mul_sq_le_integral (α : ℝ) (hα : 0 < α) (M : ℕ) :
+    (∑ k ∈ Finset.range M, exp (-α * ((k : ℝ) + 1) ^ 2)) ≤
+    ∫ x in Set.Ioi 0, exp (-α * x ^ 2) := by
+  -- First bound the finite sum by the finite integral via antitone comparison
+  have hanti : AntitoneOn (fun x : ℝ => exp (-α * x ^ 2)) (Set.Icc 0 (0 + (M : ℝ))) := by
+    apply (antitoneOn_exp_neg_mul_sq α hα).mono
+    exact Set.Icc_subset_Ici_self
+  -- The AntitoneOn.sum_le_integral uses (i + 1 : Nat), we need (i : Nat) + 1
+  have h1 := AntitoneOn.sum_le_integral hanti
+  simp only [zero_add, Nat.cast_add, Nat.cast_one] at h1
+  -- Now bound the finite interval integral by the half-line integral
+  calc ∑ k ∈ Finset.range M, exp (-α * ((k : ℝ) + 1) ^ 2)
+    _ ≤ ∫ x in (0 : ℝ)..↑M, exp (-α * x ^ 2) := h1
+    _ = ∫ x in Set.Ioc 0 (M : ℝ), exp (-α * x ^ 2) := by
+        rw [intervalIntegral.integral_of_le (Nat.cast_nonneg M)]
+    _ ≤ ∫ x in Set.Ioi 0, exp (-α * x ^ 2) := by
+        apply MeasureTheory.setIntegral_mono_set
+        · exact (integrable_exp_neg_mul_sq hα).integrableOn
+        · exact ae_of_all _ (fun x => le_of_lt (exp_pos _))
+        · exact (Set.Ioc_subset_Ioi_self).eventuallyLE
+
+/-- Helper: splitting an Icc sum on Z into k=0, positive, and negative parts. -/
+private lemma sum_Icc_neg_pos_split (M : ℕ) (f : ℤ → ℝ) :
+    ∑ k ∈ Finset.Icc (-(M : ℤ)) M, f k =
+    f 0 + ∑ k ∈ Finset.Icc (1 : ℤ) M, f k + ∑ k ∈ Finset.Icc (1 : ℤ) M, f (-k) := by
   sorry
 
-/-- Gaussian sum bound: `Σ_{k=-∞}^{∞} exp(-α·k²) ≤ 1 + √(π/α)` for α > 0.
-On a finite lattice, the finite sum is bounded by the infinite sum. -/
+/-- Helper: for an even function, the sum over negative indices equals the sum over positive. -/
+private lemma sum_neg_eq_sum_pos (M : ℕ) (f : ℤ → ℝ) (hf : ∀ k, f (-k) = f k) :
+    ∑ k ∈ Finset.Icc (1 : ℤ) M, f (-k) = ∑ k ∈ Finset.Icc (1 : ℤ) M, f k := by
+  congr 1; ext k; exact hf k
+
+/-- Helper: convert sum over Icc 1 M of ℤ to sum over Finset.range M of ℕ. -/
+private lemma sum_Icc_int_eq_sum_range (M : ℕ) (g : ℝ → ℝ) :
+    ∑ k ∈ Finset.Icc (1 : ℤ) (M : ℤ), g (k : ℝ) =
+    ∑ k ∈ Finset.range M, g ((k : ℝ) + 1) := by
+  sorry
+
 theorem gaussian_sum_bound (α : ℝ) (hα : 0 < α) :
     ∀ (M : ℕ), (∑ k ∈ Finset.Icc (-(M : ℤ)) M, exp (-α * (k : ℝ) ^ 2) : ℝ) ≤
     1 + sqrt (π / α) := by
-  sorry
+  intro M
+  set f : ℤ → ℝ := fun k => exp (-α * (k : ℝ) ^ 2) with hf_def
+  -- f is even: f(-k) = f(k)
+  have hf_even : ∀ k : ℤ, f (-k) = f k := by
+    intro k; simp [hf_def, neg_sq]
+  -- Step 1: Split into k=0, positive, negative
+  have hsplit := sum_Icc_neg_pos_split M f
+  -- Step 2: Negative part = positive part (by evenness)
+  have hneg := sum_neg_eq_sum_pos M f hf_even
+  -- Step 3: So total = f(0) + 2 * sum over positives
+  -- Set S = positive sum
+  set S := ∑ k ∈ Finset.Icc (1 : ℤ) (M : ℤ), f k
+  -- Rewrite the LHS
+  calc ∑ k ∈ Finset.Icc (-(M : ℤ)) M, f k
+      = f 0 + S + S := by rw [hsplit, hneg]
+    _ = 1 + (S + S) := by simp [hf_def]; ring
+    _ ≤ 1 + sqrt (π / α) := by
+        gcongr
+        -- Convert Z sum to ℕ sum
+        show S + S ≤ sqrt (π / α)
+        have hS_eq : S = ∑ k ∈ Finset.range M, exp (-α * ((k : ℝ) + 1) ^ 2) := by
+          simp only [S, hf_def]
+          exact sum_Icc_int_eq_sum_range M (fun x => exp (-α * x ^ 2))
+        rw [hS_eq]
+        have hsum_le := sum_exp_neg_mul_sq_le_integral α hα M
+        -- We know sum ≤ ∫_{Ioi 0} exp(-αx²) dx = sqrt(π/α)/2
+        have hgauss : ∫ x in Set.Ioi 0, exp (-α * x ^ 2) = sqrt (π / α) / 2 :=
+          integral_gaussian_Ioi α
+        -- So 2 * sum ≤ 2 * sqrt(π/α)/2 = sqrt(π/α)
+        calc (∑ k ∈ Finset.range M, exp (-α * ((k : ℝ) + 1) ^ 2))
+              + ∑ k ∈ Finset.range M, exp (-α * ((k : ℝ) + 1) ^ 2)
+            ≤ (∫ x in Set.Ioi 0, exp (-α * x ^ 2))
+              + ∫ x in Set.Ioi 0, exp (-α * x ^ 2) :=
+                add_le_add hsum_le hsum_le
+          _ = sqrt (π / α) / 2 + sqrt (π / α) / 2 := by rw [hgauss]
+          _ = sqrt (π / α) := by ring
 
 /-! ## Heat kernel trace bound -/
 
