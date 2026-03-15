@@ -543,10 +543,16 @@ theorem torusGaussianMeasure_isGaussian (N : ℕ) [NeZero N]
 
 If `ν_N → μ` weakly and `E_N[ω(f)²] → G(f,f)`, then `E_μ[ω(f)²] = G(f,f)`.
 
-This requires uniform integrability of `ω ↦ ω(f)²`, which follows from the
-uniform bound `E_N[ω(f)²] ≤ C` (from `torusEmbeddedTwoPoint_uniform_bound`).
-Bounded second moments + weak convergence → convergence of second moments. -/
-axiom torusLimit_covariance_eq
+**Proof strategy (characteristic function method):**
+Rather than uniform integrability, we use the Gaussian structure:
+1. The limit μ is Gaussian (from `torusGaussianLimit_isGaussian`).
+2. For a centered Gaussian with variance σ², `∫ cos(ω f) = exp(-σ²/2)`.
+3. `cos ∘ eval_f` is bounded continuous, so `∫ cos(ω f) dμ_{φ(n)} → ∫ cos(ω f) dμ`.
+4. The lattice CF gives `∫ cos(ω f) dμ_{φ(n)} = exp(-twoPoint_{φ(n)}/2)`.
+5. By `torus_propagator_convergence`, `twoPoint → Green`, so the LHS → `exp(-Green/2)`.
+6. By uniqueness of limits: `exp(-∫(ω f)² dμ / 2) = exp(-Green/2)`.
+7. By injectivity of exp: `∫(ω f)² dμ = Green`. -/
+theorem torusLimit_covariance_eq
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
@@ -557,7 +563,183 @@ axiom torusLimit_covariance_eq
         atTop (nhds (∫ ω, g ω ∂μ)))
     (f : TorusTestFunction L) :
     ∫ ω : Configuration (TorusTestFunction L), (ω f) ^ 2 ∂μ =
-    torusContinuumGreen L mass hmass f f
+    torusContinuumGreen L mass hmass f f := by
+  -- Abbreviation
+  set eval_f := fun ω : Configuration (TorusTestFunction L) => ω f
+  set σ_sq := ∫ ω : Configuration (TorusTestFunction L), (ω f) ^ 2 ∂μ
+  set G := torusContinuumGreen L mass hmass f f
+  -- === Step 1: The lattice measures are Gaussian ===
+  have hμ_seq_gauss : ∀ n (g : TorusTestFunction L),
+      ∫ ω : Configuration (TorusTestFunction L),
+        Real.exp (ω g) ∂(torusContinuumMeasure L (φ n + 1) mass hmass) =
+      Real.exp ((1 / 2) * ∫ ω, (ω g) ^ 2 ∂(torusContinuumMeasure L (φ n + 1) mass hmass)) := by
+    intro n g
+    rw [torusGaussianMeasure_isGaussian L (φ n + 1) mass hmass g]
+    congr 1; congr 1
+    simp only [torusEmbeddedTwoPoint]
+    congr 1; funext ω; ring
+  -- === Step 2: The limit μ is Gaussian ===
+  have hμ_gauss : ∀ (g : TorusTestFunction L),
+      ∫ ω : Configuration (TorusTestFunction L),
+        Real.exp (ω g) ∂μ =
+      Real.exp ((1 / 2) * ∫ ω, (ω g) ^ 2 ∂μ) :=
+    torusGaussianLimit_isGaussian L
+      (fun n => torusContinuumMeasure L (φ n + 1) mass hmass)
+      (fun n => torusContinuumMeasure_isProbability L (φ n + 1) mass hmass)
+      hμ_seq_gauss μ hconv
+  -- === Step 3: Pushforward of limit to ℝ is Gaussian ===
+  -- Each (μ_{φ(n)}).map eval_f = gaussianReal 0 v_n
+  have h_eval_meas : Measurable eval_f := configuration_eval_measurable f
+  have h_push_gauss_n : ∀ n,
+      (torusContinuumMeasure L (φ n + 1) mass hmass).map eval_f =
+        gaussianReal 0 (∫ ω, (ω f) ^ 2 ∂(torusContinuumMeasure L (φ n + 1) mass hmass)).toNNReal :=
+    fun n => pushforward_eval_gaussianReal L
+      (fun n => torusContinuumMeasure L (φ n + 1) mass hmass)
+      (fun n => torusContinuumMeasure_isProbability L (φ n + 1) mass hmass)
+      hμ_seq_gauss f n
+  -- μ.map eval_f = gaussianReal 0 v for some v
+  have h_push_conv : ∀ (g : ℝ → ℝ), Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Tendsto (fun n => ∫ x, g x ∂((torusContinuumMeasure L (φ n + 1) mass hmass).map eval_f))
+        atTop (nhds (∫ x, g x ∂(μ.map eval_f))) := by
+    intro g hg_cont hg_bdd
+    simp_rw [integral_map h_eval_meas.aemeasurable hg_cont.measurable.aestronglyMeasurable]
+    exact hconv (g ∘ eval_f)
+      (hg_cont.comp (WeakDual.eval_continuous f))
+      (by obtain ⟨C, hC⟩ := hg_bdd; exact ⟨C, fun x => hC (x f)⟩)
+  haveI : IsProbabilityMeasure (μ.map eval_f) :=
+    Measure.isProbabilityMeasure_map h_eval_meas.aemeasurable
+  obtain ⟨v, hv⟩ := weakLimit_centered_gaussianReal
+    (fun n => (torusContinuumMeasure L (φ n + 1) mass hmass).map eval_f)
+    (fun n => (∫ ω, (ω f) ^ 2 ∂(torusContinuumMeasure L (φ n + 1) mass hmass)).toNNReal)
+    (fun n => by
+      have := torusContinuumMeasure_isProbability L (φ n + 1) mass hmass
+      exact Measure.isProbabilityMeasure_map h_eval_meas.aemeasurable)
+    h_push_gauss_n (μ.map eval_f) h_push_conv
+  -- === Step 4: Extract ∫ (ω f)² dμ = v ===
+  have h_σ_eq_v : σ_sq = ↑v := by
+    have h1 : σ_sq = ∫ x, x ^ 2 ∂(μ.map eval_f) :=
+      (integral_map h_eval_meas.aemeasurable
+        (continuous_pow 2).aestronglyMeasurable).symm
+    rw [h1, hv]
+    have h_mean : ∫ x, x ∂(gaussianReal (0 : ℝ) v) = 0 := integral_id_gaussianReal
+    have h_var := variance_of_integral_eq_zero
+      (measurable_id.aemeasurable (μ := gaussianReal (0 : ℝ) v)) h_mean
+    simp only [id] at h_var
+    rw [← h_var]
+    exact variance_fun_id_gaussianReal
+  -- === Step 5: Show v_n → v and v_n → Green, so v = Green ===
+  -- v_n = ∫ (ω f)^2 dμ_{φ(n)} = torusEmbeddedTwoPoint L (φ n + 1) mass hmass f f
+  have h_vn_eq : ∀ n, (∫ ω, (ω f) ^ 2 ∂(torusContinuumMeasure L (φ n + 1) mass hmass)) =
+      torusEmbeddedTwoPoint L (φ n + 1) mass hmass f f := by
+    intro n
+    simp only [torusEmbeddedTwoPoint]
+    congr 1; funext ω; ring
+  -- torusEmbeddedTwoPoint → Green along φ
+  have h_prop_conv : Tendsto
+      (fun n => torusEmbeddedTwoPoint L (φ n + 1) mass hmass f f)
+      atTop (nhds G) := by
+    exact (torus_propagator_convergence L mass hmass f f).comp hφ
+  -- v_n (as real) → Green
+  have h_vn_to_G : Tendsto
+      (fun n => ∫ ω, (ω f) ^ 2 ∂(torusContinuumMeasure L (φ n + 1) mass hmass))
+      atTop (nhds G) := by
+    exact (Filter.Tendsto.congr (fun n => (h_vn_eq n).symm) h_prop_conv)
+  -- === Step 6: Use cos integral to identify v with Green ===
+  -- cos(ω f) is bounded continuous
+  have h_cos_bdd_cont :
+      Continuous (fun ω : Configuration (TorusTestFunction L) =>
+        Real.cos (eval_f ω)) ∧
+      ∃ C, ∀ ω, |Real.cos (eval_f ω)| ≤ C :=
+    ⟨Real.continuous_cos.comp (WeakDual.eval_continuous f),
+     ⟨1, fun ω => abs_le.mpr ⟨Real.neg_one_le_cos _, Real.cos_le_one _⟩⟩⟩
+  -- ∫ cos(ω f) dμ_{φ(n)} → ∫ cos(ω f) dμ
+  have h_cos_conv : Tendsto
+      (fun n => ∫ ω, Real.cos (eval_f ω) ∂(torusContinuumMeasure L (φ n + 1) mass hmass))
+      atTop (nhds (∫ ω, Real.cos (eval_f ω) ∂μ)) :=
+    hconv _ h_cos_bdd_cont.1 h_cos_bdd_cont.2
+  -- Helper: for any w : ℝ≥0, ∫ cos(x) d(gaussianReal 0 w) = exp(-(w:ℝ)/2)
+  -- (the real part of the Gaussian characteristic function at t = 1)
+  have cos_integral_gaussianReal : ∀ (w : ℝ≥0),
+      ∫ x, Real.cos (1 * x) ∂(gaussianReal (0 : ℝ) w) =
+      Real.exp (-(↑(w : ℝ) * 1 ^ 2 / 2)) := by
+    intro w
+    haveI : IsProbabilityMeasure (gaussianReal (0 : ℝ) w) := inferInstance
+    -- charFun (gaussianReal 0 w) 1 = cexp(1*0*I - w*1^2/2) = cexp(-w/2)
+    have h_cf : charFun (gaussianReal (0 : ℝ) w) 1 = cexp (-(↑(w : ℝ) * (1 : ℂ) ^ 2 / 2)) := by
+      rw [charFun_gaussianReal]; congr 1; push_cast; ring
+    -- cexp(-w/2) is real since exponent is real
+    have h_cast_eq : -(↑↑w * (1 : ℂ) ^ 2 / 2) = ↑(-(↑(w : ℝ) * 1 ^ 2 / 2) : ℝ) := by
+      simp only [ofReal_neg, ofReal_div, ofReal_mul, ofReal_pow]; push_cast; ring
+    have h_cf_real : charFun (gaussianReal (0 : ℝ) w) 1 =
+        ↑(Real.exp (-(↑(w : ℝ) * 1 ^ 2 / 2))) := by
+      rw [h_cf, h_cast_eq, ofReal_exp]
+    have h_re_cf : (charFun (gaussianReal (0 : ℝ) w) 1).re =
+        Real.exp (-(↑(w : ℝ) * 1 ^ 2 / 2)) := by
+      rw [h_cf_real, ofReal_re]
+    rw [charFun_apply_real] at h_re_cf
+    have h_int : Integrable (fun x : ℝ => cexp ((1 : ℂ) * ↑x * I)) (gaussianReal (0 : ℝ) w) :=
+      (integrable_const (1 : ℝ)).mono'
+        ((by fun_prop : Continuous fun (x : ℝ) => cexp ((1 : ℂ) * ↑x * I)).aestronglyMeasurable)
+        (ae_of_all _ fun x => by
+          rw [show (1 : ℂ) * ↑x * I = ↑(1 * x) * I from by push_cast; ring,
+            Complex.norm_exp_ofReal_mul_I])
+    rw [← h_re_cf]
+    trans ∫ x : ℝ, (cexp ((1 : ℂ) * ↑x * I)).re ∂(gaussianReal (0 : ℝ) w)
+    · exact integral_congr_ae (ae_of_all _ fun x => by
+        change Real.cos (1 * x) = (cexp ((1 : ℂ) * ↑x * I)).re
+        rw [show (1 : ℂ) * ↑x * I = ↑(1 * x) * I from by push_cast; ring]
+        exact (exp_ofReal_mul_I_re _).symm)
+    · have h := integral_re h_int
+      simp only [RCLike.re_to_complex] at h; exact h
+  -- For each lattice measure: ∫ cos(ω f) = exp(-twoPoint/2)
+  have h_cos_lattice : ∀ n,
+      ∫ ω, Real.cos (eval_f ω) ∂(torusContinuumMeasure L (φ n + 1) mass hmass) =
+      Real.exp (-(torusEmbeddedTwoPoint L (φ n + 1) mass hmass f f) / 2) := by
+    intro n
+    set μ_N := torusContinuumMeasure L (φ n + 1) mass hmass
+    -- Step 1: ∫ cos(ω f) dμ_N as ∫ cos(1*x) d(μ_N.map eval_f)
+    have hcos_asm : AEStronglyMeasurable
+        (fun x => Real.cos (1 * x)) (μ_N.map eval_f) :=
+      ((Real.continuous_cos.comp (continuous_const.mul
+        continuous_id)).measurable).aestronglyMeasurable
+    have h_step1 : ∫ ω, Real.cos (eval_f ω) ∂μ_N =
+        ∫ x, Real.cos (1 * x) ∂(μ_N.map eval_f) := by
+      rw [integral_map h_eval_meas.aemeasurable hcos_asm]
+      congr 1; ext ω; simp
+    -- Step 2: Apply the Gaussian pushforward
+    rw [h_step1, h_push_gauss_n n, cos_integral_gaussianReal]
+    -- Step 3: exp(-(v_n:ℝ) * 1^2 / 2) = exp(-twoPoint / 2)
+    congr 1
+    rw [Real.coe_toNNReal _ (integral_nonneg (fun ω => sq_nonneg _))]
+    rw [h_vn_eq n]; ring
+  -- exp(-twoPoint/2) → exp(-Green/2) (from propagator convergence)
+  have h_exp_conv : Tendsto
+      (fun n => Real.exp (-(torusEmbeddedTwoPoint L (φ n + 1) mass hmass f f) / 2))
+      atTop (nhds (Real.exp (-G / 2))) :=
+    (Real.continuous_exp.tendsto _).comp (h_prop_conv.neg.div_const 2)
+  -- For the limit measure: ∫ cos(ω f) = exp(-σ_sq/2)
+  -- This uses the Gaussianity of μ: μ.map eval_f = gaussianReal 0 v with σ_sq = v
+  have hcos_asm_limit : AEStronglyMeasurable
+      (fun x => Real.cos (1 * x)) (μ.map eval_f) :=
+    ((Real.continuous_cos.comp (continuous_const.mul
+      continuous_id)).measurable).aestronglyMeasurable
+  have h_cos_limit : ∫ ω, Real.cos (eval_f ω) ∂μ = Real.exp (-σ_sq / 2) := by
+    have h1 : ∫ ω : Configuration (TorusTestFunction L),
+        Real.cos (eval_f ω) ∂μ =
+        ∫ x, Real.cos (1 * x) ∂(μ.map eval_f) := by
+      rw [integral_map h_eval_meas.aemeasurable hcos_asm_limit]
+      congr 1; ext ω; simp
+    rw [h1, hv, cos_integral_gaussianReal]
+    congr 1
+    rw [h_σ_eq_v]; ring
+  -- By uniqueness of limits: exp(-σ_sq/2) = exp(-Green/2)
+  have h_exp_eq : Real.exp (-σ_sq / 2) = Real.exp (-G / 2) := by
+    rw [← h_cos_limit]
+    refine tendsto_nhds_unique ?_ h_exp_conv
+    exact (h_cos_conv.congr fun n => h_cos_lattice n)
+  -- By injectivity of exp: -σ_sq/2 = -G/2, so σ_sq = G
+  have h_neg_eq : -σ_sq / 2 = -G / 2 := Real.exp_injective h_exp_eq
+  linarith
 
 /-! ## Gaussian uniqueness -/
 
