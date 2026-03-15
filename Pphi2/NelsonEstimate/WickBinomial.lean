@@ -72,7 +72,10 @@ theorem wickMonomial_four_add (c₁ c₂ x y : ℝ) :
     6 * wickMonomial 2 c₁ x * wickMonomial 2 c₂ y +
     4 * x * wickMonomial 3 c₂ y +
     wickMonomial 4 c₂ y := by
-  sorry
+  rw [wickMonomial_four, wickMonomial_four, wickMonomial_four,
+      wickMonomial_three, wickMonomial_three,
+      wickMonomial_two, wickMonomial_two]
+  ring
 
 /-! ## Lower bound for the smooth part
 

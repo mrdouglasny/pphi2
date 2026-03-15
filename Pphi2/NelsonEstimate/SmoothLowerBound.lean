@@ -98,7 +98,11 @@ theorem smooth_interaction_lower_bound_volume (ha : 0 < a)
   suffices hsuff : a ^ d * (Fintype.card (FinLatticeSites d N) : ℝ) = L ^ d by
     nlinarith
   -- a^d · |Λ| = (L/N)^d · N^d = L^d
-  sorry -- lattice volume identity
+  have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
+  rw [ha_eq, div_pow]
+  simp only [Fintype.card_fun, ZMod.card, Fintype.card_fin]
+  push_cast
+  field_simp
 
 /-! ## Combined with smooth variance bound -/
 
@@ -123,7 +127,10 @@ theorem smooth_interaction_lower_bound_log (ha : 0 < a) (hmass : 0 < mass)
   -- Step 2: Apply smooth_interaction_lower_bound_volume
   -- V_S ≥ -6 L^d c_S² ≥ -6 L^d (K₁(1+|log T|))² = -6 L^d K₁² (1+|log T|)²
   have hc_S_nn : 0 ≤ smoothWickConstant d N a mass T := by
-    sorry -- positivity of smoothWickConstant (sum of positive terms)
+    unfold smoothWickConstant
+    apply mul_nonneg (by positivity)
+    apply Finset.sum_nonneg; intro m _
+    exact le_of_lt (smoothCovEigenvalue_pos d N a mass T hT m ha hmass)
   have h_lower := smooth_interaction_lower_bound_volume d N a ha L hL ha_eq
     (smoothWickConstant d N a mass T) hc_S_nn φ_S
   refine ⟨6 * L ^ d * K₁ ^ 2, by positivity, ?_⟩
