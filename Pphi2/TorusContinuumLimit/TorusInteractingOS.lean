@@ -254,17 +254,35 @@ theorem torusInteractingMeasure_gf_timeReflection_invariant
   exact (interactingLatticeMeasure_timeReflection_invariant L N P mass
     (circleSpacing_pos L N) hmass _).symm
 
-/-- **Cutoff exponential moment bound.**
+/-- **Gaussian exponential moment bound.**
 
-At each cutoff N, the interacting measure satisfies:
-  `∫ exp(|ω(f)|) dμ_{P,N} ≤ C · exp(G_N(f,f))`
+For a Gaussian measure `μ = measure T` and test function `f`,
+`∫ exp(t|ω(f)|) dμ` is finite for all t and bounded by `2 exp(t²‖Tf‖²/2)`.
 
-From Cauchy-Schwarz density transfer + Nelson + Gaussian MGF:
-  `E_P[exp(|ωf|)] ≤ √K · (E_GFF[exp(2|ωf|)])^{1/2} ≤ √(2K) · exp(G_N(f,f))`
+From `pairing_is_gaussian`: `ω(f) ~ gaussianReal 0 ‖Tf‖²` under μ.
+Then `E[exp(t|X|)] ≤ E[exp(tX)] + E[exp(-tX)] = 2 exp(t²σ²/2)` by `mgf_id_gaussianReal`.
 
-The Gaussian exponential moment `E_GFF[exp(t|X|)] ≤ 2 exp(t²σ²/2)` for X ~ N(0,σ²)
-follows from `mgf_id_gaussianReal` (Mathlib). -/
-axiom torusInteractingMeasure_exponentialMomentBound_cutoff
+This is a textbook result: Gaussian random variables have finite exponential moments. -/
+axiom gaussian_exp_abs_moment
+    (N : ℕ) [NeZero N] (mass : ℝ) (hmass : 0 < mass)
+    (g : FinLatticeField 2 N) (t : ℝ) :
+    Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (t * |ω g|))
+      (latticeGaussianMeasure 2 N (circleSpacing L N) mass
+        (circleSpacing_pos L N) hmass) ∧
+    ∫ ω : Configuration (FinLatticeField 2 N),
+      Real.exp (t * |ω g|)
+      ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass
+        (circleSpacing_pos L N) hmass) ≤
+    2 * Real.exp (t ^ 2 / 2 *
+      ∫ ω, (ω g) ^ 2 ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass
+        (circleSpacing_pos L N) hmass))
+
+/-- **Cutoff exponential moment bound** (from density transfer + Gaussian MGF + Nelson).
+
+Proved from `density_transfer_bound` + `nelson_exponential_estimate` +
+`gaussian_exp_abs_moment`. -/
+theorem torusInteractingMeasure_exponentialMomentBound_cutoff
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧ ∀ (f : TorusTestFunction L) (N : ℕ) [NeZero N],
     Integrable (fun ω : Configuration (TorusTestFunction L) =>
@@ -272,7 +290,168 @@ axiom torusInteractingMeasure_exponentialMomentBound_cutoff
     ∫ ω : Configuration (TorusTestFunction L),
       Real.exp (|ω f|)
       ∂(torusInteractingMeasure L N P mass hmass) ≤
-    C * Real.exp (torusEmbeddedTwoPoint L N mass hmass f f)
+    C * Real.exp (torusEmbeddedTwoPoint L N mass hmass f f) := by
+  -- Get K from Nelson's exponential estimate
+  obtain ⟨K, hK_pos, hK_bound⟩ := nelson_exponential_estimate L P mass hmass
+  -- C = √(2K) works
+  refine ⟨Real.sqrt (2 * K), Real.sqrt_pos_of_pos (by linarith), fun f N _ => ?_⟩
+  -- Setup: abbreviations for measures and embedding
+  set μ_int := interactingLatticeMeasure 2 N P (circleSpacing L N) mass
+    (circleSpacing_pos L N) hmass
+  set μ_GFF := latticeGaussianMeasure 2 N (circleSpacing L N) mass
+    (circleSpacing_pos L N) hmass
+  set ι := torusEmbedLift L N
+  set g := latticeTestFn L N f
+  have hι_meas : AEMeasurable ι μ_int :=
+    (torusEmbedLift_measurable L N).aemeasurable
+  have h_eval : ∀ ω : Configuration (FinLatticeField 2 N),
+      (ι ω) f = ω g := fun ω => torusEmbedLift_eval_eq L N f ω
+  -- Step 1: Push through torus embedding
+  -- torusInteractingMeasure = Measure.map ι μ_int
+  -- ∫ exp(|ω f|) d(map ι μ_int) = ∫ exp(|ω g|) dμ_int
+  have hmeas_lhs : AEStronglyMeasurable (fun ω : Configuration (TorusTestFunction L) =>
+      Real.exp (|ω f|)) (Measure.map ι μ_int) :=
+    (Real.measurable_exp.comp (configuration_eval_measurable f).abs).aestronglyMeasurable
+  change Integrable (fun ω => Real.exp (|ω f|)) (Measure.map ι μ_int) ∧
+    ∫ ω, Real.exp (|ω f|) ∂(Measure.map ι μ_int) ≤
+    Real.sqrt (2 * K) * Real.exp (torusEmbeddedTwoPoint L N mass hmass f f)
+  rw [integrable_map_measure hmeas_lhs hι_meas,
+      integral_map hι_meas hmeas_lhs]
+  simp_rw [Function.comp_def, h_eval]
+  -- Goal now on lattice: Integrable (exp(|ω g|)) μ_int ∧ ∫ exp(|ω g|) dμ_int ≤ ...
+  -- Step 2: Integrability of exp(|ω g|) under μ_int
+  -- μ_int = Z⁻¹ • μ_GFF.withDensity(bw), bw ≤ exp(B)
+  -- So exp(|ω g|) integrable under μ_int ⟸ exp(|ω g|) * bw integrable under μ_GFF
+  -- ⟸ exp(|ω g|) * exp(B) integrable ⟸ exp(|ω g|) integrable
+  -- And exp(|ω g|) = exp(1 * |ω g|) is integrable by gaussian_exp_abs_moment at t=1
+  obtain ⟨B, hB⟩ := interactionFunctional_bounded_below 2 N P (circleSpacing L N) mass
+    (circleSpacing_pos L N) hmass
+  set bw := boltzmannWeight 2 N P (circleSpacing L N) mass
+  have hbw_bound : ∀ ω, bw ω ≤ Real.exp B := fun ω =>
+    Real.exp_le_exp_of_le (by linarith [hB ω])
+  have hbw_pos : ∀ ω, 0 < bw ω :=
+    boltzmannWeight_pos 2 N P (circleSpacing L N) mass
+  have hF_meas_raw : Measurable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (|ω g|)) :=
+    Real.measurable_exp.comp (configuration_eval_measurable g).abs
+  -- exp(|ω g|) integrable under μ_GFF (gaussian_exp_abs_moment at t=1)
+  have hF_int_GFF : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (|ω g|)) μ_GFF := by
+    have h := (gaussian_exp_abs_moment L N mass hmass g 1).1
+    exact h.congr (ae_of_all _ fun ω => by ring_nf)
+  have hZ_pos : 0 < partitionFunction 2 N P (circleSpacing L N) mass
+    (circleSpacing_pos L N) hmass :=
+    partitionFunction_pos 2 N P (circleSpacing L N) mass (circleSpacing_pos L N) hmass
+  -- Integrability under withDensity: use integrable_withDensity_iff
+  have hf_dens_meas : Measurable (fun ω : Configuration (FinLatticeField 2 N) =>
+      ENNReal.ofReal (bw ω)) :=
+    ENNReal.measurable_ofReal.comp
+      ((interactionFunctional_measurable 2 N P (circleSpacing L N) mass).neg.exp)
+  have hbw_simp : ∀ ω : Configuration (FinLatticeField 2 N),
+      (ENNReal.ofReal (bw ω)).toReal = bw ω :=
+    fun ω => ENNReal.toReal_ofReal (le_of_lt (hbw_pos ω))
+  have hF_int_wd : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (|ω g|))
+      (μ_GFF.withDensity (fun ω => ENNReal.ofReal (bw ω))) := by
+    apply (integrable_withDensity_iff hf_dens_meas
+      (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mpr
+    simp_rw [hbw_simp]
+    -- Goal: Integrable (fun ω => exp(|ω g|) * bw ω) μ_GFF
+    -- Dominate by exp(|ω g|) * exp(B)
+    apply (hF_int_GFF.mul_const (Real.exp B)).mono
+    · exact hF_meas_raw.aestronglyMeasurable.mul
+        (interactionFunctional_measurable 2 N P
+          (circleSpacing L N) mass).neg.exp.aestronglyMeasurable
+    · exact Filter.Eventually.of_forall fun ω => by
+        simp only [Real.norm_eq_abs]
+        rw [abs_of_nonneg (mul_nonneg (Real.exp_pos _).le (hbw_pos ω).le),
+            abs_of_nonneg (mul_nonneg (Real.exp_pos _).le (Real.exp_pos B).le)]
+        exact mul_le_mul_of_nonneg_left (hbw_bound ω) (Real.exp_pos _).le
+  have hF_int_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (|ω g|)) μ_int := by
+    change Integrable _ (interactingLatticeMeasure 2 N P (circleSpacing L N) mass
+      (circleSpacing_pos L N) hmass)
+    unfold interactingLatticeMeasure
+    exact hF_int_wd.smul_measure
+      (ENNReal.inv_ne_top.mpr ((ENNReal.ofReal_pos.mpr hZ_pos).ne'))
+  -- Step 3: Apply density_transfer_bound with F(ω) = exp(|ω g|)
+  have hZ_ge_one := partitionFunction_ge_one 2 N P mass hmass
+    (circleSpacing L N) (circleSpacing_pos L N)
+  have hF_nn : ∀ ω : Configuration (FinLatticeField 2 N), 0 ≤ Real.exp (|ω g|) :=
+    fun ω => (Real.exp_pos _).le
+  have hF_meas : AEStronglyMeasurable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (|ω g|)) μ_GFF :=
+    hF_meas_raw.aestronglyMeasurable
+  -- F² = exp(|ω g|)^2 = exp(2|ω g|), integrable by gaussian_exp_abs_moment at t=2
+  have hF_sq_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (|ω g|) ^ 2) μ_GFF := by
+    have h_eq : ∀ ω : Configuration (FinLatticeField 2 N),
+        Real.exp (|ω g|) ^ 2 = Real.exp (2 * |ω g|) := fun ω => by
+      rw [sq, ← Real.exp_add]; ring_nf
+    simp_rw [h_eq]
+    exact (gaussian_exp_abs_moment L N mass hmass g 2).1
+  -- Apply density_transfer_bound
+  have h_dt := density_transfer_bound 2 N P (circleSpacing L N) mass
+    (circleSpacing_pos L N) hmass K hK_pos (hK_bound N)
+    hZ_ge_one (fun ω => Real.exp (|ω g|)) hF_nn hF_meas hF_sq_int
+  -- h_dt: ∫ exp(|ω g|) dμ_int ≤ K^{1/2} * (∫ exp(|ω g|)^{(2:ℝ)} dμ_GFF)^{1/2}
+  -- Step 4: Bound (∫ exp(|ω g|)^{(2:ℝ)} dμ_GFF)^{1/2} using gaussian_exp_abs_moment
+  have h_rpow_eq : ∀ ω : Configuration (FinLatticeField 2 N),
+      Real.exp (|ω g|) ^ (2:ℝ) = Real.exp (2 * |ω g|) := fun ω => by
+    rw [show (2:ℝ) = ↑(2:ℕ) from by norm_num, Real.rpow_natCast, sq, ← Real.exp_add]; ring_nf
+  have h_int_rpow_eq : ∫ ω, (fun ω => Real.exp (|ω g|)) ω ^ (2:ℝ) ∂μ_GFF =
+      ∫ ω, Real.exp (2 * |ω g|) ∂μ_GFF := by
+    congr 1; ext ω; exact h_rpow_eq ω
+  -- gaussian_exp_abs_moment at t=2: ∫ exp(2|ω g|) ≤ 2 * exp(2^2/2 * ∫(ωg)²)
+  have h_gauss : ∫ ω, Real.exp (2 * |ω g|) ∂μ_GFF ≤
+      2 * Real.exp ((2:ℝ) ^ 2 / 2 * ∫ ω, (ω g) ^ 2 ∂μ_GFF) :=
+    (gaussian_exp_abs_moment L N mass hmass g 2).2
+  -- ∫(ωg)² = torusEmbeddedTwoPoint L N mass hmass f f
+  have h_second_moment_eq : ∫ ω, (ω g) ^ 2 ∂μ_GFF =
+      torusEmbeddedTwoPoint L N mass hmass f f :=
+    (torusEmbeddedTwoPoint_eq_lattice_second_moment L N mass hmass f).symm
+  -- 2^2/2 * ∫(ωg)² = 2 * G_N(f,f)
+  have h_exp_simp : (2:ℝ) ^ 2 / 2 * ∫ ω, (ω g) ^ 2 ∂μ_GFF =
+      2 * torusEmbeddedTwoPoint L N mass hmass f f := by
+    rw [h_second_moment_eq]; norm_num
+  -- So: ∫ exp(2|ωg|) ≤ 2 * exp(2 * G_N(f,f))
+  have h_gauss' : ∫ ω, Real.exp (2 * |ω g|) ∂μ_GFF ≤
+      2 * Real.exp (2 * torusEmbeddedTwoPoint L N mass hmass f f) := by
+    rw [← h_exp_simp]; exact h_gauss
+  -- Step 5: Bound (∫ exp(2|ωg|))^{1/2} ≤ √2 * exp(G_N(f,f))
+  set G_N := torusEmbeddedTwoPoint L N mass hmass f f
+  have h_gauss_nn : (0:ℝ) ≤ ∫ ω, Real.exp (2 * |ω g|) ∂μ_GFF :=
+    integral_nonneg fun ω => (Real.exp_pos _).le
+  have h_rpow_bound : (∫ ω, (fun ω => Real.exp (|ω g|)) ω ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ) ≤
+      Real.sqrt 2 * Real.exp G_N := by
+    rw [h_int_rpow_eq]
+    calc (∫ ω, Real.exp (2 * |ω g|) ∂μ_GFF) ^ (1/2:ℝ)
+        ≤ (2 * Real.exp (2 * G_N)) ^ (1/2:ℝ) :=
+          Real.rpow_le_rpow h_gauss_nn h_gauss' (by norm_num : (0:ℝ) ≤ 1/2)
+      _ = Real.sqrt (2 * Real.exp (2 * G_N)) := by
+          rw [Real.sqrt_eq_rpow]
+      _ = Real.sqrt 2 * Real.sqrt (Real.exp (2 * G_N)) := by
+          rw [Real.sqrt_mul (by norm_num : (0:ℝ) ≤ 2)]
+      _ = Real.sqrt 2 * Real.exp G_N := by
+          congr 1
+          rw [show (2 : ℝ) * G_N = G_N + G_N from by ring,
+              Real.exp_add, Real.sqrt_mul_self (Real.exp_pos _).le]
+  -- Step 6: Combine: ∫ exp(|ωg|) ≤ K^{1/2} * √2 * exp(G_N) = √(2K) * exp(G_N)
+  have h_integral_bound : ∫ ω, Real.exp (|ω g|) ∂μ_int ≤
+      Real.sqrt (2 * K) * Real.exp G_N := by
+    calc ∫ ω, Real.exp (|ω g|) ∂μ_int
+        ≤ K ^ (1/2:ℝ) *
+          (∫ ω, (fun ω => Real.exp (|ω g|)) ω ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ) := h_dt
+      _ ≤ K ^ (1/2:ℝ) * (Real.sqrt 2 * Real.exp G_N) :=
+          mul_le_mul_of_nonneg_left h_rpow_bound (Real.rpow_nonneg hK_pos.le _)
+      _ = Real.sqrt K * (Real.sqrt 2 * Real.exp G_N) := by
+          rw [← Real.sqrt_eq_rpow]
+      _ = (Real.sqrt K * Real.sqrt 2) * Real.exp G_N := by ring
+      _ = Real.sqrt (2 * K) * Real.exp G_N := by
+          congr 1
+          rw [mul_comm (Real.sqrt K) (Real.sqrt 2),
+              ← Real.sqrt_mul (by norm_num : (0:ℝ) ≤ 2)]
+  exact ⟨hF_int_int, h_integral_bound⟩
 
 /-- **Interacting exponential moment bound** (transferred to continuum limit).
 
