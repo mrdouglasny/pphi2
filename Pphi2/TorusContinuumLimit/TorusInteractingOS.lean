@@ -81,22 +81,54 @@ translations and D4 point group symmetries. These follow from:
 
 References: Glimm-Jaffe §19.4, Simon Ch. V §1. -/
 
-/-- The lattice translation linear map on the lattice field. -/
-private def latticeTranslateLM (N : ℕ) (j₁ j₂ : ℤ) :
+/-- Linear map on lattice field induced by a site permutation `σ`. -/
+private def latticeSitePermuteLM (N : ℕ)
+    (σ : FinLatticeSites 2 N → FinLatticeSites 2 N) :
     FinLatticeField 2 N →ₗ[ℝ] FinLatticeField 2 N where
-  toFun g := g ∘ translateSites N j₁ j₂
+  toFun g := g ∘ σ
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
 
-/-- **Lattice interacting measure is translation-invariant** under lattice translations. -/
-axiom interactingLatticeMeasure_translation_invariant
+/-- **Lattice interacting measure is invariant under site symmetries.**
+
+For any site permutation `σ` that preserves the lattice Laplacian
+eigenvalues, the interacting measure is σ-invariant. This single axiom
+unifies translation, swap, and time-reflection invariance.
+
+The proof uses:
+1. V(σω) = V(ω): interaction sums over all sites (relabeling-invariant)
+2. ρ(σφ) = ρ(φ): Gaussian density depends on eigenvalues (σ-invariant by hσ)
+3. |det(σ)| = 1: σ is a permutation matrix on ℝ^{sites} -/
+axiom interactingLatticeMeasure_symmetry_invariant
+    (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
+    (ha : 0 < circleSpacing L N) (hmass : 0 < mass)
+    (σ : FinLatticeSites 2 N → FinLatticeSites 2 N)
+    (_hσ_bij : Function.Bijective σ)
+    (_hσ_laplacian : ∀ (g : FinLatticeField 2 N),
+      ∫ ω : Configuration (FinLatticeField 2 N), (ω (g ∘ σ)) ^ 2
+        ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass ha hmass) =
+      ∫ ω, (ω g) ^ 2 ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass ha hmass))
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    (F : Configuration (FinLatticeField 2 N) → E) :
+    ∫ ω, F (ω.comp (latticeSitePermuteLM N σ).toContinuousLinearMap)
+      ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass) =
+    ∫ ω, F ω ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass)
+
+-- Specific instances:
+
+private def latticeTranslateLM (N : ℕ) (j₁ j₂ : ℤ) :=
+  latticeSitePermuteLM N (translateSites N j₁ j₂)
+
+private theorem interactingLatticeMeasure_translation_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
     (ha : 0 < circleSpacing L N) (hmass : 0 < mass)
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     (j₁ j₂ : ℤ) (F : Configuration (FinLatticeField 2 N) → E) :
     ∫ ω, F (ω.comp (latticeTranslateLM N j₁ j₂).toContinuousLinearMap)
       ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass) =
-    ∫ ω, F ω ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass)
+    ∫ ω, F ω ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass) :=
+  interactingLatticeMeasure_symmetry_invariant L N P mass ha hmass
+    (translateSites N j₁ j₂) sorry sorry F
 
 theorem torusInteractingMeasure_gf_latticeTranslation_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
@@ -455,30 +487,18 @@ theorem torusInteractingLimit_translation_invariant
     tendsto_nhds_unique h_sub h_diff
   exact (sub_eq_zero.mp h_eq).symm
 
-/-- The lattice swap linear map: `(L_swap g)(x) = g(swapSites x)`. -/
-private def latticeSwapLM (N : ℕ) :
-    FinLatticeField 2 N →ₗ[ℝ] FinLatticeField 2 N where
-  toFun g := g ∘ swapSites N
-  map_add' _ _ := rfl
-  map_smul' _ _ := rfl
+private def latticeSwapLM (N : ℕ) := latticeSitePermuteLM N (swapSites N)
 
-/-- **Lattice interacting measure is swap-invariant.**
-
-The interacting lattice measure is invariant under coordinate swap
-`(i,j) ↦ (j,i)` on `FinLatticeSites 2 N`. This follows from:
-- The interaction `V = a² Σ_x :P(φ(x)):` sums over all sites; swap relabels.
-- The GFF eigenvalues `λ_{n₁,n₂}` are symmetric under n₁ ↔ n₂.
-- Lebesgue measure is preserved (det of swap = -1, |det| = 1).
-
-Analogous to `latticeMeasure_translation_invariant` but with swap. -/
-axiom interactingLatticeMeasure_swap_invariant
+private theorem interactingLatticeMeasure_swap_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
     (ha : 0 < circleSpacing L N) (hmass : 0 < mass)
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     (F : Configuration (FinLatticeField 2 N) → E) :
     ∫ ω, F (ω.comp (latticeSwapLM N).toContinuousLinearMap) ∂(interactingLatticeMeasure 2 N P
       (circleSpacing L N) mass ha hmass) =
-    ∫ ω, F ω ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass)
+    ∫ ω, F ω ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass) :=
+  interactingLatticeMeasure_symmetry_invariant L N P mass ha hmass
+    (swapSites N) sorry sorry F
 
 /-- **The torus interacting generating functional is swap-invariant at every cutoff.**
 
@@ -543,22 +563,18 @@ theorem torusInteractingMeasure_gf_swap_invariant
     (circleSpacing_pos L N) hmass _).symm
 
 /-- The lattice time-reflection linear map: `(L_refl g)(x) = g(timeReflectSites x)`. -/
-private def latticeTimeReflectLM (N : ℕ) :
-    FinLatticeField 2 N →ₗ[ℝ] FinLatticeField 2 N where
-  toFun g := g ∘ timeReflectSites N
-  map_add' _ _ := rfl
-  map_smul' _ _ := rfl
+private def latticeTimeReflectLM (N : ℕ) := latticeSitePermuteLM N (timeReflectSites N)
 
-/-- **Lattice interacting measure is time-reflection-invariant.**
-Same justification as swap: sum relabeling + eigenvalue symmetry + measure preservation. -/
-axiom interactingLatticeMeasure_timeReflection_invariant
+private theorem interactingLatticeMeasure_timeReflection_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
     (ha : 0 < circleSpacing L N) (hmass : 0 < mass)
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     (F : Configuration (FinLatticeField 2 N) → E) :
     ∫ ω, F (ω.comp (latticeTimeReflectLM N).toContinuousLinearMap) ∂(interactingLatticeMeasure
       2 N P (circleSpacing L N) mass ha hmass) =
-    ∫ ω, F ω ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass)
+    ∫ ω, F ω ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass) :=
+  interactingLatticeMeasure_symmetry_invariant L N P mass ha hmass
+    (timeReflectSites N) sorry sorry F
 
 /-- **The torus interacting generating functional is time-reflection-invariant.**
 
