@@ -909,11 +909,121 @@ theorem z2_symmetric_of_weakLimit
       Tendsto (fun n => ∫ ω, g ω ∂(μ_seq n)) atTop (nhds (∫ ω, g ω ∂μ))) :
     Measure.map (Neg.neg : Configuration (TorusTestFunction L) →
       Configuration (TorusTestFunction L)) μ = μ := by
-  -- Z₂ symmetry of weak limit: needs measure extensionality on cylindrical σ-algebra.
-  -- The proof shows ∫ f d(neg_*μ) = ∫ f dμ for all bounded continuous f via weak
-  -- convergence. The extensionality step needs cylindrical σ-algebra treatment
-  -- (BorelSpace removed as inconsistent for infinite-dim weak duals).
-  sorry
+  -- Strategy: push forward both sides through configBasisEval to ℕ → ℝ (Polish + Borel),
+  -- show the pushforwards agree using weak convergence + uniqueness of limits,
+  -- then pull back using instMeasurableSpaceConfiguration_eq_comap.
+  have hneg_meas := torus_configuration_neg_measurable L
+  -- Key identity: configBasisEval ∘ neg = Neg.neg ∘ configBasisEval
+  -- (because (-ω)(basis m) = -(ω(basis m)))
+  have he_neg : (configBasisEval (E := TorusTestFunction L)) ∘
+      (Neg.neg : Configuration (TorusTestFunction L) → Configuration (TorusTestFunction L)) =
+      Neg.neg ∘ configBasisEval := by
+    ext ω m
+    change (-ω) (DyninMityaginSpace.basis m) = -(ω (DyninMityaginSpace.basis m))
+    exact ContinuousLinearMap.neg_apply ω _
+  -- Abbreviate neg on ℕ → ℝ
+  set neg_RN : (ℕ → ℝ) → (ℕ → ℝ) := Neg.neg
+  -- Abbreviations for pushforward measures on ℕ → ℝ
+  set ν_μ := Measure.map configBasisEval μ with hν_μ_def
+  set neg_Config := (Neg.neg : Configuration (TorusTestFunction L) →
+    Configuration (TorusTestFunction L))
+  -- IsProbabilityMeasure for map neg μ
+  haveI hmap_neg_prob : IsProbabilityMeasure (Measure.map neg_Config μ) :=
+    Measure.isProbabilityMeasure_map hneg_meas.aemeasurable
+  set ν_neg := Measure.map configBasisEval (Measure.map neg_Config μ) with hν_neg_def
+  -- Therefore ν_neg = map neg ν_μ on ℕ → ℝ
+  have hν_neg_eq : ν_neg = Measure.map neg_RN ν_μ := by
+    change Measure.map configBasisEval (Measure.map neg_Config μ) =
+      Measure.map Neg.neg (Measure.map configBasisEval μ)
+    rw [Measure.map_map configBasisEval_measurable hneg_meas,
+        he_neg,
+        ← Measure.map_map measurable_neg configBasisEval_measurable]
+  -- Both pushforwards are probability measures
+  haveI hν_μ_prob : IsProbabilityMeasure ν_μ :=
+    Measure.isProbabilityMeasure_map configBasisEval_measurable.aemeasurable
+  haveI hν_neg_prob : IsProbabilityMeasure ν_neg :=
+    Measure.isProbabilityMeasure_map configBasisEval_measurable.aemeasurable
+  -- Show ν_neg = ν_μ on ℕ → ℝ via bounded continuous function extensionality
+  have hν_eq : ν_neg = ν_μ := by
+    apply ext_of_forall_integral_eq_of_IsFiniteMeasure
+    intro g
+    -- StronglyMeasurable for g ∘ configBasisEval on Configuration E
+    have h_ge_sm : StronglyMeasurable (fun ω : Configuration (TorusTestFunction L) =>
+        g (configBasisEval ω)) :=
+      (g.continuous.measurable.comp configBasisEval_measurable).stronglyMeasurable
+    -- ∫ g dν_neg = ∫ (g ∘ e ∘ neg) dμ
+    have h1 : ∫ x, g x ∂ν_neg =
+        ∫ ω, g (configBasisEval (neg_Config ω)) ∂μ := by
+      change ∫ x, g x ∂(Measure.map configBasisEval (Measure.map neg_Config μ)) =
+        ∫ ω, g (configBasisEval (neg_Config ω)) ∂μ
+      rw [Measure.map_map configBasisEval_measurable hneg_meas]
+      exact integral_map_of_stronglyMeasurable
+        (configBasisEval_measurable.comp hneg_meas)
+        g.continuous.stronglyMeasurable
+    -- ∫ g dν_μ = ∫ (g ∘ e) dμ
+    have h2 : ∫ x, g x ∂ν_μ = ∫ ω, g (configBasisEval ω) ∂μ := by
+      rw [hν_μ_def]
+      exact integral_map_of_stronglyMeasurable configBasisEval_measurable
+        g.continuous.stronglyMeasurable
+    rw [h1, h2]
+    -- g ∘ e and g ∘ e ∘ neg are bounded continuous on Configuration E
+    have hge_cont : Continuous (fun ω : Configuration (TorusTestFunction L) =>
+        g (configBasisEval ω)) :=
+      g.continuous.comp configBasisEval_continuous
+    have hge_bdd : ∃ C, ∀ x : Configuration (TorusTestFunction L),
+        |g (configBasisEval x)| ≤ C :=
+      ⟨‖g‖, fun x => (Real.norm_eq_abs _).symm ▸ g.norm_coe_le_norm _⟩
+    have hge_neg_cont : Continuous (fun ω : Configuration (TorusTestFunction L) =>
+        g (configBasisEval (neg_Config ω))) :=
+      hge_cont.comp continuous_neg
+    have hge_neg_bdd : ∃ C, ∀ x : Configuration (TorusTestFunction L),
+        |g (configBasisEval (neg_Config x))| ≤ C :=
+      ⟨‖g‖, fun x => (Real.norm_eq_abs _).symm ▸ g.norm_coe_le_norm _⟩
+    -- By hconv: ∫ (g ∘ e ∘ neg) dμ_n → ∫ (g ∘ e ∘ neg) dμ
+    have hconv_neg := hconv _ hge_neg_cont hge_neg_bdd
+    -- By hconv: ∫ (g ∘ e) dμ_n → ∫ (g ∘ e) dμ
+    have hconv_pos := hconv _ hge_cont hge_bdd
+    -- By hμ_symm: ∫ (g ∘ e ∘ neg) dμ_n = ∫ (g ∘ e) dμ_n
+    have h_symm_n : ∀ n,
+        ∫ ω, g (configBasisEval (neg_Config ω)) ∂(μ_seq n) =
+        ∫ ω, g (configBasisEval ω) ∂(μ_seq n) := by
+      intro n
+      -- LHS = ∫ (g ∘ e) ∘ neg dμ_n = ∫ (g ∘ e) d(map neg μ_n) = ∫ (g ∘ e) dμ_n
+      rw [show (fun ω => g (configBasisEval (neg_Config ω))) =
+          (fun ω => g (configBasisEval ω)) ∘ neg_Config from rfl]
+      rw [show ∫ x, ((fun ω => g (configBasisEval ω)) ∘ neg_Config) x ∂(μ_seq n) =
+            ∫ x, g (configBasisEval x) ∂(Measure.map neg_Config (μ_seq n)) from
+            (integral_map_of_stronglyMeasurable hneg_meas h_ge_sm).symm]
+      rw [hμ_symm]
+    -- Therefore both sequences converge to the same limit
+    exact tendsto_nhds_unique
+      (hconv_neg.congr h_symm_n)
+      hconv_pos
+  -- Pull back: ν_neg = ν_μ on ℕ → ℝ implies map neg μ = μ on Configuration E
+  ext S hS
+  rw [instMeasurableSpaceConfiguration_eq_comap] at hS
+  obtain ⟨T, hT, rfl⟩ := hS
+  rw [Measure.map_apply hneg_meas (configBasisEval_measurable hT)]
+  -- neg⁻¹(e⁻¹(T)) = e⁻¹(neg⁻¹(T)) by the commutation identity
+  have h_preimage : neg_Config ⁻¹' (configBasisEval ⁻¹' T) =
+      configBasisEval ⁻¹' (neg_RN ⁻¹' T) := by
+    ext ω; simp only [Set.mem_preimage]
+    constructor
+    · intro h; rwa [show neg_RN (configBasisEval ω) =
+          configBasisEval (neg_Config ω) from (congr_fun he_neg ω).symm]
+    · intro h; rwa [show configBasisEval (neg_Config ω) =
+          neg_RN (configBasisEval ω) from congr_fun he_neg ω]
+  rw [h_preimage]
+  -- Now both sides are ν_μ evaluated at Borel sets in ℕ → ℝ
+  have h_lhs : μ (configBasisEval ⁻¹' (neg_RN ⁻¹' T)) =
+      ν_μ (neg_RN ⁻¹' T) :=
+    (Measure.map_apply configBasisEval_measurable (measurable_neg hT)).symm
+  have h_rhs : μ (configBasisEval ⁻¹' T) = ν_μ T :=
+    (Measure.map_apply configBasisEval_measurable hT).symm
+  rw [h_lhs, h_rhs]
+  -- ν_neg = map neg ν_μ, and ν_neg = ν_μ, so ν_μ(neg⁻¹ T) = ν_μ(T)
+  rw [show ν_μ (neg_RN ⁻¹' T) = ν_neg T from by
+    rw [hν_neg_eq, Measure.map_apply measurable_neg hT], hν_eq]
 
 /-! ## Full convergence from Gaussian uniqueness -/
 
