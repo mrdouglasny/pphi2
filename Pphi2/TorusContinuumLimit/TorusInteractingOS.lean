@@ -259,12 +259,11 @@ theorem torusInteractingMeasure_gf_timeReflection_invariant
 At each cutoff N, the interacting measure satisfies:
   `∫ exp(|ω(f)|) dμ_{P,N} ≤ C · exp(G_N(f,f))`
 
-From Cauchy-Schwarz density transfer:
-  `E_P[exp(|ω(f)|)] ≤ (1/Z) √(E_GFF[exp(2|ω(f)|)]) √(E_GFF[exp(-2V)])`
-  `≤ √K · √(2 exp(2 G_N(f,f)))` (using Z ≥ 1, Nelson, Gaussian MGF)
-  `= √(2K) · exp(G_N(f,f))`
+From Cauchy-Schwarz density transfer + Nelson + Gaussian MGF:
+  `E_P[exp(|ωf|)] ≤ √K · (E_GFF[exp(2|ωf|)])^{1/2} ≤ √(2K) · exp(G_N(f,f))`
 
-References: Simon, *P(φ)₂ QFT*, Ch. V, Prop. V.1.3. -/
+The Gaussian exponential moment `E_GFF[exp(t|X|)] ≤ 2 exp(t²σ²/2)` for X ~ N(0,σ²)
+follows from `mgf_id_gaussianReal` (Mathlib). -/
 axiom torusInteractingMeasure_exponentialMomentBound_cutoff
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧ ∀ (f : TorusTestFunction L) (N : ℕ) [NeZero N],
