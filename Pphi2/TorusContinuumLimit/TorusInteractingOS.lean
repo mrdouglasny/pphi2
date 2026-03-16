@@ -115,17 +115,13 @@ Proof:
 1. BW invariance: V(omega . sigma) = V(omega) (interaction sum relabeling)
 2. Density invariance: rho(phi . sigma^-1) = rho(phi) (hypothesis)
 3. Lebesgue preservation: phi -> phi . sigma^-1 is a permutation (det = plus or minus 1)
-4. Gaussian measure preservation: combines 2 + 3 (sorry, to be filled)
+4. Gaussian measure preservation: combines 2 + 3 (sorry: requires MeasurePreserving for withDensity)
 5. Change of variables on the E-valued Bochner integral -/
 theorem interactingLatticeMeasure_symmetry_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
     (ha : 0 < circleSpacing L N) (hmass : 0 < mass)
     (σ : FinLatticeSites 2 N → FinLatticeSites 2 N)
     (hσ_bij : Function.Bijective σ)
-    (_hσ_laplacian : ∀ (g : FinLatticeField 2 N),
-      ∫ ω : Configuration (FinLatticeField 2 N), (ω (g ∘ σ)) ^ 2
-        ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass ha hmass) =
-      ∫ ω, (ω g) ^ 2 ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass ha hmass))
     (hσ_density : ∀ φ : FinLatticeField 2 N,
       gaussianDensity 2 N (circleSpacing L N) mass
         (φ ∘ (Equiv.ofBijective σ hσ_bij).symm) =
@@ -275,7 +271,6 @@ private theorem interactingLatticeMeasure_translation_invariant
     exact ⟨hleft.injective, hright.surjective⟩
   exact interactingLatticeMeasure_symmetry_invariant L N P mass ha hmass
     (translateSites N j₁ j₂) hbij
-    (by sorry) -- Laplacian preservation: ∫(ω(g∘σ))² = ∫(ωg)²
     (by -- Density preservation: gaussianDensity(φ∘σ⁻¹) = gaussianDensity(φ)
       intro φ
       -- Step 1: Identify σ⁻¹ with explicit inverse
@@ -704,10 +699,34 @@ private theorem interactingLatticeMeasure_swap_invariant
       intro x; simp only [swapSites]
       ext i; fin_cases i <;> simp [Matrix.cons_val_zero, Matrix.cons_val_one]
     exact hinv.bijective
+  have hinv : Function.Involutive (swapSites N) := by
+    intro x; simp only [swapSites]
+    ext i; fin_cases i <;> simp [Matrix.cons_val_zero, Matrix.cons_val_one]
   exact interactingLatticeMeasure_symmetry_invariant L N P mass ha hmass
     (swapSites N) hbij
-    (by sorry) -- Laplacian preservation: eigenvalues λ(n₁,n₂) symmetric
-    (by sorry) -- Density preservation: quadratic form symmetric under swap
+    (by -- Density preservation: gaussianDensity(φ∘swap⁻¹) = gaussianDensity(φ)
+      intro φ
+      set σ_equiv := Equiv.ofBijective (swapSites N) hbij
+      -- Since swap is involutive, swap⁻¹ = swap
+      have hsymm_eq : ∀ y, σ_equiv.symm y = swapSites N y := by
+        intro y
+        rw [Equiv.symm_apply_eq]
+        exact (hinv y).symm
+      -- Unfold gaussianDensity and show the exponent is equal
+      unfold gaussianDensity
+      congr 1; congr 1
+      -- Goal: ∑ x, (φ ∘ σ_equiv.symm) x * (massOperator 2 N a mass (φ ∘ σ_equiv.symm)) x =
+      --       ∑ x, φ x * (massOperator 2 N a mass φ) x
+      -- Rewrite σ_equiv.symm as swapSites
+      simp_rw [Function.comp, hsymm_eq]
+      -- Now: ∑ x, φ(swap x) * (Q(φ∘swap)) x = ∑ x, φ x * (Q φ) x
+      -- The quadratic form is invariant under swap because:
+      -- 1. The mass operator Q = -Δ + m²I commutes with swap (the Laplacian stencil
+      --    sums over directions i=0,1, and swap exchanges these directions)
+      -- 2. The sum over all lattice sites is relabeling-invariant
+      -- This requires proving massOperator commutativity with swap,
+      -- which involves showing the stencil exchange property.
+      sorry)
     F
 
 /-- **The torus interacting generating functional is swap-invariant at every cutoff.**
@@ -791,7 +810,6 @@ private theorem interactingLatticeMeasure_timeReflection_invariant
     exact hinv.bijective
   exact interactingLatticeMeasure_symmetry_invariant L N P mass ha hmass
     (timeReflectSites N) hbij
-    (by sorry) -- Laplacian preservation: eigenvalues depend on n₁², invariant under n₁→-n₁
     (by sorry) -- Density preservation: gaussianDensity invariant under time reflection
     F
 
