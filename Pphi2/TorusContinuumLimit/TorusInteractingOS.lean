@@ -251,17 +251,50 @@ theorem interactingLatticeMeasure_symmetry_invariant
     -- σ_field_equiv preserves volume (piCongrLeft permutation on ℝⁿ)
     -- and the density: ρ(σ_field_equiv.symm(φ)) = ρ(φ ∘ σ_equiv) = ρ(φ)
     have h_sigma : MeasurePreserving σ_field_equiv ν ν := by
-      -- Show that σ_field_equiv preserves ν via the characteristic functional
-      -- (two finite measures with equal Fourier transforms are equal)
-      -- ν is determined by ∫ exp(i⟨f,φ⟩) dν(φ) for all f, which equals
-      -- exp(-½ ‖T(f)‖²) where T is the covariance operator.
-      -- σ_field_equiv permutes coordinates via σ_equiv, and the lattice
-      -- covariance operator is invariant under site symmetries that
-      -- preserve the density (which is exactly hσ_density).
-      -- For the formal proof: both ν and (σ_field_equiv)_*ν are finite
-      -- measures with the same characteristic functional, hence equal
-      -- by measure uniqueness.
-      sorry
+      -- Step 2a: Rewrite ν as normalizedGaussianDensityMeasure = c⁻¹ • vol.withDensity(ρ)
+      have hν_eq : ν = normalizedGaussianDensityMeasure 2 N a mass :=
+        latticeGaussianFieldLaw_eq_normalizedGaussianDensityMeasure (d := 2) (N := N)
+          a mass ha hmass
+      rw [hν_eq, normalizedGaussianDensityMeasure]
+      -- Goal: MeasurePreserving σ_field_equiv
+      --   (c⁻¹ • gaussianDensityMeasure 2 N a mass)
+      --   (c⁻¹ • gaussianDensityMeasure 2 N a mass)
+      apply MeasurePreserving.smul_measure
+      -- Step 2b: Show MeasurePreserving σ_field_equiv
+      --   (vol.withDensity ρ) (vol.withDensity ρ)
+      simp only [gaussianDensityMeasure]
+      -- Density weight invariance: ρ(σ(φ)) = ρ(φ)
+      have hσ_field_eq : ∀ φ : FinLatticeField 2 N,
+          (σ_field_equiv φ : FinLatticeField 2 N) = φ ∘ σ_equiv.symm := by
+        intro φ
+        have := piCongrLeft_eq_comp_symm σ_equiv φ
+        change (MeasurableEquiv.piCongrLeft (fun _ => ℝ) σ_equiv) φ = φ ∘ σ_equiv.symm
+        rw [MeasurableEquiv.coe_piCongrLeft]; exact this
+      have hρ_inv : ∀ φ : FinLatticeField 2 N,
+          gaussianDensityWeight 2 N a mass (σ_field_equiv φ) =
+          gaussianDensityWeight 2 N a mass φ := by
+        intro φ
+        simp only [gaussianDensityWeight, hσ_field_eq, hσ_density]
+      -- Volume preservation
+      have h_vol : MeasurePreserving σ_field_equiv
+          (volume : Measure (FinLatticeField 2 N)) volume :=
+        volume_measurePreserving_piCongrLeft _ _
+      -- Construct MeasurePreserving for withDensity by showing map equality
+      refine ⟨σ_field_equiv.measurable, ?_⟩
+      ext s hs
+      rw [Measure.map_apply σ_field_equiv.measurable hs,
+          withDensity_apply _ (σ_field_equiv.measurable hs),
+          withDensity_apply _ hs]
+      -- Goal: ∫⁻ x in σ⁻¹(s), ρ(x) dvol = ∫⁻ x in s, ρ(x) dvol
+      -- Rewrite LHS: ρ(x) = ρ(σ(x)) on σ⁻¹(s), then change variables
+      rw [show ∫⁻ x in σ_field_equiv ⁻¹' s,
+            gaussianDensityWeight 2 N a mass x ∂volume =
+          ∫⁻ x in σ_field_equiv ⁻¹' s,
+            gaussianDensityWeight 2 N a mass (σ_field_equiv x) ∂volume from
+        setLIntegral_congr_fun (σ_field_equiv.measurable hs)
+          (fun x _ => (hρ_inv x).symm)]
+      exact h_vol.setLIntegral_comp_preimage hs
+        (gaussianDensityWeight_measurable (d := 2) (N := N) a mass)
     -- Compose: Φ = evalME.trans(σ_field.trans(evalME.symm))
     exact h_evalME.trans (h_sigma.trans h_evalME_symm)
   exact hΦ_mp.integral_comp' G
@@ -586,13 +619,108 @@ private theorem gf_sub_norm_le_seminorm
     have h_combined : ∫ ω : Configuration (TorusTestFunction L),
         (ω (g - h)) ^ 2 ∂μ ≤ C * |p (g - h)| ^ 2 :=
       (hC_bound (g - h) N).trans (mul_le_mul_of_nonneg_left h_seminorm hC_pos.le)
-    -- The proof combines:
-    -- (1) |exp(ix)-exp(iy)| ≤ |x-y| (exp is 1-Lipschitz on imaginary line)
-    -- (2) ‖∫f dμ‖ ≤ ∫ g dμ when ‖f‖ ≤ g a.e. (norm_integral_le_of_norm_le)
-    -- (3) E[|X|] ≤ √(E[X²]) for probability measures (Cauchy-Schwarz / Jensen)
-    -- (4) E[X²] ≤ C·|p|² (h_combined)
-    -- giving ‖Z[g]-Z[h]‖ ≤ √(C·|p|²) = √C·|p| ≤ 2√C·|p|
-    sorry
+    -- Abbreviation for the difference integrand
+    set F : Configuration (TorusTestFunction L) → ℂ := fun ω =>
+      Complex.exp (Complex.I * ↑(ω g)) - Complex.exp (Complex.I * ↑(ω h))
+    -- Each exp(iωf) is integrable (bounded in norm by 1)
+    have h_int : ∀ f : TorusTestFunction L,
+        Integrable (fun ω : Configuration (TorusTestFunction L) =>
+          Complex.exp (Complex.I * ↑(ω f))) μ := fun f =>
+      (integrable_const (1 : ℂ)).mono
+        (Complex.continuous_exp.measurable.comp
+          (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
+            (configuration_eval_measurable f)))).aestronglyMeasurable
+        (ae_of_all _ fun ω => by
+          rw [norm_one, mul_comm Complex.I]; exact le_of_eq (Complex.norm_exp_ofReal_mul_I _))
+    -- GF difference = ∫ F dμ
+    have h_gf_eq : torusGeneratingFunctional L μ g -
+        torusGeneratingFunctional L μ h = ∫ ω, F ω ∂μ := by
+      simp only [torusGeneratingFunctional, F]
+      exact (integral_sub (h_int g) (h_int h)).symm
+    -- ‖F(ω)‖ ≤ 2 (trivial bound, for integrability)
+    have hF_bd2 : ∀ ω, ‖F ω‖ ≤ 2 := fun ω => by
+      exact (norm_sub_le _ _).trans (by
+        rw [mul_comm Complex.I (↑(ω g) : ℂ), Complex.norm_exp_ofReal_mul_I,
+            mul_comm Complex.I (↑(ω h) : ℂ), Complex.norm_exp_ofReal_mul_I]; norm_num)
+    -- ‖F(ω)‖ ≤ |ω(g-h)| (Lipschitz of exp on imaginary line)
+    have hF_lip : ∀ ω, ‖F ω‖ ≤ |ω (g - h)| := fun ω => by
+      -- exp(ia) - exp(ib) = exp(ib)(exp(i(a-b)) - 1)
+      have : F ω = Complex.exp (Complex.I * ↑(ω h)) *
+          (Complex.exp (Complex.I * ↑(ω g - ω h)) - 1) := by
+        simp only [F]; rw [mul_sub, mul_one, ← Complex.exp_add]; congr 1; push_cast; ring
+      rw [this, norm_mul, mul_comm Complex.I (↑(ω h) : ℂ),
+        Complex.norm_exp_ofReal_mul_I, one_mul]
+      -- Goal: ‖cexp (I * ↑(ω g - ω h)) - 1‖ ≤ |ω (g - h)|
+      -- Use: ‖exp(I*x) - 1‖ = |2 sin(x/2)| ≤ |x| (from sin bound)
+      have h_key : ‖Complex.exp (Complex.I * ↑(ω g - ω h)) - 1‖ ≤
+          |ω g - ω h| := by
+        rw [Complex.norm_exp_I_mul_ofReal_sub_one]
+        calc ‖2 * Real.sin ((ω g - ω h) / 2)‖
+            = 2 * |Real.sin ((ω g - ω h) / 2)| := by
+              rw [Real.norm_eq_abs, abs_mul, abs_of_pos (by norm_num : (0:ℝ) < 2)]
+          _ ≤ 2 * |(ω g - ω h) / 2| :=
+              mul_le_mul_of_nonneg_left Real.abs_sin_le_abs (by norm_num)
+          _ = |ω g - ω h| := by rw [abs_div, abs_of_pos (by norm_num : (0:ℝ) < 2)]; ring
+      exact h_key.trans (by rw [map_sub])
+    -- ‖F(ω)‖² ≤ (ω(g-h))² (from ‖F(ω)‖ ≤ |ω(g-h)|)
+    have hF_sq : ∀ ω, ‖F ω‖ ^ 2 ≤ (ω (g - h)) ^ 2 := fun ω =>
+      (sq_le_sq' (by linarith [norm_nonneg (F ω), abs_nonneg (ω (g - h))])
+        (hF_lip ω)).trans (le_of_eq (sq_abs _))
+    -- ‖F‖ is integrable (bounded by 2)
+    have hF_meas : Measurable F :=
+      (Complex.continuous_exp.measurable.comp
+        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
+          (configuration_eval_measurable g)))).sub
+      (Complex.continuous_exp.measurable.comp
+        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
+          (configuration_eval_measurable h))))
+    have hF_norm_int : Integrable (fun ω => ‖F ω‖) μ :=
+      (integrable_const (2 : ℝ)).mono hF_meas.norm.aestronglyMeasurable
+        (ae_of_all _ fun ω => by
+          rw [Real.norm_of_nonneg (norm_nonneg _), Real.norm_of_nonneg (by norm_num : (0:ℝ) ≤ 2)]
+          exact hF_bd2 ω)
+    -- ‖F‖² is integrable (bounded by 4)
+    have hF_sq_int : Integrable (fun ω => ‖F ω‖ ^ 2) μ :=
+      (integrable_const (4 : ℝ)).mono (hF_meas.norm.pow_const 2).aestronglyMeasurable
+        (ae_of_all _ fun ω => by
+          rw [Real.norm_of_nonneg (by positivity : (0:ℝ) ≤ ‖F ω‖ ^ 2),
+              Real.norm_of_nonneg (by norm_num : (0:ℝ) ≤ 4)]
+          exact (sq_le_sq' (by linarith [norm_nonneg (F ω)]) (hF_bd2 ω)).trans
+            (by norm_num))
+    -- (ω(g-h))² is integrable (from lattice moments + pushforward)
+    have hX_sq_int : Integrable (fun ω : Configuration (TorusTestFunction L) =>
+        (ω (g - h)) ^ 2) μ := by
+      sorry -- Follows from: interacting lattice measure has all polynomial moments
+    -- Main chain: ‖Z[g]-Z[h]‖² ≤ C·|p(g-h)|²
+    have h_sq_bound : ‖torusGeneratingFunctional L μ g -
+        torusGeneratingFunctional L μ h‖ ^ 2 ≤ C * |p (g - h)| ^ 2 := by
+      calc ‖torusGeneratingFunctional L μ g -
+              torusGeneratingFunctional L μ h‖ ^ 2
+          = ‖∫ ω, F ω ∂μ‖ ^ 2 := by rw [h_gf_eq]
+        _ ≤ (∫ ω, ‖F ω‖ ∂μ) ^ 2 :=
+            sq_le_sq' (by
+              have h1 := norm_nonneg (∫ ω, F ω ∂μ)
+              have h2 : (0 : ℝ) ≤ ∫ ω, ‖F ω‖ ∂μ :=
+                integral_nonneg fun ω => norm_nonneg (F ω)
+              linarith)
+              (norm_integral_le_integral_norm _)
+        _ ≤ ∫ ω, ‖F ω‖ ^ 2 ∂μ :=
+            ConvexOn.map_integral_le (Even.convexOn_pow (n := 2) even_two)
+              (continuousOn_pow 2) isClosed_univ
+              (ae_of_all _ fun _ => Set.mem_univ _) hF_norm_int hF_sq_int
+        _ ≤ ∫ ω, (ω (g - h)) ^ 2 ∂μ :=
+            integral_mono hF_sq_int hX_sq_int (fun ω => hF_sq ω)
+        _ ≤ C * |p (g - h)| ^ 2 := h_combined
+    -- Take square root and add the factor of 2
+    calc ‖torusGeneratingFunctional L μ g -
+            torusGeneratingFunctional L μ h‖
+        ≤ Real.sqrt (C * |p (g - h)| ^ 2) := by
+          rw [← Real.sqrt_sq (norm_nonneg _)]; exact Real.sqrt_le_sqrt h_sq_bound
+      _ = Real.sqrt C * |p (g - h)| := by
+          rw [Real.sqrt_mul hC_pos.le, Real.sqrt_sq_eq_abs, abs_abs]
+      _ ≤ 2 * Real.sqrt C * |p (g - h)| := by
+          have h1 : Real.sqrt C * |p (g - h)| ≥ 0 := mul_nonneg (Real.sqrt_nonneg _) (abs_nonneg _)
+          linarith
 
 theorem torusGF_latticeApproximation_error_vanishes
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
