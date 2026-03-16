@@ -293,7 +293,7 @@ private theorem pure_basis_eq_basisVec_pair (i j : ℕ) :
 
 /-- Evaluation of a torus test function at a lattice site, applied to a basis vector,
 equals the product of circle restrictions applied to each component. -/
-private theorem evalTorusAtSite_basisVec (N : ℕ) [NeZero N]
+theorem evalTorusAtSite_basisVec (N : ℕ) [NeZero N]
     (x : FinLatticeSites 2 N) (m : ℕ) :
     evalTorusAtSite L N x (RapidDecaySeq.basisVec m) =
     circleRestriction L N (DyninMityaginSpace.basis (Nat.unpair m).1 :
@@ -309,7 +309,7 @@ private theorem evalTorusAtSite_basisVec (N : ℕ) [NeZero N]
   simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply]
 
 /-- The DyninMityaginSpace basis for `SmoothMap_Circle` is the Fourier basis. -/
-private theorem dm_basis_eq_fourierBasis (m : ℕ) :
+theorem dm_basis_eq_fourierBasis (m : ℕ) :
     (DyninMityaginSpace.basis m : SmoothMap_Circle L ℝ) =
     SmoothMap_Circle.fourierBasis (L := L) m := by
   apply SmoothMap_Circle.ext; intro x
