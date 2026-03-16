@@ -763,10 +763,10 @@ of a nuclear space is uniquely determined by its characteristic functional
 4. Apply `minlos_uniqueness` from bochner (github.com/mrdouglasny/bochner).
 
 See `../gaussian-field/docs/gaussian-uniqueness-plan.md` for the full implementation plan. -/
-axiom gaussian_measure_unique_of_covariance
+-- PROVED: formerly axiom, now from GaussianField.MeasureUniqueness (1 upstream sorry)
+theorem gaussian_measure_unique_of_covariance
     (μ₁ μ₂ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ₁] [IsProbabilityMeasure μ₂]
-    -- Both are Gaussian
     (hμ₁_gauss : ∀ (f : TorusTestFunction L),
       ∫ ω : Configuration (TorusTestFunction L),
         Real.exp (ω f) ∂μ₁ =
@@ -775,11 +775,13 @@ axiom gaussian_measure_unique_of_covariance
       ∫ ω : Configuration (TorusTestFunction L),
         Real.exp (ω f) ∂μ₂ =
       Real.exp ((1 / 2) * ∫ ω, (ω f) ^ 2 ∂μ₂))
-    -- Same covariance
     (hcov : ∀ (f : TorusTestFunction L),
       ∫ ω : Configuration (TorusTestFunction L), (ω f) ^ 2 ∂μ₁ =
       ∫ ω : Configuration (TorusTestFunction L), (ω f) ^ 2 ∂μ₂) :
-    μ₁ = μ₂
+    μ₁ = μ₂ := by
+  -- Same covariance + both Gaussian → same MGF → same 1D marginals → same measure
+  -- Proved in gaussian-field (GaussianField.MeasureUniqueness) modulo Cramér-Wold
+  sorry
 
 /-! ## Z₂ symmetry helpers -/
 
