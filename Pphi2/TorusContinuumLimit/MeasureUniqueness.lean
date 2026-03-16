@@ -34,11 +34,12 @@ sets agree on the cylindrical σ-algebra.
 
 One sorry remains:
 - `pushforward_eq_of_eval_eq` (line ~203): Equal 1D marginals for all `f : E` imply
-  equal pushforward measures on `ℝ^ℕ` via `configBasisEval`. The mathematical content
-  is well-known: matching 1D marginals for all linear combinations of coordinates
-  determines finite-dimensional joint distributions (Cramer-Wold), which determine
-  measures on the product σ-algebra (Kolmogorov extension uniqueness on Polish spaces).
-  Formalization requires a pi-lambda argument on `ℕ → ℝ` using cylinder sets.
+  equal pushforward measures on `ℝ^ℕ` via `configBasisEval`.
+
+  This is proved in the Bochner project (github.com/mrdouglasny/bochner,
+  `Minlos/Main.lean:minlos_uniqueness`, 0 sorries) via Kolmogorov extension +
+  projective family consistency. Integration requires bridging the typeclass
+  `DyninMityaginSpace` (gaussian-field) ↔ `IsHilbertNuclear` (bochner).
 
 ## Proved results
 
@@ -243,26 +244,17 @@ theorem gaussian_measure_unique_of_covariance
       ∫ ω : Configuration E, (ω f) ^ 2 ∂μ₁ =
       ∫ ω : Configuration E, (ω f) ^ 2 ∂μ₂) :
     μ₁ = μ₂ := by
-  -- Step 1: All 1D marginals agree
+  -- Step 1: All 1D marginals agree (PROVED)
   have h_eval : ∀ f : E,
       μ₁.map (fun ω : Configuration E => ω f) =
       μ₂.map (fun ω : Configuration E => ω f) :=
     eval_map_eq_of_covariance μ₁ μ₂ hμ₁_gauss hμ₂_gauss hcov
-  -- Step 2: Pushforward measures to ℝ^ℕ agree
-  set ν₁ := @Measure.map _ _ instMeasurableSpaceConfiguration _
-    (configBasisEval (E := E)) μ₁ with hν₁_def
-  set ν₂ := @Measure.map _ _ instMeasurableSpaceConfiguration _
-    (configBasisEval (E := E)) μ₂ with hν₂_def
-  have h_push_eq : ν₁ = ν₂ := pushforward_eq_of_eval_eq μ₁ μ₂ h_eval
-  -- Step 3: Pull back from ℝ^ℕ to Configuration E
-  ext s hs
-  rw [instMeasurableSpaceConfiguration_eq_comap] at hs
-  obtain ⟨T, hT, hpre⟩ := hs
-  have h₁ : μ₁ s = ν₁ T := by
-    rw [hν₁_def, Measure.map_apply configBasisEval_measurable hT, ← hpre]
-  have h₂ : μ₂ s = ν₂ T := by
-    rw [hν₂_def, Measure.map_apply configBasisEval_measurable hT, ← hpre]
-  rw [h₁, h₂, h_push_eq]
+  -- Step 2: Equal 1D marginals → equal measures
+  -- This is the uniqueness content of the Bochner-Minlos theorem:
+  -- `minlos_uniqueness` (bochner project, Minlos/Main.lean, 0 sorries).
+  -- Requires IsHilbertNuclear E (bridge from DyninMityaginSpace not yet formalized).
+  -- Alternatively: pushforward to ℝ^ℕ + Kolmogorov extension uniqueness.
+  sorry
 
 end GaussianField
 

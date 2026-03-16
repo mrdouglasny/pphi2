@@ -14,5 +14,11 @@ scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gaussian-field.git"
 rev = "cylinder"
 
+[[require]]
+name = "bochner"
+scope = "mrdouglasny"
+git = "https://github.com/mrdouglasny/bochner.git"
+rev = "main"
+
 [[lean_lib]]
 name = "Pphi2"
