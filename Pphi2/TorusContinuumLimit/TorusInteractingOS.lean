@@ -233,16 +233,37 @@ theorem interactingLatticeMeasure_symmetry_invariant
   -- Net result: Φ_equiv preserves μ_GFF
   have hΦ_mp : MeasurePreserving Φ_equiv mu_GFF mu_GFF := by
     -- Decompose: Φ = evalME.trans(σ_field.trans(evalME.symm))
-    -- MeasurePreserving of a composition
-    -- We need: evalME maps μ_GFF to some ν, σ_field preserves ν, evalME.symm maps ν back
-    -- Actually, for MeasurableEquiv, Φ_equiv.symm.map μ_GFF = μ_GFF
-    -- It's easier to show directly.
-    -- Use the ℝ-valued density bridge to show Φ_* μ_GFF = μ_GFF.
-    -- For any measurable set S: Φ_*(μ_GFF)(S) = μ_GFF(Φ⁻¹(S)) = μ_GFF(S)
-    -- This requires showing all finite-dimensional distributions agree.
-    -- For now, we sorry this (the formal proof requires connecting through
-    -- latticeGaussianFieldLaw and the density bridge).
-    sorry
+    -- Strategy: compose three MeasurePreserving steps via .trans
+    -- (1) evalME : mu_GFF →ₘ ν  (where ν = latticeGaussianFieldLaw)
+    -- (2) σ_field_equiv : ν →ₘ ν  (density + volume preservation)
+    -- (3) evalME.symm : ν →ₘ mu_GFF
+    set ν := latticeGaussianFieldLaw 2 N a mass ha hmass
+    -- Step 1: evalME preserves mu_GFF → ν
+    have h_nu_eq : ν = Measure.map evalME mu_GFF := by
+      simp only [ν, latticeGaussianFieldLaw, mu_GFF]; rfl
+    have h_evalME : MeasurePreserving evalME mu_GFF ν := by
+      rw [h_nu_eq]; exact evalME.measurable.measurePreserving mu_GFF
+    -- Step 3 (from Step 1): evalME.symm preserves ν → mu_GFF
+    have h_evalME_symm : MeasurePreserving evalME.symm ν mu_GFF :=
+      h_evalME.symm _
+    -- Step 2: σ_field_equiv preserves ν
+    -- ν = normalizedGaussianDensityMeasure = Z⁻¹ • vol.withDensity(ρ)
+    -- σ_field_equiv preserves volume (piCongrLeft permutation on ℝⁿ)
+    -- and the density: ρ(σ_field_equiv.symm(φ)) = ρ(φ ∘ σ_equiv) = ρ(φ)
+    have h_sigma : MeasurePreserving σ_field_equiv ν ν := by
+      -- Show that σ_field_equiv preserves ν via the characteristic functional
+      -- (two finite measures with equal Fourier transforms are equal)
+      -- ν is determined by ∫ exp(i⟨f,φ⟩) dν(φ) for all f, which equals
+      -- exp(-½ ‖T(f)‖²) where T is the covariance operator.
+      -- σ_field_equiv permutes coordinates via σ_equiv, and the lattice
+      -- covariance operator is invariant under site symmetries that
+      -- preserve the density (which is exactly hσ_density).
+      -- For the formal proof: both ν and (σ_field_equiv)_*ν are finite
+      -- measures with the same characteristic functional, hence equal
+      -- by measure uniqueness.
+      sorry
+    -- Compose: Φ = evalME.trans(σ_field.trans(evalME.symm))
+    exact h_evalME.trans (h_sigma.trans h_evalME_symm)
   exact hΦ_mp.integral_comp' G
 
 -- Specific instances:
@@ -552,28 +573,25 @@ private theorem gf_sub_norm_le_seminorm
     torus_interacting_second_moment_continuous L P mass hmass
   obtain ⟨p, hp_cont, hp_zero, hp_bound⟩ :=
     torusEmbeddedTwoPoint_le_seminorm L mass hmass
-  -- The bound B = 2 * √C works with seminorm p
-  refine ⟨2 * Real.sqrt C, p, hp_cont, hp_zero, fun g h N _ => ?_⟩
-  · -- ‖Z_N[g] - Z_N[h]‖ ≤ 2√C · p(g - h)
+  -- The bound B = 2 * √C works with seminorm |p|
+  -- We use |p| instead of p to ensure nonnegativity (the axiom doesn't
+  -- require p ≥ 0, but the bound 2√C · p(g-h) needs p(g-h) ≥ 0).
+  refine ⟨2 * Real.sqrt C, fun f => |p f|, hp_cont.abs,
+    by simp [hp_zero], fun g h N _ => ?_⟩
+  · -- ‖Z_N[g] - Z_N[h]‖ ≤ 2√C · |p(g - h)|
     set μ := torusInteractingMeasure L N P mass hmass
-    -- Key bound: ∫ω(g-h)² dμ ≤ C · p(g-h)²
-    have h_second : ∫ ω : Configuration (TorusTestFunction L),
-        (ω (g - h)) ^ 2 ∂μ ≤
-        C * torusEmbeddedTwoPoint L N mass hmass (g - h) (g - h) :=
-      hC_bound (g - h) N
     have h_seminorm : torusEmbeddedTwoPoint L N mass hmass
-        (g - h) (g - h) ≤ p (g - h) ^ 2 :=
-      hp_bound (g - h) N
+        (g - h) (g - h) ≤ |p (g - h)| ^ 2 := by
+      have := hp_bound (g - h) N; rwa [sq_abs]
     have h_combined : ∫ ω : Configuration (TorusTestFunction L),
-        (ω (g - h)) ^ 2 ∂μ ≤ C * p (g - h) ^ 2 :=
-      h_second.trans (mul_le_mul_of_nonneg_left h_seminorm hC_pos.le)
-    -- The full chain: ‖Z[g]-Z[h]‖ ≤ 2∫|ω(g-h)|dμ ≤ 2√(∫ω(g-h)²dμ)
-    -- ≤ 2√(C·p(g-h)²) = 2√C·|p(g-h)| ≤ 2√C·p(g-h)
-    -- The intermediate steps (exp Lipschitz + Cauchy-Schwarz) are
-    -- standard but technically involved:
-    -- 1. ‖Z[g]-Z[h]‖ ≤ 2∫|ω(g-h)| uses abs_cos_sub_cos_le +
-    --    abs_sin_sub_sin_le + Re/Im decomposition
-    -- 2. ∫|X| ≤ √(∫X²) uses Cauchy-Schwarz for probability measures
+        (ω (g - h)) ^ 2 ∂μ ≤ C * |p (g - h)| ^ 2 :=
+      (hC_bound (g - h) N).trans (mul_le_mul_of_nonneg_left h_seminorm hC_pos.le)
+    -- The proof combines:
+    -- (1) |exp(ix)-exp(iy)| ≤ |x-y| (exp is 1-Lipschitz on imaginary line)
+    -- (2) ‖∫f dμ‖ ≤ ∫ g dμ when ‖f‖ ≤ g a.e. (norm_integral_le_of_norm_le)
+    -- (3) E[|X|] ≤ √(E[X²]) for probability measures (Cauchy-Schwarz / Jensen)
+    -- (4) E[X²] ≤ C·|p|² (h_combined)
+    -- giving ‖Z[g]-Z[h]‖ ≤ √(C·|p|²) = √C·|p| ≤ 2√C·|p|
     sorry
 
 theorem torusGF_latticeApproximation_error_vanishes
