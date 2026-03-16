@@ -127,6 +127,82 @@ axiom torusGF_latticeApproximation_error_vanishes
       torusGeneratingFunctional L (torusInteractingMeasure L (φ n + 1) P mass hmass) f)
     atTop (nhds 0)
 
+/-! ## Helper: integral invariance from generating functional invariance
+
+The generating functional `Z[f] = ∫ exp(iωf) dμ` determines and is determined
+by the real-valued integrals of `cos(ωf)` and `sin(ωf)`. Specifically:
+- `Re(Z[f]) = ∫ cos(ωf) dμ`
+- `Im(Z[f]) = ∫ sin(ωf) dμ`
+
+So `Z[f] = Z[Sf]` implies `∫ cos(ωf) dμ = ∫ cos(ω(Sf)) dμ` (and similarly for sin). -/
+
+private lemma cosEval_continuous (g : TorusTestFunction L) :
+    Continuous (fun ω : Configuration (TorusTestFunction L) => Real.cos (ω g)) :=
+  Real.continuous_cos.comp (WeakDual.eval_continuous g)
+
+private lemma cosEval_bounded (g : TorusTestFunction L) :
+    ∃ C, ∀ ω : Configuration (TorusTestFunction L), |Real.cos (ω g)| ≤ C :=
+  ⟨1, fun _ => Real.abs_cos_le_one _⟩
+
+private lemma sinEval_continuous (g : TorusTestFunction L) :
+    Continuous (fun ω : Configuration (TorusTestFunction L) => Real.sin (ω g)) :=
+  Real.continuous_sin.comp (WeakDual.eval_continuous g)
+
+private lemma sinEval_bounded (g : TorusTestFunction L) :
+    ∃ C, ∀ ω : Configuration (TorusTestFunction L), |Real.sin (ω g)| ≤ C :=
+  ⟨1, fun _ => Real.abs_sin_le_one _⟩
+
+/-- Decomposition: the generating functional's real part is the cosine integral.
+Proved by commuting Re (a CLM) with the Bochner integral. -/
+private lemma gf_re_eq_cos_integral
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
+    (torusGeneratingFunctional L μ g).re =
+    ∫ ω : Configuration (TorusTestFunction L), Real.cos (ω g) ∂μ := by
+  unfold torusGeneratingFunctional
+  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re =
+    Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
+  have hint : Integrable (fun ω : Configuration (TorusTestFunction L) =>
+      Complex.exp (Complex.I * ↑(ω g))) μ := by
+    apply (integrable_const (1 : ℂ)).mono
+    · exact (Complex.continuous_exp.measurable.comp
+        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
+          (configuration_eval_measurable g)))).aestronglyMeasurable
+    · apply ae_of_all; intro ω; simp only [norm_one]
+      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
+      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
+  rw [← ContinuousLinearMap.integral_comp_comm Complex.reCLM hint]
+  congr 1 with ω
+  simp only [Complex.reCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
+    Complex.add_re, Complex.mul_re, Complex.I_re, mul_zero,
+    Complex.sin_ofReal_im, Complex.I_im, mul_one, sub_self, add_zero]
+  exact Complex.cos_ofReal_re (ω g)
+
+/-- Decomposition: the generating functional's imaginary part is the sine integral. -/
+private lemma gf_im_eq_sin_integral
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
+    (torusGeneratingFunctional L μ g).im =
+    ∫ ω : Configuration (TorusTestFunction L), Real.sin (ω g) ∂μ := by
+  unfold torusGeneratingFunctional
+  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).im =
+    Complex.imCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
+  have hint : Integrable (fun ω : Configuration (TorusTestFunction L) =>
+      Complex.exp (Complex.I * ↑(ω g))) μ := by
+    apply (integrable_const (1 : ℂ)).mono
+    · exact (Complex.continuous_exp.measurable.comp
+        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
+          (configuration_eval_measurable g)))).aestronglyMeasurable
+    · apply ae_of_all; intro ω; simp only [norm_one]
+      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
+      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
+  rw [← ContinuousLinearMap.integral_comp_comm Complex.imCLM hint]
+  congr 1 with ω
+  simp only [Complex.imCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
+    Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+    Complex.cos_ofReal_im, Complex.sin_ofReal_re, Complex.sin_ofReal_im]
+  ring
+
 /-- **Translation invariance of the interacting continuum limit.**
 
 Proved from lattice approximation error vanishing + weak convergence.
@@ -151,9 +227,28 @@ theorem torusInteractingLimit_translation_invariant
       torusGeneratingFunctional L (torusInteractingMeasure L (φ n + 1) P mass hmass) g)
       atTop (nhds (torusGeneratingFunctional L μ g)) := by
     intro g
-    -- GF convergence from weak convergence of cos/sin integrals.
-    -- Same technique used throughout this file (os2_translation, os2_D4).
-    sorry
+    -- Z_N[g] = ∫ exp(iωg) dμ_N converges to Z[g] = ∫ exp(iωg) dμ.
+    -- Suffices: Re and Im parts converge separately, then combine.
+    -- Step 1: Re(Z_N[g]) = ∫ cos(ωg) dμ_N → ∫ cos(ωg) dμ = Re(Z[g])
+    have h_re : Tendsto (fun n => (torusGeneratingFunctional L
+        (torusInteractingMeasure L (φ n + 1) P mass hmass) g).re)
+        atTop (nhds (torusGeneratingFunctional L μ g).re) := by
+      simp_rw [gf_re_eq_cos_integral]
+      exact hconv _ (cosEval_continuous L g) (cosEval_bounded L g)
+    -- Step 2: Im(Z_N[g]) = ∫ sin(ωg) dμ_N → ∫ sin(ωg) dμ = Im(Z[g])
+    have h_im : Tendsto (fun n => (torusGeneratingFunctional L
+        (torusInteractingMeasure L (φ n + 1) P mass hmass) g).im)
+        atTop (nhds (torusGeneratingFunctional L μ g).im) := by
+      simp_rw [gf_im_eq_sin_integral]
+      exact hconv _ (sinEval_continuous L g) (sinEval_bounded L g)
+    -- Step 3: Combine Re + Im convergence into ℂ convergence.
+    -- z_n = ↑(z_n.re) + ↑(z_n.im) * I → ↑(z.re) + ↑(z.im) * I = z
+    rw [show torusGeneratingFunctional L μ g =
+      ↑(torusGeneratingFunctional L μ g).re +
+      ↑(torusGeneratingFunctional L μ g).im * I from (re_add_im _).symm]
+    have h_comb := (h_re.ofReal.add (h_im.ofReal.mul_const I))
+    refine h_comb.congr (fun n => ?_)
+    exact (re_add_im _)
   have h_Tvf := hgf_tendsto (torusTranslation L v f)
   have h_f := hgf_tendsto f
   have h_diff := torusGF_latticeApproximation_error_vanishes L P mass hmass φ hφ v f
@@ -658,82 +753,6 @@ theorem torusInteracting_exponentialMomentBound
         atTop (nhds (∫ ω, F ω ∂μ)) :=
       integral_tendsto_of_tendsto_of_monotone h_trunc_int h_int h_mono h_pw
     exact le_of_tendsto' h_mct h_trunc_nat
-
-/-! ## Helper: integral invariance from generating functional invariance
-
-The generating functional `Z[f] = ∫ exp(iωf) dμ` determines and is determined
-by the real-valued integrals of `cos(ωf)` and `sin(ωf)`. Specifically:
-- `Re(Z[f]) = ∫ cos(ωf) dμ`
-- `Im(Z[f]) = ∫ sin(ωf) dμ`
-
-So `Z[f] = Z[Sf]` implies `∫ cos(ωf) dμ = ∫ cos(ω(Sf)) dμ` (and similarly for sin). -/
-
-private lemma cosEval_continuous (g : TorusTestFunction L) :
-    Continuous (fun ω : Configuration (TorusTestFunction L) => Real.cos (ω g)) :=
-  Real.continuous_cos.comp (WeakDual.eval_continuous g)
-
-private lemma cosEval_bounded (g : TorusTestFunction L) :
-    ∃ C, ∀ ω : Configuration (TorusTestFunction L), |Real.cos (ω g)| ≤ C :=
-  ⟨1, fun _ => Real.abs_cos_le_one _⟩
-
-private lemma sinEval_continuous (g : TorusTestFunction L) :
-    Continuous (fun ω : Configuration (TorusTestFunction L) => Real.sin (ω g)) :=
-  Real.continuous_sin.comp (WeakDual.eval_continuous g)
-
-private lemma sinEval_bounded (g : TorusTestFunction L) :
-    ∃ C, ∀ ω : Configuration (TorusTestFunction L), |Real.sin (ω g)| ≤ C :=
-  ⟨1, fun _ => Real.abs_sin_le_one _⟩
-
-/-- Decomposition: the generating functional's real part is the cosine integral.
-Proved by commuting Re (a CLM) with the Bochner integral. -/
-private lemma gf_re_eq_cos_integral
-    (μ : Measure (Configuration (TorusTestFunction L)))
-    [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
-    (torusGeneratingFunctional L μ g).re =
-    ∫ ω : Configuration (TorusTestFunction L), Real.cos (ω g) ∂μ := by
-  unfold torusGeneratingFunctional
-  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re =
-    Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
-  have hint : Integrable (fun ω : Configuration (TorusTestFunction L) =>
-      Complex.exp (Complex.I * ↑(ω g))) μ := by
-    apply (integrable_const (1 : ℂ)).mono
-    · exact (Complex.continuous_exp.measurable.comp
-        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
-          (configuration_eval_measurable g)))).aestronglyMeasurable
-    · apply ae_of_all; intro ω; simp only [norm_one]
-      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
-      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
-  rw [← ContinuousLinearMap.integral_comp_comm Complex.reCLM hint]
-  congr 1 with ω
-  simp only [Complex.reCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
-    Complex.add_re, Complex.mul_re, Complex.I_re, mul_zero,
-    Complex.sin_ofReal_im, Complex.I_im, mul_one, sub_self, add_zero]
-  exact Complex.cos_ofReal_re (ω g)
-
-/-- Decomposition: the generating functional's imaginary part is the sine integral. -/
-private lemma gf_im_eq_sin_integral
-    (μ : Measure (Configuration (TorusTestFunction L)))
-    [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
-    (torusGeneratingFunctional L μ g).im =
-    ∫ ω : Configuration (TorusTestFunction L), Real.sin (ω g) ∂μ := by
-  unfold torusGeneratingFunctional
-  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).im =
-    Complex.imCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
-  have hint : Integrable (fun ω : Configuration (TorusTestFunction L) =>
-      Complex.exp (Complex.I * ↑(ω g))) μ := by
-    apply (integrable_const (1 : ℂ)).mono
-    · exact (Complex.continuous_exp.measurable.comp
-        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
-          (configuration_eval_measurable g)))).aestronglyMeasurable
-    · apply ae_of_all; intro ω; simp only [norm_one]
-      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
-      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
-  rw [← ContinuousLinearMap.integral_comp_comm Complex.imCLM hint]
-  congr 1 with ω
-  simp only [Complex.imCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
-    Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-    Complex.cos_ofReal_im, Complex.sin_ofReal_re, Complex.sin_ofReal_im]
-  ring
 
 /-! ### Helper lemmas for OS0 -/
 
