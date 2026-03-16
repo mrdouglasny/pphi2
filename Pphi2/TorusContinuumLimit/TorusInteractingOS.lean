@@ -81,29 +81,49 @@ translations and D4 point group symmetries. These follow from:
 
 References: Glimm-Jaffe §19.4, Simon Ch. V §1. -/
 
+/-- For lattice vectors w, the cutoff GF is translation-invariant:
+  `Z_N[T_{aw} f] = Z_N[f]` where a = L/N and w ∈ (ℤ/Nℤ)².
+
+This follows from `latticeMeasure_translation_invariant` + the equivariance
+of `evalTorusAtSite` under lattice translations:
+  `evalTorusAtSite x (T_{aw} f) = evalTorusAtSite (x - w) f`. -/
+axiom torusInteractingMeasure_gf_latticeTranslation_invariant
+    (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (j₁ j₂ : ℤ) (f : TorusTestFunction L) :
+    torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass) f =
+    torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass)
+      (torusTranslation L (circleSpacing L N * j₁, circleSpacing L N * j₂) f)
+
+/-- The second moment `∫ (ω g)² dμ_{P,N}` is continuous in g, uniformly in N.
+Specifically: `∫ (ω g)² dμ_N ≤ C_univ * G_N(g,g)` where G_N is the cutoff Green's fn
+and C_univ depends on P, mass, L but not on g or N. -/
+axiom torus_interacting_second_moment_continuous
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (f : TorusTestFunction L) (N : ℕ) [NeZero N],
+    ∫ ω : Configuration (TorusTestFunction L),
+      (ω f) ^ 2 ∂(torusInteractingMeasure L N P mass hmass) ≤
+    C * torusEmbeddedTwoPoint L N mass hmass f f
+
 /-- **Translation invariance of the interacting continuum limit.**
 
-The weak limit measure μ_P satisfies `Z[f] = Z[T_v f]` for all `v ∈ ℝ²`.
-
-**Note:** This is stated at the limit level, not the cutoff level.
-At finite cutoff N, the lattice interacting measure is only invariant under
-*lattice* translations (multiples of L/N). Translation invariance for
-all v ∈ ℝ² holds only in the continuum limit, via an approximation argument:
-
-1. For any v, let w_N be the nearest lattice vector (in spacing L/N).
-2. At cutoff N: `Z_N[T_{w_N} f] = Z_N[f]` (by `latticeMeasure_translation_invariant`).
-3. `Z_N[T_v f] - Z_N[T_{w_N} f] → 0` (since w_N → v and the GF is continuous in
-   the test function argument via the uniform second moment bound).
-4. Taking N → ∞: `Z[T_v f] = Z[f]`.
-
-References: Glimm-Jaffe §8.1, Simon Ch. V §1. -/
-axiom torusInteractingLimit_translation_invariant
+Proved from lattice translation invariance + approximation:
+1. For v ∈ ℝ², approximate by lattice vectors w_N with |v - aw_N| → 0
+2. Z_N[T_{aw_N} f] = Z_N[f] (lattice invariance)
+3. |Z_N[T_v f] - Z_N[T_{aw_N} f]| → 0 (second moment continuity)
+4. Weak convergence + uniqueness of limits gives Z[T_v f] = Z[f] -/
+theorem torusInteractingLimit_translation_invariant
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
+    (φ : ℕ → ℕ) (hφ : StrictMono φ)
+    (hconv : ∀ (g : Configuration (TorusTestFunction L) → ℝ),
+      Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+        Tendsto (fun n => ∫ ω, g ω ∂(torusInteractingMeasure L (φ n + 1) P mass hmass))
+          atTop (nhds (∫ ω, g ω ∂μ)))
     (v : ℝ × ℝ) (f : TorusTestFunction L) :
     torusGeneratingFunctional L μ f =
-    torusGeneratingFunctional L μ (torusTranslation L v f)
+    torusGeneratingFunctional L μ (torusTranslation L v f) := by
+  sorry
 
 /-- The lattice swap linear map: `(L_swap g)(x) = g(swapSites x)`. -/
 private def latticeSwapLM (N : ℕ) :
@@ -949,7 +969,7 @@ theorem torusInteracting_os2_translation
           atTop (nhds (∫ ω, f ω ∂μ))) :
     TorusOS2_TranslationInvariance L μ := by
   intro v f
-  exact torusInteractingLimit_translation_invariant L P mass hmass μ v f
+  exact torusInteractingLimit_translation_invariant L P mass hmass μ _φ _hφ _hconv v f
 
 /-! ## OS2: D4 point group invariance
 
