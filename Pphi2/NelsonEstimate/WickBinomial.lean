@@ -45,7 +45,7 @@ binomial sum of Wick monomials with split variances.
 
 For all n, c₁, c₂ ≥ 0, x, y ∈ ℝ:
   wickMonomial n (c₁ + c₂) (x + y) =
-    Σ_{k ∈ range (n+1)} C(n, k) • wickMonomial k c₁ x • wickMonomial (n-k) c₂ y  -/
+    Σ_{k ∈ range (n+1)} C(n, k) • wickMonomial k c₁ x • wickMonomial (n-k) c₂ y -/
 theorem wickMonomial_add_binomial (n : ℕ) (c₁ c₂ x y : ℝ) :
     wickMonomial n (c₁ + c₂) (x + y) =
     ∑ k ∈ range (n + 1),
@@ -88,7 +88,7 @@ So :x⁴:_c ≥ -6c² for all x. -/
 
 /-- The Wick-ordered fourth power has a universal lower bound:
 `:x⁴:_c ≥ -6c²` for all x and c ≥ 0. -/
-theorem wickMonomial_four_lower_bound (c : ℝ) (hc : 0 ≤ c) (x : ℝ) :
+theorem wickMonomial_four_lower_bound (c : ℝ) (_hc : 0 ≤ c) (x : ℝ) :
     -6 * c ^ 2 ≤ wickMonomial 4 c x := by
   -- wickMonomial 4 c x = x⁴ - 6c·x² + 3c²
   -- = (x² - 3c)² - 6c²

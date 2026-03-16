@@ -53,8 +53,7 @@ theorem covariance_split (T : ℝ) (m : ℕ) :
     (latticeEigenvalue d N a mass m)⁻¹ =
     smoothCovEigenvalue d N a mass T m + roughCovEigenvalue d N a mass T m := by
   unfold smoothCovEigenvalue roughCovEigenvalue
-  rw [div_add_div_same]
-  congr 1; ring
+  rw [add_div]; ring
 
 /-- The smooth Wick constant: average of smooth covariance eigenvalues. -/
 def smoothWickConstant (T : ℝ) : ℝ :=
@@ -86,7 +85,7 @@ For d = 2 and T > 0: c_S ≤ C · (1 + |log T|)
 
 The smooth covariance `exp(-T·λ_k)/λ_k` is exponentially suppressed for large λ_k,
 so the sum over Fourier modes converges to O(|log T|) uniformly in N. -/
-theorem smoothVariance_le_log (hd : d = 2) (T : ℝ) (hT : 0 < T)
+theorem smoothVariance_le_log (_hd : d = 2) (T : ℝ) (_hT : 0 < T)
     (ha : 0 < a) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧ smoothWickConstant d N a mass T ≤ C * (1 + |Real.log T|) := by
   -- Direct bound: each smoothCovEigenvalue(k) = exp(-Tλ)/λ ≤ 1/λ ≤ 1/m²
@@ -113,7 +112,7 @@ theorem smoothVariance_le_log (hd : d = 2) (T : ℝ) (hT : 0 < T)
 /-- The rough L² bound is O(T).
 C_R(k) ≤ T (since (1-e^{-x})/x ≤ 1), so C_R(k)² ≤ T·C_R(k) ≤ T/λ_k.
 Averaging: Σ C_R² / |Λ| ≤ T · c_a ≤ T/m². -/
-theorem roughCovEigenvalue_le_T (T : ℝ) (hT : 0 ≤ T) (m : ℕ)
+theorem roughCovEigenvalue_le_T (T : ℝ) (_hT : 0 ≤ T) (m : ℕ)
     (ha : 0 < a) (hmass : 0 < mass) :
     roughCovEigenvalue d N a mass T m ≤ T := by
   unfold roughCovEigenvalue
@@ -177,7 +176,7 @@ theorem roughCovariance_sq_summable (T : ℝ) (hT : 0 < T)
 /-! ## Positivity -/
 
 /-- Smooth covariance eigenvalues are positive. -/
-theorem smoothCovEigenvalue_pos (T : ℝ) (hT : 0 < T) (m : ℕ)
+theorem smoothCovEigenvalue_pos (T : ℝ) (_hT : 0 < T) (m : ℕ)
     (ha : 0 < a) (hmass : 0 < mass) :
     0 < smoothCovEigenvalue d N a mass T m := by
   unfold smoothCovEigenvalue

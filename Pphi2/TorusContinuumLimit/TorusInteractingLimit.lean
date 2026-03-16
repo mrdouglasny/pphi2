@@ -358,7 +358,7 @@ theorem torus_interacting_tightness
     (fun f ⟨N, hN⟩ => by  -- integrability of (ω f)² w.r.t. interacting measure
       haveI : NeZero N := ⟨by omega⟩
       -- Push through Measure.map to reduce to lattice integrability
-      show Integrable (fun ω => (ω f) ^ 2) (torusInteractingMeasure L N P mass hmass)
+      change Integrable (fun ω => (ω f) ^ 2) (torusInteractingMeasure L N P mass hmass)
       unfold torusInteractingMeasure
       rw [integrable_map_measure
         ((configuration_eval_measurable f).pow_const 2).aestronglyMeasurable

@@ -58,12 +58,9 @@ the L² norm of the rough covariance.
 For d = 2: E[E_R²] ≤ C · T^{1/2}
 
 This is the key estimate that makes the rough error "small" when T is small. -/
-theorem rough_error_variance (ha : 0 < a) (hmass : 0 < mass)
-    (hd : d = 2) (T : ℝ) (hT : 0 < T) :
-    ∃ (C : ℝ), 0 < C ∧ ∀ (L : ℝ) (_ : 0 < L) (_ : a = L / N),
-    -- The variance of the rough error under the split Gaussian measure
-    -- is bounded by C · T^{1/2}, uniformly in N
-    True := ⟨1, one_pos, fun _ _ _ => trivial⟩
+-- Placeholder theorems — conclusions are True pending proper measure-theoretic types
+theorem rough_error_variance :
+    ∃ (C : ℝ), 0 < C ∧ True := ⟨1, one_pos, trivial⟩
 
 /-! ## Hypercontractivity on the rough error
 
@@ -82,11 +79,8 @@ For the rough error E_R (degree 4 polynomial of Gaussian field):
   ‖E_R‖_p ≤ C · p² · T^{δ/2}
 
 where δ > 0 comes from roughCovariance_sq_summable. -/
-theorem rough_error_Lp_bound (ha : 0 < a) (hmass : 0 < mass)
-    (hd : d = 2) (T : ℝ) (hT : 0 < T) (p : ℝ) (hp : 2 ≤ p) :
-    ∃ (C : ℝ), 0 < C ∧
-    -- ‖E_R‖_p ≤ C · p² · T^{1/4}
-    True := ⟨1, one_pos, trivial⟩
+theorem rough_error_Lp_bound :
+    ∃ (C : ℝ), 0 < C ∧ True := ⟨1, one_pos, trivial⟩
 
 /-! ## Tail bound via Chebyshev optimization
 
@@ -106,12 +100,8 @@ This is the stretched-exponential tail bound needed for Nelson's trick. -/
 
 The exponent 1/2 comes from degree 4 (general: 2/degree).
 The T^{-1/8} factor makes the tail sharper as T → 0. -/
-theorem rough_error_tail_bound (ha : 0 < a) (hmass : 0 < mass)
-    (hd : d = 2) (T : ℝ) (hT : 0 < T) (lam : ℝ) (hlam : 0 < lam) :
-    ∃ (c : ℝ), 0 < c ∧
-    -- P(|E_R| > λ) ≤ exp(-c · λ^{1/2} · T^{-1/8})
-    -- Stated for probability measures on the lattice:
-    True := ⟨1, one_pos, trivial⟩
+theorem rough_error_tail_bound :
+    ∃ (c : ℝ), 0 < c ∧ True := ⟨1, one_pos, trivial⟩
 
 end Pphi2
 

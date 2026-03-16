@@ -100,7 +100,7 @@ theorem torusContinuumMeasures_tight
       haveI : NeZero N := ⟨by omega⟩
       -- torusContinuumMeasure = map torusEmbedLift (latticeGaussianMeasure ...)
       -- Push through Measure.map to reduce to lattice integrability
-      show Integrable (fun ω => (ω f) ^ 2) (torusContinuumMeasure L N mass hmass)
+      change Integrable (fun ω => (ω f) ^ 2) (torusContinuumMeasure L N mass hmass)
       unfold torusContinuumMeasure
       rw [integrable_map_measure
         ((configuration_eval_measurable f).pow_const 2).aestronglyMeasurable
