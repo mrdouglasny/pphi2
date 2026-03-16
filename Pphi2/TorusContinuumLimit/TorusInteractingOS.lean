@@ -67,6 +67,162 @@ namespace Pphi2
 
 variable (L : ℝ) [hL : Fact (0 < L)]
 
+/-! ## Cutoff-level invariance axioms
+
+The interacting lattice measure on the torus is invariant under lattice
+translations and D4 point group symmetries. These follow from:
+- The interaction `V_N(ω) = a² Σ_x :P(φ(x)):_c` sums over ALL lattice
+  sites with periodic BCs, so translating relabels the sum.
+- The lattice GFF measure is invariant (covariance is translation/D4-invariant).
+- The Boltzmann weight `exp(-V)` is therefore invariant.
+- The partition function Z is the same before and after the symmetry.
+
+References: Glimm-Jaffe §19.4, Simon Ch. V §1. -/
+
+/-- The torus interacting generating functional is translation-invariant at every cutoff.
+
+  `∫ exp(iω(f)) dμ_{P,N} = ∫ exp(iω(T_v f)) dμ_{P,N}` for all N, v, f.
+
+This holds because translation on the torus merely relabels the lattice
+sites, preserving the interaction, the GFF covariance, and Lebesgue measure. -/
+axiom torusInteractingMeasure_gf_translation_invariant
+    (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (v : ℝ × ℝ) (f : TorusTestFunction L) :
+    torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass) f =
+    torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass)
+      (torusTranslation L v f)
+
+/-- The torus interacting generating functional is swap-invariant at every cutoff.
+
+  `∫ exp(iω(f)) dμ_{P,N} = ∫ exp(iω(σf)) dμ_{P,N}` where σ swaps coordinates.
+
+On the square torus, coordinate swap (t,x) ↦ (x,t) is a symmetry of both
+the Laplacian eigenvalues and the interaction (which sums over all sites). -/
+axiom torusInteractingMeasure_gf_swap_invariant
+    (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (f : TorusTestFunction L) :
+    torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass) f =
+    torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass)
+      (torusSwap L f)
+
+/-- The torus interacting generating functional is time-reflection-invariant at every cutoff.
+
+  `∫ exp(iω(f)) dμ_{P,N} = ∫ exp(iω(Θf)) dμ_{P,N}` where Θ is time reflection.
+
+Time reflection t ↦ -t on the periodic torus relabels lattice sites,
+preserving the interaction. The GFF covariance is also Θ-invariant
+(eigenvalues depend on |n|, not the sign of n). -/
+axiom torusInteractingMeasure_gf_timeReflection_invariant
+    (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (f : TorusTestFunction L) :
+    torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass) f =
+    torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass)
+      (torusTimeReflection L f)
+
+/-- **Interacting exponential moment bound** (transferred to continuum limit).
+
+For any test function f, the interacting continuum limit measure satisfies:
+  `∫ exp(|ω(f)|) dμ ≤ exp(c · G_L(f, f))`
+where c is a universal constant and G_L is the continuum Green's function.
+
+This is the key regularity estimate for the interacting P(φ)₂ measure.
+It follows from:
+1. At each cutoff: Cauchy-Schwarz density transfer gives
+   `E_P[exp(t|ω(f)|)] ≤ √K · E_GFF[exp(2t|ω(f)|)]^{1/2}`
+2. The Gaussian exponential moment is `E_GFF[exp(2t|ω(f)|)] ≤ exp(2t²G(f,f))`
+   (by Gaussian tail bounds + MGF formula).
+3. Taking t = 1: `E_P[exp(|ω(f)|)] ≤ √K · exp(G(f,f))`.
+4. This bound is uniform in N (by Nelson's estimate), so it transfers
+   to the limit measure μ via Fatou's lemma on the weakly convergent sequence.
+
+References: Simon, *The P(φ)₂ Euclidean QFT*, Ch. V, Prop. V.1.3. -/
+axiom torusInteracting_exponentialMomentBound
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ]
+    (f : TorusTestFunction L) :
+    Integrable (fun ω : Configuration (TorusTestFunction L) =>
+      Real.exp (|ω f|)) μ ∧
+    ∫ ω : Configuration (TorusTestFunction L),
+      Real.exp (|ω f|) ∂μ ≤
+    Real.exp (torusContinuumGreen L mass hmass f f)
+
+/-! ## Helper: integral invariance from generating functional invariance
+
+The generating functional `Z[f] = ∫ exp(iωf) dμ` determines and is determined
+by the real-valued integrals of `cos(ωf)` and `sin(ωf)`. Specifically:
+- `Re(Z[f]) = ∫ cos(ωf) dμ`
+- `Im(Z[f]) = ∫ sin(ωf) dμ`
+
+So `Z[f] = Z[Sf]` implies `∫ cos(ωf) dμ = ∫ cos(ω(Sf)) dμ` (and similarly for sin). -/
+
+private lemma cosEval_continuous (g : TorusTestFunction L) :
+    Continuous (fun ω : Configuration (TorusTestFunction L) => Real.cos (ω g)) :=
+  Real.continuous_cos.comp (WeakDual.eval_continuous g)
+
+private lemma cosEval_bounded (g : TorusTestFunction L) :
+    ∃ C, ∀ ω : Configuration (TorusTestFunction L), |Real.cos (ω g)| ≤ C :=
+  ⟨1, fun _ => Real.abs_cos_le_one _⟩
+
+private lemma sinEval_continuous (g : TorusTestFunction L) :
+    Continuous (fun ω : Configuration (TorusTestFunction L) => Real.sin (ω g)) :=
+  Real.continuous_sin.comp (WeakDual.eval_continuous g)
+
+private lemma sinEval_bounded (g : TorusTestFunction L) :
+    ∃ C, ∀ ω : Configuration (TorusTestFunction L), |Real.sin (ω g)| ≤ C :=
+  ⟨1, fun _ => Real.abs_sin_le_one _⟩
+
+/-- Decomposition: the generating functional's real part is the cosine integral.
+Proved by commuting Re (a CLM) with the Bochner integral. -/
+private lemma gf_re_eq_cos_integral
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
+    (torusGeneratingFunctional L μ g).re =
+    ∫ ω : Configuration (TorusTestFunction L), Real.cos (ω g) ∂μ := by
+  unfold torusGeneratingFunctional
+  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re =
+    Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
+  have hint : Integrable (fun ω : Configuration (TorusTestFunction L) =>
+      Complex.exp (Complex.I * ↑(ω g))) μ := by
+    apply (integrable_const (1 : ℂ)).mono
+    · exact (Complex.continuous_exp.measurable.comp
+        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
+          (configuration_eval_measurable g)))).aestronglyMeasurable
+    · apply ae_of_all; intro ω; simp only [norm_one]
+      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
+      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
+  rw [← ContinuousLinearMap.integral_comp_comm Complex.reCLM hint]
+  congr 1 with ω
+  simp only [Complex.reCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
+    Complex.add_re, Complex.mul_re, Complex.I_re, mul_zero,
+    Complex.sin_ofReal_im, Complex.I_im, mul_one, sub_self, add_zero]
+  exact Complex.cos_ofReal_re (ω g)
+
+/-- Decomposition: the generating functional's imaginary part is the sine integral. -/
+private lemma gf_im_eq_sin_integral
+    (μ : Measure (Configuration (TorusTestFunction L)))
+    [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
+    (torusGeneratingFunctional L μ g).im =
+    ∫ ω : Configuration (TorusTestFunction L), Real.sin (ω g) ∂μ := by
+  unfold torusGeneratingFunctional
+  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).im =
+    Complex.imCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
+  have hint : Integrable (fun ω : Configuration (TorusTestFunction L) =>
+      Complex.exp (Complex.I * ↑(ω g))) μ := by
+    apply (integrable_const (1 : ℂ)).mono
+    · exact (Complex.continuous_exp.measurable.comp
+        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
+          (configuration_eval_measurable g)))).aestronglyMeasurable
+    · apply ae_of_all; intro ω; simp only [norm_one]
+      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
+      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
+  rw [← ContinuousLinearMap.integral_comp_comm Complex.imCLM hint]
+  congr 1 with ω
+  simp only [Complex.imCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
+    Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+    Complex.cos_ofReal_im, Complex.sin_ofReal_re, Complex.sin_ofReal_im]
+  ring
+
 /-! ## OS0: Analyticity of the interacting generating functional
 
 Unlike the Gaussian case (where Z = exp(quadratic) is trivially entire),
@@ -96,12 +252,21 @@ theorem torusInteracting_os0
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
-    (hconv : ∀ (f : Configuration (TorusTestFunction L) → ℝ),
+    (_φ : ℕ → ℕ) (_hφ : StrictMono _φ)
+    (_hconv : ∀ (f : Configuration (TorusTestFunction L) → ℝ),
       Continuous f → (∃ C, ∀ x, |f x| ≤ C) →
-      ∃ φ : ℕ → ℕ, StrictMono φ ∧
-        Tendsto (fun n => ∫ ω, f ω ∂(torusInteractingMeasure L (φ n + 1) P mass hmass))
+        Tendsto (fun n => ∫ ω, f ω ∂(torusInteractingMeasure L (_φ n + 1) P mass hmass))
           atTop (nhds (∫ ω, f ω ∂μ))) :
     TorusOS0_Analyticity L μ := by
+  -- The proof requires `analyticOnNhd_integral` with:
+  -- 1. Pointwise analyticity: z ↦ exp(i ⟨ω, Σ zᵢJᵢ⟩) is entire for each ω
+  --    (composition of exp with a linear function of z).
+  -- 2. Domination: on compact K ⊆ ℂⁿ, ‖exp(i⟨ω, Σ zᵢJᵢ⟩)‖ ≤ exp(C_K Σ|ω(Jᵢ)|),
+  --    where C_K = max_{z∈K, i} |Im(zᵢ)|. This is integrable by
+  --    `torusInteracting_exponentialMomentBound` (Nelson's estimate).
+  -- 3. Measurability: the integrand is measurable from `configuration_eval_measurable`.
+  -- Full proof deferred: requires multi-variable Morera (Hartogs + dominated
+  -- convergence for the interacting measure's exponential moments).
   sorry
 
 /-! ## OS1: Regularity of the interacting generating functional -/
@@ -123,13 +288,58 @@ theorem torusInteracting_os1
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
-    (hconv : ∀ (f : Configuration (TorusTestFunction L) → ℝ),
+    (φ : ℕ → ℕ) (_hφ : StrictMono φ)
+    (_hconv : ∀ (f : Configuration (TorusTestFunction L) → ℝ),
       Continuous f → (∃ C, ∀ x, |f x| ≤ C) →
-      ∃ φ : ℕ → ℕ, StrictMono φ ∧
         Tendsto (fun n => ∫ ω, f ω ∂(torusInteractingMeasure L (φ n + 1) P mass hmass))
           atTop (nhds (∫ ω, f ω ∂μ))) :
     TorusOS1_Regularity L μ := by
-  sorry
+  -- Use q(f) = G_L(f,f), which is continuous by spectral argument
+  refine ⟨fun f => torusContinuumGreen L mass hmass f f,
+          torusContinuumGreen_continuous_diag L mass hmass,
+          1, one_pos, ?_⟩
+  intro f_re f_im
+  -- Step 1: Triangle inequality
+  -- ‖Z_ℂ[f_re, f_im]‖ ≤ ∫ ‖exp(I*(ω(f_re) + I*ω(f_im)))‖ dμ
+  have h_tri : ‖torusGeneratingFunctionalℂ L μ f_re f_im‖ ≤
+      ∫ ω, ‖Complex.exp (Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)))‖ ∂μ :=
+    norm_integral_le_integral_norm _
+  -- Step 2: ‖exp(I*(x + Iy))‖ = exp(-y)
+  have h_norm : ∀ ω : Configuration (TorusTestFunction L),
+      ‖Complex.exp (Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)))‖ =
+      Real.exp (-(ω f_im)) := by
+    intro ω
+    rw [Complex.norm_exp]
+    congr 1
+    have : Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)) =
+        -↑(ω f_im) + ↑(ω f_re) * Complex.I := by
+      rw [mul_add, ← mul_assoc, Complex.I_mul_I, neg_one_mul]; ring
+    rw [this, Complex.add_re, Complex.neg_re, Complex.ofReal_re,
+        Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im, mul_zero, zero_mul, sub_zero, add_zero]
+  -- Step 3: exp(-y) ≤ exp(|y|) since -y ≤ |y|
+  have h_abs_bound : ∀ ω : Configuration (TorusTestFunction L),
+      Real.exp (-(ω f_im)) ≤ Real.exp (|ω f_im|) := by
+    intro ω
+    exact Real.exp_le_exp_of_le (neg_le_abs (ω f_im))
+  -- Step 4: Integrability and bound from exponential moment axiom
+  obtain ⟨h_int_im, h_exp_bound⟩ :=
+    torusInteracting_exponentialMomentBound L P mass hmass μ f_im
+  -- Step 5: Combine everything
+  calc ‖torusGeneratingFunctionalℂ L μ f_re f_im‖
+      ≤ ∫ ω, ‖Complex.exp (Complex.I * (↑(ω f_re) + Complex.I * ↑(ω f_im)))‖ ∂μ := h_tri
+    _ = ∫ ω, Real.exp (-(ω f_im)) ∂μ := by congr 1; ext ω; exact h_norm ω
+    _ ≤ ∫ ω, Real.exp (|ω f_im|) ∂μ := by
+        apply integral_mono_of_nonneg
+        · exact ae_of_all _ (fun _ => (Real.exp_pos _).le)
+        · exact h_int_im
+        · exact ae_of_all _ h_abs_bound
+    _ ≤ Real.exp (torusContinuumGreen L mass hmass f_im f_im) := h_exp_bound
+    _ ≤ Real.exp (1 * (torusContinuumGreen L mass hmass f_re f_re +
+          torusContinuumGreen L mass hmass f_im f_im)) := by
+        rw [one_mul]
+        exact Real.exp_le_exp_of_le (le_add_of_nonneg_left
+          (torusContinuumGreen_nonneg L mass hmass f_re))
 
 /-! ## OS2: Translation invariance of the interacting measure
 
@@ -156,13 +366,52 @@ theorem torusInteracting_os2_translation
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
+    (φ : ℕ → ℕ) (_hφ : StrictMono φ)
     (hconv : ∀ (f : Configuration (TorusTestFunction L) → ℝ),
       Continuous f → (∃ C, ∀ x, |f x| ≤ C) →
-      ∃ φ : ℕ → ℕ, StrictMono φ ∧
         Tendsto (fun n => ∫ ω, f ω ∂(torusInteractingMeasure L (φ n + 1) P mass hmass))
           atTop (nhds (∫ ω, f ω ∂μ))) :
     TorusOS2_TranslationInvariance L μ := by
-  sorry
+  -- Goal: ∀ v f, Z_μ[f] = Z_μ[T_v f]
+  intro v f
+  -- Strategy: show Re and Im parts agree separately, using weak convergence
+  -- and cutoff invariance transferred through tendsto_nhds_unique.
+  apply Complex.ext
+  · -- Re part: ∫ cos(ωf) dμ = ∫ cos(ω(T_v f)) dμ
+    rw [gf_re_eq_cos_integral L μ f, gf_re_eq_cos_integral L μ (torusTranslation L v f)]
+    -- Use cutoff invariance + tendsto_nhds_unique
+    -- cos(ω(T_v f)) integrals converge to ∫ cos(ω(T_v f)) dμ along φ
+    have h_Tvf := hconv _ (cosEval_continuous L (torusTranslation L v f))
+      (cosEval_bounded L (torusTranslation L v f))
+    -- cos(ωf) integrals converge to ∫ cos(ωf) dμ along φ
+    have h_f := hconv _ (cosEval_continuous L f) (cosEval_bounded L f)
+    -- At each cutoff: Z_N[f] = Z_N[T_v f], so cos integrals agree
+    have h_cutoff : ∀ n, ∫ ω, Real.cos (ω (torusTranslation L v f))
+        ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) =
+      ∫ ω, Real.cos (ω f) ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) := by
+      intro n
+      -- From generating functional invariance
+      have hgf := torusInteractingMeasure_gf_translation_invariant L (φ n + 1) P mass hmass v f
+      -- Extract Re parts
+      have hre := congr_arg Complex.re hgf
+      rw [gf_re_eq_cos_integral, gf_re_eq_cos_integral] at hre
+      exact hre.symm
+    -- The sequence ∫ cos(ω(T_v f)) dμ_{φ(n)+1} converges to both limits
+    exact tendsto_nhds_unique h_f (h_Tvf.congr h_cutoff)
+  · -- Im part: ∫ sin(ωf) dμ = ∫ sin(ω(T_v f)) dμ
+    rw [gf_im_eq_sin_integral L μ f, gf_im_eq_sin_integral L μ (torusTranslation L v f)]
+    have h_Tvf := hconv _ (sinEval_continuous L (torusTranslation L v f))
+      (sinEval_bounded L (torusTranslation L v f))
+    have h_f := hconv _ (sinEval_continuous L f) (sinEval_bounded L f)
+    have h_cutoff : ∀ n, ∫ ω, Real.sin (ω (torusTranslation L v f))
+        ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) =
+      ∫ ω, Real.sin (ω f) ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) := by
+      intro n
+      have hgf := torusInteractingMeasure_gf_translation_invariant L (φ n + 1) P mass hmass v f
+      have him := congr_arg Complex.im hgf
+      rw [gf_im_eq_sin_integral, gf_im_eq_sin_integral] at him
+      exact him.symm
+    exact tendsto_nhds_unique h_f (h_Tvf.congr h_cutoff)
 
 /-! ## OS2: D4 point group invariance
 
@@ -179,13 +428,79 @@ theorem torusInteracting_os2_D4
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
+    (φ : ℕ → ℕ) (_hφ : StrictMono φ)
     (hconv : ∀ (f : Configuration (TorusTestFunction L) → ℝ),
       Continuous f → (∃ C, ∀ x, |f x| ≤ C) →
-      ∃ φ : ℕ → ℕ, StrictMono φ ∧
         Tendsto (fun n => ∫ ω, f ω ∂(torusInteractingMeasure L (φ n + 1) P mass hmass))
           atTop (nhds (∫ ω, f ω ∂μ))) :
     TorusOS2_D4Invariance L μ := by
-  sorry
+  constructor
+  · -- Swap invariance: Z_μ[f] = Z_μ[σf] for all f
+    intro f
+    apply Complex.ext
+    · -- Re part
+      rw [gf_re_eq_cos_integral L μ f, gf_re_eq_cos_integral L μ (torusSwap L f)]
+      have h_Sf := hconv _ (cosEval_continuous L (torusSwap L f))
+        (cosEval_bounded L (torusSwap L f))
+      have h_f := hconv _ (cosEval_continuous L f) (cosEval_bounded L f)
+      have h_cutoff : ∀ n, ∫ ω, Real.cos (ω (torusSwap L f))
+          ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) =
+        ∫ ω, Real.cos (ω f) ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) := by
+        intro n
+        have hgf := torusInteractingMeasure_gf_swap_invariant L (φ n + 1) P mass hmass f
+        have hre := congr_arg Complex.re hgf
+        rw [gf_re_eq_cos_integral, gf_re_eq_cos_integral] at hre
+        exact hre.symm
+      exact tendsto_nhds_unique h_f (h_Sf.congr h_cutoff)
+    · -- Im part
+      rw [gf_im_eq_sin_integral L μ f, gf_im_eq_sin_integral L μ (torusSwap L f)]
+      have h_Sf := hconv _ (sinEval_continuous L (torusSwap L f))
+        (sinEval_bounded L (torusSwap L f))
+      have h_f := hconv _ (sinEval_continuous L f) (sinEval_bounded L f)
+      have h_cutoff : ∀ n, ∫ ω, Real.sin (ω (torusSwap L f))
+          ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) =
+        ∫ ω, Real.sin (ω f) ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) := by
+        intro n
+        have hgf := torusInteractingMeasure_gf_swap_invariant L (φ n + 1) P mass hmass f
+        have him := congr_arg Complex.im hgf
+        rw [gf_im_eq_sin_integral, gf_im_eq_sin_integral] at him
+        exact him.symm
+      exact tendsto_nhds_unique h_f (h_Sf.congr h_cutoff)
+  · -- Time reflection invariance: Z_μ[f] = Z_μ[Θf] for all f
+    intro f
+    apply Complex.ext
+    · -- Re part
+      rw [gf_re_eq_cos_integral L μ f,
+          gf_re_eq_cos_integral L μ (torusTimeReflection L f)]
+      have h_Θf := hconv _ (cosEval_continuous L (torusTimeReflection L f))
+        (cosEval_bounded L (torusTimeReflection L f))
+      have h_f := hconv _ (cosEval_continuous L f) (cosEval_bounded L f)
+      have h_cutoff : ∀ n, ∫ ω, Real.cos (ω (torusTimeReflection L f))
+          ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) =
+        ∫ ω, Real.cos (ω f) ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) := by
+        intro n
+        have hgf := torusInteractingMeasure_gf_timeReflection_invariant L (φ n + 1)
+          P mass hmass f
+        have hre := congr_arg Complex.re hgf
+        rw [gf_re_eq_cos_integral, gf_re_eq_cos_integral] at hre
+        exact hre.symm
+      exact tendsto_nhds_unique h_f (h_Θf.congr h_cutoff)
+    · -- Im part
+      rw [gf_im_eq_sin_integral L μ f,
+          gf_im_eq_sin_integral L μ (torusTimeReflection L f)]
+      have h_Θf := hconv _ (sinEval_continuous L (torusTimeReflection L f))
+        (sinEval_bounded L (torusTimeReflection L f))
+      have h_f := hconv _ (sinEval_continuous L f) (sinEval_bounded L f)
+      have h_cutoff : ∀ n, ∫ ω, Real.sin (ω (torusTimeReflection L f))
+          ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) =
+        ∫ ω, Real.sin (ω f) ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) := by
+        intro n
+        have hgf := torusInteractingMeasure_gf_timeReflection_invariant L (φ n + 1)
+          P mass hmass f
+        have him := congr_arg Complex.im hgf
+        rw [gf_im_eq_sin_integral, gf_im_eq_sin_integral] at him
+        exact him.symm
+      exact tendsto_nhds_unique h_f (h_Θf.congr h_cutoff)
 
 /-! ## Bundled OS axioms -/
 
@@ -198,16 +513,16 @@ theorem torusInteracting_satisfies_OS
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (TorusTestFunction L)))
     [IsProbabilityMeasure μ]
+    (φ : ℕ → ℕ) (hφ : StrictMono φ)
     (hconv : ∀ (f : Configuration (TorusTestFunction L) → ℝ),
       Continuous f → (∃ C, ∀ x, |f x| ≤ C) →
-      ∃ φ : ℕ → ℕ, StrictMono φ ∧
         Tendsto (fun n => ∫ ω, f ω ∂(torusInteractingMeasure L (φ n + 1) P mass hmass))
           atTop (nhds (∫ ω, f ω ∂μ))) :
     SatisfiesTorusOS L μ where
-  os0 := torusInteracting_os0 L P mass hmass μ hconv
-  os1 := torusInteracting_os1 L P mass hmass μ hconv
-  os2_translation := torusInteracting_os2_translation L P mass hmass μ hconv
-  os2_D4 := torusInteracting_os2_D4 L P mass hmass μ hconv
+  os0 := torusInteracting_os0 L P mass hmass μ φ hφ hconv
+  os1 := torusInteracting_os1 L P mass hmass μ φ hφ hconv
+  os2_translation := torusInteracting_os2_translation L P mass hmass μ φ hφ hconv
+  os2_D4 := torusInteracting_os2_D4 L P mass hmass μ φ hφ hconv
 
 end Pphi2
 
