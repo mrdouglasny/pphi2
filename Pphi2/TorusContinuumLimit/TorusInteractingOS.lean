@@ -268,6 +268,8 @@ References: Simon, *P(φ)₂ QFT*, Ch. V, Prop. V.1.3. -/
 axiom torusInteractingMeasure_exponentialMomentBound_cutoff
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧ ∀ (f : TorusTestFunction L) (N : ℕ) [NeZero N],
+    Integrable (fun ω : Configuration (TorusTestFunction L) =>
+      Real.exp (|ω f|)) (torusInteractingMeasure L N P mass hmass) ∧
     ∫ ω : Configuration (TorusTestFunction L),
       Real.exp (|ω f|)
       ∂(torusInteractingMeasure L N P mass hmass) ≤
@@ -300,11 +302,62 @@ theorem torusInteracting_exponentialMomentBound
   obtain ⟨K, hK_pos, hK_bound⟩ :=
     torusInteractingMeasure_exponentialMomentBound_cutoff L P mass hmass
   refine ⟨K, hK_pos, fun f => ?_⟩
-  constructor
-  -- Part 1: Integrability + Part 2: Bound
-  -- Both via truncation: min(exp(|ωf|), M) is bcf, converges via hconv,
-  -- bounded by K * exp(G_N(f,f)) at cutoff, transfers to K * exp(G(f,f)).
-  all_goals sorry
+  -- Key claim: for every M > 0, ∫ min(exp(|ωf|), M) dμ ≤ K * exp(G(f,f))
+  set B := K * Real.exp (torusContinuumGreen L mass hmass f f)
+  have hB_pos : 0 < B := mul_pos hK_pos (Real.exp_pos _)
+  -- Propagator convergence: G_N(f,f) → G(f,f)
+  have hG_conv := torus_propagator_convergence L mass hmass f f
+  have h_trunc : ∀ M : ℝ, 0 < M →
+      ∫ ω : Configuration (TorusTestFunction L), min (Real.exp (|ω f|)) M ∂μ ≤ B := by
+    intro M hM
+    -- min(exp(|ωf|), M) is bounded continuous
+    have h_cont : Continuous (fun ω : Configuration (TorusTestFunction L) =>
+        min (Real.exp (|ω f|)) M) :=
+      (Real.continuous_exp.comp (continuous_abs.comp (WeakDual.eval_continuous f))).min
+        continuous_const
+    have h_bdd : ∃ C, ∀ ω : Configuration (TorusTestFunction L),
+        |min (Real.exp (|ω f|)) M| ≤ C :=
+      ⟨M, fun ω => by
+        rw [abs_of_nonneg (le_min (Real.exp_pos _).le hM.le)]
+        exact min_le_right _ _⟩
+    -- By weak convergence: lim ∫ min(exp(|ωf|), M) dμ_N = ∫ min(exp(|ωf|), M) dμ
+    have h_lim := hconv _ h_cont h_bdd
+    -- At each cutoff: ∫ min(exp(|ωf|), M) dμ_N ≤ ∫ exp(|ωf|) dμ_N ≤ K * exp(G_N)
+    have h_cutoff : ∀ n, ∫ ω, min (Real.exp (|ω f|)) M
+        ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) ≤
+        K * Real.exp (torusEmbeddedTwoPoint L (φ n + 1) mass hmass f f) := by
+      intro n
+      calc ∫ ω, min (Real.exp (|ω f|)) M
+            ∂(torusInteractingMeasure L (φ n + 1) P mass hmass)
+          ≤ ∫ ω, Real.exp (|ω f|)
+            ∂(torusInteractingMeasure L (φ n + 1) P mass hmass) := by
+            apply integral_mono_of_nonneg
+            · exact ae_of_all _ (fun _ => le_min (Real.exp_pos _).le hM.le)
+            · sorry -- integrability of exp(|ωf|) under cutoff measure
+            · exact ae_of_all _ (fun ω => min_le_left _ _)
+        _ ≤ K * Real.exp (torusEmbeddedTwoPoint L (φ n + 1) mass hmass f f) :=
+            hK_bound f (φ n + 1)
+    -- The cutoff bound K * exp(G_N) → K * exp(G) = B
+    have h_B_lim : Tendsto (fun n =>
+        K * Real.exp (torusEmbeddedTwoPoint L (φ n + 1) mass hmass f f))
+        atTop (nhds B) := by
+      show Tendsto _ atTop (nhds (K * Real.exp (torusContinuumGreen L mass hmass f f)))
+      apply Filter.Tendsto.const_mul
+      exact (Real.continuous_exp.tendsto _).comp
+        (hG_conv.comp (_hφ.tendsto_atTop))
+    -- lim (∫ min dμ_N) = ∫ min dμ ≤ lim (K * exp(G_N)) = B
+    exact le_of_tendsto_of_tendsto h_lim h_B_lim (Filter.Eventually.of_forall h_cutoff)
+  -- Derive integrability + bound from h_trunc:
+  -- For all M > 0, ∫ min(exp(|ωf|), M) dμ ≤ B.
+  -- The lintegral ∫⁻ exp(|ωf|) dμ = sup_M ∫⁻ min(exp(|ωf|), M) dμ ≤ B
+  -- Hence exp(|ωf|) is integrable and ∫ exp(|ωf|) dμ ≤ B.
+  --
+  -- For now: this MCT step is a standard measure theory argument.
+  -- The formal proof requires:
+  -- 1. `∫⁻ min(exp(|ωf|), M) dμ ≤ B` from h_trunc (convert ∫ to ∫⁻ for nonneg)
+  -- 2. `∫⁻ exp(|ωf|) dμ = sup_M ∫⁻ min(exp(|ωf|), M) dμ` (lintegral_iSup)
+  -- 3. Convert back: ∫⁻ ≤ B implies Integrable and ∫ ≤ B
+  constructor <;> sorry
 
 /-! ## Helper: integral invariance from generating functional invariance
 
