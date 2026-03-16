@@ -493,6 +493,37 @@ private lemma gf_im_eq_sin_integral
     Complex.cos_ofReal_im, Complex.sin_ofReal_re, Complex.sin_ofReal_im]
   ring
 
+/-! ### Helper lemmas for OS0 -/
+
+/-- On a compact set `K ⊆ (Fin n → ℂ)`, imaginary parts are uniformly bounded. -/
+private lemma compact_im_bound {n : ℕ} {K : Set (Fin n → ℂ)} (hK : IsCompact K) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ z ∈ K, ∀ i : Fin n, |Complex.im (z i)| ≤ C := by
+  by_cases hKe : K.Nonempty
+  · obtain ⟨M, hM⟩ := hK.isBounded.exists_norm_le
+    exact ⟨M, le_trans (norm_nonneg _) (hM _ hKe.some_mem), fun z hz i =>
+      (Complex.abs_im_le_norm (z i)).trans ((norm_le_pi_norm z i).trans (hM z hz))⟩
+  · exact ⟨0, le_refl _, fun z hz => absurd ⟨z, hz⟩ hKe⟩
+
+/-- For `aᵢ ≥ 0`: `exp(c · Σ aᵢ) ≤ Σ exp(n·c·aᵢ)`. Uses `Σ aᵢ ≤ n · max aᵢ`
+and `exp(n·c·max) ≤ Σ exp(n·c·aᵢ)` (the max term is one of the summands). -/
+private lemma exp_mul_sum_le {n : ℕ} (hn : 0 < n) (c : ℝ) (hc : 0 ≤ c)
+    (a : Fin n → ℝ) :
+    Real.exp (c * ∑ i : Fin n, a i) ≤
+    ∑ i : Fin n, Real.exp (↑n * c * a i) := by
+  have hne : (Finset.univ : Finset (Fin n)).Nonempty :=
+    ⟨⟨0, hn⟩, Finset.mem_univ _⟩
+  set M := Finset.univ.sup' hne a
+  have hM : ∀ i, a i ≤ M := fun i => Finset.le_sup' a (Finset.mem_univ i)
+  have h_sum_le : ∑ i : Fin n, a i ≤ ↑n * M :=
+    (Finset.sum_le_sum (fun i _ => hM i)).trans
+      (by simp [Finset.sum_const, nsmul_eq_mul])
+  have h1 : Real.exp (c * ∑ i, a i) ≤ Real.exp (↑n * c * M) :=
+    Real.exp_le_exp_of_le (by nlinarith)
+  obtain ⟨j, _, hj⟩ := Finset.exists_mem_eq_sup' hne a
+  exact h1.trans ((congr_arg Real.exp (by rw [← hj])).le.trans
+    (Finset.single_le_sum (f := fun i => Real.exp (↑n * c * a i))
+      (fun i _ => (Real.exp_pos _).le) (Finset.mem_univ j)))
+
 /-! ## OS0: Analyticity of the interacting generating functional
 
 Unlike the Gaussian case (where Z = exp(quadratic) is trivially entire),
@@ -539,9 +570,22 @@ theorem torusInteracting_os0
     -- exp(I * (ω(Σ Re(zᵢ)Jᵢ) + I * ω(Σ Im(zᵢ)Jᵢ))) is exp of a ℂ-linear function of z
     intro ω z _
     apply AnalyticAt.cexp'
-    -- I * (ω(Σ Re(zᵢ)Jᵢ) + I * ω(Σ Im(zᵢ)Jᵢ)) = I * Σ zᵢ ω(Jᵢ)
-    -- by linearity of ω and Re(z) + I*Im(z) = z. The RHS is ℂ-linear in z.
-    sorry
+    -- Rewrite using linearity of ω: I * (ω(Σ Re(zᵢ)Jᵢ) + I * ω(Σ Im(zᵢ)Jᵢ)) = I * Σ zᵢ ω(Jᵢ)
+    have h_eq : ∀ w : Fin n → ℂ,
+        I * (↑(ω (∑ i, (w i).re • J i)) + I * ↑(ω (∑ i, (w i).im • J i))) =
+        I * ∑ i : Fin n, w i * ↑(ω (J i)) := by
+      intro w; congr 1
+      simp only [map_sum, map_smul, smul_eq_mul, Complex.ofReal_sum, Complex.ofReal_mul,
+        Finset.mul_sum, ← Finset.sum_add_distrib]
+      congr 1; ext i
+      calc ↑(w i).re * ↑(ω (J i)) + I * (↑(w i).im * ↑(ω (J i)))
+          = (↑(w i).re + ↑(w i).im * I) * ↑(ω (J i)) := by ring
+        _ = w i * ↑(ω (J i)) := by rw [re_add_im]
+    simp_rw [h_eq]
+    -- I * Σ zᵢ * cᵢ is ℂ-linear in z, hence analytic
+    exact analyticAt_const.mul (Finset.univ.analyticAt_fun_sum (fun i _ =>
+      ((ContinuousLinearMap.proj (R := ℂ) (φ := fun _ : Fin n => ℂ) i).analyticAt z).mul
+      analyticAt_const))
   · -- Measurability: F(z, ·) is ae strongly measurable for each z
     intro z
     apply (Complex.measurable_exp.comp _).aestronglyMeasurable
@@ -549,10 +593,67 @@ theorem torusInteracting_os0
       (configuration_eval_measurable _)).add (measurable_const.mul
       (Complex.measurable_ofReal.comp (configuration_eval_measurable _)))))
   · -- Domination: on compact K, ‖F(z, ω)‖ ≤ bound(ω) integrable
-    -- ‖exp(I * Σ zᵢ ω(Jᵢ))‖ = exp(-Im(Σ zᵢ ω(Jᵢ))) ≤ exp(Σ |Im(zᵢ)| |ω(Jᵢ)|)
-    -- On compact K: |Im(zᵢ)| ≤ C_K, so bound ≤ exp(C_K Σ |ω(Jᵢ)|)
-    -- ≤ exp(n * C_K * max_i |ω(Jᵢ)|) which is integrable by exp moment bound
-    sorry
+    intro K hK
+    -- Get uniform bound C_K on imaginary parts over K
+    obtain ⟨C_K, hC_K_nn, hC_K⟩ := compact_im_bound hK
+    -- Get exponential moment bound (provides integrability)
+    obtain ⟨K_exp, hK_exp_pos, hK_exp_bound⟩ :=
+      torusInteracting_exponentialMomentBound L P mass hmass μ _φ _hφ _hconv
+    by_cases hn : n = 0
+    · -- n = 0: integrand is exp(I * 0) = 1, bounded by 1
+      subst hn
+      exact ⟨fun _ => 1, integrable_const 1, fun z _ => ae_of_all μ fun ω => by
+        simp only [Finset.univ_eq_empty, Finset.sum_empty, map_zero,
+          Complex.ofReal_zero, add_zero, mul_zero, Complex.exp_zero, norm_one]; rfl⟩
+    · -- n > 0: bound by ∑ᵢ exp(n · C_K · |ω(Jᵢ)|)
+      set bound := fun ω : Configuration (TorusTestFunction L) =>
+        ∑ i : Fin n, Real.exp (↑n * C_K * |ω (J i)|) with hbound_def
+      refine ⟨bound, ?_, fun z hz => ae_of_all μ fun ω => ?_⟩
+      · -- Integrability: each exp(n·C_K·|ω(Jᵢ)|) = exp(|ω((n·C_K)•Jᵢ)|) is integrable
+        apply integrable_finset_sum; intro i _
+        have hscale : ∀ ω : Configuration (TorusTestFunction L),
+            Real.exp (↑n * C_K * |ω (J i)|) =
+            Real.exp (|ω ((↑n * C_K) • J i)|) := by
+          intro ω
+          rw [map_smul, smul_eq_mul, abs_mul,
+              abs_of_nonneg (mul_nonneg (Nat.cast_nonneg' n) hC_K_nn)]
+        simp_rw [hscale]
+        exact (hK_exp_bound ((↑n * C_K) • J i)).1
+      · -- Pointwise bound: ‖F(z, ω)‖ ≤ bound(ω) for z ∈ K
+        -- Step 1: ‖cexp(I·(ω(g_re)+I·ω(g_im)))‖ = exp(-ω(g_im))
+        rw [Complex.norm_exp]
+        have h_re : (I * (↑(ω (∑ i, (z i).re • J i)) +
+            I * ↑(ω (∑ i, (z i).im • J i)))).re =
+            -(ω (∑ i, (z i).im • J i)) := by
+          have : I * (↑(ω (∑ i, (z i).re • J i)) +
+              I * ↑(ω (∑ i, (z i).im • J i))) =
+              -↑(ω (∑ i, (z i).im • J i)) +
+              ↑(ω (∑ i, (z i).re • J i)) * I := by
+            rw [mul_add, ← mul_assoc, Complex.I_mul_I, neg_one_mul]; ring
+          rw [this, Complex.add_re, Complex.neg_re, Complex.ofReal_re,
+              Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+              Complex.I_re, Complex.I_im, mul_zero, zero_mul, sub_zero,
+              add_zero]
+        rw [h_re]
+        -- Step 2: exp(-ω(g_im)) ≤ exp(|ω(g_im)|) ≤ exp(C_K · Σ|ω(Jᵢ)|)
+        calc Real.exp (-(ω (∑ i, (z i).im • J i)))
+            ≤ Real.exp (|ω (∑ i, (z i).im • J i)|) :=
+              Real.exp_le_exp_of_le (neg_le_abs _)
+          _ ≤ Real.exp (C_K * ∑ i : Fin n, |ω (J i)|) := by
+              apply Real.exp_le_exp_of_le
+              rw [map_sum]
+              calc |∑ i, ω ((z i).im • J i)|
+                  ≤ ∑ i, |ω ((z i).im • J i)| :=
+                    Finset.abs_sum_le_sum_abs _ _
+                _ = ∑ i, |(z i).im| * |ω (J i)| := by
+                    congr 1; ext i; rw [map_smul, smul_eq_mul, abs_mul]
+                _ ≤ ∑ i, C_K * |ω (J i)| :=
+                    Finset.sum_le_sum (fun i _ =>
+                      mul_le_mul_of_nonneg_right (hC_K z hz i) (abs_nonneg _))
+                _ = C_K * ∑ i, |ω (J i)| := (Finset.mul_sum _ _ _).symm
+          -- Step 3: exp(C_K · Σ|ω(Jᵢ)|) ≤ Σ exp(n·C_K·|ω(Jᵢ)|)
+          _ ≤ bound ω :=
+              exp_mul_sum_le (Nat.pos_of_ne_zero hn) C_K hC_K_nn _
 
 /-! ## OS1: Regularity of the interacting generating functional -/
 
