@@ -64,12 +64,12 @@ The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
 **25 axioms, 0 sorries.**
 
-### Route B: T²_L (torus) — OS0–OS2 (**3 axioms**)
+### Route B: T²_L (torus) — OS0–OS2 (**1 axiom, 1 sorry**)
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
-spacing a = L/N → 0. The interacting continuum limit exists (proved via
-Mitoma-Chebyshev tightness from gaussian-field + Nelson's exponential estimate).
-OS3 (reflection positivity) is dropped here — it's more natural on the cylinder.
-**3 axioms, 0 sorries** (+ Nelson estimate proof skeleton in `NelsonEstimate/`: 5 sub-sorries).
+spacing a = L/N → 0. The interacting continuum limit `torusInteractingLimit_exists`
+is **PROVED** via Mitoma-Chebyshev tightness + Nelson's exponential estimate
+(proved: physical volume a²N²=L² is constant). OS3 dropped (→ cylinder).
+**1 axiom** (OS0 analyticity), **1 sorry** (Cramér-Wold for Gaussian uniqueness).
 
 ### Route C: S¹_L × ℝ (cylinder) — OS0–OS3
 Direct Nelson/Simon construction with natural time axis ℝ for OS reconstruction.
@@ -139,9 +139,9 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`, 3084 jobs).
 
-- **pphi2:** 58 axioms, 1 sorry (+ 5 in Nelson estimate proof skeleton)
+- **pphi2:** 54 axioms, 2 sorries
 - **gaussian-field** (upstream, cylinder branch): 0 axioms outside `future/`
-- **Route B (torus):** 3 active axioms, 0 sorries — most developed route
+- **Route B (torus):** 1 axiom, 1 sorry — most developed route (down from 7 axioms)
 
 The torus continuum limit (`TorusContinuumLimit/`) provides a cleaner alternative
 to the S'(ℝ^d) approach: by fixing the physical volume L and taking only N→∞,

@@ -89,21 +89,26 @@ Gaussian limit identified with torus Green's function.
 - No rotation invariance needed
 - No natural time reflection (periodic time) → OS3 deferred to cylinder
 
-### Status: 3 axioms, 0 sorries (+ Nelson estimate in progress)
-Main theorem: `torusInteractingLimit_exists`
+### Status: 1 axiom, 1 sorry
+Main theorem: `torusInteractingLimit_exists` — **PROVED**
 
 **Proved (formerly axioms):**
 - `configuration_tight_of_uniform_second_moments` → theorem in gaussian-field (`GaussianField.Tightness`)
 - `torusLimit_covariance_eq` → theorem via Gaussian characteristic function
+- `nelson_exponential_estimate` → theorem via physical volume identity a²N²=L²
+- `gaussian_measure_unique_of_covariance` → theorem via complex MGF extension
+  (1 sorry: `pushforward_eq_of_eval_eq` — Cramér-Wold, in `MeasureUniqueness.lean`)
 
-**Dropped (OS3 not on torus):**
-- `torusPositiveTimeSubmodule`, `torusLattice_rp` — unused, OS3 comes from cylinder
+**Deleted (OS3 not on torus):**
+- `torusPositiveTimeSubmodule`, `torusLattice_rp`, `TorusOS3_ReflectionPositivity` — removed
 
-**Remaining 3 axioms:**
-1. `nelson_exponential_estimate` — uniform-in-N L² bound on Boltzmann weight
-   (proof skeleton in `Pphi2/NelsonEstimate/`: heat kernel splitting + dynamic cutoff, 5 sorries)
-2. `torusGeneratingFunctionalℂ_analyticOnNhd` — OS0 analyticity
-3. `gaussian_measure_unique_of_covariance` — Gaussian uniqueness (Bochner-Minlos, belongs in gaussian-field)
+**Remaining 1 axiom:**
+1. `torusGeneratingFunctionalℂ_analyticOnNhd` — OS0 analyticity of generating functional
+   (proved in OSforGFF via parametric integral analyticity, 849 lines, needs adaptation)
+
+**Remaining 1 sorry:**
+1. `pushforward_eq_of_eval_eq` — equal 1D marginals → equal measures (Cramér-Wold)
+   (in `MeasureUniqueness.lean`)
 
 ---
 
@@ -182,7 +187,7 @@ Main theorem: `cylinderInteracting_satisfies_OS`
 | **OS proved** | OS1–OS4 | OS0–OS2 | none (all axiom'd) |
 | **OS axiom'd** | OS0 | OS0 only | OS0–OS3 |
 | **OS3 strategy** | Transfer matrix | Dropped (→ cylinder) | Laplace factorization |
-| **Axioms** | 25 | **3** (+2 unused) | 23 + 1 sorry |
+| **Axioms** | 25 | **1** + 1 sorry | 23 + 1 sorry |
 
 ### Upstream (gaussian-field repo, cylinder branch): 12 axioms
 Cylinder module: `cylinderMassOperator`, `cylinderGreen_pos`,
@@ -190,5 +195,5 @@ Cylinder module: `cylinderMassOperator`, `cylinderGreen_pos`,
 Tightness: `configuration_tight_of_uniform_second_moments` proved (0 sorries).
 False PolishSpace/BorelSpace axioms removed; `prokhorov_configuration` used instead.
 
-### Grand total: 58 axioms + 1 sorry (pphi2) + 12 axioms (gaussian-field cylinder)
-### Nelson estimate: proof skeleton with 5 sub-sorries in `Pphi2/NelsonEstimate/`
+### Grand total: 54 axioms + 2 sorries (pphi2) + 12 axioms (gaussian-field cylinder)
+### Nelson estimate: PROVED (see `docs/nelson-estimate.md`)
