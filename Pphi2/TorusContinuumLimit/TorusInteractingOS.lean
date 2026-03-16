@@ -1382,7 +1382,7 @@ From `pairing_is_gaussian`: `ω(f) ~ gaussianReal 0 ‖Tf‖²` under μ.
 Then `E[exp(t|X|)] ≤ E[exp(tX)] + E[exp(-tX)] = 2 exp(t²σ²/2)` by `mgf_id_gaussianReal`.
 
 This is a textbook result: Gaussian random variables have finite exponential moments. -/
-axiom gaussian_exp_abs_moment
+theorem gaussian_exp_abs_moment
     (N : ℕ) [NeZero N] (mass : ℝ) (hmass : 0 < mass)
     (g : FinLatticeField 2 N) (t : ℝ) :
     Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
@@ -1395,7 +1395,118 @@ axiom gaussian_exp_abs_moment
         (circleSpacing_pos L N) hmass) ≤
     2 * Real.exp (t ^ 2 / 2 *
       ∫ ω, (ω g) ^ 2 ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass
-        (circleSpacing_pos L N) hmass))
+        (circleSpacing_pos L N) hmass)) := by
+  -- Setup: abbreviations
+  set μ := latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass
+  set T := latticeCovariance 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass
+  have hμ_eq : μ = GaussianField.measure T := rfl
+  haveI : IsProbabilityMeasure μ :=
+    latticeGaussianMeasure_isProbability 2 N (circleSpacing L N) mass
+      (circleSpacing_pos L N) hmass
+  -- Step 1: Pushforward is Gaussian
+  have h_gauss : μ.map (fun ω : Configuration (FinLatticeField 2 N) => ω g) =
+      ProbabilityTheory.gaussianReal 0
+        (@inner ℝ ell2' _ (T g) (T g) : ℝ).toNNReal :=
+    pairing_is_gaussian T g
+  set v := (@inner ℝ ell2' _ (T g) (T g) : ℝ).toNNReal with hv_def
+  -- Step 2: Integrability of exp(t*x) and exp(-t*x) under the Gaussian
+  have h_int_pos : Integrable (fun x : ℝ => Real.exp (t * x))
+      (ProbabilityTheory.gaussianReal 0 v) :=
+    ProbabilityTheory.integrable_exp_mul_gaussianReal t
+  have h_int_neg : Integrable (fun x : ℝ => Real.exp (-(t * x)))
+      (ProbabilityTheory.gaussianReal 0 v) := by
+    simp_rw [show ∀ x, -(t * x) = (-t) * x from fun x => by ring]
+    exact ProbabilityTheory.integrable_exp_mul_gaussianReal (-t)
+  -- Step 3: Pull back integrability to configuration space
+  have h_eval_meas : Measurable (fun ω : Configuration (FinLatticeField 2 N) => ω g) :=
+    configuration_eval_measurable g
+  have h_int_pos_conf : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (t * ω g)) μ := by
+    rw [← h_gauss] at h_int_pos
+    rwa [integrable_map_measure h_int_pos.aestronglyMeasurable
+      h_eval_meas.aemeasurable] at h_int_pos
+  have h_int_neg_conf : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (-(t * ω g))) μ := by
+    rw [← h_gauss] at h_int_neg
+    rwa [integrable_map_measure h_int_neg.aestronglyMeasurable
+      h_eval_meas.aemeasurable] at h_int_neg
+  -- Step 4: Pointwise bound exp(t*|x|) ≤ exp(t*x) + exp(-t*x)
+  have h_pointwise : ∀ x : ℝ, Real.exp (t * |x|) ≤ Real.exp (t * x) + Real.exp (-(t * x)) := by
+    intro x
+    by_cases hx : 0 ≤ x
+    · rw [abs_of_nonneg hx]
+      linarith [Real.exp_pos (-(t * x))]
+    · push_neg at hx
+      rw [abs_of_neg hx, show t * (-x) = -(t * x) from by ring]
+      linarith [Real.exp_pos (t * x)]
+  -- Step 5: Integrability of exp(t*|ω g|)
+  have h_int_sum : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (t * ω g) + Real.exp (-(t * ω g))) μ :=
+    h_int_pos_conf.add h_int_neg_conf
+  have h_int_abs : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
+      Real.exp (t * |ω g|)) μ := by
+    apply h_int_sum.mono
+      ((h_eval_meas.abs.const_mul t).exp.aestronglyMeasurable)
+    exact Filter.Eventually.of_forall fun ω => by
+      rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
+      calc Real.exp (t * |ω g|)
+          ≤ Real.exp (t * ω g) + Real.exp (-(t * ω g)) := h_pointwise (ω g)
+        _ ≤ |Real.exp (t * ω g) + Real.exp (-(t * ω g))| :=
+            le_abs_self _
+  -- Step 6: MGF values for exp(t*x) and exp(-t*x)
+  have h_mgf_pos : ∫ ω : Configuration (FinLatticeField 2 N),
+      Real.exp (t * ω g) ∂μ = Real.exp ((v : ℝ) * t ^ 2 / 2) := by
+    have h_eq : ∫ ω, Real.exp (t * ω g) ∂μ =
+        ∫ x, Real.exp (t * x) ∂(μ.map (fun ω : Configuration (FinLatticeField 2 N) => ω g)) :=
+      (integral_map h_eval_meas.aemeasurable
+        ((measurable_const.mul measurable_id).exp.aestronglyMeasurable)).symm
+    rw [h_eq, h_gauss]
+    have := congr_fun (@ProbabilityTheory.mgf_id_gaussianReal (0 : ℝ) v) t
+    simp only [ProbabilityTheory.mgf, id] at this
+    rw [this]; simp [zero_mul, zero_add]
+  have h_mgf_neg : ∫ ω : Configuration (FinLatticeField 2 N),
+      Real.exp (-(t * ω g)) ∂μ = Real.exp ((v : ℝ) * t ^ 2 / 2) := by
+    have h_eq : ∫ ω, Real.exp (-(t * ω g)) ∂μ =
+        ∫ x, Real.exp ((-t) * x)
+          ∂(μ.map (fun ω : Configuration (FinLatticeField 2 N) => ω g)) := by
+      rw [show (fun ω : Configuration (FinLatticeField 2 N) => Real.exp (-(t * ω g))) =
+            (fun x : ℝ => Real.exp ((-t) * x)) ∘
+            (fun ω : Configuration (FinLatticeField 2 N) => ω g) from by
+        ext ω; simp [neg_mul]]
+      exact (integral_map h_eval_meas.aemeasurable
+        ((measurable_const.mul measurable_id).exp.aestronglyMeasurable)).symm
+    rw [h_eq, h_gauss]
+    have := congr_fun (@ProbabilityTheory.mgf_id_gaussianReal (0 : ℝ) v) (-t)
+    simp only [ProbabilityTheory.mgf, id] at this
+    rw [this]; congr 1; ring
+  -- Step 7: Integral bound
+  have h_integral_bound : ∫ ω, Real.exp (t * |ω g|) ∂μ ≤
+      2 * Real.exp ((v : ℝ) * t ^ 2 / 2) := by
+    calc ∫ ω, Real.exp (t * |ω g|) ∂μ
+        ≤ ∫ ω, (Real.exp (t * ω g) + Real.exp (-(t * ω g))) ∂μ := by
+          apply integral_mono h_int_abs h_int_sum
+          exact fun ω => h_pointwise (ω g)
+      _ = ∫ ω, Real.exp (t * ω g) ∂μ + ∫ ω, Real.exp (-(t * ω g)) ∂μ :=
+          integral_add h_int_pos_conf h_int_neg_conf
+      _ = Real.exp ((v : ℝ) * t ^ 2 / 2) + Real.exp ((v : ℝ) * t ^ 2 / 2) := by
+          rw [h_mgf_pos, h_mgf_neg]
+      _ = 2 * Real.exp ((v : ℝ) * t ^ 2 / 2) := by ring
+  -- Step 8: Match the second moment to ∫ (ω g)² dμ
+  -- Need: (v : ℝ) = @inner ℝ ell2' _ (T g) (T g) = ∫ (ω g)² dμ
+  have h_second_moment : ∫ ω, (ω g) ^ 2 ∂μ = @inner ℝ ell2' _ (T g) (T g) := by
+    rw [hμ_eq]; exact second_moment_eq_covariance T g
+  have h_inner_nonneg : (0 : ℝ) ≤ @inner ℝ ell2' _ (T g) (T g) := by
+    rw [real_inner_self_eq_norm_sq]
+    exact sq_nonneg _
+  have h_v_eq : (v : ℝ) = ∫ ω, (ω g) ^ 2 ∂μ := by
+    rw [h_second_moment]
+    exact Real.coe_toNNReal _ h_inner_nonneg
+  -- Combine
+  refine ⟨h_int_abs, ?_⟩
+  calc ∫ ω, Real.exp (t * |ω g|) ∂μ
+      ≤ 2 * Real.exp ((v : ℝ) * t ^ 2 / 2) := h_integral_bound
+    _ = 2 * Real.exp (t ^ 2 / 2 * ∫ ω, (ω g) ^ 2 ∂μ) := by
+        rw [h_v_eq]; ring_nf
 
 /-- **Cutoff exponential moment bound** (from density transfer + Gaussian MGF + Nelson).
 
