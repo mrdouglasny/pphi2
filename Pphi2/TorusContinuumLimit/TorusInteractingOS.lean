@@ -81,18 +81,65 @@ translations and D4 point group symmetries. These follow from:
 
 References: Glimm-Jaffe §19.4, Simon Ch. V §1. -/
 
-/-- For lattice vectors w, the cutoff GF is translation-invariant:
-  `Z_N[T_{aw} f] = Z_N[f]` where a = L/N and w ∈ (ℤ/Nℤ)².
+/-- The lattice translation linear map on the lattice field. -/
+private def latticeTranslateLM (N : ℕ) (j₁ j₂ : ℤ) :
+    FinLatticeField 2 N →ₗ[ℝ] FinLatticeField 2 N where
+  toFun g := g ∘ translateSites N j₁ j₂
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
 
-This follows from `latticeMeasure_translation_invariant` + the equivariance
-of `evalTorusAtSite` under lattice translations:
-  `evalTorusAtSite x (T_{aw} f) = evalTorusAtSite (x - w) f`. -/
-axiom torusInteractingMeasure_gf_latticeTranslation_invariant
+/-- **Lattice interacting measure is translation-invariant** under lattice translations. -/
+axiom interactingLatticeMeasure_translation_invariant
+    (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
+    (ha : 0 < circleSpacing L N) (hmass : 0 < mass)
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    (j₁ j₂ : ℤ) (F : Configuration (FinLatticeField 2 N) → E) :
+    ∫ ω, F (ω.comp (latticeTranslateLM N j₁ j₂).toContinuousLinearMap)
+      ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass) =
+    ∫ ω, F ω ∂(interactingLatticeMeasure 2 N P (circleSpacing L N) mass ha hmass)
+
+theorem torusInteractingMeasure_gf_latticeTranslation_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (j₁ j₂ : ℤ) (f : TorusTestFunction L) :
     torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass) f =
     torusGeneratingFunctional L (torusInteractingMeasure L N P mass hmass)
-      (torusTranslation L (circleSpacing L N * j₁, circleSpacing L N * j₂) f)
+      (torusTranslation L (circleSpacing L N * j₁, circleSpacing L N * j₂) f) := by
+  -- Same pattern as swap/reflection proofs
+  have h_lattice_trans : ∀ x : FinLatticeSites 2 N,
+      latticeTestFn L N (torusTranslation L
+        (circleSpacing L N * j₁, circleSpacing L N * j₂) f) x =
+      latticeTestFn L N f (translateSites N j₁ j₂ x) := by
+    intro x
+    simp only [latticeTestFn, torusTranslation]
+    exact evalTorusAtSite_latticeTranslation L N j₁ j₂ x f
+  set μ_lat := interactingLatticeMeasure 2 N P (circleSpacing L N) mass
+    (circleSpacing_pos L N) hmass
+  unfold torusGeneratingFunctional torusInteractingMeasure
+  have hmeas : AEMeasurable (torusEmbedLift L N) μ_lat :=
+    (torusEmbedLift_measurable L N).aemeasurable
+  have hasm₁ : AEStronglyMeasurable (fun ω : Configuration (TorusTestFunction L) =>
+      Complex.exp (Complex.I * ↑(ω f))) (Measure.map (torusEmbedLift L N) μ_lat) :=
+    (Complex.measurable_exp.comp (measurable_const.mul (Complex.measurable_ofReal.comp
+      (configuration_eval_measurable f)))).aestronglyMeasurable
+  have hasm₂ : AEStronglyMeasurable (fun ω : Configuration (TorusTestFunction L) =>
+      Complex.exp (Complex.I * ↑(ω (torusTranslation L
+        (circleSpacing L N * j₁, circleSpacing L N * j₂) f))))
+      (Measure.map (torusEmbedLift L N) μ_lat) :=
+    (Complex.measurable_exp.comp (measurable_const.mul (Complex.measurable_ofReal.comp
+      (configuration_eval_measurable _)))).aestronglyMeasurable
+  rw [MeasureTheory.integral_map hmeas hasm₁, MeasureTheory.integral_map hmeas hasm₂]
+  simp_rw [torusEmbedLift_eval_eq]
+  have h_trans_lattice : ∀ φ : Configuration (FinLatticeField 2 N),
+      φ (latticeTestFn L N (torusTranslation L
+        (circleSpacing L N * j₁, circleSpacing L N * j₂) f)) =
+      (φ.comp (latticeTranslateLM N j₁ j₂).toContinuousLinearMap) (latticeTestFn L N f) := by
+    intro φ
+    change φ (latticeTestFn L N (torusTranslation L _ f)) =
+      φ ((latticeTranslateLM N j₁ j₂) (latticeTestFn L N f))
+    congr 1; ext x; exact h_lattice_trans x
+  simp_rw [h_trans_lattice]
+  exact (interactingLatticeMeasure_translation_invariant L N P mass
+    (circleSpacing_pos L N) hmass j₁ j₂ _).symm
 
 /-- **The second moment is controlled by the Gaussian second moment, uniformly.**
 
