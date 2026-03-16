@@ -123,6 +123,18 @@ theorem torusInteractingLimit_translation_invariant
     (v : ℝ × ℝ) (f : TorusTestFunction L) :
     torusGeneratingFunctional L μ f =
     torusGeneratingFunctional L μ (torusTranslation L v f) := by
+  -- The proof follows the approximation argument documented in
+  -- docs/translation-invariance-proof.md
+  --
+  -- Key idea: |Z_N[T_v f] - Z_N[f]| → 0 via:
+  --   |Z_N[T_v f] - Z_N[T_{w_n} f]| ≤ √(C · G_N(T_v f - T_{w_n} f))  → 0
+  --   Z_N[T_{w_n} f] = Z_N[f]  (lattice invariance)
+  --
+  -- Then weak convergence + limit uniqueness gives Z[T_v f] = Z[f].
+  --
+  -- The |exp(ix)-exp(iy)| ≤ |x-y| bound reduces to second moments,
+  -- the interacting-to-Gaussian bridge (Axiom 2) converts to Gaussian,
+  -- and Gaussian Green's function continuity closes the argument.
   sorry
 
 /-- The lattice swap linear map: `(L_swap g)(x) = g(swapSites x)`. -/
