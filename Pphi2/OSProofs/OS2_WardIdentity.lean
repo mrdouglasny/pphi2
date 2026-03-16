@@ -112,7 +112,7 @@ private lemma latticeTranslation_eq (v : FinLatticeSites d N) (φ : FinLatticeFi
 
 /-- The mass operator commutes with lattice translation.
 `Q(T_v φ) = T_v(Q φ)` because both -Δ and m² commute with translation. -/
-private lemma massOperator_translation_commute (a mass : ℝ) (v : FinLatticeSites d N)
+theorem massOperator_translation_commute (a mass : ℝ) (v : FinLatticeSites d N)
     (φ : FinLatticeField d N) :
     massOperator d N a mass (latticeTranslation d N v φ) =
     latticeTranslation d N v (massOperator d N a mass φ) := by
@@ -130,7 +130,7 @@ private lemma massOperator_translation_commute (a mass : ℝ) (v : FinLatticeSit
 
 The quadratic form `∑_x φ(x)·(Qφ)(x)` is invariant because Q commutes
 with translation and the sum over all lattice sites is relabeling-invariant. -/
-private lemma gaussianDensity_translation_invariant (a mass : ℝ) (v : FinLatticeSites d N)
+theorem gaussianDensity_translation_invariant (a mass : ℝ) (v : FinLatticeSites d N)
     (φ : FinLatticeField d N) :
     gaussianDensity d N a mass (latticeTranslation d N v φ) =
     gaussianDensity d N a mass φ := by

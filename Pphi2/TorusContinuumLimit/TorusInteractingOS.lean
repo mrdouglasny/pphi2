@@ -60,6 +60,7 @@ import Pphi2.TorusContinuumLimit.TorusInteractingLimit
 import Pphi2.TorusContinuumLimit.TorusPropagatorConvergence
 import Pphi2.GeneralResults.ComplexAnalysis
 import Pphi2.InteractingMeasure.Normalization
+import Pphi2.OSProofs.OS2_WardIdentity
 import Torus.Evaluation
 
 noncomputable section
@@ -275,7 +276,28 @@ private theorem interactingLatticeMeasure_translation_invariant
   exact interactingLatticeMeasure_symmetry_invariant L N P mass ha hmass
     (translateSites N j₁ j₂) hbij
     (by sorry) -- Laplacian preservation: ∫(ω(g∘σ))² = ∫(ωg)²
-    (by sorry) -- Density preservation: gaussianDensity(φ∘σ⁻¹) = gaussianDensity(φ)
+    (by -- Density preservation: gaussianDensity(φ∘σ⁻¹) = gaussianDensity(φ)
+      intro φ
+      -- Step 1: Identify σ⁻¹ with explicit inverse
+      set σ_equiv := Equiv.ofBijective (translateSites N j₁ j₂) hbij
+      -- The explicit inverse sends y ↦ ![y 0 + j₁, y 1 + j₂]
+      have hsymm_eq : ∀ y : FinLatticeSites 2 N,
+          σ_equiv.symm y =
+          (![y 0 + (j₁ : ZMod N), y 1 + (j₂ : ZMod N)] : FinLatticeSites 2 N) := by
+        intro y
+        rw [Equiv.symm_apply_eq]
+        change y = translateSites N j₁ j₂ (![y 0 + (j₁ : ZMod N), y 1 + (j₂ : ZMod N)])
+        simp only [translateSites]
+        ext i; fin_cases i <;> simp [Matrix.cons_val_zero, Matrix.cons_val_one]
+      -- Step 2: Show φ ∘ σ⁻¹ = latticeTranslation 2 N v φ for v = ![-j₁, -j₂]
+      set v : FinLatticeSites 2 N := ![(-(j₁ : ZMod N)), (-(j₂ : ZMod N))]
+      suffices h_eq : φ ∘ σ_equiv.symm = latticeTranslation 2 N v φ by
+        rw [h_eq]
+        exact gaussianDensity_translation_invariant 2 N (circleSpacing L N) mass v φ
+      funext x
+      simp only [Function.comp, hsymm_eq, latticeTranslation]
+      congr 1; funext i; fin_cases i <;>
+        simp [v, Matrix.cons_val_zero, Matrix.cons_val_one, sub_neg_eq_add])
     F
 
 theorem torusInteractingMeasure_gf_latticeTranslation_invariant
