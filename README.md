@@ -64,13 +64,22 @@ The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
 **25 axioms, 0 sorries.**
 
-### Route B: T²_L (symmetric torus) — OS0–OS2 (**0 axioms, 0 sorry**)
+### Route B: T²_L (symmetric torus) — OS0–OS2
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
 spacing a = L/N → 0. The interacting continuum limit `torusInteractingLimit_exists`
-is **PROVED** via Mitoma-Chebyshev tightness + Nelson's exponential estimate
+is proved via Mitoma-Chebyshev tightness + Nelson's exponential estimate
 (proved: physical volume a²N²=L² is constant). OS3 dropped (→ Routes B', C).
-**All OS0–OS2 fully proved** from Mathlib + gaussian-field with no custom axioms.
-See `docs/torus-interacting-os-proof.md` for the complete proof overview.
+
+**`TorusInteractingOS.lean`: 0 local axioms, 0 sorry.**
+All OS0–OS2 proofs are complete within this file, but they depend on
+upstream infrastructure with remaining gaps (see `docs/torus-route-gap-audit.md`):
+- OS0 uses `osgood_separately_analytic` (axiom in `ComplexAnalysis.lean`)
+- OS2 time reflection uses `evalTorusAtSite_timeReflection` (sorry in gaussian-field)
+- OS2 lattice translation uses `evalTorusAtSite_latticeTranslation` (sorry in gaussian-field)
+- Limit existence uses `configuration_tight_of_uniform_second_moments` (gaussian-field)
+- Gaussian OS0 uses `torusGeneratingFunctionalℂ_analyticOnNhd` (axiom in `TorusOSAxioms.lean`)
+
+See `docs/torus-interacting-os-proof.md` for the proof overview.
 
 ### Route B': T_{L,W} → S¹_W × ℝ (asymmetric torus → cylinder) — OS0–OS3
 Extends Route B to the cylinder by taking the time direction to infinity.

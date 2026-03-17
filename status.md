@@ -11,10 +11,12 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**Route B (torus): 0 axioms, 0 sorry** — OS0–OS2 FULLY PROVED.
-All OS axioms for the interacting P(φ)₂ continuum limit on the torus T²_L
-proved from Mathlib + gaussian-field with no custom axioms.
-See `docs/torus-interacting-os-proof.md` for the complete proof overview.
+**Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 0 sorry.**
+All OS0–OS2 proofs complete within this file, but transitive dependencies
+have remaining gaps — see `docs/torus-route-gap-audit.md` for details.
+Upstream gaps: `osgood_separately_analytic` (axiom), 2 `evalTorusAtSite` sorries
+in gaussian-field, `torusGeneratingFunctionalℂ_analyticOnNhd` (axiom),
+`configuration_tight_of_uniform_second_moments` (gaussian-field dependency).
 
 **Route B' (asymmetric torus → cylinder): PLANNED.**
 Extends Route B to S¹_W × ℝ via L → ∞ limit of T_{L,W}.

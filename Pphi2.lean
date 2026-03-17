@@ -42,6 +42,7 @@ import Pphi2.TorusContinuumLimit.TorusConvergence
 import Pphi2.TorusContinuumLimit.TorusGaussianLimit
 import Pphi2.TorusContinuumLimit.TorusInteractingLimit
 import Pphi2.TorusContinuumLimit.TorusOSAxioms
+import Pphi2.TorusContinuumLimit.TorusInteractingOS
 
 -- Phase 4c: Cylinder continuum limit (Gaussian + interacting)
 import Pphi2.CylinderContinuumLimit.CylinderInteraction
