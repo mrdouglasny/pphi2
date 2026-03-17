@@ -885,7 +885,433 @@ theorem torusTranslation_continuous_in_v
   `sobolevSeminorm_affine_precomp_le`, `finset_sup_poly_bound`, `tendsto_sum_nat_add`,
   `WithSeminorms.tendsto_nhds`, `Seminorm.apply_sum_le`, `le_of_tendsto`.
   -/
-  sorry
+  -- Abbreviations
+  set E := GaussianField.SmoothMap_Circle L ℝ
+  -- The topology on TorusTestFunction is WithSeminorms rapidDecaySeminorm
+  have h_ws : WithSeminorms (RapidDecaySeq.rapidDecaySeminorm :
+      ℕ → Seminorm ℝ (TorusTestFunction L)) := RapidDecaySeq.rapidDecay_withSeminorms
+  -- Step 1: Reduce to ContinuousAt at each v₀
+  rw [continuous_iff_continuousAt]
+  intro v₀
+  -- Step 2: Use WithSeminorms characterization of convergence
+  -- Suffices: for each seminorm k and ε > 0, eventually seminorm_k(diff) < ε
+  suffices ∀ (i : ℕ) (ε : ℝ), 0 < ε → ∀ᶠ v in nhds v₀,
+      RapidDecaySeq.rapidDecaySeminorm i
+        (GaussianField.torusTranslation L v f -
+         GaussianField.torusTranslation L v₀ f) < ε by
+    rw [ContinuousAt]
+    exact (h_ws.tendsto_nhds _ _).mpr this
+  intro k ε hε
+  -- Step 3: Get uniform-in-v bound on mapImage seminorms
+  -- pure_seminorm_bound gives: C, s₁, s₂ such that
+  --   seminorm_k(pure(e₁, e₂)) ≤ C * (s₁.sup p)(e₁) * (s₂.sup p)(e₂)
+  -- Since p_i(T_s g) ≤ p_i(g) by Sobolev isometry, we get:
+  --   seminorm_k(mapImage(T_v)(m)) ≤ C * (s₁.sup p)(ψ_a) * (s₂.sup p)(ψ_b) ≤ K*(1+m)^S
+  -- uniformly in v.
+  obtain ⟨C_pure, s₁, s₂, hpure⟩ :=
+    GaussianField.NuclearTensorProduct.pure_seminorm_bound (E₁ := E) (E₂ := E) k
+  set ψ := DyninMityaginSpace.basis (E := E)
+  -- Sobolev isometry for translations: (s.sup p)(T_s g) ≤ (s.sup p)(g)
+  have h_trans_iso₁ : ∀ (s : ℝ) (g : E),
+      (s₁.sup DyninMityaginSpace.p) (GaussianField.circleTranslation L s g) ≤
+      (s₁.sup DyninMityaginSpace.p) g := by
+    intro s g
+    apply Seminorm.finset_sup_apply_le (apply_nonneg _ _)
+    intro i hi
+    calc DyninMityaginSpace.p i (GaussianField.circleTranslation L s g)
+        ≤ DyninMityaginSpace.p i g :=
+          GaussianField.sobolevSeminorm_affine_precomp_le 1 (-s) (by norm_num) i
+            g (GaussianField.circleTranslation L s g)
+            (fun x => by show g (x - s) = g (1 * x + -s); ring_nf)
+      _ ≤ s₁.sup DyninMityaginSpace.p g :=
+          Seminorm.le_finset_sup_apply hi
+  have h_trans_iso₂ : ∀ (s : ℝ) (g : E),
+      (s₂.sup DyninMityaginSpace.p) (GaussianField.circleTranslation L s g) ≤
+      (s₂.sup DyninMityaginSpace.p) g := by
+    intro s g
+    apply Seminorm.finset_sup_apply_le (apply_nonneg _ _)
+    intro i hi
+    calc DyninMityaginSpace.p i (GaussianField.circleTranslation L s g)
+        ≤ DyninMityaginSpace.p i g :=
+          GaussianField.sobolevSeminorm_affine_precomp_le 1 (-s) (by norm_num) i
+            g (GaussianField.circleTranslation L s g)
+            (fun x => by show g (x - s) = g (1 * x + -s); ring_nf)
+      _ ≤ s₂.sup DyninMityaginSpace.p g :=
+          Seminorm.le_finset_sup_apply hi
+  -- Get polynomial growth of basis elements
+  classical
+  obtain ⟨D₁, hD₁, S₁, hbnd₁⟩ := GaussianField.finset_sup_poly_bound
+    DyninMityaginSpace.p s₁ (DyninMityaginSpace.basis (E := E))
+    (fun i _ => DyninMityaginSpace.basis_growth i)
+  obtain ⟨D₂, hD₂, S₂, hbnd₂⟩ := GaussianField.finset_sup_poly_bound
+    DyninMityaginSpace.p s₂ (DyninMityaginSpace.basis (E := E))
+    (fun i _ => DyninMityaginSpace.basis_growth i)
+  -- Uniform bound: seminorm_k(mapImage(T_v)(m)) ≤ K * (1+m)^S for ALL v
+  set K := (↑C_pure + 1) * D₁ * D₂ with hK_def
+  set S := S₁ + S₂ with hS_def
+  have hK_pos : 0 < K := by positivity
+  have h_uniform_bound : ∀ (v : ℝ × ℝ) (m : ℕ),
+      RapidDecaySeq.rapidDecaySeminorm k (GaussianField.mapImage
+        (GaussianField.circleTranslation L v.1)
+        (GaussianField.circleTranslation L v.2) m) ≤
+      K * (1 + (m : ℝ)) ^ S := by
+    intro v m
+    set a := (Nat.unpair m).1
+    set b := (Nat.unpair m).2
+    -- mapImage(T_v)(m) = pure(T_{v.1} ψ_a, T_{v.2} ψ_b)
+    show RapidDecaySeq.rapidDecaySeminorm k
+      (GaussianField.NuclearTensorProduct.pure
+        (GaussianField.circleTranslation L v.1 (ψ a))
+        (GaussianField.circleTranslation L v.2 (ψ b))) ≤ _
+    have ha_le : (1 + (a : ℝ)) ≤ (1 + (m : ℝ)) :=
+      add_le_add_right (Nat.cast_le.mpr (Nat.unpair_left_le m)) 1
+    have hb_le : (1 + (b : ℝ)) ≤ (1 + (m : ℝ)) :=
+      add_le_add_right (Nat.cast_le.mpr (Nat.unpair_right_le m)) 1
+    calc RapidDecaySeq.rapidDecaySeminorm k
+          (GaussianField.NuclearTensorProduct.pure
+            (GaussianField.circleTranslation L v.1 (ψ a))
+            (GaussianField.circleTranslation L v.2 (ψ b)))
+        ≤ ↑C_pure * (s₁.sup DyninMityaginSpace.p)
+              (GaussianField.circleTranslation L v.1 (ψ a)) *
+            (s₂.sup DyninMityaginSpace.p)
+              (GaussianField.circleTranslation L v.2 (ψ b)) :=
+          hpure _ _
+      _ ≤ ↑C_pure * (s₁.sup DyninMityaginSpace.p) (ψ a) *
+            (s₂.sup DyninMityaginSpace.p) (ψ b) := by
+          gcongr
+          · exact h_trans_iso₁ _ _
+          · exact h_trans_iso₂ _ _
+      _ ≤ ↑C_pure * (D₁ * (1 + (a : ℝ)) ^ S₁) * (D₂ * (1 + (b : ℝ)) ^ S₂) := by
+          gcongr
+          · exact hbnd₁ a
+          · exact hbnd₂ b
+      _ ≤ ↑C_pure * (D₁ * (1 + (m : ℝ)) ^ S₁) * (D₂ * (1 + (m : ℝ)) ^ S₂) := by
+          gcongr <;> exact pow_le_pow_left₀ (by positivity) (by assumption) _
+      _ = ↑C_pure * D₁ * D₂ * (1 + (m : ℝ)) ^ (S₁ + S₂) := by
+          rw [pow_add]; ring
+      _ ≤ ((↑C_pure + 1) * D₁ * D₂) * (1 + (m : ℝ)) ^ (S₁ + S₂) := by
+          gcongr; linarith [NNReal.coe_nonneg C_pure]
+  -- Step 4: The 3-epsilon argument
+  -- Choose N so that the tail Σ_{m≥N} |f.val m| * 2K*(1+m)^S < ε/2
+  -- Then for the head Σ_{m<N} |f.val m| * seminorm_k(diff_m), choose δ by continuity.
+  --
+  -- For the tail: Σ_{m≥N} |f.val m| * 2K*(1+m)^S → 0 as N → ∞
+  -- because f.rapid_decay S gives Σ |f.val m| * (1+m)^S < ∞.
+  set g : ℕ → ℝ := fun m => |f.val m| * (2 * K) * (1 + (m : ℝ)) ^ S
+  have hg_summable : Summable g := by
+    have := f.rapid_decay S
+    exact (this.mul_left (2 * K)).congr (fun m => by simp [g]; ring)
+  -- Choose N so that Σ_{m≥N} g(m) < ε/2
+  have h_tail_small : ∃ N : ℕ, ∑' m, g (m + N) < ε / 2 := by
+    have h_tendsto : Filter.Tendsto (fun N => ∑' m, g (m + N)) Filter.atTop (nhds 0) :=
+      tendsto_sum_nat_add g
+    have h_ev := (Filter.Tendsto.eventually h_tendsto
+      (Iio_mem_nhds (show (0 : ℝ) < ε / 2 by linarith)))
+    rw [Filter.Eventually, Filter.mem_atTop_sets] at h_ev
+    obtain ⟨N, hN⟩ := h_ev
+    exact ⟨N, hN N le_rfl⟩
+  obtain ⟨N, hN_tail⟩ := h_tail_small
+  -- Step 5: Each v ↦ mapImage(T_{v.1}, T_{v.2})(m) is continuous in the NTP topology
+  have h_mapImage_cont : ∀ m,
+      Continuous (fun v : ℝ × ℝ => GaussianField.mapImage
+        (GaussianField.circleTranslation L v.1)
+        (GaussianField.circleTranslation L v.2) m) := by
+    intro m
+    -- mapImage(T_v)(m) = pure(T_{v.1} ψ_a, T_{v.2} ψ_b)
+    show Continuous (fun v : ℝ × ℝ =>
+      GaussianField.NuclearTensorProduct.pure
+        (GaussianField.circleTranslation L v.1 (ψ (Nat.unpair m).1))
+        (GaussianField.circleTranslation L v.2 (ψ (Nat.unpair m).2)))
+    have h1 : Continuous (fun v : ℝ × ℝ =>
+        GaussianField.circleTranslation L v.1 (ψ (Nat.unpair m).1)) :=
+      (circleTranslation_continuous_in_s L (ψ (Nat.unpair m).1)).comp continuous_fst
+    have h2 : Continuous (fun v : ℝ × ℝ =>
+        GaussianField.circleTranslation L v.2 (ψ (Nat.unpair m).2)) :=
+      (circleTranslation_continuous_in_s L (ψ (Nat.unpair m).2)).comp continuous_snd
+    exact GaussianField.NuclearTensorProduct.pure_continuous.comp (h1.prodMk h2)
+  -- Step 6: The seminorm of mapImage is continuous, so eventually head < ε/2
+  -- For each m, v ↦ seminorm_k(mapImage(T_v)(m) - mapImage(T_{v₀})(m)) → 0
+  have h_head_small : ∀ᶠ v in nhds v₀,
+      ∑ m ∈ Finset.range N, |f.val m| *
+        RapidDecaySeq.rapidDecaySeminorm k
+          (GaussianField.mapImage
+            (GaussianField.circleTranslation L v.1)
+            (GaussianField.circleTranslation L v.2) m -
+           GaussianField.mapImage
+            (GaussianField.circleTranslation L v₀.1)
+            (GaussianField.circleTranslation L v₀.2) m) < ε / 2 := by
+    -- Each summand → 0 as v → v₀, since mapImage is continuous
+    -- and seminorm is continuous. So the finite sum → 0.
+    have h_tendsto : Filter.Tendsto (fun v =>
+        ∑ m ∈ Finset.range N, |f.val m| *
+          RapidDecaySeq.rapidDecaySeminorm k
+            (GaussianField.mapImage
+              (GaussianField.circleTranslation L v.1)
+              (GaussianField.circleTranslation L v.2) m -
+             GaussianField.mapImage
+              (GaussianField.circleTranslation L v₀.1)
+              (GaussianField.circleTranslation L v₀.2) m))
+        (nhds v₀) (nhds 0) := by
+      have : (0 : ℝ) = ∑ _ ∈ Finset.range N, (0 : ℝ) := by simp
+      rw [this]; clear this
+      apply tendsto_finset_sum
+      intro m _
+      have : (0 : ℝ) = |f.val m| * 0 := by simp
+      rw [this]; clear this
+      apply Filter.Tendsto.const_mul
+      -- seminorm_k(mapImage(T_v)(m) - mapImage(T_{v₀})(m)) → 0
+      -- because mapImage is continuous in v and seminorm_k is continuous
+      have h_cont_diff : Continuous (fun v : ℝ × ℝ =>
+          GaussianField.mapImage
+            (GaussianField.circleTranslation L v.1)
+            (GaussianField.circleTranslation L v.2) m -
+          GaussianField.mapImage
+            (GaussianField.circleTranslation L v₀.1)
+            (GaussianField.circleTranslation L v₀.2) m) :=
+        (h_mapImage_cont m).sub continuous_const
+      have h_at_v₀ : (fun v : ℝ × ℝ =>
+          GaussianField.mapImage
+            (GaussianField.circleTranslation L v.1)
+            (GaussianField.circleTranslation L v.2) m -
+          GaussianField.mapImage
+            (GaussianField.circleTranslation L v₀.1)
+            (GaussianField.circleTranslation L v₀.2) m) v₀ = 0 := sub_self _
+      have h_comp_cont : Continuous (fun v : ℝ × ℝ =>
+          RapidDecaySeq.rapidDecaySeminorm k
+            (GaussianField.mapImage
+              (GaussianField.circleTranslation L v.1)
+              (GaussianField.circleTranslation L v.2) m -
+            GaussianField.mapImage
+              (GaussianField.circleTranslation L v₀.1)
+              (GaussianField.circleTranslation L v₀.2) m)) :=
+        (h_ws.continuous_seminorm k).comp h_cont_diff
+      have h_val_at_v₀ : RapidDecaySeq.rapidDecaySeminorm k
+          (GaussianField.mapImage
+            (GaussianField.circleTranslation L v₀.1)
+            (GaussianField.circleTranslation L v₀.2) m -
+          GaussianField.mapImage
+            (GaussianField.circleTranslation L v₀.1)
+            (GaussianField.circleTranslation L v₀.2) m) = 0 := by
+        rw [sub_self]; exact map_zero _
+      rw [← h_val_at_v₀]
+      exact h_comp_cont.continuousAt
+    exact h_tendsto.eventually (Iio_mem_nhds (by linarith))
+  -- Step 7: Bound the seminorm using CLM expansion + triangle inequality
+  -- T_v f = mapCLM(T_v) f = mapCLM(T_v)(Σ' m, f_m • e_m)
+  -- The CLM preserves HasSum:
+  --   HasSum (fun m => f_m • mapCLM(T_v)(e_m)) (T_v f)
+  -- where mapCLM(T_v)(e_m) = mapImage(T_v)(m) (by basisVec_eq_pure + mapCLM_pure)
+  --
+  -- So T_v f = Σ' m, f_m • mapImage(T_v)(m) (HasSum in NTP topology)
+  -- And T_v f - T_{v₀} f = Σ' m, f_m • (mapImage(T_v)(m) - mapImage(T_{v₀})(m))
+  --
+  -- seminorm_k(Σ' m, ...) ≤ Σ' m, |f_m| * seminorm_k(...)
+  -- Split at N: head + tail.
+  --
+  -- Instead of this full expansion (which requires many intermediate steps),
+  -- we use a simpler bound via the CLM itself.
+  -- Note: torusTranslation L v = mapCLM(T_{v.1}, T_{v.2}) which is a CLM.
+  -- For fixed m, mapCLM T₁ T₂ (basisVec m) = mapImage T₁ T₂ m
+  -- (by basisVec_eq_pure + nuclearTensorProduct_mapCLM_pure).
+  --
+  -- HasSum expansion: mapCLM(T_v) f = Σ' m, f_m • mapImage(T_v)(m)
+  -- This follows from (hasSum_basisVec f).mapL (mapCLM(T_v)).
+  -- We use this to bound the seminorm.
+  --
+  -- For conciseness, we prove the bound directly:
+  -- seminorm_k(T_v f - T_{v₀} f) ≤ (head seminorm bound) + (tail bound)
+  -- where the head is eventually < ε/2 and the tail < ε/2.
+  --
+  -- The full formal proof requires establishing the HasSum and tsum equalities.
+  -- Since mapCLM is linear and continuous, this follows from standard Lean4 API.
+  --
+  -- KEY HELPER: mapCLM applied to basis vectors equals mapImage
+  have h_mapCLM_basis : ∀ (T₁ T₂ : E →L[ℝ] E) (m : ℕ),
+      GaussianField.nuclearTensorProduct_mapCLM T₁ T₂ (RapidDecaySeq.basisVec m) =
+      GaussianField.mapImage T₁ T₂ m := by
+    intro T₁ T₂ m
+    -- basisVec m = pure(ψ_a, ψ_b) by biorthogonality
+    have hbv := GaussianField.NuclearTensorProduct.basisVec_eq_pure
+      (DyninMityaginSpace.HasBiorthogonalBasis.coeff_basis (E := E))
+      (DyninMityaginSpace.HasBiorthogonalBasis.coeff_basis (E := E)) m
+    rw [hbv]
+    exact GaussianField.nuclearTensorProduct_mapCLM_pure T₁ T₂ _ _
+  -- HasSum for the CLM expansion
+  have h_hasSum : ∀ (T₁ T₂ : E →L[ℝ] E),
+      HasSum (fun m => f.val m • GaussianField.mapImage T₁ T₂ m)
+        (GaussianField.nuclearTensorProduct_mapCLM T₁ T₂ f) := by
+    intro T₁ T₂
+    have h := (RapidDecaySeq.hasSum_basisVec f).mapL
+      (GaussianField.nuclearTensorProduct_mapCLM T₁ T₂)
+    simp only [ContinuousLinearMap.map_smul] at h
+    convert h using 1
+    ext1 m
+    show f.val m • GaussianField.mapImage T₁ T₂ m =
+      GaussianField.nuclearTensorProduct_mapCLM T₁ T₂ (f.val m • RapidDecaySeq.basisVec m)
+    calc f.val m • GaussianField.mapImage T₁ T₂ m
+        = f.val m • GaussianField.nuclearTensorProduct_mapCLM T₁ T₂
+            (RapidDecaySeq.basisVec m) := by rw [h_mapCLM_basis]
+      _ = GaussianField.nuclearTensorProduct_mapCLM T₁ T₂
+            (f.val m • RapidDecaySeq.basisVec m) :=
+          ((GaussianField.nuclearTensorProduct_mapCLM T₁ T₂).map_smul
+            (f.val m) (RapidDecaySeq.basisVec m)).symm
+  -- Define abbreviations for the CLMs at v and v₀
+  set T_v := fun (v : ℝ × ℝ) => GaussianField.nuclearTensorProduct_mapCLM
+    (GaussianField.circleTranslation L v.1)
+    (GaussianField.circleTranslation L v.2)
+  -- T_v f = Σ' m, f_m • mapImage(T_v)(m) and similarly for T_{v₀}
+  -- Their difference:
+  have h_diff_hasSum : ∀ (v : ℝ × ℝ),
+      HasSum (fun m => f.val m •
+        (GaussianField.mapImage
+          (GaussianField.circleTranslation L v.1)
+          (GaussianField.circleTranslation L v.2) m -
+         GaussianField.mapImage
+          (GaussianField.circleTranslation L v₀.1)
+          (GaussianField.circleTranslation L v₀.2) m))
+        (GaussianField.torusTranslation L v f -
+         GaussianField.torusTranslation L v₀ f) := by
+    intro v
+    have h1 := h_hasSum (GaussianField.circleTranslation L v.1)
+      (GaussianField.circleTranslation L v.2)
+    have h2 := h_hasSum (GaussianField.circleTranslation L v₀.1)
+      (GaussianField.circleTranslation L v₀.2)
+    convert h1.sub h2 using 1
+    ext1 m; simp [smul_sub]
+  -- Seminorm bound via HasSum
+  -- seminorm_k is a continuous seminorm, so for a HasSum g_m → s,
+  -- seminorm_k(s) = seminorm_k(Σ' m, g_m) ≤ Σ' m, seminorm_k(g_m)
+  -- Actually, the rapid decay seminorm is: Σ' n, |s.val n| * (1+n)^k,
+  -- and we need: this ≤ Σ' m, |f_m| * seminorm_k(d_m)
+  -- where d_m = mapImage(T_v)(m) - mapImage(T_{v₀})(m).
+  -- This is NOT a simple "seminorm of sum ≤ sum of seminorms" for infinite sums.
+  -- Instead, we bound: seminorm_k(T_v f - T_{v₀} f) < ε
+  -- by the 3-epsilon using partial sums.
+  --
+  -- Define the partial sum: S_N(v) = Σ_{m<N} f_m • mapImage(T_v)(m)
+  -- Then: T_v f - S_N(v) has small seminorm (tail bound)
+  -- and S_N(v) - S_N(v₀) has small seminorm (head, eventually)
+  -- and S_N(v₀) - T_{v₀} f has small seminorm (tail bound)
+  -- By triangle inequality: seminorm_k(T_v f - T_{v₀} f) < 3ε/3 = ε... wait, need ε not 3ε.
+  -- Let's use ε/3 instead of ε/2.
+  --
+  -- Actually, let's just bound directly.
+  -- We show: ∀ᶠ v, seminorm_k(T_v f - T_{v₀} f) < ε
+  -- using head_small and tail_small.
+  --
+  -- Note: seminorm_k(T_v f - T_{v₀} f) is the seminorm of the HasSum.
+  -- By the HasSum characterization:
+  --   T_v f - T_{v₀} f = lim_{N→∞} Σ_{m<N} f_m • d_m
+  -- and seminorm_k is continuous, so:
+  --   seminorm_k(T_v f - T_{v₀} f) = lim_{N→∞} seminorm_k(Σ_{m<N} f_m • d_m)
+  -- ≤ lim_{N→∞} Σ_{m<N} |f_m| * seminorm_k(d_m)  (by triangle ineq for finite sums)
+  -- = Σ' m, |f_m| * seminorm_k(d_m)  (by monotone convergence)
+  --
+  -- Split at N: ≤ (Σ_{m<N} |f_m| * seminorm_k(d_m)) + (Σ_{m≥N} |f_m| * seminorm_k(d_m))
+  -- Tail: ≤ Σ_{m≥N} |f_m| * 2K*(1+m)^S < ε/2 (by choice of N)
+  -- Head: < ε/2 (eventually, by h_head_small)
+  --
+  -- Rather than formalizing all this, we use a compact bound.
+  -- Filter the eventually from h_head_small.
+  filter_upwards [h_head_small] with v hv_head
+  -- Need: seminorm_k(T_v f - T_{v₀} f) < ε
+  -- Use: seminorm is continuous, so it commutes with the HasSum limit.
+  -- seminorm_k(T_v f - T_{v₀} f) ≤ Σ' m, |f_m| * seminorm_k(d_m)
+  -- (This is le_of_tendsto applied to the HasSum and the seminorm.)
+  set d := fun m => GaussianField.mapImage
+    (GaussianField.circleTranslation L v.1)
+    (GaussianField.circleTranslation L v.2) m -
+    GaussianField.mapImage
+    (GaussianField.circleTranslation L v₀.1)
+    (GaussianField.circleTranslation L v₀.2) m
+  -- seminorm_k(T_v f - T_{v₀} f) ≤ Σ' m, |f_m| * seminorm_k(d m)
+  -- This follows from: diff = lim partial sums (HasSum), seminorm is continuous,
+  -- and seminorm(finite sum) ≤ sum of seminorms (subadditivity).
+  have h_dk_summable : Summable (fun m => |f.val m| *
+      RapidDecaySeq.rapidDecaySeminorm k (d m)) :=
+    hg_summable.of_nonneg_of_le
+      (fun m => mul_nonneg (abs_nonneg _) (apply_nonneg _ _))
+      (fun m => by
+        have h_sub := map_sub_le_add (RapidDecaySeq.rapidDecaySeminorm k)
+          (GaussianField.mapImage
+            (GaussianField.circleTranslation L v.1)
+            (GaussianField.circleTranslation L v.2) m)
+          (GaussianField.mapImage
+            (GaussianField.circleTranslation L v₀.1)
+            (GaussianField.circleTranslation L v₀.2) m)
+        calc |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m)
+            ≤ |f.val m| * (2 * K * (1 + (m : ℝ)) ^ S) :=
+            mul_le_mul_of_nonneg_left
+              (calc RapidDecaySeq.rapidDecaySeminorm k (d m)
+                  ≤ _ := h_sub
+                _ ≤ K * (1 + (m : ℝ)) ^ S + K * (1 + (m : ℝ)) ^ S :=
+                  add_le_add (h_uniform_bound v m) (h_uniform_bound v₀ m)
+                _ = 2 * K * (1 + (m : ℝ)) ^ S := by ring)
+              (abs_nonneg _)
+          _ = g m := by simp only [g]; ring)
+  have h_seminorm_le : RapidDecaySeq.rapidDecaySeminorm k
+      (GaussianField.torusTranslation L v f -
+       GaussianField.torusTranslation L v₀ f) ≤
+      ∑' m, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m) := by
+    apply le_of_tendsto
+      ((h_ws.continuous_seminorm k).continuousAt.tendsto.comp
+        (h_diff_hasSum v).tendsto_sum_nat)
+    rw [Filter.Eventually, Filter.mem_atTop_sets]
+    refine ⟨0, fun n _ => ?_⟩
+    calc (RapidDecaySeq.rapidDecaySeminorm k)
+          (∑ m ∈ Finset.range n, f.val m • d m)
+        ≤ ∑ m ∈ Finset.range n,
+            (RapidDecaySeq.rapidDecaySeminorm k) (f.val m • d m) :=
+          (Finset.range n).le_sum_of_subadditive _
+            (map_zero (RapidDecaySeq.rapidDecaySeminorm k)).le
+            (RapidDecaySeq.rapidDecaySeminorm k).add_le'
+            (fun m => f.val m • d m)
+      _ = ∑ m ∈ Finset.range n,
+            |f.val m| * (RapidDecaySeq.rapidDecaySeminorm k) (d m) := by
+          congr 1; ext m
+          show (RapidDecaySeq.rapidDecaySeminorm k) (f.val m • d m) =
+            |f.val m| * (RapidDecaySeq.rapidDecaySeminorm k) (d m)
+          -- rapidDecaySeminorm k (c • x) = Σ |c * x_n| * w(n) = |c| * Σ |x_n| * w(n) = |c| * p(x)
+          show ∑' n, |(f.val m • d m).val n| * (1 + (n : ℝ)) ^ k =
+            |f.val m| * ∑' n, |(d m).val n| * (1 + (n : ℝ)) ^ k
+          conv_lhs => arg 1; ext n; rw [show (f.val m • d m).val n = f.val m * (d m).val n from rfl,
+            abs_mul, mul_assoc]
+          rw [tsum_mul_left]
+      _ ≤ ∑' m, |f.val m| * (RapidDecaySeq.rapidDecaySeminorm k) (d m) :=
+          h_dk_summable.sum_le_tsum _
+            (fun m _ => mul_nonneg (abs_nonneg _) (apply_nonneg _ _))
+  -- Now split the tsum at N: head + tail
+  have h_tsum_split : ∑' m, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m) ≤
+      (∑ m ∈ Finset.range N, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m)) +
+      ∑' m, g (m + N) := by
+    have h_dk_le_g : ∀ m, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m) ≤ g m := by
+      intro m
+      calc |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m)
+          ≤ |f.val m| * (2 * K * (1 + (m : ℝ)) ^ S) :=
+            mul_le_mul_of_nonneg_left
+              ((map_sub_le_add (RapidDecaySeq.rapidDecaySeminorm k) _ _).trans
+                ((add_le_add (h_uniform_bound v m) (h_uniform_bound v₀ m)).trans
+                (by linarith)))
+              (abs_nonneg _)
+        _ = g m := by simp only [g]; ring
+    -- Σ dk = head_dk + tail_dk ≤ head_dk + tail_g
+    rw [(h_dk_summable.sum_add_tsum_nat_add N).symm]
+    exact add_le_add le_rfl
+      (Summable.tsum_le_tsum
+        (fun m => h_dk_le_g (m + N))
+        (h_dk_summable.comp_injective (add_left_injective N))
+        (hg_summable.comp_injective (add_left_injective N)))
+  -- Combine: seminorm_k(diff) ≤ head + tail < ε/2 + ε/2 = ε
+  calc RapidDecaySeq.rapidDecaySeminorm k
+        (GaussianField.torusTranslation L v f -
+         GaussianField.torusTranslation L v₀ f)
+      ≤ ∑' m, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m) :=
+        h_seminorm_le
+    _ ≤ (∑ m ∈ Finset.range N, |f.val m| *
+          RapidDecaySeq.rapidDecaySeminorm k (d m)) +
+        ∑' m, g (m + N) := h_tsum_split
+    _ < ε / 2 + ε / 2 := add_lt_add hv_head hN_tail
+    _ = ε := by ring
 
 /-- **Generating functional is uniformly Lipschitz in a continuous seminorm.**
 
