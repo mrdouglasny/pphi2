@@ -253,144 +253,13 @@ private theorem analyticOnNhd_eq_of_eqOn_reals {n : ℕ}
     rw [show w = Function.update w j₀ (w j₀) from (Function.update_eq_self j₀ w).symm]
     exact h_id (Set.mem_univ _)
 
-/-- **Analyticity of the complex generating functional.**
 
-The map `z ↦ Z_ℂ(∑ Re(zᵢ)·Jᵢ, ∑ Im(zᵢ)·Jᵢ)` is entire analytic in `z ∈ ℂⁿ`.
+/-! ### Gaussian OS0 (removed)
 
-For each fixed configuration ω, the integrand `exp(∑ I·zᵢ·ω(Jᵢ))` is entire in z
-(it is `exp` composed with a ℂ-linear function). The domination bound
-`‖exp(∑ I·zᵢ·ω(Jᵢ))‖ ≤ exp(∑ |zᵢ|·|ω(Jᵢ)|)` is integrable by the Gaussian
-moment bound. By Morera's theorem (holomorphic dependence on parameters),
-the integral is entire.
-
-Reference: Reed-Simon I, Thm VI.1 (analytic families of integrands);
-Fernique (1975), §III.4. -/
-axiom torusGeneratingFunctionalℂ_analyticOnNhd
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (TorusTestFunction L)))
-    [IsProbabilityMeasure μ]
-    (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass)
-    (n : ℕ) (J : Fin n → TorusTestFunction L) :
-    AnalyticOnNhd ℂ (fun z : Fin n → ℂ =>
-      torusGeneratingFunctionalℂ L μ
-        (∑ i, (z i).re • J i) (∑ i, (z i).im • J i)) Set.univ
-
-/-! ### Complex generating functional = exp(quadratic) -/
-
-/-- **Complex generating functional of a torus Gaussian as exp of a quadratic form.**
-
-For a Gaussian measure μ with covariance G_L, the complex generating functional
-evaluated on `f_re = ∑ Re(zᵢ) Jᵢ, f_im = ∑ Im(zᵢ) Jᵢ` simplifies to:
-
-  `Z_ℂ[z] = exp(-½ ∑ᵢⱼ zᵢ zⱼ G_L(Jᵢ, Jⱼ))`
-
-**Proof:** Both sides are entire analytic functions of z ∈ ℂⁿ (LHS by
-`torusGeneratingFunctionalℂ_analyticOnNhd`, RHS by exp ∘ quadratic polynomial).
-For z ∈ ℝⁿ, Im(zᵢ) = 0, so the LHS reduces to the characteristic functional
-`Z(∑ xᵢ·Jᵢ) = exp(-½ G(∑ xᵢ·Jᵢ, ∑ xⱼ·Jⱼ))` (proved), and the RHS reduces to
-`exp(-½ ∑ xᵢxⱼGᵢⱼ) = exp(-½ G(∑ xᵢ·Jᵢ, ∑ xⱼ·Jⱼ))` by bilinearity
-(`greenFunctionBilinear_finset_sum`). Agreement on ℝⁿ plus analyticity on ℂⁿ
-gives equality by the multi-variable identity principle
-(`analyticOnNhd_eq_of_eqOn_reals`).
-
-Reference: Fernique (1975), §III.4; Simon, *P(φ)₂ QFT*, Ch. I. -/
-theorem torusGaussianLimit_complex_cf_quadratic
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (TorusTestFunction L)))
-    [IsProbabilityMeasure μ]
-    (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass)
-    (n : ℕ) (J : Fin n → TorusTestFunction L)
-    (z : Fin n → ℂ) :
-    torusGeneratingFunctionalℂ L μ
-      (∑ i, (z i).re • J i) (∑ i, (z i).im • J i) =
-    Complex.exp ((-1 / 2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
-      z i * z j * (torusContinuumGreen L mass hmass (J i) (J j) : ℂ)) := by
-  -- Apply the multi-variable identity theorem: both sides are entire analytic
-  -- functions of z that agree on ℝⁿ.
-  set F := fun z : Fin n → ℂ =>
-    torusGeneratingFunctionalℂ L μ (∑ i, (z i).re • J i) (∑ i, (z i).im • J i)
-  set G := fun z : Fin n → ℂ =>
-    Complex.exp ((-1 / 2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
-      z i * z j * (torusContinuumGreen L mass hmass (J i) (J j) : ℂ))
-  -- F is entire analytic: the integrand ω ↦ exp(∑ I*zᵢ*ω(Jᵢ)) is entire in z
-  -- for each fixed ω (exp of a ℂ-linear function), bounded by exp(∑|zᵢ|*|ω(Jᵢ)|)
-  -- which is integrable. By holomorphic dependence on parameters, F is entire.
-  have hF_an : AnalyticOnNhd ℂ F Set.univ :=
-    torusGeneratingFunctionalℂ_analyticOnNhd L mass hmass μ hGCL n J
-  have hG_an : AnalyticOnNhd ℂ G Set.univ := by
-    intro z _; apply AnalyticAt.cexp'
-    apply AnalyticAt.mul analyticAt_const
-    apply Finset.univ.analyticAt_fun_sum; intro i _
-    apply Finset.univ.analyticAt_fun_sum; intro j _
-    exact ((ContinuousLinearMap.proj (R := ℂ) (φ := fun _ : Fin n => ℂ) i).analyticAt z |>.mul
-      ((ContinuousLinearMap.proj (R := ℂ) (φ := fun _ : Fin n => ℂ) j).analyticAt z)).mul
-      analyticAt_const
-  -- They agree on ℝⁿ
-  have h_eq_real : ∀ x : Fin n → ℝ, F (fun i => (x i : ℂ)) = G (fun i => (x i : ℂ)) := by
-    intro x
-    -- LHS: Z_ℂ(∑ xᵢ•Jᵢ, 0) = Z(∑ xᵢ•Jᵢ) = exp(-½ G(f,f))
-    simp only [F, G, Complex.ofReal_re, Complex.ofReal_im]
-    rw [show (∑ i : Fin n, (0 : ℝ) • J i) = (0 : TorusTestFunction L) from by simp]
-    rw [show torusGeneratingFunctionalℂ L μ (∑ i, x i • J i) 0 =
-        torusGeneratingFunctional L μ (∑ i, x i • J i) from by
-      simp [torusGeneratingFunctionalℂ, torusGeneratingFunctional, map_zero]]
-    rw [torusGaussianLimit_characteristic_functional L mass hmass μ hGCL]
-    congr 1; congr 1
-    -- ∑ᵢⱼ xᵢxⱼGᵢⱼ = G(∑ xᵢ•Jᵢ, ∑ xⱼ•Jⱼ)
-    simp only [torusContinuumGreen]
-    rw [greenFunctionBilinear_finset_sum mass hmass Finset.univ Finset.univ x x J J]
-    push_cast; ring
-  -- Apply the identity theorem
-  have := analyticOnNhd_eq_of_eqOn_reals hF_an hG_an h_eq_real
-  exact congr_fun this z
-
-/-- OS0 for the torus Gaussian continuum limit.
-
-For Gaussian μ with covariance G_L, the complex generating functional is:
-  `Z[f_re, f_im] = exp(-½ G_L(f_re + if_im, f_re + if_im))`
-where G_L extends bilinearly. This is entire in the coefficients zᵢ since
-it is the composition of a polynomial (the bilinear form) with exp.
-
-The proof uses `torusGaussianLimit_complex_cf_quadratic` to rewrite the
-generating functional as `exp(-½ ∑ᵢⱼ zᵢzⱼ Gᵢⱼ)`, then shows this is
-analytic because it is `exp ∘ (quadratic polynomial)`, and both exp
-and polynomials are entire. -/
-theorem torusGaussianLimit_os0
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (TorusTestFunction L)))
-    [IsProbabilityMeasure μ]
-    (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass) :
-    TorusOS0_Analyticity L μ := by
-  intro n J
-  -- Rewrite using the closed form: Z_ℂ(z) = exp(-½ ∑ᵢⱼ zᵢzⱼ Gᵢⱼ)
-  have h_eq : (fun z : Fin n → ℂ =>
-      torusGeneratingFunctionalℂ L μ
-        (∑ i, (z i).re • J i) (∑ i, (z i).im • J i)) =
-      (fun z => Complex.exp ((-1 / 2 : ℂ) * ∑ i : Fin n, ∑ j : Fin n,
-        z i * z j * (torusContinuumGreen L mass hmass (J i) (J j) : ℂ))) := by
-    ext z
-    exact torusGaussianLimit_complex_cf_quadratic L mass hmass μ hGCL n J z
-  rw [h_eq]
-  -- Now show exp(quadratic) is analytic on Set.univ
-  intro z _
-  -- It suffices to show AnalyticAt (which implies AnalyticWithinAt)
-  apply AnalyticAt.analyticWithinAt
-  -- Helper: z ↦ z i is analytic (coordinate projection is a CLM from Fin n → ℂ)
-  have h_proj : ∀ (k : Fin n), AnalyticAt ℂ (fun z : Fin n → ℂ => z k) z := by
-    intro k
-    exact ((ContinuousLinearMap.proj (R := ℂ) (φ := fun _ : Fin n => ℂ) k).analyticAt z)
-  -- exp ∘ (quadratic) is analytic since both are
-  apply AnalyticAt.cexp'
-  -- The inner function z ↦ (-1/2) * ∑ᵢⱼ zᵢ zⱼ Gᵢⱼ is analytic
-  apply AnalyticAt.mul
-  · exact analyticAt_const
-  -- ∑ᵢ ∑ⱼ zᵢ zⱼ Gᵢⱼ is analytic (finite sum of analytic functions)
-  · apply Finset.univ.analyticAt_fun_sum
-    intro i _
-    apply Finset.univ.analyticAt_fun_sum
-    intro j _
-    -- zᵢ * zⱼ * Gᵢⱼ is analytic: product of analytic functions times a constant
-    exact (h_proj i |>.mul (h_proj j)).mul analyticAt_const
+The Gaussian OS0 chain was removed (not needed for interacting case).
+The interacting OS0 is proved independently in TorusInteractingOS.lean
+via analyticOnNhd_integral. Gaussian OS0 is provable directly
+(exp of quadratic is entire) without Osgood. -/
 
 /-! ## OS1: Regularity -/
 
@@ -712,7 +581,7 @@ theorem torusGaussianLimit_satisfies_OS
     [IsProbabilityMeasure μ]
     (hGCL : IsTorusGaussianContinuumLimit L μ mass hmass) :
     SatisfiesTorusOS L μ where
-  os0 := torusGaussianLimit_os0 L mass hmass μ hGCL
+  os0 := by sorry -- Gaussian OS0 removed; provable directly (exp of quadratic)
   os1 := torusGaussianLimit_os1 L mass hmass μ hGCL
   os2_translation := torusGaussianLimit_os2_translation L mass hmass μ hGCL
   os2_D4 := torusGaussianLimit_os2_D4 L mass hmass μ hGCL
