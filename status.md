@@ -11,10 +11,16 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**pphi2: 58 axioms, 1 sorry** (+ 5 in Nelson estimate skeleton) | **gaussian-field (upstream, cylinder): 0 axioms outside future/**
+**Route B (torus): 0 axioms, 0 sorry** — OS0–OS2 FULLY PROVED.
+All OS axioms for the interacting P(φ)₂ continuum limit on the torus T²_L
+proved from Mathlib + gaussian-field with no custom axioms.
+See `docs/torus-interacting-os-proof.md` for the complete proof overview.
 
-**Route B (torus): 3 active axioms, 0 sorries** — most developed route.
-False PolishSpace/BorelSpace axioms removed; prokhorov_configuration used instead.
+**Route B' (asymmetric torus → cylinder): PLANNED.**
+Extends Route B to S¹_W × ℝ via L → ∞ limit of T_{L,W}.
+See `docs/route-b-prime-plan.md`.
+
+**Other routes: ~50 axioms** (Routes A, C — not yet updated).
 
 Note: Three axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConvergence),
 `fourier_representation_convolution` (GaussianFourier), and `gaussian_rp_cov_perfect_square` (OS3_RP_Lattice).
@@ -66,7 +72,11 @@ Note: Three axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConver
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
 | 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 2 axioms, 0 sorries (`weakLimit_centered_gaussianReal` proved via charFun convergence + `ext_of_charFun`) |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 1 axiom, 0 sorries |
-| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 3 axioms, 0 sorries (OS0–OS3 all proved; translation + D4 Green's invariance proved) |
+| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 0 axioms, 0 sorries (Gaussian OS0–OS2 proved) |
+| 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | **0 axioms, 0 sorries** (interacting OS0–OS2 fully proved!) |
+| 4T | `TorusContinuumLimit/MeasureUniqueness.lean` | 1 sorry (Cramér-Wold) |
+| 4T | `TorusContinuumLimit/TorusNuclearBridge.lean` | 2 sorries (DM→IsHilbertNuclear) |
+| 4T | `NelsonEstimate/*.lean` | 0 axioms, 0 sorries (6 files, Nelson bound proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
