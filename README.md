@@ -64,12 +64,13 @@ The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
 **25 axioms, 0 sorries.**
 
-### Route B: T²_L (torus) — OS0–OS2 (**1 axiom, 1 sorry**)
+### Route B: T²_L (torus) — OS0–OS2 (**0 axioms, 0 sorry**)
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
 spacing a = L/N → 0. The interacting continuum limit `torusInteractingLimit_exists`
 is **PROVED** via Mitoma-Chebyshev tightness + Nelson's exponential estimate
 (proved: physical volume a²N²=L² is constant). OS3 dropped (→ cylinder).
-**1 axiom** (OS0 analyticity), **1 sorry** (Cramér-Wold for Gaussian uniqueness).
+**All OS0–OS2 fully proved** from Mathlib + gaussian-field with no custom axioms.
+See `docs/torus-interacting-os-proof.md` for the complete proof overview.
 
 ### Route C: S¹_L × ℝ (cylinder) — OS0–OS3
 Direct Nelson/Simon construction with natural time axis ℝ for OS reconstruction.
