@@ -54,9 +54,9 @@ The construction proceeds in six phases:
 
 6. **Assembly** — Combine all axioms into the main theorem.
 
-## Three routes (spacetimes)
+## Four routes (spacetimes)
 
-The construction is carried out on three spacetimes, each targeting different
+The construction is carried out on four spacetimes, each targeting different
 OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
@@ -64,15 +64,45 @@ The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
 **25 axioms, 0 sorries.**
 
-### Route B: T²_L (torus) — OS0–OS2 (**0 axioms, 0 sorry**)
+### Route B: T²_L (symmetric torus) — OS0–OS2 (**0 axioms, 0 sorry**)
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
 spacing a = L/N → 0. The interacting continuum limit `torusInteractingLimit_exists`
 is **PROVED** via Mitoma-Chebyshev tightness + Nelson's exponential estimate
-(proved: physical volume a²N²=L² is constant). OS3 dropped (→ cylinder).
+(proved: physical volume a²N²=L² is constant). OS3 dropped (→ Routes B', C).
 **All OS0–OS2 fully proved** from Mathlib + gaussian-field with no custom axioms.
 See `docs/torus-interacting-os-proof.md` for the complete proof overview.
 
-### Route C: S¹_L × ℝ (cylinder) — OS0–OS3
+### Route B': T_{L,W} → S¹_W × ℝ (asymmetric torus → cylinder) — OS0–OS3
+Extends Route B to the cylinder by taking the time direction to infinity.
+The construction proceeds in two limits:
+
+1. **UV limit (Route B):** On the asymmetric torus T_{L,W} = (ℝ/Lℤ) × (ℝ/Wℤ)
+   with lattice (ℤ/N_L ℤ) × (ℤ/N_W ℤ), take the spacing a → 0 (N → ∞).
+   Route B's OS0–OS2 proofs apply to each asymmetric torus with minor
+   modifications (the test function space is C∞(S¹_L) ⊗̂ C∞(S¹_W) with
+   possibly different L, W).
+
+2. **IR limit (new):** Take L → ∞ with W fixed. The torus measures
+   μ_{P,L,W} on T_{L,W} converge weakly to a measure μ_{P,W} on the
+   cylinder S¹_W × ℝ. Tightness follows from uniform-in-L moment bounds
+   (the interaction density V/volume and Green's function G_W(f,f) remain
+   bounded as L → ∞).
+
+The cylinder S¹_W × ℝ has a natural time axis ℝ, enabling:
+- **OS3 (Reflection positivity):** Time reflection Θ: t ↦ -t is a clean
+  involution on S¹_W × ℝ. The RP matrix for positive-time test functions
+  is positive semidefinite, proved from the lattice RP (transfer matrix
+  positivity) + weak limit transfer.
+- **Transfer matrix:** The cylinder admits a Hilbert space decomposition
+  L²(S¹_W) via spatial slicing at fixed time. The transfer operator
+  T = exp(-H) where H is the P(φ)₂ Hamiltonian. Spectral gap of T
+  gives the mass gap and clustering.
+
+**Advantages over Route C:** Reuses all Route B infrastructure (0 axioms for
+OS0–OS2). Only needs new work for OS3 (RP) and the L → ∞ limit.
+**Status:** Planned. Infrastructure from Route B directly applicable.
+
+### Route C: S¹_L × ℝ (cylinder, direct) — OS0–OS3
 Direct Nelson/Simon construction with natural time axis ℝ for OS reconstruction.
 The field is a distribution (not a function), requiring isonormal Gaussian extension.
 OS3 uses Laplace factorization of the cylinder Green's function.
@@ -81,11 +111,11 @@ OS3 uses Laplace factorization of the cylinder Green's function.
 ### Which OS axiom comes from which route?
 | OS axiom | Best route | Why |
 |----------|-----------|-----|
-| OS0 (Analyticity) | Any | Exponential moment bounds |
-| OS1 (Regularity) | B (torus) | Clean moment bounds, no IR |
-| OS2 (Symmetry) | A (ℝ²) | Full E(2) symmetry |
-| OS3 (RP) | C (cylinder) | Natural time half-space ℝ₊ |
-| OS4 (Clustering) | A (ℝ²) | Transfer matrix spectral gap |
+| OS0 (Analyticity) | B, B' | Exponential moment bounds (proved) |
+| OS1 (Regularity) | B, B' | Clean moment bounds (proved) |
+| OS2 (Symmetry) | B' or A | B' for cylinder symmetries, A for full E(2) |
+| OS3 (RP) | B' or C | Natural time half-space on cylinder |
+| OS4 (Clustering) | B' or A | Transfer matrix spectral gap |
 
 ## Construction parameters and renormalization
 
