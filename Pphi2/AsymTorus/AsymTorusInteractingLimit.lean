@@ -68,7 +68,57 @@ theorem asymNelson_exponential_estimate
           (asymGeomSpacing_pos Lt Ls N) hmass) ≤ K := by
   -- Same proof as nelson_exponential_estimate_lattice but with a_geom²N² = Lt·Ls
   -- instead of a²N² = L². K = exp(2 · Lt · Ls · A).
-  sorry
+  -- Step 1: Get uniform lower bound on wickPolynomial for c ∈ [0, mass⁻²]
+  obtain ⟨A, hA_pos, hA_bound⟩ :=
+    Pphi2.wickPolynomial_uniform_bounded_below P (mass⁻¹ ^ 2) (by positivity)
+  -- Step 2: K = exp(2 · Lt · Ls · A) works uniformly in N
+  refine ⟨Real.exp (2 * (Lt * Ls) * A), Real.exp_pos _, fun N _ => ?_⟩
+  set a := asymGeomSpacing Lt Ls N
+  set ha := asymGeomSpacing_pos Lt Ls N
+  set μ := latticeGaussianMeasure 2 N a mass ha hmass
+  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability 2 N a mass ha hmass
+  -- Step 3: V(ω) ≥ -(a² · |Λ| · A) = -(Lt·Ls · A) for all ω
+  have hc_nn : 0 ≤ wickConstant 2 N a mass :=
+    le_of_lt (wickConstant_pos 2 N a mass ha hmass)
+  have hc_le : wickConstant 2 N a mass ≤ mass⁻¹ ^ 2 :=
+    wickConstant_le_inv_mass_sq 2 N a mass ha hmass
+  set Λ := Fintype.card (FinLatticeSites 2 N)
+  -- Key identity: a² · Λ = Lt · Ls (since a = √(Lt·Ls)/N and Λ = N²)
+  have hΛ_eq : (Λ : ℝ) = (N : ℝ) ^ 2 := by
+    change (Fintype.card (Fin 2 → ZMod N) : ℝ) = (N : ℝ) ^ 2
+    simp [ZMod.card]
+  have ha_sq_Λ : a ^ 2 * (Λ : ℝ) = Lt * Ls := by
+    rw [hΛ_eq]
+    exact asymGeomSpacing_sq_mul_sq Lt Ls N
+  have h_wp_bound : ∀ (ω : Configuration (FinLatticeField 2 N)),
+      interactionFunctional 2 N P a mass ω ≥ -(Lt * Ls * A) := by
+    intro ω
+    unfold interactionFunctional
+    have ha_pow : (0 : ℝ) ≤ a ^ 2 := sq_nonneg a
+    calc a ^ 2 * ∑ x : FinLatticeSites 2 N,
+          wickPolynomial P (wickConstant 2 N a mass) (ω (finLatticeDelta 2 N x))
+        ≥ a ^ 2 * ∑ _x : FinLatticeSites 2 N, (-A) := by
+          apply mul_le_mul_of_nonneg_left _ ha_pow
+          exact Finset.sum_le_sum fun x _ => hA_bound _ hc_nn hc_le _
+      _ = a ^ 2 * (-(↑Λ * A)) := by
+          congr 1; rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]; ring
+      _ = -(a ^ 2 * ↑Λ * A) := by ring
+      _ = -(Lt * Ls * A) := by rw [ha_sq_Λ]
+  -- Step 4: exp(-2V) ≤ exp(2 · Lt · Ls · A) pointwise
+  have h_exp_bound : ∀ ω, (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2 ≤
+      Real.exp (2 * (Lt * Ls) * A) := by
+    intro ω
+    rw [sq, ← Real.exp_add, show -interactionFunctional 2 N P a mass ω +
+        (-interactionFunctional 2 N P a mass ω) =
+        -2 * interactionFunctional 2 N P a mass ω from by ring]
+    exact Real.exp_le_exp_of_le (by linarith [h_wp_bound ω])
+  -- Step 5: Integrate the pointwise bound over the probability measure
+  calc ∫ ω, (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2 ∂μ
+      ≤ ∫ _ω, Real.exp (2 * (Lt * Ls) * A) ∂μ := by
+        apply integral_mono_of_nonneg (ae_of_all _ fun ω => sq_nonneg _)
+          (integrable_const _) (ae_of_all _ h_exp_bound)
+    _ = Real.exp (2 * (Lt * Ls) * A) := by
+        simp [integral_const]
 
 /-- The asymmetric torus interacting measure is a probability measure. -/
 instance asymTorusInteractingMeasure_isProbability (N : ℕ) [NeZero N]
