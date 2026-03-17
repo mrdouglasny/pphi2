@@ -3,7 +3,7 @@
 Date: 2026-03-17
 
 This note records the current state of the torus continuum-limit route after
-reading the repo sources, not just the README prose.
+reading the repo sources, not just the README or `status.md` prose.
 
 ## Short answer
 
@@ -12,24 +12,32 @@ claimed by the README.
 
 - `torusInteractingLimit_exists` is not fully closed.
 - Torus interacting `OS0`-`OS2` are not fully axiom-free.
-- The README currently overstates completion.
+- The current docs and status summaries overstate completion.
 
 ## Documentation mismatch
 
-The README contradicts itself.
+After merging the latest `origin/main`, the substantive source-level gaps below
+did not change. The new remote commits only changed documentation and status
+tracking, not the torus proof files that those summaries describe.
+
+The top-level prose is inconsistent with the source state.
 
 - It claims Route B has `0 axioms, 0 sorry` and that all torus `OS0`-`OS2`
   are fully proved.
 - Later it says Route B still has `1 axiom, 1 sorry`.
+- `status.md` now also claims Route B is `0 axioms, 0 sorry` and that
+  `TorusInteractingOS.lean` has `0 axioms, 0 sorries`, but the source and
+  upstream dependencies do not support that claim.
 
 Relevant lines:
 
 - `README.md:67-73`
 - `README.md:175-188`
+- `status.md:14-21`
+- `status.md:69-78`
 
-`status.md` is closer to the source state and still lists active torus axioms:
-
-- `status.md:65-69`
+So the issue is no longer just that the README is stale; the newer status file
+also overstates completion.
 
 ## What is actually finished
 
@@ -172,4 +180,5 @@ The current torus-route status is:
   `sorry`.
 
 So the torus route is best described as advanced and buildable, but not
-completely finished.
+completely finished. Rechecking after merging the current remote docs/status
+does not change that conclusion.
