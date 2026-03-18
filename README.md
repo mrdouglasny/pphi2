@@ -81,36 +81,36 @@ are now largely resolved (see `docs/torus-route-gap-audit.md`):
 
 See `docs/torus-interacting-os-proof.md` for the proof overview.
 
-### Route B': T_{L,W} → S¹_W × ℝ (asymmetric torus → cylinder) — OS0–OS3
+### Route B': T_{Lt,Ls} → S¹_{Ls} × ℝ (asymmetric torus → cylinder) — OS0–OS3
 Extends Route B to the cylinder by taking the time direction to infinity.
 The construction proceeds in two limits:
 
-1. **UV limit (Route B):** On the asymmetric torus T_{L,W} = (ℝ/Lℤ) × (ℝ/Wℤ)
-   with lattice (ℤ/N_L ℤ) × (ℤ/N_W ℤ), take the spacing a → 0 (N → ∞).
-   Route B's OS0–OS2 proofs apply to each asymmetric torus with minor
-   modifications (the test function space is C∞(S¹_L) ⊗̂ C∞(S¹_W) with
-   possibly different L, W).
+1. **UV limit (DONE):** On the asymmetric torus T_{Lt,Ls} = (ℝ/Lt ℤ) × (ℝ/Ls ℤ)
+   with lattice (ℤ/Nℤ)² and geometric-mean spacing √(Lt·Ls)/N, take N → ∞.
+   Route B's OS0–OS2 proofs are fully adapted to the asymmetric case.
+   `AsymTorusOS.lean`: **0 axioms, 0 sorry.**
 
-2. **IR limit (new):** Take L → ∞ with W fixed. The torus measures
-   μ_{P,L,W} on T_{L,W} converge weakly to a measure μ_{P,W} on the
-   cylinder S¹_W × ℝ. Tightness follows from uniform-in-L moment bounds
-   (the interaction density V/volume and Green's function G_W(f,f) remain
-   bounded as L → ∞).
+2. **IR limit (planned):** Take Lt → ∞ with Ls fixed. The torus measures
+   μ_{P,Lt,Ls} on T_{Lt,Ls} converge weakly to a measure μ_{P,Ls} on the
+   cylinder S¹_{Ls} × ℝ. Tightness follows from uniform-in-Lt moment bounds
+   (the interaction density V/volume and Green's function G_{Ls}(f,f) remain
+   bounded as Lt → ∞).
 
-The cylinder S¹_W × ℝ has a natural time axis ℝ, enabling:
+The cylinder S¹_{Ls} × ℝ has a natural time axis ℝ, enabling:
 - **OS3 (Reflection positivity):** Time reflection Θ: t ↦ -t is a clean
-  involution on S¹_W × ℝ. The RP matrix for positive-time test functions
+  involution on S¹_{Ls} × ℝ. The RP matrix for positive-time test functions
   is positive semidefinite, proved from the lattice RP (transfer matrix
   positivity) + weak limit transfer.
 - **Transfer matrix:** The cylinder admits a Hilbert space decomposition
-  L²(S¹_W) via spatial slicing at fixed time. The transfer operator
+  L²(S¹_{Ls}) via spatial slicing at fixed time. The transfer operator
   T = exp(-H) where H is the P(φ)₂ Hamiltonian. Spectral gap of T
   gives the mass gap and clustering.
 
 **Advantages over Route C:** Reuses all Route B infrastructure (0 axioms for
-OS0–OS2). Only needs new work for OS3 (RP) and the L → ∞ limit.
+OS0–OS2). Only needs new work for OS3 (RP) and the Lt → ∞ limit.
 **Status:** UV limit (Step 1) complete — `AsymTorusOS.lean` has **0 axioms,
 0 sorry** for OS0–OS2. Cylinder IR limit (Step 2) planned.
+**25 axioms** (Routes A and C infrastructure), **0 axioms** for Route B' OS0–OS2.
 
 ### Route C: S¹_L × ℝ (cylinder, direct) — OS0–OS3
 Direct Nelson/Simon construction with natural time axis ℝ for OS reconstruction.
