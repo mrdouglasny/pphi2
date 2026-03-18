@@ -44,6 +44,7 @@ import Mathlib.Analysis.Complex.Liouville
 import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.Analysis.Analytic.Basic
+import Pphi2.GeneralResults.Osgood.OsgoodN
 
 open MeasureTheory Complex Filter Topology Metric Set
 open scoped ENNReal NNReal
@@ -51,9 +52,8 @@ open scoped ENNReal NNReal
 /-! ### Osgood's Lemma
 
 A continuous function on `ℂⁿ` that is separately analytic in each
-coordinate is jointly analytic. This is a standard result in several
-complex variables (weaker than Hartogs' theorem, which drops the
-continuity hypothesis).
+coordinate is jointly analytic. Proved by induction on `n` using
+Irving's two-variable Osgood theorem and Cauchy coefficient analyticity.
 
 Reference: Krantz, *Function Theory of Several Complex Variables*,
 Theorem 7.2.1. -/
@@ -63,17 +63,16 @@ namespace ComplexAnalysis
 /-- **Osgood's lemma.** A continuous function `f : ℂⁿ → ℂ` that is
 separately analytic in each complex coordinate is jointly analytic.
 
-This is a classical result in several complex variables. The proof
-proceeds by induction on `n`, using the Cauchy integral formula in
-one variable and analyticity of the resulting coefficients by induction.
-
-Axiomatized as a standard textbook fact (Krantz, Thm 7.2.1). -/
-axiom osgood_separately_analytic {n : ℕ}
+Proved by induction on `n` in `Osgood/OsgoodN.lean`, using the
+two-variable Osgood theorem from `Osgood/Osgood2.lean` (adapted from
+Geoffrey Irving's `girving/ray`). -/
+theorem osgood_separately_analytic {n : ℕ}
     {f : (Fin n → ℂ) → ℂ}
     (hf_cont : Continuous f)
     (hf_sep : ∀ (j : Fin n) (z₀ : Fin n → ℂ),
       AnalyticAt ℂ (fun t : ℂ => f (Function.update z₀ j t)) (z₀ j)) :
-    AnalyticOnNhd ℂ f Set.univ
+    AnalyticOnNhd ℂ f Set.univ :=
+  _root_.osgood_separately_analytic n hf_cont hf_sep
 
 end ComplexAnalysis
 
