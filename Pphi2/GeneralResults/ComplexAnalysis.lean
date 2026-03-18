@@ -58,6 +58,8 @@ continuity hypothesis).
 Reference: Krantz, *Function Theory of Several Complex Variables*,
 Theorem 7.2.1. -/
 
+namespace ComplexAnalysis
+
 /-- **Osgood's lemma.** A continuous function `f : ℂⁿ → ℂ` that is
 separately analytic in each complex coordinate is jointly analytic.
 
@@ -72,6 +74,8 @@ axiom osgood_separately_analytic {n : ℕ}
     (hf_sep : ∀ (j : Fin n) (z₀ : Fin n → ℂ),
       AnalyticAt ℂ (fun t : ℂ => f (Function.update z₀ j t)) (z₀ j)) :
     AnalyticOnNhd ℂ f Set.univ
+
+end ComplexAnalysis
 
 /-! ### Helper: analyticity of coordinate update map -/
 
@@ -275,4 +279,4 @@ theorem analyticOnNhd_integral {n : ℕ} {α : Type*} [MeasurableSpace α]
       differentiable_one_var_integral hG_an hG_meas hG_dom
     exact hG_diff.analyticAt (z₀ j)
   -- Step 3: Apply Osgood's lemma
-  exact osgood_separately_analytic hI_cont hI_sep
+  exact ComplexAnalysis.osgood_separately_analytic hI_cont hI_sep
