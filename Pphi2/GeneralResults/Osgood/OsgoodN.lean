@@ -530,6 +530,137 @@ theorem block_osgood_series {m : ℕ}
     exact antidiag
   exact { r_le := p_radius, r_pos := by simp [hr], hasSum := p_hasSum }
 
+/-- Cauchy estimate for the first Fréchet derivative: if `G : E → F` is differentiable
+and `‖G(x)‖ ≤ C` on `Metric.closedBall x₀ r`, then `‖fderiv ℂ G x₀‖ ≤ C / r`.
+Proved by reducing to the 1D Cauchy estimate along each direction. -/
+private theorem norm_fderiv_le_of_forall_closedBall_norm_le
+    {E : Type} [NormedAddCommGroup E] [NormedSpace ℂ E]
+    {F : Type} [NormedAddCommGroup F] [NormedSpace ℂ F] [CompleteSpace F]
+    {G : E → F} {x₀ : E} {r C : ℝ} (hr : 0 < r)
+    (hG_diff : Differentiable ℂ G)
+    (hG_bound : ∀ x ∈ Metric.closedBall x₀ r, ‖G x‖ ≤ C) :
+    ‖fderiv ℂ G x₀‖ ≤ C / r := by
+  rw [ContinuousLinearMap.opNorm_le_iff (div_nonneg
+    (le_trans (norm_nonneg _) (hG_bound x₀ (Metric.mem_closedBall_self hr.le))) hr.le)]
+  intro v
+  -- For v = 0, the bound is trivial
+  by_cases hv : v = 0
+  · simp [hv, div_nonneg (le_trans (norm_nonneg _)
+      (hG_bound x₀ (Metric.mem_closedBall_self hr.le))) hr.le]
+  -- For v ≠ 0, reduce to the 1D Cauchy estimate along the direction v/‖v‖
+  -- Consider the 1D slice g(z) = G(x₀ + z • v) for z ∈ ℂ
+  -- g'(0) = (fderiv ℂ G x₀) v
+  set g : ℂ → F := fun z => G (x₀ + z • v) with hg_def
+  have hg_diff : Differentiable ℂ g :=
+    hG_diff.comp ((differentiable_const x₀).add ((differentiable_id).smul_const v))
+  have hg_deriv : deriv g 0 = fderiv ℂ G x₀ v := by
+    have hι : HasDerivAt (fun z : ℂ => x₀ + z • v) v 0 := by
+      have h1 : HasDerivAt (fun z : ℂ => z • v) ((1 : ℂ) • v) 0 :=
+        (hasDerivAt_id (0 : ℂ)).smul_const v
+      simp only [one_smul] at h1
+      have h2 := (hasDerivAt_const 0 x₀).add h1
+      simp only [zero_add] at h2; exact h2
+    have hcomp := (hG_diff (x₀ + 0 • v)).hasFDerivAt.comp_hasDerivAt 0 hι
+    simp only [zero_smul, add_zero] at hcomp
+    exact hcomp.deriv
+  -- Bound: |g'(0)| ≤ C/r * ‖v‖ via the 1D Cauchy estimate on the disk of radius r/‖v‖
+  -- Actually, we use the disk of radius r/‖v‖ so that ‖z•v‖ = |z|*‖v‖ ≤ r when |z| ≤ r/‖v‖
+  set R' := r / ‖v‖ with hR'_def
+  have hR' : 0 < R' := div_pos hr (norm_pos_iff.mpr hv)
+  have hg_sphere : ∀ z ∈ Metric.sphere (0 : ℂ) R', ‖g z‖ ≤ C := by
+    intro z hz
+    apply hG_bound
+    rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left]
+    rw [Metric.mem_sphere, dist_eq_norm, sub_zero] at hz
+    calc ‖z • v‖ = ‖z‖ * ‖v‖ := norm_smul z v
+      _ = R' * ‖v‖ := by rw [hz]
+      _ ≤ r := by rw [hR'_def, div_mul_cancel₀ r (norm_ne_zero_iff.mpr hv)]
+  have : ‖deriv g 0‖ ≤ C / R' :=
+    Complex.norm_deriv_le_of_forall_mem_sphere_norm_le hR' hg_diff.diffContOnCl hg_sphere
+  rw [hg_deriv] at this
+  calc ‖(fderiv ℂ G x₀) v‖ ≤ C / R' := this
+    _ = C / (r / ‖v‖) := rfl
+    _ = C * ‖v‖ / r := by rw [div_div_eq_mul_div]
+    _ = C / r * ‖v‖ := by ring
+
+/-- Iterated multivariate Cauchy estimate: if `f : E → ℂ` is smooth and `‖f(x)‖ ≤ B` on
+`Metric.closedBall x₀ R`, then `(n!)⁻¹ * ‖iteratedFDeriv ℂ n f x₀‖ ≤ B * (e/R)^n`.
+Proved by induction: at each step the 1D Cauchy estimate for fderiv gives
+`‖D^{k+1}f(x)‖ ≤ sup ‖D^k f‖ / (R/n)`, yielding `‖D^n f(x₀)‖ ≤ B * (n/R)^n`.
+Then `(n!)⁻¹ * B * (n/R)^n = B * n^n/(n! R^n) ≤ B * e^n/R^n` by `pow_div_factorial_le_exp`. -/
+private theorem norm_iteratedFDeriv_div_factorial_le
+    {E : Type} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
+    {f : E → ℂ} {x₀ : E}
+    (hf_smooth : ContDiff ℂ ⊤ f)
+    {R : ℝ} (hR : 0 < R) {B : ℝ}
+    (hB : ∀ x ∈ Metric.closedBall x₀ R, ‖f x‖ ≤ B)
+    (n : ℕ) :
+    (↑(n.factorial) : ℝ)⁻¹ * ‖iteratedFDeriv ℂ n f x₀‖ ≤ B * (R / Real.exp 1)⁻¹ ^ n := by
+  rcases n.eq_zero_or_pos with rfl | hn
+  · simp [iteratedFDeriv_zero_apply, hB x₀ (Metric.mem_closedBall_self hR.le)]
+  have hB_nn : 0 ≤ B := le_trans (norm_nonneg _) (hB x₀ (Metric.mem_closedBall_self hR.le))
+  have hRn : (0 : ℝ) < R / n := div_pos hR (Nat.cast_pos.mpr hn)
+  -- Key: ∀ k ≤ n, ∀ x ∈ closedBall x₀ (R - k*(R/n)),
+  --   ‖iteratedFDeriv ℂ k f x‖ ≤ B * (n/R)^k
+  -- Note: NO k! factor. The operator norm bound at each step only introduces n/R.
+  suffices key : ∀ k : ℕ, k ≤ n →
+      ∀ x ∈ Metric.closedBall x₀ (R - ↑k * (R / ↑n)),
+        ‖iteratedFDeriv ℂ k f x‖ ≤ B * (↑n / R) ^ k by
+    have h_at_x₀ := key n le_rfl x₀ (by
+      rw [Metric.mem_closedBall, dist_self]
+      have : (↑n : ℝ) * (R / ↑n) = R :=
+        mul_div_cancel₀ R (Nat.cast_ne_zero.mpr (Nat.pos_iff_ne_zero.mp hn))
+      linarith)
+    -- Now: (n!)⁻¹ * ‖D^n f(x₀)‖ ≤ (n!)⁻¹ * B * (n/R)^n = B * n^n / (n! * R^n)
+    -- And n^n / n! ≤ e^n by pow_div_factorial_le_exp
+    -- (n!)⁻¹ * B * (n/R)^n = B * n^n / (n! * R^n) ≤ B * exp(n) / R^n
+    --   = B * (exp 1)^n / R^n = B * (exp 1 / R)^n = B * ρ⁻¹^n
+    have hfact_pos : (0 : ℝ) < ↑(n.factorial) := Nat.cast_pos.mpr n.factorial_pos
+    have hRn_pos : (0 : ℝ) < R ^ n := pow_pos hR n
+    -- Key: n^n / n! ≤ exp n
+    have h_key : (↑n : ℝ) ^ n / ↑(n.factorial) ≤ Real.exp ↑n :=
+      Real.pow_div_factorial_le_exp (x := ↑n) (Nat.cast_nonneg n) n
+    -- exp n = (exp 1)^n
+    have h_exp : Real.exp (↑n : ℝ) = Real.exp 1 ^ n := by
+      rw [← Real.exp_nat_mul, mul_one]
+    calc (↑(n.factorial) : ℝ)⁻¹ * ‖iteratedFDeriv ℂ n f x₀‖
+        ≤ (↑(n.factorial))⁻¹ * (B * (↑n / R) ^ n) := by gcongr
+      _ = B * ((↑n) ^ n / (↑(n.factorial))) / R ^ n := by
+          rw [div_pow]; ring
+      _ ≤ B * Real.exp (↑n) / R ^ n := by
+          gcongr
+      _ = B * (Real.exp 1 ^ n / R ^ n) := by
+          rw [h_exp, mul_div_assoc]
+      _ = B * (R / Real.exp 1)⁻¹ ^ n := by
+          rw [inv_div, div_pow]
+  intro k hk
+  induction k with
+  | zero =>
+    intro x hx
+    simp only [Nat.zero_eq, CharP.cast_eq_zero, zero_mul, sub_zero, pow_zero, mul_one] at hx ⊢
+    rw [norm_iteratedFDeriv_zero]; exact hB x hx
+  | succ k ih =>
+    intro x hx
+    rw [← norm_fderiv_iteratedFDeriv]
+    have h_ball_sub : Metric.closedBall x (R / ↑n) ⊆
+        Metric.closedBall x₀ (R - ↑k * (R / ↑n)) := by
+      intro y hy
+      rw [Metric.mem_closedBall] at hx hy ⊢
+      calc dist y x₀ ≤ dist y x + dist x x₀ := dist_triangle y x x₀
+        _ ≤ R / ↑n + (R - ↑(k + 1) * (R / ↑n)) := add_le_add hy hx
+        _ = R - ↑k * (R / ↑n) := by push_cast; ring
+    have ih_on_ball : ∀ y ∈ Metric.closedBall x (R / ↑n),
+        ‖iteratedFDeriv ℂ k f y‖ ≤ B * (↑n / R) ^ k :=
+      fun y hy => ih (Nat.le_of_succ_le hk) y (h_ball_sub hy)
+    calc ‖fderiv ℂ (iteratedFDeriv ℂ k f) x‖
+        ≤ (B * (↑n / R) ^ k) / (R / ↑n) := by
+          exact norm_fderiv_le_of_forall_closedBall_norm_le hRn
+            (hf_smooth.differentiable_iteratedFDeriv (m := k)
+              (show ((k : ℕ) : WithTop ℕ∞) < ⊤ by simp))
+            ih_on_ball
+      _ = B * (↑n / R) ^ (k + 1) := by
+          rw [pow_succ]; field_simp
+
 set_option maxHeartbeats 1600000 in
 /-- **Multivariate Cauchy estimate with polarization loss.**
 
@@ -582,9 +713,7 @@ theorem analyticAt_hasFPowerSeriesOnBall_of_bound
     -- ‖q n‖ = (n!)⁻¹ * ‖iteratedFDeriv ℂ n f x₀‖
     show ‖((Nat.factorial n : ℝ)⁻¹) • iteratedFDeriv ℂ n f x₀‖ ≤ B * ρ⁻¹ ^ n
     rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg (inv_nonneg.mpr (by positivity))]
-    -- Suffices: ‖iteratedFDeriv ℂ n f x₀‖ ≤ B * (n/R)^n * n!
-    -- which gives (n!)⁻¹ * ‖iteratedFDeriv‖ ≤ B * (n/R)^n ≤ B * (e/R)^n = B * ρ⁻¹^n
-    sorry
+    exact norm_iteratedFDeriv_div_factorial_le hf_smooth hR hB n
   -- Step 4: q.radius ≥ ρ (from coeff_bound)
   have q_radius : ENNReal.ofReal ρ ≤ q.radius := by
     have h_bound : ∀ n, ‖q n‖ * ρ ^ n ≤ B := by
@@ -592,12 +721,69 @@ theorem analyticAt_hasFPowerSeriesOnBall_of_bound
       calc ‖q n‖ * ρ ^ n
           ≤ B * ρ⁻¹ ^ n * ρ ^ n := by gcongr; exact coeff_bound n
         _ = B := by rw [mul_assoc, ← mul_pow, inv_mul_cancel₀ hρ.ne', one_pow, mul_one]
-    sorry -- Use q.le_radius_of_bound B h_bound after ENNReal.ofReal ↔ NNReal conversion
+    rw [ENNReal.ofReal_eq_coe_nnreal hρ.le]
+    exact q.le_radius_of_bound B (fun n => h_bound n)
   -- Step 5: HasFPowerSeriesOnBall f q x₀ ρ
   -- The diagonal of q equals the diagonal of p₀, so q sums to f.
   -- We show hasSum by the identity theorem.
   have h_series : HasFPowerSeriesOnBall f q x₀ (ENNReal.ofReal ρ) := by
-    sorry
+    have hq_pos : 0 < q.radius := lt_of_lt_of_le (by positivity : (0 : ℝ≥0∞) < ENNReal.ofReal ρ) q_radius
+    -- q.sum represents q on eball 0 q.radius
+    have hq_fps : HasFPowerSeriesOnBall q.sum q 0 q.radius := q.hasFPowerSeriesOnBall hq_pos
+    -- On a neighborhood of 0, f(x₀ + y) = q.sum y
+    -- This follows from hfp₀.hasSum_iteratedFDeriv:
+    --   HasSum (fun n => (n!)⁻¹ • iteratedFDeriv ℂ n f x₀ (fun _ => y)) (f(x₀ + y))
+    -- for y ∈ eball 0 r₀, and q n (fun _ => y) = (n!)⁻¹ • iteratedFDeriv(fun _ => y).
+    have h_eq_near : ∀ y ∈ Metric.eball (0 : E) r₀, f (x₀ + y) = q.sum y := by
+      intro y hy
+      have h_hasSum := hfp₀.hasSum_iteratedFDeriv hy
+      -- h_hasSum : HasSum (fun n => (↑n!)⁻¹ • iteratedFDeriv ℂ n f x₀ (fun _ => y)) (f(x₀ + y))
+      -- q.sum y = tsum (fun n => q n (fun _ => y))
+      -- q n (fun _ => y) = ((n! : ℝ)⁻¹ • iteratedFDeriv ℂ n f x₀) (fun _ => y)
+      --                    = (n! : ℝ)⁻¹ • iteratedFDeriv ℂ n f x₀ (fun _ => y)
+      -- and (↑n!)⁻¹ • v = ((n! : ℂ)⁻¹ : ℂ) • v for v : ℂ
+      -- We need to match the ℝ-scalar and ℂ-scalar versions.
+      have h_term_eq : ∀ n, q n (fun _ => y) = (↑(n.factorial) : ℂ)⁻¹ • iteratedFDeriv ℂ n f x₀ (fun _ => y) := by
+        intro n
+        -- q n = (↑(n!))⁻¹ • (iteratedFDeriv ℂ n f x₀) where scalar is ℝ
+        -- Need: (r • M) v = (↑r : ℂ) • (M v) for r : ℝ, M : ContinuousMultilinearMap, v
+        change ((Nat.factorial n : ℝ)⁻¹ • iteratedFDeriv ℂ n f x₀) (fun _ => y) =
+          (↑(n.factorial) : ℂ)⁻¹ • iteratedFDeriv ℂ n f x₀ (fun _ => y)
+        rw [show (((Nat.factorial n : ℝ)⁻¹ • iteratedFDeriv ℂ n f x₀) (fun _ => y)) =
+          ((Nat.factorial n : ℝ)⁻¹ : ℝ) • (iteratedFDeriv ℂ n f x₀ (fun _ => y)) from rfl]
+        rw [Complex.real_smul]
+        congr 1
+        simp [map_inv₀, map_natCast]
+      rw [← h_hasSum.tsum_eq]
+      congr 1; ext n; exact (h_term_eq n).symm
+    -- Now use the identity theorem: f(x₀ + ·) and q.sum agree on eball 0 r₀,
+    -- both are analytic on eball 0 (ofReal ρ), and this set is preconnected.
+    refine ⟨q_radius, by positivity, fun {y} hy => ?_⟩
+    -- We need HasSum (fun n => q n (fun _ => y)) (f (x₀ + y))
+    -- equivalently f(x₀ + y) = q.sum y
+    suffices h_eq : f (x₀ + y) = q.sum y by
+      rw [h_eq]
+      have := (hq_fps.mono (by positivity) q_radius).hasSum hy
+      simpa [zero_add] using this
+    -- Apply identity theorem
+    -- Both f(x₀ + ·) and q.sum are analytic on the ball eball 0 q.radius
+    have h_f_an : AnalyticOnNhd ℂ (fun y => f (x₀ + y)) (Metric.eball 0 q.radius) := by
+      intro y _
+      have : AnalyticAt ℂ (fun y => x₀ + y) y :=
+        (analyticAt_const.add analyticAt_id)
+      exact (hf (x₀ + y) (Set.mem_univ _)).comp_of_eq this rfl
+    have h_q_an : AnalyticOnNhd ℂ q.sum (Metric.eball 0 q.radius) :=
+      hq_fps.analyticOnNhd
+    have h_agree : (fun y => f (x₀ + y)) =ᶠ[𝓝 0] q.sum := by
+      rw [Filter.eventuallyEq_iff_exists_mem]
+      exact ⟨Metric.eball 0 r₀, Metric.eball_mem_nhds 0 hfp₀.r_pos, fun y hy => h_eq_near y hy⟩
+    -- The ball eball 0 q.radius is preconnected
+    have h_preconn : IsPreconnected (Metric.eball (0 : E) q.radius) :=
+      (convex_eball (0 : E) q.radius).isPreconnected
+    have h_0_mem : (0 : E) ∈ Metric.eball (0 : E) q.radius := Metric.mem_eball_self hq_pos
+    have h_y_mem : y ∈ Metric.eball (0 : E) q.radius := Metric.eball_subset_eball q_radius hy
+    exact h_f_an.eqOn_of_preconnected_of_eventuallyEq
+      h_q_an h_preconn h_0_mem h_agree h_y_mem
   exact ⟨q, h_series, coeff_bound⟩
 
 set_option maxHeartbeats 800000 in
