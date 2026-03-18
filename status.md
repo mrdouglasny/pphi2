@@ -12,11 +12,13 @@ detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
 **Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 0 sorry.**
-All OS0–OS2 proofs complete within this file, but transitive dependencies
-have remaining gaps — see `docs/torus-route-gap-audit.md` for details.
-Upstream gaps: ~~`osgood_separately_analytic` (axiom)~~ **PROVED**, 2 `evalTorusAtSite` sorries
-in gaussian-field, `torusGeneratingFunctionalℂ_analyticOnNhd` (axiom),
-`configuration_tight_of_uniform_second_moments` (gaussian-field dependency).
+All OS0–OS2 proofs complete within this file. Transitive dependencies are
+now largely resolved — see `docs/torus-route-gap-audit.md` for details.
+Recently closed:
+- `osgood_separately_analytic` — **PROVED** (Osgood/OsgoodN.lean, 1965 lines)
+- `torusGeneratingFunctionalℂ_analyticOnNhd` — **PROVED** (Gaussian integrability via AM-GM)
+- `evalTorusAtSite` sorries — **PROVED** in gaussian-field
+Remaining: `configuration_tight_of_uniform_second_moments` (theorem in gaussian-field).
 
 **Route B' (asymmetric torus → cylinder): PLANNED.**
 Extends Route B to S¹_W × ℝ via L → ∞ limit of T_{L,W}.
@@ -360,7 +362,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`torusGaussianLimit_characteristic_functional`~~ | TorusOSAxioms | **PROVED** | CF `E[e^{iωf}] = exp(-½G(f,f))` from MGF via `complexMGF` analytic continuation + `charFun_gaussianReal`. |
 | `torusPositiveTimeSubmodule` | TorusOSAxioms | Infrastructure | Submodule of torus test functions with time support in (0, L/2). Nuclear tensor product lacks pointwise evaluation, so submodule axiomatized. |
 | ~~`torusGaussianLimit_complex_cf_quadratic`~~ | TorusOSAxioms | **PROVED** | Complex CF of Gaussian = exp(-½ ∑ᵢⱼ zᵢzⱼ G(Jᵢ,Jⱼ)). Proved via `torusGeneratingFunctionalℂ_analyticOnNhd` + `analyticOnNhd_eq_of_eqOn_reals`. |
-| `torusGeneratingFunctionalℂ_analyticOnNhd` | TorusOSAxioms | Medium | Analyticity of complex generating functional on ℂⁿ. Needed for identity theorem argument in OS0. |
+| ~~`torusGeneratingFunctionalℂ_analyticOnNhd`~~ | TorusOSAxioms | **PROVED** | Analyticity of complex generating functional on ℂⁿ. Proved via `analyticOnNhd_integral` + `gaussian_exp_sum_abs_integrable` (AM-GM induction). |
 | `torusLattice_rp` | TorusOSAxioms | Medium | Matrix-form reflection positivity for lattice GFF on torus. For positive-time test functions, Σᵢⱼ cᵢcⱼ Re(Z[fᵢ - Θfⱼ]) ≥ 0. Fubini + perfect-square argument. |
 | ~~`torusGaussianLimit_complex_cf_norm`~~ | TorusOSAxioms | **ELIMINATED** | Axiom eliminated: OS1 proved directly via triangle inequality `‖Z_ℂ‖ ≤ ∫ exp(-ω(f_im)) dμ = exp(½G₂₂)` without needing exact norm. |
 | ~~`torusContinuumGreen_continuous_diag`~~ | TorusOSAxioms | **PROVED** | Proved via `greenFunctionBilinear_continuous_diag` in gaussian-field. Locally uniform convergence of partial sums (Weierstrass M-test + coeff_decay). |
@@ -621,7 +623,7 @@ infrastructure. Assessment date: 2026-03-04.
 | ~~`torusContinuumMeasures_tight`~~ | TorusTightness | **PROVED** from `configuration_tight_of_uniform_second_moments` + `torus_second_moment_uniform`. |
 | `configuration_tight_of_uniform_second_moments` | TorusTightness | ✅ Verified (DT 2026-03-11). Mitoma-Chebyshev for nuclear duals. Mitoma (1983) + Chebyshev. Nuclearity essential. |
 | `torusPositiveTimeSubmodule` | TorusOSAxioms | Submodule of positive-time test functions. Infrastructure axiom. |
-| `torusGeneratingFunctionalℂ_analyticOnNhd` | TorusOSAxioms | Analyticity of complex generating functional. From exponential moments via Morera. |
+| ~~`torusGeneratingFunctionalℂ_analyticOnNhd`~~ | TorusOSAxioms | **PROVED.** Analyticity of complex generating functional. Via `analyticOnNhd_integral` + AM-GM Gaussian integrability. |
 | `torusLattice_rp` | TorusOSAxioms | Matrix-form RP for lattice GFF on torus. Fubini + perfect-square argument. |
 | `gaussian_rp_with_boundary_weight` | OS3_RP_Lattice | Core Gaussian RP: ∫ G·G∘Θ·w dμ_GFF ≥ 0. Gaussian Markov property. Glimm-Jaffe Ch. 6.1. |
 | ~~`transferOperator_isCompact`~~ | L2Operator | **PROVED** from `hilbert_schmidt_isCompact` (proved) + `transferWeight_memLp_two` + `transferGaussian_norm_le_one`. |

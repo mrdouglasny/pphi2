@@ -71,13 +71,13 @@ is proved via Mitoma-Chebyshev tightness + Nelson's exponential estimate
 (proved: physical volume a²N²=L² is constant). OS3 dropped (→ Routes B', C).
 
 **`TorusInteractingOS.lean`: 0 local axioms, 0 sorry.**
-All OS0–OS2 proofs are complete within this file, but they depend on
-upstream infrastructure with remaining gaps (see `docs/torus-route-gap-audit.md`):
-- ~~OS0 uses `osgood_separately_analytic` (axiom in `ComplexAnalysis.lean`)~~ **PROVED** — Osgood's lemma for n variables fully verified (1965 lines, 0 axioms)
-- OS2 time reflection uses `evalTorusAtSite_timeReflection` (sorry in gaussian-field)
-- OS2 lattice translation uses `evalTorusAtSite_latticeTranslation` (sorry in gaussian-field)
-- Limit existence uses `configuration_tight_of_uniform_second_moments` (gaussian-field)
-- Gaussian OS0 uses `torusGeneratingFunctionalℂ_analyticOnNhd` (axiom in `TorusOSAxioms.lean`)
+All OS0–OS2 proofs are complete within this file. Upstream dependencies
+are now largely resolved (see `docs/torus-route-gap-audit.md`):
+- ~~OS0 uses `osgood_separately_analytic` (axiom)~~ **PROVED** — Osgood's lemma fully verified (1965 lines, 0 axioms)
+- ~~Gaussian OS0 uses `torusGeneratingFunctionalℂ_analyticOnNhd` (axiom)~~ **PROVED** — Gaussian integrability via AM-GM induction
+- ~~OS2 time reflection uses `evalTorusAtSite_timeReflection` (sorry)~~ **PROVED** in gaussian-field
+- ~~OS2 lattice translation uses `evalTorusAtSite_latticeTranslation` (sorry)~~ **PROVED** in gaussian-field
+- Limit existence uses `configuration_tight_of_uniform_second_moments` (theorem in gaussian-field)
 
 See `docs/torus-interacting-os-proof.md` for the proof overview.
 

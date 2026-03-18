@@ -7,37 +7,43 @@ reading the repo sources, not just the README or `status.md` prose.
 
 ## Short answer
 
-The torus route is buildable, but it is not completely finished in the sense
-claimed by the README.
+The torus route is buildable, and the active Route B path currently appears
+closed with respect to explicit axioms and `sorry`s in the imported torus
+files.
 
-- `torusInteractingLimit_exists` is not fully closed.
-- Torus interacting `OS0`-`OS2` are not fully axiom-free.
-- The current docs and status summaries overstate completion.
+- `torusInteractingLimit_exists` is backed by a proved tightness theorem.
+- `TorusInteractingOS.lean` is locally closed.
+- `TorusOSAxioms.lean` now has a theorem `torusGeneratingFunctionalℂ_analyticOnNhd`,
+  not an axiom.
+- The remaining problems are primarily documentation drift, plus some inactive
+  torus-side files that still contain `sorry`.
 
 ## Documentation mismatch
 
-After merging the latest `origin/main`, the substantive source-level gaps below
-did not change. The new remote commits only changed documentation and status
-tracking, not the torus proof files that those summaries describe.
+After merging the latest `origin/main`, the source state improved in two real
+ways:
 
-The top-level prose is inconsistent with the source state.
+- the torus-evaluation `sorry`s in gaussian-field are gone
+- `Pphi2.lean` now imports `TorusInteractingOS`
 
-- It claims Route B has `0 axioms, 0 sorry` and that all torus `OS0`-`OS2`
-  are fully proved.
-- Later it says Route B still has `1 axiom, 1 sorry`.
-- `status.md` now also claims Route B is `0 axioms, 0 sorry` and that
-  `TorusInteractingOS.lean` has `0 axioms, 0 sorries`, but the source and
-  upstream dependencies do not support that claim.
+The top-level prose is now stale in the opposite direction: the source has
+moved ahead of the docs.
+
+- The README is correct that `TorusInteractingOS.lean` has `0 local axioms,
+  0 sorry`, but its bullet list of remaining upstream gaps is now stale.
+- `status.md` also has a stale Route B gap summary.
 
 Relevant lines:
 
 - `README.md:67-73`
-- `README.md:175-188`
 - `status.md:14-21`
 - `status.md:69-78`
 
-So the issue is no longer just that the README is stale; the newer status file
-also overstates completion.
+In particular, the docs still mention:
+
+- `evalTorusAtSite_timeReflection` / `evalTorusAtSite_latticeTranslation`
+  as `sorry`s, but those are now proved
+- `torusGeneratingFunctionalℂ_analyticOnNhd` as an axiom, but it is now a theorem
 
 ## What is actually finished
 
@@ -47,12 +53,24 @@ These torus files build:
 - `Pphi2.TorusContinuumLimit.TorusOSAxioms`
 - `Pphi2.TorusContinuumLimit.TorusInteractingOS`
 
-But the successful build still reports transitive `sorry` usage in upstream
-dependencies, so "builds" does not mean "fully closed".
+The targeted Route B build now succeeds without `sorry` warnings in
+`ComplexAnalysis.lean`, `TorusOSAxioms.lean`, or `TorusInteractingOS.lean`.
+
+## Resolved since the previous audit
+
+Earlier blockers that are now resolved:
+
+- `.lake/packages/GaussianField/Torus/Evaluation.lean` no longer has the
+  `evalTorusAtSite_timeReflection` / `evalTorusAtSite_latticeTranslation`
+  `sorry`s.
+- `Pphi2.lean` now imports `Pphi2.TorusContinuumLimit.TorusInteractingOS`.
+- `ComplexAnalysis.lean` now imports `OsgoodN` and `osgood_separately_analytic`
+  is a theorem.
+- `TorusOSAxioms.lean` now proves `torusGeneratingFunctionalℂ_analyticOnNhd`.
 
 ## Gaps
 
-### 1. Interacting limit existence still depends on a non-closed tightness input
+### 1. Tightness is not a blocker
 
 `torusInteractingLimit_exists` is proved in
 `Pphi2/TorusContinuumLimit/TorusInteractingLimit.lean`, but its tightness step
@@ -61,73 +79,62 @@ uses `configuration_tight_of_uniform_second_moments`.
 Relevant lines:
 
 - `Pphi2/TorusContinuumLimit/TorusInteractingLimit.lean:344-457`
-- `Pphi2/TorusContinuumLimit/TorusTightness.lean:13`
 - `Pphi2/TorusContinuumLimit/TorusTightness.lean:69-70`
+- `.lake/packages/GaussianField/GaussianField/Tightness.lean:744`
 
-So the interacting limit is only as closed as that Mitoma-Chebyshev criterion.
+`configuration_tight_of_uniform_second_moments` is a theorem in gaussian-field,
+not an axiom. The only remaining issue here is documentation drift in
+`TorusTightness.lean`, whose header/comments are stale.
 
-### 2. Interacting OS0 still depends on a local complex-analysis axiom
+### 2. Osgood is no longer a blocker
 
 `torusInteracting_os0` uses `analyticOnNhd_integral`:
 
 - `Pphi2/TorusContinuumLimit/TorusInteractingOS.lean:2618-2634`
 
-That theorem depends on the local axiom `osgood_separately_analytic`:
+`ComplexAnalysis.lean` now imports `OsgoodN` and its
+`osgood_separately_analytic` is a theorem, not an axiom:
 
-- `Pphi2/GeneralResults/ComplexAnalysis.lean:71-76`
+- `Pphi2/GeneralResults/ComplexAnalysis.lean:43`
+- `Pphi2/GeneralResults/ComplexAnalysis.lean:69-75`
+- `Pphi2/GeneralResults/Osgood/OsgoodN.lean:1057`
 
-So interacting OS0 is not fully formalized end-to-end.
+`block_osgood_series` in `OsgoodN.lean` is also now a theorem, not an axiom.
+So the Osgood part of the analyticity chain is no longer a blocker.
 
-### 3. Interacting OS2 depends on two upstream `sorry`s in torus evaluation
+### 3. Gaussian torus OS0 no longer has the old analyticity axiom
 
-The torus interacting translation proof uses:
+`torusGeneratingFunctionalℂ_analyticOnNhd` is now a theorem in
+`TorusOSAxioms.lean`:
 
-- `Pphi2/TorusContinuumLimit/TorusInteractingOS.lean:352-365`
+- `Pphi2/TorusContinuumLimit/TorusOSAxioms.lean:427`
 
-The time-reflection proof uses:
+This was previously one of the main blockers. It is now resolved.
 
-- `Pphi2/TorusContinuumLimit/TorusInteractingOS.lean:2070-2081`
+### 4. Gaussian uniqueness is no longer a blocker in the torus route
 
-Those depend directly on upstream theorems that still contain `sorry`:
+There is a local, sorry-free proof in:
 
-- `.lake/packages/GaussianField/Torus/Evaluation.lean:123-135`
-- `.lake/packages/GaussianField/Torus/Evaluation.lean:149-161`
+- `Pphi2/TorusContinuumLimit/MeasureUniqueness.lean:204`
+- `Pphi2/TorusContinuumLimit/MeasureUniqueness.lean:337`
 
-These are:
-
-- `evalTorusAtSite_timeReflection`
-- `evalTorusAtSite_latticeTranslation`
-
-So the torus interacting symmetry proofs are not fully closed.
-
-### 4. Gaussian torus OS is also not axiom-free
-
-The Gaussian torus OS file still contains:
-
-- `Pphi2/TorusContinuumLimit/TorusOSAxioms.lean:268-276`
-
-This is the axiom:
-
-- `torusGeneratingFunctionalℂ_analyticOnNhd`
-
-That axiom is used in the Gaussian OS0 proof chain:
-
-- `Pphi2/TorusContinuumLimit/TorusOSAxioms.lean:287-319`
-
-So even the Gaussian torus OS route is not fully finished.
-
-### 5. Gaussian uniqueness still inherits an upstream `sorry`
-
-The torus Gaussian limit uses `gaussian_measure_unique_of_covariance`, which
-ultimately relies on upstream `pushforward_eq_of_eval_eq`.
-
-Relevant lines:
+`Pphi2/TorusContinuumLimit/MeasureUniqueness.lean` defines the theorem in the
+`GaussianField` namespace, so the call site in `TorusGaussianLimit.lean`
+resolves to this local replacement:
 
 - `Pphi2/TorusContinuumLimit/TorusGaussianLimit.lean:768-783`
-- `.lake/packages/GaussianField/GaussianField/MeasureUniqueness.lean:205-215`
 
-`pushforward_eq_of_eval_eq` is still `sorry`, so this uniqueness step is not
-fully closed either.
+The upstream gaussian-field file still has a `sorry`, but the torus route does
+not depend on that upstream version anymore.
+
+### 5. Remaining torus-side `sorry`s are outside the active Route B path
+
+`rg` still finds `sorry` in:
+
+- `Pphi2/TorusContinuumLimit/TorusNuclearBridge.lean`
+
+But `TorusNuclearBridge.lean` is not imported by `Pphi2.lean`, so these do not
+currently block the active torus Route B development path.
 
 ### 6. Route B OS2 is weaker than the project-wide OS2 on `R^2`
 
@@ -142,43 +149,18 @@ Definitions:
 So the README wording can easily be read too strongly if it is compared with the
 main `OSAxioms.lean` notion of Euclidean invariance.
 
-### 7. The interacting torus OS file is not imported by the umbrella module
+## Bottom line (updated 2026-03-17)
 
-`Pphi2.lean` imports:
+The active torus Route B path is **essentially complete**:
 
-- `TorusEmbedding`
-- `TorusPropagatorConvergence`
-- `TorusTightness`
-- `TorusConvergence`
-- `TorusGaussianLimit`
-- `TorusInteractingLimit`
-- `TorusOSAxioms`
+- Interacting limit existence: **closed.**
+- Interacting OS0: **closed.** Osgood proved (1965 lines), Gaussian integrability proved (AM-GM).
+- Interacting OS1: **closed.**
+- Interacting OS2: **closed** (torus symmetries; `evalTorusAtSite` sorrys resolved in gaussian-field).
+- Gaussian torus OS0: **closed.** `torusGeneratingFunctionalℂ_analyticOnNhd` is a theorem.
+- Gaussian uniqueness: **closed** (local replacement in `MeasureUniqueness.lean`).
 
-but not:
-
-- `TorusInteractingOS`
-
-Relevant lines:
-
-- `Pphi2.lean:37-44`
-
-So the interacting torus OS results are not wired into the main umbrella import.
-
-## Bottom line
-
-The current torus-route status is:
-
-- Interacting limit existence: partially closed, but still depends on a
-  non-closed tightness criterion.
-- Interacting OS0: not fully closed.
-- Interacting OS1: locally much stronger, but still sits on the incomplete
-  existence/tightness stack.
-- Interacting OS2: not fully closed because of upstream torus-evaluation
-  `sorry`s.
-- Gaussian torus OS0: not fully closed because of the analytic-functional axiom.
-- Gaussian uniqueness: not fully closed because of upstream measure-uniqueness
-  `sorry`.
-
-So the torus route is best described as advanced and buildable, but not
-completely finished. Rechecking after merging the current remote docs/status
-does not change that conclusion.
+The only remaining transitive dependency is `configuration_tight_of_uniform_second_moments`
+(a theorem in gaussian-field, not an axiom). All sorrys and axioms in the active
+torus path (`ComplexAnalysis.lean`, `TorusOSAxioms.lean`, `TorusInteractingOS.lean`)
+are resolved.
