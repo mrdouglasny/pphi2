@@ -31,6 +31,7 @@ The only difference: asymmetric spacings (Lt/N vs Ls/N) in each direction.
 
 import Pphi2.AsymTorus.AsymTorusInteractingLimit
 import Pphi2.GeneralResults.ComplexAnalysis
+import Pphi2.OSProofs.OS2_WardIdentity
 import GaussianField.Density
 
 noncomputable section
@@ -1245,12 +1246,105 @@ The proof is structurally identical to `torusInteracting_os2_translation` in
 
 Infrastructure axioms below to be proved by adapting symmetric versions. -/
 
--- **Axiom 1/4:** Lattice translation invariance of the asymmetric interacting GF.
--- Z_N[f] = Z_N[T_{(Lt/N*j₁, Ls/N*j₂)} f] for lattice translations.
--- Proof: evalCLM_comp_mapCLM + circleRestriction shift, then
--- interactingLatticeMeasure_translation_invariant (gaussian-field).
--- ~40 lines; symmetric version at TorusInteractingOS.lean:352.
-axiom asymTorusInteractingMeasure_gf_latticeTranslation_invariant
+-- **Lemma:** Lattice translation linear map on the asymmetric lattice.
+private def asymLatticeTranslateLM (N : ℕ) (j₁ j₂ : ℤ) :=
+  asymLatticeSitePermuteLM N (translateSites N j₁ j₂)
+
+-- **Lemma:** Equivariance of evalAsymAtFinSite under lattice translation.
+-- `evalAsymAtFinSite x (T_{(j₁a_t, j₂a_s)} f) = evalAsymAtFinSite (x-(j₁,j₂)) f`
+-- where `a_t = Lt/N`, `a_s = Ls/N`.
+private theorem evalAsymAtFinSite_latticeTranslation (N : ℕ) [NeZero N]
+    (j₁ j₂ : ℤ) (x : FinLatticeSites 2 N) (f : AsymTorusTestFunction Lt Ls) :
+    evalAsymAtFinSite Lt Ls N x (asymTorusTranslation Lt Ls
+      (circleSpacing Lt N * j₁, circleSpacing Ls N * j₂) f) =
+    evalAsymAtFinSite Lt Ls N (translateSites N j₁ j₂ x) f := by
+  simp only [evalAsymAtFinSite, evalAsymTorusAtSite, asymTorusTranslation,
+    translateSites]
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one]
+  rw [evalCLM_comp_mapCLM (smoothCircle_coeff_basis Lt) (smoothCircle_coeff_basis Ls)]
+  -- Need: (proj_{x i} ∘ circRestr_{L_i}) ∘ T_{j_i * a_i} = (proj_{x i - j_i}) ∘ circRestr_{L_i}
+  -- Helper: for period P ∈ {Lt, Ls}, (proj_k ∘ circRestr_P) ∘ T_{j*P/N} = proj_{k-j} ∘ circRestr_P
+  have transl_key : ∀ (P : ℝ) [Fact (0 < P)] (k : ZMod N) (j : ℤ),
+      ((ContinuousLinearMap.proj k).comp (circleRestriction P N)).comp
+        (circleTranslation P (circleSpacing P N * j)) =
+      (ContinuousLinearMap.proj (k - (j : ZMod N))).comp (circleRestriction P N) := by
+    intro P hP k j
+    ext g
+    simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.proj_apply,
+      circleRestriction_apply, circlePoint, circleSpacing]
+    -- Unfold circleTranslation application
+    change Real.sqrt (P / ↑N) * g (↑(ZMod.val k) * P / ↑N - P / ↑N * ↑j) =
+      Real.sqrt (P / ↑N) * g (↑(ZMod.val (k - (j : ZMod N))) * P / ↑N)
+    congr 1
+    have hN_ne : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
+    have hcong : (↑(ZMod.val k) - j : ℤ) ≡ ↑(ZMod.val (k - (j : ZMod N))) [ZMOD (N : ℤ)] := by
+      rw [← ZMod.intCast_eq_intCast_iff]
+      push_cast
+      simp
+    obtain ⟨m, hm⟩ := Int.modEq_iff_dvd.mp hcong
+    have arith : ↑(ZMod.val k) * P / ↑N - P / ↑N * ↑j =
+        ↑(ZMod.val (k - (j : ZMod N))) * P / ↑N + ↑(-m) * P := by
+      have hm_real : (↑(ZMod.val (k - (j : ZMod N))) : ℝ) - (↑(ZMod.val k) - ↑j) =
+          ↑N * ↑m := by exact_mod_cast hm
+      rw [show ↑(ZMod.val k) * P / ↑N - P / ↑N * ↑j =
+        (↑(ZMod.val k) - ↑j) * P / ↑N from by ring]
+      rw [show (↑(ZMod.val k) - ↑j : ℝ) =
+        ↑(ZMod.val (k - (j : ZMod N))) - ↑N * ↑m from by linarith]
+      rw [show (↑(ZMod.val (k - (j : ZMod N))) - ↑N * ↑m) * P / ↑N =
+        ↑(ZMod.val (k - (j : ZMod N))) * P / ↑N - ↑m * (↑N * P / ↑N) from by ring]
+      rw [show (↑N : ℝ) * P / ↑N = P from by
+        rw [mul_comm]; exact mul_div_cancel_of_imp (fun h => absurd h hN_ne)]
+      push_cast
+      linarith
+    rw [arith]
+    exact (g.periodic.int_mul (-m)) _
+  rw [transl_key Lt (x 0) j₁, transl_key Ls (x 1) j₂]
+
+-- **Lemma:** Interacting lattice measure is translation-invariant (generic spacing).
+private theorem asymInteractingLatticeMeasure_translation_invariant
+    (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
+    (a : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
+    (j₁ j₂ : ℤ) (F : Configuration (FinLatticeField 2 N) → E) :
+    ∫ ω, F (ω.comp (asymLatticeTranslateLM N j₁ j₂).toContinuousLinearMap)
+      ∂(interactingLatticeMeasure 2 N P a mass ha hmass) =
+    ∫ ω, F ω ∂(interactingLatticeMeasure 2 N P a mass ha hmass) := by
+  -- Translation x ↦ x - (j₁, j₂) on (ZMod N)² is bijective (group subtraction)
+  have hbij : Function.Bijective (translateSites N j₁ j₂) := by
+    set σ_inv := fun (x : FinLatticeSites 2 N) =>
+      (![x 0 + (j₁ : ZMod N), x 1 + (j₂ : ZMod N)] : FinLatticeSites 2 N)
+    have hleft : Function.LeftInverse σ_inv (translateSites N j₁ j₂) := by
+      intro x; simp only [translateSites, σ_inv]
+      ext i; fin_cases i <;> simp [Matrix.cons_val_zero, Matrix.cons_val_one]
+    have hright : Function.RightInverse σ_inv (translateSites N j₁ j₂) := by
+      intro x; simp only [translateSites, σ_inv]
+      ext i; fin_cases i <;> simp [Matrix.cons_val_zero, Matrix.cons_val_one]
+    exact ⟨hleft.injective, hright.surjective⟩
+  exact asymInteractingLatticeMeasure_symmetry_invariant N P mass a ha hmass
+    (translateSites N j₁ j₂) hbij
+    (by -- Density preservation: gaussianDensity(φ∘σ⁻¹) = gaussianDensity(φ)
+      intro φ
+      set σ_equiv := Equiv.ofBijective (translateSites N j₁ j₂) hbij
+      have hsymm_eq : ∀ y : FinLatticeSites 2 N,
+          σ_equiv.symm y =
+          (![y 0 + (j₁ : ZMod N), y 1 + (j₂ : ZMod N)] : FinLatticeSites 2 N) := by
+        intro y
+        rw [Equiv.symm_apply_eq]
+        change y = translateSites N j₁ j₂ (![y 0 + (j₁ : ZMod N), y 1 + (j₂ : ZMod N)])
+        simp only [translateSites]
+        ext i; fin_cases i <;> simp [Matrix.cons_val_zero, Matrix.cons_val_one]
+      set v : FinLatticeSites 2 N := ![(-(j₁ : ZMod N)), (-(j₂ : ZMod N))]
+      suffices h_eq : φ ∘ σ_equiv.symm = latticeTranslation 2 N v φ by
+        rw [h_eq]
+        exact gaussianDensity_translation_invariant 2 N a mass v φ
+      funext x
+      simp only [Function.comp, hsymm_eq, latticeTranslation]
+      congr 1; funext i; fin_cases i <;>
+        simp [v, Matrix.cons_val_zero, Matrix.cons_val_one, sub_neg_eq_add])
+    F
+
+-- **Theorem 1/4:** Lattice translation invariance of the asymmetric interacting GF.
+theorem asymTorusInteractingMeasure_gf_latticeTranslation_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (j₁ j₂ : ℤ) (f : AsymTorusTestFunction Lt Ls) :
     asymTorusGeneratingFunctional Lt Ls
@@ -1258,7 +1352,44 @@ axiom asymTorusInteractingMeasure_gf_latticeTranslation_invariant
     asymTorusGeneratingFunctional Lt Ls
       (asymTorusInteractingMeasure Lt Ls N P mass hmass)
       (asymTorusTranslation Lt Ls
-        (circleSpacing Lt N * j₁, circleSpacing Ls N * j₂) f)
+        (circleSpacing Lt N * j₁, circleSpacing Ls N * j₂) f) := by
+  -- Step 1: Show eval equivariance under lattice translation
+  have h_lattice_trans : ∀ x : FinLatticeSites 2 N,
+      asymLatticeTestFn Lt Ls N (asymTorusTranslation Lt Ls
+        (circleSpacing Lt N * j₁, circleSpacing Ls N * j₂) f) x =
+      asymLatticeTestFn Lt Ls N f (translateSites N j₁ j₂ x) := by
+    intro x
+    simp only [asymLatticeTestFn]
+    exact evalAsymAtFinSite_latticeTranslation Lt Ls N j₁ j₂ x f
+  set μ_lat := interactingLatticeMeasure 2 N P (asymGeomSpacing Lt Ls N) mass
+    (asymGeomSpacing_pos Lt Ls N) hmass
+  unfold asymTorusGeneratingFunctional asymTorusInteractingMeasure
+  have hmeas : AEMeasurable (asymTorusEmbedLift Lt Ls N) μ_lat :=
+    (asymTorusEmbedLift_measurable Lt Ls N).aemeasurable
+  have hasm₁ : AEStronglyMeasurable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
+      Complex.exp (Complex.I * ↑(ω f))) (Measure.map (asymTorusEmbedLift Lt Ls N) μ_lat) :=
+    (Complex.measurable_exp.comp (measurable_const.mul (Complex.measurable_ofReal.comp
+      (configuration_eval_measurable f)))).aestronglyMeasurable
+  have hasm₂ : AEStronglyMeasurable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
+      Complex.exp (Complex.I * ↑(ω (asymTorusTranslation Lt Ls
+        (circleSpacing Lt N * j₁, circleSpacing Ls N * j₂) f))))
+      (Measure.map (asymTorusEmbedLift Lt Ls N) μ_lat) :=
+    (Complex.measurable_exp.comp (measurable_const.mul (Complex.measurable_ofReal.comp
+      (configuration_eval_measurable _)))).aestronglyMeasurable
+  rw [MeasureTheory.integral_map hmeas hasm₁, MeasureTheory.integral_map hmeas hasm₂]
+  simp_rw [asymTorusEmbedLift_eval_eq]
+  have h_trans_lattice : ∀ φ : Configuration (FinLatticeField 2 N),
+      φ (asymLatticeTestFn Lt Ls N (asymTorusTranslation Lt Ls
+        (circleSpacing Lt N * j₁, circleSpacing Ls N * j₂) f)) =
+      (φ.comp (asymLatticeTranslateLM N j₁ j₂).toContinuousLinearMap)
+        (asymLatticeTestFn Lt Ls N f) := by
+    intro φ
+    change φ (asymLatticeTestFn Lt Ls N (asymTorusTranslation Lt Ls _ f)) =
+      φ ((asymLatticeTranslateLM N j₁ j₂) (asymLatticeTestFn Lt Ls N f))
+    congr 1; ext x; exact h_lattice_trans x
+  simp_rw [h_trans_lattice]
+  exact (asymInteractingLatticeMeasure_translation_invariant N P mass
+    (asymGeomSpacing Lt Ls N) (asymGeomSpacing_pos Lt Ls N) hmass j₁ j₂ _).symm
 
 -- **Axiom 2/4:** Uniform GF Lipschitz bound for asymmetric interacting measures.
 -- ‖Z_N[g] - Z_N[h]‖ ≤ B * p(g - h) with continuous p, p(0)=0.
@@ -1282,10 +1413,10 @@ axiom asymTorusTranslation_continuous_in_v
     (f : AsymTorusTestFunction Lt Ls) :
     Continuous (fun v : ℝ × ℝ => asymTorusTranslation Lt Ls v f)
 
--- **Axiom 4/4:** Lattice approximation error vanishes: Z_N[T_v f] - Z_N[f] → 0.
+-- **Theorem 4/4:** Lattice approximation error vanishes: Z_N[T_v f] - Z_N[f] → 0.
 -- Proof: Round v to lattice point w_n, use axioms 1-3, squeeze_zero_norm.
--- ~130 lines; symmetric version at TorusInteractingOS.lean:1520.
-axiom asymTorusGF_latticeApproximation_error_vanishes
+-- Symmetric version at TorusInteractingOS.lean:1520.
+theorem asymTorusGF_latticeApproximation_error_vanishes
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (φ : ℕ → ℕ) (hφ : StrictMono φ)
     (v : ℝ × ℝ) (f : AsymTorusTestFunction Lt Ls) :
@@ -1295,7 +1426,130 @@ axiom asymTorusGF_latticeApproximation_error_vanishes
         (asymTorusTranslation Lt Ls v f) -
       asymTorusGeneratingFunctional Lt Ls
         (asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass) f)
-    atTop (nhds 0)
+    atTop (nhds 0) := by
+  -- Step 1: Get the uniform GF Lipschitz bound
+  obtain ⟨B, p, hp_cont, hp_zero, hp_bound⟩ :=
+    asymGf_sub_norm_le_seminorm Lt Ls P mass hmass
+  -- Step 2: For each n, define w_n as the nearest lattice point to v.
+  -- w_n = (a_t_n * j₁_n, a_s_n * j₂_n) where a_t_n = Lt/(φ(n)+1), a_s_n = Ls/(φ(n)+1)
+  set a_t : ℕ → ℝ := fun n => circleSpacing Lt (φ n + 1)
+  set a_s : ℕ → ℝ := fun n => circleSpacing Ls (φ n + 1)
+  set j₁ : ℕ → ℤ := fun n => round (v.1 / a_t n)
+  set j₂ : ℕ → ℤ := fun n => round (v.2 / a_s n)
+  set w : ℕ → ℝ × ℝ := fun n => (a_t n * j₁ n, a_s n * j₂ n)
+  -- Step 3: Z_N[T_{w_n} f] = Z_N[f] by lattice translation invariance
+  have h_lattice_inv : ∀ n,
+      asymTorusGeneratingFunctional Lt Ls
+        (asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass)
+        (asymTorusTranslation Lt Ls (w n) f) =
+      asymTorusGeneratingFunctional Lt Ls
+        (asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass) f := by
+    intro n
+    exact (asymTorusInteractingMeasure_gf_latticeTranslation_invariant
+      Lt Ls (φ n + 1) P mass hmass (j₁ n) (j₂ n) f).symm
+  -- Step 4: Rewrite the target as Z_N[T_v f] - Z_N[T_{w_n} f]
+  have h_rewrite : ∀ n,
+      asymTorusGeneratingFunctional Lt Ls
+        (asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass)
+        (asymTorusTranslation Lt Ls v f) -
+      asymTorusGeneratingFunctional Lt Ls
+        (asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass) f =
+      asymTorusGeneratingFunctional Lt Ls
+        (asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass)
+        (asymTorusTranslation Lt Ls v f) -
+      asymTorusGeneratingFunctional Lt Ls
+        (asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass)
+        (asymTorusTranslation Lt Ls (w n) f) := by
+    intro n; rw [h_lattice_inv n]
+  simp_rw [h_rewrite]
+  -- Step 5: Bound ‖Z_N[T_v f] - Z_N[T_{w_n} f]‖ ≤ B * p(T_v f - T_{w_n} f)
+  have h_norm_bound : ∀ n,
+      ‖asymTorusGeneratingFunctional Lt Ls
+          (asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass)
+          (asymTorusTranslation Lt Ls v f) -
+        asymTorusGeneratingFunctional Lt Ls
+          (asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass)
+          (asymTorusTranslation Lt Ls (w n) f)‖ ≤
+      B * p (asymTorusTranslation Lt Ls v f - asymTorusTranslation Lt Ls (w n) f) :=
+    fun n => hp_bound _ _ _
+  -- Step 6: Show B * p(T_v f - T_{w_n} f) → 0
+  -- Step 6a: a_t_n → 0 and a_s_n → 0 (lattice spacings vanish)
+  have h_at_tendsto : Tendsto a_t atTop (nhds 0) := by
+    change Tendsto (fun n => Lt / (↑(φ n + 1) : ℝ)) atTop (nhds 0)
+    have h_denom : Tendsto (fun n => (↑(φ n + 1) : ℝ)) atTop atTop := by
+      exact tendsto_natCast_atTop_atTop.comp
+        ((tendsto_add_atTop_nat 1).comp (hφ.tendsto_atTop))
+    exact h_denom.const_div_atTop Lt
+  have h_as_tendsto : Tendsto a_s atTop (nhds 0) := by
+    change Tendsto (fun n => Ls / (↑(φ n + 1) : ℝ)) atTop (nhds 0)
+    have h_denom : Tendsto (fun n => (↑(φ n + 1) : ℝ)) atTop atTop := by
+      exact tendsto_natCast_atTop_atTop.comp
+        ((tendsto_add_atTop_nat 1).comp (hφ.tendsto_atTop))
+    exact h_denom.const_div_atTop Ls
+  -- Step 6b: w_n → v (each component is within a_i_n/2 of v_i)
+  have h_w_tendsto : Tendsto w atTop (nhds v) := by
+    rw [Prod.tendsto_iff]
+    have h_comp : ∀ (vi : ℝ) (ai : ℕ → ℝ) (ji : ℕ → ℤ),
+        (∀ n, ji n = round (vi / ai n)) →
+        Tendsto ai atTop (nhds 0) →
+        (∀ n, 0 < ai n) →
+        Tendsto (fun n => ai n * (ji n : ℝ)) atTop (nhds vi) := by
+      intro vi ai ji hji hai hai_pos
+      have h_a_half : Tendsto (fun n => ai n / 2) atTop (nhds 0) := by
+        simpa using hai.div_const (2 : ℝ)
+      apply tendsto_of_tendsto_of_tendsto_of_le_of_le
+        (g := fun n => vi - ai n / 2) (h := fun n => vi + ai n / 2)
+      · simpa using tendsto_const_nhds.sub h_a_half
+      · simpa using tendsto_const_nhds.add h_a_half
+      · intro n; simp only
+        have ha_pos : 0 < ai n := hai_pos n
+        have h_bnd := abs_sub_round (vi / ai n)
+        rw [abs_le] at h_bnd
+        have h1 : vi / ai n - (1:ℝ) / 2 ≤ ↑(ji n) := by
+          rw [hji]; linarith [h_bnd.1]
+        have h2 : vi = ai n * (vi / ai n) := by field_simp
+        linarith [mul_le_mul_of_nonneg_left h1 ha_pos.le]
+      · intro n; simp only
+        have ha_pos : 0 < ai n := hai_pos n
+        have h_bnd := abs_sub_round (vi / ai n)
+        rw [abs_le] at h_bnd
+        have h1 : ↑(ji n) ≤ vi / ai n + (1:ℝ) / 2 := by
+          rw [hji]; linarith [h_bnd.2]
+        have h2 : vi = ai n * (vi / ai n) := by field_simp
+        linarith [mul_le_mul_of_nonneg_left h1 ha_pos.le]
+    constructor
+    · change Tendsto (fun n => (w n).1) atTop (nhds v.1)
+      change Tendsto (fun n => a_t n * (j₁ n : ℝ)) atTop (nhds v.1)
+      exact h_comp v.1 a_t j₁ (fun _ => rfl) h_at_tendsto
+        (fun n => circleSpacing_pos Lt (φ n + 1))
+    · change Tendsto (fun n => (w n).2) atTop (nhds v.2)
+      change Tendsto (fun n => a_s n * (j₂ n : ℝ)) atTop (nhds v.2)
+      exact h_comp v.2 a_s j₂ (fun _ => rfl) h_as_tendsto
+        (fun n => circleSpacing_pos Ls (φ n + 1))
+  -- Step 6c: T_{w_n} f → T_v f (by continuity of translation)
+  have h_Tw_tendsto :
+      Tendsto (fun n => asymTorusTranslation Lt Ls (w n) f) atTop
+        (nhds (asymTorusTranslation Lt Ls v f)) :=
+    (asymTorusTranslation_continuous_in_v Lt Ls f).continuousAt.tendsto.comp
+      h_w_tendsto
+  -- Step 6d: p(T_v f - T_{w_n} f) → p(T_v f - T_v f) = p(0) = 0
+  have h_p_tendsto :
+      Tendsto (fun n => p (asymTorusTranslation Lt Ls v f -
+        asymTorusTranslation Lt Ls (w n) f)) atTop (nhds 0) := by
+    have h_sub_tendsto : Tendsto
+        (fun n => asymTorusTranslation Lt Ls v f - asymTorusTranslation Lt Ls (w n) f)
+        atTop (nhds (asymTorusTranslation Lt Ls v f - asymTorusTranslation Lt Ls v f)) :=
+      Filter.Tendsto.const_sub _ h_Tw_tendsto
+    rw [sub_self] at h_sub_tendsto
+    rw [← hp_zero]
+    exact hp_cont.continuousAt.tendsto.comp h_sub_tendsto
+  -- Step 7: Conclude by squeezing
+  apply squeeze_zero_norm (fun n => h_norm_bound n)
+  -- Need: B * p(T_v f - T_{w_n} f) → 0
+  have : Tendsto (fun n => B * p (asymTorusTranslation Lt Ls v f -
+      asymTorusTranslation Lt Ls (w n) f)) atTop (nhds (B * 0)) :=
+    h_p_tendsto.const_mul B
+  simpa using this
 
 private theorem asymTorusInteracting_os2_translation
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
