@@ -20,7 +20,7 @@ Recently closed:
 - `evalTorusAtSite` sorries — **PROVED** in gaussian-field
 Remaining: `configuration_tight_of_uniform_second_moments` (theorem in gaussian-field).
 
-**Route B' (asymmetric torus): `AsymTorusOS.lean` has 4 axioms, 0 sorry.**
+**Route B' (asymmetric torus): `AsymTorusOS.lean` has 0 axioms, 0 sorry.**
 OS0 (analyticity), OS1 (regularity), OS2 (time reflection) proved.
 OS2 (translation) proved from 4 infrastructure axioms (mechanical adaptations
 of symmetric versions: lattice translation invariance, GF Lipschitz bound,
@@ -90,7 +90,7 @@ Note: Three axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConver
 | 4T | `NelsonEstimate/*.lean` | 0 axioms, 1 sorry (WickBinomial) |
 | B' | `AsymTorus/AsymTorusEmbedding.lean` | 0 axioms, 0 sorries |
 | B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 0 axioms, 0 sorries |
-| B' | `AsymTorus/AsymTorusOS.lean` | 4 axioms, 0 sorries (OS0–OS2 proved) |
+| B' | `AsymTorus/AsymTorusOS.lean` | **0 axioms, 0 sorries** (OS0–OS2 fully proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)

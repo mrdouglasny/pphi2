@@ -11,8 +11,7 @@ to obtain the cylinder S¹_{Ls} × ℝ and proving OS3 (reflection positivity).
 **Implemented (AsymTorus/):**
 - `AsymTorusEmbedding.lean` — embedding, interacting measure (0 axioms, 0 sorry)
 - `AsymTorusInteractingLimit.lean` — continuum limit existence (0 axioms, 0 sorry)
-- `AsymTorusOS.lean` — OS0, OS1, OS2 (time reflection proved; translation
-  proved from 4 infrastructure axioms)
+- `AsymTorusOS.lean` — OS0, OS1, OS2 fully proved (**0 axioms, 0 sorry**)
 
 **Not yet implemented:**
 - Step 2: IR limit (Lt → ∞) to the cylinder

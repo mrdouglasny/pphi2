@@ -109,7 +109,8 @@ The cylinder S¹_W × ℝ has a natural time axis ℝ, enabling:
 
 **Advantages over Route C:** Reuses all Route B infrastructure (0 axioms for
 OS0–OS2). Only needs new work for OS3 (RP) and the L → ∞ limit.
-**Status:** Planned. Infrastructure from Route B directly applicable.
+**Status:** UV limit (Step 1) complete — `AsymTorusOS.lean` has **0 axioms,
+0 sorry** for OS0–OS2. Cylinder IR limit (Step 2) planned.
 
 ### Route C: S¹_L × ℝ (cylinder, direct) — OS0–OS3
 Direct Nelson/Simon construction with natural time axis ℝ for OS reconstruction.

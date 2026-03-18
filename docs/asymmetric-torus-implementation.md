@@ -9,7 +9,7 @@ implemented in `Pphi2/AsymTorus/`:
 |------|--------|
 | `AsymTorusEmbedding.lean` | 0 axioms, 0 sorry |
 | `AsymTorusInteractingLimit.lean` | 0 axioms, 0 sorry |
-| `AsymTorusOS.lean` | 4 axioms, 0 sorry (OS0–OS2 proved) |
+| `AsymTorusOS.lean` | **0 axioms, 0 sorry** (OS0–OS2 fully proved) |
 
 ## Implementation Model
 
@@ -51,19 +51,16 @@ the asymmetric type. Route B proofs adapted with type changes:
 2. `AsymTorusInteractingLimit.lean` — `asymTorusInteractingLimit_exists`
    (weak limit via Prokhorov, same pipeline as symmetric)
 3. `AsymTorusOS.lean` — OS0 (analyticity via Osgood + dominated convergence),
-   OS1 (regularity from moment bounds), OS2 (time reflection proved,
-   translation from 4 infrastructure axioms)
+   OS1 (regularity from moment bounds), OS2 (time reflection + translation
+   fully proved). **0 axioms, 0 sorrys.**
 
-## Remaining axioms in AsymTorusOS.lean (4)
+## Previously axiomatized infrastructure (now proved)
 
-These are mechanical adaptations of symmetric-torus versions:
-1. Lattice translation invariance for asymmetric lattice
-2. Green's function Lipschitz bound for asymmetric torus
-3. Translation continuity for asymmetric evaluation
-4. Lattice approximation error vanishing for asymmetric case
-
-All four follow the same proofs as their symmetric counterparts
-with Lt, Ls replacing L.
+All four infrastructure axioms have been proved (2026-03-18):
+1. ~~Lattice translation invariance~~ — proved via evalAsymAtFinSite equivariance
+2. ~~GF Lipschitz bound~~ — proved via Cauchy-Schwarz + hypercontractivity + tight norm bound
+3. ~~Translation continuity~~ — proved via DM expansion + Sobolev isometry + 3-epsilon
+4. ~~Lattice approx error vanishes~~ — proved via squeeze using 1-3
 
 ## Remaining work (Step 2: IR limit)
 
