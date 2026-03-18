@@ -135,16 +135,16 @@ All axioms in this file now require `IsPphi2Limit μ P mass` (fixed 2026-02-25:
 | 38 | `os2_from_phi4` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Fixed: requires `IsPhi4ContinuumLimit`. |
 | 39 | ~~`os3_from_pphi2`~~ | Bridge | ✅ **PROVED** | SA 2026-02-27 | Replaced axiom with theorem: `exact os3_for_continuum_limit ... (IsPphi2ContinuumLimit.toIsPphi2Limit h)`. |
 
-### Route B': Asymmetric Torus (4 axioms)
+### Route B': Asymmetric Torus (0 axioms — all proved 2026-03-18)
 
-All are mechanical adaptations of proved symmetric versions in `TorusInteractingOS.lean`.
+All four infrastructure axioms have been replaced with theorems.
 
-| # | Name | File | Rating | Verified | Notes |
-|---|------|------|--------|----------|-------|
-| B'1 | `asymTorusInteractingMeasure_gf_latticeTranslation_invariant` | AsymTorusOS | ✅ Standard | SA 2026-03-18 | Symmetric version proved at TorusInteractingOS:352. Needs `evalAsymAtFinSite_latticeTranslation`. |
-| B'2 | `asymGf_sub_norm_le_seminorm` | AsymTorusOS | ✅ Standard | SA 2026-03-18 | Cauchy-Schwarz + Lipschitz of exp. Symmetric version proved at TorusInteractingOS:1328. |
-| B'3 | `asymTorusTranslation_continuous_in_v` | AsymTorusOS | ✅ Standard | SA 2026-03-18 | Sobolev isometry + 3-epsilon. Symmetric version proved at TorusInteractingOS:871. |
-| B'4 | `asymTorusGF_latticeApproximation_error_vanishes` | AsymTorusOS | ✅ Standard | SA 2026-03-18 | Lattice rounding + squeeze. Symmetric version proved at TorusInteractingOS:1520. |
+| # | Name | File | Status | Notes |
+|---|------|------|--------|-------|
+| ~~B'1~~ | `asymTorusInteractingMeasure_gf_latticeTranslation_invariant` | AsymTorusOS | **PROVED** | Via evalAsymAtFinSite equivariance + lattice measure translation invariance. |
+| ~~B'2~~ | `asymGf_sub_norm_le_seminorm` | AsymTorusOS | **PROVED** | Cauchy-Schwarz + hypercontractivity + tight lattice norm bound. |
+| ~~B'3~~ | `asymTorusTranslation_continuous_in_v` | AsymTorusOS | **PROVED** | DM expansion + Sobolev isometry + 3-epsilon argument. |
+| ~~B'4~~ | `asymTorusGF_latticeApproximation_error_vanishes` | AsymTorusOS | **PROVED** | Lattice rounding + squeeze using B'1–B'3. |
 
 ### Verification Summary (pphi2)
 

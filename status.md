@@ -21,10 +21,10 @@ Recently closed:
 Remaining: `configuration_tight_of_uniform_second_moments` (theorem in gaussian-field).
 
 **Route B' (asymmetric torus): `AsymTorusOS.lean` has 0 axioms, 0 sorry.**
-OS0 (analyticity), OS1 (regularity), OS2 (time reflection) proved.
-OS2 (translation) proved from 4 infrastructure axioms (mechanical adaptations
-of symmetric versions: lattice translation invariance, GF Lipschitz bound,
-translation continuity, lattice approximation error vanishing).
+OS0 (analyticity), OS1 (regularity), OS2 (time reflection + translation) all proved.
+Four infrastructure lemmas (lattice translation invariance, GF Lipschitz bound,
+translation continuity, lattice approximation error vanishing) were formerly
+axiomatized and are now fully proved theorems (2026-03-18).
 Extends Route B to T_{Lt,Ls} with different circle sizes per direction.
 
 **Other routes: ~50 axioms** (Routes A, C — not yet updated).
