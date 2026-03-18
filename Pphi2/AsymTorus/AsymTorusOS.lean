@@ -1791,12 +1791,462 @@ theorem asymGf_sub_norm_le_seminorm
         linarith
 
 
--- **Axiom 3/4:** Continuity of v ↦ T_v f in the NTP topology.
+-- **Helper:** Continuity of s ↦ T_s g for a single circle factor.
+-- (The symmetric version is private in TorusInteractingOS.lean.)
+private theorem circleTranslation_continuous_in_s
+    {L : ℝ} [Fact (0 < L)]
+    (g : GaussianField.SmoothMap_Circle L ℝ) :
+    Continuous (fun s : ℝ => GaussianField.circleTranslation L s g) := by
+  rw [continuous_iff_continuousAt]
+  intro s₀
+  rw [ContinuousAt,
+      GaussianField.SmoothMap_Circle.smoothCircle_withSeminorms.tendsto_nhds
+        (fun s => GaussianField.circleTranslation L s g)
+        (GaussianField.circleTranslation L s₀ g)]
+  intro k ε hε
+  set h : ℝ → ℝ := iteratedDeriv k (⇑g) with hh_def
+  have hh_cont : Continuous h := g.continuous_iteratedDeriv k
+  have hh_per : Function.Periodic h L := g.periodic_iteratedDeriv k
+  have hh_uc : UniformContinuous h := by
+    rw [Metric.uniformContinuous_iff]
+    intro ε' hε'
+    have huc_cpt : UniformContinuousOn h (Set.Icc (-L) (2 * L)) :=
+      isCompact_Icc.uniformContinuousOn_of_continuous hh_cont.continuousOn
+    rw [Metric.uniformContinuousOn_iff] at huc_cpt
+    obtain ⟨δ₀, hδ₀_pos, huc_cpt⟩ := huc_cpt ε' hε'
+    have hL_pos := (inferInstance : Fact (0 < L)).out
+    refine ⟨min δ₀ (L / 2), lt_min hδ₀_pos (by linarith), fun {x y} hxy => ?_⟩
+    set x' := toIcoMod hL_pos 0 x
+    set n := toIcoDiv hL_pos (0 : ℝ) x
+    have hx_eq : x = x' + n • L :=
+      (toIcoMod_add_toIcoDiv_zsmul hL_pos 0 x).symm
+    have hx'_mem : x' ∈ Set.Ico (0 : ℝ) L := by
+      have := toIcoMod_mem_Ico hL_pos 0 x; simp at this; exact this
+    set y' := x' + (y - x)
+    have hx_val : h x = h x' := by
+      have : x = x' + n • L := hx_eq
+      rw [this]; exact hh_per.zsmul n x'
+    have hy_val : h y = h y' := by
+      change h y = h (x' + (y - x))
+      have heq : x' + (y - x) = y - n • L := by rw [hx_eq]; ring
+      rw [heq]
+      exact (hh_per.sub_zsmul_eq n).symm
+    have hx'_Icc : x' ∈ Set.Icc (-L) (2 * L) := by
+      exact ⟨by linarith [hx'_mem.1, hL_pos], by linarith [hx'_mem.2, hL_pos]⟩
+    have hy'x' : dist y' x' < L / 2 := by
+      have : dist y' x' = dist y x := by
+        simp only [y', dist_eq_norm]; congr 1; ring
+      rw [this, dist_comm]
+      exact lt_of_lt_of_le hxy (min_le_right _ _)
+    have hy'_Icc : y' ∈ Set.Icc (-L) (2 * L) := by
+      rw [Real.dist_eq] at hy'x'
+      constructor
+      · linarith [hx'_mem.1, abs_le.mp (le_of_lt hy'x')]
+      · linarith [hx'_mem.2, abs_le.mp (le_of_lt hy'x')]
+    have hdist : dist x' y' < δ₀ := by
+      have : dist x' y' = dist x y := by
+        simp only [y', dist_eq_norm]
+        congr 1
+        ring
+      rw [this]
+      exact lt_of_lt_of_le hxy (min_le_left _ _)
+    rw [hx_val, hy_val]
+    exact huc_cpt x' hx'_Icc y' hy'_Icc hdist
+  rw [Metric.uniformContinuous_iff] at hh_uc
+  obtain ⟨δ, hδ_pos, hδ⟩ := hh_uc ε hε
+  rw [Filter.Eventually, Metric.mem_nhds_iff]
+  exact ⟨δ, hδ_pos, fun s hs => by
+    have h_pw : ∀ x, ‖iteratedDeriv k
+        (↑(GaussianField.circleTranslation L s g - GaussianField.circleTranslation L s₀ g)) x‖ < ε := by
+      intro x
+      have h_coe : ∀ y, (↑(GaussianField.circleTranslation L s g -
+          GaussianField.circleTranslation L s₀ g) : ℝ → ℝ) y = g (y - s) - g (y - s₀) := by
+        intro y; rfl
+      have h_deriv : iteratedDeriv k
+          (↑(GaussianField.circleTranslation L s g - GaussianField.circleTranslation L s₀ g)) x =
+          h (x - s) - h (x - s₀) := by
+        have hTs_cd : ContDiffAt ℝ k (fun y => g (y - s)) x :=
+          (g.smooth.comp (contDiff_id.sub contDiff_const)).contDiffAt.of_le
+            (by exact_mod_cast le_top)
+        have hTs₀_cd : ContDiffAt ℝ k (fun y => g (y - s₀)) x :=
+          (g.smooth.comp (contDiff_id.sub contDiff_const)).contDiffAt.of_le
+            (by exact_mod_cast le_top)
+        have h_coe_eq : (↑(GaussianField.circleTranslation L s g -
+            GaussianField.circleTranslation L s₀ g) : ℝ → ℝ) =
+            fun y => g (y - s) - g (y - s₀) := by ext y; rfl
+        rw [h_coe_eq, iteratedDeriv_fun_sub hTs_cd hTs₀_cd]
+        congr 1 <;> exact congr_fun (iteratedDeriv_comp_sub_const k (⇑g) _) x
+      rw [h_deriv, ← dist_eq_norm]
+      apply hδ
+      rw [Real.dist_eq, show x - s - (x - s₀) = s₀ - s from by ring, abs_sub_comm,
+          ← Real.dist_eq]
+      exact Metric.mem_ball.mp hs
+    change GaussianField.SmoothMap_Circle.sobolevSeminorm k
+      (GaussianField.circleTranslation L s g - GaussianField.circleTranslation L s₀ g) < ε
+    set d := GaussianField.circleTranslation L s g - GaussianField.circleTranslation L s₀ g
+    set S := (fun x => ‖iteratedDeriv k (↑d) x‖) '' Set.Icc 0 L
+    have h_ne : S.Nonempty := Set.Nonempty.image _
+      GaussianField.SmoothMap_Circle.Icc_nonempty
+    have h_bdd_above := d.bddAbove_norm_iteratedDeriv_image k
+    obtain ⟨x₀, hx₀_mem, hx₀_max⟩ := IsCompact.exists_isMaxOn
+      (isCompact_Icc : IsCompact (Set.Icc (0 : ℝ) L))
+      GaussianField.SmoothMap_Circle.Icc_nonempty
+      (ContinuousOn.norm (d.continuous_iteratedDeriv k).continuousOn)
+    have h_max_lt : ‖iteratedDeriv k (↑d) x₀‖ < ε := h_pw x₀
+    calc GaussianField.SmoothMap_Circle.sobolevSeminorm k d
+        = sSup S := rfl
+      _ ≤ ‖iteratedDeriv k (↑d) x₀‖ := by
+          apply csSup_le h_ne
+          rintro _ ⟨x, hx, rfl⟩
+          exact hx₀_max hx
+      _ < ε := h_max_lt⟩
+
+-- **Theorem 3/4:** Continuity of v ↦ T_v f in the NTP topology.
 -- Proof: Dynin-Mityagin expansion + Sobolev isometry + 3-epsilon argument.
--- ~440 lines; symmetric version at TorusInteractingOS.lean:871.
-axiom asymTorusTranslation_continuous_in_v
+-- Adapted from the symmetric version at TorusInteractingOS.lean:871.
+set_option maxHeartbeats 12800000 in
+theorem asymTorusTranslation_continuous_in_v
     (f : AsymTorusTestFunction Lt Ls) :
-    Continuous (fun v : ℝ × ℝ => asymTorusTranslation Lt Ls v f)
+    Continuous (fun v : ℝ × ℝ => asymTorusTranslation Lt Ls v f) := by
+  -- Abbreviations: E_t for the time circle, E_s for the space circle
+  set E_t := GaussianField.SmoothMap_Circle Lt ℝ
+  set E_s := GaussianField.SmoothMap_Circle Ls ℝ
+  -- The topology on AsymTorusTestFunction is WithSeminorms rapidDecaySeminorm
+  have h_ws : WithSeminorms (RapidDecaySeq.rapidDecaySeminorm :
+      ℕ → Seminorm ℝ (AsymTorusTestFunction Lt Ls)) := RapidDecaySeq.rapidDecay_withSeminorms
+  -- Step 1: Reduce to ContinuousAt at each v₀
+  rw [continuous_iff_continuousAt]
+  intro v₀
+  -- Step 2: Use WithSeminorms characterization of convergence
+  suffices ∀ (i : ℕ) (ε : ℝ), 0 < ε → ∀ᶠ v in nhds v₀,
+      RapidDecaySeq.rapidDecaySeminorm i
+        (GaussianField.asymTorusTranslation Lt Ls v f -
+         GaussianField.asymTorusTranslation Lt Ls v₀ f) < ε by
+    rw [ContinuousAt]
+    exact (h_ws.tendsto_nhds _ _).mpr this
+  intro k ε hε
+  -- Step 3: Get uniform-in-v bound on mapImage seminorms
+  obtain ⟨C_pure, s₁, s₂, hpure⟩ :=
+    GaussianField.NuclearTensorProduct.pure_seminorm_bound (E₁ := E_t) (E₂ := E_s) k
+  set ψ_t := DyninMityaginSpace.basis (E := E_t)
+  set ψ_s := DyninMityaginSpace.basis (E := E_s)
+  -- Sobolev isometry for translations: (s.sup p)(T_s g) ≤ (s.sup p)(g)
+  have h_trans_iso₁ : ∀ (s : ℝ) (g : E_t),
+      (s₁.sup DyninMityaginSpace.p) (GaussianField.circleTranslation Lt s g) ≤
+      (s₁.sup DyninMityaginSpace.p) g := by
+    intro s g
+    apply Seminorm.finset_sup_apply_le (apply_nonneg _ _)
+    intro i hi
+    calc DyninMityaginSpace.p i (GaussianField.circleTranslation Lt s g)
+        ≤ DyninMityaginSpace.p i g :=
+          GaussianField.sobolevSeminorm_affine_precomp_le 1 (-s) (by norm_num) i
+            g (GaussianField.circleTranslation Lt s g)
+            (fun x => by show g (x - s) = g (1 * x + -s); ring_nf)
+      _ ≤ s₁.sup DyninMityaginSpace.p g :=
+          Seminorm.le_finset_sup_apply hi
+  have h_trans_iso₂ : ∀ (s : ℝ) (g : E_s),
+      (s₂.sup DyninMityaginSpace.p) (GaussianField.circleTranslation Ls s g) ≤
+      (s₂.sup DyninMityaginSpace.p) g := by
+    intro s g
+    apply Seminorm.finset_sup_apply_le (apply_nonneg _ _)
+    intro i hi
+    calc DyninMityaginSpace.p i (GaussianField.circleTranslation Ls s g)
+        ≤ DyninMityaginSpace.p i g :=
+          GaussianField.sobolevSeminorm_affine_precomp_le 1 (-s) (by norm_num) i
+            g (GaussianField.circleTranslation Ls s g)
+            (fun x => by show g (x - s) = g (1 * x + -s); ring_nf)
+      _ ≤ s₂.sup DyninMityaginSpace.p g :=
+          Seminorm.le_finset_sup_apply hi
+  -- Get polynomial growth of basis elements
+  classical
+  obtain ⟨D₁, hD₁, S₁, hbnd₁⟩ := GaussianField.finset_sup_poly_bound
+    DyninMityaginSpace.p s₁ (DyninMityaginSpace.basis (E := E_t))
+    (fun i _ => DyninMityaginSpace.basis_growth i)
+  obtain ⟨D₂, hD₂, S₂, hbnd₂⟩ := GaussianField.finset_sup_poly_bound
+    DyninMityaginSpace.p s₂ (DyninMityaginSpace.basis (E := E_s))
+    (fun i _ => DyninMityaginSpace.basis_growth i)
+  -- Uniform bound: seminorm_k(mapImage(T_v)(m)) ≤ K * (1+m)^S for ALL v
+  set K := (↑C_pure + 1) * D₁ * D₂ with hK_def
+  set S := S₁ + S₂ with hS_def
+  have hK_pos : 0 < K := by positivity
+  have h_uniform_bound : ∀ (v : ℝ × ℝ) (m : ℕ),
+      RapidDecaySeq.rapidDecaySeminorm k (GaussianField.mapImage
+        (GaussianField.circleTranslation Lt v.1)
+        (GaussianField.circleTranslation Ls v.2) m) ≤
+      K * (1 + (m : ℝ)) ^ S := by
+    intro v m
+    set a := (Nat.unpair m).1
+    set b := (Nat.unpair m).2
+    show RapidDecaySeq.rapidDecaySeminorm k
+      (GaussianField.NuclearTensorProduct.pure
+        (GaussianField.circleTranslation Lt v.1 (ψ_t a))
+        (GaussianField.circleTranslation Ls v.2 (ψ_s b))) ≤ _
+    have ha_le : (1 + (a : ℝ)) ≤ (1 + (m : ℝ)) :=
+      add_le_add_right (Nat.cast_le.mpr (Nat.unpair_left_le m)) 1
+    have hb_le : (1 + (b : ℝ)) ≤ (1 + (m : ℝ)) :=
+      add_le_add_right (Nat.cast_le.mpr (Nat.unpair_right_le m)) 1
+    calc RapidDecaySeq.rapidDecaySeminorm k
+          (GaussianField.NuclearTensorProduct.pure
+            (GaussianField.circleTranslation Lt v.1 (ψ_t a))
+            (GaussianField.circleTranslation Ls v.2 (ψ_s b)))
+        ≤ ↑C_pure * (s₁.sup DyninMityaginSpace.p)
+              (GaussianField.circleTranslation Lt v.1 (ψ_t a)) *
+            (s₂.sup DyninMityaginSpace.p)
+              (GaussianField.circleTranslation Ls v.2 (ψ_s b)) :=
+          hpure _ _
+      _ ≤ ↑C_pure * (s₁.sup DyninMityaginSpace.p) (ψ_t a) *
+            (s₂.sup DyninMityaginSpace.p) (ψ_s b) := by
+          gcongr
+          · exact h_trans_iso₁ _ _
+          · exact h_trans_iso₂ _ _
+      _ ≤ ↑C_pure * (D₁ * (1 + (a : ℝ)) ^ S₁) * (D₂ * (1 + (b : ℝ)) ^ S₂) := by
+          gcongr
+          · exact hbnd₁ a
+          · exact hbnd₂ b
+      _ ≤ ↑C_pure * (D₁ * (1 + (m : ℝ)) ^ S₁) * (D₂ * (1 + (m : ℝ)) ^ S₂) := by
+          gcongr <;> exact pow_le_pow_left₀ (by positivity) (by assumption) _
+      _ = ↑C_pure * D₁ * D₂ * (1 + (m : ℝ)) ^ (S₁ + S₂) := by
+          rw [pow_add]; ring
+      _ ≤ ((↑C_pure + 1) * D₁ * D₂) * (1 + (m : ℝ)) ^ (S₁ + S₂) := by
+          gcongr; linarith [NNReal.coe_nonneg C_pure]
+  -- Step 4: The 3-epsilon argument
+  set g : ℕ → ℝ := fun m => |f.val m| * (2 * K) * (1 + (m : ℝ)) ^ S
+  have hg_summable : Summable g := by
+    have := f.rapid_decay S
+    exact (this.mul_left (2 * K)).congr (fun m => by simp [g]; ring)
+  -- Choose N so that Σ_{m≥N} g(m) < ε/2
+  have h_tail_small : ∃ N : ℕ, ∑' m, g (m + N) < ε / 2 := by
+    have h_tendsto : Filter.Tendsto (fun N => ∑' m, g (m + N)) Filter.atTop (nhds 0) :=
+      tendsto_sum_nat_add g
+    have h_ev := (Filter.Tendsto.eventually h_tendsto
+      (Iio_mem_nhds (show (0 : ℝ) < ε / 2 by linarith)))
+    rw [Filter.Eventually, Filter.mem_atTop_sets] at h_ev
+    obtain ⟨N, hN⟩ := h_ev
+    exact ⟨N, hN N le_rfl⟩
+  obtain ⟨N, hN_tail⟩ := h_tail_small
+  -- Step 5: Each v ↦ mapImage(T_{v.1}, T_{v.2})(m) is continuous in the NTP topology
+  have h_mapImage_cont : ∀ m,
+      Continuous (fun v : ℝ × ℝ => GaussianField.mapImage
+        (GaussianField.circleTranslation Lt v.1)
+        (GaussianField.circleTranslation Ls v.2) m) := by
+    intro m
+    show Continuous (fun v : ℝ × ℝ =>
+      GaussianField.NuclearTensorProduct.pure
+        (GaussianField.circleTranslation Lt v.1 (ψ_t (Nat.unpair m).1))
+        (GaussianField.circleTranslation Ls v.2 (ψ_s (Nat.unpair m).2)))
+    have h1 : Continuous (fun v : ℝ × ℝ =>
+        GaussianField.circleTranslation Lt v.1 (ψ_t (Nat.unpair m).1)) :=
+      (circleTranslation_continuous_in_s (ψ_t (Nat.unpair m).1)).comp continuous_fst
+    have h2 : Continuous (fun v : ℝ × ℝ =>
+        GaussianField.circleTranslation Ls v.2 (ψ_s (Nat.unpair m).2)) :=
+      (circleTranslation_continuous_in_s (ψ_s (Nat.unpair m).2)).comp continuous_snd
+    exact GaussianField.NuclearTensorProduct.pure_continuous.comp (h1.prodMk h2)
+  -- Step 6: The seminorm of mapImage is continuous, so eventually head < ε/2
+  have h_head_small : ∀ᶠ v in nhds v₀,
+      ∑ m ∈ Finset.range N, |f.val m| *
+        RapidDecaySeq.rapidDecaySeminorm k
+          (GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v.1)
+            (GaussianField.circleTranslation Ls v.2) m -
+           GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v₀.1)
+            (GaussianField.circleTranslation Ls v₀.2) m) < ε / 2 := by
+    have h_tendsto : Filter.Tendsto (fun v =>
+        ∑ m ∈ Finset.range N, |f.val m| *
+          RapidDecaySeq.rapidDecaySeminorm k
+            (GaussianField.mapImage
+              (GaussianField.circleTranslation Lt v.1)
+              (GaussianField.circleTranslation Ls v.2) m -
+             GaussianField.mapImage
+              (GaussianField.circleTranslation Lt v₀.1)
+              (GaussianField.circleTranslation Ls v₀.2) m))
+        (nhds v₀) (nhds 0) := by
+      have : (0 : ℝ) = ∑ _ ∈ Finset.range N, (0 : ℝ) := by simp
+      rw [this]; clear this
+      apply tendsto_finset_sum
+      intro m _
+      have : (0 : ℝ) = |f.val m| * 0 := by simp
+      rw [this]; clear this
+      apply Filter.Tendsto.const_mul
+      have h_cont_diff : Continuous (fun v : ℝ × ℝ =>
+          GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v.1)
+            (GaussianField.circleTranslation Ls v.2) m -
+          GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v₀.1)
+            (GaussianField.circleTranslation Ls v₀.2) m) :=
+        (h_mapImage_cont m).sub continuous_const
+      have h_at_v₀ : (fun v : ℝ × ℝ =>
+          GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v.1)
+            (GaussianField.circleTranslation Ls v.2) m -
+          GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v₀.1)
+            (GaussianField.circleTranslation Ls v₀.2) m) v₀ = 0 := sub_self _
+      have h_comp_cont : Continuous (fun v : ℝ × ℝ =>
+          RapidDecaySeq.rapidDecaySeminorm k
+            (GaussianField.mapImage
+              (GaussianField.circleTranslation Lt v.1)
+              (GaussianField.circleTranslation Ls v.2) m -
+            GaussianField.mapImage
+              (GaussianField.circleTranslation Lt v₀.1)
+              (GaussianField.circleTranslation Ls v₀.2) m)) :=
+        (h_ws.continuous_seminorm k).comp h_cont_diff
+      have h_val_at_v₀ : RapidDecaySeq.rapidDecaySeminorm k
+          (GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v₀.1)
+            (GaussianField.circleTranslation Ls v₀.2) m -
+          GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v₀.1)
+            (GaussianField.circleTranslation Ls v₀.2) m) = 0 := by
+        rw [sub_self]; exact map_zero _
+      rw [← h_val_at_v₀]
+      exact h_comp_cont.continuousAt
+    exact h_tendsto.eventually (Iio_mem_nhds (by linarith))
+  -- Step 7: Bound the seminorm using CLM expansion + triangle inequality
+  have h_mapCLM_basis : ∀ (T₁ : E_t →L[ℝ] E_t) (T₂ : E_s →L[ℝ] E_s) (m : ℕ),
+      GaussianField.nuclearTensorProduct_mapCLM T₁ T₂ (RapidDecaySeq.basisVec m) =
+      GaussianField.mapImage T₁ T₂ m := by
+    intro T₁ T₂ m
+    have hbv := GaussianField.NuclearTensorProduct.basisVec_eq_pure
+      (DyninMityaginSpace.HasBiorthogonalBasis.coeff_basis (E := E_t))
+      (DyninMityaginSpace.HasBiorthogonalBasis.coeff_basis (E := E_s)) m
+    rw [hbv]
+    exact GaussianField.nuclearTensorProduct_mapCLM_pure T₁ T₂ _ _
+  -- HasSum for the CLM expansion
+  have h_hasSum : ∀ (T₁ : E_t →L[ℝ] E_t) (T₂ : E_s →L[ℝ] E_s),
+      HasSum (fun m => f.val m • GaussianField.mapImage T₁ T₂ m)
+        (GaussianField.nuclearTensorProduct_mapCLM T₁ T₂ f) := by
+    intro T₁ T₂
+    have h := (RapidDecaySeq.hasSum_basisVec f).mapL
+      (GaussianField.nuclearTensorProduct_mapCLM T₁ T₂)
+    simp only [ContinuousLinearMap.map_smul] at h
+    convert h using 1
+    ext1 m
+    show f.val m • GaussianField.mapImage T₁ T₂ m =
+      GaussianField.nuclearTensorProduct_mapCLM T₁ T₂ (f.val m • RapidDecaySeq.basisVec m)
+    calc f.val m • GaussianField.mapImage T₁ T₂ m
+        = f.val m • GaussianField.nuclearTensorProduct_mapCLM T₁ T₂
+            (RapidDecaySeq.basisVec m) := by rw [h_mapCLM_basis]
+      _ = GaussianField.nuclearTensorProduct_mapCLM T₁ T₂
+            (f.val m • RapidDecaySeq.basisVec m) :=
+          ((GaussianField.nuclearTensorProduct_mapCLM T₁ T₂).map_smul
+            (f.val m) (RapidDecaySeq.basisVec m)).symm
+  -- Define abbreviations for the CLMs at v and v₀
+  set T_v := fun (v : ℝ × ℝ) => GaussianField.nuclearTensorProduct_mapCLM
+    (GaussianField.circleTranslation Lt v.1)
+    (GaussianField.circleTranslation Ls v.2)
+  -- Difference HasSum
+  have h_diff_hasSum : ∀ (v : ℝ × ℝ),
+      HasSum (fun m => f.val m •
+        (GaussianField.mapImage
+          (GaussianField.circleTranslation Lt v.1)
+          (GaussianField.circleTranslation Ls v.2) m -
+         GaussianField.mapImage
+          (GaussianField.circleTranslation Lt v₀.1)
+          (GaussianField.circleTranslation Ls v₀.2) m))
+        (GaussianField.asymTorusTranslation Lt Ls v f -
+         GaussianField.asymTorusTranslation Lt Ls v₀ f) := by
+    intro v
+    have h1 := h_hasSum (GaussianField.circleTranslation Lt v.1)
+      (GaussianField.circleTranslation Ls v.2)
+    have h2 := h_hasSum (GaussianField.circleTranslation Lt v₀.1)
+      (GaussianField.circleTranslation Ls v₀.2)
+    convert h1.sub h2 using 1
+    ext1 m; simp [smul_sub]
+  -- Filter the eventually from h_head_small.
+  filter_upwards [h_head_small] with v hv_head
+  -- Need: seminorm_k(T_v f - T_{v₀} f) < ε
+  set d := fun m => GaussianField.mapImage
+    (GaussianField.circleTranslation Lt v.1)
+    (GaussianField.circleTranslation Ls v.2) m -
+    GaussianField.mapImage
+    (GaussianField.circleTranslation Lt v₀.1)
+    (GaussianField.circleTranslation Ls v₀.2) m
+  -- seminorm_k(T_v f - T_{v₀} f) ≤ Σ' m, |f_m| * seminorm_k(d m)
+  have h_dk_summable : Summable (fun m => |f.val m| *
+      RapidDecaySeq.rapidDecaySeminorm k (d m)) :=
+    hg_summable.of_nonneg_of_le
+      (fun m => mul_nonneg (abs_nonneg _) (apply_nonneg _ _))
+      (fun m => by
+        have h_sub := map_sub_le_add (RapidDecaySeq.rapidDecaySeminorm k)
+          (GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v.1)
+            (GaussianField.circleTranslation Ls v.2) m)
+          (GaussianField.mapImage
+            (GaussianField.circleTranslation Lt v₀.1)
+            (GaussianField.circleTranslation Ls v₀.2) m)
+        calc |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m)
+            ≤ |f.val m| * (2 * K * (1 + (m : ℝ)) ^ S) :=
+            mul_le_mul_of_nonneg_left
+              (calc RapidDecaySeq.rapidDecaySeminorm k (d m)
+                  ≤ _ := h_sub
+                _ ≤ K * (1 + (m : ℝ)) ^ S + K * (1 + (m : ℝ)) ^ S :=
+                  add_le_add (h_uniform_bound v m) (h_uniform_bound v₀ m)
+                _ = 2 * K * (1 + (m : ℝ)) ^ S := by ring)
+              (abs_nonneg _)
+          _ = g m := by simp only [g]; ring)
+  have h_seminorm_le : RapidDecaySeq.rapidDecaySeminorm k
+      (GaussianField.asymTorusTranslation Lt Ls v f -
+       GaussianField.asymTorusTranslation Lt Ls v₀ f) ≤
+      ∑' m, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m) := by
+    apply le_of_tendsto
+      ((h_ws.continuous_seminorm k).continuousAt.tendsto.comp
+        (h_diff_hasSum v).tendsto_sum_nat)
+    rw [Filter.Eventually, Filter.mem_atTop_sets]
+    refine ⟨0, fun n _ => ?_⟩
+    calc (RapidDecaySeq.rapidDecaySeminorm k)
+          (∑ m ∈ Finset.range n, f.val m • d m)
+        ≤ ∑ m ∈ Finset.range n,
+            (RapidDecaySeq.rapidDecaySeminorm k) (f.val m • d m) :=
+          (Finset.range n).le_sum_of_subadditive _
+            (map_zero (RapidDecaySeq.rapidDecaySeminorm k)).le
+            (RapidDecaySeq.rapidDecaySeminorm k).add_le'
+            (fun m => f.val m • d m)
+      _ = ∑ m ∈ Finset.range n,
+            |f.val m| * (RapidDecaySeq.rapidDecaySeminorm k) (d m) := by
+          congr 1; ext m
+          show (RapidDecaySeq.rapidDecaySeminorm k) (f.val m • d m) =
+            |f.val m| * (RapidDecaySeq.rapidDecaySeminorm k) (d m)
+          show ∑' n, |(f.val m • d m).val n| * (1 + (n : ℝ)) ^ k =
+            |f.val m| * ∑' n, |(d m).val n| * (1 + (n : ℝ)) ^ k
+          conv_lhs => arg 1; ext n; rw [show (f.val m • d m).val n = f.val m * (d m).val n from rfl,
+            abs_mul, mul_assoc]
+          rw [tsum_mul_left]
+      _ ≤ ∑' m, |f.val m| * (RapidDecaySeq.rapidDecaySeminorm k) (d m) :=
+          h_dk_summable.sum_le_tsum _
+            (fun m _ => mul_nonneg (abs_nonneg _) (apply_nonneg _ _))
+  -- Now split the tsum at N: head + tail
+  have h_tsum_split : ∑' m, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m) ≤
+      (∑ m ∈ Finset.range N, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m)) +
+      ∑' m, g (m + N) := by
+    have h_dk_le_g : ∀ m, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m) ≤ g m := by
+      intro m
+      calc |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m)
+          ≤ |f.val m| * (2 * K * (1 + (m : ℝ)) ^ S) :=
+            mul_le_mul_of_nonneg_left
+              ((map_sub_le_add (RapidDecaySeq.rapidDecaySeminorm k) _ _).trans
+                ((add_le_add (h_uniform_bound v m) (h_uniform_bound v₀ m)).trans
+                (by linarith)))
+              (abs_nonneg _)
+        _ = g m := by simp only [g]; ring
+    rw [(h_dk_summable.sum_add_tsum_nat_add N).symm]
+    exact add_le_add le_rfl
+      (Summable.tsum_le_tsum
+        (fun m => h_dk_le_g (m + N))
+        (h_dk_summable.comp_injective (add_left_injective N))
+        (hg_summable.comp_injective (add_left_injective N)))
+  -- Combine: seminorm_k(diff) ≤ head + tail < ε/2 + ε/2 = ε
+  calc RapidDecaySeq.rapidDecaySeminorm k
+        (GaussianField.asymTorusTranslation Lt Ls v f -
+         GaussianField.asymTorusTranslation Lt Ls v₀ f)
+      ≤ ∑' m, |f.val m| * RapidDecaySeq.rapidDecaySeminorm k (d m) :=
+        h_seminorm_le
+    _ ≤ (∑ m ∈ Finset.range N, |f.val m| *
+          RapidDecaySeq.rapidDecaySeminorm k (d m)) +
+        ∑' m, g (m + N) := h_tsum_split
+    _ < ε / 2 + ε / 2 := add_lt_add hv_head hN_tail
+    _ = ε := by ring
 
 -- **Theorem 4/4:** Lattice approximation error vanishes: Z_N[T_v f] - Z_N[f] → 0.
 -- Proof: Round v to lattice point w_n, use axioms 1-3, squeeze_zero_norm.
