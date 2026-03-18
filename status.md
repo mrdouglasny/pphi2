@@ -5,13 +5,13 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3084 jobs).
+3724 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 0 sorry.**
+**Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 1 sorry.**
 All OS0–OS2 proofs complete within this file. Transitive dependencies are
 now largely resolved — see `docs/torus-route-gap-audit.md` for details.
 Recently closed:
@@ -20,9 +20,12 @@ Recently closed:
 - `evalTorusAtSite` sorries — **PROVED** in gaussian-field
 Remaining: `configuration_tight_of_uniform_second_moments` (theorem in gaussian-field).
 
-**Route B' (asymmetric torus → cylinder): PLANNED.**
-Extends Route B to S¹_W × ℝ via L → ∞ limit of T_{L,W}.
-See `docs/route-b-prime-plan.md`.
+**Route B' (asymmetric torus): `AsymTorusOS.lean` has 4 axioms, 0 sorry.**
+OS0 (analyticity), OS1 (regularity), OS2 (time reflection) proved.
+OS2 (translation) proved from 4 infrastructure axioms (mechanical adaptations
+of symmetric versions: lattice translation invariance, GF Lipschitz bound,
+translation continuity, lattice approximation error vanishing).
+Extends Route B to T_{Lt,Ls} with different circle sizes per direction.
 
 **Other routes: ~50 axioms** (Routes A, C — not yet updated).
 
@@ -76,15 +79,18 @@ Note: Three axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConver
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
 | 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 0 axioms, 0 sorries (`torus_propagator_convergence` proved via gaussian-field `lattice_green_tendsto_continuum` axiom) |
-| 4T | `TorusContinuumLimit/TorusTightness.lean` | 1 axiom, 0 sorries |
+| 4T | `TorusContinuumLimit/TorusTightness.lean` | 0 axioms, 1 sorry |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
-| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 2 axioms, 0 sorries (`weakLimit_centered_gaussianReal` proved via charFun convergence + `ext_of_charFun`) |
-| 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 1 axiom, 0 sorries |
-| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 0 axioms, 0 sorries (Gaussian OS0–OS2 proved) |
-| 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | **0 axioms, 0 sorries** (interacting OS0–OS2 fully proved!) |
+| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 0 axioms, 1 sorry |
+| 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 0 axioms, 0 sorries |
+| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 0 axioms, 1 sorry |
+| 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | 0 axioms, 1 sorry |
 | 4T | `TorusContinuumLimit/MeasureUniqueness.lean` | 1 sorry (Cramér-Wold) |
 | 4T | `TorusContinuumLimit/TorusNuclearBridge.lean` | 2 sorries (DM→IsHilbertNuclear) |
-| 4T | `NelsonEstimate/*.lean` | 0 axioms, 0 sorries (6 files, Nelson bound proved) |
+| 4T | `NelsonEstimate/*.lean` | 0 axioms, 1 sorry (WickBinomial) |
+| B' | `AsymTorus/AsymTorusEmbedding.lean` | 0 axioms, 0 sorries |
+| B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 0 axioms, 0 sorries |
+| B' | `AsymTorus/AsymTorusOS.lean` | 4 axioms, 0 sorries (OS0–OS2 proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 
 ### Inactive files (old DDJ/stochastic quantization approach)

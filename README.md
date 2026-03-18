@@ -179,7 +179,7 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`, 3084 jobs).
 
-- **pphi2:** 54 axioms, 2 sorries
+- **pphi2:** 61 axioms, 8 sorries
 - **gaussian-field** (upstream, cylinder branch): 0 axioms outside `future/`
 - **Route B (torus):** 1 axiom, 1 sorry — most developed route (down from 7 axioms)
 

@@ -172,31 +172,20 @@ private theorem asym_pure_basis_eq_basisVec_pair (i j : ℕ) :
   · intro h; exact h1 (by have := congr_arg (fun p => (Nat.unpair p).1) h
                           simpa only [Nat.unpair_pair] using this)
 
--- Helper: the squared sum Σ_x (asymLatticeTestFn f x)² is bounded uniformly in N.
--- Asymmetric analog of `latticeTestFn_norm_sq_bounded`.
-private theorem asymLatticeTestFn_norm_sq_bounded
-    (f : AsymTorusTestFunction Lt Ls) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (N : ℕ) [NeZero N],
-    ∑ x : FinLatticeSites 2 N, (asymLatticeTestFn Lt Ls N f x) ^ 2 ≤ C := by
-  -- Step 1: Uniform C⁰ bound on Fourier basis elements for each circle.
-  obtain ⟨C₀t, hC₀t_pos, hC₀t_bound⟩ :=
-    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Lt) 0
-  have hC₀t : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Lt) 0
-      (SmoothMap_Circle.fourierBasis n) ≤ C₀t := fun n => by
-    specialize hC₀t_bound n; simp only [pow_zero, mul_one] at hC₀t_bound; exact hC₀t_bound
-  obtain ⟨C₀s, hC₀s_pos, hC₀s_bound⟩ :=
-    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Ls) 0
-  have hC₀s : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Ls) 0
-      (SmoothMap_Circle.fourierBasis n) ≤ C₀s := fun n => by
-    specialize hC₀s_bound n; simp only [pow_zero, mul_one] at hC₀s_bound; exact hC₀s_bound
-  -- Step 2: Set up the witness.
+-- Parameterized Riemann sum bound: given Sobolev constants C₀t, C₀s,
+-- the squared sum Σ_x (asymLatticeTestFn f x)² ≤ Lt*Ls*C₀t²*C₀s²*(p₀f)² + 1.
+theorem asymLatticeTestFn_norm_sq_le
+    (C₀t : ℝ) (hC₀t_pos : 0 < C₀t)
+    (hC₀t : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Lt) 0
+      (SmoothMap_Circle.fourierBasis n) ≤ C₀t)
+    (C₀s : ℝ) (hC₀s_pos : 0 < C₀s)
+    (hC₀s : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Ls) 0
+      (SmoothMap_Circle.fourierBasis n) ≤ C₀s)
+    (f : AsymTorusTestFunction Lt Ls) (N : ℕ) [NeZero N] :
+    ∑ x : FinLatticeSites 2 N, (asymLatticeTestFn Lt Ls N f x) ^ 2 ≤
+    Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * (RapidDecaySeq.rapidDecaySeminorm 0 f) ^ 2 + 1 := by
   set p₀f := RapidDecaySeq.rapidDecaySeminorm 0 f
-  have hC_pos : 0 < Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1 := by
-    have := mul_nonneg (mul_nonneg (mul_nonneg (mul_nonneg hLt.out.le hLs.out.le)
-      (sq_nonneg C₀t)) (sq_nonneg C₀s)) (sq_nonneg p₀f)
-    linarith
-  refine ⟨Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1, hC_pos, fun N _ => ?_⟩
-  -- Step 3: Summability of |f.val m|.
+  -- Summability of |f.val m|.
   have hf_sum : Summable (fun m => |f.val m|) :=
     (f.rapid_decay 0).congr (fun m => by simp [pow_zero])
   -- Step 4: Bound |circleRestriction L_i N (basis n) k| ≤ √(L_i/N) * C₀i.
@@ -306,6 +295,29 @@ private theorem asymLatticeTestFn_norm_sq_bounded
     _ ≤ Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1 :=
         le_add_of_nonneg_right (by positivity)
 
+-- Existential wrapper for `asymLatticeTestFn_norm_sq_le`.
+theorem asymLatticeTestFn_norm_sq_bounded
+    (f : AsymTorusTestFunction Lt Ls) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (N : ℕ) [NeZero N],
+    ∑ x : FinLatticeSites 2 N, (asymLatticeTestFn Lt Ls N f x) ^ 2 ≤ C := by
+  obtain ⟨C₀t, hC₀t_pos, hC₀t_bound⟩ :=
+    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Lt) 0
+  have hC₀t : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Lt) 0
+      (SmoothMap_Circle.fourierBasis n) ≤ C₀t := fun n => by
+    specialize hC₀t_bound n; simp only [pow_zero, mul_one] at hC₀t_bound; exact hC₀t_bound
+  obtain ⟨C₀s, hC₀s_pos, hC₀s_bound⟩ :=
+    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Ls) 0
+  have hC₀s : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Ls) 0
+      (SmoothMap_Circle.fourierBasis n) ≤ C₀s := fun n => by
+    specialize hC₀s_bound n; simp only [pow_zero, mul_one] at hC₀s_bound; exact hC₀s_bound
+  set p₀f := RapidDecaySeq.rapidDecaySeminorm 0 f
+  have hC_pos : 0 < Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1 := by
+    have := mul_nonneg (mul_nonneg (mul_nonneg (mul_nonneg hLt.out.le hLs.out.le)
+      (sq_nonneg C₀t)) (sq_nonneg C₀s)) (sq_nonneg p₀f)
+    linarith
+  exact ⟨_, hC_pos, fun N _ =>
+    asymLatticeTestFn_norm_sq_le Lt Ls C₀t hC₀t_pos hC₀t C₀s hC₀s_pos hC₀s f N⟩
+
 theorem asymGaussian_second_moment_uniform_bound
     (mass : ℝ) (hmass : 0 < mass)
     (f : AsymTorusTestFunction Lt Ls) :
@@ -314,17 +326,12 @@ theorem asymGaussian_second_moment_uniform_bound
       (ω (asymLatticeTestFn Lt Ls N f)) ^ 2
       ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
         (asymGeomSpacing_pos Lt Ls N) hmass) ≤ Cg := by
-  -- Step 1: Get the Riemann sum bound
   obtain ⟨C_f, hC_f_pos, hC_f_bound⟩ := asymLatticeTestFn_norm_sq_bounded Lt Ls f
-  -- The bound is Cg = mass⁻² * C_f
   refine ⟨mass⁻¹ ^ 2 * C_f, mul_pos (pow_pos (inv_pos.mpr hmass) 2) hC_f_pos, fun N _ => ?_⟩
-  -- Step 2: Rewrite as covariance inner product
   set g := asymLatticeTestFn Lt Ls N f
   set a := asymGeomSpacing Lt Ls N
   set ha := asymGeomSpacing_pos Lt Ls N
   set T := latticeCovariance 2 N a mass ha hmass
-  -- ∫ (ω g)² dμ_GFF = ⟨Tg, Tg⟩
-  -- Use change to unfold latticeGaussianMeasure to GaussianField.measure T
   change ∫ ω, (ω g) ^ 2 ∂(GaussianField.measure T) ≤ mass⁻¹ ^ 2 * C_f
   rw [second_moment_eq_covariance T g]
   -- Step 3: Apply covariance bound
