@@ -675,11 +675,27 @@ private theorem asymGaussian_exp_abs_moment
 /-- The lattice second moment `∫ (ω g)^2 dμ_GFF` is bounded by the continuum
 Green's function `greenFunctionBilinear mass hmass f f`.
 
-This is the lattice-to-continuum propagator comparison: the Galerkin
-approximation gives a lower bound on the bilinear form of the inverse
-operator, so `⟨T_lat g, T_lat g⟩ ≤ G_∞(f, f)` for all N.
+This is a lattice-to-continuum propagator comparison:
+  `⟨T_N g, T_N g⟩ = Σ_k |c_k(g)|^2 / (μ_k + m^2) ≤ Σ_m |c_m(f)|^2 / (λ_m + m^2) = G(f,f)`
+where μ_k are discrete Laplacian eigenvalues and λ_m are continuum eigenvalues.
 
-TODO: Prove this from spectral theory of the lattice Laplacian. -/
+**Why this is hard:** The lattice eigenvalues μ_k approximate the continuum
+eigenvalues λ_m but the approximation is NOT monotone in general (finite
+differences vs. exact second derivatives). The standard approach is:
+  1. Show `lattice_green_tendsto_continuum` (convergence, already proved)
+  2. Show monotonicity of the Galerkin truncation (requires the lattice
+     discretization to be a *restriction* of the continuum operator)
+For finite-difference discretizations, step 2 fails without additional
+spectral analysis (e.g., explicit eigenvalue comparison for the torus).
+
+**Status:** Used in `asymTorusInteractingMeasure_exponentialMomentBound_cutoff`.
+The symmetric version avoids this by bounding with `torusEmbeddedTwoPoint`
+(the lattice-level two-point function) instead of `greenFunctionBilinear`.
+
+**Possible fix:** Refactor to bound by `mass^{-2} * C_f` (from
+`asymGaussian_second_moment_uniform_bound`) instead of `greenFunctionBilinear`,
+which would require changing the downstream `asymTorusInteracting_exponentialMomentBound`
+chain to use the uniform constant rather than the continuum Green's function. -/
 private theorem asymLattice_second_moment_le_greenFunction
     (N : ℕ) [NeZero N] (mass : ℝ) (hmass : 0 < mass)
     (f : AsymTorusTestFunction Lt Ls) :
@@ -688,7 +704,7 @@ private theorem asymLattice_second_moment_le_greenFunction
       ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
         (asymGeomSpacing_pos Lt Ls N) hmass) ≤
     greenFunctionBilinear mass hmass f f := by
-  sorry -- Lattice-to-continuum propagator comparison
+  sorry -- Lattice-to-continuum spectral comparison; see docstring for status
 
 /-- Cutoff-level exponential moment bound for the asymmetric interacting measure.
 
@@ -1230,8 +1246,32 @@ private theorem asymTorusInteracting_os1
 
 /-- OS2 (translation) for the asymmetric torus interacting continuum limit.
 
-TODO: Adapt `torusInteracting_os2_translation` (~60 lines).
-Uses `torusGF_latticeApproximation_error_vanishes` (asymmetric version). -/
+The proof is structurally identical to `torusInteracting_os2_translation` in
+`TorusInteractingOS.lean` (line 2829), which delegates to
+`torusInteractingLimit_translation_invariant` (line 1731).
+
+**Missing infrastructure** (all are direct adaptations of symmetric versions):
+
+1. `asymTorusInteractingMeasure_gf_latticeTranslation_invariant` (~40 lines)
+   Shows `Z_N[f] = Z_N[T_{a*j} f]` for lattice translations.
+   Symmetric version: `torusInteractingMeasure_gf_latticeTranslation_invariant` (line 352).
+   Needs: `evalTorusAtSite_latticeTranslation` for asymmetric spacings.
+
+2. `asymGf_sub_norm_le_seminorm` (~190 lines)
+   Uniform Lipschitz bound `|Z_N[g] - Z_N[h]| <= B * p(g-h)`.
+   Symmetric version: `gf_sub_norm_le_seminorm` (line 1328).
+   Needs: `asymTorus_interacting_second_moment_continuous` + seminorm bound.
+
+3. `asymTorusGF_latticeApproximation_error_vanishes` (~130 lines)
+   Shows `Z_N[T_v f] - Z_N[f] -> 0` via lattice rounding + GF continuity.
+   Symmetric version: `torusGF_latticeApproximation_error_vanishes` (line 1520).
+   Needs: items 1-2 above + `asymTorusTranslation_continuous_in_v`.
+
+4. `asymTorusTranslation_continuous_in_v` (~80 lines)
+   Continuity of `v |-> T_v f` in the NTP topology.
+   Symmetric version: `torusTranslation_continuous_in_v` (line 871).
+
+**Total:** ~440 lines of infrastructure, all mechanical adaptations. -/
 private theorem asymTorusInteracting_os2_translation
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
@@ -1243,11 +1283,17 @@ private theorem asymTorusInteracting_os2_translation
           atTop (nhds (∫ ω, g ω ∂μ))) :
     AsymTorusOS2_TranslationInvariance Lt Ls μ := by
   sorry
-  -- Proof sketch (identical to torusInteracting_os2_translation):
+  -- Proof sketch (identical to torusInteractingLimit_translation_invariant):
   -- 1. Build GF tendsto from weak convergence via cos/sin decomposition
-  -- 2. Get lattice approximation error vanishes (asymmetric version)
-  -- 3. Difference of limits = limit of differences = 0
-  -- 4. Conclude Z[f] = Z[T_v f]
+  --    (asymCosEval_continuous/asymSinEval_continuous already exist)
+  -- 2. For each n, round v to nearest lattice point w_n:
+  --    w_n = (Lt/(phi(n)+1) * round(v.1 * (phi(n)+1)/Lt),
+  --           Ls/(phi(n)+1) * round(v.2 * (phi(n)+1)/Ls))
+  -- 3. Z_N[T_{w_n} f] = Z_N[f] by lattice translation invariance (MISSING: item 1)
+  -- 4. |Z_N[T_v f] - Z_N[T_{w_n} f]| <= B * p(T_v f - T_{w_n} f) (MISSING: item 2)
+  -- 5. p(T_v f - T_{w_n} f) -> 0 since w_n -> v (MISSING: items 3-4)
+  -- 6. squeeze_zero_norm concludes Z_N[T_v f] - Z_N[f] -> 0
+  -- 7. tendsto_nhds_unique gives Z[T_v f] = Z[f]
 
 /-- **OS2 (time reflection) for the asymmetric torus interacting continuum limit.**
 
