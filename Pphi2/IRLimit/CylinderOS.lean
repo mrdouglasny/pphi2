@@ -71,11 +71,21 @@ theorem cylinderPullback_timeTranslation_invariant
 -- The mathematical content is trivial: reindexing a sum over ℤ.
 
 /-- **OS2 time reflection**: The pulled-back cylinder measure is exactly
-time-reflection invariant at every finite Lt. -/
+time-reflection invariant at every finite Lt, provided the torus measure
+is time-reflection invariant.
+
+**Proof chain**:
+1. `∫ exp(iωf) dν_Lt = ∫ exp(iω(embed f)) dμ` (pullback)
+2. `= ∫ exp(iω(Θ_torus(embed f))) dμ` (torus reflection invariance)
+3. `= ∫ exp(iω(embed(Θ f))) dμ` (intertwining: `embed ∘ Θ = Θ_torus ∘ embed`)
+4. `= ∫ exp(iω(Θf)) dν_Lt` (pullback) -/
 axiom cylinderPullback_timeReflection_invariant
     (Lt : ℝ) [Fact (0 < Lt)]
     (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
     [IsProbabilityMeasure μ]
+    (hμ_refl : ∀ g : AsymTorusTestFunction Lt Ls,
+      ∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ =
+      ∫ ω, Complex.exp (Complex.I * ↑(ω (asymTorusTimeReflection Lt Ls g))) ∂μ)
     (f : CylinderTestFunction Ls) :
     ∫ ω, Complex.exp (Complex.I * ↑(ω f))
       ∂(cylinderPullbackMeasure Lt Ls μ) =
@@ -143,8 +153,25 @@ theorem routeBPrime_cylinder_OS
   refine ⟨ν, hν_prob, fun n J => cylinderIR_os0 Ls P mass hmass ν n J, ?_, ?_⟩
   · -- OS2: time reflection passes through the weak limit
     -- At each finite Lt, reflection is exact (cylinderPullback_timeReflection_invariant)
-    -- The limit inherits it by continuity of the generating functional
-    intro f; sorry
+    -- Taking the limit, both sides converge to the same value.
+    intro f
+    -- Z_{Lt_n}(f) → Z(f) by characteristic functional convergence
+    have hL := hν_conv f
+    -- Z_{Lt_n}(Θf) → Z(Θf) by convergence applied to Θf
+    have hR := hν_conv (cylinderTimeReflection Ls f)
+    -- But Z_{Lt_n}(f) = Z_{Lt_n}(Θf) at each finite Lt_n (exact reflection invariance)
+    have h_eq : ∀ n,
+        (∫ ω, Complex.exp (Complex.I * ↑(ω f))
+          ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n)))) =
+        (∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderTimeReflection Ls f)))
+          ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n)))) := by
+      intro n
+      exact @cylinderPullback_timeReflection_invariant Ls _ (Lt (φ n)) (hLt (φ n))
+        (μ (φ n)) (hμ_prob (φ n))
+        (fun g => (hμ_os (φ n)).os2_timeReflection g)
+        f
+    -- Since Z_{Lt_n}(f) = Z_{Lt_n}(Θf) and both converge, their limits agree
+    exact tendsto_nhds_unique hL (hR.congr (fun n => (h_eq n).symm))
   · -- OS3: reflection positivity
     intro n f c; exact cylinderIR_os3 Ls P mass hmass ν n f c
 

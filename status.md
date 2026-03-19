@@ -92,6 +92,12 @@ Note: Three axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConver
 | B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 0 axioms, 0 sorries |
 | B' | `AsymTorus/AsymTorusOS.lean` | **0 axioms, 0 sorries** (OS0–OS2 fully proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
+| B'IR | `IRLimit/Periodization.lean` | 0 axioms, 0 sorries (re-exports from gaussian-field) |
+| B'IR | `IRLimit/CylinderEmbedding.lean` | 2 axioms, 0 sorries (intertwining axioms) |
+| B'IR | `IRLimit/GreenFunctionComparison.lean` | 1 axiom, 0 sorries (uniform 2nd moment) |
+| B'IR | `IRLimit/UniformExponentialMoment.lean` | 1 axiom, 0 sorries (uniform exp moment) |
+| B'IR | `IRLimit/IRTightness.lean` | 1 axiom, 0 sorries (Prokhorov extraction) |
+| B'IR | `IRLimit/CylinderOS.lean` | 3 axioms, 1 sorry (OS0+OS2+OS3; OS2 proved via weak limit) |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 

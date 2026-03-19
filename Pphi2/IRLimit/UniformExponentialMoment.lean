@@ -25,6 +25,7 @@ functional is entire analytic (OS0).
 -/
 
 import Pphi2.IRLimit.GreenFunctionComparison
+import Pphi2.AsymTorus.AsymTorusOS
 
 noncomputable section
 
@@ -44,20 +45,24 @@ pulled-back torus interacting measure is bounded uniformly in Lt:
 where `q` is a continuous seminorm on `CylinderTestFunction Ls` and
 `K, C > 0` are constants independent of `f` and `Lt`.
 
-This combines the torus Nelson exponential bound with the method of
-images bound on `‖embed f‖`. -/
+**Proof chain**: From `AsymSatisfiesTorusOS.os1` (torus exponential moment
+bound), applied to `g = embed(f)`, combined with the method of images
+bound `‖embed f‖ ≤ C · q(f)` from `torusGreen_uniform_bound`.
+
+This is the key input for OS0 analyticity of the IR limit. -/
 axiom cylinderIR_uniform_exponential_moment
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
-    ∃ (K C : ℝ) (q : CylinderTestFunction Ls → ℝ),
+    ∃ (K C : ℝ) (q : Seminorm ℝ (CylinderTestFunction Ls)),
     0 < K ∧ 0 < C ∧ Continuous q ∧
-    ∀ (Lt : ℝ) [Fact (0 < Lt)]
+    ∀ (Lt : ℝ) [Fact (0 < Lt)] (_ : 1 ≤ Lt)
       (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
-      [IsProbabilityMeasure μ]
+      [hμ : IsProbabilityMeasure μ]
+      (_ : @AsymSatisfiesTorusOS Lt Ls _ _ μ hμ)
       (f : CylinderTestFunction Ls),
     Integrable (fun ω : Configuration (CylinderTestFunction Ls) =>
       Real.exp (|ω f|)) (cylinderPullbackMeasure Lt Ls μ) ∧
     ∫ ω : Configuration (CylinderTestFunction Ls),
       Real.exp (|ω f|) ∂(cylinderPullbackMeasure Lt Ls μ) ≤
-    K * Real.exp (C * q f)
+    K * Real.exp (C * q f ^ 2)
 
 end Pphi2

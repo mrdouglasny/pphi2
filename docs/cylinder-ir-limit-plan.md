@@ -10,15 +10,25 @@ proved UV limit in `AsymTorus/`) and construct their weak limit as
 
 **Implemented** (`Pphi2/IRLimit/`):
 
-| File | Status | Axioms |
-|------|--------|--------|
-| `Periodization.lean` | Re-exports from gaussian-field | 0 (3 in g-f) |
-| `CylinderEmbedding.lean` | `cylinderToTorusEmbed` is a **def** | 0 + 1 sorry |
-| `GreenFunctionComparison.lean` | Axiom: uniform 2nd moment | 1 |
-| `IRTightness.lean` | Axiom: Prokhorov extraction | 1 |
-| `CylinderOS.lean` | Axiom: main OS0+OS2+OS3 theorem | 1 |
+| File | Status | Axioms | Sorries |
+|------|--------|--------|---------|
+| `Periodization.lean` | Re-exports from gaussian-field | 0 | 0 |
+| `CylinderEmbedding.lean` | `cylinderToTorusEmbed` is a **def**; `cylinderPullback_continuous` **proved** | 2 | 0 |
+| `GreenFunctionComparison.lean` | Axiom: uniform 2nd moment (requires OS assumption) | 1 | 0 |
+| `UniformExponentialMoment.lean` | Axiom: uniform exp moment (requires OS assumption) | 1 | 0 |
+| `IRTightness.lean` | Axiom: Prokhorov extraction with char. functional convergence | 1 | 0 |
+| `CylinderOS.lean` | OS0+OS3 axiomatized; OS2 **proved** via weak limit | 3 | 1 |
 
-**Total: 3 axioms in pphi2, 5 axioms in gaussian-field.**
+**Total: 8 axioms + 1 sorry in pphi2, 3 axioms in gaussian-field `Cylinder/MethodOfImages.lean`.**
+
+Changes from initial plan (2026-03-19):
+- Removed intermediate axioms `torusGreen_method_of_images` and `wrapAround_exponentially_suppressed` from gaussian-field (subsumed by `torusGreen_uniform_bound`)
+- Added `UniformExponentialMoment.lean` for OS0 analyticity
+- Proved `cylinderPullback_continuous` (WeakDual continuity)
+- Proved OS2 time reflection in `routeBPrime_cylinder_OS` via characteristic functional convergence + torus reflection invariance
+- Refined axiom statements: `cylinderIR_uniform_second_moment` and `cylinderIR_uniform_exponential_moment` now require `AsymSatisfiesTorusOS`
+- `cylinderIRLimit_exists` now states characteristic functional convergence (not just first moments)
+- `cylinderPullback_timeReflection_invariant` now requires torus Θ invariance
 
 ## Architecture
 

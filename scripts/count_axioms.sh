@@ -71,7 +71,7 @@ count_in_dir() {
 count_in_dir "$PPHI2_DIR" "pphi2" "Pphi2"
 
 if [ -d "$GF_DIR" ]; then
-    count_in_dir "$GF_DIR" "gaussian-field" "GaussianField" "HeatKernel" "Lattice" "SchwartzNuclear" "Torus" "SmoothCircle" "Nuclear"
+    count_in_dir "$GF_DIR" "gaussian-field" "GaussianField" "HeatKernel" "Lattice" "SchwartzNuclear" "Torus" "SmoothCircle" "Nuclear" "Cylinder"
 else
     echo ""
     echo -e "${RED}gaussian-field not found at $GF_DIR${NC}"

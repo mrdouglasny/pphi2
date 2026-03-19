@@ -90,11 +90,13 @@ The construction proceeds in two limits:
    Route B's OS0–OS2 proofs are fully adapted to the asymmetric case.
    `AsymTorusOS.lean`: **0 axioms, 0 sorry.**
 
-2. **IR limit (planned):** Take Lt → ∞ with Ls fixed. The torus measures
+2. **IR limit (in progress):** Take Lt → ∞ with Ls fixed. The torus measures
    μ_{P,Lt,Ls} on T_{Lt,Ls} converge weakly to a measure μ_{P,Ls} on the
    cylinder S¹_{Ls} × ℝ. Tightness follows from uniform-in-Lt moment bounds
-   (the interaction density V/volume and Green's function G_{Ls}(f,f) remain
-   bounded as Lt → ∞).
+   via the **method of images** (gaussian-field `Cylinder/MethodOfImages.lean`).
+   The IR limit files are in `IRLimit/` with 8 axioms and 1 sorry.
+   OS2 (time reflection) of the limit measure is **proved** via characteristic
+   functional convergence.
 
 The cylinder S¹_{Ls} × ℝ has a natural time axis ℝ, enabling:
 - **OS3 (Reflection positivity):** Time reflection Θ: t ↦ -t is a clean
@@ -109,8 +111,8 @@ The cylinder S¹_{Ls} × ℝ has a natural time axis ℝ, enabling:
 **Advantages over Route C:** Reuses all Route B infrastructure (0 axioms for
 OS0–OS2). Only needs new work for OS3 (RP) and the Lt → ∞ limit.
 **Status:** UV limit (Step 1) complete — `AsymTorusOS.lean` has **0 axioms,
-0 sorry** for OS0–OS2. Cylinder IR limit (Step 2) planned.
-**25 axioms** (Routes A and C infrastructure), **0 axioms** for Route B' OS0–OS2.
+0 sorry** for OS0–OS2. Cylinder IR limit (Step 2) in progress — `IRLimit/` has
+**8 axioms, 1 sorry**. OS2 of the limit is proved; OS0, OS3 remain axiomatized.
 
 ### Route C: S¹_L × ℝ (cylinder, direct) — OS0–OS3
 Direct Nelson/Simon construction with natural time axis ℝ for OS reconstruction.
@@ -178,11 +180,12 @@ consistency checks:
 ## Current status
 
 All six phases are structurally complete and the full project builds
-(`lake build`, 3084 jobs).
+(`lake build`, 3729 jobs).
 
-- **pphi2:** 61 axioms, 8 sorries
-- **gaussian-field** (upstream, cylinder branch): 0 axioms outside `future/`
+- **pphi2:** 64 axioms, 8 sorries
+- **gaussian-field** (upstream): 19 axioms, 1 sorry (including Cylinder/ modules)
 - **Route B (torus):** 1 axiom, 1 sorry — most developed route (down from 7 axioms)
+- **Route B' IR limit:** 8 axioms, 1 sorry — cylinder OS0+OS2+OS3 via Lt → ∞
 
 The torus continuum limit (`TorusContinuumLimit/`) provides a cleaner alternative
 to the S'(ℝ^d) approach: by fixing the physical volume L and taking only N→∞,

@@ -79,11 +79,9 @@ def cylinderPullbackMeasure
 /-- The pullback is continuous, hence measurable. -/
 theorem cylinderPullback_continuous :
     Continuous (cylinderPullback Lt Ls) := by
-  rw [continuous_def]
-  intro U hU
-  -- The pullback is the composition ω ↦ ω ∘ embed, which is continuous
-  -- in the weak-* topology because each evaluation is continuous.
-  sorry -- TODO: WeakDual continuity argument
+  apply WeakDual.continuous_of_continuous_eval
+  intro f
+  exact WeakDual.eval_continuous (cylinderToTorusEmbed Lt Ls f)
 
 -- Note: Measurability of cylinderPullback follows from continuity
 -- once OpensMeasurableSpace is available for the configuration space.

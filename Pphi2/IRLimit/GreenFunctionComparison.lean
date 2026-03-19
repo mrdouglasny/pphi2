@@ -21,6 +21,7 @@ Combined: `E_{ν_Lt}[(ωf)²] ≤ C·C' · q(f)²` uniformly in Lt.
 -/
 
 import Pphi2.IRLimit.CylinderEmbedding
+import Pphi2.AsymTorus.AsymTorusOS
 import Cylinder.MethodOfImages
 
 noncomputable section
@@ -38,28 +39,27 @@ For any cylinder test function f, the second moment under the
 pulled-back torus interacting measure is bounded by a continuous
 seminorm of f, uniformly in the time period Lt ≥ 1.
 
-**Proof**: Chains the pullback identity, the AsymTorus density transfer
-(interacting → Gaussian second moment), and the method of images
-uniform bound on the torus Green's function.
+**Proof chain**:
+1. `∫ (ω f)² dν_Lt = ∫ (ω(embed f))² dμ` (pullback identity)
+2. OS1 regularity of μ gives `∫ (ω g)² dμ ≤ C₁ · q₁(g)²` for a
+   continuous seminorm q₁ on `AsymTorusTestFunction Lt Ls`
+3. Method of images: `q₁(embed f) ≤ C₂ · q₂(f)` uniformly in Lt ≥ 1
+   (from `torusGreen_uniform_bound` in gaussian-field)
 
-The bound `E[(ωf)²] ≤ C · q(f)²` with `C` independent of Lt is the
-core tightness input for the IR limit. -/
+Combined: `∫ (ω f)² dν_Lt ≤ C · q(f)²` with C, q independent of Lt.
+
+The bound is the core tightness input for the IR limit. -/
 axiom cylinderIR_uniform_second_moment
-    (P : InteractionPolynomial) :
-    ∃ (C : ℝ) (q : CylinderTestFunction Ls → ℝ),
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    ∃ (C : ℝ) (q : Seminorm ℝ (CylinderTestFunction Ls)),
     0 < C ∧ Continuous q ∧
-    ∀ (Lt : ℝ) [Fact (0 < Lt)]
+    ∀ (Lt : ℝ) [Fact (0 < Lt)] (_ : 1 ≤ Lt)
       (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
-      [IsProbabilityMeasure μ]
+      [hμ : IsProbabilityMeasure μ]
+      (_ : @AsymSatisfiesTorusOS Lt Ls _ _ μ hμ)
       (f : CylinderTestFunction Ls),
     ∫ ω : Configuration (CylinderTestFunction Ls),
       (ω f) ^ 2 ∂(cylinderPullbackMeasure Lt Ls μ) ≤
-    C * q f
-
--- NOTE: To prove this axiom, wire together:
--- 1. cylinderPullback_eval: (pullback ω) f = ω (embed f)
--- 2. asymTorus interacting second moment bound (from AsymTorusOS)
--- 3. torusGreen_uniform_bound (from Cylinder.MethodOfImages in gaussian-field):
---    G_{Lt,Ls}(embed f, embed f) ≤ C · q(f)² for continuous seminorm q
+    C * q f ^ 2
 
 end Pphi2

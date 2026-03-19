@@ -51,7 +51,12 @@ have a weakly convergent subsequence.
 2. Mitoma-Chebyshev tightness criterion (from gaussian-field)
 3. Prokhorov's theorem (Polish space + tight → subsequential limit)
 
-The limit is a probability measure on `Configuration (CylinderTestFunction Ls)`. -/
+The limit is a probability measure on `Configuration (CylinderTestFunction Ls)`.
+
+Convergence is stated for the **characteristic functional** (not just
+first moments), since this is what's needed for OS axiom transfer. By
+the Lévy continuity theorem on nuclear spaces, characteristic functional
+convergence is equivalent to weak convergence. -/
 axiom cylinderIRLimit_exists
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
@@ -61,8 +66,11 @@ axiom cylinderIRLimit_exists
     (hμ_os : ∀ n, @AsymSatisfiesTorusOS (Lt n) Ls _ _ (μ n) (hμ_prob n)) :
     ∃ (φ : ℕ → ℕ) (ν : Measure (Configuration (CylinderTestFunction Ls))),
     StrictMono φ ∧ IsProbabilityMeasure ν ∧
-    ∀ (f : CylinderTestFunction Ls),
-    Tendsto (fun n => ∫ ω, ω f ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n))))
-      atTop (nhds (∫ ω, ω f ∂ν))
+    -- Characteristic functional convergence
+    (∀ (f : CylinderTestFunction Ls),
+    Tendsto (fun n =>
+      ∫ ω, Complex.exp (Complex.I * ↑(ω f))
+        ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n))))
+      atTop (nhds (∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν)))
 
 end Pphi2
