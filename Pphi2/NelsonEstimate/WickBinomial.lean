@@ -232,7 +232,40 @@ theorem wickMonomial_add_binomial (n : ℕ) (c₁ c₂ x y : ℝ) :
           simp only [← Finset.sum_add_distrib]
           apply Finset.sum_congr rfl; intro i _; ring
         linarith [h, hcancel]
-      sorry
+      -- Prove A + C = RHS via antidiagonal sums and Pascal's rule
+      -- Convert range sums to antidiagonal sums
+      rw [← Finset.Nat.sum_antidiagonal_eq_sum_range_succ
+            (fun i j => ↑((n + 1).choose i) * wickMonomial (i + 1) c₁ x * wickMonomial j c₂ y),
+          ← Finset.Nat.sum_antidiagonal_eq_sum_range_succ
+            (fun i j => ↑((n + 1).choose i) * wickMonomial i c₁ x * wickMonomial (j + 1) c₂ y),
+          ← Finset.Nat.sum_antidiagonal_eq_sum_range_succ
+            (fun i j => ↑((n + 2).choose i) * wickMonomial i c₁ x * wickMonomial j c₂ y)]
+      -- Convert ↑choose * a * b to choose • (a * b) for sum_antidiagonal_choose_succ_nsmul
+      -- nsmul_eq_mul: n • x = ↑n * x, so ↑n * (a * b) = n • (a * b)
+      simp_rw [show ∀ (a b c : ℝ), a * b * c = a * (b * c) from fun a b c => mul_assoc a b c]
+      simp_rw [← nsmul_eq_mul]
+      -- Now match with sum_antidiagonal_choose_succ_nsmul
+      rw [show n + 2 = n + 1 + 1 from rfl]
+      rw [Finset.sum_antidiagonal_choose_succ_nsmul
+            (fun i j => wickMonomial i c₁ x * wickMonomial j c₂ y) (n + 1)]
+      -- RHS: Σ C(n+1,i) • f(i, j+1) + Σ C(n+1,j) • f(i+1, j)
+      -- LHS: A + C where
+      --   A = Σ C(n+1,i) • (W_{i+1} * W_j)  -- f(i+1, j) with C(n+1,i)
+      --   C = Σ C(n+1,i) • (W_i * W_{j+1})  -- f(i, j+1) with C(n+1,i)
+      -- RHS first sum matches C ✓
+      -- RHS second sum has C(n+1,j), need to convert to C(n+1,i) for A
+      rw [add_comm]
+      congr 1
+      -- Goal: Σ C(n+1,i) • (W_{i+1} * W_j) = Σ C(n+1,j) • (W_{i+1} * W_j) on antidiag(n+1)
+      apply Finset.sum_congr rfl
+      intro ij hij
+      have hmem := Finset.mem_antidiagonal.mp hij
+      -- hmem : ij.1 + ij.2 = n + 1
+      have hsymm : (n + 1).choose ij.2 = (n + 1).choose ij.1 := by
+        have h2 : ij.2 = n + 1 - ij.1 := by omega
+        rw [h2]
+        exact Nat.choose_symm (by omega)
+      rw [hsymm]
 
 /-! ## Explicit cases -/
 
