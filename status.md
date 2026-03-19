@@ -93,11 +93,11 @@ Note: Three axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConver
 | B' | `AsymTorus/AsymTorusOS.lean` | **0 axioms, 0 sorries** (OS0–OS2 fully proved) |
 | 6 | `Bridge.lean` | 4 axioms, 0 sorries |
 | B'IR | `IRLimit/Periodization.lean` | 0 axioms, 0 sorries (re-exports from gaussian-field) |
-| B'IR | `IRLimit/CylinderEmbedding.lean` | 2 axioms, 0 sorries (intertwining axioms) |
+| B'IR | `IRLimit/CylinderEmbedding.lean` | **0 axioms, 0 sorries** (intertwining proved via NTP pure tensor density) |
 | B'IR | `IRLimit/GreenFunctionComparison.lean` | 1 axiom, 0 sorries (uniform 2nd moment) |
 | B'IR | `IRLimit/UniformExponentialMoment.lean` | 1 axiom, 0 sorries (uniform exp moment) |
 | B'IR | `IRLimit/IRTightness.lean` | 1 axiom, 0 sorries (Prokhorov extraction) |
-| B'IR | `IRLimit/CylinderOS.lean` | 3 axioms, 1 sorry (OS0+OS2+OS3; OS2 proved via weak limit) |
+| B'IR | `IRLimit/CylinderOS.lean` | 2 axioms, 0 sorries (OS0+OS3; OS2 proved via weak limit) |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
@@ -698,7 +698,7 @@ infrastructure. Assessment date: 2026-03-04.
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **14 axioms, 0 sorries**.
+The gaussian-field library (dependency) has **15 axioms, 0 sorries**.
 - `GaussianField/Properties.lean`: 1 axiom (`measure_unique_of_charFun`)
 - `GaussianField/Support.lean`: 2 axioms (`not_supported_of_not_hilbertSchmidt`, `supportHilbertSpace_exists`)
 - `HeatKernel/PositionKernel.lean`: 1 axiom (`mehlerKernel_eq_series`)
