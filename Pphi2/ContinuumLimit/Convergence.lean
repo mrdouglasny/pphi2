@@ -216,98 +216,10 @@ theorem continuumLimit (P : InteractionPolynomial)
 
 /-! ## Schwinger function convergence -/
 
-/-- **Convergence of general n-point Schwinger functions.**
-
-  `S_n^{(a)}(f₁,...,fₙ) → S_n(f₁,...,fₙ)`
-
-for all n and all test functions f₁,...,fₙ ∈ S(ℝ^d).
-
-The connected parts decay according to the mass gap
-(from `clustering_uniform`).
-
-Reference: Glimm-Jaffe Ch. 19.2 — extends schwinger2_convergence to
-arbitrary n by induction on moment order, using uniform hypercontractive
-estimates and diagonal subsequence extraction. -/
-axiom schwinger_n_convergence (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) (n : ℕ)
-    (f : Fin n → ContinuumTestFunction d)
-    -- A sequence of lattice spacings converging to 0
-    (a : ℕ → ℝ) (ha_pos : ∀ k, 0 < a k) (ha_le : ∀ k, a k ≤ 1)
-    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
-    -- There exist a subsequence and a limit measure such that the n-point
-    -- Schwinger functions converge along that subsequence.
-    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
-      StrictMono φ ∧ IsProbabilityMeasure μ ∧
-      Filter.Tendsto
-        (fun k => ∫ ω : Configuration (ContinuumTestFunction d),
-          ∏ i : Fin n, ω (f i) ∂(continuumMeasure d N P (a (φ k)) mass (ha_pos (φ k)) hmass))
-        Filter.atTop
-        (nhds (∫ ω : Configuration (ContinuumTestFunction d),
-          ∏ i : Fin n, ω (f i) ∂μ))
-
-/-- **Convergence of the two-point Schwinger function.**
-
-For Schwartz functions f, g ∈ S(ℝ^d):
-
-  `S₂^{(a)}(f, g) = ∫ Φ(f) · Φ(g) dν_a → S₂(f, g) = ∫ Φ(f) · Φ(g) dμ`
-
-as a → 0 (along the convergent subsequence).
-
-This is a special case of `schwinger_n_convergence` with n = 2 and
-test functions `![f, g]`.
-
-Reference: Glimm-Jaffe Ch. 19.2 — Prokhorov tightness gives subsequential
-weak convergence; uniform L² integrability (from Nelson hypercontractive
-estimates) upgrades weak to strong moment convergence. -/
-theorem schwinger2_convergence (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (f g : ContinuumTestFunction d)
-    -- A sequence of lattice spacings converging to 0
-    (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
-    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
-    -- There exist a subsequence and a limit measure such that the two-point
-    -- Schwinger functions converge along that subsequence.
-    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
-      StrictMono φ ∧ IsProbabilityMeasure μ ∧
-      Filter.Tendsto
-        (fun n => ∫ ω : Configuration (ContinuumTestFunction d),
-          ω f * ω g ∂(continuumMeasure d N P (a (φ n)) mass (ha_pos (φ n)) hmass))
-        Filter.atTop
-        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ω f * ω g ∂μ)) := by
-  -- Apply schwinger_n_convergence with n = 2 and test functions ![f, g]
-  obtain ⟨φ, μ, hφ, hμ, hconv⟩ :=
-    schwinger_n_convergence d N P mass hmass 2 ![f, g] a ha_pos ha_le ha_lim
-  refine ⟨φ, μ, hφ, hμ, ?_⟩
-  -- The product ∏ i : Fin 2, ω (![f, g] i) = ω f * ω g
-  have key : ∀ ω : Configuration (ContinuumTestFunction d),
-      ω f * ω g = ∏ i : Fin 2, ω (![f, g] i) := by
-    intro ω; simp [Fin.prod_univ_two]
-  simp_rw [key]
-  exact hconv
-
-/-! ## Properties of the continuum limit -/
-
-/-- The continuum limit measure is non-trivial (not the delta measure at 0).
-
-This follows from the two-point function being nonzero:
-  `S₂(f, f) = ∫ Φ(f)² dμ > 0` for f ≠ 0
-
-The Gaussian two-point function provides a lower bound.
-
-Reference: Simon Ch. V — the free field two-point function
-⟨Φ(f)²⟩_0 = ‖f‖²_{H⁻¹} > 0 for f ≠ 0 provides a uniform
-lower bound on the lattice two-point functions, which
-survives the continuum limit. -/
-axiom continuumLimit_nontrivial (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
-    (ha_lim : Filter.Tendsto a Filter.atTop (nhds 0)) :
-    -- The continuum limit measure is non-trivial: there exists a test function
-    -- f such that the two-point function ∫ (ω f)² dμ is strictly positive.
-    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
-      StrictMono φ ∧ IsProbabilityMeasure μ ∧
-      ∃ (f : ContinuumTestFunction d),
-        0 < ∫ ω : Configuration (ContinuumTestFunction d), (ω f) ^ 2 ∂μ
+-- NOTE: schwinger_n_convergence and continuumLimit_nontrivial were removed
+-- as dead axioms. schwinger_n_convergence was only used by schwinger2_convergence
+-- (also dead). continuumLimit_nontrivial was never used. The non-Gaussianity
+-- result continuumLimit_nonGaussian (below) is the live axiom used in Main.lean.
 
 /-- The continuum limit is non-Gaussian (for nontrivial P).
 

@@ -54,32 +54,9 @@ namespace Pphi2
 
 variable (d N : ℕ) [NeZero N]
 
-/-! ## Uniform second moment bounds -/
-
-/-- **Uniform bound on the second moment of field evaluations.**
-
-  `∫ |Φ_a(f)|² dν_a ≤ C(f)` uniformly in a
-
-where `Φ_a(f) = (ι_a φ)(f) = a^d Σ_x φ(x) f(ax)` is the continuum field
-evaluation.
-
-The bound C(f) depends on the Schwartz function f but not on the
-lattice spacing a. It is controlled by the H^{-1} Sobolev norm of f.
-
-Proof outline:
-1. `∫ Φ_a(f)² dμ_a ≤ e^{C|Λ|} · ∫ Φ_a(f)² dμ_{GFF}` (interaction bounded below)
-2. `∫ Φ_a(f)² dμ_{GFF} = ⟨f, G_a f⟩_lattice` (Gaussian covariance)
-3. `⟨f, G_a f⟩_lattice → ⟨f, G f⟩_continuum` as a → 0 (propagator convergence)
-4. The convergent sequence is bounded. -/
-axiom second_moment_uniform (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) (f : ContinuumTestFunction d) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-    ∫ ω : Configuration (ContinuumTestFunction d),
-      (ω f) ^ 2 ∂(continuumMeasure d N P a mass ha hmass) ≤ C
-
--- NOTE: moment_equicontinuity was removed as a dead axiom (never referenced
--- by any other declaration). The tightness argument uses second_moment_uniform
--- + Mitoma-Chebyshev directly.
+-- NOTE: second_moment_uniform and moment_equicontinuity were removed as dead
+-- axioms (never referenced by any actual Lean code outside this file).
+-- The tightness axiom continuumMeasures_tight (below) is the live axiom.
 
 /-! ## Tightness -/
 
