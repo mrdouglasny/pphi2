@@ -20,6 +20,8 @@ The embedding periodizes the temporal factor and swaps to match conventions.
 
 import Pphi2.IRLimit.Periodization
 import Pphi2.AsymTorus.AsymTorusEmbedding
+import Nuclear.GeneralMapCLM
+import Cylinder.Basic
 
 noncomputable section
 
@@ -31,30 +33,25 @@ variable (Lt Ls : ℝ) [hLt : Fact (0 < Lt)] [hLs : Fact (0 < Ls)]
 
 /-! ## Cylinder → Torus Embedding
 
-The NTP infrastructure only supports endomorphism maps (T : E →L[ℝ] E),
-not maps between different NTP types. The cylinder-to-torus embedding maps
-between different types:
+`CylinderTestFunction Ls = NTP(SMC_Ls, SchwartzMap ℝ ℝ)` — spatial × temporal
+`AsymTorusTestFunction Lt Ls = NTP(SMC_Lt, SMC_Ls)` — temporal × spatial
 
-  NTP(SMC_Ls, SchwartzMap ℝ ℝ) → NTP(SMC_Lt, SMC_Ls)
+The embedding:
+1. Map via `id ⊗ periodize`: `NTP(SMC_Ls, Schwartz ℝ) → NTP(SMC_Ls, SMC_Lt)`
+2. Swap: `NTP(SMC_Ls, SMC_Lt) → NTP(SMC_Lt, SMC_Ls)`
 
-This requires a generalized tensor product functor which we axiomatize here.
-The embedding acts on pure tensors as:
+Uses `nuclearTensorProduct_mapCLM_general` (from gaussian-field) for step 1
+and `nuclearTensorProduct_swapCLM` for step 2. -/
 
-  `pure(g_spatial, h_temporal) ↦ pure(periodize Lt h_temporal, g_spatial)`
-
-(periodize the temporal factor, swap the order). -/
-
-/-- The cylinder-to-torus embedding CLM.
-
-Maps `CylinderTestFunction Ls = NTP(SMC_Ls, Schwartz ℝ)` into
-`AsymTorusTestFunction Lt Ls = NTP(SMC_Lt, SMC_Ls)` by periodizing the
-temporal Schwartz component and swapping factor order.
-
-Axiomatized because `nuclearTensorProduct_mapCLM` only handles endomorphisms.
-The proof would construct this as the unique continuous extension of
-`pure(g, h) ↦ pure(periodize Lt h, g)` using the DM basis. -/
-axiom cylinderToTorusEmbed :
-    CylinderTestFunction Ls →L[ℝ] AsymTorusTestFunction Lt Ls
+/-- Embed cylinder test functions into asymmetric torus test functions.
+Periodizes the temporal (Schwartz) factor and swaps factor order. -/
+def cylinderToTorusEmbed :
+    CylinderTestFunction Ls →L[ℝ] AsymTorusTestFunction Lt Ls :=
+  (nuclearTensorProduct_swapCLM
+    (E₁ := SmoothMap_Circle Ls ℝ) (E₂ := SmoothMap_Circle Lt ℝ)).comp
+  (nuclearTensorProduct_mapCLM_general
+    (ContinuousLinearMap.id ℝ (SmoothMap_Circle Ls ℝ))
+    (periodizeCLM Lt))
 
 /-- The pullback on configurations: given a torus configuration ω,
 produce a cylinder configuration by precomposing with the embedding. -/
