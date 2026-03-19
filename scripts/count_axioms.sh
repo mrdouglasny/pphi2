@@ -19,8 +19,9 @@ count_file() {
     local file="$1"
     local pattern="$2"
     local n
-    # Skip lines marked with count_axioms:skip (e.g. axioms inside comments)
-    n=$(grep "$pattern" "$file" 2>/dev/null | grep -cv 'count_axioms:skip') || true
+    # Skip comment lines and lines marked with count_axioms:skip
+    # For 'sorry' pattern: exclude lines that are clearly inside doc comments
+    n=$(grep "$pattern" "$file" 2>/dev/null | grep -v 'count_axioms:skip' | grep -cv '^\s*--\|^\s*/[-*]\|^\s*\*\|sorry.s\b\|sorry.\b\|sorry:') || true
     n=$(echo "$n" | tr -cd '0-9')
     echo "${n:-0}"
 }

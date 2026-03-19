@@ -64,7 +64,21 @@ theorem cylinderPullback_timeTranslation_invariant
   --     = ∫ exp(i·ω_torus(T_{τ,0}(embed f))) dμ  (intertwining)
   --     = ∫ exp(i·ω_torus(embed f)) dμ  (torus translation invariance)
   -- So LHS = RHS.
-  sorry -- needs: unfold cylinderPullbackMeasure + integral_map + intertwining + hμ_os2
+  unfold cylinderPullbackMeasure
+  have hmeas : Measurable (cylinderPullback Lt Ls) :=
+    configuration_measurable_of_eval_measurable _
+      (fun φ => configuration_eval_measurable _)
+  have hasm : ∀ g : CylinderTestFunction Ls,
+      AEStronglyMeasurable (fun ω => Complex.exp (Complex.I * ↑(ω g)))
+        (Measure.map (cylinderPullback Lt Ls) μ) :=
+    fun g => (Complex.measurable_exp.comp (measurable_const.mul
+      (Complex.measurable_ofReal.comp
+        (configuration_eval_measurable g)))).aestronglyMeasurable
+  rw [integral_map hmeas.aemeasurable (hasm _),
+      integral_map hmeas.aemeasurable (hasm _)]
+  simp only [cylinderPullback_eval]
+  simp_rw [cylinderToTorusEmbed_comp_timeTranslation]
+  exact hμ_os2 (τ, 0) (cylinderToTorusEmbed Lt Ls f)
 
 -- NOTE: This is "axiom" only because formalizing "periodization intertwines
 -- shifts" requires periodizeCLM_comp_schwartzTranslation in gaussian-field.
@@ -79,7 +93,7 @@ is time-reflection invariant.
 2. `= ∫ exp(iω(Θ_torus(embed f))) dμ` (torus reflection invariance)
 3. `= ∫ exp(iω(embed(Θ f))) dμ` (intertwining: `embed ∘ Θ = Θ_torus ∘ embed`)
 4. `= ∫ exp(iω(Θf)) dν_Lt` (pullback) -/
-axiom cylinderPullback_timeReflection_invariant
+theorem cylinderPullback_timeReflection_invariant
     (Lt : ℝ) [Fact (0 < Lt)]
     (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
     [IsProbabilityMeasure μ]
@@ -90,7 +104,22 @@ axiom cylinderPullback_timeReflection_invariant
     ∫ ω, Complex.exp (Complex.I * ↑(ω f))
       ∂(cylinderPullbackMeasure Lt Ls μ) =
     ∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderTimeReflection Ls f)))
-      ∂(cylinderPullbackMeasure Lt Ls μ)
+      ∂(cylinderPullbackMeasure Lt Ls μ) := by
+  unfold cylinderPullbackMeasure
+  have hmeas : Measurable (cylinderPullback Lt Ls) :=
+    configuration_measurable_of_eval_measurable _
+      (fun φ => configuration_eval_measurable _)
+  have hasm : ∀ g : CylinderTestFunction Ls,
+      AEStronglyMeasurable (fun ω => Complex.exp (Complex.I * ↑(ω g)))
+        (Measure.map (cylinderPullback Lt Ls) μ) :=
+    fun g => (Complex.measurable_exp.comp (measurable_const.mul
+      (Complex.measurable_ofReal.comp
+        (configuration_eval_measurable g)))).aestronglyMeasurable
+  rw [integral_map hmeas.aemeasurable (hasm _),
+      integral_map hmeas.aemeasurable (hasm _)]
+  simp only [cylinderPullback_eval]
+  simp_rw [cylinderToTorusEmbed_comp_timeReflection]
+  exact hμ_refl (cylinderToTorusEmbed Lt Ls f)
 
 /-! ## OS0: Analyticity (axiomatized)
 
