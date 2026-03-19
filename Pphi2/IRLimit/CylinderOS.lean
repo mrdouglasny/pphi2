@@ -18,6 +18,7 @@ States OS0–OS3 for the P(φ)₂ cylinder measure obtained as the IR limit
 -/
 
 import Pphi2.IRLimit.IRTightness
+import Pphi2.IRLimit.UniformExponentialMoment
 import Cylinder.Symmetry
 import Cylinder.PositiveTime
 import Cylinder.ReflectionPositivity
@@ -35,18 +36,24 @@ variable (Ls : ℝ) [hLs : Fact (0 < Ls)]
 /-- **Route B' main theorem**: the IR limit of asymmetric torus measures
 satisfies OS0–OS3 on the cylinder S¹_{Ls} × ℝ.
 
-**OS0** (analyticity): transferred from torus via weak convergence +
-exponential moment bounds.
+**OS0** (analyticity): Uniform exponential moment bounds
+(`cylinderIR_uniform_exponential_moment`) give locally uniform boundedness
+of the generating functionals `z ↦ Z_Lt[zf]`. Combined with pointwise
+convergence on ℝ (from weak convergence), Vitali/Montel gives analyticity
+of the limit.
 
 **OS1** (regularity): transferred from torus moment bounds.
 
-**OS2** (invariance): spatial from torus spatial invariance (exact);
-temporal from torus time translation in the Lt → ∞ limit;
-time reflection from torus time reflection (exact).
+**OS2** (invariance): **Exact at every finite Lt.** Periodization
+intertwines time shifts: `periodize(shift_τ f) = shift_τ(periodize f)`.
+So the pullback measure is exactly time-translation invariant.
+Spatial and time-reflection invariance are similarly exact.
 
-**OS3** (reflection positivity): lattice RP (transfer matrix, proved in
-OS3_RP_Lattice.lean) → torus RP (weak limit) → cylinder RP (IR limit).
-Each step preserves positive semidefiniteness. -/
+**OS3** (reflection positivity): **Via compact support density.**
+For `f ∈ C_c^∞((0,R) × S¹)` and `Lt > 2R`, `embed f` has no wrap-around
+into negative time on the torus, so torus RP applies. Pass through the
+IR limit (PSD is closed). Extend to all positive-time test functions by
+density of `C_c^∞` in the positive Schwartz space. -/
 axiom routeBPrime_cylinder_OS
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
