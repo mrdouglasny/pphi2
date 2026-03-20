@@ -163,8 +163,30 @@ extraction principle on this space, avoiding any global Polish-space claim for
 the full weak-* dual topology.
 -/
 
-/-- Sequential Prokhorov extraction directly on configuration space. -/
-axiom prokhorov_configuration_sequential
+/-- **S'(ℝ^d) is a Polish space.**
+
+The space of tempered distributions S'(ℝ^d) = WeakDual ℝ 𝓢(ℝ^d) is Polish
+(complete separable metrizable). This follows from the Sobolev embedding:
+𝓢(ℝ^d) ↪ H^{-s}(ℝ^d) for s > d/2, and H^{-s} is a separable Hilbert space
+whose dual is Polish.
+
+Alternatively: 𝓢(ℝ^d) is a nuclear Fréchet space, hence its strong dual
+is a countable union of Banach spaces, which is Polish.
+
+Reference: Gel'fand-Vilenkin, *Generalized Functions* Vol. 4, §III.4;
+Reed-Simon I, §V.3. -/
+axiom configuration_continuum_polishSpace :
+    PolishSpace (Configuration (ContinuumTestFunction d))
+
+/-- S'(ℝ^d) has a Borel σ-algebra compatible with the weak-* topology. -/
+axiom configuration_continuum_borelSpace :
+    BorelSpace (Configuration (ContinuumTestFunction d))
+
+/-- Sequential Prokhorov extraction on configuration space.
+
+Proved from `prokhorov_sequential` (for Polish spaces) using the
+`PolishSpace` and `BorelSpace` instances for S'(ℝ^d). -/
+theorem prokhorov_configuration_sequential
     (μ : ℕ → Measure (Configuration (ContinuumTestFunction d)))
     (hμ_prob : ∀ n, IsProbabilityMeasure (μ n))
     (hμ_tight : ∀ ε : ℝ, 0 < ε →
@@ -174,7 +196,9 @@ axiom prokhorov_configuration_sequential
       StrictMono φ ∧ IsProbabilityMeasure ν ∧
       ∀ (f : Configuration (ContinuumTestFunction d) → ℝ), Continuous f →
         (∃ C, ∀ x, |f x| ≤ C) →
-        Tendsto (fun n => ∫ ω, f ω ∂(μ (φ n))) atTop (nhds (∫ ω, f ω ∂ν))
+        Tendsto (fun n => ∫ ω, f ω ∂(μ (φ n))) atTop (nhds (∫ ω, f ω ∂ν)) :=
+  @prokhorov_sequential _ _ _ (configuration_continuum_polishSpace (d := d))
+    (configuration_continuum_borelSpace (d := d)) μ hμ_prob hμ_tight
 
 /-! ## The continuum limit -/
 
