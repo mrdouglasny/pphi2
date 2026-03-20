@@ -195,26 +195,262 @@ private theorem covariance_le_mass_inv_sq_norm (a mass : ℝ) (ha : 0 < a) (hmas
         simp only [sq]
         linarith
 
+/-! ### Helper lemmas for the Schwartz Riemann sum bound -/
+
+/-- EuclideanSpace component norm ≤ full norm: `‖y_i‖ ≤ ‖y‖`. -/
+private lemma euclidean_component_le_norm
+    (y : EuclideanSpace ℝ (Fin d)) (i : Fin d) :
+    ‖y i‖ ≤ ‖y‖ := by
+  have h1 : ‖y i‖ ^ 2 ≤ ‖y‖ ^ 2 := by
+    rw [EuclideanSpace.norm_sq_eq]
+    have : y i = y.ofLp i := rfl; rw [this]
+    exact Finset.single_le_sum (f := fun j => ‖y.ofLp j‖ ^ 2)
+      (fun j _ => sq_nonneg _) (Finset.mem_univ i)
+  nlinarith [sq_nonneg (‖y i‖ - ‖y‖), norm_nonneg y]
+
+/-- Schwartz decay squared: `f(y)² ≤ S_f² / (1+‖y‖)^{2d}`. -/
+private lemma schwartz_sq_decay (f : ContinuumTestFunction d)
+    (y : EuclideanSpace ℝ (Fin d)) :
+    f y ^ 2 ≤ (2 ^ d * ((Finset.Iic ((d : ℕ), (0 : ℕ))).sup
+      fun m => SchwartzMap.seminorm ℝ m.1 m.2) f) ^ 2 /
+    (1 + ‖y‖) ^ (2 * d) := by
+  set S := 2 ^ d * ((Finset.Iic ((d : ℕ), (0 : ℕ))).sup
+    fun m => SchwartzMap.seminorm ℝ m.1 m.2) f
+  have hdecay : (1 + ‖y‖) ^ d * ‖f y‖ ≤ S := by
+    have h := SchwartzMap.one_add_le_sup_seminorm_apply
+      (𝕜 := ℝ) (m := (d, 0)) (k := d) (n := 0)
+      (le_refl d) (le_refl 0) f y
+    simp only [norm_iteratedFDeriv_zero] at h; exact h
+  rw [le_div_iff₀ (by positivity : (0 : ℝ) < (1 + ‖y‖) ^ (2 * d))]
+  calc f y ^ 2 * (1 + ‖y‖) ^ (2 * d)
+      = (‖f y‖) ^ 2 * ((1 + ‖y‖) ^ d) ^ 2 := by
+        rw [Real.norm_eq_abs, sq_abs, ← pow_mul]; ring_nf
+    _ = ((1 + ‖y‖) ^ d * ‖f y‖) ^ 2 := by ring
+    _ ≤ S ^ 2 := by
+        apply sq_le_sq'
+        · nlinarith [mul_nonneg
+            (pow_nonneg
+              (show (0 : ℝ) ≤ 1 + ‖y‖ by linarith [norm_nonneg y]) d)
+            (norm_nonneg (f y))]
+        · exact hdecay
+
+/-- Product norm bound: `∏_i (1+‖y_i‖)² ≤ (1+‖y‖)^{2d}`. -/
+private lemma norm_prod_bound (y : EuclideanSpace ℝ (Fin d)) :
+    ∏ i : Fin d, (1 + ‖y i‖) ^ 2 ≤ (1 + ‖y‖) ^ (2 * d) := by
+  rw [show (1 + ‖y‖) ^ (2 * d) = ∏ _i : Fin d, (1 + ‖y‖) ^ 2
+    from by simp [Finset.prod_const, pow_mul]]
+  exact Finset.prod_le_prod (fun i _ => sq_nonneg _)
+    (fun i _ => pow_le_pow_left₀
+      (by linarith [norm_nonneg (y i)])
+      (by linarith [euclidean_component_le_norm d y i]) 2)
+
+/-- Schwartz product bound: `f(y)² · ∏_i (1+‖y_i‖)² ≤ S_f²`. -/
+private lemma schwartz_sq_product_bound (f : ContinuumTestFunction d)
+    (y : EuclideanSpace ℝ (Fin d)) :
+    f y ^ 2 * ∏ i : Fin d, (1 + ‖y i‖) ^ 2 ≤
+    (2 ^ d * ((Finset.Iic ((d : ℕ), (0 : ℕ))).sup
+      fun m => SchwartzMap.seminorm ℝ m.1 m.2) f) ^ 2 := by
+  set S := 2 ^ d * ((Finset.Iic ((d : ℕ), (0 : ℕ))).sup
+    fun m => SchwartzMap.seminorm ℝ m.1 m.2) f
+  calc f y ^ 2 * ∏ i, (1 + ‖y i‖) ^ 2
+      ≤ S ^ 2 / (1 + ‖y‖) ^ (2 * d) * ∏ i, (1 + ‖y i‖) ^ 2 :=
+        mul_le_mul_of_nonneg_right (schwartz_sq_decay d f y)
+          (Finset.prod_nonneg (fun i _ => sq_nonneg _))
+    _ ≤ S ^ 2 / (1 + ‖y‖) ^ (2 * d) * (1 + ‖y‖) ^ (2 * d) :=
+        mul_le_mul_of_nonneg_left (norm_prod_bound d y)
+          (div_nonneg (sq_nonneg _) (le_of_lt (by positivity)))
+    _ = S ^ 2 := by field_simp
+
+/-- Norm of physicalPosition component equals `a · val(x_i)`. -/
+private lemma physPos_norm_component (a : ℝ) (ha : 0 < a)
+    (x : FinLatticeSites d N) (i : Fin d) :
+    ‖(physicalPosition d N a x) i‖ = a * ↑(ZMod.val (x i)) := by
+  rw [show (physicalPosition d N a x) i = a * ↑(ZMod.val (x i))
+    from by simp [physicalPosition]]
+  rw [Real.norm_eq_abs,
+    abs_of_nonneg (mul_nonneg (le_of_lt ha) (Nat.cast_nonneg _))]
+
+/-- ZMod sum equals Finset.range sum. -/
+private lemma zmod_sum_eq_range_sum (g : ℕ → ℝ) :
+    ∑ x : ZMod N, g (ZMod.val x) =
+    ∑ n ∈ Finset.range N, g n := by
+  rw [show ∑ x : ZMod N, g (ZMod.val x) = ∑ n : Fin N, g n.val
+    from Fintype.sum_bijective
+      (fun (x : ZMod N) =>
+        (⟨ZMod.val x, ZMod.val_lt x⟩ : Fin N))
+      ⟨fun a b h => ZMod.val_injective N (Fin.mk.inj h),
+       fun ⟨n, hn⟩ =>
+        ⟨(n : ZMod N), by
+          ext; exact ZMod.val_natCast_of_lt hn⟩⟩
+      _ _ (fun _ => rfl),
+    ← Finset.sum_range (f := g)]
+
+/-- Telescoping: `a/(1+an)² ≤ 1/(1+a(n-1)) - 1/(1+an)` for `n ≥ 1`. -/
+private lemma telescoping_step (a : ℝ) (ha : 0 < a)
+    (n : ℕ) (hn : 1 ≤ n) :
+    a / (1 + a * (n : ℝ)) ^ 2 ≤
+    1 / (1 + a * ((n : ℝ) - 1)) - 1 / (1 + a * (n : ℝ)) := by
+  have h1 : (0 : ℝ) < 1 + a * (n : ℝ) := by positivity
+  have h2 : (0 : ℝ) < 1 + a * ((n : ℝ) - 1) := by
+    nlinarith [show (1 : ℝ) ≤ (n : ℝ) from Nat.one_le_cast.mpr hn]
+  suffices a / (1 + a * (n : ℝ)) ^ 2 ≤
+      a / ((1 + a * ((n : ℝ) - 1)) * (1 + a * (n : ℝ))) by
+    calc a / (1 + a * (n : ℝ)) ^ 2
+        ≤ a / ((1 + a * ((n : ℝ) - 1)) * (1 + a * (n : ℝ))) := this
+      _ = 1 / (1 + a * ((n : ℝ) - 1)) - 1 / (1 + a * (n : ℝ)) := by
+          field_simp; ring
+  exact div_le_div_of_nonneg_left (le_of_lt ha)
+    (mul_pos h2 h1) (by nlinarith [le_of_lt h1])
+
+/-- 1D sum bound: `Σ_{n ∈ range M} a/(1+an)² ≤ 2` for `0 < a ≤ 1`. -/
+private lemma one_d_sum_bound (a : ℝ) (ha : 0 < a)
+    (ha1 : a ≤ 1) (M : ℕ) :
+    ∑ n ∈ Finset.range M,
+      a / (1 + a * (n : ℝ)) ^ 2 ≤ 2 := by
+  cases M with
+  | zero => simp
+  | succ K =>
+    rw [Finset.sum_range_succ'
+      (f := fun n => a / (1 + a * (n : ℝ)) ^ 2)]
+    simp only [Nat.cast_zero, mul_zero, add_zero,
+      one_pow, div_one]
+    have htel : ∑ k ∈ Finset.range K,
+        a / (1 + a * ((k : ℝ) + 1)) ^ 2 ≤
+        ∑ k ∈ Finset.range K,
+          (1 / (1 + a * (k : ℝ)) -
+           1 / (1 + a * ((k : ℝ) + 1))) := by
+      apply Finset.sum_le_sum; intro k _
+      have h := telescoping_step a ha (k + 1)
+        (Nat.le_add_left 1 k)
+      simp only [Nat.cast_add, Nat.cast_one,
+        show ((k : ℝ) + 1) - 1 = (k : ℝ) by ring] at h
+      exact h
+    have hsum_eq : ∑ k ∈ Finset.range K,
+        (1 / (1 + a * (k : ℝ)) -
+         1 / (1 + a * ((k : ℝ) + 1))) =
+        1 - 1 / (1 + a * (K : ℝ)) := by
+      have h := Finset.sum_range_sub'
+        (fun k => 1 / (1 + a * (k : ℝ))) K
+      simp only [Nat.cast_zero, Nat.cast_add, Nat.cast_one,
+        mul_zero, add_zero, div_one] at h
+      exact h
+    -- Normalize ↑(k+1) to ↑k + 1 everywhere
+    simp only [Nat.cast_add, Nat.cast_one] at htel ⊢
+    rw [hsum_eq] at htel
+    linarith [div_nonneg one_pos.le
+      (le_of_lt
+        (by positivity : (0 : ℝ) < 1 + a * (K : ℝ)))]
+
+/-- 1D bound over ZMod N:
+    `Σ_{n : ZMod N} a/(1+a·n.val)² ≤ 2`. -/
+private lemma one_d_zmod_bound (a : ℝ) (ha : 0 < a)
+    (ha1 : a ≤ 1) :
+    ∑ n : ZMod N, a / (1 + a * (ZMod.val n : ℝ)) ^ 2 ≤
+    2 := by
+  rw [zmod_sum_eq_range_sum N
+    (fun n => a / (1 + a * (n : ℝ)) ^ 2)]
+  exact one_d_sum_bound a ha ha1 N
+
+/-! ### Schwartz Riemann sum bound -/
+
 /-- **Schwartz Riemann sum bound.**
 
 For a Schwartz function f : S(ℝ^d) and the lattice (ℤ/Nℤ)^d with spacing a,
 the weighted sum `a^d · Σ_{x} |f(a·x)|²` is bounded uniformly in a ∈ (0,1] and N.
 
-This is a standard fact: the Riemann sum approximates `‖f‖²_{L²(ℝ^d)}`, and since
-f is Schwartz (hence rapidly decaying), the sum converges uniformly and is bounded
-by a constant depending only on f.
+The proof uses:
+1. Schwartz decay: `(1+‖y‖)^d · |f(y)| ≤ S_f` from seminorm bounds
+2. Product factorization: `(1+‖y‖)^{2d} ≥ ∏_i (1+|y_i|)²`
+3. Sum factorization: `Σ_x ∏_i g(x_i) = ∏_i Σ_n g(n)` over the lattice
+4. 1D telescoping: `Σ_n a/(1+an)² ≤ 2` for `0 < a ≤ 1`
 
-More precisely: `|f(y)| ≤ C_n (1+|y|)^{-n}` for all n, so
-`a^d Σ_x f(ax)² ≤ C² · a^d Σ_x (1+a|x|)^{-2n}`, and for 2n > d the sum converges
-to at most `∫ (1+|y|)^{-2n} dy < ∞`. -/
+This gives `a^d Σ_x f(ax)² ≤ S_f² · 2^d`. -/
 private theorem schwartz_riemann_sum_bound
     (f : ContinuumTestFunction d) :
     ∃ C : ℝ, 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
     ∀ (N : ℕ) [NeZero N],
-    a ^ d * ∑ x : FinLatticeSites d N, (evalAtSite d N a f x) ^ 2 ≤ C := by
-  -- Schwartz decay: |f(y)| ≤ p(f) · (1+|y|)^{-M} for M > d
-  -- Riemann sum a^d Σ_x (1+a|x|)^{-2M} bounded by ∫ (1+|y|)^{-2M} dy
-  sorry
+    a ^ d * ∑ x : FinLatticeSites d N,
+      (evalAtSite d N a f x) ^ 2 ≤ C := by
+  -- The Schwartz seminorm constant
+  set S := 2 ^ d * ((Finset.Iic ((d : ℕ), (0 : ℕ))).sup
+    fun m => SchwartzMap.seminorm ℝ m.1 m.2) f
+  refine ⟨S ^ 2 * 2 ^ d + 1, by positivity, ?_⟩
+  intro a ha ha1 N _
+  simp only [evalAtSite]
+  -- Step 1: Bound f(y)² using Schwartz product bound
+  -- f(y)² * ∏_i (1+‖y_i‖)² ≤ S² implies
+  -- f(y)² ≤ S² / ∏_i (1+‖y_i‖)²
+  have hbound : ∀ x : FinLatticeSites d N,
+      f (physicalPosition d N a x) ^ 2 ≤
+      S ^ 2 / ∏ i : Fin d,
+        (1 + a * (ZMod.val (x i) : ℝ)) ^ 2 := by
+    intro x
+    have hprod_pos : (0 : ℝ) < ∏ i : Fin d,
+        (1 + a * (ZMod.val (x i) : ℝ)) ^ 2 :=
+      Finset.prod_pos (fun i _ =>
+        sq_pos_of_pos (by positivity))
+    rw [le_div_iff₀ hprod_pos]
+    -- Rewrite ∏(1+a*val)² as ∏(1+‖component‖)²
+    calc f (physicalPosition d N a x) ^ 2 *
+          ∏ i, (1 + a * (ZMod.val (x i) : ℝ)) ^ 2
+        = f (physicalPosition d N a x) ^ 2 *
+          ∏ i, (1 + ‖(physicalPosition d N a x) i‖) ^ 2 := by
+          congr 1; apply Finset.prod_congr rfl
+          intro i _; congr 1; congr 1
+          exact (physPos_norm_component d N a ha x i).symm
+      _ ≤ S ^ 2 :=
+          schwartz_sq_product_bound d f
+            (physicalPosition d N a x)
+  -- Step 2: Sum the bounds
+  -- Factor: a^d * Σ f(y)² ≤ S² * Σ_x ∏_i a/(1+a·val)²
+  --                         = S² * ∏_i Σ_n a/(1+an)²  ≤  S² · 2^d
+  suffices h_main : a ^ d *
+      ∑ x : FinLatticeSites d N,
+        f (physicalPosition d N a x) ^ 2 ≤
+      S ^ 2 * 2 ^ d by linarith
+  -- Bound each term: f(y)² ≤ S² / ∏(1+a·val)²
+  calc a ^ d * ∑ x, f (physicalPosition d N a x) ^ 2
+      ≤ a ^ d * ∑ x : FinLatticeSites d N,
+          S ^ 2 / ∏ i : Fin d,
+            (1 + a * (ZMod.val (x i) : ℝ)) ^ 2 := by
+        gcongr with x; exact hbound x
+    -- Factor a^d into the product and combine with sum
+    _ = S ^ 2 * ∑ x : FinLatticeSites d N,
+          ∏ i : Fin d,
+            a / (1 + a * (ZMod.val (x i) : ℝ)) ^ 2 := by
+        -- Pull S² out as a constant factor
+        conv_lhs =>
+          rw [Finset.mul_sum]
+          arg 2; ext x
+          rw [show a ^ d * (S ^ 2 /
+              ∏ i : Fin d,
+                (1 + a * (ZMod.val (x i) : ℝ)) ^ 2) =
+            S ^ 2 * (a ^ d /
+              ∏ i : Fin d,
+                (1 + a * (ZMod.val (x i) : ℝ)) ^ 2) from
+              by ring]
+          rw [show a ^ d = ∏ _i : Fin d, a from
+            by simp [Finset.prod_const]]
+          rw [← Finset.prod_div_distrib]
+        rw [← Finset.mul_sum]
+    -- Factor the sum as a product of 1D sums
+    _ = S ^ 2 * ∏ _i : Fin d,
+          ∑ n : ZMod N,
+            a / (1 + a * (ZMod.val n : ℝ)) ^ 2 := by
+        congr 1
+        rw [← Fintype.prod_sum
+          (fun _ => fun n : ZMod N =>
+            a / (1 + a * (ZMod.val n : ℝ)) ^ 2)]
+    -- Bound each 1D sum by 2
+    _ ≤ S ^ 2 * 2 ^ d := by
+        gcongr
+        rw [show (2 : ℝ) ^ d = ∏ _i : Fin d, (2 : ℝ)
+          from by simp [Finset.prod_const]]
+        exact Finset.prod_le_prod
+          (fun i _ => Finset.sum_nonneg
+            (fun n _ => div_nonneg
+              (le_of_lt ha) (sq_nonneg _)))
+          (fun i _ => one_d_zmod_bound N a ha ha1)
 
 theorem embeddedTwoPoint_uniform_bound (mass : ℝ) (hmass : 0 < mass)
     (f : ContinuumTestFunction d) :

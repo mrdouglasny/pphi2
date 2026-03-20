@@ -29,8 +29,10 @@ Extends Route B to T_{Lt,Ls} with different circle sizes per direction.
 
 **Other routes: ~50 axioms** (Routes A, C — not yet updated).
 
-Note: Three axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConvergence),
-`fourier_representation_convolution` (GaussianFourier), and `gaussian_rp_cov_perfect_square` (OS3_RP_Lattice).
+Note: Two axioms are `private`: `fourier_representation_convolution` (GaussianFourier)
+and `gaussian_rp_cov_perfect_square` (OS3_RP_Lattice).
+`schwartz_riemann_sum_bound` (PropagatorConvergence) was proved via Schwartz decay +
+telescoping sum bound.
 
 `schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
@@ -65,7 +67,7 @@ Note: Three axioms are `private`: `schwartz_riemann_sum_bound` (PropagatorConver
 | 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 proved theorems |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 0 sorries |
-| 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom + 1 private axiom (`schwartz_riemann_sum_bound`), 0 sorries |
+| 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`schwartz_riemann_sum_bound` proved) |
 | 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 1 axiom, 0 sorries |
 | 4G | `GaussianContinuumLimit/GaussianLimit.lean` | 1 axiom, 0 sorries |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 6 axioms |
@@ -698,7 +700,7 @@ infrastructure. Assessment date: 2026-03-04.
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **15 axioms, 0 sorries**.
+The gaussian-field library (dependency) has **14 axioms, 0 sorries**.
 - `GaussianField/Properties.lean`: 1 axiom (`measure_unique_of_charFun`)
 - `GaussianField/Support.lean`: 2 axioms (`not_supported_of_not_hilbertSchmidt`, `supportHilbertSpace_exists`)
 - `HeatKernel/PositionKernel.lean`: 1 axiom (`mehlerKernel_eq_series`)
