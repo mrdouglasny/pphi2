@@ -15,7 +15,7 @@
    "type": "git",
    "subDir": null,
    "scope": "mrdouglasny",
-   "rev": "f9d6e0ecc955a8cdd8d1f2612d8447f8329aa5a5",
+   "rev": "3af101c31f1cf07b260b4a1909c516d7d66b9cba",
    "name": "GaussianField",
    "manifestFile": "lake-manifest.json",
    "inputRev": "cylinder",
