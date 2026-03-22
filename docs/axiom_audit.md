@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-03-19
-**pphi2**: 33 axioms, 0 sorries (active build) | **gaussian-field**: 19 axioms, 0 sorries
+**Updated**: 2026-03-21
+**pphi2**: 32 axioms, 0 sorries (active build) | **gaussian-field**: 14 axioms, 0 sorries
 
 Note: pphi2 count includes 3 private axioms (`schwartz_riemann_sum_bound`,
 `fourier_representation_convolution`, `gaussian_rp_cov_perfect_square`).
