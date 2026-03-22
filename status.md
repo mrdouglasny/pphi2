@@ -5,13 +5,15 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3800 jobs).
+3801 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 1 sorry.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-03-22): 32 axioms, 0 sorries.**
+
+**Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 0 sorries.**
 All OS0–OS2 proofs complete within this file. Transitive dependencies are
 now largely resolved — see `docs/torus-route-gap-audit.md` for details.
 Recently closed:
@@ -62,10 +64,10 @@ telescoping sum bound.
 | 3 | `OSProofs/OS4_MassGap.lean` | 2 axioms, 0 sorries |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def) |
-| 4 | `ContinuumLimit/Hypercontractivity.lean` | 1 axiom, 0 sorries (`wickConstant_eq_variance`; `wickConstant_eq_variance_two_dim` proved) |
-| 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
-| 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 proved theorems |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
+| 4 | `ContinuumLimit/Hypercontractivity.lean` | 0 axioms, 0 sorries (`wickConstant_eq_variance` now proved generically; `wickConstant_eq_variance_two_dim` remains as a 2D corollary) |
+| 4 | `ContinuumLimit/Tightness.lean` | 1 axiom |
+| 4 | `ContinuumLimit/Convergence.lean` | 3 axioms, 0 sorries, 2 proved theorems |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom, 0 sorries |
 | 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`schwartz_riemann_sum_bound` proved) |
 | 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 1 axiom, 0 sorries |
@@ -77,26 +79,28 @@ telescoping sum bound.
 | — | `GeneralResults/Osgood/OsgoodN.lean` | **0 axioms, 0 sorries** (n-variable Osgood by induction) |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
 | — | `GeneralResults/LatticeFourierIndexing.lean` | 0 axioms (Fourier mode reindexing and 2D lattice-eigenvalue sum theorem) |
+| — | `GeneralResults/LatticeProductDFT.lean` | 0 axioms (generic product DFT Parseval theorem and abstract-vs-explicit spectral covariance identity) |
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
 | 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 0 axioms, 0 sorries (`torus_propagator_convergence` proved via gaussian-field `lattice_green_tendsto_continuum` axiom) |
-| 4T | `TorusContinuumLimit/TorusTightness.lean` | 0 axioms, 1 sorry |
+| 4T | `TorusContinuumLimit/TorusTightness.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
-| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 0 axioms, 1 sorry |
+| 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 0 axioms, 0 sorries |
-| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 0 axioms, 1 sorry |
-| 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | 0 axioms, 1 sorry |
-| 4T | `TorusContinuumLimit/MeasureUniqueness.lean` | 1 sorry (Cramér-Wold) |
-| 4T | `TorusContinuumLimit/TorusNuclearBridge.lean` | 2 sorries (DM→IsHilbertNuclear) |
-| 4T | `NelsonEstimate/*.lean` | 0 axioms, 1 sorry (WickBinomial) |
+| 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 0 axioms, 0 sorries |
+| 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | 0 axioms, 0 sorries |
+| 4T | `TorusContinuumLimit/MeasureUniqueness.lean` | 0 axioms, 0 sorries |
+| 4T | `TorusContinuumLimit/TorusNuclearBridge.lean` | 0 axioms, 0 sorries |
+| 4T | `NelsonEstimate/*.lean` | 0 axioms, 0 sorries |
 | B' | `AsymTorus/AsymTorusEmbedding.lean` | 0 axioms, 0 sorries |
 | B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 0 axioms, 0 sorries |
 | B' | `AsymTorus/AsymTorusOS.lean` | **0 axioms, 0 sorries** (OS0–OS2 fully proved) |
-| 6 | `Bridge.lean` | 4 axioms, 0 sorries |
+| 6 | `Bridge.lean` | 3 axioms, 0 sorries |
 | B'IR | `IRLimit/Periodization.lean` | 0 axioms, 0 sorries (re-exports from gaussian-field) |
 | B'IR | `IRLimit/CylinderEmbedding.lean` | **0 axioms, 0 sorries** (intertwining proved via NTP pure tensor density) |
+| B'IR | `IRLimit/CovarianceConvergence.lean` | 2 axioms, 0 sorries (periodic resolvent wrap-around estimate proved) |
 | B'IR | `IRLimit/GreenFunctionComparison.lean` | 1 axiom, 0 sorries (uniform 2nd moment) |
 | B'IR | `IRLimit/UniformExponentialMoment.lean` | 1 axiom, 0 sorries (uniform exp moment) |
 | B'IR | `IRLimit/IRTightness.lean` | 1 axiom, 0 sorries (Prokhorov extraction) |
@@ -317,7 +321,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
 | ~~`gaussian_hypercontractivity_continuum`~~ | Hypercontractivity | **Proved** | Gaussian hypercontractivity in continuum-embedded form. Proved from `gaussian_hypercontractive` (gaussian-field) via pushforward + `latticeEmbedLift_eval_eq`. |
 | ~~`wickMonomial_latticeGaussian`~~ | Hypercontractivity | **Theorem** | Proved from `wickConstant_eq_variance` + marginal Gaussian + `gaussian_hermite_zero_mean`. |
-| `wickConstant_eq_variance` | Hypercontractivity | Medium | Remaining gap is the dimension-generic statement. The 2D spectral/Parseval theorem is now proved via `GeneralResults/LatticeFourierIndexing.lean` and `wickConstant_eq_variance_two_dim`. |
+| ~~`wickConstant_eq_variance`~~ | Hypercontractivity | **Theorem** | Proved generically from `GeneralResults/LatticeProductDFT.lean`: product-DFT Parseval plus the abstract spectral covariance formula identify the site variance with the Wick constant in arbitrary dimension. |
 | ~~`gaussian_hermite_zero_mean`~~ | Hypercontractivity | **Proved** | 1D: ∫ He_n dN(0,σ²) = 0 for n ≥ 1; polynomial integrability under `gaussianReal`. |
 | ~~`wickPolynomial_uniform_bounded_below`~~ | WickPolynomial | **Proved** | Wick polynomial P(c,x) ≥ -A uniformly for c ∈ [0,C]. Coefficient continuity + compactness + leading term dominance. |
 | ~~`exponential_moment_bound`~~ | Hypercontractivity | **Proved** | ∫ exp(-2V_a) dμ_{GFF} ≤ K. Proved from `wickPolynomial_uniform_bounded_below` + pointwise exp bound + probability measure. |
@@ -514,7 +518,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 
 ### Tier 2: Core analytic results (the hard axioms)
 
-5. **Hypercontractivity** — `wickMonomial_latticeGaussian` is a **theorem**; the remaining input is the dimension-generic `wickConstant_eq_variance` axiom. The 2D spectral/Parseval theorem is now proved via `GeneralResults/LatticeFourierIndexing.lean` and `wickConstant_eq_variance_two_dim`. `wickPolynomial_uniform_bounded_below` proved. `exponential_moment_bound` proved from bounded-below + probability measure. `interactionFunctional_mean_nonpos` proved from `wickMonomial_latticeGaussian` + linearity + `P.coeff_zero_nonpos`. `partitionFunction_ge_one` / `interacting_moment_bound` as before.
+5. **Hypercontractivity** — `wickMonomial_latticeGaussian`, `wickConstant_eq_variance`, and `gaussian_hermite_zero_mean` are now **theorems**. The remaining work in this area is downstream analytic strengthening, not the Wick/GFF variance bridge. `wickConstant_eq_variance` is now proved generically via `GeneralResults/LatticeProductDFT.lean`. `wickPolynomial_uniform_bounded_below` proved. `exponential_moment_bound` proved from bounded-below + probability measure. `interactionFunctional_mean_nonpos` proved from `wickMonomial_latticeGaussian` + linearity + `P.coeff_zero_nonpos`. `partitionFunction_ge_one` / `interacting_moment_bound` as before.
 6. **`second_moment_uniform` + `continuumMeasures_tight`** — Tightness argument. Depends on Nelson.
 7. **`spectral_gap_uniform`** — Uniform mass gap. Kato-Rellich perturbation theory.
 8. **`ward_identity_lattice` + `anomaly_vanishes`** — Ward identity + power counting for rotation invariance.
@@ -664,7 +668,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Super-renormalizability gives a² Ward identity bound. No log corrections in d=2. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Fernique + Nelson hypercontractive estimate transferred to limit. |
 | ~~`wickMonomial_latticeGaussian`~~ | Hypercontractivity | **Theorem** (see `Hypercontractivity.lean`). |
-| `wickConstant_eq_variance` | Hypercontractivity | Remaining dimension-generic Wick constant = GFF site variance statement; the 2D theorem is now proved. |
+| ~~`wickConstant_eq_variance`~~ | Hypercontractivity | **Theorem** (generic proof via `GeneralResults/LatticeProductDFT.lean`; 2D corollary retained in `Hypercontractivity.lean`). |
 | ~~`gaussian_hermite_zero_mean`~~ | Hypercontractivity | **Theorem** (see `GaussianHermiteMean.lean`). |
 | ~~`wickPolynomial_uniform_bounded_below`~~ | WickPolynomial | ✅ **Proved** via coefficient continuity + compactness + leading term dominance. |
 | `rotation_invariance_continuum` | OS2_WardIdentity | Ward identity + anomaly irrelevance for O(2). |

@@ -171,19 +171,130 @@ in `Cylinder/MethodOfImages.lean`. -/
 
 For ω > 0 and |t| < Lt/2:
   |cosh(ω(Lt/2 - |t|))/(2ω sinh(ωLt/2)) - e^{-ω|t|}/(2ω)|
-    ≤ e^{-ω|t|} · e^{-ω Lt} / (ω(1 - e^{-ω Lt}))
+    ≤ e^{-ω(Lt - |t|)} / (ω(1 - e^{-ω Lt}))
 
-In particular, the error is O(e^{-m Lt}) uniformly in t ∈ supp(f)
-for Schwartz test functions f (since |t| grows at most polynomially
-while the exponential decay dominates). -/
+This is the standard wrap-around contribution from the method of images:
+the nearest nontrivial image sits at temporal distance `Lt - |t|`.
+
+In particular, on any fixed compact time interval the error is `O(e^{-ω Lt})`
+as `Lt → ∞`, and under the hypothesis `|t| < Lt / 2` it is uniformly
+`O(e^{-ω Lt / 2})`. -/
 theorem periodicResolvent_convergence_rate
     (ω : ℝ) (hω : 0 < ω)
-    (t : ℝ) (Lt : ℝ) (hLt : 0 < Lt) (ht : |t| < Lt / 2) :
+    (t : ℝ) (Lt : ℝ) (hLt : 0 < Lt) (_ht : |t| < Lt / 2) :
     |Real.cosh (ω * (Lt / 2 - |t|)) / (2 * ω * Real.sinh (ω * Lt / 2)) -
      Real.exp (-ω * |t|) / (2 * ω)| ≤
-    Real.exp (-ω * |t|) * Real.exp (-ω * Lt) /
+    Real.exp (-ω * (Lt - |t|)) /
       (ω * (1 - Real.exp (-ω * Lt))) := by
-  sorry
+  set a : ℝ := ω * Lt / 2
+  set b : ℝ := ω * |t|
+  have ha_pos : 0 < a := by
+    dsimp [a]
+    positivity
+  have hb_nonneg : 0 ≤ b := by
+    dsimp [b]
+    positivity
+  have hsinh_pos : 0 < Real.sinh a := by
+    rw [Real.sinh_eq]
+    have hnum_pos : 0 < Real.exp a - Real.exp (-a) := by
+      exact sub_pos.mpr <| (Real.exp_lt_exp).2 (by linarith [ha_pos])
+    nlinarith
+  have hsinh_ne : Real.sinh a ≠ 0 := ne_of_gt hsinh_pos
+  have hω_ne : ω ≠ 0 := ne_of_gt hω
+  have hLt_exp_lt : Real.exp (-ω * Lt) < 1 := by
+    rw [Real.exp_lt_one_iff]
+    nlinarith
+  have hone_pos : 0 < 1 - Real.exp (-ω * Lt) := sub_pos.mpr hLt_exp_lt
+  have hone_ne : 1 - Real.exp (-ω * Lt) ≠ 0 := ne_of_gt hone_pos
+  have hsplit : Real.cosh (a - b) =
+      Real.sinh a * Real.exp (-b) + Real.exp (-a) * Real.cosh b := by
+    have hcosh_a : Real.cosh a = Real.sinh a + Real.exp (-a) := by
+      linarith [Real.cosh_sub_sinh a]
+    calc
+      Real.cosh (a - b)
+          = Real.cosh a * Real.cosh b - Real.sinh a * Real.sinh b := by
+              rw [Real.cosh_sub]
+      _ = (Real.sinh a + Real.exp (-a)) * Real.cosh b - Real.sinh a * Real.sinh b := by
+            rw [hcosh_a]
+      _ = Real.sinh a * (Real.cosh b - Real.sinh b) + Real.exp (-a) * Real.cosh b := by
+            ring
+      _ = Real.sinh a * Real.exp (-b) + Real.exp (-a) * Real.cosh b := by
+            rw [Real.cosh_sub_sinh]
+  have hdiff :
+      Real.cosh (ω * (Lt / 2 - |t|)) / (2 * ω * Real.sinh (ω * Lt / 2)) -
+          Real.exp (-ω * |t|) / (2 * ω) =
+        Real.exp (-a) * Real.cosh b / (2 * ω * Real.sinh a) := by
+    have harg : ω * (Lt / 2 - |t|) = a - b := by
+      dsimp [a, b]
+      ring
+    rw [harg, show ω * Lt / 2 = a by rfl, hsplit]
+    field_simp [hω_ne, hsinh_ne]
+    ring
+  have habs :
+      |Real.cosh (ω * (Lt / 2 - |t|)) / (2 * ω * Real.sinh (ω * Lt / 2)) -
+        Real.exp (-ω * |t|) / (2 * ω)| =
+      Real.exp (-a) * Real.cosh b / (2 * ω * Real.sinh a) := by
+    rw [hdiff, abs_of_nonneg]
+    positivity
+  have hsinh_exp : 2 * Real.sinh a = Real.exp a - Real.exp (-a) := by
+    rw [Real.sinh_eq]
+    ring
+  have hratio :
+      Real.exp (-a) / (2 * Real.sinh a) =
+        Real.exp (-ω * Lt) / (1 - Real.exp (-ω * Lt)) := by
+    rw [hsinh_exp, Real.exp_neg]
+    set u : ℝ := Real.exp a
+    have hu_ne : u ≠ 0 := by
+      dsimp [u]
+      exact ne_of_gt (Real.exp_pos a)
+    have hratio_u :
+        u⁻¹ / (u - u⁻¹) = (u * u)⁻¹ / (1 - (u * u)⁻¹) := by
+      field_simp [hu_ne]
+    have hu_sq : Real.exp (-ω * Lt) = (u * u)⁻¹ := by
+      rw [show -ω * Lt = -(a + a) by
+        dsimp [a]
+        ring, Real.exp_neg, Real.exp_add, show Real.exp a = u by rfl]
+    rw [hu_sq]
+    simpa [u] using hratio_u
+  have hcosh_le : Real.cosh b ≤ Real.exp b := by
+    rw [Real.cosh_eq]
+    have hle : Real.exp (-b) ≤ Real.exp b := by
+      exact (Real.exp_le_exp).2 (by linarith [hb_nonneg])
+    linarith
+  have hfactor_nonneg :
+      0 ≤ Real.exp (-ω * Lt) / (ω * (1 - Real.exp (-ω * Lt))) := by
+    apply div_nonneg
+    · exact le_of_lt (Real.exp_pos _)
+    · exact le_of_lt (mul_pos hω hone_pos)
+  rw [habs]
+  calc
+    Real.exp (-a) * Real.cosh b / (2 * ω * Real.sinh a)
+        = Real.cosh b * (Real.exp (-ω * Lt) / (ω * (1 - Real.exp (-ω * Lt)))) := by
+            have hωhone_ne : ω * (1 - Real.exp (-ω * Lt)) ≠ 0 :=
+              mul_ne_zero hω_ne hone_ne
+            calc
+              Real.exp (-a) * Real.cosh b / (2 * ω * Real.sinh a)
+                  = Real.cosh b * (Real.exp (-a) / (2 * Real.sinh a)) / ω := by
+                      field_simp [hω_ne, hsinh_ne]
+              _ = Real.cosh b * (Real.exp (-ω * Lt) / (1 - Real.exp (-ω * Lt))) / ω := by
+                    rw [hratio]
+              _ = Real.cosh b * (Real.exp (-ω * Lt) / (ω * (1 - Real.exp (-ω * Lt)))) := by
+                    field_simp [hω_ne, hone_ne]
+    _ ≤ Real.exp b * (Real.exp (-ω * Lt) / (ω * (1 - Real.exp (-ω * Lt)))) := by
+          gcongr
+    _ = Real.exp (-ω * (Lt - |t|)) / (ω * (1 - Real.exp (-ω * Lt))) := by
+          have hcombine : Real.exp b * Real.exp (-ω * Lt) =
+              Real.exp (-ω * (Lt - |t|)) := by
+            rw [show b = ω * |t| by rfl, ← Real.exp_add]
+            congr 1
+            ring
+          calc
+            Real.exp b * (Real.exp (-ω * Lt) / (ω * (1 - Real.exp (-ω * Lt))))
+                = (Real.exp b * Real.exp (-ω * Lt)) / (ω * (1 - Real.exp (-ω * Lt))) := by
+                    rw [div_eq_mul_inv]
+                    ring
+            _ = Real.exp (-ω * (Lt - |t|)) / (ω * (1 - Real.exp (-ω * Lt))) := by
+                    rw [hcombine]
 
 end Pphi2
 
