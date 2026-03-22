@@ -129,6 +129,19 @@ theorem wickConstant_antitone_mass (a : ℝ) (ha : 0 < a)
   · -- 0 + m₁² ≤ 0 + m₂²
     linarith [pow_le_pow_left₀ (le_of_lt hm₁) hm₂ 2]
 
+/-- The Wick constant can be reindexed as an average over coordinatewise 1D
+Fourier modes in any dimension. -/
+theorem wickConstant_eq_latticeEigenvalue1d_family_average (a mass : ℝ) :
+    (wickConstant d N a mass : ℝ) =
+      (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+        ∑ k : (Fin d → Fin N),
+          ((∑ i : Fin d, latticeEigenvalue1d N a (k i)) + mass ^ 2)⁻¹ := by
+  unfold wickConstant
+  rw [← Fin.sum_univ_eq_sum_range]
+  congr 1
+  exact sum_latticeEigenvalue_eq_sum_latticeEigenvalue1d_family
+    (N := N) (d := d) (a := a) (mass := mass) (F := fun t => t⁻¹)
+
 /-- In two dimensions, the Wick constant is the average of the product DFT
 eigenvalue formula coming from the 1D lattice modes. -/
 theorem wickConstant_two_eq_dft_eigenvalue_average (a mass : ℝ) :

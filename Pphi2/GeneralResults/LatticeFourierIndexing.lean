@@ -204,6 +204,83 @@ theorem sum_rawFrequency_pair_eq_sum_latticeEigenvalue1d_pair
           F (latticeEigenvalue1d N a m₁) (latticeEigenvalue1d N a m₂) := by
               rw [Finset.sum_comm]
 
+/-- Reindex lattice sites from `ZMod N` coordinates to `Fin N` coordinates. -/
+private noncomputable def finLatticeSitesEquivPiFin (d : ℕ) :
+    FinLatticeSites d N ≃ (Fin d → Fin N) where
+  toFun x i := ⟨ZMod.val (x i), ZMod.val_lt (x i)⟩
+  invFun k i := ((k i : Fin N) : ZMod N)
+  left_inv x := by
+    funext i
+    exact ZMod.natCast_zmod_val (x i)
+  right_inv k := by
+    funext i
+    apply Fin.ext
+    simp [ZMod.val_natCast, Nat.mod_eq_of_lt (k i).isLt]
+
+/-- Coordinatewise version of `realModeRawEquiv`. -/
+private noncomputable def realModeRawEquivFamily (d : ℕ) :
+    (Fin d → Fin N) ≃ (Fin d → Fin N) where
+  toFun k i := realModeToRaw (N := N) (k i)
+  invFun k i := rawModeToReal (N := N) (k i)
+  left_inv k := by
+    funext i
+    exact rawModeToReal_realModeToRaw (N := N) (k i)
+  right_inv k := by
+    funext i
+    exact realModeToRaw_rawModeToReal (N := N) (k i)
+
+/-- The explicit `d`-dimensional lattice eigenvalue enumeration can be
+reindexed as a sum over coordinatewise 1D Fourier-mode eigenvalues. -/
+theorem sum_latticeEigenvalue_eq_sum_latticeEigenvalue1d_family
+    {α : Type*} [AddCommMonoid α] (d : ℕ) (a mass : ℝ) (F : ℝ → α) :
+    ∑ m : Fin (Fintype.card (FinLatticeSites d N)), F (latticeEigenvalue d N a mass m) =
+      ∑ k : (Fin d → Fin N),
+        F ((∑ i : Fin d, latticeEigenvalue1d N a (k i)) + mass ^ 2) := by
+  calc
+    ∑ m : Fin (Fintype.card (FinLatticeSites d N)), F (latticeEigenvalue d N a mass m)
+      = ∑ s : FinLatticeSites d N,
+          F (((4 / a ^ 2) * ∑ i : Fin d,
+            Real.sin (Real.pi * (ZMod.val (s i) : ℝ) / N) ^ 2) + mass ^ 2) := by
+              refine Fintype.sum_equiv (Fintype.equivFin (FinLatticeSites d N)).symm
+                (fun m : Fin (Fintype.card (FinLatticeSites d N)) =>
+                  F (latticeEigenvalue d N a mass m))
+                (fun s : FinLatticeSites d N =>
+                  F (((4 / a ^ 2) * ∑ i : Fin d,
+                    Real.sin (Real.pi * (ZMod.val (s i) : ℝ) / N) ^ 2) + mass ^ 2)) ?_
+              intro m
+              have hm : (m : ℕ) < N ^ d := by
+                simpa using m.2
+              simp [latticeEigenvalue, latticeLaplacianEigenvalue, hm]
+    _ = ∑ raw : (Fin d → Fin N),
+          F (((4 / a ^ 2) * ∑ i : Fin d,
+            Real.sin (Real.pi * ((raw i).val : ℝ) / N) ^ 2) + mass ^ 2) := by
+              refine Fintype.sum_equiv (finLatticeSitesEquivPiFin (N := N) d)
+                (fun s : FinLatticeSites d N =>
+                  F (((4 / a ^ 2) * ∑ i : Fin d,
+                    Real.sin (Real.pi * (ZMod.val (s i) : ℝ) / N) ^ 2) + mass ^ 2))
+                (fun raw : Fin d → Fin N =>
+                  F (((4 / a ^ 2) * ∑ i : Fin d,
+                    Real.sin (Real.pi * ((raw i).val : ℝ) / N) ^ 2) + mass ^ 2)) ?_
+              intro s
+              rfl
+    _ = ∑ k : (Fin d → Fin N),
+          F ((∑ i : Fin d, latticeEigenvalue1d N a (k i)) + mass ^ 2) := by
+              symm
+              refine Fintype.sum_equiv (realModeRawEquivFamily (N := N) d)
+                (fun k : Fin d → Fin N =>
+                  F ((∑ i : Fin d, latticeEigenvalue1d N a (k i)) + mass ^ 2))
+                (fun raw : Fin d → Fin N =>
+                  F (((4 / a ^ 2) * ∑ i : Fin d,
+                    Real.sin (Real.pi * ((raw i).val : ℝ) / N) ^ 2) + mass ^ 2)) ?_
+              intro k
+              symm
+              exact congrArg F <| by
+                rw [Finset.mul_sum]
+                refine congrArg (fun t : ℝ => t + mass ^ 2) ?_
+                refine Finset.sum_congr rfl ?_
+                intro i hi
+                exact realModeToRaw_eigenvalue (N := N) a (k i)
+
 /-- Reindex the finite 2D lattice eigenvalue enumeration into the product
 ordering coming from the 1D DFT eigenvalues. -/
 theorem sum_latticeEigenvalue_two_eq_sum_latticeEigenvalue1d_pair
