@@ -4,6 +4,8 @@
 
 -- Core definitions
 import Pphi2.Polynomial
+import Pphi2.GeneralResults.GaussianHermiteMean
+import Pphi2.GeneralResults.LatticeFourierIndexing
 
 -- Phase 1: Wick ordering
 import Pphi2.WickOrdering.WickPolynomial

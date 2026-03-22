@@ -57,7 +57,11 @@ infrastructure for extensions beyond Wick monomials.
 -/
 
 import Pphi2.ContinuumLimit.Embedding
+import Pphi2.GeneralResults.GaussianHermiteMean
+import GaussianField.Density
 import GaussianField.HypercontractiveNat
+import Lattice.CirculantDFT2d
+import Lattice.Symmetry
 import Mathlib.Analysis.Convex.Integral
 
 noncomputable section
@@ -176,6 +180,470 @@ theorem gaussian_hypercontractivity_continuum
   rw [h_μ]
   exact gaussian_hypercontractive (latticeCovariance d N a mass ha hmass) g_f n p hp m hm hp_eq
 
+/-! ## Spectral preliminaries for the Wick-constant variance identity -/
+
+private lemma massOperator_translation_commute (a mass : ℝ) (v : FinLatticeSites d N)
+    (φ : FinLatticeField d N) :
+    massOperator d N a mass (latticeTranslationFun d N v φ) =
+    latticeTranslationFun d N v (massOperator d N a mass φ) := by
+  have hΔ := finiteLaplacian_translation_commute d N a v φ
+  ext x
+  simp only [massOperator, ContinuousLinearMap.add_apply, ContinuousLinearMap.neg_apply,
+    ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, Pi.add_apply, Pi.neg_apply,
+    Pi.smul_apply, smul_eq_mul, latticeTranslationFun]
+  exact congrArg (fun t => -t + mass ^ 2 * φ (x - v)) (congr_fun hΔ x)
+
+private lemma gaussianDensity_translation_invariant (a mass : ℝ) (v : FinLatticeSites d N)
+    (φ : FinLatticeField d N) :
+    gaussianDensity d N a mass (latticeTranslationFun d N v φ) =
+    gaussianDensity d N a mass φ := by
+  unfold gaussianDensity
+  congr 1
+  congr 1
+  have hcomm := massOperator_translation_commute d N a mass v φ
+  simp_rw [show ∀ x, massOperator d N a mass (latticeTranslationFun d N v φ) x =
+    latticeTranslationFun d N v (massOperator d N a mass φ) x from fun x => congr_fun hcomm x]
+  apply Fintype.sum_equiv (Equiv.subRight v)
+  intro x
+  rfl
+
+private noncomputable def latticeTranslationEquiv (v : FinLatticeSites d N) :
+    FinLatticeField d N ≃ᵐ FinLatticeField d N :=
+  MeasurableEquiv.piCongrLeft (fun _ : FinLatticeSites d N => ℝ) (Equiv.addRight v)
+
+omit [NeZero N] in
+private lemma latticeTranslationEquiv_eq (v : FinLatticeSites d N) (φ : FinLatticeField d N) :
+    latticeTranslationEquiv d N v φ = latticeTranslationFun d N v φ := by
+  ext x
+  change (Equiv.piCongrLeft (fun _ => ℝ) (Equiv.addRight v)) φ x = φ (x - v)
+  conv_lhs => rw [show x = (Equiv.addRight v) (x - v) from (sub_add_cancel x v).symm]
+  rw [Equiv.piCongrLeft_apply_apply]
+
+private lemma latticeTranslation_volume_preserving (v : FinLatticeSites d N) :
+    MeasurePreserving (latticeTranslationEquiv d N v)
+      (volume : Measure (FinLatticeField d N)) volume :=
+  volume_measurePreserving_piCongrLeft _ _
+
+private lemma latticeField_second_moment_translation_invariant
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (x v : FinLatticeSites d N) :
+    ∫ ω, (ω (finLatticeDelta d N (x + v))) ^ 2 ∂(latticeGaussianMeasure d N a mass ha hmass) =
+      ∫ ω, (ω (finLatticeDelta d N x)) ^ 2 ∂(latticeGaussianMeasure d N a mass ha hmass) := by
+  rw [show (∫ ω, (ω (finLatticeDelta d N (x + v))) ^ 2
+      ∂(latticeGaussianMeasure d N a mass ha hmass)) =
+      ∫ ω, (fun φ : FinLatticeField d N => φ (x + v) ^ 2) (evalMap d N ω)
+        ∂(latticeGaussianMeasure d N a mass ha hmass) by
+        simp [evalMap]]
+  rw [show (∫ ω, (ω (finLatticeDelta d N x)) ^ 2
+      ∂(latticeGaussianMeasure d N a mass ha hmass)) =
+      ∫ ω, (fun φ : FinLatticeField d N => φ x ^ 2) (evalMap d N ω)
+        ∂(latticeGaussianMeasure d N a mass ha hmass) by
+        simp [evalMap]]
+  rw [latticeGaussianMeasure_density_integral' d N a mass ha hmass
+      (fun φ : FinLatticeField d N => φ (x + v) ^ 2)]
+  rw [latticeGaussianMeasure_density_integral' d N a mass ha hmass
+      (fun φ : FinLatticeField d N => φ x ^ 2)]
+  congr 1
+  let G : FinLatticeField d N → ℝ := fun φ => φ x ^ 2
+  calc
+    ∫ φ, φ (x + v) ^ 2 * gaussianDensity d N a mass φ
+      = ∫ φ, G (latticeTranslationEquiv d N (-v) φ) *
+          gaussianDensity d N a mass (latticeTranslationEquiv d N (-v) φ) := by
+            refine integral_congr_ae (ae_of_all _ fun φ => ?_)
+            dsimp [G]
+            rw [latticeTranslationEquiv_eq (d := d) (N := N) (-v) φ]
+            simp [latticeTranslationFun, gaussianDensity_translation_invariant]
+    _ = ∫ φ, G φ * gaussianDensity d N a mass φ := by
+          exact (latticeTranslation_volume_preserving d N (-v)).integral_comp'
+            (fun ψ => G ψ * gaussianDensity d N a mass ψ)
+    _ = ∫ φ, φ x ^ 2 * gaussianDensity d N a mass φ := rfl
+
+private lemma latticeVariance_translation_invariant
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (x v : FinLatticeSites d N) :
+    @inner ℝ ell2' _
+      (latticeCovariance d N a mass ha hmass (finLatticeDelta d N (x + v)))
+      (latticeCovariance d N a mass ha hmass (finLatticeDelta d N (x + v))) =
+    @inner ℝ ell2' _
+      (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+      (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
+  let μ := latticeGaussianMeasure d N a mass ha hmass
+  calc
+    @inner ℝ ell2' _
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N (x + v)))
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N (x + v)))
+      = ∫ ω : Configuration (FinLatticeField d N),
+          (ω (finLatticeDelta d N (x + v))) * (ω (finLatticeDelta d N (x + v))) ∂μ := by
+            symm
+            simpa [μ, GaussianField.covariance, sq] using
+              (lattice_cross_moment d N a mass ha hmass
+                (finLatticeDelta d N (x + v)) (finLatticeDelta d N (x + v)))
+    _ = ∫ ω : Configuration (FinLatticeField d N),
+          (ω (finLatticeDelta d N x)) * (ω (finLatticeDelta d N x)) ∂μ := by
+            simpa [μ, sq] using
+              (latticeField_second_moment_translation_invariant d N a mass ha hmass x v)
+    _ = @inner ℝ ell2' _
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
+            simpa [μ, GaussianField.covariance, sq] using
+              (lattice_cross_moment d N a mass ha hmass
+                (finLatticeDelta d N x) (finLatticeDelta d N x))
+
+private lemma delta_massEigenvectorCoeff (a mass : ℝ)
+    (k x : FinLatticeSites d N) :
+    (∑ y : FinLatticeSites d N,
+      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y *
+        finLatticeDelta d N x y) =
+      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x := by
+  simp [finLatticeDelta]
+
+private lemma massEigenvectorBasis_norm_sq_eq_one (a mass : ℝ) (k : FinLatticeSites d N) :
+    ∑ x : FinLatticeSites d N,
+      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x ^ 2 = 1 := by
+  have h_norm1 := (massEigenvectorBasis d N a mass).orthonormal.1 k
+  simp only [EuclideanSpace.norm_eq] at h_norm1
+  have hsq :
+      ∑ x : FinLatticeSites d N,
+          (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x ^ 2 =
+        ∑ x : FinLatticeSites d N,
+          ‖(massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x‖ ^ 2 := by
+    congr 1
+    ext x
+    rw [Real.norm_eq_abs, sq_abs]
+  rw [hsq]
+  have hnonneg :
+      0 ≤ ∑ x : FinLatticeSites d N,
+        ‖(massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x‖ ^ 2 :=
+    Finset.sum_nonneg fun _ _ => sq_nonneg _
+  nlinarith [Real.sq_sqrt hnonneg]
+
+private lemma latticeVariance_sum_eq_massEigenvalue_trace
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
+    ∑ x : FinLatticeSites d N,
+      @inner ℝ ell2' _
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) =
+      ∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ := by
+  calc
+    ∑ x : FinLatticeSites d N,
+        @inner ℝ ell2' _
+          (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+          (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+      = ∑ x : FinLatticeSites d N,
+          ∑ k : FinLatticeSites d N,
+            (massEigenvalues d N a mass k)⁻¹ *
+              (∑ y : FinLatticeSites d N,
+                (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y *
+                  finLatticeDelta d N x y) ^ 2 := by
+            refine Finset.sum_congr rfl ?_
+            intro x hx
+            simpa [latticeCovariance] using
+              (spectralLatticeCovariance_norm_sq (d := d) (N := N) a mass ha hmass
+                (finLatticeDelta d N x))
+    _ = ∑ x : FinLatticeSites d N,
+          ∑ k : FinLatticeSites d N,
+            (massEigenvalues d N a mass k)⁻¹ *
+              ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) ^ 2 := by
+            refine Finset.sum_congr rfl ?_
+            intro x hx
+            refine Finset.sum_congr rfl ?_
+            intro k hk
+            rw [delta_massEigenvectorCoeff]
+    _ = ∑ k : FinLatticeSites d N,
+          (massEigenvalues d N a mass k)⁻¹ *
+            ∑ x : FinLatticeSites d N,
+              ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) ^ 2 := by
+            rw [Finset.sum_comm]
+            refine Finset.sum_congr rfl ?_
+            intro k hk
+            rw [← Finset.mul_sum]
+    _ = ∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ := by
+            refine Finset.sum_congr rfl ?_
+            intro k hk
+            rw [massEigenvectorBasis_norm_sq_eq_one]
+            simp
+
+private lemma latticeVariance_eq_massEigenvalue_average
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (x : FinLatticeSites d N) :
+    @inner ℝ ell2' _
+      (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+      (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) =
+      (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+        ∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ := by
+  have hconst : ∀ y : FinLatticeSites d N,
+      @inner ℝ ell2' _
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N y))
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N y)) =
+      @inner ℝ ell2' _
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
+    intro y
+    simpa [sub_add_cancel] using
+      (latticeVariance_translation_invariant d N a mass ha hmass x (y - x))
+  have hsum := latticeVariance_sum_eq_massEigenvalue_trace d N a mass ha hmass
+  have hcard_pos : (0 : ℝ) < Fintype.card (FinLatticeSites d N) := by
+    exact_mod_cast Fintype.card_pos
+  have hconst_sum :
+      ∑ y : FinLatticeSites d N,
+        @inner ℝ ell2' _
+          (latticeCovariance d N a mass ha hmass (finLatticeDelta d N y))
+          (latticeCovariance d N a mass ha hmass (finLatticeDelta d N y)) =
+      (Fintype.card (FinLatticeSites d N) : ℝ) *
+        @inner ℝ ell2' _
+          (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+          (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
+    calc
+      ∑ y : FinLatticeSites d N,
+          @inner ℝ ell2' _
+            (latticeCovariance d N a mass ha hmass (finLatticeDelta d N y))
+            (latticeCovariance d N a mass ha hmass (finLatticeDelta d N y))
+        = ∑ _y : FinLatticeSites d N,
+            @inner ℝ ell2' _
+              (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+              (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
+              refine Finset.sum_congr rfl ?_
+              intro y hy
+              exact hconst y
+      _ = (Fintype.card (FinLatticeSites d N) : ℝ) *
+            @inner ℝ ell2' _
+              (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+              (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
+              simp
+  calc
+    @inner ℝ ell2' _
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+      = (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+          ((Fintype.card (FinLatticeSites d N) : ℝ) *
+            @inner ℝ ell2' _
+              (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+              (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))) := by
+            field_simp [ne_of_gt hcard_pos]
+    _ = (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+          ∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ := by
+            rw [← hconst_sum, hsum]
+
+private noncomputable def finLatticeSitesTwoEquivProd :
+    FinLatticeSites 2 N ≃ ZMod N × ZMod N where
+  toFun x := (x 0, x 1)
+  invFun p := fun i => Fin.cases p.1 (fun _ => p.2) i
+  left_inv x := by
+    ext i
+    fin_cases i <;> rfl
+  right_inv p := rfl
+
+private lemma latticeFourierBasis_sq_sum_2d (m₁ m₂ : Fin N) :
+    ∑ x : FinLatticeSites 2 N,
+      (latticeFourierBasisFun N m₁ (x 0) * latticeFourierBasisFun N m₂ (x 1)) ^ 2 =
+      latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂ := by
+  calc
+    ∑ x : FinLatticeSites 2 N,
+        (latticeFourierBasisFun N m₁ (x 0) * latticeFourierBasisFun N m₂ (x 1)) ^ 2
+      = ∑ p : ZMod N × ZMod N,
+          (latticeFourierBasisFun N m₁ p.1 * latticeFourierBasisFun N m₂ p.2) ^ 2 := by
+            refine Fintype.sum_equiv (finLatticeSitesTwoEquivProd (N := N))
+              (fun x : FinLatticeSites 2 N =>
+                (latticeFourierBasisFun N m₁ (x 0) * latticeFourierBasisFun N m₂ (x 1)) ^ 2)
+              (fun p : ZMod N × ZMod N =>
+                (latticeFourierBasisFun N m₁ p.1 * latticeFourierBasisFun N m₂ p.2) ^ 2) ?_
+            intro x
+            rfl
+    _ = ∑ p : ZMod N × ZMod N,
+          (latticeFourierBasisFun N m₁ p.1) ^ 2 * (latticeFourierBasisFun N m₂ p.2) ^ 2 := by
+            refine Finset.sum_congr rfl ?_
+            intro p hp
+            ring
+    _ = (∑ z : ZMod N, latticeFourierBasisFun N m₁ z ^ 2) *
+          ∑ z : ZMod N, latticeFourierBasisFun N m₂ z ^ 2 := by
+            rw [Fintype.sum_prod_type]
+            symm
+            exact Fintype.sum_mul_sum _ _
+    _ = latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂ := by
+            rw [latticeFourierNormSq, latticeFourierNormSq]
+
+private lemma latticeVariance_eq_dft_eigenvalue_average
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (x : FinLatticeSites 2 N) :
+    @inner ℝ ell2' _
+      (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+      (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x)) =
+      (1 / Fintype.card (FinLatticeSites 2 N) : ℝ) *
+        ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+          (latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2)⁻¹ := by
+  have hconst : ∀ y : FinLatticeSites 2 N,
+      @inner ℝ ell2' _
+        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y)) =
+      @inner ℝ ell2' _
+        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x)) := by
+    intro y
+    simpa [sub_add_cancel] using
+      (latticeVariance_translation_invariant (d := 2) (N := N) a mass ha hmass x (y - x))
+  have hcov :
+      ∀ y : FinLatticeSites 2 N,
+        @inner ℝ ell2' _
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y)) =
+        ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+          ((latticeFourierBasisFun N m₁ (y 0) * latticeFourierBasisFun N m₂ (y 1)) ^ 2) /
+            ((latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2) *
+              latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂) := by
+    intro y
+    calc
+      @inner ℝ ell2' _
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+        = GaussianField.covariance
+            (latticeCovariance 2 N a mass ha hmass)
+            (finLatticeDelta 2 N y) (finLatticeDelta 2 N y) := by
+              rw [GaussianField.covariance]
+      _ = ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+            (latticeFourierBasisFun N m₁ (y 0) * latticeFourierBasisFun N m₂ (y 1)) *
+              (latticeFourierBasisFun N m₁ (y 0) * latticeFourierBasisFun N m₂ (y 1)) /
+              ((latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2) *
+                latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂) := by
+                  simpa [finLatticeDelta] using
+                    (abstract_spectral_eq_dft_spectral_2d (N := N) a mass ha hmass
+                      (finLatticeDelta 2 N y) (finLatticeDelta 2 N y))
+      _ = ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+            ((latticeFourierBasisFun N m₁ (y 0) * latticeFourierBasisFun N m₂ (y 1)) ^ 2) /
+              ((latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2) *
+                latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂) := by
+                  refine Finset.sum_congr rfl ?_
+                  intro m₁ hm₁
+                  refine Finset.sum_congr rfl ?_
+                  intro m₂ hm₂
+                  ring
+  have hsum :
+      ∑ y : FinLatticeSites 2 N,
+        @inner ℝ ell2' _
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y)) =
+      ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+        (latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2)⁻¹ := by
+    calc
+      ∑ y : FinLatticeSites 2 N,
+          @inner ℝ ell2' _
+            (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+            (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+        = ∑ y : FinLatticeSites 2 N,
+            ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+              ((latticeFourierBasisFun N m₁ (y 0) * latticeFourierBasisFun N m₂ (y 1)) ^ 2) /
+                ((latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2) *
+                  latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂) := by
+                    refine Finset.sum_congr rfl ?_
+                    intro y hy
+                    exact hcov y
+      _ = ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+            ∑ y : FinLatticeSites 2 N,
+              ((latticeFourierBasisFun N m₁ (y 0) * latticeFourierBasisFun N m₂ (y 1)) ^ 2) /
+                ((latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2) *
+                  latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂) := by
+                    rw [Finset.sum_comm]
+                    refine Finset.sum_congr rfl ?_
+                    intro m₁ hm₁
+                    rw [Finset.sum_comm]
+      _ = ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+            ((latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2) *
+              latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂)⁻¹ *
+              ∑ y : FinLatticeSites 2 N,
+                ((latticeFourierBasisFun N m₁ (y 0) * latticeFourierBasisFun N m₂ (y 1)) ^ 2) := by
+                    refine Finset.sum_congr rfl ?_
+                    intro m₁ hm₁
+                    refine Finset.sum_congr rfl ?_
+                    intro m₂ hm₂
+                    calc
+                      ∑ y : FinLatticeSites 2 N,
+                          ((latticeFourierBasisFun N m₁ (y 0) *
+                              latticeFourierBasisFun N m₂ (y 1)) ^ 2) /
+                            ((latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2) *
+                              latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂)
+                        = ∑ y : FinLatticeSites 2 N,
+                            (((latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2) *
+                              latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂)⁻¹ *
+                              ((latticeFourierBasisFun N m₁ (y 0) *
+                                latticeFourierBasisFun N m₂ (y 1)) ^ 2)) := by
+                                  refine Finset.sum_congr rfl ?_
+                                  intro y hy
+                                  ring
+                      _ = ((latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2) *
+                            latticeFourierNormSq N m₁ * latticeFourierNormSq N m₂)⁻¹ *
+                            ∑ y : FinLatticeSites 2 N,
+                              ((latticeFourierBasisFun N m₁ (y 0) *
+                                latticeFourierBasisFun N m₂ (y 1)) ^ 2) := by
+                                  rw [← Finset.mul_sum]
+      _ = ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+            (latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2)⁻¹ := by
+              refine Finset.sum_congr rfl ?_
+              intro m₁ hm₁
+              refine Finset.sum_congr rfl ?_
+              intro m₂ hm₂
+              rw [latticeFourierBasis_sq_sum_2d]
+              have hμ_pos :
+                  0 < latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2 := by
+                have hm₁_nonneg := latticeEigenvalue1d_nonneg N a m₁
+                have hm₂_nonneg := latticeEigenvalue1d_nonneg N a m₂
+                positivity
+              have hnorm₁_pos : 0 < latticeFourierNormSq N m₁ :=
+                latticeFourierNormSq_pos N m₁ m₁.isLt
+              have hnorm₂_pos : 0 < latticeFourierNormSq N m₂ :=
+                latticeFourierNormSq_pos N m₂ m₂.isLt
+              field_simp [ne_of_gt hμ_pos, ne_of_gt hnorm₁_pos, ne_of_gt hnorm₂_pos]
+  have hcard_pos : (0 : ℝ) < Fintype.card (FinLatticeSites 2 N) := by
+    exact_mod_cast Fintype.card_pos
+  have hconst_sum :
+      ∑ y : FinLatticeSites 2 N,
+        @inner ℝ ell2' _
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y)) =
+      (Fintype.card (FinLatticeSites 2 N) : ℝ) *
+        @inner ℝ ell2' _
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x)) := by
+    calc
+      ∑ y : FinLatticeSites 2 N,
+          @inner ℝ ell2' _
+            (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+            (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N y))
+        = ∑ _y : FinLatticeSites 2 N,
+            @inner ℝ ell2' _
+              (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+              (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x)) := by
+                refine Finset.sum_congr rfl ?_
+                intro y hy
+                exact hconst y
+      _ = (Fintype.card (FinLatticeSites 2 N) : ℝ) *
+            @inner ℝ ell2' _
+              (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+              (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x)) := by
+                simp
+  calc
+    @inner ℝ ell2' _
+        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+      = (1 / Fintype.card (FinLatticeSites 2 N) : ℝ) *
+          ((Fintype.card (FinLatticeSites 2 N) : ℝ) *
+            @inner ℝ ell2' _
+              (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+              (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))) := by
+            field_simp [ne_of_gt hcard_pos]
+    _ = (1 / Fintype.card (FinLatticeSites 2 N) : ℝ) *
+          ∑ m₁ : Fin N, ∑ m₂ : Fin N,
+            (latticeEigenvalue1d N a m₁ + latticeEigenvalue1d N a m₂ + mass ^ 2)⁻¹ := by
+              rw [← hconst_sum, hsum]
+
+/-- In two dimensions, the Wick ordering constant equals the site variance of
+the lattice Gaussian free field. -/
+theorem wickConstant_eq_variance_two_dim
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (x : FinLatticeSites 2 N) :
+    (wickConstant 2 N a mass : ℝ) =
+      @inner ℝ ell2' _
+        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x)) := by
+  rw [wickConstant_two_eq_dft_eigenvalue_average (N := N) a mass]
+  exact (latticeVariance_eq_dft_eigenvalue_average (N := N) a mass ha hmass x).symm
+
 /-! ## Textbook axioms
 
 These axioms replace the compound axioms `exponential_moment_bound` and
@@ -198,28 +666,6 @@ axiom wickConstant_eq_variance (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     @inner ℝ ell2' _
       (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
       (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
-
-/-- **Hermite orthogonality under 1D Gaussian.**
-
-The probabilist's Hermite polynomial (= Wick monomial) of order n ≥ 1
-has zero mean under the Gaussian with matching variance:
-`∫ He_n(t; σ_sq) dN(0, σ_sq)(t) = 0`.
-
-Also states integrability (polynomials of Gaussian rv's are integrable).
-
-This is a standard 1D probability result: the Hermite polynomials form
-an orthogonal system in L²(N(0,σ_sq)), with He_0 = 1 being the constant.
-So ∫ He_n · He_0 dN(0,σ_sq) = 0 for n ≥ 1.
-
-Reference: Janson, *Gaussian Hilbert Spaces*, Prop. 1.1;
-Simon (1974), §I.3. -/
-axiom gaussian_hermite_zero_mean
-    (σ_sq : ℝ) (hσ : 0 < σ_sq)
-    (n : ℕ) (hn : 1 ≤ n) :
-    Integrable (fun t => wickMonomial n σ_sq t)
-      (ProbabilityTheory.gaussianReal 0 σ_sq.toNNReal) ∧
-    ∫ t, wickMonomial n σ_sq t
-      ∂(ProbabilityTheory.gaussianReal 0 σ_sq.toNNReal) = 0
 
 /-- **Hermite orthogonality for the lattice Gaussian measure.**
 
