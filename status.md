@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-03-22): 32 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-03-25): 32 axioms, 0 sorries.**
 
 **Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 0 sorries.**
 All OS0–OS2 proofs complete within this file. Transitive dependencies are
