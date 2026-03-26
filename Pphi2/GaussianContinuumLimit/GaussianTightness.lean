@@ -10,7 +10,7 @@ Shows that the family of continuum-embedded Gaussian measures
 ## Main results
 
 - `gaussian_second_moment_uniform` — `∫ (ω f)² dν_{GFF,a} ≤ C` uniformly
-- `gaussianContinuumMeasures_tight` — (axiom) tightness via Mitoma criterion
+- `gaussianContinuumMeasures_tight` — tightness via uniform second moments
 
 ## Mathematical background
 
@@ -40,6 +40,8 @@ discretized L² norm.
 -/
 
 import Pphi2.GaussianContinuumLimit.PropagatorConvergence
+import GaussianField.Tightness
+import SchwartzNuclear.HermiteNuclear
 
 noncomputable section
 
@@ -80,29 +82,91 @@ theorem gaussian_second_moment_uniform (mass : ℝ) (hmass : 0 < mass)
 
 /-! ## Tightness of Gaussian continuum measures -/
 
-/-- **Tightness of the embedded Gaussian measures.**
+/-- Integrability of evaluation-squared through the lattice embedding.
 
-The family `{ν_{GFF,a}}_{a ∈ (0,1]}` is tight on S'(ℝ^d).
+The key fact: `(latticeEmbedLift ω) f = ω(g_f)` where
+`g_f = a^d • Σ_x evalAtSite(f, x) • e_x` is a lattice test function,
+so `((latticeEmbedLift ω) f)² = ω(g_f)²`, which is integrable by
+`pairing_product_integrable` for the Gaussian measure. -/
+private theorem gaussianContinuumMeasure_sq_integrable
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f : ContinuumTestFunction d) :
+    Integrable (fun ω : Configuration (ContinuumTestFunction d) =>
+      (ω f) ^ 2) (gaussianContinuumMeasure d N a mass ha hmass) := by
+  unfold gaussianContinuumMeasure
+  apply (integrable_map_measure
+    ((configuration_eval_measurable f).aestronglyMeasurable.pow 2)
+    (latticeEmbedLift_measurable d N a ha).aemeasurable).mpr
+  set T := latticeCovariance d N a mass ha hmass
+  set g_f : FinLatticeField d N :=
+    a ^ d • ∑ x : FinLatticeSites d N,
+      evalAtSite d N a f x • Pi.single x (1 : ℝ)
+  -- The goal has Pi-level power: ((fun ω => ω f) ^ 2) ∘ lift
+  -- Show this equals fun ω => (ω g_f) * (ω g_f)
+  show Integrable
+    (((fun ω : Configuration (ContinuumTestFunction d) =>
+        ω f) ^ 2) ∘ latticeEmbedLift d N a ha)
+    (latticeGaussianMeasure d N a mass ha hmass)
+  have h_congr :
+      (((fun ω : Configuration (ContinuumTestFunction d) =>
+          ω f) ^ 2) ∘ latticeEmbedLift d N a ha) =
+      fun ω => (ω g_f) * (ω g_f) := by
+    ext ω; simp only [Function.comp, Pi.pow_apply]
+    have : (latticeEmbedLift d N a ha ω) f = ω g_f := by
+      simp only [latticeEmbedLift, latticeEmbed_eval, latticeEmbedEval,
+        g_f, map_smul, map_sum, smul_eq_mul]
+      congr 1; apply Finset.sum_congr rfl; intro x _; ring
+    rw [this, sq]
+  rw [h_congr]
+  exact pairing_product_integrable T g_f g_f
 
-Proof outline:
-1. **1D marginals**: For each f ∈ S(ℝ^d), the pushforward `(ev_f)_* ν_{GFF,a}`
-   is a centered Gaussian N(0, σ²_a) on ℝ. By `gaussian_second_moment_uniform`,
-   σ²_a ≤ C(f) uniformly. Chebyshev gives `P(|Φ_a(f)| > R) ≤ C/R²` for all a.
-
-2. **Equicontinuity**: For f, g ∈ S, `E[|Φ_a(f) - Φ_a(g)|²]` is controlled
-   by Schwartz seminorms of f - g, uniformly in a. This follows from the
-   operator bound `C_a ≤ m⁻²·I` and Schwartz seminorm estimates.
-
-3. **Mitoma criterion**: 1D tightness + equicontinuity ⟹ tightness on S'.
-
-Reference: Mitoma (1983), Simon §V.1. -/
-axiom gaussianContinuumMeasures_tight
+theorem gaussianContinuumMeasures_tight
     (mass : ℝ) (hmass : 0 < mass) :
     ∀ ε : ℝ, 0 < ε →
     ∃ (K : Set (Configuration (ContinuumTestFunction d))),
       IsCompact K ∧
       ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-      1 - ε ≤ (gaussianContinuumMeasure d N a mass ha hmass K).toReal
+      1 - ε ≤ (gaussianContinuumMeasure d N a mass ha hmass K).toReal := by
+  intro ε hε
+  -- Provide DyninMityaginSpace instance for the Schwartz test function space.
+  -- For d ≥ 1, this is the Hermite-function basis instance.
+  -- For d = 0, the space S(ℝ⁰) ≅ ℝ is trivially a DM space but the
+  -- formalized instance requires Nontrivial, which fails for Fin 0.
+  rcases Nat.eq_zero_or_pos d with rfl | hd
+  · -- d = 0: degenerate case (0-dimensional Schwartz space ≅ ℝ).
+    -- Tightness holds trivially but the formal proof requires
+    -- DyninMityaginSpace for the 0-dimensional case.
+    sorry
+  · -- d ≥ 1: full proof via Baire category / barrel theorem
+    haveI : Nonempty (Fin d) := Fin.pos_iff_nonempty.mp hd
+    haveI : Nontrivial (EuclideanSpace ℝ (Fin d)) := inferInstance
+    haveI : DyninMityaginSpace (ContinuumTestFunction d) :=
+      schwartz_dyninMityaginSpace
+    set ι := { a : ℝ // 0 < a ∧ a ≤ 1 }
+    set μ : ι → Measure (Configuration (ContinuumTestFunction d)) :=
+      fun i => gaussianContinuumMeasure d N i.val mass i.prop.1 hmass
+    have hprob : ∀ i : ι, IsProbabilityMeasure (μ i) :=
+      fun i => gaussianContinuumMeasure_isProbability d N
+        i.val mass i.prop.1 hmass
+    have h_int :
+        ∀ (f : ContinuumTestFunction d) (i : ι),
+        Integrable (fun ω : Configuration (ContinuumTestFunction d) =>
+          (ω f) ^ 2) (μ i) :=
+      fun f i => gaussianContinuumMeasure_sq_integrable d N
+        i.val mass i.prop.1 hmass f
+    have h_moments :
+        ∀ f : ContinuumTestFunction d, ∃ C : ℝ, ∀ i : ι,
+        ∫ ω : Configuration (ContinuumTestFunction d),
+          (ω f) ^ 2 ∂(μ i) ≤ C := by
+      intro f
+      obtain ⟨C, _, hC⟩ :=
+        gaussian_second_moment_uniform d N mass hmass f
+      exact ⟨C, fun i => hC i.val i.prop.1 i.prop.2⟩
+    obtain ⟨K, hK_compact, hK_mass⟩ :=
+      configuration_tight_of_uniform_second_moments
+        μ hprob h_int h_moments ε hε
+    exact ⟨K, hK_compact,
+      fun a ha ha_le => hK_mass ⟨a, ha, ha_le⟩⟩
 
 end Pphi2
 

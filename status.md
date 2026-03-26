@@ -11,7 +11,7 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-03-25): 32 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-03-26): 31 axioms, 1 sorry.**
 
 **Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 0 sorries.**
 All OS0–OS2 proofs complete within this file. Transitive dependencies are
@@ -70,7 +70,7 @@ telescoping sum bound.
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom, 0 sorries |
 | 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`schwartz_riemann_sum_bound` proved) |
-| 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 1 axiom, 0 sorries |
+| 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 0 axioms, 1 sorry |
 | 4G | `GaussianContinuumLimit/GaussianLimit.lean` | 1 axiom, 0 sorries |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 6 axioms |
 | — | `GeneralResults/ComplexAnalysis.lean` | **0 axioms** (`osgood_separately_analytic` proved via Osgood/) |
@@ -344,7 +344,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | `propagator_convergence` | PropagatorConvergence | Medium | Lattice Riemann sum of Green's function → continuum Fourier integral. Dominated convergence + Schwartz decay. |
-| `gaussianContinuumMeasures_tight` | GaussianTightness | Medium | Tightness of embedded GFF measures via Mitoma criterion + Chebyshev from uniform second moments. |
+| ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED** | Tightness via `configuration_tight_of_uniform_second_moments` + integrability through lattice embedding. Sorry for degenerate d=0 case. |
 | `gaussianLimit_isGaussian` | GaussianLimit | Medium | Weak limits of Gaussian measures are Gaussian. Bochner-Minlos + pointwise convergence of characteristic functionals. |
 
 **Proved theorems (GaussianContinuumLimit/):**
@@ -354,10 +354,13 @@ refactoring (functionality consolidated into L2Operator axioms).
 - `gaussianContinuumLimit_exists`: Subsequential weak limit via Prokhorov extraction.
 - `gaussianContinuumLimit_nontrivial`: `∫ (ω f)² dμ > 0` from `continuumGreenBilinear_pos`.
 - `gaussian_feeds_interacting_tightness`: Bridge — Gaussian bound feeds Cauchy-Schwarz density transfer.
+- `gaussianContinuumMeasures_tight`: Tightness of embedded GFF measures via `configuration_tight_of_uniform_second_moments`.
+- `gaussianContinuumMeasure_sq_integrable`: Integrability of `(ω f)²` through lattice embedding via `pairing_product_integrable`.
 
 **Sorries (provable):**
 - `embeddedTwoPoint_eq_latticeSum`: Pushforward integral → lattice double sum (Fubini + Gaussian integration).
 - `embeddedTwoPoint_uniform_bound`: `E[Φ_a(f)²] ≤ C` from eigenvalue bound + Riemann sum.
+- `gaussianContinuumMeasures_tight` (d=0 case): DyninMityaginSpace for 0-dim Schwartz space (degenerate).
 - `continuumGreenBilinear_pos`: `G(f,f) > 0` from Fourier injectivity on Schwartz space.
 
 Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially since |cos(·)| ≤ 1.
@@ -694,7 +697,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `second_moment_uniform` | Tightness | Uniform second moments for interacting measure. |
 | `moment_equicontinuity` | Tightness | Equicontinuity of moments in f. |
 | `continuumMeasures_tight` | Tightness | Tightness via Mitoma for interacting measures on S'(ℝ²). |
-| `gaussianContinuumMeasures_tight` | GaussianTightness | Tightness of embedded GFF measures via Mitoma. |
+| ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED** — Tightness via DM + barrel theorem. |
 | `gaussianLimit_isGaussian` | GaussianLimit | Weak limits of Gaussians are Gaussian (S'(ℝ²) version). |
 
 ### Recommended attack order
