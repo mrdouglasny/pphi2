@@ -75,17 +75,46 @@ noncomputable def schwartzTranslate (v : EuclideanSpace ℝ (Fin d)) :
     (show AntilipschitzWith 1 (fun x : EuclideanSpace ℝ (Fin d) => x - v) from
       fun x y => by simp [edist_sub_right])
 
-/-! ## Physical position of a lattice site -/
+/-! ## Signed representative for ZMod N
+
+For the lattice-to-continuum embedding, we use centered coordinates so that
+the embedding commutes with time reflection (negation of the 0th coordinate).
+`signedVal x` gives the representative of `x ∈ ZMod N` in `{-⌊N/2⌋, ..., ⌊(N-1)/2⌋}`. -/
 
 variable (N : ℕ) [NeZero N]
 
-/-- Physical position of a lattice site: maps `x ∈ (Fin N)^d` to `a · x ∈ ℝ^d`.
+/-- Centered/signed representative of an element of `ZMod N`.
+Maps to `{-⌊N/2⌋, ..., ⌊(N-1)/2⌋}` for odd N. -/
+def signedVal (n : ZMod N) : ℤ :=
+  if (ZMod.val n : ℤ) ≤ (N : ℤ) / 2 then (ZMod.val n : ℤ) else (ZMod.val n : ℤ) - (N : ℤ)
 
-For a site x = (x₁,...,x_d) with xᵢ ∈ Fin N, the physical position is
-`(a · x₁, ..., a · x_d) ∈ ℝ^d` where xᵢ is cast to ℝ. -/
+/-- Key property: `signedVal` is odd for odd N.
+`signedVal(-x) = -signedVal(x)` when N is odd. -/
+theorem signedVal_neg (hN : Odd N) (x : ZMod N) :
+    signedVal N (-x) = -signedVal N x := by
+  unfold signedVal
+  by_cases hx : x = 0
+  · subst hx; simp [show (0 : ℤ) ≤ (N : ℤ) / 2 from by omega]
+  · rw [ZMod.neg_val, if_neg hx]
+    have hv_lt := ZMod.val_lt x
+    have hv_pos : 0 < ZMod.val x := by
+      rcases Nat.eq_zero_or_pos (ZMod.val x) with h | h
+      · exact absurd ((ZMod.val_eq_zero x).mp h) hx
+      · exact h
+    obtain ⟨k, hk⟩ := hN
+    simp only [Nat.cast_sub hv_lt.le]
+    split_ifs <;> omega
+
+/-! ## Physical position of a lattice site -/
+
+/-- Physical position of a lattice site using **centered coordinates**.
+
+Maps `x ∈ (ZMod N)^d` to `(a · signedVal(x₁), ..., a · signedVal(x_d)) ∈ ℝ^d`.
+This uses `signedVal` (centered representatives) so that the embedding commutes
+with time reflection: `physicalPosition a (Θx) = Θ(physicalPosition a x)` for odd N. -/
 def physicalPosition (a : ℝ) (x : FinLatticeSites d N) :
     EuclideanSpace ℝ (Fin d) :=
-  (WithLp.equiv 2 (Fin d → ℝ)).symm (fun i => a * ((ZMod.val (x i) : ℕ) : ℝ))
+  (WithLp.equiv 2 (Fin d → ℝ)).symm (fun i => a * (signedVal N (x i) : ℝ))
 
 /-! ## The lattice-to-continuum embedding -/
 
