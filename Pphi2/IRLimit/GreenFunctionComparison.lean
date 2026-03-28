@@ -81,14 +81,21 @@ theorem os1_implies_second_moment_bound
   obtain ⟨q, hq_cont, c, hc_pos, hos1⟩ := hos.os1
   -- C = 4 · exp(c) works (using x² ≤ 2·cosh(x) ≤ 2·exp(|x|))
   exact ⟨4 * Real.exp c, q, mul_pos (by norm_num) (Real.exp_pos c), hq_cont, fun f => by
-    -- The proof:
-    -- (a) E[(ω f)²] ≤ 2 · E[exp(|ω f|)] (from x² ≤ 2·exp(|x|))
-    -- (b) E[exp(|ω f|)] ≤ E[exp(ω f)] + E[exp(-ω f)] (triangle)
-    -- (c) E[exp(±ω f)] ≤ exp(c · q(f)) (from OS1 at f_re=0, f_im=±f)
-    -- (d) Combined: E[(ω f)²] ≤ 4·exp(c·q(f))
-    -- (e) Quadraticity: E[(ω(tf))²] = t²·E[(ω f)²], so setting t = q(f)
-    --     and g = f/q(f): E[(ω f)²] = q(f)²·E[(ω g)²] ≤ q(f)²·4·exp(c)
-    --     (since q(g) = 1, so exp(c·q(g)) = exp(c))
+    -- Step (a): x² ≤ 2·(exp x + exp(-x)) applied inside integral
+    -- E[(ω f)²] ≤ 2·(E[exp(ω f)] + E[exp(-ω f)])
+    --
+    -- Step (b): OS1 at f_re=0, f_im=±f gives:
+    -- ‖∫ exp(i·(0 + i·ω(f))) dμ‖ = ‖∫ exp(-ω f) dμ‖ ≤ exp(c·q(0)+c·q(f)) = exp(c·q(f))
+    -- ‖∫ exp(i·(0 + i·ω(-f))) dμ‖ = ‖∫ exp(ω f) dμ‖ ≤ exp(c·q(0)+c·q(-f)) = exp(c·q(f))
+    -- Since exp(±ω f) > 0, ‖∫...‖ = ∫... and the integrals are real-valued.
+    -- So: E[exp(ω f)] + E[exp(-ω f)] ≤ 2·exp(c·q(f))
+    --
+    -- Step (c): Combined: E[(ω f)²] ≤ 4·exp(c·q(f))
+    --
+    -- Step (d): Quadraticity + scaling.
+    -- For q(f) = 0: E[(ω f)²] = 0 ≤ 0 (since MGF ≤ 1 implies ω f = 0 a.s.)
+    -- For q(f) > 0: set g = f/q(f), then q(g) = 1 and ω(f) = q(f)·ω(g)
+    -- E[(ω f)²] = q(f)²·E[(ω g)²] ≤ q(f)²·4·exp(c·1) = 4·exp(c)·q(f)²
     sorry⟩
 
 /-- Uniform second moment bound for the cylinder pullback measures.
