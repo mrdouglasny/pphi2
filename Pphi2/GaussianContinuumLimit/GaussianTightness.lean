@@ -49,7 +49,7 @@ open GaussianField MeasureTheory
 
 namespace Pphi2
 
-variable (d N : ℕ) [NeZero N]
+variable (d N : ℕ) [NeZero N] [Fact (0 < d)]
 
 /-! ## Uniform second moment bounds -/
 
@@ -132,41 +132,36 @@ theorem gaussianContinuumMeasures_tight
   -- For d ≥ 1, this is the Hermite-function basis instance.
   -- For d = 0, the space S(ℝ⁰) ≅ ℝ is trivially a DM space but the
   -- formalized instance requires Nontrivial, which fails for Fin 0.
-  rcases Nat.eq_zero_or_pos d with rfl | hd
-  · -- d = 0: degenerate case (0-dimensional Schwartz space ≅ ℝ).
-    -- Tightness holds trivially but the formal proof requires
-    -- DyninMityaginSpace for the 0-dimensional case.
-    sorry
-  · -- d ≥ 1: full proof via Baire category / barrel theorem
-    haveI : Nonempty (Fin d) := Fin.pos_iff_nonempty.mp hd
-    haveI : Nontrivial (EuclideanSpace ℝ (Fin d)) := inferInstance
-    haveI : DyninMityaginSpace (ContinuumTestFunction d) :=
-      schwartz_dyninMityaginSpace
-    set ι := { a : ℝ // 0 < a ∧ a ≤ 1 }
-    set μ : ι → Measure (Configuration (ContinuumTestFunction d)) :=
-      fun i => gaussianContinuumMeasure d N i.val mass i.prop.1 hmass
-    have hprob : ∀ i : ι, IsProbabilityMeasure (μ i) :=
-      fun i => gaussianContinuumMeasure_isProbability d N
-        i.val mass i.prop.1 hmass
-    have h_int :
-        ∀ (f : ContinuumTestFunction d) (i : ι),
-        Integrable (fun ω : Configuration (ContinuumTestFunction d) =>
-          (ω f) ^ 2) (μ i) :=
-      fun f i => gaussianContinuumMeasure_sq_integrable d N
-        i.val mass i.prop.1 hmass f
-    have h_moments :
-        ∀ f : ContinuumTestFunction d, ∃ C : ℝ, ∀ i : ι,
-        ∫ ω : Configuration (ContinuumTestFunction d),
-          (ω f) ^ 2 ∂(μ i) ≤ C := by
-      intro f
-      obtain ⟨C, _, hC⟩ :=
-        gaussian_second_moment_uniform d N mass hmass f
-      exact ⟨C, fun i => hC i.val i.prop.1 i.prop.2⟩
-    obtain ⟨K, hK_compact, hK_mass⟩ :=
-      configuration_tight_of_uniform_second_moments
-        μ hprob h_int h_moments ε hε
-    exact ⟨K, hK_compact,
-      fun a ha ha_le => hK_mass ⟨a, ha, ha_le⟩⟩
+  have hd : 0 < d := Fact.out
+  haveI : Nonempty (Fin d) := Fin.pos_iff_nonempty.mp hd
+  haveI : Nontrivial (EuclideanSpace ℝ (Fin d)) := inferInstance
+  haveI : DyninMityaginSpace (ContinuumTestFunction d) :=
+    schwartz_dyninMityaginSpace
+  set ι := { a : ℝ // 0 < a ∧ a ≤ 1 }
+  set μ : ι → Measure (Configuration (ContinuumTestFunction d)) :=
+    fun i => gaussianContinuumMeasure d N i.val mass i.prop.1 hmass
+  have hprob : ∀ i : ι, IsProbabilityMeasure (μ i) :=
+    fun i => gaussianContinuumMeasure_isProbability d N
+      i.val mass i.prop.1 hmass
+  have h_int :
+      ∀ (f : ContinuumTestFunction d) (i : ι),
+      Integrable (fun ω : Configuration (ContinuumTestFunction d) =>
+        (ω f) ^ 2) (μ i) :=
+    fun f i => gaussianContinuumMeasure_sq_integrable d N
+      i.val mass i.prop.1 hmass f
+  have h_moments :
+      ∀ f : ContinuumTestFunction d, ∃ C : ℝ, ∀ i : ι,
+      ∫ ω : Configuration (ContinuumTestFunction d),
+        (ω f) ^ 2 ∂(μ i) ≤ C := by
+    intro f
+    obtain ⟨C, _, hC⟩ :=
+      gaussian_second_moment_uniform d N mass hmass f
+    exact ⟨C, fun i => hC i.val i.prop.1 i.prop.2⟩
+  obtain ⟨K, hK_compact, hK_mass⟩ :=
+    configuration_tight_of_uniform_second_moments
+      μ hprob h_int h_moments ε hε
+  exact ⟨K, hK_compact,
+    fun a ha ha_le => hK_mass ⟨a, ha, ha_le⟩⟩
 
 end Pphi2
 

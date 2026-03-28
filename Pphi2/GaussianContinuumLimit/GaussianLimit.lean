@@ -54,7 +54,7 @@ open GaussianField MeasureTheory Filter
 
 namespace Pphi2
 
-variable (d N : ℕ) [NeZero N]
+variable (d N : ℕ) [NeZero N] [Fact (0 < d)]
 
 /-! ## Existence of the Gaussian continuum limit -/
 
