@@ -296,7 +296,7 @@ theorem pphi2_limit_exists (P : InteractionPolynomial)
         Tendsto (fun n : ℕ => 1 / (n + 1 : ℝ)) Filter.atTop (nhds 0))
   · intro k
     positivity
-  · refine ⟨?_, ?_, ?_, ?_⟩
+  · refine ⟨?_, ?_, ?_, ?_, ?_⟩
     · intro n f
       exact (tendsto_const_nhds :
         Filter.Tendsto
@@ -336,6 +336,8 @@ theorem pphi2_limit_exists (P : InteractionPolynomial)
           rw [integral_dirac' _ _ hmeas]
           norm_num [show (0 : Configuration (ContinuumTestFunction 2)) g = 0 from rfl]
         rw [this f, this (schwartzTranslate 2 v f)]
+    · -- Weak convergence: constant sequence at δ₀ → trivial
+      intro g _ _; exact tendsto_const_nhds
 
 end Pphi2
 

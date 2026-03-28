@@ -356,7 +356,7 @@ theorem translation_invariance_continuum (P : InteractionPolynomial)
     (h_limit : IsPphi2Limit μ P mass) :
     ∀ (v : EuclideanSpace ℝ (Fin 2)) (f : TestFunction2),
     generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f) := by
-  rcases h_limit with ⟨a, ν, hprob, _ha_tend, _ha_pos, _hmom, _hneg, hcf, hlat⟩
+  rcases h_limit with ⟨a, ν, hprob, _ha_tend, _ha_pos, _hmom, _hneg, hcf, hlat, _hweakconv⟩
   intro v f
   -- SchwartzMap.translate v f = schwartzTranslate 2 v f (same definition)
   have htranslate_eq : SchwartzMap.translate v f = schwartzTranslate 2 v f := rfl

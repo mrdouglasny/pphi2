@@ -335,7 +335,14 @@ def IsPphi2Limit {d : ℕ}
         ∫ ω : Configuration (ContinuumTestFunction d),
           Complex.exp (Complex.I * ↑(ω f)) ∂(ν k) =
         ∫ ω : Configuration (ContinuumTestFunction d),
-          Complex.exp (Complex.I * ↑(ω (schwartzTranslate d v f))) ∂(ν k))
+          Complex.exp (Complex.I * ↑(ω (schwartzTranslate d v f))) ∂(ν k)) ∧
+    -- Weak convergence for bounded continuous functions:
+    -- ∫ g dν_k → ∫ g dμ for all bounded continuous g : Configuration → ℝ.
+    -- This follows from Prokhorov's theorem (`prokhorov_configuration`).
+    (∀ (g : Configuration (ContinuumTestFunction d) → ℝ),
+      Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Filter.Tendsto (fun k => ∫ ω, g ω ∂(ν k))
+        Filter.atTop (nhds (∫ ω, g ω ∂μ)))
 
 end Pphi2
 

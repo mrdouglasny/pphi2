@@ -126,7 +126,12 @@ def IsPphi2ContinuumLimit
     (∀ (v : EuclideanSpace ℝ (Fin 2)) (f : TestFun),
       ∀ᶠ k in Filter.atTop,
         ∫ ω : FieldConfig, Complex.exp (Complex.I * ↑(ω f)) ∂(ν k) =
-        ∫ ω : FieldConfig, Complex.exp (Complex.I * ↑(ω (schwartzTranslate 2 v f))) ∂(ν k))
+        ∫ ω : FieldConfig, Complex.exp (Complex.I * ↑(ω (schwartzTranslate 2 v f))) ∂(ν k)) ∧
+    -- Weak convergence for bounded continuous functions
+    (∀ (g : FieldConfig → ℝ),
+      Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Filter.Tendsto (fun k => ∫ ω, g ω ∂(ν k))
+        Filter.atTop (nhds (∫ ω, g ω ∂μ)))
 
 /-- A probability measure μ on S'(ℝ²) that arises as the infinite-volume limit
 of the Phi4 continuum construction: μ = weak-lim_{Λ→∞} μ^{Phi4}_{Λ}
@@ -268,8 +273,7 @@ Proof sketch:
 
 This holds at weak coupling where the cluster expansion guarantees uniqueness.
 At strong coupling, both constructions still produce valid OS measures, but
-uniqueness (and hence equality) requires additional phase selection arguments. -/
-/-- **Main theorem: the two constructions produce the same measure.**
+uniqueness (and hence equality) requires additional phase selection arguments.
 
 Proved from `measure_determined_by_schwinger` + `schwinger_agreement`. -/
 theorem same_continuum_measure
