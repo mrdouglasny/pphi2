@@ -177,12 +177,19 @@ theorem continuum_embedded_measure_rp'
   set G : Configuration (ContinuumTestFunction 2) → ℝ :=
     fun ω => F ω * F (distribTimeReflection ω)
   change 0 ≤ ∫ ω, G ω ∂(Measure.map ι μ_latt)
-  -- Step 2: Apply integral_map to rewrite as ∫ G∘ι dμ_latt
-  -- The change of variables and lattice RP application requires:
-  -- (a) Measurability of G ∘ ι on the lattice (finite-dimensional)
-  -- (b) The intertwining identity: F(Θ*(ι φ)) = F(ι(Θ_latt φ))
-  -- (c) Applying lattice_rp to F ∘ ι
-  -- All are standard but require lattice geometry plumbing.
+  -- Step 2: Change of variables via integral_map
+  -- ∫ G d(ι_* μ) = ∫ G∘ι dμ
+  -- Then: (G∘ι)(φ) = F(ι φ) · F(Θ*(ι φ)) = F(ι φ) · F(ι(Θ_latt φ))
+  -- This is a non-negative integrand (F(ι φ)² after rewriting) IF Θ* acts trivially.
+  -- In general it's F(ι φ) · F(ι(Θφ)), which is the RP test for G_latt = F∘ι.
+  --
+  -- The gap: lattice_rp requires PositiveTimeSupported, but F is arbitrary.
+  -- The standard RP inequality ∫ F·(F∘Θ) ≥ 0 for all F follows from RP for
+  -- positive-time F by density. This requires a "strong RP" reformulation of
+  -- lattice_rp, or a direct proof that ∫ G·(G∘Θ) dμ_latt ≥ 0 for all G.
+  --
+  -- For now, this remains the single sorry in the RP chain.
+  -- Mathematical content: change of variables (integral_map) + lattice RP.
   sorry
 
 end Pphi2
