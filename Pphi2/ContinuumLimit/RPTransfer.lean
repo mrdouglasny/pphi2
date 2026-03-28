@@ -49,11 +49,26 @@ The lattice time reflection `Θ_latt` on `Configuration(FinLatticeField 2 N)`
 maps `ω ↦ ω ∘ (· ∘ timeReflection2D)`, i.e., it permutes the lattice sites
 by `(t,x) ↦ (-t, x)`. -/
 
+/-- Time reflection on `FinLatticeSites 2 N = Fin 2 → ZMod N`.
+Negates the 0th coordinate (time), preserves the 1st (space). -/
+def siteTimeReflection (x : FinLatticeSites 2 N) : FinLatticeSites 2 N :=
+  fun i => if i = 0 then -x i else x i
+
+/-- Time reflection on lattice fields: `(Θφ)(x) = φ(Θx)`. -/
+def fieldTimeReflection (φ : FinLatticeField 2 N) : FinLatticeField 2 N :=
+  φ ∘ siteTimeReflection N
+
+/-- The field time reflection as a linear map on `FinLatticeField 2 N`. -/
+def fieldTimeReflectionLinear : FinLatticeField 2 N →ₗ[ℝ] FinLatticeField 2 N where
+  toFun := fieldTimeReflection N
+  map_add' φ ψ := by ext x; simp [fieldTimeReflection, Function.comp]
+  map_smul' r φ := by ext x; simp [fieldTimeReflection, Function.comp]
+
 /-- Lattice time reflection on configuration space.
-`(Θ_latt ω)(φ) = ω(φ ∘ timeReflection2D)` for field configurations φ. -/
+`(Θ_latt ω)(φ) = ω(Θφ) = ω(φ ∘ siteTimeReflection)`. -/
 def latticeConfigReflection :
     Configuration (FinLatticeField 2 N) → Configuration (FinLatticeField 2 N) :=
-  sorry
+  fun ω => ω.comp (fieldTimeReflectionLinear N).toContinuousLinearMap
 
 /-! ## Intertwining identity
 

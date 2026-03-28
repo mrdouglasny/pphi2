@@ -140,7 +140,12 @@ is continuous in ω (it's `WeakDual.eval_continuous` at the fixed test function
 from the universal property of the weak-* topology. -/
 theorem distribTimeReflection_continuous :
     Continuous distribTimeReflection := by
-  sorry
+  apply WeakDual.continuous_of_continuous_eval
+  intro f
+  change Continuous (fun ω : GaussianField.Configuration (ContinuumTestFunction 2) =>
+    (distribTimeReflection ω) f)
+  simp only [distribTimeReflection_apply]
+  exact WeakDual.eval_continuous (continuumTimeReflection f)
 
 /-- **RP of approximating measures** (axiom for the lattice-to-continuum transfer).
 
