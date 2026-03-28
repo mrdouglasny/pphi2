@@ -33,6 +33,45 @@ open GaussianField MeasureTheory
 variable (Ls : ℝ) [hLs : Fact (0 < Ls)]
 variable (mass : ℝ) (hmass : 0 < mass)
 
+/-- **Pullback identity**: second moment under the cylinder pullback equals
+second moment of the embedded test function under the torus measure. -/
+theorem cylinderPullback_second_moment_eq
+    (Lt : ℝ) [Fact (0 < Lt)]
+    (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
+    [IsProbabilityMeasure μ]
+    (f : CylinderTestFunction Ls) :
+    ∫ ω : Configuration (CylinderTestFunction Ls),
+      (ω f) ^ 2 ∂(cylinderPullbackMeasure Lt Ls μ) =
+    ∫ ω : Configuration (AsymTorusTestFunction Lt Ls),
+      (ω (cylinderToTorusEmbed Lt Ls f)) ^ 2 ∂μ := by
+  unfold cylinderPullbackMeasure
+  have hmeas : Measurable (cylinderPullback Lt Ls) :=
+    configuration_measurable_of_eval_measurable _
+      (fun φ => configuration_eval_measurable _)
+  change ∫ ω, (ω f) ^ 2 ∂(Measure.map (cylinderPullback Lt Ls) μ) = _
+  rw [integral_map hmeas.aemeasurable
+    ((configuration_eval_measurable f).pow_const 2 |>.aestronglyMeasurable)]
+  congr 1
+
+/-- **OS1 second moment bound**: OS1 regularity implies a second moment bound.
+
+From `‖Z_ℂ[0, tf]‖ ≤ exp(c · q(tf))` we get `∫ exp(-t·ω(f)) dμ ≤ exp(c·t·q(f))`
+which at t=1 gives `∫ exp(ω(f)) dμ ≤ exp(c·q(f))`. Since `x² ≤ 2·exp(|x|)`,
+`∫ (ω f)² dμ ≤ 2 · ∫ exp(|ω f|) dμ ≤ 4 · exp(c·q(f))`.
+
+For a continuous seminorm q, `exp(c·q(f))` is bounded by `C·q'(f)²` on
+the unit ball of q', giving the quadratic bound. -/
+theorem os1_implies_second_moment_bound
+    (Lt : ℝ) [Fact (0 < Lt)]
+    (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
+    [IsProbabilityMeasure μ]
+    (hos : @AsymSatisfiesTorusOS Lt Ls _ _ μ inferInstance) :
+    ∃ (C : ℝ) (q : AsymTorusTestFunction Lt Ls → ℝ),
+    0 < C ∧ Continuous q ∧
+    ∀ f : AsymTorusTestFunction Lt Ls,
+      ∫ ω : Configuration (AsymTorusTestFunction Lt Ls), (ω f) ^ 2 ∂μ ≤ C * q f ^ 2 := by
+  sorry
+
 /-- Uniform second moment bound for the cylinder pullback measures.
 
 For any cylinder test function f, the second moment under the
@@ -40,9 +79,9 @@ pulled-back torus interacting measure is bounded by a continuous
 seminorm of f, uniformly in the time period Lt ≥ 1.
 
 **Proof chain**:
-1. `∫ (ω f)² dν_Lt = ∫ (ω(embed f))² dμ` (pullback identity)
-2. OS1 regularity of μ gives `∫ (ω g)² dμ ≤ C₁ · q₁(g)²` for a
-   continuous seminorm q₁ on `AsymTorusTestFunction Lt Ls`
+1. `∫ (ω f)² dν_Lt = ∫ (ω(embed f))² dμ` (pullback identity, proved)
+2. OS1 regularity of μ gives `∫ (ω g)² dμ ≤ C₁ · q₁(g)²`
+   (from `os1_implies_second_moment_bound`)
 3. Method of images: `q₁(embed f) ≤ C₂ · q₂(f)` uniformly in Lt ≥ 1
    (from `torusGreen_uniform_bound` in gaussian-field)
 
