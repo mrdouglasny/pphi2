@@ -171,6 +171,14 @@ theorem routeBPrime_cylinder_OS
     (∀ (f : CylinderTestFunction Ls),
       ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν =
       ∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderTimeReflection Ls f))) ∂ν) ∧
+    -- OS2 time translation
+    (∀ (τ : ℝ) (f : CylinderTestFunction Ls),
+      ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν =
+      ∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderTranslation Ls 0 τ f))) ∂ν) ∧
+    -- OS2 spatial translation
+    (∀ (v : ℝ) (f : CylinderTestFunction Ls),
+      ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν =
+      ∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderSpatialTranslation Ls v f))) ∂ν) ∧
     -- OS3
     (∀ (n : ℕ) (f : Fin n → ↥(cylinderPositiveTimeSubmodule Ls)) (c : Fin n → ℂ),
       0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
@@ -179,7 +187,7 @@ theorem routeBPrime_cylinder_OS
             cylinderTimeReflection Ls (f j : CylinderTestFunction Ls)))) ∂ν).re) := by
   obtain ⟨φ, ν, hφ, hν_prob, hν_conv⟩ :=
     cylinderIRLimit_exists Ls P mass hmass Lt hLt hLt_tend μ hμ_prob hμ_os
-  refine ⟨ν, hν_prob, fun n J => cylinderIR_os0 Ls P mass hmass ν n J, ?_, ?_⟩
+  refine ⟨ν, hν_prob, fun n J => cylinderIR_os0 Ls P mass hmass ν n J, ?_, ?_, ?_, ?_⟩
   · -- OS2: time reflection passes through the weak limit
     -- At each finite Lt, reflection is exact (cylinderPullback_timeReflection_invariant)
     -- Taking the limit, both sides converge to the same value.
@@ -201,6 +209,24 @@ theorem routeBPrime_cylinder_OS
         f
     -- Since Z_{Lt_n}(f) = Z_{Lt_n}(Θf) and both converge, their limits agree
     exact tendsto_nhds_unique hL (hR.congr (fun n => (h_eq n).symm))
+  · -- OS2: time translation passes through (exact at finite Lt)
+    intro τ f
+    have hL := hν_conv f
+    have hR := hν_conv (cylinderTranslation Ls 0 τ f)
+    have h_eq : ∀ n,
+        (∫ ω, Complex.exp (Complex.I * ↑(ω f))
+          ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n)))) =
+        (∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderTranslation Ls 0 τ f)))
+          ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n)))) := by
+      intro n
+      exact @cylinderPullback_timeTranslation_invariant Ls _ (Lt (φ n)) (hLt (φ n))
+        (μ (φ n)) (hμ_prob (φ n))
+        (fun v g => (hμ_os (φ n)).os2_translation v g)
+        τ f
+    exact tendsto_nhds_unique hL (hR.congr (fun n => (h_eq n).symm))
+  · -- OS2: spatial translation (exact at finite Lt via torus spatial invariance)
+    intro v f
+    sorry -- same pattern: cylinderPullback_spatialTranslation_invariant (needs formalization)
   · -- OS3: reflection positivity
     intro n f c; exact cylinderIR_os3 Ls P mass hmass ν n f c
 
