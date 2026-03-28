@@ -11,12 +11,47 @@ The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**Current counter (2026-03-28): 29 axioms, 1 sorry.**
+**Current counter (2026-03-28): 27 axioms, 0 sorries.**
 
-Recent reductions:
-- `gaussian_hermite_zero_mean` — **PROVED** (PR#1, Hermite orthonormality from Mathlib)
-- `wickConstant_eq_variance` — **PROVED** (PR#1, product DFT Parseval + translation invariance)
-- `periodicResolvent_convergence_rate` — **PROVED** (PR#1, hyperbolic identity manipulation)
+Recent reductions (2026-03-28):
+- `configuration_continuum_polishSpace` — **REMOVED** (inconsistent: weak-* dual is not Polish)
+- `configuration_continuum_borelSpace` — **REMOVED** (inconsistent: same reason)
+  Replaced by `prokhorov_configuration` from gaussian-field (proved, avoids Polish/Borel)
+- `os3_inheritance` — **REMOVED** (incorrectly stated for ALL bounded continuous F)
+  Replaced by `os3_for_continuum_limit` axiom in standard `OS3_ReflectionPositivity` form
+- `continuum_embedded_measure_rp` — **REMOVED** (dead code after OS3 restructuring)
+- `gaussianContinuumMeasures_tight` sorry — **ELIMINATED** (added `[Fact (0 < d)]`)
+- `signedVal` + `signedVal_neg` — **PROVED** (centered coordinates for lattice embedding)
+- `latticeEmbedLift_intertwines_reflection` — **PROVED** (embedding commutes with time reflection)
+- `distribTimeReflection_continuous` — **PROVED** (WeakDual.continuous_of_continuous_eval)
+- `physicalPosition` — switched to centered coordinates (`signedVal` replaces `ZMod.val`)
+
+Upstream gaussian-field reductions (2026-03-27):
+- `schwartzLaplaceEvalCLM` — **PROVED** (new SchwartzFourier/LaplaceCLM.lean, 0 axioms)
+- `schwartzLaplaceEvalCLM_apply` — **PROVED** (definitional rfl)
+- `schwartzLaplace_uniformBound` — **PROVED** (via toLpCLM + Seminorm.bound_of_continuous)
+- gaussian-field axiom count: **7 → 4**
+
+Earlier reductions (PR#1 from Matteo Cipollina):
+- `gaussian_hermite_zero_mean` — **PROVED** (Hermite orthonormality from Mathlib)
+- `wickConstant_eq_variance` — **PROVED** (product DFT Parseval + translation invariance)
+- `periodicResolvent_convergence_rate` — **PROVED** (hyperbolic identity manipulation)
+
+### Next steps for `os3_for_continuum_limit`
+
+The axiom `os3_for_continuum_limit` (OS3 for the continuum limit) is provable via
+weak convergence + lattice OS3. The gap: `IsPphi2Limit` doesn't carry OS3 of the
+approximating measures. Per Gemini analysis, the recommended fix is:
+
+**Add `approx_os3 : ∀ k, @OS3_ReflectionPositivity (ν k) (ν_is_prob k)` to
+`IsPphi2Limit`.** This makes `IsPphi2Limit` a complete certificate that a valid
+P(φ)₂ construction was performed. The burden shifts to the construction site
+(`continuumLimit`), which must supply lattice OS3 (from `lattice_rp`) through
+the embedding intertwining (proved in `RPTransfer.lean`).
+
+Circular import note: `IsPphi2Limit` (in `Embedding.lean`) cannot import
+`OSAxioms.lean`. The OS3 condition must be stated inline using the generating
+functional, or the imports must be restructured.
 
 **Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 0 sorries.**
 All OS0–OS2 proofs complete within this file. Transitive dependencies are
@@ -72,7 +107,8 @@ telescoping sum bound.
 | 4 | `ContinuumLimit/Hypercontractivity.lean` | 0 axioms, 0 sorries (`wickConstant_eq_variance` now proved generically; `wickConstant_eq_variance_two_dim` remains as a 2D corollary) |
 | 4 | `ContinuumLimit/Tightness.lean` | 1 axiom |
 | 4 | `ContinuumLimit/Convergence.lean` | 3 axioms, 0 sorries, 2 proved theorems |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom, 0 sorries |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | **0 axioms, 0 sorries** (os3_inheritance removed; OS3 now in OS2_WardIdentity) |
+| 4 | `ContinuumLimit/RPTransfer.lean` | 0 axioms, 0 sorries (intertwining proved, signedVal) |
 | 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`schwartz_riemann_sum_bound` proved) |
 | 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 0 axioms, 1 sorry |
@@ -340,7 +376,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `continuumLimit_nontrivial` | Convergence | Hard | ∫ (ω f)² dμ > 0 for some f. Free field two-point function gives lower bound. |
 | `continuumLimit_nonGaussian` | Convergence | Hard | Connected 4-point function ≠ 0. Perturbation theory gives O(λ) contribution. |
 | `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
-| `os3_inheritance` | AxiomInheritance | Medium | Abstract RP: ∫ F(ω)·F(Θ*ω) dμ ≥ 0 for bounded continuous F. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
+| `os3_for_continuum_limit` | OS2_WardIdentity | Medium | Standard OS3 (RP matrix ≥ 0 for positive-time test fns). Provable by adding `approx_os3` to `IsPphi2Limit`. |
 | `os4_inheritance` | AxiomInheritance | Med/Hard | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | ~~`continuumLimit_satisfies_os0134`~~ | AxiomInheritance | **Theorem** | Assembly of os0/os1/os3/os4 inheritance results. |
 
