@@ -159,57 +159,8 @@ theorem distribTimeReflection_continuous :
   simp only [distribTimeReflection_apply]
   exact WeakDual.eval_continuous (continuumTimeReflection f)
 
-/-- **RP of approximating measures** (axiom for the lattice-to-continuum transfer).
-
-Each continuum-embedded lattice measure satisfies reflection positivity:
-`∫ F(ω) · F(Θ*ω) dν_k ≥ 0` for all bounded continuous F.
-
-This transfers lattice RP through the embedding: the embedding intertwines
-time reflection on Configuration space with lattice time reflection,
-so `∫ F·(F∘Θ*) dν_k = ∫ (F∘ι)·((F∘ι)∘Θ_lattice) dμ_lattice ≥ 0`. -/
-axiom continuum_embedded_measure_rp
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
-    (a : ℝ) (ha : 0 < a) (N : ℕ) [NeZero N] :
-    ∀ (F : Configuration (ContinuumTestFunction 2) → ℝ),
-      Continuous F → (∃ C, ∀ ω, |F ω| ≤ C) →
-      0 ≤ ∫ ω, F ω * F (distribTimeReflection ω)
-        ∂(continuumMeasure 2 N P a mass ha hmass)
-
-theorem os3_inheritance (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ)
-    (h_limit : IsPphi2Limit μ P mass) :
-    -- For all bounded continuous F depending on positive-time evaluations:
-    -- ∫ F(ω) · F(Θ*ω) dμ(ω) ≥ 0
-    ∀ (F : Configuration (ContinuumTestFunction 2) → ℝ),
-      Continuous F → (∃ C, ∀ ω, |F ω| ≤ C) →
-      ∫ ω, F ω * F (distribTimeReflection ω) ∂μ ≥ 0 := by
-  -- Extract approximating data from IsPphi2Limit
-  obtain ⟨a, ν, hν_prob, _ha_tend, _ha_pos, _hmom, _hz2, _hcf, _hlat, h_weak⟩ := h_limit
-  intro F hF_cont ⟨C, hC⟩
-  -- G(ω) = F(ω) · F(Θ*ω) is bounded continuous
-  set G : Configuration (ContinuumTestFunction 2) → ℝ :=
-    fun ω => F ω * F (distribTimeReflection ω)
-  have hG_cont : Continuous G :=
-    hF_cont.mul (hF_cont.comp distribTimeReflection_continuous)
-  have hG_bdd : ∃ C', ∀ ω, |G ω| ≤ C' :=
-    ⟨C * C, fun ω => by
-      simp only [G, abs_mul]
-      exact mul_le_mul (hC ω) (hC _) (abs_nonneg _) (le_trans (abs_nonneg _) (hC ω))⟩
-  -- Weak convergence: ∫ G dν_k → ∫ G dμ
-  have h_tend : Filter.Tendsto (fun k => ∫ ω, G ω ∂(ν k))
-      Filter.atTop (nhds (∫ ω, G ω ∂μ)) :=
-    h_weak G hG_cont hG_bdd
-  -- Each ∫ G dν_k ≥ 0 by RP of the approximating measures
-  -- (This requires knowing ν_k are continuum-embedded lattice measures.
-  -- For now, we axiomatize this as continuum_embedded_measure_rp.
-  -- The full proof would extract the lattice structure from IsPphi2Limit
-  -- and apply lattice RP through the embedding.)
-  have h_nonneg : ∀ k, 0 ≤ ∫ ω, G ω ∂(ν k) := by
-    sorry -- needs: ν k satisfies RP (from lattice RP through embedding)
-  -- Limit of nonneg sequence is nonneg
-  exact ge_of_tendsto h_tend (Filter.Eventually.of_forall h_nonneg)
+-- OS3 inheritance is now `os3_for_continuum_limit` in `OS2_WardIdentity.lean`,
+-- stated directly in the standard `OS3_ReflectionPositivity` form.
 
 -- NOTE: os0_inheritance and os4_inheritance were removed as dead axioms
 -- (only used in SatisfiesOS0134 bundle which was never consumed downstream).
