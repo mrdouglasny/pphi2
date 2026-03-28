@@ -100,20 +100,53 @@ lemma fieldTimeReflection_single (x : FinLatticeSites 2 N) :
     have : siteTimeReflection N y ≠ x := fun heq => h (by rw [← heq, hinv y])
     simp [this]
 
+/-- Evaluation at a reflected site of a reflected function equals evaluation at the
+original site: `(Θf)(pos(Θy)) = f(pos(y))` for odd N.
+Uses `signedVal_neg` (centered coordinates commute with negation). -/
+lemma evalAtSite_reflection (hN_odd : Odd N) (a : ℝ) (f : ContinuumTestFunction 2)
+    (y : FinLatticeSites 2 N) :
+    evalAtSite 2 N a (continuumTimeReflection f) (siteTimeReflection N y) =
+    evalAtSite 2 N a f y := by
+  simp only [evalAtSite, continuumTimeReflection_apply_coord, physicalPosition, siteTimeReflection]
+  congr 1
+  apply (WithLp.equiv 2 (Fin 2 → ℝ)).injective
+  funext i
+  change (if i = 0 then -(a * ↑(signedVal N (if i = 0 then -y i else y i)))
+    else a * ↑(signedVal N (if i = 0 then -y i else y i))) = a * ↑(signedVal N (y i))
+  split
+  · rename_i h; subst h; simp [signedVal_neg N hN_odd, Int.cast_neg]
+  · simp_all
+
+/-- **The embedding intertwines time reflection** for odd N. -/
 theorem latticeEmbedLift_intertwines_reflection (a : ℝ) (ha : 0 < a)
     (hN_odd : Odd N)
     (ω : Configuration (FinLatticeField 2 N))
     (f : ContinuumTestFunction 2) :
     distribTimeReflection (latticeEmbedLift 2 N a ha ω) f =
     latticeEmbedLift 2 N a ha (latticeConfigReflection N ω) f := by
-  -- Unfold both sides to sums and use the helper lemmas.
-  -- LHS = (ι ω)(Θf) = a^2 * Σ_x ω(e_x) * (Θf)(pos(x))
-  -- RHS = (ι(Θω))(f) = a^2 * Σ_x (Θω)(e_x) * f(pos(x))
-  --      = a^2 * Σ_x ω(fieldTimeRefl(e_x)) * f(pos(x))
-  --      = a^2 * Σ_x ω(e_{Θx}) * f(pos(x))  (by fieldTimeReflection_single)
-  -- Reindex LHS: x' = Θx gives Σ_{x'} ω(e_{Θx'}) * (Θf)(pos(Θx'))
-  -- Need: (Θf)(pos(Θx')) = f(pos(x'))  (by position intertwining + signedVal_neg)
-  sorry
+  simp only [distribTimeReflection_apply, latticeEmbedLift, latticeEmbed]
+  change latticeEmbedEval 2 N a (fun x => ω (Pi.single x 1)) (continuumTimeReflection f) =
+    latticeEmbedEval 2 N a (fun x => (latticeConfigReflection N ω) (Pi.single x 1)) f
+  -- Simplify RHS: (Θω)(e_x) = ω(e_{Θx})
+  have hRHS : ∀ x : FinLatticeSites 2 N,
+      (latticeConfigReflection N ω) (Pi.single x 1) =
+      ω (Pi.single (siteTimeReflection N x) 1) := by
+    intro x; show ω (fieldTimeReflectionLinear N (Pi.single x 1)) = _
+    rw [show (fieldTimeReflectionLinear N) (Pi.single x 1) =
+      fieldTimeReflection N (Pi.single x 1) from rfl, fieldTimeReflection_single N x]
+  simp_rw [hRHS]; unfold latticeEmbedEval; congr 1
+  -- Reindex LHS sum by the involution Θ: substitute x = Θy
+  have hinv := siteTimeReflection_involutive N
+  conv_lhs =>
+    rw [show ∑ x : FinLatticeSites 2 N,
+      ω (Pi.single x 1) * evalAtSite 2 N a (continuumTimeReflection f) x =
+      ∑ y : FinLatticeSites 2 N,
+      ω (Pi.single (siteTimeReflection N y) 1) *
+        evalAtSite 2 N a (continuumTimeReflection f) (siteTimeReflection N y) from
+      (Equiv.sum_comp (Equiv.ofBijective _ ⟨hinv.injective, hinv.surjective⟩) _).symm]
+  -- Both sums now have ω(e_{Θy}) * ...; use evalAtSite_reflection
+  congr 1; ext y; congr 1
+  exact evalAtSite_reflection N hN_odd a f y
 
 /-! ## RP transfer theorem
 
