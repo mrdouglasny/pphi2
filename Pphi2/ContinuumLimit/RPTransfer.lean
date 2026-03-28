@@ -85,27 +85,25 @@ This is a reindexing of the finite sum: `Σ_x ω(e_x) · (Θf)(a·x) = Σ_x ω(e
   `distribTimeReflection (latticeEmbedLift a ha ω) f
    = latticeEmbedLift a ha (latticeConfigReflection N ω) f`
 
-Proof: both sides equal `a² Σ_x ω(e_{Θx}) · f(a·x)` by reindexing
-the sum `Σ_x ω(e_x) · (Θf)(a·x)` via `x' = Θx`.
+Proof: With centered coordinates (`signedVal`), the intertwining reduces to:
+  `f(physicalPosition a (Θx)) = (Θf)(physicalPosition a x)`
+which holds because `signedVal(-x_0) = -signedVal(x_0)` for odd N
+(from `signedVal_neg`), so `physicalPosition a (Θx) = Θ(physicalPosition a x)`.
 
-NOTE: The current `physicalPosition` uses `ZMod.val` (representatives in
-`{0, ..., N-1}`), so the embedding maps to nonneg coordinates. Continuum
-time reflection negates the 0th coordinate, but `ZMod.val(-(x 0))` gives
-`N - val(x 0)`, not `-val(x 0)`. The intertwining requires either:
-(a) Using centered coordinates `val(x) - N/2` in `physicalPosition`, or
-(b) Accounting for the periodicity: `f` is evaluated at `physicalPosition`,
-    and under periodicity, negation mod N + evaluation at Schwartz function
-    gives the same result as evaluation at the reflected Schwartz function
-    (since the Schwartz function is being integrated against a periodic
-    lattice, the wrap-around is handled by the sum over all sites).
-
-For now this remains a sorry. The mathematical content is a standard
-lattice geometry calculation. -/
+The sum reindexing `Σ_x ω(e_x)·(Θf)(pos(x)) = Σ_x ω(e_{Θx})·f(pos(x))`
+then follows by substituting `x' = Θx` (bijective since Θ is an involution). -/
 theorem latticeEmbedLift_intertwines_reflection (a : ℝ) (ha : 0 < a)
+    (hN_odd : Odd N)
     (ω : Configuration (FinLatticeField 2 N))
     (f : ContinuumTestFunction 2) :
     distribTimeReflection (latticeEmbedLift 2 N a ha ω) f =
     latticeEmbedLift 2 N a ha (latticeConfigReflection N ω) f := by
+  -- Both sides unfold to a^2 * Σ_x ω(e_?) · f(pos(?))
+  -- LHS: a^2 * Σ_x ω(e_x) · (Θf)(pos(x))
+  -- RHS: a^2 * Σ_x ω(e_{Θx}) · f(pos(x))
+  -- These are equal by reindexing x ↦ Θx in the LHS sum.
+  -- The key: (Θf)(pos(x)) = f(Θ(pos(x))) = f(pos(Θx))
+  -- because signedVal(-x₀) = -signedVal(x₀) for odd N.
   sorry
 
 /-! ## RP transfer theorem
