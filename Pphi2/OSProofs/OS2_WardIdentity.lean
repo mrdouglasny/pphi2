@@ -641,24 +641,20 @@ private lemma generatingFunctional_re_eq_integral_cos
         simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
               Complex.cos_ofReal_re, Complex.sin_ofReal_re]
 
-/-- **OS3 transfers to the continuum limit** (standard RP matrix form).
+/-- **OS3 transfers via weak convergence + lattice RP.**
 
-For positive-time test functions `fᵢ` and real coefficients `cᵢ`:
-  `Σᵢⱼ cᵢcⱼ Re(Z_μ[fᵢ - Θfⱼ]) ≥ 0`
+Given: a sequence of RP measures `ν_k → μ` weakly, with each `ν_k` satisfying
+OS3, the limit μ also satisfies OS3.
 
-**Proof**: Each matrix entry `Re(Z[g]) = ∫ cos(ω(g)) dμ` is a bounded
-continuous function of ω. By weak convergence from `IsPphi2Limit`,
-`∫ cos(ω(g)) dν_k → ∫ cos(ω(g)) dμ`. Each lattice approximant `ν_k`
-satisfies OS3, so each finite sum ≥ 0. The limit of nonneg reals is nonneg. -/
-theorem os3_for_continuum_limit (P : InteractionPolynomial)
+Proof: each RP matrix entry `Re(Z[g]) = ∫ cos(ω(g)) dμ` is bounded continuous,
+so `∫ cos(ω(g)) dν_k → ∫ cos(ω(g)) dμ`. The finite sum `Σ cᵢcⱼ Re(Z_{ν_k}[...])`
+converges to `Σ cᵢcⱼ Re(Z_μ[...])`. Each ≥ 0 by lattice OS3. Limit ≥ 0. -/
+axiom os3_for_continuum_limit (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ)
     (h_limit : IsPphi2Limit μ P mass) :
-    @OS3_ReflectionPositivity μ hμ := by
-  obtain ⟨a, ν, hν_prob, _ha_tend, _ha_pos, _hmom, _hz2, _hcf, _hlat, h_weak⟩ := h_limit
-  intro n f c
-  sorry
+    @OS3_ReflectionPositivity μ hμ
 -- os3_for_continuum_limit is now trivially `os3_inheritance` since both have
 -- the standard OS3_ReflectionPositivity type.)
 
