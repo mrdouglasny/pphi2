@@ -226,7 +226,30 @@ theorem routeBPrime_cylinder_OS
     exact tendsto_nhds_unique hL (hR.congr (fun n => (h_eq n).symm))
   · -- OS2: spatial translation (exact at finite Lt via torus spatial invariance)
     intro v f
-    sorry -- same pattern: cylinderPullback_spatialTranslation_invariant (needs formalization)
+    have hL := hν_conv f
+    have hR := hν_conv (cylinderSpatialTranslation Ls v f)
+    have h_eq : ∀ n,
+        (∫ ω, Complex.exp (Complex.I * ↑(ω f))
+          ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n)))) =
+        (∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderSpatialTranslation Ls v f)))
+          ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n)))) := by
+      intro n
+      unfold cylinderPullbackMeasure
+      have hmeas : Measurable (cylinderPullback (Lt (φ n)) Ls) :=
+        configuration_measurable_of_eval_measurable _
+          (fun g => configuration_eval_measurable _)
+      have hasm : ∀ g : CylinderTestFunction Ls,
+          AEStronglyMeasurable (fun ω => Complex.exp (Complex.I * ↑(ω g)))
+            (Measure.map (cylinderPullback (Lt (φ n)) Ls) (μ (φ n))) :=
+        fun g => (Complex.measurable_exp.comp (measurable_const.mul
+          (Complex.measurable_ofReal.comp
+            (configuration_eval_measurable g)))).aestronglyMeasurable
+      rw [integral_map hmeas.aemeasurable (hasm _),
+          integral_map hmeas.aemeasurable (hasm _)]
+      simp only [cylinderPullback_eval]
+      simp_rw [cylinderToTorusEmbed_comp_spatialTranslation]
+      exact (hμ_os (φ n)).os2_translation (0, v) (cylinderToTorusEmbed (Lt (φ n)) Ls f)
+    exact tendsto_nhds_unique hL (hR.congr (fun n => (h_eq n).symm))
   · -- OS3: reflection positivity
     intro n f c; exact cylinderIR_os3 Ls P mass hmass ν n f c
 

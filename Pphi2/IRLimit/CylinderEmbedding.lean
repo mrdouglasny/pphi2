@@ -168,6 +168,46 @@ theorem cylinderToTorusEmbed_comp_timeTranslation (τ : ℝ)
     rw [nuclearTensorProduct_mapCLM_pure]
   exact ContinuousLinearMap.ext_iff.mp key f
 
+/-- The embedding intertwines cylinder spatial translation with torus spatial translation:
+`embed(T_v f) = T_{(0,v)}(embed f)`.
+
+Spatial shifts on the circle factor pass through directly: `T_v` on cylinder
+applies `circleTranslation v` to the first (spatial) factor, while on the torus
+it applies `circleTranslation Ls v` to the second (spatial) factor. The periodization
+of the temporal factor is unaffected. -/
+theorem cylinderToTorusEmbed_comp_spatialTranslation (v : ℝ)
+    (f : CylinderTestFunction Ls) :
+    cylinderToTorusEmbed Lt Ls (cylinderSpatialTranslation Ls v f) =
+    asymTorusTranslation Lt Ls (0, v) (cylinderToTorusEmbed Lt Ls f) := by
+  have key : cylinderToTorusEmbed Lt Ls ∘L cylinderSpatialTranslation Ls v =
+      asymTorusTranslation Lt Ls (0, v) ∘L cylinderToTorusEmbed Lt Ls := by
+    apply cylinderToTorus_clm_ext_of_pure
+    intro g h
+    simp only [ContinuousLinearMap.comp_apply]
+    -- LHS: embed(T_v g ⊗ h)
+    have hdef : cylinderSpatialTranslation Ls v = nuclearTensorProduct_mapCLM
+      (circleTranslation Ls v) (ContinuousLinearMap.id ℝ (SchwartzMap ℝ ℝ)) := rfl
+    rw [hdef, nuclearTensorProduct_mapCLM_pure]
+    simp only [ContinuousLinearMap.id_apply]
+    -- embed(pure (T_v g) h) = swap((id ⊗ periodize)(pure (T_v g) h))
+    --   = swap(pure (T_v g) (periodize h)) = pure (periodize h) (T_v g)
+    change cylinderToTorusEmbed Lt Ls
+        (NuclearTensorProduct.pure (circleTranslation Ls v g) h) =
+      asymTorusTranslation Lt Ls (0, v)
+        (cylinderToTorusEmbed Lt Ls (NuclearTensorProduct.pure g h))
+    simp only [cylinderToTorusEmbed, ContinuousLinearMap.comp_apply]
+    rw [nuclearTensorProduct_mapCLM_general_pure, nuclearTensorProduct_swapCLM_pure,
+        nuclearTensorProduct_mapCLM_general_pure, nuclearTensorProduct_swapCLM_pure,
+        ContinuousLinearMap.id_apply, ContinuousLinearMap.id_apply]
+    -- LHS: pure (periodize h) (T_v g)
+    -- RHS: T_{(0,v)} (pure (periodize h) g) = pure (T_Lt 0 (periodize h)) (T_Ls v g)
+    --     = pure (periodize h) (T_v g)  (since T_Lt 0 = id)
+    simp only [asymTorusTranslation]
+    rw [nuclearTensorProduct_mapCLM_pure]
+    congr 1
+    rw [circleTranslation_zero]; simp
+  exact ContinuousLinearMap.ext_iff.mp key f
+
 /-- The embedding intertwines cylinder time reflection with torus time reflection:
 `embed(Θ f) = Θ_torus(embed f)`. -/
 theorem cylinderToTorusEmbed_comp_timeReflection
