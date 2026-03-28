@@ -112,7 +112,10 @@ The cylinder S¹_{Ls} × ℝ has a natural time axis ℝ, enabling:
 OS0–OS2). Only needs new work for OS3 (RP) and the Lt → ∞ limit.
 **Status:** UV limit (Step 1) complete — `AsymTorusOS.lean` has **0 axioms,
 0 sorry** for OS0–OS2. Cylinder IR limit (Step 2) in progress — `IRLimit/` has
-**7 axioms, 0 sorries**. OS2 of the limit is proved; OS0, OS3 remain axiomatized.
+**7 axioms, 0 sorries**. OS2 time reflection of the limit is proved (exact
+at finite Lt, passes through by `tendsto_nhds_unique`); full OS2 including
+spatial and time translation invariance follows by the same argument but
+is not yet stated in `routeBPrime_cylinder_OS`. OS0 and OS3 remain axiomatized.
 
 ### Route C: S¹_L × ℝ (cylinder, direct) — OS0–OS3
 Direct Nelson/Simon construction with natural time axis ℝ for OS reconstruction.
