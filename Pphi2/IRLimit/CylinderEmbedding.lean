@@ -53,6 +53,14 @@ def cylinderToTorusEmbed :
     (ContinuousLinearMap.id ℝ (SmoothMap_Circle Ls ℝ))
     (periodizeCLM Lt))
 
+/-- On pure tensors, `cylinderToTorusEmbed` is exactly "periodize time and swap". -/
+@[simp] theorem cylinderToTorusEmbed_pure
+    (g : SmoothMap_Circle Ls ℝ) (h : SchwartzMap ℝ ℝ) :
+    cylinderToTorusEmbed Lt Ls (NuclearTensorProduct.pure g h) =
+      NuclearTensorProduct.pure (periodizeCLM Lt h) g := by
+  simp [cylinderToTorusEmbed, ContinuousLinearMap.comp_apply,
+    nuclearTensorProduct_mapCLM_general_pure, nuclearTensorProduct_swapCLM_pure]
+
 /-- The pullback on configurations: given a torus configuration ω,
 produce a cylinder configuration by precomposing with the embedding. -/
 def cylinderPullback

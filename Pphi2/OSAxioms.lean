@@ -2,14 +2,20 @@
 Copyright (c) 2026 Michael R. Douglas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 
-# Osterwalder-Schrader Axioms for P(Φ)₂
+# Measure-level Osterwalder-Schrader axioms for `P(Φ)₂`
 
-Defines the OS axiom framework for the Glimm-Jaffe/Nelson lattice
-construction. The axioms are stated for probability measures on
-S'(ℝ²) = Configuration (ContinuumTestFunction 2).
+Defines the measure-level OS axiom framework for the Glimm-Jaffe/Nelson lattice
+construction. The axioms here are stated for probability measures on
+`S'(ℝ²) = Configuration (ContinuumTestFunction 2)`.
 
-The formulations match those in OSforGFF/OS_Axioms.lean, adapted from
-d=4 to d=2.
+This is intentionally the most concrete Euclidean layer in the repo: stronger
+than the original Osterwalder-Schrader Schwinger-function formulation, and not
+meant as a universal definition of QFT. The long-term architecture is to factor
+these measure-level axioms through a shared abstract Schwinger/reconstruction
+interface in `Common.QFT.*`.
+
+The concrete formulas match those in `OSforGFF/OS_Axioms.lean`, adapted from
+`d = 4` to `d = 2`.
 
 ## The five OS axioms
 

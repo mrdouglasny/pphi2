@@ -5,11 +5,19 @@
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
 structurally complete and the full project builds successfully (`lake build`,
-3724 jobs).
+3805 jobs).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
+
+A shared `Common/QFT` layer now separates concrete measure models, tensor
+moments, distributional Schwinger-function data, explicit reconstruction input,
+and backend-independent reconstruction rules. This keeps the current scalar
+positive-measure construction explicit while opening a path to broader
+Euclidean/Minkowski interfaces.
+
+**Active build totals:** 32 axioms, 0 sorries.
 
 **Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 1 sorry.**
 All OS0–OS2 proofs complete within this file. Transitive dependencies are
@@ -62,10 +70,10 @@ telescoping sum bound.
 | 3 | `OSProofs/OS4_MassGap.lean` | 2 axioms, 0 sorries |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def) |
-| 4 | `ContinuumLimit/Hypercontractivity.lean` | 1 axiom |
-| 4 | `ContinuumLimit/Tightness.lean` | 3 axioms |
-| 4 | `ContinuumLimit/Convergence.lean` | 4 axioms, 2 proved theorems |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | 3 axioms, 0 sorries |
+| 4 | `ContinuumLimit/Hypercontractivity.lean` | 2 axioms |
+| 4 | `ContinuumLimit/Tightness.lean` | 1 axiom |
+| 4 | `ContinuumLimit/Convergence.lean` | 3 axioms, 2 proved theorems |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | 1 axiom, 0 sorries |
 | 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`schwartz_riemann_sum_bound` proved) |
 | 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 1 axiom, 0 sorries |
@@ -76,8 +84,11 @@ telescoping sum bound.
 | — | `GeneralResults/Osgood/Osgood2.lean` | 0 axioms (2-variable Osgood, adapted from Irving) |
 | — | `GeneralResults/Osgood/OsgoodN.lean` | **0 axioms, 0 sorries** (n-variable Osgood by induction) |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
+| — | `Common/QFT/Euclidean/Formulations.lean` | 0 axioms (shared measure / Schwinger / reconstruction-input interfaces) |
+| — | `Common/QFT/Euclidean/ReconstructionInterfaces.lean` | 0 axioms (backend-independent linear-growth / reconstruction rule interfaces) |
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
+| 6 | `FormulationAdapter.lean` | 0 axioms, 0 sorries (exports `Pphi2` into the shared formulation layer) |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
 | 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 0 axioms, 0 sorries (`torus_propagator_convergence` proved via gaussian-field `lattice_green_tendsto_continuum` axiom) |
@@ -87,18 +98,19 @@ telescoping sum bound.
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 0 axioms, 1 sorry |
 | 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | 0 axioms, 1 sorry |
-| 4T | `TorusContinuumLimit/MeasureUniqueness.lean` | 1 sorry (Cramér-Wold) |
+| 4T | `TorusContinuumLimit/MeasureUniqueness.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusNuclearBridge.lean` | 2 sorries (DM→IsHilbertNuclear) |
 | 4T | `NelsonEstimate/*.lean` | 0 axioms, 1 sorry (WickBinomial) |
 | B' | `AsymTorus/AsymTorusEmbedding.lean` | 0 axioms, 0 sorries |
 | B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 0 axioms, 0 sorries |
 | B' | `AsymTorus/AsymTorusOS.lean` | **0 axioms, 0 sorries** (OS0–OS2 fully proved) |
-| 6 | `Bridge.lean` | 4 axioms, 0 sorries |
+| 6 | `Bridge.lean` | 3 axioms, 0 sorries |
 | B'IR | `IRLimit/Periodization.lean` | 0 axioms, 0 sorries (re-exports from gaussian-field) |
 | B'IR | `IRLimit/CylinderEmbedding.lean` | **0 axioms, 0 sorries** (intertwining proved via NTP pure tensor density) |
 | B'IR | `IRLimit/GreenFunctionComparison.lean` | 1 axiom, 0 sorries (uniform 2nd moment) |
 | B'IR | `IRLimit/UniformExponentialMoment.lean` | 1 axiom, 0 sorries (uniform exp moment) |
 | B'IR | `IRLimit/IRTightness.lean` | 1 axiom, 0 sorries (Prokhorov extraction) |
+| B'IR | `IRLimit/CovarianceConvergence.lean` | 0 axioms, 0 sorries (compact-support temporal bridge, pure/finite-rank/general convergence to a global physically normalized cylinder form via explicit temporal `2π` rescaling of `cylinderGreen`, uniform bilinear seminorm control of embedded torus covariances, and the IR-limit covariance identification are all proved) |
 | B'IR | `IRLimit/CylinderOS.lean` | 2 axioms, 0 sorries (OS0+OS3; OS2 proved via weak limit) |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
