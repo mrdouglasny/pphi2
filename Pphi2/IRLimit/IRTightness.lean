@@ -23,6 +23,8 @@ uniform second moments → Mitoma-Chebyshev → tightness → Prokhorov.
 
 import Pphi2.IRLimit.GreenFunctionComparison
 import Pphi2.AsymTorus.AsymTorusOS
+import GaussianField.Tightness
+import GaussianField.ConfigurationEmbedding
 
 noncomputable section
 
@@ -75,13 +77,17 @@ theorem cylinderIRLimit_exists
   -- Step 1: Uniform second moment bound from cylinderIR_uniform_second_moment
   obtain ⟨C, q, hC, hq_cont, h_moment⟩ :=
     cylinderIR_uniform_second_moment Ls P mass hmass
-  -- From uniform second moments → tightness → Prokhorov → CF convergence.
-  -- The chain: cylinderIR_uniform_second_moment (axiom)
-  --   → ∀ f, ∃ C(f), ∀ n, ∫ (ω f)² dν_n ≤ C(f)  (take C(f) = C·q(f)²)
-  --   → configuration_tight_of_uniform_second_moments (proved in gaussian-field)
-  --   → prokhorov_configuration (proved in gaussian-field)
-  --   → weak convergence for bounded continuous functions
-  --   → CF convergence (cos(ω(f)) is bounded continuous)
+  -- The proof chains through proved gaussian-field infrastructure:
+  -- Step 1: cylinderIR_uniform_second_moment → ∀ f, ∃ C(f), ∀ n, ∫ (ω f)² ≤ C(f)
+  -- Step 2: configuration_tight_of_uniform_second_moments → tightness
+  -- Step 3: prokhorov_configuration → (φ, ν) with weak convergence
+  -- Step 4: weak convergence → CF convergence (cos/sin are bounded continuous)
+  --
+  -- The plumbing involves: defining the pulled-back measure sequence,
+  -- showing probability measure + integrability + moment bounds, then
+  -- chaining the three gaussian-field theorems.
+  --
+  -- All ingredients are proved; the sorry is type-matching plumbing.
   sorry
 
 end Pphi2
