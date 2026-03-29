@@ -114,6 +114,52 @@ theorem mgf_at_scaled
   rw [h, integral_const_mul]
   congr 1; ring
 
+omit hDM in
+/-- A centered Gaussian measure on `Configuration E` has Gaussian 1D marginals.
+
+For each test function `f`, the pushforward of `μ` by evaluation `ω ↦ ω f`
+is the centered real Gaussian with variance
+`σ² = ∫ (ω f)^2 dμ`. This is the one-measure analogue of
+`eval_map_eq_of_covariance`. -/
+theorem eval_map_eq_gaussianReal
+    (μ : @Measure (Configuration E) instMeasurableSpaceConfiguration)
+    [IsProbabilityMeasure μ]
+    (hμ_gauss : ∀ (f : E),
+      ∫ ω : Configuration E, Real.exp (ω f) ∂μ =
+      Real.exp ((1 / 2) * ∫ ω, (ω f) ^ 2 ∂μ))
+    (f : E) :
+    μ.map (fun ω : Configuration E => ω f) =
+    gaussianReal 0 (∫ ω : Configuration E, (ω f) ^ 2 ∂μ).toNNReal := by
+  set σ_sq : ℝ := ∫ ω : Configuration E, (ω f) ^ 2 ∂μ
+  set σ : NNReal := σ_sq.toNNReal
+  have hσ_nonneg : 0 ≤ σ_sq := integral_nonneg (fun _ => sq_nonneg _)
+  have hσ_cast : (σ : ℝ) = σ_sq := Real.coe_toNNReal _ hσ_nonneg
+  have h_meas : @Measurable _ _ instMeasurableSpaceConfiguration _
+      (fun ω : Configuration E => ω f) := configuration_eval_measurable f
+  have hmgf : ProbabilityTheory.mgf (fun ω : Configuration E => ω f) μ =
+      ProbabilityTheory.mgf id (gaussianReal 0 σ) := by
+    ext t
+    simp only [ProbabilityTheory.mgf, id]
+    rw [mgf_at_scaled μ hμ_gauss f t]
+    rw [show ∫ x, Real.exp (t * x) ∂gaussianReal 0 σ =
+        Real.exp (0 * t + ↑σ * t ^ 2 / 2) from
+      ProbabilityTheory.mgf_gaussianReal (by simp) t]
+    congr 1
+    simp only [zero_mul, zero_add, hσ_cast]
+    ring
+  have h_eqOn := ProbabilityTheory.eqOn_complexMGF_of_mgf hmgf
+  have h_strip :
+      ProbabilityTheory.integrableExpSet (fun ω : Configuration E => ω f) μ = Set.univ := by
+    rw [ProbabilityTheory.integrableExpSet_eq_of_mgf hmgf,
+      ProbabilityTheory.integrableExpSet_id_gaussianReal]
+  rw [h_strip, interior_univ] at h_eqOn
+  have h_cmgf : ProbabilityTheory.complexMGF (fun ω : Configuration E => ω f) μ =
+      ProbabilityTheory.complexMGF id (gaussianReal 0 σ) :=
+    funext (fun z => h_eqOn (Set.mem_univ z))
+  have h_map_eq := Measure.ext_of_complexMGF_eq
+    h_meas.aemeasurable aemeasurable_id h_cmgf
+  simpa only [Measure.map_id] using h_map_eq
+
 /-! ## Step 3: Equal 1D marginals for all test functions -/
 
 omit hDM in
@@ -152,7 +198,8 @@ theorem eval_map_eq_of_covariance
         Real.exp (0 * t + ↑σ * t ^ 2 / 2) from
       ProbabilityTheory.mgf_gaussianReal (by simp) t]
     congr 1
-    simp only [zero_mul, zero_add, hσ_def, Real.coe_toNNReal _ (integral_nonneg (fun _ => sq_nonneg _))]
+    simp only [zero_mul, zero_add, hσ_def,
+      Real.coe_toNNReal _ (integral_nonneg (fun _ => sq_nonneg _))]
     ring
   have hmgf₂ : ProbabilityTheory.mgf (fun ω : Configuration E => ω f) μ₂ =
       ProbabilityTheory.mgf id (gaussianReal 0 σ) := by
@@ -168,11 +215,13 @@ theorem eval_map_eq_of_covariance
   have h_eqOn₁ := ProbabilityTheory.eqOn_complexMGF_of_mgf hmgf₁
   have h_eqOn₂ := ProbabilityTheory.eqOn_complexMGF_of_mgf hmgf₂
   -- The strip = ℂ because integrableExpSet = univ for our X
-  have h_strip : ProbabilityTheory.integrableExpSet (fun ω : Configuration E => ω f) μ₁ = Set.univ := by
+  have h_strip :
+      ProbabilityTheory.integrableExpSet (fun ω : Configuration E => ω f) μ₁ = Set.univ := by
     rw [ProbabilityTheory.integrableExpSet_eq_of_mgf hmgf₁,
         ProbabilityTheory.integrableExpSet_id_gaussianReal]
   rw [h_strip, interior_univ] at h_eqOn₁
-  have h_strip₂ : ProbabilityTheory.integrableExpSet (fun ω : Configuration E => ω f) μ₂ = Set.univ := by
+  have h_strip₂ :
+      ProbabilityTheory.integrableExpSet (fun ω : Configuration E => ω f) μ₂ = Set.univ := by
     rw [ProbabilityTheory.integrableExpSet_eq_of_mgf hmgf₂,
         ProbabilityTheory.integrableExpSet_id_gaussianReal]
   rw [h_strip₂, interior_univ] at h_eqOn₂

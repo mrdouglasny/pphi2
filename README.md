@@ -23,6 +23,20 @@ Wightman QFT in 1+1 Minkowski spacetime with a positive mass gap.
 This is the theorem originally proved by Glimm-Jaffe (1968–1973), Nelson (1973),
 and Simon, with contributions from Guerra-Rosen-Simon and others.
 
+## Scope and foundations direction
+
+This repository currently formalizes one specific Euclidean-QFT formulation:
+the Glimm-Jaffe/Nelson construction of a positive probability measure on
+`S'(ℝ²)` for bosonic scalar `P(Φ)₂`. It does not claim that positive-measure
+models exhaust all QFTs, or that this interface already captures gauge fields,
+fermions, chemical potential, or topological terms.
+
+To make the library useful beyond constructive scalar theory, the next
+foundational step is to factor the development through explicit formulation
+layers: concrete measure models, Schwinger-function models, and the additional
+reconstruction input needed to pass from Euclidean data to Minkowski data. See
+`docs/foundational-roadmap.md`.
+
 ## Proof approach
 
 The construction proceeds in six phases:
@@ -94,7 +108,7 @@ The construction proceeds in two limits:
    μ_{P,Lt,Ls} on T_{Lt,Ls} converge weakly to a measure μ_{P,Ls} on the
    cylinder S¹_{Ls} × ℝ. Tightness follows from uniform-in-Lt moment bounds
    via the **method of images** (gaussian-field `Cylinder/MethodOfImages.lean`).
-   The IR limit files are in `IRLimit/` with 7 axioms and 0 sorries.
+   The IR limit files are in `IRLimit/` with 4 axioms and 0 sorries.
    OS2 (time reflection) of the limit measure is **proved** via characteristic
    functional convergence.
 
@@ -112,13 +126,13 @@ The cylinder S¹_{Ls} × ℝ has a natural time axis ℝ, enabling:
 OS0–OS2). Only needs new work for OS3 (RP) and the Lt → ∞ limit.
 **Status:** UV limit (Step 1) complete — `AsymTorusOS.lean` has **0 axioms,
 0 sorry** for OS0–OS2. Cylinder IR limit (Step 2) in progress — `IRLimit/` has
-**7 axioms, 0 sorries**. OS2 time reflection is proved (exact at each finite
-Lt, passes through via `tendsto_nhds_unique`). Spatial translation is also
-exact at finite Lt. Time translation on the cylinder requires passing from
-discrete (lattice) to continuous invariance in the Lt → ∞ limit — the same
-"eventually invariant + CF convergence" argument used for Route A
-(`translation_invariance_continuum`), but not yet formalized for Route B'.
-OS0 and OS3 remain axiomatized.
+**4 axioms, 0 sorries**. OS2 time reflection is proved via characteristic-functional
+convergence, and compact-support, finite-rank, and general cylinder covariance
+convergence are proved against a global physically normalized cylinder form
+obtained from `cylinderGreen` by explicit temporal `2π` rescaling, with uniform
+bilinear seminorm control of the embedded torus covariance family. Spatial
+translation is exact at each finite `Lt`; what remains axiomatized in the IR
+lane is the uniform second-moment bound, uniform exponential moment, and OS0/OS3.
 
 ### Route C: S¹_L × ℝ (cylinder, direct) — OS0–OS3
 Direct Nelson/Simon construction with natural time axis ℝ for OS reconstruction.
@@ -186,12 +200,18 @@ consistency checks:
 ## Current status
 
 All six phases are structurally complete and the full project builds
-(`lake build`, 3801 jobs).
+(`lake build`).
 
-- **pphi2:** 27 axioms, 0 sorries (active build; 21 Route C axioms preserved in `future/`)
-- **gaussian-field** (upstream): 4 axioms, 0 sorries (including Cylinder/ and SchwartzFourier/ modules)
-- **Route B (torus):** 0 axioms, 0 sorries — most developed route (down from 7 axioms)
-- **Route B' IR limit:** 7 axioms, 0 sorries — cylinder OS0+OS3 via Lt → ∞
+- **pphi2:** 26 axioms, 0 sorries in the active build; Route C's 21 axioms remain preserved in `future/`
+- **Route B (torus):** 0 axioms, 0 sorries — the most developed route
+- **Route B' IR limit:** 4 axioms, 0 sorries — pure/finite-rank/general covariance convergence to the global physical cylinder form is proved, together with the explicit temporal `2π` normalization bridge and uniform bilinear seminorm control; what remains here is the uniform second-moment bound, uniform exponential moment, and OS0/OS3
+- **Shared foundations layer:** `Common/QFT/Euclidean/Formulations.lean` and
+  `Common/QFT/Euclidean/ReconstructionInterfaces.lean` separate concrete
+  measure models, tensor-moment Schwinger data, distributional Schwinger data,
+  explicit reconstruction hypotheses, and backend-independent reconstruction rules
+- **Local `Phi4` core:** `Phi4.lean` tracks the locally buildable Euclidean /
+  tensor-Schwinger pipeline only; the OS/reconstruction lane is kept explicit
+  and optional rather than silently assumed in the active umbrella
 
 The torus continuum limit (`TorusContinuumLimit/`) provides a cleaner alternative
 to the S'(ℝ^d) approach: by fixing the physical volume L and taking only N→∞,
@@ -273,8 +293,12 @@ Pphi2/
   GeneralResults/
     FunctionalAnalysis.lean          -- Pure Mathlib results: Cesàro, Schwartz Lp, trig identity
   OSAxioms.lean                      -- Phase 6: OS axiom definitions (matching OSforGFF)
+  FormulationAdapter.lean            -- Exports `Pphi2` to the shared formulation interfaces
   Main.lean                          -- Phase 6: Main theorem assembly
   Bridge.lean                        -- Bridge between pphi2 and Phi4 approaches
+Common/
+  QFT/Euclidean/Formulations.lean    -- Shared formulation layers: measure / Schwinger / reconstruction input
+  QFT/Euclidean/ReconstructionInterfaces.lean -- Backend-independent linear-growth / reconstruction interfaces
 ```
 
 ## Dependencies
@@ -299,6 +323,9 @@ lake build
 - [status.md](status.md) — Complete axiom/sorry inventory with difficulty
   ratings and priority ordering
 - [docs/plan.md](docs/plan.md) — Development roadmap and construction outline
+- [docs/foundational-roadmap.md](docs/foundational-roadmap.md) — Why the repo
+  is being refactored around formulation layers (measure / Schwinger /
+  reconstruction)
 - [docs/axiom_audit.md](docs/axiom_audit.md) — Self-audit of all axioms
   (pphi2 + gaussian-field) with correctness ratings
 - [docs/mathlib_candidates.md](docs/mathlib_candidates.md) — Standard results

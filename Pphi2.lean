@@ -65,4 +65,5 @@ import Pphi2.OSProofs.OS2_WardIdentity
 
 -- Phase 6: Assembly — OS axiom framework and main theorem
 import Pphi2.OSAxioms
+import Pphi2.FormulationAdapter
 import Pphi2.Main

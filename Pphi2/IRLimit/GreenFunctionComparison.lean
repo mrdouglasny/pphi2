@@ -52,6 +52,31 @@ theorem cylinderPullback_second_moment_eq
     ((configuration_eval_measurable f).pow_const 2 |>.aestronglyMeasurable)]
   congr 1
 
+/-- **Cutoff-level density transfer** for cylinder pullbacks.
+
+This is the proved finite-cutoff step behind the IR second-moment argument:
+the pullback second moment is controlled by the corresponding lattice Gaussian
+second moment of the embedded test function. -/
+theorem cylinderPullback_second_moment_density_transfer_cutoff
+    (Lt : ℝ) [Fact (0 < Lt)] (P : InteractionPolynomial) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (N : ℕ) [NeZero N] (f : CylinderTestFunction Ls),
+    ∫ ω : Configuration (CylinderTestFunction Ls),
+      (ω f) ^ 2 ∂(cylinderPullbackMeasure Lt Ls
+        (asymTorusInteractingMeasure Lt Ls N P mass hmass)) ≤
+    C * ∫ ω : Configuration (FinLatticeField 2 N),
+      (ω (asymLatticeTestFn Lt Ls N (cylinderToTorusEmbed Lt Ls f))) ^ 2
+        ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
+          (asymGeomSpacing_pos Lt Ls N) hmass) := by
+  obtain ⟨C, hC_pos, hC_bound⟩ :=
+    asymTorus_interacting_second_moment_density_transfer Lt Ls P mass hmass
+  refine ⟨C, hC_pos, fun N _ f => ?_⟩
+  haveI : IsProbabilityMeasure
+      (asymTorusInteractingMeasure Lt Ls N P mass hmass) :=
+    asymTorusInteractingMeasure_isProbability Lt Ls N P mass hmass
+  rw [cylinderPullback_second_moment_eq Ls Lt
+    (asymTorusInteractingMeasure Lt Ls N P mass hmass) f]
+  exact hC_bound (cylinderToTorusEmbed Lt Ls f) N
+
 /-- Uniform second moment bound for the cylinder pullback measures.
 
 For any cylinder test function f, the second moment under the
@@ -60,7 +85,7 @@ seminorm of f, uniformly in the time period Lt ≥ 1.
 
 **Proof chain**:
 1. `∫ (ω f)² dν_Lt = ∫ (ω(embed f))² dμ` (pullback identity, proved above)
-2. The interacting measure's second moment is bounded quadratically:
+2. At fixed cutoff, the interacting measure's second moment is bounded quadratically:
    `∫ (ω g)² dμ_int ≤ C₁ · G_{Lt,Ls}(g, g)` (density transfer via
    Cauchy-Schwarz: `E_int[X²] ≤ (1/Z)·E_GFF[X⁴]^{1/2}·E_GFF[e^{-2V}]^{1/2}`
    with X⁴ bounded by hypercontractivity and e^{-2V} by Nelson's estimate)
@@ -71,7 +96,9 @@ Combined: `∫ (ω f)² dν_Lt ≤ C · q(f)²` with C, q independent of Lt.
 
 NOTE: The quadratic bound requires the specific interacting measure structure
 (Nelson estimate + Gaussian hypercontractivity + density transfer), not just
-abstract OS axioms. OS1 alone gives only an exponential bound. -/
+abstract OS axioms. The cutoff-level density-transfer step is proved above; the
+remaining axiom packages the passage to the torus UV limit together with the
+genuinely new uniform-in-`Lt` cylinder seminorm control. -/
 axiom cylinderIR_uniform_second_moment
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (C : ℝ) (q : Seminorm ℝ (CylinderTestFunction Ls)),

@@ -53,6 +53,14 @@ def cylinderToTorusEmbed :
     (ContinuousLinearMap.id ℝ (SmoothMap_Circle Ls ℝ))
     (periodizeCLM Lt))
 
+/-- On pure tensors, `cylinderToTorusEmbed` is exactly "periodize time and swap". -/
+@[simp] theorem cylinderToTorusEmbed_pure
+    (g : SmoothMap_Circle Ls ℝ) (h : SchwartzMap ℝ ℝ) :
+    cylinderToTorusEmbed Lt Ls (NuclearTensorProduct.pure g h) =
+      NuclearTensorProduct.pure (periodizeCLM Lt h) g := by
+  simp [cylinderToTorusEmbed, ContinuousLinearMap.comp_apply,
+    nuclearTensorProduct_mapCLM_general_pure, nuclearTensorProduct_swapCLM_pure]
+
 /-- The pullback on configurations: given a torus configuration ω,
 produce a cylinder configuration by precomposing with the embedding. -/
 def cylinderPullback
@@ -75,6 +83,23 @@ def cylinderPullbackMeasure
     (f : CylinderTestFunction Ls) :
     (cylinderPullback Lt Ls ω) f = ω (cylinderToTorusEmbed Lt Ls f) :=
   rfl
+
+/-- Second moments on the pulled-back measure equal torus second moments for the embedded
+test function (`MeasureTheory.integral_map` and `cylinderPullback_eval`). -/
+theorem cylinderPullbackMeasure_integral_sq
+    (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
+    (f : CylinderTestFunction Ls) :
+    ∫ ω, (ω f) ^ 2 ∂(cylinderPullbackMeasure Lt Ls μ) =
+    ∫ ω, (ω (cylinderToTorusEmbed Lt Ls f)) ^ 2 ∂μ := by
+  unfold cylinderPullbackMeasure
+  have hmeas : Measurable (cylinderPullback Lt Ls) :=
+    configuration_measurable_of_eval_measurable _
+      (fun φ => configuration_eval_measurable _)
+  have hf_sq_sm : StronglyMeasurable
+      (fun ω : Configuration (CylinderTestFunction Ls) => (ω f) ^ 2) :=
+    ((configuration_eval_measurable f).pow_const 2).stronglyMeasurable
+  rw [integral_map_of_stronglyMeasurable hmeas hf_sq_sm]
+  simp_rw [cylinderPullback_eval]
 
 /-- The pullback is continuous, hence measurable. -/
 theorem cylinderPullback_continuous :

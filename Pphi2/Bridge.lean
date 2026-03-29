@@ -2,11 +2,17 @@
 Copyright (c) 2026 Michael R. Douglas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 
-# Bridge: pphi2 ↔ Phi4 Measure Equality and Axiom Transfer
+# Bridge: `Pphi2` ↔ `Phi4` scalar equivalence at the measure level
 
-Proves that the pphi2 lattice construction and the Phi4 continuum construction
-produce the same probability measure on S'(ℝ²), and uses this to transfer
-OS axioms between the two frameworks.
+Proves that the `Pphi2` lattice construction and the `Phi4` continuum
+construction produce the same probability measure on `S'(ℝ²)`, and uses this to
+transfer OS axioms between the two frameworks.
+
+This file studies a very strong notion of equivalence specialized to scalar
+positive-measure theories: literal equality of probability measures on
+`S'(ℝ²)`. For broader formulations, the primary comparison object should be
+Schwinger data or reconstructed Minkowski data, with measure equality treated as
+a downstream corollary under determinacy hypotheses.
 
 ## Key payoff
 
