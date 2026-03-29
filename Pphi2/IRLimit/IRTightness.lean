@@ -57,7 +57,7 @@ Convergence is stated for the **characteristic functional** (not just
 first moments), since this is what's needed for OS axiom transfer. By
 the Lévy continuity theorem on nuclear spaces, characteristic functional
 convergence is equivalent to weak convergence. -/
-axiom cylinderIRLimit_exists
+theorem cylinderIRLimit_exists
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
     (hLt_tend : Tendsto Lt atTop atTop)
@@ -71,6 +71,18 @@ axiom cylinderIRLimit_exists
     Tendsto (fun n =>
       ∫ ω, Complex.exp (Complex.I * ↑(ω f))
         ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n))))
-      atTop (nhds (∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν)))
+      atTop (nhds (∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν))) := by
+  -- Step 1: Uniform second moment bound from cylinderIR_uniform_second_moment
+  obtain ⟨C, q, hC, hq_cont, h_moment⟩ :=
+    cylinderIR_uniform_second_moment Ls P mass hmass
+  -- Step 2: Tightness via Mitoma-Chebyshev criterion
+  -- configuration_tight_of_uniform_second_moments gives compact sets with
+  -- mass ≥ 1-ε for all pulled-back measures.
+  -- Step 3: Prokhorov extraction gives subsequence + limit
+  -- prokhorov_configuration gives (φ, ν) with StrictMono φ, IsProbabilityMeasure ν,
+  -- and weak convergence for bounded continuous functions.
+  -- Characteristic functional convergence follows from weak convergence
+  -- (cos(ω(f)) and sin(ω(f)) are bounded continuous).
+  sorry
 
 end Pphi2
