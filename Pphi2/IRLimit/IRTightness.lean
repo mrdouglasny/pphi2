@@ -75,14 +75,13 @@ theorem cylinderIRLimit_exists
   -- Step 1: Uniform second moment bound from cylinderIR_uniform_second_moment
   obtain ⟨C, q, hC, hq_cont, h_moment⟩ :=
     cylinderIR_uniform_second_moment Ls P mass hmass
-  -- Step 2: Tightness via Mitoma-Chebyshev criterion
-  -- configuration_tight_of_uniform_second_moments gives compact sets with
-  -- mass ≥ 1-ε for all pulled-back measures.
-  -- Step 3: Prokhorov extraction gives subsequence + limit
-  -- prokhorov_configuration gives (φ, ν) with StrictMono φ, IsProbabilityMeasure ν,
-  -- and weak convergence for bounded continuous functions.
-  -- Characteristic functional convergence follows from weak convergence
-  -- (cos(ω(f)) and sin(ω(f)) are bounded continuous).
+  -- From uniform second moments → tightness → Prokhorov → CF convergence.
+  -- The chain: cylinderIR_uniform_second_moment (axiom)
+  --   → ∀ f, ∃ C(f), ∀ n, ∫ (ω f)² dν_n ≤ C(f)  (take C(f) = C·q(f)²)
+  --   → configuration_tight_of_uniform_second_moments (proved in gaussian-field)
+  --   → prokhorov_configuration (proved in gaussian-field)
+  --   → weak convergence for bounded continuous functions
+  --   → CF convergence (cos(ω(f)) is bounded continuous)
   sorry
 
 end Pphi2
