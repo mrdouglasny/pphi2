@@ -296,6 +296,26 @@ lake build
 
 ## Documentation
 
+### Expository
+- [docs/construction-overview.md](docs/construction-overview.md) —
+  End-to-end overview of the six-phase construction, from lattice to QFT
+- [docs/wick-ordering.md](docs/wick-ordering.md) — Wick ordering,
+  renormalization, and why only one counterterm is needed
+- [docs/nuclear-spaces-and-measures.md](docs/nuclear-spaces-and-measures.md) —
+  Nuclear spaces, the Gel'fand triple, and Gaussian measure construction
+- [docs/transfer-matrix-and-mass-gap.md](docs/transfer-matrix-and-mass-gap.md) —
+  Transfer matrix, Jentzsch's theorem, and the mass gap
+- [docs/reflection-positivity.md](docs/reflection-positivity.md) —
+  Reflection positivity (OS3), the perfect square argument, and OS
+  reconstruction
+- [docs/hypercontractivity.md](docs/hypercontractivity.md) — Why
+  hypercontractivity is needed and how it transfers Gaussian estimates to
+  the interacting measure
+- [docs/tightness-and-weak-convergence.md](docs/tightness-and-weak-convergence.md) —
+  Tightness, weak convergence, Prokhorov's theorem, and uniqueness of
+  the limit
+
+### Technical
 - [status.md](status.md) — Complete axiom/sorry inventory with difficulty
   ratings and priority ordering
 - [docs/plan.md](docs/plan.md) — Development roadmap and construction outline
@@ -345,6 +365,10 @@ positivity results used in the OS3 reflection positivity proof.
   and other consistency tests (e.g. moment bounds, support properties) would
   then be stated once and instantiated for each spacetime. Both the Gaussian
   and interacting measures would be verified against the same axiom bundle.
+
+## Author
+
+Michael R. Douglas and collaborators
 
 ## License
 
