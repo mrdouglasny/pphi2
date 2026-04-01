@@ -16,7 +16,7 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Active build totals (2026-03-30): 25 axioms, 0 sorries.**
+**Active build totals (2026-04-01): 25 axioms, 0 sorries.**
 
 Recent reductions (2026-03-30):
 - `configuration_continuum_polishSpace` — **REMOVED** (inconsistent: weak-* dual is not Polish)
@@ -38,7 +38,7 @@ Upstream gaussian-field reductions (2026-03-27):
 - `schwartzLaplaceEvalCLM` — **PROVED** (new SchwartzFourier/LaplaceCLM.lean, 0 axioms)
 - `schwartzLaplaceEvalCLM_apply` — **PROVED** (definitional rfl)
 - `schwartzLaplace_uniformBound` — **PROVED** (via toLpCLM + Seminorm.bound_of_continuous)
-- gaussian-field axiom count: **7 → 4**
+- gaussian-field axiom count: **7 → 3**
 
 Earlier reductions (PR#1 from Matteo Cipollina):
 - `gaussian_hermite_zero_mean` — **PROVED** (Hermite orthonormality from Mathlib)
@@ -111,6 +111,8 @@ telescoping sum bound.
 | — | `GeneralResults/Osgood/Osgood2.lean` | 0 axioms (2-variable Osgood, adapted from Irving) |
 | — | `GeneralResults/Osgood/OsgoodN.lean` | **0 axioms, 0 sorries** (n-variable Osgood by induction) |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
+| — | `GeneralResults/ResolventFourierAnalysis.lean` | 0 axioms (Fourier/resolvent kernel identities) |
+| — | `GeneralResults/SchwartzCutoff.lean` | 0 axioms (smooth cutoff operators on Schwartz space) |
 | — | `Common/QFT/Euclidean/Formulations.lean` | 0 axioms (shared measure / Schwinger / reconstruction-input interfaces) |
 | — | `Common/QFT/Euclidean/ReconstructionInterfaces.lean` | 0 axioms (backend-independent linear-growth / reconstruction rule interfaces) |
 | — | `GeneralResults/LatticeFourierIndexing.lean` | 0 axioms (Fourier mode reindexing and 2D lattice-eigenvalue sum theorem) |
@@ -136,7 +138,8 @@ telescoping sum bound.
 | 6 | `Bridge.lean` | 3 axioms, 0 sorries |
 | B'IR | `IRLimit/Periodization.lean` | 0 axioms, 0 sorries (re-exports from gaussian-field) |
 | B'IR | `IRLimit/CylinderEmbedding.lean` | **0 axioms, 0 sorries** (intertwining proved via NTP pure tensor density) |
-| B'IR | `IRLimit/CovarianceConvergence.lean` | 0 axioms, 0 sorries (periodic resolvent wrap-around estimate, compact-support temporal bridge, pure/finite-rank/general convergence to a global physically normalized cylinder form via explicit temporal `2π` rescaling of `cylinderGreen`, uniform bilinear seminorm control of embedded torus covariances, and the IR-limit covariance identification are all proved) |
+| B'IR | `IRLimit/CovarianceConvergence.lean` | 0 axioms, 0 sorries (spectral decompositions, pullback measures, basis machinery) |
+| B'IR | `IRLimit/CovarianceConvergenceProof.lean` | 0 axioms, 0 sorries (exponential convergence rates, `asymTorusGreen_tendsto_physicalCylinderGreen`, `cylinderIRLimit_covariance_eq`) |
 | B'IR | `IRLimit/GreenFunctionComparison.lean` | 1 axiom, 0 sorries (uniform 2nd moment) |
 | B'IR | `IRLimit/UniformExponentialMoment.lean` | 1 axiom, 0 sorries (uniform exp moment) |
 | B'IR | `IRLimit/IRTightness.lean` | 0 axioms, 0 sorries (Prokhorov extraction proved) |
