@@ -71,7 +71,8 @@ This combines:
 - OS0 (Analyticity): `os0_continuum` — Fernique bounds + Vitali's theorem
 - OS1 (Regularity): `os1_continuum` — Nelson's hypercontractive estimate
 - OS2 (Euclidean Invariance): `os2_continuum` — translations + Ward identity + irrelevance
-- OS3 (Reflection Positivity): `os3_for_continuum_limit` — fully proved from `os3_inheritance`
+- OS3 (Reflection Positivity): `os3_for_continuum_limit` — passed to the
+  limit from the RP approximants via characteristic-functional convergence
 - OS4 (Clustering): `os4_clustering_continuum` — uniform spectral gap + exponential decay -/
 theorem pphi2_main (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
@@ -276,8 +277,8 @@ theorem mass_reparametrization_exists
     (P : InteractionPolynomial) (mass mass' : ℝ)
     (hmass : 0 < mass) (hmass' : 0 < mass') :
     ∃ (μ : Measure FieldConfig2) (_ : IsProbabilityMeasure μ),
-      @IsPphi2Limit 2 μ P mass ∧
-      @IsPphi2Limit 2 μ (P.shiftQuadratic (mass ^ 2 / 2 - mass' ^ 2 / 2)) mass' := by
+      IsPphi2Limit μ P mass ∧
+      IsPphi2Limit μ (P.shiftQuadratic (mass ^ 2 / 2 - mass' ^ 2 / 2)) mass' := by
   obtain ⟨μ, hμ, hlim⟩ := pphi2_limit_exists P mass hmass
   exact ⟨μ, hμ, hlim,
     mass_reparametrization_invariance P mass mass' hmass hmass' μ hlim⟩

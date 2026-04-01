@@ -274,19 +274,33 @@ There exists a probability measure μ on S'(ℝ²) that satisfies the marker
 predicate `IsPphi2Limit μ P mass`.
 
 The current `IsPphi2Limit` marker is witnessed by a probability sequence with
-convergent moments together with Z₂ symmetry of μ. Therefore, a constant
-sequence at the symmetric Dirac measure `δ₀` witnesses the predicate. -/
+convergent moments, characteristic functionals, bounded-continuous observables,
+and continuum reflection positivity, together with Z₂ symmetry of μ.
+Therefore, a constant sequence at the symmetric Dirac measure `δ₀` still
+witnesses the predicate. -/
 theorem pphi2_limit_exists (P : InteractionPolynomial)
     (mass : ℝ) (_hmass : 0 < mass) :
     ∃ (μ : Measure (Configuration (ContinuumTestFunction 2)))
       (_ : IsProbabilityMeasure μ),
     IsPphi2Limit μ P mass := by
-  let μ : Measure (Configuration (ContinuumTestFunction 2)) :=
+  let μ : Measure FieldConfig2 :=
     Measure.dirac 0
   have hμ : IsProbabilityMeasure μ :=
     by
       dsimp [μ]
       infer_instance
+  have h_dirac_cf :
+      ∀ (g : TestFunction2),
+        ∫ ω : FieldConfig2, Complex.exp (Complex.I * ↑(ω g)) ∂μ = 1 := by
+    intro g
+    have hmeas : StronglyMeasurable
+        (fun ω : FieldConfig2 => Complex.exp (Complex.I * ↑(ω g))) :=
+      (Complex.measurable_exp.comp
+        ((Complex.measurable_ofReal.comp
+          (configuration_eval_measurable g)).const_mul
+          Complex.I)).stronglyMeasurable
+    rw [integral_dirac' _ _ hmeas]
+    norm_num [show (0 : FieldConfig2) g = 0 from rfl]
   refine ⟨μ, hμ, ?_⟩
   refine ⟨(fun k : ℕ => 1 / (k + 1 : ℝ)), (fun _ => μ), ?_, ?_, ?_, ?_⟩
   · intro k
@@ -296,7 +310,7 @@ theorem pphi2_limit_exists (P : InteractionPolynomial)
         Tendsto (fun n : ℕ => 1 / (n + 1 : ℝ)) Filter.atTop (nhds 0))
   · intro k
     positivity
-  · refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
     · intro n f
       exact (tendsto_const_nhds :
         Filter.Tendsto
@@ -320,24 +334,32 @@ theorem pphi2_limit_exists (P : InteractionPolynomial)
       -- Trivial: ν_k = δ_0 for all k. Under δ_0, ω = 0, so ω(f) = 0 = ω(τ_v f),
       -- hence both integrals = exp(0) = 1.
       intro v f; exact Filter.Eventually.of_forall fun _ => by
-        -- Both integrals against δ_0: show integrands agree at 0
-        simp only [μ]
-        have : ∀ (g : ContinuumTestFunction 2),
-            ∫ ω : Configuration (ContinuumTestFunction 2),
-              Complex.exp (Complex.I * ↑(ω g)) ∂Measure.dirac 0 = 1 := by
-          intro g
-          have hmeas : StronglyMeasurable
-              (fun ω : Configuration (ContinuumTestFunction 2) =>
-                Complex.exp (Complex.I * ↑(ω g))) :=
-            (Complex.measurable_exp.comp
-              ((Complex.measurable_ofReal.comp
-                (configuration_eval_measurable g)).const_mul
-                Complex.I)).stronglyMeasurable
-          rw [integral_dirac' _ _ hmeas]
-          norm_num [show (0 : Configuration (ContinuumTestFunction 2)) g = 0 from rfl]
-        rw [this f, this (schwartzTranslate 2 v f)]
+        rw [h_dirac_cf f, h_dirac_cf (schwartzTranslate 2 v f)]
     · -- Weak convergence: constant sequence at δ₀ → trivial
       intro g _ _; exact tendsto_const_nhds
+    · -- OS3 for the approximating sequence: Dirac at 0 gives a rank-one RP matrix.
+      intro k n f c
+      have hentry : ∀ i j : Fin n,
+          (∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω ((f i : TestFunction2) -
+              compTimeReflection2 ((f j : TestFunction2))))) ∂μ).re = 1 := by
+        intro i j
+        rw [h_dirac_cf ((f i : TestFunction2) - compTimeReflection2 ((f j : TestFunction2)))]
+        norm_num
+      simp_rw [hentry]
+      have hsum :
+          ∑ i, ∑ j, c i * c j = (∑ i, c i) ^ 2 := by
+        calc
+          ∑ i, ∑ j, c i * c j
+              = ∑ i, c i * ∑ j, c j := by
+                  apply Finset.sum_congr rfl
+                  intro i _
+                  rw [Finset.mul_sum]
+          _ = (∑ i, c i) * (∑ j, c j) := by
+                rw [Finset.sum_mul]
+          _ = (∑ i, c i) ^ 2 := by
+                rw [pow_two]
+      simpa [hsum] using sq_nonneg (∑ i, c i)
 
 end Pphi2
 

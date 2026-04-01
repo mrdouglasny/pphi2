@@ -4,23 +4,31 @@
 
 The project formalizes the construction of P(Φ)₂ Euclidean quantum field theory
 in Lean 4 via the Glimm-Jaffe/Nelson lattice approach. All six phases are
-structurally complete and the full project builds successfully (`lake build`,
-3801 jobs).
+structurally complete and the full project builds successfully (`lake build`).
 
 The proof architecture is: axiomatize key analytic/probabilistic results with
 detailed proof sketches, prove the logical structure connecting them, and
 progressively fill in the axioms with full proofs.
 
-**Current counter (2026-03-28): 27 axioms, 0 sorries.**
+A shared `Common/QFT` layer now separates concrete measure models, tensor
+moments, distributional Schwinger-function data, explicit reconstruction input,
+and backend-independent reconstruction rules. This keeps the current scalar
+positive-measure construction explicit while opening a path to broader
+Euclidean/Minkowski interfaces.
 
-Recent reductions (2026-03-28):
+**Active build totals (2026-03-30): 25 axioms, 0 sorries.**
+
+Recent reductions (2026-03-30):
 - `configuration_continuum_polishSpace` — **REMOVED** (inconsistent: weak-* dual is not Polish)
 - `configuration_continuum_borelSpace` — **REMOVED** (inconsistent: same reason)
   Replaced by `prokhorov_configuration` from gaussian-field (proved, avoids Polish/Borel)
 - `os3_inheritance` — **REMOVED** (incorrectly stated for ALL bounded continuous F)
-  Replaced by `os3_for_continuum_limit` axiom in standard `OS3_ReflectionPositivity` form
+- `os3_for_continuum_limit` — **PROVED** by strengthening `IsPphi2Limit` with
+  inline reflection positivity of the approximating continuum measures and
+  passing the RP matrix entries to the limit via characteristic-functional
+  convergence
 - `continuum_embedded_measure_rp` — **REMOVED** (dead code after OS3 restructuring)
-- `gaussianContinuumMeasures_tight` sorry — **ELIMINATED** (added `[Fact (0 < d)]`)
+- `gaussianContinuumMeasures_tight` sorry — **ELIMINATED by proving the theorem for `d > 0`** via `configuration_tight_of_uniform_second_moments`; the excluded `d = 0` case is a separate Dynin-Mityagin / Schwartz-space infrastructure issue
 - `signedVal` + `signedVal_neg` — **PROVED** (centered coordinates for lattice embedding)
 - `latticeEmbedLift_intertwines_reflection` — **PROVED** (embedding commutes with time reflection)
 - `distribTimeReflection_continuous` — **PROVED** (WeakDual.continuous_of_continuous_eval)
@@ -36,22 +44,6 @@ Earlier reductions (PR#1 from Matteo Cipollina):
 - `gaussian_hermite_zero_mean` — **PROVED** (Hermite orthonormality from Mathlib)
 - `wickConstant_eq_variance` — **PROVED** (product DFT Parseval + translation invariance)
 - `periodicResolvent_convergence_rate` — **PROVED** (hyperbolic identity manipulation)
-
-### Next steps for `os3_for_continuum_limit`
-
-The axiom `os3_for_continuum_limit` (OS3 for the continuum limit) is provable via
-weak convergence + lattice OS3. The gap: `IsPphi2Limit` doesn't carry OS3 of the
-approximating measures. Per Gemini analysis, the recommended fix is:
-
-**Add `approx_os3 : ∀ k, @OS3_ReflectionPositivity (ν k) (ν_is_prob k)` to
-`IsPphi2Limit`.** This makes `IsPphi2Limit` a complete certificate that a valid
-P(φ)₂ construction was performed. The burden shifts to the construction site
-(`continuumLimit`), which must supply lattice OS3 (from `lattice_rp`) through
-the embedding intertwining (proved in `RPTransfer.lean`).
-
-Circular import note: `IsPphi2Limit` (in `Embedding.lean`) cannot import
-`OSAxioms.lean`. The OS3 condition must be stated inline using the generating
-functional, or the imports must be restructured.
 
 **Route B (torus): `TorusInteractingOS.lean` has 0 local axioms, 0 sorries.**
 All OS0–OS2 proofs complete within this file. Transitive dependencies are
@@ -106,12 +98,12 @@ telescoping sum bound.
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def) |
 | 4 | `ContinuumLimit/Hypercontractivity.lean` | 0 axioms, 0 sorries (`wickConstant_eq_variance` now proved generically; `wickConstant_eq_variance_two_dim` remains as a 2D corollary) |
 | 4 | `ContinuumLimit/Tightness.lean` | 1 axiom |
-| 4 | `ContinuumLimit/Convergence.lean` | 3 axioms, 0 sorries, 2 proved theorems |
+| 4 | `ContinuumLimit/Convergence.lean` | 1 axiom, 0 sorries (`continuumLimit` and `pphi2_limit_exists` proved) |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | **0 axioms, 0 sorries** (os3_inheritance removed; OS3 now in OS2_WardIdentity) |
 | 4 | `ContinuumLimit/RPTransfer.lean` | 0 axioms, 0 sorries (intertwining proved, signedVal) |
 | 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`schwartz_riemann_sum_bound` proved) |
-| 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 0 axioms, 1 sorry |
+| 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 0 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/GaussianLimit.lean` | 1 axiom, 0 sorries |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 6 axioms |
 | — | `GeneralResults/ComplexAnalysis.lean` | **0 axioms** (`osgood_separately_analytic` proved via Osgood/) |
@@ -119,10 +111,13 @@ telescoping sum bound.
 | — | `GeneralResults/Osgood/Osgood2.lean` | 0 axioms (2-variable Osgood, adapted from Irving) |
 | — | `GeneralResults/Osgood/OsgoodN.lean` | **0 axioms, 0 sorries** (n-variable Osgood by induction) |
 | — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
+| — | `Common/QFT/Euclidean/Formulations.lean` | 0 axioms (shared measure / Schwinger / reconstruction-input interfaces) |
+| — | `Common/QFT/Euclidean/ReconstructionInterfaces.lean` | 0 axioms (backend-independent linear-growth / reconstruction rule interfaces) |
 | — | `GeneralResults/LatticeFourierIndexing.lean` | 0 axioms (Fourier mode reindexing and 2D lattice-eigenvalue sum theorem) |
 | — | `GeneralResults/LatticeProductDFT.lean` | 0 axioms (generic product DFT Parseval theorem and abstract-vs-explicit spectral covariance identity) |
 | — | `OSforGFF/TimeTranslation.lean` | 0 axioms, 0 sorries (Schwartz translation continuity) |
 | 6 | `OSAxioms.lean` | 0 axioms, 0 sorries |
+| 6 | `FormulationAdapter.lean` | 0 axioms, 0 sorries (exports `Pphi2` into the shared formulation layer) |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
 | 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 0 axioms, 0 sorries (`torus_propagator_convergence` proved via gaussian-field `lattice_green_tendsto_continuum` axiom) |
@@ -141,10 +136,10 @@ telescoping sum bound.
 | 6 | `Bridge.lean` | 3 axioms, 0 sorries |
 | B'IR | `IRLimit/Periodization.lean` | 0 axioms, 0 sorries (re-exports from gaussian-field) |
 | B'IR | `IRLimit/CylinderEmbedding.lean` | **0 axioms, 0 sorries** (intertwining proved via NTP pure tensor density) |
-| B'IR | `IRLimit/CovarianceConvergence.lean` | 2 axioms, 0 sorries (periodic resolvent wrap-around estimate proved) |
+| B'IR | `IRLimit/CovarianceConvergence.lean` | 0 axioms, 0 sorries (periodic resolvent wrap-around estimate, compact-support temporal bridge, pure/finite-rank/general convergence to a global physically normalized cylinder form via explicit temporal `2π` rescaling of `cylinderGreen`, uniform bilinear seminorm control of embedded torus covariances, and the IR-limit covariance identification are all proved) |
 | B'IR | `IRLimit/GreenFunctionComparison.lean` | 1 axiom, 0 sorries (uniform 2nd moment) |
 | B'IR | `IRLimit/UniformExponentialMoment.lean` | 1 axiom, 0 sorries (uniform exp moment) |
-| B'IR | `IRLimit/IRTightness.lean` | 1 axiom, 0 sorries (Prokhorov extraction) |
+| B'IR | `IRLimit/IRTightness.lean` | 0 axioms, 0 sorries (Prokhorov extraction proved) |
 | B'IR | `IRLimit/CylinderOS.lean` | 2 axioms, 0 sorries (OS0+OS3; OS2 proved via weak limit) |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
@@ -376,7 +371,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `continuumLimit_nontrivial` | Convergence | Hard | ∫ (ω f)² dμ > 0 for some f. Free field two-point function gives lower bound. |
 | `continuumLimit_nonGaussian` | Convergence | Hard | Connected 4-point function ≠ 0. Perturbation theory gives O(λ) contribution. |
 | `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
-| `os3_for_continuum_limit` | OS2_WardIdentity | Medium | Standard OS3 (RP matrix ≥ 0 for positive-time test fns). Provable by adding `approx_os3` to `IsPphi2Limit`. |
+| ~~`os3_for_continuum_limit`~~ | OS2_WardIdentity | ✅ **Proved** | Standard OS3 from inline approximant RP in `IsPphi2Limit` + entrywise characteristic-functional convergence. |
 | `os4_inheritance` | AxiomInheritance | Med/Hard | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | ~~`continuumLimit_satisfies_os0134`~~ | AxiomInheritance | **Theorem** | Assembly of os0/os1/os3/os4 inheritance results. |
 
@@ -385,7 +380,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
 | `propagator_convergence` | PropagatorConvergence | Medium | Lattice Riemann sum of Green's function → continuum Fourier integral. Dominated convergence + Schwartz decay. |
-| ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED** | Tightness via `configuration_tight_of_uniform_second_moments` + integrability through lattice embedding. Sorry for degenerate d=0 case. |
+| ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED for `d > 0`** | Tightness via `configuration_tight_of_uniform_second_moments` + integrability through lattice embedding. The excluded `d = 0` case is a separate Dynin-Mityagin / Schwartz-space infrastructure issue. |
 | `gaussianLimit_isGaussian` | GaussianLimit | Medium | Weak limits of Gaussian measures are Gaussian. Bochner-Minlos + pointwise convergence of characteristic functionals. |
 
 **Proved theorems (GaussianContinuumLimit/):**
@@ -395,13 +390,13 @@ refactoring (functionality consolidated into L2Operator axioms).
 - `gaussianContinuumLimit_exists`: Subsequential weak limit via Prokhorov extraction.
 - `gaussianContinuumLimit_nontrivial`: `∫ (ω f)² dμ > 0` from `continuumGreenBilinear_pos`.
 - `gaussian_feeds_interacting_tightness`: Bridge — Gaussian bound feeds Cauchy-Schwarz density transfer.
-- `gaussianContinuumMeasures_tight`: Tightness of embedded GFF measures via `configuration_tight_of_uniform_second_moments`.
+- `gaussianContinuumMeasures_tight`: Tightness of embedded GFF measures via `configuration_tight_of_uniform_second_moments`, now proved for `d > 0`.
 - `gaussianContinuumMeasure_sq_integrable`: Integrability of `(ω f)²` through lattice embedding via `pairing_product_integrable`.
 
 **Sorries (provable):**
 - `embeddedTwoPoint_eq_latticeSum`: Pushforward integral → lattice double sum (Fubini + Gaussian integration).
 - `embeddedTwoPoint_uniform_bound`: `E[Φ_a(f)²] ≤ C` from eigenvalue bound + Riemann sum.
-- `gaussianContinuumMeasures_tight` (d=0 case): DyninMityaginSpace for 0-dim Schwartz space (degenerate).
+- Optional full generality for `gaussianContinuumMeasures_tight` (`d = 0` case): add a dedicated `DyninMityaginSpace (ContinuumTestFunction 0)` instance, then audit `GaussianLimit.lean` and `ContinuumLimit/Convergence.lean` for other `d > 0` dependencies.
 - `continuumGreenBilinear_pos`: `G(f,f) > 0` from Fourier injectivity on Schwartz space.
 
 Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially since |cos(·)| ≤ 1.
@@ -738,7 +733,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `second_moment_uniform` | Tightness | Uniform second moments for interacting measure. |
 | `moment_equicontinuity` | Tightness | Equicontinuity of moments in f. |
 | `continuumMeasures_tight` | Tightness | Tightness via Mitoma for interacting measures on S'(ℝ²). |
-| ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED** — Tightness via DM + barrel theorem. |
+| ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED for `d > 0`** — Tightness via `configuration_tight_of_uniform_second_moments`; the remaining `d = 0` case is a separate Dynin-Mityagin / Schwartz-space infrastructure issue. |
 | `gaussianLimit_isGaussian` | GaussianLimit | Weak limits of Gaussians are Gaussian (S'(ℝ²) version). |
 
 ### Recommended attack order

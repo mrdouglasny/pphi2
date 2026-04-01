@@ -22,3 +22,7 @@ rev = "main"
 
 [[lean_lib]]
 name = "Pphi2"
+needs = ["Common"]
+
+[[lean_lib]]
+name = "Common"

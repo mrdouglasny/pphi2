@@ -356,7 +356,8 @@ theorem translation_invariance_continuum (P : InteractionPolynomial)
     (h_limit : IsPphi2Limit μ P mass) :
     ∀ (v : EuclideanSpace ℝ (Fin 2)) (f : TestFunction2),
     generatingFunctional μ f = generatingFunctional μ (SchwartzMap.translate v f) := by
-  rcases h_limit with ⟨a, ν, hprob, _ha_tend, _ha_pos, _hmom, _hneg, hcf, hlat, _hweakconv⟩
+  rcases h_limit with ⟨a, ν, hprob, _ha_tend, _ha_pos, _hmom, _hneg, hcf, hlat, _hweakconv,
+    _happrox_os3⟩
   intro v f
   -- SchwartzMap.translate v f = schwartzTranslate 2 v f (same definition)
   have htranslate_eq : SchwartzMap.translate v f = schwartzTranslate 2 v f := rfl
@@ -597,21 +598,12 @@ axiom rotation_invariance_continuum (P : InteractionPolynomial)
     (R : O2) (f : TestFunction2) :
     generatingFunctional μ (euclideanAction2 ⟨R, 0⟩ f) = generatingFunctional μ f
 
-/-! ## OS3: IsRP implies OS3_ReflectionPositivity
+/-! ## OS3: pass RP matrices to the limit
 
-The abstract RP property (`os3_inheritance`) implies the full OS3 axiom
-(`OS3_ReflectionPositivity`) via the trigonometric identity:
-
-  `Σᵢⱼ cᵢcⱼ cos(aᵢ - bⱼ) = (Σᵢ cᵢ cos aᵢ)(Σⱼ cⱼ cos bⱼ)
-                            + (Σᵢ cᵢ sin aᵢ)(Σⱼ cⱼ sin bⱼ)`
-
-Proof outline:
-1. `Re(Z[fᵢ - Θfⱼ]) = ∫ cos(⟨ω, fᵢ⟩ - ⟨Θ*ω, fⱼ⟩) dμ`
-2. Apply the identity with `aᵢ = ⟨ω, fᵢ⟩`, `bⱼ = ⟨Θ*ω, fⱼ⟩`
-3. The sum becomes `∫ [G_cos(ω)·G_cos(Θ*ω) + G_sin(ω)·G_sin(Θ*ω)] dμ`
-   where `G_cos(ω) = Σᵢ cᵢ cos(⟨ω, fᵢ⟩)`, `G_sin(ω) = Σᵢ cᵢ sin(⟨ω, fᵢ⟩)`
-4. Each integrand is `F(ω)·F(Θ*ω)` for bounded continuous F
-5. Each integral ≥ 0 by `os3_inheritance` -/
+`IsPphi2Limit` now records reflection positivity for the approximating
+continuum measures themselves. Combined with characteristic-functional
+convergence, this lets us pass each RP matrix entry to the limit directly in
+the standard `OS3_ReflectionPositivity` formulation. -/
 
 /-- `Re(Z[g]) = ∫ cos(⟨ω, g⟩) dμ` — the real part of the generating functional
 is the integral of cosine of the distribution pairing.
@@ -641,22 +633,66 @@ private lemma generatingFunctional_re_eq_integral_cos
         simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
               Complex.cos_ofReal_re, Complex.sin_ofReal_re]
 
-/-- **OS3 transfers via weak convergence + lattice RP.**
+/-- **OS3 transfers from the approximating continuum measures.**
 
-Given: a sequence of RP measures `ν_k → μ` weakly, with each `ν_k` satisfying
-OS3, the limit μ also satisfies OS3.
+The limit certificate `IsPphi2Limit μ P mass` records two ingredients:
 
-Proof: each RP matrix entry `Re(Z[g]) = ∫ cos(ω(g)) dμ` is bounded continuous,
-so `∫ cos(ω(g)) dν_k → ∫ cos(ω(g)) dμ`. The finite sum `Σ cᵢcⱼ Re(Z_{ν_k}[...])`
-converges to `Σ cᵢcⱼ Re(Z_μ[...])`. Each ≥ 0 by lattice OS3. Limit ≥ 0. -/
-axiom os3_for_continuum_limit (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
+1. characteristic-functional convergence for every real test function;
+2. reflection positivity of every approximating continuum measure `ν_k`.
+
+For a fixed RP matrix entry `Re(Z[fᵢ - Θfⱼ])`, (1) gives convergence of the
+entry, and finite summation preserves this convergence. Since every approximant
+matrix is nonnegative by (2), the limit matrix is also nonnegative. -/
+theorem os3_for_continuum_limit (P : InteractionPolynomial)
+    (mass : ℝ) (_hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ)
     (h_limit : IsPphi2Limit μ P mass) :
-    @OS3_ReflectionPositivity μ hμ
--- os3_for_continuum_limit is now trivially `os3_inheritance` since both have
--- the standard OS3_ReflectionPositivity type.)
+    @OS3_ReflectionPositivity μ hμ := by
+  rcases h_limit with ⟨_a, ν, _hprob, _ha_tend, _ha_pos, _hmom, _hneg, hcf, _hlat, _hweakconv,
+    happrox_os3⟩
+  intro n f c
+  unfold generatingFunctional
+  have hentry :
+      ∀ i j : Fin n,
+        Filter.Tendsto
+          (fun k => (∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω ((f i : TestFunction2) -
+              compTimeReflection2 ((f j : TestFunction2))))) ∂(ν k)).re)
+          Filter.atTop
+          (nhds ((∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω ((f i : TestFunction2) -
+              compTimeReflection2 ((f j : TestFunction2))))) ∂μ).re)) := by
+    intro i j
+    have hcf_ij := hcf ((f i : TestFunction2) - compTimeReflection2 ((f j : TestFunction2)))
+    exact Complex.continuous_re.continuousAt.tendsto.comp hcf_ij
+  have hsum_tend :
+      Filter.Tendsto
+        (fun k =>
+          ∑ i, ∑ j, c i * c j *
+            (∫ ω : FieldConfig2,
+              Complex.exp (Complex.I * ↑(ω ((f i : TestFunction2) -
+                compTimeReflection2 ((f j : TestFunction2))))) ∂(ν k)).re)
+        Filter.atTop
+        (nhds (∑ i, ∑ j, c i * c j *
+          (∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω ((f i : TestFunction2) -
+              compTimeReflection2 ((f j : TestFunction2))))) ∂μ).re)) := by
+    apply tendsto_finset_sum
+    intro i _
+    apply tendsto_finset_sum
+    intro j _
+    simpa [mul_assoc, mul_left_comm, mul_comm] using
+      Filter.Tendsto.const_mul (c i * c j) (hentry i j)
+  have hsum_nonneg :
+      ∀ k,
+        0 ≤ ∑ i, ∑ j, c i * c j *
+          (∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω ((f i : TestFunction2) -
+              compTimeReflection2 ((f j : TestFunction2))))) ∂(ν k)).re := by
+    intro k
+    simpa using happrox_os3 k n f c
+  exact ge_of_tendsto hsum_tend (Filter.Eventually.of_forall hsum_nonneg)
 
 /-! ## Full OS axioms for the continuum limit
 
@@ -1120,7 +1156,8 @@ theorem pphi2_measure_neg_invariant (P : InteractionPolynomial)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (h_limit : IsPphi2Limit μ P mass) :
     Measure.map (Neg.neg : FieldConfig2 → FieldConfig2) μ = μ := by
-  rcases h_limit with ⟨_a, _ν, _hprob, _ha_tend, _ha_pos, _hmom, hneg, _hcf, _hlat⟩
+  rcases h_limit with ⟨_a, _ν, _hprob, _ha_tend, _ha_pos, _hmom, hneg, _hcf, _hlat,
+    _hweakconv, _happrox_os3⟩
   exact hneg
 
 /-- Negation on Configuration is measurable w.r.t. the cylindrical σ-algebra. -/
@@ -1351,9 +1388,10 @@ theorem os4_clustering_implies_ergodicity (P : InteractionPolynomial)
 
 /-- **The continuum limit satisfies all five OS axioms.**
 
-Assembles all results: OS3 is fully proved via the trig identity decomposition
-and `os3_inheritance`. OS0, OS1, OS2, OS4 follow from the lattice construction
-via the mechanisms described above. -/
+Assembles all results: OS3 is proved by passing the RP matrix inequalities of
+the approximating continuum measures to the limit through characteristic
+functional convergence. OS0, OS1, OS2, OS4 follow from the lattice
+construction via the mechanisms described above. -/
 theorem continuumLimit_satisfies_fullOS
     (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)

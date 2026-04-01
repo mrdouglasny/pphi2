@@ -46,6 +46,8 @@ open GaussianField MeasureTheory
 
 namespace Pphi2
 
+section ContinuumTestFunctionDefs
+
 variable (d : ℕ)
 
 /-! ## Continuum test function and distribution spaces
@@ -74,6 +76,83 @@ noncomputable def schwartzTranslate (v : EuclideanSpace ℝ (Fin d)) :
         (Function.HasTemperateGrowth.const v))
     (show AntilipschitzWith 1 (fun x : EuclideanSpace ℝ (Fin d) => x - v) from
       fun x y => by simp [edist_sub_right])
+
+end ContinuumTestFunctionDefs
+
+/-! ## Low-level continuum reflection data for `d = 2`
+
+These definitions live here rather than in `OSAxioms.lean` because the
+construction predicate `IsPphi2Limit` needs to record reflection positivity of
+the approximating measures without importing the full OS axiom layer. -/
+
+/-- Spacetime for `P(Φ)₂`: Euclidean `ℝ²`. -/
+abbrev SpaceTime2 := EuclideanSpace ℝ (Fin 2)
+
+/-- Real Schwartz test functions on `ℝ²`. -/
+abbrev TestFunction2 := ContinuumTestFunction 2
+
+/-- Tempered distributions on `ℝ²`. -/
+abbrev FieldConfig2 := Configuration (ContinuumTestFunction 2)
+
+/-- Time reflection on `ℝ²`: `(t, x) ↦ (-t, x)`. -/
+def timeReflection2 (p : SpaceTime2) : SpaceTime2 :=
+  (WithLp.equiv 2 (Fin 2 → ℝ)).symm
+    (fun i => if i = 0 then -(WithLp.equiv 2 (Fin 2 → ℝ) p) i
+              else (WithLp.equiv 2 (Fin 2 → ℝ) p) i)
+
+/-- Time reflection is an involution. -/
+theorem timeReflection2_involution (p : SpaceTime2) :
+    timeReflection2 (timeReflection2 p) = p := by
+  simp only [timeReflection2]
+  ext i
+  simp
+  split <;> simp
+
+/-- Time reflection as a linear map on spacetime. -/
+def timeReflectionLinear : SpaceTime2 →ₗ[ℝ] SpaceTime2 where
+  toFun := timeReflection2
+  map_add' p q := by
+    ext i
+    simp [timeReflection2, WithLp.equiv, Equiv.symm]
+    split <;> ring
+  map_smul' c p := by
+    ext i
+    simp [timeReflection2, WithLp.equiv, Equiv.symm, smul_eq_mul]
+
+/-- Time reflection as a continuous linear equivalence. -/
+noncomputable def timeReflectionCLE : SpaceTime2 ≃L[ℝ] SpaceTime2 :=
+  (LinearEquiv.ofInvolutive timeReflectionLinear
+    timeReflection2_involution).toContinuousLinearEquiv
+
+/-- Pullback of time reflection on real test functions. -/
+noncomputable def compTimeReflection2 : TestFunction2 →L[ℝ] TestFunction2 :=
+  SchwartzMap.compCLMOfContinuousLinearEquiv ℝ timeReflectionCLE
+
+/-- Pointwise evaluation of reflected test functions. -/
+theorem compTimeReflection2_apply (f : TestFunction2) (p : SpaceTime2) :
+    compTimeReflection2 f p = f (timeReflection2 p) := rfl
+
+/-- A spacetime point has positive time if its first coordinate is positive. -/
+def hasPositiveTime2 (p : SpaceTime2) : Prop :=
+  (WithLp.equiv 2 (Fin 2 → ℝ) p) 0 > 0
+
+/-- Real Schwartz functions supported in the positive-time half-space. -/
+def positiveTimeSubmodule2 : Submodule ℝ TestFunction2 where
+  carrier := { f : TestFunction2 | tsupport f ⊆ { p | hasPositiveTime2 p } }
+  zero_mem' := by
+    simp only [Set.mem_setOf_eq, tsupport]
+    exact (closure_minimal Function.support_zero.subset isClosed_empty).trans (Set.empty_subset _)
+  add_mem' := fun {f g} hf hg =>
+    (tsupport_add f g).trans (Set.union_subset hf hg)
+  smul_mem' := fun c f hf =>
+    (tsupport_smul_subset_right (fun _ : SpaceTime2 => c) f).trans hf
+
+/-- Positive-time Schwartz test functions on `ℝ²`. -/
+abbrev PositiveTimeTestFunction2 := positiveTimeSubmodule2
+
+section LatticeEmbedding
+
+variable (d : ℕ)
 
 /-! ## Signed representative for ZMod N
 
@@ -296,82 +375,73 @@ theorem continuumMeasure_isProbability (P : InteractionPolynomial)
   exact Measure.isProbabilityMeasure_map
     (latticeEmbedLift_measurable d N a ha).aemeasurable
 
+end LatticeEmbedding
+
 /-! ## P(φ)₂ continuum limit predicate -/
 
-/-- **Marker predicate**: μ is a P(φ)₂ continuum limit measure.
+/-- **Marker predicate**: μ is a `P(Φ)₂` continuum limit measure on `S'(ℝ²)`.
 
-A probability measure μ on S'(ℝ^d) satisfies `IsPphi2Limit` if it arises as
-a subsequential weak limit of the lattice construction. Concretely, this means
-there exists a sequence of lattice spacings aₖ → 0 and a corresponding sequence
-of probability measures νₖ on S'(ℝ^d) such that:
-
-1. All Schwinger functions converge:
-   `∫ ∏ᵢ ω(fᵢ) dνₖ → ∫ ∏ᵢ ω(fᵢ) dμ`
-
-2. The characteristic functional converges:
-   `∫ exp(i·ω(f)) dνₖ → ∫ exp(i·ω(f)) dμ`
-
-The characteristic functional convergence is the standard definition of weak
-convergence on nuclear spaces (Bochner-Minlos / Lévy continuity theorem). It
-follows from moment convergence plus uniform exponential bounds (Nelson's
-hypercontractive estimate), but is cleaner as a direct hypothesis.
-
-This predicate is used as a hypothesis on axioms that hold specifically for
-P(φ)₂ continuum limit measures (translation/rotation invariance, exponential
-moments, RP, clustering) — properties that do NOT hold for arbitrary probability
-measures on S'(ℝ^d).
-
-In addition to moment and characteristic functional convergence, we record the
-standard Z₂ symmetry of an even interaction:
-
-  `Measure.map Neg.neg μ = μ`.
+A probability measure `μ` satisfies `IsPphi2Limit` if it is presented together
+with a sequence of continuum-embedded approximating measures `νₖ` whose moment
+and characteristic functionals converge to those of `μ`, whose bounded
+continuous observables converge weakly to `μ`, and whose reflection-positive
+matrices are already nonnegative. We also record the standard `Z₂` symmetry
+`Measure.map Neg.neg μ = μ`.
 
 The definition is mirrored in `Bridge.lean` by `IsPphi2ContinuumLimit`, which
-uses the type aliases `FieldConfig` and `TestFun` for the d=2 case. -/
-def IsPphi2Limit {d : ℕ}
-    (μ : Measure (Configuration (ContinuumTestFunction d)))
+uses the type aliases `FieldConfig` and `TestFun` for the same `d = 2`
+configuration space. This is the minimal extra structure needed to prove
+`os3_for_continuum_limit` without importing the full OS axiom layer into
+`Embedding.lean`. -/
+def IsPphi2Limit
+    (μ : Measure FieldConfig2)
     (_P : InteractionPolynomial) (_mass : ℝ) : Prop :=
-  ∃ (a : ℕ → ℝ) (ν : ℕ → Measure (Configuration (ContinuumTestFunction d))),
+  ∃ (a : ℕ → ℝ) (ν : ℕ → Measure FieldConfig2),
     (∀ k, IsProbabilityMeasure (ν k)) ∧
     Filter.Tendsto a Filter.atTop (nhds 0) ∧
     (∀ k, 0 < a k) ∧
-    (∀ (n : ℕ) (f : Fin n → ContinuumTestFunction d),
+    (∀ (n : ℕ) (f : Fin n → TestFunction2),
       Filter.Tendsto
-        (fun k => ∫ ω : Configuration (ContinuumTestFunction d), ∏ i, ω (f i) ∂(ν k))
+        (fun k => ∫ ω : FieldConfig2, ∏ i, ω (f i) ∂(ν k))
         Filter.atTop
-        (nhds (∫ ω : Configuration (ContinuumTestFunction d), ∏ i, ω (f i) ∂μ))) ∧
+        (nhds (∫ ω : FieldConfig2, ∏ i, ω (f i) ∂μ))) ∧
     Measure.map
-      (Neg.neg : Configuration (ContinuumTestFunction d) →
-        Configuration (ContinuumTestFunction d)) μ = μ ∧
+      (Neg.neg : FieldConfig2 → FieldConfig2) μ = μ ∧
     -- Characteristic functional convergence: Z_{ν_k}[f] → Z_μ[f] for all f.
     -- This is the standard definition of weak convergence on nuclear spaces
     -- (Bochner-Minlos / Lévy continuity). It follows from moment convergence
     -- plus uniform exponential bounds, but is cleaner to include directly.
-    (∀ (f : ContinuumTestFunction d),
+    (∀ (f : TestFunction2),
       Filter.Tendsto
-        (fun k => ∫ ω : Configuration (ContinuumTestFunction d),
+        (fun k => ∫ ω : FieldConfig2,
           Complex.exp (Complex.I * ↑(ω f)) ∂(ν k))
         Filter.atTop
-        (nhds (∫ ω : Configuration (ContinuumTestFunction d),
+        (nhds (∫ ω : FieldConfig2,
           Complex.exp (Complex.I * ↑(ω f)) ∂μ))) ∧
     -- Lattice translation invariance: for any translation vector v, the
     -- characteristic functional of ν_k is eventually invariant under τ_v.
     -- This holds because the lattice spacings a_k → 0 can be chosen so that
     -- for any v, v is eventually a lattice vector (e.g., dyadic a_k = 2^{-k}).
     -- Inherited from `latticeMeasure_translation_invariant` via embedding.
-    (∀ (v : EuclideanSpace ℝ (Fin d)) (f : ContinuumTestFunction d),
+    (∀ (v : SpaceTime2) (f : TestFunction2),
       ∀ᶠ k in Filter.atTop,
-        ∫ ω : Configuration (ContinuumTestFunction d),
+        ∫ ω : FieldConfig2,
           Complex.exp (Complex.I * ↑(ω f)) ∂(ν k) =
-        ∫ ω : Configuration (ContinuumTestFunction d),
-          Complex.exp (Complex.I * ↑(ω (schwartzTranslate d v f))) ∂(ν k)) ∧
+        ∫ ω : FieldConfig2,
+          Complex.exp (Complex.I * ↑(ω (schwartzTranslate 2 v f))) ∂(ν k)) ∧
     -- Weak convergence for bounded continuous functions:
     -- ∫ g dν_k → ∫ g dμ for all bounded continuous g : Configuration → ℝ.
     -- This follows from Prokhorov's theorem (`prokhorov_configuration`).
-    (∀ (g : Configuration (ContinuumTestFunction d) → ℝ),
+    (∀ (g : FieldConfig2 → ℝ),
       Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
       Filter.Tendsto (fun k => ∫ ω, g ω ∂(ν k))
-        Filter.atTop (nhds (∫ ω, g ω ∂μ)))
+        Filter.atTop (nhds (∫ ω, g ω ∂μ))) ∧
+    -- Reflection positivity for the approximating continuum measures.
+    (∀ (k : ℕ) (n : ℕ) (f : Fin n → PositiveTimeTestFunction2) (c : Fin n → ℝ),
+      0 ≤ ∑ i, ∑ j, c i * c j *
+        (∫ ω : FieldConfig2,
+          Complex.exp (Complex.I * ↑(ω ((f i : TestFunction2) -
+            compTimeReflection2 (f j : TestFunction2)))) ∂(ν k)).re)
 
 end Pphi2
 
