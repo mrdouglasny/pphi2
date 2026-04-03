@@ -508,7 +508,7 @@ theorem anomaly_scaling_dimension (_P : InteractionPolynomial) (a mass : ℝ)
       nlinarith [sq_nonneg (|a * k i|), sq_nonneg (a * k i), sq_abs (a * k i)]
     nlinarith [sq_nonneg (k i), sq_nonneg a]
   · -- |ak| > 1: diff ≤ a²k² ≤ a⁴k⁴ (since a²k² ≥ 1)
-    push_neg at hak
+    push Not at hak
     have h_sq : 1 < (a * k i) ^ 2 := by
       nlinarith [sq_abs (a * k i), abs_nonneg (a * k i)]
     -- a²k² ≤ a⁴k⁴ since 1 ≤ a²k² (multiply both sides by a²k²)

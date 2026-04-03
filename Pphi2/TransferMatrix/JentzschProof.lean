@@ -372,7 +372,7 @@ theorem eigenvector_constant_sign {n : ℕ}
     simp only [Pi.sub_apply] at hx
     rw [habs] at hx
     -- hx : 0 < |f x| - f x. If f x ≥ 0, then |f x| = f x, contradiction.
-    by_contra h_ge; push_neg at h_ge
+    by_contra h_ge; push Not at h_ge
     linarith [abs_of_nonneg h_ge]
 
 /-! ## Phase 6: The top eigenvalue lam₀ is simple
@@ -537,7 +537,7 @@ theorem spectral_gap {n : ℕ}
     rw [abs_of_nonneg hmu_nonneg]
     exact lt_of_le_of_ne hmu_le hμ_ne
   · -- μ < 0: |μ| = -μ. Need -μ < lam₀, i.e., |μ| < lam₀.
-    push_neg at hmu_nonneg
+    push Not at hmu_nonneg
     -- If |μ| < lam₀, done. Otherwise |μ| = lam₀, i.e., μ = -lam₀.
     rcases lt_or_eq_of_le h_abs_mu_le with h_done | h_eq
     · exact h_done
@@ -620,7 +620,7 @@ theorem spectral_gap {n : ℕ}
             smul_add, neg_smul]; abel
       -- At least one of p, q is nonzero (both zero ⟹ g = 0)
       have h_not_both_zero : p ≠ 0 ∨ q ≠ 0 := by
-        by_contra h; push_neg at h; obtain ⟨hp0, hq0⟩ := h
+        by_contra h; push Not at h; obtain ⟨hp0, hq0⟩ := h
         apply hg_ne
         have h2g : (2 : ℝ) • g = p - q := by
           change (2 : ℝ) • g = (|g| : Lp ℝ 2 _) + g - ((|g| : Lp ℝ 2 _) - g)
@@ -883,7 +883,7 @@ theorem jentzsch_theorem_proved {n : ℕ}
   -- Proof: if all eigenval ≤ 0, then inner f (Tf) ≤ 0 for all f (by HasSum),
   -- but positivity-improving gives inner |bj| (T|bj|) > 0, contradiction.
   have h_some_pos : ∃ i, 0 < eigenval i := by
-    by_contra h_all; push_neg at h_all
+    by_contra h_all; push Not at h_all
     obtain ⟨j, _, _⟩ := h_nt
     -- ⟨f, Tf⟩ ≤ 0 for all f (spectral decomposition + all eigenval ≤ 0)
     have h_rnp : ∀ f : Lp ℝ 2 (volume : Measure (Fin n → ℝ)),
@@ -971,7 +971,7 @@ theorem jentzsch_theorem_proved {n : ℕ}
     intro i
     by_cases h : eigenval j₀ / 2 < |eigenval i|
     · exact hi₀_max i (h_fin.mem_toFinset.mpr h)
-    · push_neg at h
+    · push Not at h
       have : eigenval i ≤ |eigenval i| := le_abs_self _
       linarith [hi₀_max j₀ (h_fin.mem_toFinset.mpr hj₀_mem)]
   -- eigenval i₀ > 0

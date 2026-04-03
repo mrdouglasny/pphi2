@@ -137,7 +137,7 @@ then `∫ exp(|ω f|) dν ≤ B`. Proof: min(exp(|·|), M) is bounded continuous
 so ∫ min(exp(|ωf|), M) dν = lim ∫ min(exp(|ωf|), M) dν_n ≤ B. Send M → ∞. -/
 private theorem limit_exponential_moment
     (νseq : ℕ → Measure (Configuration (CylinderTestFunction Ls)))
-    (hνseq_prob : ∀ n, IsProbabilityMeasure (νseq n))
+    (_hνseq_prob : ∀ n, IsProbabilityMeasure (νseq n))
     (ν : Measure (Configuration (CylinderTestFunction Ls)))
     [IsProbabilityMeasure ν]
     (hbc : ∀ (g : Configuration (CylinderTestFunction Ls) → ℝ),

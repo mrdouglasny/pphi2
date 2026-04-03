@@ -368,7 +368,7 @@ theorem l2SpatialField_hilbertBasis_nontrivial
     simp [hAB.inter_eq]
   -- By contradiction: assume ι has < 2 elements
   by_contra h_not
-  push_neg at h_not
+  push Not at h_not
   -- h_not : ∀ j k : ι, j = k (ι is subsingleton)
   by_cases hι : IsEmpty ι
   · -- ι empty: b.repr maps to ℓ²(∅) = {0}, so f₁ = 0

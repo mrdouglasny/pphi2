@@ -638,7 +638,7 @@ theorem asymTorusInteractingLimit_exists
       -- ENNReal.ofReal (1-ε) ≤ ν n K, need 1-ε ≤ (ν n K).toReal
       by_cases h1ε : 1 - ε ≤ 0
       · exact le_trans h1ε (ENNReal.toReal_nonneg)
-      · push_neg at h1ε
+      · push Not at h1ε
         rwa [← ENNReal.ofReal_toReal h_lt_top.ne,
              ENNReal.ofReal_le_ofReal_iff (ENNReal.toReal_nonneg)] at h_ennreal)
   exact ⟨μ, hμ_prob, φ, hφ_mono, hconv⟩

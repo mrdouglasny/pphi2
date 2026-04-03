@@ -1143,7 +1143,7 @@ theorem torusTranslation_continuous_in_v
     intro T₁ T₂
     have h := (RapidDecaySeq.hasSum_basisVec f).mapL
       (GaussianField.nuclearTensorProduct_mapCLM T₁ T₂)
-    simp only [ContinuousLinearMap.map_smul] at h
+    simp only at h
     convert h using 1
     ext1 m
     show f.val m • GaussianField.mapImage T₁ T₂ m =
@@ -2170,7 +2170,7 @@ theorem gaussian_exp_abs_moment
     by_cases hx : 0 ≤ x
     · rw [abs_of_nonneg hx]
       linarith [Real.exp_pos (-(t * x))]
-    · push_neg at hx
+    · push Not at hx
       rw [abs_of_neg hx, show t * (-x) = -(t * x) from by ring]
       linarith [Real.exp_pos (t * x)]
   -- Step 5: Integrability of exp(t*|ω g|)
@@ -2789,7 +2789,7 @@ theorem torusInteracting_os1
         have hle : K ≤ Real.exp (|Real.log K|) := by
           by_cases h1 : 1 ≤ K
           · rw [abs_of_nonneg (Real.log_nonneg h1), Real.exp_log hK_pos]
-          · push_neg at h1
+          · push Not at h1
             exact le_trans h1.le (Real.one_le_exp (abs_nonneg _))
         calc K * Real.exp (torusContinuumGreen L mass hmass f_im f_im)
             ≤ Real.exp (|Real.log K|) *

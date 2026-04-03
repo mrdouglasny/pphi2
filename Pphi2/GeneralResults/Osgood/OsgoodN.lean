@@ -394,7 +394,7 @@ theorem block_osgood_series {m : ℕ}
     (c : ℕ → (Fin m → ℂ) → ℂ)
     (w₀ : ℂ) (v₀ : Fin m → ℂ)
     (r : ℝ) (hr : 0 < r) (M : ℝ) (hM_nonneg : 0 ≤ M)
-    (cauchy_bound : ∀ k, ∀ v ∈ Metric.closedBall v₀ r, ‖c k v‖ ≤ M * r⁻¹ ^ k)
+    (_cauchy_bound : ∀ k, ∀ v ∈ Metric.closedBall v₀ r, ‖c k v‖ ≤ M * r⁻¹ ^ k)
     (cauchy_hasSum : ∀ v ∈ Metric.closedBall v₀ r, ∀ u ∈ Metric.ball (0 : ℂ) r,
       HasSum (fun k => u ^ k * c k v) (g (w₀ + u, v)))
     (q : ℕ → FormalMultilinearSeries ℂ (Fin m → ℂ) ℂ)
@@ -446,7 +446,7 @@ theorem block_osgood_series {m : ℕ}
       · exact h_bound_summable
     exact p.le_radius_of_summable h_summable
   -- Phase 4: Show the series sums to g((w₀, v₀) + y)
-  have p_hasSum : ∀ {y : ℂ × (Fin m → ℂ)}, y ∈ EMetric.ball (0 : ℂ × (Fin m → ℂ))
+  have p_hasSum : ∀ {y : ℂ × (Fin m → ℂ)}, y ∈ Metric.eball (0 : ℂ × (Fin m → ℂ))
       (ENNReal.ofReal r) →
       HasSum (fun n => p n fun _ => y) (g ((w₀, v₀) + y)) := by
     intro ⟨u, s⟩ hus
@@ -545,8 +545,7 @@ private theorem norm_fderiv_le_of_forall_closedBall_norm_le
   intro v
   -- For v = 0, the bound is trivial
   by_cases hv : v = 0
-  · simp [hv, div_nonneg (le_trans (norm_nonneg _)
-      (hG_bound x₀ (Metric.mem_closedBall_self hr.le))) hr.le]
+  · simp [hv]
   -- For v ≠ 0, reduce to the 1D Cauchy estimate along the direction v/‖v‖
   -- Consider the 1D slice g(z) = G(x₀ + z • v) for z ∈ ℂ
   -- g'(0) = (fderiv ℂ G x₀) v
@@ -597,7 +596,7 @@ private theorem norm_iteratedFDeriv_div_factorial_le
     (n : ℕ) :
     (↑(n.factorial) : ℝ)⁻¹ * ‖iteratedFDeriv ℂ n f x₀‖ ≤ B * (R / Real.exp 1)⁻¹ ^ n := by
   rcases n.eq_zero_or_pos with rfl | hn
-  · simp [iteratedFDeriv_zero_apply, hB x₀ (Metric.mem_closedBall_self hR.le)]
+  · simp [hB x₀ (Metric.mem_closedBall_self hR.le)]
   have hB_nn : 0 ≤ B := le_trans (norm_nonneg _) (hB x₀ (Metric.mem_closedBall_self hR.le))
   have hRn : (0 : ℝ) < R / n := div_pos hR (Nat.cast_pos.mpr hn)
   -- Key: ∀ k ≤ n, ∀ x ∈ closedBall x₀ (R - k*(R/n)),
@@ -637,7 +636,7 @@ private theorem norm_iteratedFDeriv_div_factorial_le
   induction k with
   | zero =>
     intro x hx
-    simp only [Nat.zero_eq, CharP.cast_eq_zero, zero_mul, sub_zero, pow_zero, mul_one] at hx ⊢
+    simp only [CharP.cast_eq_zero, zero_mul, sub_zero, pow_zero, mul_one] at hx ⊢
     rw [norm_iteratedFDeriv_zero]; exact hB x hx
   | succ k ih =>
     intro x hx
@@ -753,7 +752,7 @@ theorem analyticAt_hasFPowerSeriesOnBall_of_bound
           ((Nat.factorial n : ℝ)⁻¹ : ℝ) • (iteratedFDeriv ℂ n f x₀ (fun _ => y)) from rfl]
         rw [Complex.real_smul]
         congr 1
-        simp [map_inv₀, map_natCast]
+        simp
       rw [← h_hasSum.tsum_eq]
       congr 1; ext n; exact (h_term_eq n).symm
     -- Now use the identity theorem: f(x₀ + ·) and q.sum agree on eball 0 r₀,

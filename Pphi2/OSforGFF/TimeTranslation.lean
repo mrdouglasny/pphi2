@@ -282,8 +282,7 @@ def unitTimeDir : SpaceTime d := EuclideanSpace.single timeIndex (1 : ℝ)
 lemma continuous_timeShift_param (x : SpaceTime d) : Continuous (fun s : ℝ => timeShift s x) := by
   have h_shift : (fun s : ℝ => timeShift s x) = (fun s => x + s • unitTimeDir) := by
     funext s; simp only [timeShift, unitTimeDir, EuclideanSpace.single]
-    ext i; simp only [PiLp.add_apply, PiLp.smul_apply, smul_eq_mul, Pi.single,
-      Function.update, timeIndex, eq_rec_constant, dite_eq_ite]
+    ext i; simp only [PiLp.add_apply, PiLp.smul_apply, smul_eq_mul, timeIndex]
     by_cases h : i = (⟨0, Fact.out⟩ : Fin d) <;> simp_all [Fin.ext_iff]
   rw [h_shift]
   exact continuous_const.add (continuous_id.smul continuous_const)
@@ -318,7 +317,7 @@ lemma iteratedFDeriv_timeTranslationSchwartz
     simp only [timeShiftConst, unitTimeDir, EuclideanSpace.single, timeIndex]
     -- LHS: if i.val = 0 then h else 0
     -- RHS: h * (Pi.single timeIndex 1) i = h * (if i = timeIndex then 1 else 0)
-    simp only [PiLp.smul_apply, smul_eq_mul, Pi.single_apply]
+    simp only [PiLp.smul_apply, smul_eq_mul]
     split_ifs with hi1
     · sorry -- TODO: Mathlib 4.29 PiLp.single simp loop
     · sorry -- TODO: Mathlib 4.29 PiLp.single simp loop
@@ -393,7 +392,7 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
   let y := h • (unitTimeDir : SpaceTime d)
   have hy : ‖y‖ = |h| := by
     simp only [y, unitTimeDir, norm_smul, Real.norm_eq_abs]
-    rw [EuclideanSpace.norm_single, norm_one, mul_one]
+    rw [PiLp.norm_single, norm_one, mul_one]
   -- Use Mean Value estimate: ‖g(1) - g(0)‖ ≤ |h| · sup ‖D^{n+1} f(path)‖ · ‖unitTimeDir‖
   -- Since the path is from x to x + h•e₀, the bound involves |h|
   -- We bound this by the seminorm, absorbing weight shift via Peetre
@@ -606,7 +605,7 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
           simp only [max_eq_left (pow_le_one₀ (norm_nonneg w) hw), mul_one]
           exact h1
         · -- ‖w‖ > 1 case: (1 + ‖w‖)^k ≤ (2‖w‖)^k = 2^k * ‖w‖^k = 2^k * max(1, ‖w‖^k)
-          push_neg at hw
+          push Not at hw
           have h1 : 1 + ‖w‖ ≤ 2 * ‖w‖ := by linarith
           have h2 : (1 + ‖w‖) ^ k ≤ (2 * ‖w‖) ^ k := by
             apply pow_le_pow_left₀ (by linarith [norm_nonneg w])

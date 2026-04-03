@@ -209,12 +209,12 @@ theorem ContinuousOn.cauchy1 {n1 : ℕ} (rp : r > 0)
   simp; exact fc
 
 /-- One 2D coefficient of the 2D Cauchy series -/
-def Separate.series2Coeff (h : Separate f c0 c1 r b s) (n0 n1 : ℕ) : E :=
+def Separate.series2Coeff (_h : Separate f c0 c1 r b s) (n0 n1 : ℕ) : E :=
   (2*π*I : ℂ)⁻¹ • ∮ z0 in C(c0, r), (z0 - c0)⁻¹ ^ n0 • (z0 - c0)⁻¹ •
     (2*π*I : ℂ)⁻¹ • ∮ z1 in C(c1, r), (z1 - c1)⁻¹ ^ n1 • (z1 - c1)⁻¹ • f (z0, z1)
 
 /-- `series2Coeff` summed over `n0` -/
-def Separate.series2CoeffN0Sum (h : Separate f c0 c1 r b s) (n1 : ℕ) (w0 : ℂ) : E :=
+def Separate.series2CoeffN0Sum (_h : Separate f c0 c1 r b s) (n1 : ℕ) (w0 : ℂ) : E :=
   (2*π*I : ℂ)⁻¹ • ∮ z0 : ℂ in C(c0, r), (z0 - (c0 + w0))⁻¹ •
     (2*π*I : ℂ)⁻¹ • ∮ z1 : ℂ in C(c1, r), (z1 - c1)⁻¹ ^ n1 • (z1 - c1)⁻¹ • f (z0, z1)
 
@@ -563,7 +563,7 @@ theorem osgood_h (h : Separate f c0 c1 r b s) :
   { r_le := cauchy2_radius h
     r_pos := by simp; exact h.rp
     hasSum := by
-      simp only [Metric.emetric_ball, Metric.mem_ball, dist_zero_right, Prod.forall]
+      simp only [Metric.eball_ofReal, Metric.mem_ball, dist_zero_right, Prod.forall]
       intro w0 w1 wr; rw [Prod.norm_def] at wr
       simp only [max_lt_iff] at wr
       have w0m : w0 ∈ ball (0 : ℂ) r := by simp; exact wr.left

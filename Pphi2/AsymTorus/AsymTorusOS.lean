@@ -605,7 +605,7 @@ private theorem asymGaussian_exp_abs_moment
     intro x
     by_cases hx : 0 ≤ x
     · rw [abs_of_nonneg hx]; linarith [Real.exp_pos (-(t * x))]
-    · push_neg at hx; rw [abs_of_neg hx, show t * (-x) = -(t * x) from by ring]
+    · push Not at hx; rw [abs_of_neg hx, show t * (-x) = -(t * x) from by ring]
       linarith [Real.exp_pos (t * x)]
   -- Step 5: Integrability of exp(t*|ω g|)
   have h_int_sum : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
@@ -1008,7 +1008,7 @@ private theorem asymTorusInteracting_exponentialMomentBound
     have hK_le : K_cut ≤ Real.exp (|Real.log K_cut|) := by
       by_cases h1 : 1 ≤ K_cut
       · rw [abs_of_nonneg (Real.log_nonneg h1), Real.exp_log hK_cut_pos]
-      · push_neg at h1; exact le_trans h1.le (Real.one_le_exp (abs_nonneg _))
+      · push Not at h1; exact le_trans h1.le (Real.one_le_exp (abs_nonneg _))
     calc ∫ ω, F ω ∂μ ≤ B := h_le_B
       _ = K_cut * Real.exp σ2_bound := rfl
       _ ≤ Real.exp (|Real.log K_cut|) * Real.exp σ2_bound :=
@@ -1207,7 +1207,7 @@ private theorem asymTorusInteracting_os1
         -- Proof: 1 ≤ ∫ exp(|ω f_re|) dμ ≤ exp(q f_re), so 0 ≤ q f_re
         have hq_re_nn : 0 ≤ q f_re := by
           have : (1 : ℝ) ≤ Real.exp (q f_re) :=
-            le_trans (by simp [measure_univ] :
+            le_trans (by simp :
               (1 : ℝ) = ∫ _ : Configuration (AsymTorusTestFunction Lt Ls), 1 ∂μ).le
               (le_trans (integral_mono (integrable_const 1) (hq_bound f_re).1
                 (fun ω => by exact_mod_cast (Real.one_le_exp (abs_nonneg (ω f_re)))))
@@ -2120,7 +2120,7 @@ theorem asymTorusTranslation_continuous_in_v
     intro T₁ T₂
     have h := (RapidDecaySeq.hasSum_basisVec f).mapL
       (GaussianField.nuclearTensorProduct_mapCLM T₁ T₂)
-    simp only [ContinuousLinearMap.map_smul] at h
+    simp only at h
     convert h using 1
     ext1 m
     show f.val m • GaussianField.mapImage T₁ T₂ m =

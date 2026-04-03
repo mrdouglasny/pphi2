@@ -376,7 +376,7 @@ theorem poly_even_degree_bounded_below (p : ℝ[X])
     simp only [Set.mem_compl_iff, Set.mem_setOf_eq] at hx
     simp only [Metric.mem_closedBall, dist_zero_right, Real.norm_eq_abs]
     by_contra hx_far
-    push_neg at hx_far
+    push Not at hx_far
     exact hx (hclaim x (le_of_lt hx_far))
   -- Step 4: Combine norm → ∞ with eventually nonneg to get signed tendency
   rw [Filter.tendsto_atTop]
@@ -578,7 +578,7 @@ theorem wickPolynomial_uniform_bounded_below
     have := hclaim c ⟨hc0, hcC⟩ x hx
     linarith [abs_nonneg (f p₀)]
   · -- Bounded |x|: wickPolynomial ≥ f(p₀) ≥ -|f(p₀)| ≥ -A
-    push_neg at hx
+    push Not at hx
     have hx_bound : x ∈ Set.Icc (-R) R := by
       rw [Set.mem_Icc]; constructor
       · linarith [(abs_lt.mp hx).1]

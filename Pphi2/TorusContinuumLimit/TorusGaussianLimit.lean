@@ -268,7 +268,7 @@ theorem weakLimit_centered_gaussianReal
   -- contradicting continuity at 0 where the value is 1)
   have h_limit_pos : 0 < ∫ x, Real.cos (1 * x) ∂ν := by
     by_contra h_not_pos
-    push_neg at h_not_pos
+    push Not at h_not_pos
     have h_zero : ∫ x, Real.cos (1 * x) ∂ν = 0 := le_antisymm h_not_pos h_limit_nonneg
     have h_vn_infty : Tendsto (fun n => (v_seq n : ℝ)) atTop atTop := by
       rw [Filter.tendsto_atTop]; intro b

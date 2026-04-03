@@ -64,7 +64,7 @@ private theorem wickMonomial_mul_right : ∀ (m : ℕ) (c y : ℝ),
 /-- Key binomial coefficient identity: (k+1) * C(n+1, k+1) = (n+1) * C(n, k) -/
 private theorem choose_mul_succ (n k : ℕ) :
     (k + 1 : ℝ) * ((n + 1).choose (k + 1) : ℝ) = (n + 1 : ℝ) * (n.choose k : ℝ) := by
-  have h := Nat.succ_mul_choose_eq n k
+  have h := Nat.add_one_mul_choose_eq n k
   -- h : (n + 1) * n.choose k = (n + 1).choose (k + 1) * (k + 1)
   -- Need: (k+1) * C(n+1, k+1) = (n+1) * C(n, k)
   -- which is h rewritten as multiplication commuted
@@ -74,7 +74,7 @@ private theorem choose_mul_succ (n k : ℕ) :
 /-- Key binomial coefficient identity: (n+1-k) * C(n+1, k) = (n+1) * C(n, k) for k ≤ n -/
 private theorem choose_mul_complement (n k : ℕ) (hk : k ≤ n) :
     ((n + 1 - k : ℕ) : ℝ) * ((n + 1).choose k : ℝ) = (n + 1 : ℝ) * (n.choose k : ℝ) := by
-  have h := Nat.succ_mul_choose_eq n (n - k)
+  have h := Nat.add_one_mul_choose_eq n (n - k)
   -- h : (n+1) * C(n, n-k) = C(n+1, n-k+1) * (n-k+1)
   have hk' : n - k + 1 = n + 1 - k := by omega
   have hchoose1 : n.choose (n - k) = n.choose k := Nat.choose_symm hk
@@ -164,7 +164,7 @@ theorem wickMonomial_add_binomial (n : ℕ) (c₁ c₂ x y : ℝ) :
           (↑n + 1) * c₁ * (↑(n.choose i) * wickMonomial i c₁ x * wickMonomial (n - i) c₂ y) := by
         -- The i=0 term vanishes (factor i=0)
         rw [Finset.sum_range_succ']
-        simp only [Nat.cast_zero, zero_mul, mul_zero, zero_add, add_zero]
+        simp only [Nat.cast_zero, zero_mul, mul_zero, add_zero]
         apply Finset.sum_congr rfl
         intro i hi
         have him : i < n + 1 := Finset.mem_range.mp hi

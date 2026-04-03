@@ -230,7 +230,7 @@ theorem termCmmap_apply [NormedAddCommGroup E] [NormedSpace 𝕜 E] [SMulCommCla
       rw [min_eq_right hle']
       rw [Nat.sub_eq_zero_of_le hle']
       simp only [pow_zero, one_smul, ← smul_assoc, smul_eq_mul, pow_succ']
-    · simp only [nk, ↓reduceIte]; push_neg at nk
+    · simp only [nk, ↓reduceIte]; push Not at nk
       rw [sndCmmap_apply]
       have nsk : k ≤ n.succ := Nat.le_succ_of_le nk
       rw [min_eq_left nk, min_eq_left nsk]
