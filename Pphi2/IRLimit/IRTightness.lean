@@ -114,6 +114,12 @@ theorem cylinderIRLimit_exists
     (hμ_os : ∀ n, @AsymSatisfiesTorusOS (Lt n) Ls _ _ (μ n) (hμ_prob n)) :
     ∃ (φ : ℕ → ℕ) (ν : Measure (Configuration (CylinderTestFunction Ls))),
     StrictMono φ ∧ IsProbabilityMeasure ν ∧
+    -- Bounded-continuous convergence (full weak convergence)
+    (∀ (g : Configuration (CylinderTestFunction Ls) → ℝ),
+      Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Tendsto (fun n =>
+        ∫ ω, g ω ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n))))
+        atTop (nhds (∫ ω, g ω ∂ν))) ∧
     -- Characteristic functional convergence
     (∀ (f : CylinderTestFunction Ls),
     Tendsto (fun n =>
@@ -261,9 +267,14 @@ theorem cylinderIRLimit_exists
   have hφ : StrictMono φ := by
     intro a b hab
     exact Nat.add_lt_add_right (hφtail hab) N0
-  refine ⟨φ, ν, hφ, hν_lim_prob, ?_⟩
-  intro f
-  simpa [φ, νseq] using hcf_tail f
+  refine ⟨φ, ν, hφ, hν_lim_prob, ?_, ?_⟩
+  · -- BC convergence: from prokhorov_configuration BC convergence, reindexed
+    intro g hg_cont hg_bdd
+    have := hconv g hg_cont hg_bdd
+    simpa [φ, νseq] using this
+  · -- CF convergence: from BC convergence via cos/sin
+    intro f
+    simpa [φ, νseq] using hcf_tail f
   -- The proof chains through proved gaussian-field infrastructure:
   -- Step 1: cylinderIR_uniform_second_moment → ∀ f, ∃ C(f), ∀ n, ∫ (ω f)² ≤ C(f)
   -- Step 2: configuration_tight_of_uniform_second_moments → tightness

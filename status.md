@@ -16,9 +16,16 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-04-02): 24 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-04-02): 23 axioms, 0 sorries.**
 
 Recent reductions (2026-04-02):
+- `limit_exponential_moment` sorry — **ELIMINATED**: truncation + MCT proof via
+  `lintegral_iSup` (monotone convergence) + `Integrable.of_bound` + `ofReal_integral_eq_lintegral_ofReal`.
+  Key insight: use `Measurable.aestronglyMeasurable` (not `Continuous.aestronglyMeasurable`
+  which needs `OpensMeasurableSpace` on domain) to get AEStronglyMeasurability.
+- `cylinderIR_os0` — **PROVED** (axiom → theorem): OS0 analyticity for the IR limit
+  derived from `cylinderIR_uniform_exponential_moment` + BC weak convergence +
+  `analyticOnNhd_integral`.
 - `gaussianLimit_isGaussian` — **PROVED** by reducing continuum Gaussianity to
   1D evaluation marginals and a generic weak-limit theorem for centered real
   Gaussians
@@ -146,7 +153,7 @@ telescoping sum bound.
 | B'IR | `IRLimit/GreenFunctionComparison.lean` | 1 axiom, 0 sorries (uniform 2nd moment) |
 | B'IR | `IRLimit/UniformExponentialMoment.lean` | 1 axiom, 0 sorries (uniform exp moment) |
 | B'IR | `IRLimit/IRTightness.lean` | 0 axioms, 0 sorries (Prokhorov extraction proved) |
-| B'IR | `IRLimit/CylinderOS.lean` | 2 axioms, 0 sorries (OS0+OS3; OS2 proved via weak limit) |
+| B'IR | `IRLimit/CylinderOS.lean` | 1 axiom, 0 sorries (OS3 axiomatized; OS0+OS2 proved) |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 

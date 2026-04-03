@@ -12,7 +12,7 @@ weak.linter.mathlibStandardSet = true
 name = "GaussianField"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gaussian-field.git"
-rev = "cylinder"
+rev = "a5a1afc"
 
 [[require]]
 name = "bochner"

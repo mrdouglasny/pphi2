@@ -21,7 +21,7 @@ count_file() {
     local n
     # Skip comment lines and lines marked with count_axioms:skip
     # For 'sorry' pattern: exclude lines that are clearly inside doc comments
-    n=$(grep "$pattern" "$file" 2>/dev/null | grep -v 'count_axioms:skip' | grep -cv '^\s*--\|^\s*/[-*]\|^\s*\*\|sorry.s\b\|sorry.\b\|sorry:') || true
+    n=$(grep "$pattern" "$file" 2>/dev/null | grep -v 'count_axioms:skip' | grep -cv '^\s*--\|^\s*/[-*]\|^\s*\*\|sorry.s\b\|sorry.\b\|sorry:\|the sorry\|a sorry\|sorry.d\b\|sorry-free') || true
     n=$(echo "$n" | tr -cd '0-9')
     echo "${n:-0}"
 }

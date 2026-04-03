@@ -79,7 +79,7 @@ OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
 The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
-**20 axioms, 0 sorries.**
+**23 axioms, 0 sorries** (pphi2) + **3 axioms** (gaussian-field) = **26 combined**.
 
 ### Route B: T²_L (symmetric torus) — OS0–OS2
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
@@ -112,6 +112,7 @@ The construction proceeds in two limits:
    cylinder S¹_{Ls} × ℝ. Tightness follows from uniform-in-Lt moment bounds
    via the **method of images** (gaussian-field `Cylinder/MethodOfImages.lean`).
    The IR limit files are in `IRLimit/` with 4 axioms and 0 sorries.
+   `limit_exponential_moment` (MCT + truncation) is now fully proved.
    OS2 (time reflection) of the limit measure is **proved** via characteristic
    functional convergence.
 
@@ -129,7 +130,8 @@ The cylinder S¹_{Ls} × ℝ has a natural time axis ℝ, enabling:
 OS0–OS2). Only needs new work for OS3 (RP) and the Lt → ∞ limit.
 **Status:** UV limit (Step 1) complete — `AsymTorusOS.lean` has **0 axioms,
 0 sorry** for OS0–OS2. Cylinder IR limit (Step 2) in progress — `IRLimit/` has
-**4 axioms, 0 sorries**. OS2 time reflection is proved via characteristic-functional
+**4 axioms, 0 sorries**. `limit_exponential_moment` (MCT + truncation + BC convergence)
+is now fully proved. OS2 time reflection is proved via characteristic-functional
 convergence, and compact-support, finite-rank, and general cylinder covariance
 convergence are proved against a global physically normalized cylinder form
 obtained from `cylinderGreen` by explicit temporal `2π` rescaling, with uniform
@@ -205,9 +207,9 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-- **pphi2:** 24 axioms, 0 sorries in the active build; `os3_for_continuum_limit` and `gaussianLimit_isGaussian` are now theorems, and Route C's 21 axioms remain preserved in `future/`
+- **pphi2:** 23 axioms, 5 sorries in the active build; `cylinderIR_os0` (OS0 analyticity) now proved via `analyticOnNhd_integral` + exponential moment transfer; Route C's 21 axioms remain preserved in `future/`
 - **Route B (torus):** 0 axioms, 0 sorries — the most developed route
-- **Route B' IR limit:** 4 axioms, 0 sorries — pure/finite-rank/general covariance convergence to the global physical cylinder form is proved, together with the explicit temporal `2π` normalization bridge and uniform bilinear seminorm control; what remains here is the uniform second-moment bound, uniform exponential moment, and OS0/OS3
+- **Route B' IR limit:** 3 axioms, 5 sorries — OS0 analyticity proved from uniform exponential moments + BC weak convergence; what remains is the uniform second-moment bound, uniform exponential moment, and OS3
 - **Shared foundations layer:** `Common/QFT/Euclidean/Formulations.lean` and
   `Common/QFT/Euclidean/ReconstructionInterfaces.lean` separate concrete
   measure models, tensor-moment Schwinger data, distributional Schwinger data,

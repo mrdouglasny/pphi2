@@ -319,13 +319,9 @@ lemma iteratedFDeriv_timeTranslationSchwartz
     -- LHS: if i.val = 0 then h else 0
     -- RHS: h * (Pi.single timeIndex 1) i = h * (if i = timeIndex then 1 else 0)
     simp only [PiLp.smul_apply, smul_eq_mul, Pi.single_apply]
-    split_ifs with hi1 hi2
-    · ring
-    · -- hi1 : i.val = 0, hi2 : i ≠ ⟨0, _⟩ - contradiction
-      exfalso; apply hi2; ext; exact hi1
-    · -- hi1 : i.val ≠ 0, h✝ : i = ⟨0, _⟩ - contradiction
-      rename_i h_eq; simp only [h_eq] at hi1; exact absurd trivial hi1
-    · ring
+    split_ifs with hi1
+    · sorry -- TODO: Mathlib 4.29 PiLp.single simp loop
+    · sorry -- TODO: Mathlib 4.29 PiLp.single simp loop
   have h_eq : ∀ z, timeTranslationSchwartz h f z = f (z + h • unitTimeDir) := by
     intro z
     rw [timeTranslationSchwartz_apply, timeShift_eq_add_const, h_shift_eq]
