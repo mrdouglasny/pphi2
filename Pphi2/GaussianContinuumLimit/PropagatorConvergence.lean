@@ -1,6 +1,7 @@
 /-
 Copyright (c) 2026 Michael R. Douglas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Matteo Cipollina, Michael R. Douglas
 
 # Lattice Propagator Convergence
 
@@ -9,7 +10,12 @@ Green's function converges to the continuum Green's function as a → 0.
 
 ## Main results
 
-- `propagator_convergence` — (axiom) lattice Riemann sum → continuum integral
+- `latticeGreenBilinear_basis_tendsto_continuum` — (axiom) basis-pair spectral
+  convergence
+- `latticeGreenBilinear_tendsto_continuum` — theorem extending basis-pair
+  convergence to arbitrary Schwartz test functions
+- `propagator_convergence` — theorem deduced from
+  `embeddedTwoPoint_eq_latticeGreenBilinear`
 - `embeddedTwoPoint_uniform_bound` — `E[Φ_a(f)²] ≤ C · ‖f‖²` uniformly in a, N
 - `continuumGreenBilinear_pos` — `G(f,f) > 0` for nonzero f
 
@@ -47,7 +53,10 @@ uniformly bounded for Schwartz f, giving `E[Φ_a(f)²] ≤ C/m²`.
 -/
 
 import Pphi2.GaussianContinuumLimit.EmbeddedCovariance
+import Pphi2.GeneralResults.DyninMityaginBilinear
+import Mathlib.Analysis.Distribution.TemperateGrowth
 import Mathlib.Data.ZMod.ValMinAbs
+import SchwartzNuclear.HermiteNuclear
 
 noncomputable section
 
@@ -57,43 +66,54 @@ namespace Pphi2
 
 variable (d N : ℕ) [NeZero N]
 
+private noncomputable instance continuumFinNonempty [Fact (0 < d)] : Nonempty (Fin d) :=
+  Fin.pos_iff_nonempty.mp Fact.out
+
+private noncomputable instance continuumEuclideanNontrivial [Fact (0 < d)] :
+    Nontrivial (EuclideanSpace ℝ (Fin d)) := inferInstance
+
+private noncomputable instance continuumTestFunction_dyninMityagin [Fact (0 < d)] :
+    DyninMityaginSpace (ContinuumTestFunction d) :=
+  schwartz_dyninMityaginSpace
+
 /-! ## Propagator convergence -/
 
-/-- **Lattice propagator converges to continuum Green's function.**
+/- **Basis-pair lattice propagator converges to the continuum Green's function.**
 
-For Schwartz test functions f, g and lattice parameters a → 0 with Na → ∞:
+This is the remaining analytic input after all algebraic rewrites:
+for each pair of Dynin-Mityagin basis vectors and lattice parameters
+`a → 0` with `Na → ∞`, the lattice spectral Green form converges to the
+continuum Green form.
 
-  `embeddedTwoPoint d N a mass f g → continuumGreenBilinear d mass f g`
-
-Mathematically, this says the Riemann sum:
-
-  `a^{2d} Σ_{x,y ∈ Λ} C_a(x,y) f(ax) g(ay)`
-
-converges to:
-
-  `∫ f̂(k) ĝ(k) / (|k|² + m²) dk / (2π)^d`
-
-The proof has three ingredients:
-1. In Fourier space, the lattice eigenvalues `(4/a²)sin²(πk/N) + m²`
-   approximate `|k|² + m²` for each mode k.
-2. The Riemann sum over lattice momenta approximates the Fourier integral.
-3. Schwartz decay of f̂, ĝ provides dominated convergence (the tails
-   are uniformly bounded by `C · |k|^{-M}` for any M).
+The full Schwartz-space convergence theorem `latticeGreenBilinear_tendsto_continuum`
+is proved later in this file by two DM-expansion steps plus polynomial bounds
+on the lattice bilinear form applied to basis vectors.
 
 Reference: Glimm-Jaffe §6.1, Simon Ch. I. -/
-axiom propagator_convergence
+section ConvergenceAxiom
+
+variable [Fact (0 < d)]
+axiom latticeGreenBilinear_basis_tendsto_continuum
     (mass : ℝ) (hmass : 0 < mass)
-    (f g : ContinuumTestFunction d)
     -- Sequence of lattice spacings tending to 0
     (a_seq : ℕ → ℝ) (ha_pos : ∀ n, 0 < a_seq n)
     (ha_lim : Tendsto a_seq atTop (nhds 0))
     -- Sequence of lattice sizes with N_n · a_n → ∞
     (N_seq : ℕ → ℕ) [∀ n, NeZero (N_seq n)]
-    (hNa : Tendsto (fun n => (N_seq n : ℝ) * a_seq n) atTop atTop) :
+    (hNa : Tendsto (fun n => (N_seq n : ℝ) * a_seq n) atTop atTop)
+    (i j : ℕ) :
     Tendsto
-      (fun n => embeddedTwoPoint d (N_seq n) (a_seq n) mass (ha_pos n) hmass f g)
+      (fun n =>
+        latticeGreenBilinear d (N_seq n) (a_seq n) mass
+          (DyninMityaginSpace.basis i)
+          (DyninMityaginSpace.basis j))
       atTop
-      (nhds (continuumGreenBilinear d mass f g))
+      (nhds
+        (continuumGreenBilinear d mass
+          (DyninMityaginSpace.basis i)
+          (DyninMityaginSpace.basis j)))
+
+end ConvergenceAxiom
 
 /-! ## Uniform bound on the embedded two-point function -/
 
@@ -436,6 +456,95 @@ private lemma one_d_zmod_bound (a : ℝ) (ha : 0 < a)
 
 /-! ### Schwartz Riemann sum bound -/
 
+private def schwartzSeminormWindow (d : ℕ) : Finset (ℕ × ℕ) :=
+  Finset.Iic ((d : ℕ), (0 : ℕ))
+
+private def schwartzDecayMajorant (d : ℕ) (f : ContinuumTestFunction d) : ℝ :=
+  2 ^ d * ((schwartzSeminormWindow d).sup fun m => SchwartzMap.seminorm ℝ m.1 m.2) f
+
+/-- The Riemann-sum estimate with an explicit seminorm majorant.
+
+If `S` dominates the finite family of seminorms used in
+`schwartz_sq_product_bound`, then the lattice Schwartz Riemann sum is bounded by
+`S² * 3^d`. -/
+private theorem schwartz_riemann_sum_bound_of_majorant
+    (f : ContinuumTestFunction d) (S : ℝ)
+    (hS :
+      schwartzDecayMajorant d f ≤ S) :
+    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∀ (N : ℕ) [NeZero N],
+    a ^ d * ∑ x : FinLatticeSites d N,
+      (evalAtSite d N a f x) ^ 2 ≤ S ^ 2 * 3 ^ d := by
+  intro a ha ha1 N _
+  have hmajorant_nonneg : 0 ≤ schwartzDecayMajorant d f := by
+    unfold schwartzDecayMajorant
+    exact mul_nonneg (by positivity)
+      (apply_nonneg
+        ((schwartzSeminormWindow d).sup fun m => SchwartzMap.seminorm ℝ m.1 m.2) f)
+  have hS_nonneg : 0 ≤ S := le_trans hmajorant_nonneg hS
+  simp only [evalAtSite]
+  have hbound : ∀ x : FinLatticeSites d N,
+      f (physicalPosition d N a x) ^ 2 ≤
+      S ^ 2 / ∏ i : Fin d,
+        (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2 := by
+    intro x
+    have hprod_pos : (0 : ℝ) < ∏ i : Fin d,
+        (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2 :=
+      Finset.prod_pos (fun i _ =>
+        sq_pos_of_pos (by positivity))
+    rw [le_div_iff₀ hprod_pos]
+    calc f (physicalPosition d N a x) ^ 2 *
+          ∏ i, (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2
+        = f (physicalPosition d N a x) ^ 2 *
+          ∏ i, (1 + ‖(physicalPosition d N a x) i‖) ^ 2 := by
+          congr 1; apply Finset.prod_congr rfl
+          intro i _; congr 1; congr 1
+          exact (physPos_norm_component d N a ha x i).symm
+      _ ≤ schwartzDecayMajorant d f ^ 2 := by
+          simpa [schwartzDecayMajorant, schwartzSeminormWindow] using
+            schwartz_sq_product_bound d f (physicalPosition d N a x)
+      _ ≤ S ^ 2 := by
+          nlinarith [hS, hmajorant_nonneg]
+  calc a ^ d * ∑ x, f (physicalPosition d N a x) ^ 2
+      ≤ a ^ d * ∑ x : FinLatticeSites d N,
+          S ^ 2 / ∏ i : Fin d,
+            (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2 := by
+        gcongr with x
+        exact hbound x
+    _ = S ^ 2 * ∑ x : FinLatticeSites d N,
+          ∏ i : Fin d,
+            a / (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2 := by
+        conv_lhs =>
+          rw [Finset.mul_sum]
+          arg 2; ext x
+          rw [show a ^ d * (S ^ 2 /
+              ∏ i : Fin d,
+                (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2) =
+            S ^ 2 * (a ^ d /
+              ∏ i : Fin d,
+                (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2) from
+              by ring]
+          rw [show a ^ d = ∏ _i : Fin d, a from
+            by simp [Finset.prod_const]]
+          rw [← Finset.prod_div_distrib]
+        rw [← Finset.mul_sum]
+    _ = S ^ 2 * ∏ _i : Fin d,
+          ∑ n : ZMod N,
+            a / (1 + a * ((signedVal N n).natAbs : ℝ)) ^ 2 := by
+        congr 1
+        rw [← Fintype.prod_sum
+          (fun _ => fun n : ZMod N =>
+            a / (1 + a * ((signedVal N n).natAbs : ℝ)) ^ 2)]
+    _ ≤ S ^ 2 * 3 ^ d := by
+        gcongr
+        rw [show (3 : ℝ) ^ d = ∏ _i : Fin d, (3 : ℝ)
+          from by simp [Finset.prod_const]]
+        exact Finset.prod_le_prod
+          (fun i _ => Finset.sum_nonneg
+            (fun n _ => div_nonneg
+              (le_of_lt ha) (sq_nonneg _)))
+          (fun i _ => one_d_zmod_bound N a ha ha1)
+
 /-- **Schwartz Riemann sum bound.**
 
 For a Schwartz function f : S(ℝ^d) and the lattice (ℤ/Nℤ)^d with spacing a,
@@ -454,86 +563,494 @@ private theorem schwartz_riemann_sum_bound
     ∀ (N : ℕ) [NeZero N],
     a ^ d * ∑ x : FinLatticeSites d N,
       (evalAtSite d N a f x) ^ 2 ≤ C := by
-  -- The Schwartz seminorm constant
-  set S := 2 ^ d * ((Finset.Iic ((d : ℕ), (0 : ℕ))).sup
-    fun m => SchwartzMap.seminorm ℝ m.1 m.2) f
+  set S := schwartzDecayMajorant d f
   refine ⟨S ^ 2 * 3 ^ d + 1, by positivity, ?_⟩
   intro a ha ha1 N _
-  simp only [evalAtSite]
-  -- Step 1: Bound f(y)² using Schwartz product bound
-  -- f(y)² * ∏_i (1+‖y_i‖)² ≤ S² implies
-  -- f(y)² ≤ S² / ∏_i (1+‖y_i‖)²
-  have hbound : ∀ x : FinLatticeSites d N,
-      f (physicalPosition d N a x) ^ 2 ≤
-      S ^ 2 / ∏ i : Fin d,
-        (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2 := by
-    intro x
-    have hprod_pos : (0 : ℝ) < ∏ i : Fin d,
-        (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2 :=
-      Finset.prod_pos (fun i _ =>
-        sq_pos_of_pos (by positivity))
-    rw [le_div_iff₀ hprod_pos]
-    -- Rewrite ∏(1+a*|signedVal|)² as ∏(1+‖component‖)²
-    calc f (physicalPosition d N a x) ^ 2 *
-          ∏ i, (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2
-        = f (physicalPosition d N a x) ^ 2 *
-          ∏ i, (1 + ‖(physicalPosition d N a x) i‖) ^ 2 := by
-          congr 1; apply Finset.prod_congr rfl
-          intro i _; congr 1; congr 1
-          exact (physPos_norm_component d N a ha x i).symm
-      _ ≤ S ^ 2 :=
-          schwartz_sq_product_bound d f
-            (physicalPosition d N a x)
-  -- Step 2: Sum the bounds
-  -- Factor: a^d * Σ f(y)² ≤ S² * Σ_x ∏_i a/(1+a·|signedVal|)²
-  --                         = S² * ∏_i Σ_n a/(1+a·|signedVal n|)²  ≤  S² · 3^d
-  suffices h_main : a ^ d *
-      ∑ x : FinLatticeSites d N,
-        f (physicalPosition d N a x) ^ 2 ≤
-      S ^ 2 * 3 ^ d by linarith
-  -- Bound each term: f(y)² ≤ S² / ∏(1+a·|signedVal|)²
-  calc a ^ d * ∑ x, f (physicalPosition d N a x) ^ 2
-      ≤ a ^ d * ∑ x : FinLatticeSites d N,
-          S ^ 2 / ∏ i : Fin d,
-            (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2 := by
-        gcongr with x; exact hbound x
-    -- Factor a^d into the product and combine with sum
-    _ = S ^ 2 * ∑ x : FinLatticeSites d N,
-          ∏ i : Fin d,
-            a / (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2 := by
-        -- Pull S² out as a constant factor
-        conv_lhs =>
-          rw [Finset.mul_sum]
-          arg 2; ext x
-          rw [show a ^ d * (S ^ 2 /
-              ∏ i : Fin d,
-                (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2) =
-            S ^ 2 * (a ^ d /
-              ∏ i : Fin d,
-                (1 + a * ((signedVal N (x i)).natAbs : ℝ)) ^ 2) from
-              by ring]
-          rw [show a ^ d = ∏ _i : Fin d, a from
-            by simp [Finset.prod_const]]
-          rw [← Finset.prod_div_distrib]
-        rw [← Finset.mul_sum]
-    -- Factor the sum as a product of 1D sums
-    _ = S ^ 2 * ∏ _i : Fin d,
-          ∑ n : ZMod N,
-            a / (1 + a * ((signedVal N n).natAbs : ℝ)) ^ 2 := by
+  have hmain := schwartz_riemann_sum_bound_of_majorant (d := d) (N := N) f S (le_rfl) a ha ha1
+  linarith
+
+/-- Polynomial Riemann-sum bound on DM basis vectors of the Schwartz space. -/
+private theorem schwartz_riemann_sum_basis_bound [Fact (0 < d)] :
+    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∀ (N : ℕ) [NeZero N],
+    a ^ d * ∑ x : FinLatticeSites d N,
+      (evalAtSite d N a (DyninMityaginSpace.basis i) x) ^ 2 ≤
+        C * (1 + (i : ℝ)) ^ r := by
+  obtain ⟨D, hD_pos, r, hD⟩ :=
+    finset_sup_poly_bound
+      (fun m : ℕ × ℕ => SchwartzMap.seminorm ℝ m.1 m.2)
+      (schwartzSeminormWindow d)
+      (DyninMityaginSpace.basis (E := ContinuumTestFunction d))
+      (fun m hm => by
+        simpa using DyninMityaginSpace.basis_growth (E := ContinuumTestFunction d) m)
+  set A : ℝ := 2 ^ d * D
+  refine ⟨A ^ 2 * 3 ^ d + 1, by positivity, 2 * r, ?_⟩
+  intro i a ha ha1 N _
+  have hmajorant :
+      schwartzDecayMajorant d (DyninMityaginSpace.basis (E := ContinuumTestFunction d) i) ≤
+        A * (1 + (i : ℝ)) ^ r := by
+    dsimp [schwartzDecayMajorant, schwartzSeminormWindow, A]
+    calc
+      2 ^ d *
+          ((schwartzSeminormWindow d).sup fun m => SchwartzMap.seminorm ℝ m.1 m.2)
+            (DyninMityaginSpace.basis (E := ContinuumTestFunction d) i)
+        ≤ 2 ^ d * (D * (1 + (i : ℝ)) ^ r) := by
+            gcongr
+            exact hD i
+      _ = A * (1 + (i : ℝ)) ^ r := by ring
+  have hmain :=
+    schwartz_riemann_sum_bound_of_majorant
+      (d := d) (N := N)
+      (f := DyninMityaginSpace.basis (E := ContinuumTestFunction d) i)
+      (S := A * (1 + (i : ℝ)) ^ r)
+      hmajorant a ha ha1
+  have hpow_nonneg : 0 ≤ (1 + (i : ℝ)) ^ (2 * r) := by positivity
+  calc
+    a ^ d * ∑ x : FinLatticeSites d N,
+      (evalAtSite d N a (DyninMityaginSpace.basis i) x) ^ 2
+      ≤ (A * (1 + (i : ℝ)) ^ r) ^ 2 * 3 ^ d := hmain
+    _ = A ^ 2 * 3 ^ d * (1 + (i : ℝ)) ^ (2 * r) := by ring
+    _ ≤ (A ^ 2 * 3 ^ d + 1) * (1 + (i : ℝ)) ^ (2 * r) := by
+        have hA : A ^ 2 * 3 ^ d ≤ A ^ 2 * 3 ^ d + 1 := by linarith
+        calc
+          A ^ 2 * 3 ^ d * (1 + (i : ℝ)) ^ (2 * r)
+            ≤ (A ^ 2 * 3 ^ d + 1) * (1 + (i : ℝ)) ^ (2 * r) :=
+              mul_le_mul_of_nonneg_right hA hpow_nonneg
+
+/-- The lattice Green form on the diagonal is controlled by any lattice
+Riemann-sum bound for the corresponding test function. -/
+private theorem latticeGreenBilinear_diag_bound_of_riemann_bound
+    (mass : ℝ) (hmass : 0 < mass)
+    (f : ContinuumTestFunction d) (C_f : ℝ)
+    (hC : ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+      ∀ (N : ℕ) [NeZero N],
+      a ^ d * ∑ x : FinLatticeSites d N, (evalAtSite d N a f x) ^ 2 ≤ C_f) :
+    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+      latticeGreenBilinear d N a mass f f ≤ mass⁻¹ ^ 2 * C_f := by
+  intro a ha ha_le
+  rw [← embeddedTwoPoint_eq_latticeGreenBilinear (d := d) (N := N) (a := a)
+    (mass := mass) (ha := ha) (hmass := hmass) f f]
+  set T := latticeCovariance d N a mass ha hmass
+  set μ := latticeGaussianMeasure d N a mass ha hmass
+  set h_f : FinLatticeField d N := fun x => a ^ d * evalAtSite d N a f x
+  have hintegrand : ∀ ω : Configuration (FinLatticeField d N),
+      (a ^ d * ∑ x, ω (Pi.single x 1) * evalAtSite d N a f x) *
+      (a ^ d * ∑ x, ω (Pi.single x 1) * evalAtSite d N a f x) =
+      (ω h_f) ^ 2 := by
+    intro ω
+    have hlin : ω h_f = a ^ d * ∑ x, ω (Pi.single x 1) * evalAtSite d N a f x := by
+      show ω h_f = a ^ d * ∑ x, ω (Pi.single x 1) * evalAtSite d N a f x
+      have : h_f = a ^ d • ∑ x : FinLatticeSites d N,
+          evalAtSite d N a f x • Pi.single x (1 : ℝ) := by
+        ext y; simp [h_f, Finset.sum_apply, Pi.single_apply]
+      rw [this, map_smul, smul_eq_mul]
+      congr 1
+      rw [map_sum]
+      congr 1; ext x
+      rw [map_smul, smul_eq_mul, mul_comm]
+    rw [hlin]
+    ring
+  rw [embeddedTwoPoint_eq_covariance (d := d) (N := N) (a := a)
+    (mass := mass) (ha := ha) (hmass := hmass) f f]
+  simp only [latticeEmbed_eval, latticeEmbedEval]
+  have hintegrand_eq :
+      (fun ω : Configuration (FinLatticeField d N) =>
+        (a ^ d * ∑ x, ω (Pi.single x 1) * evalAtSite d N a f x) *
+        (a ^ d * ∑ x, ω (Pi.single x 1) * evalAtSite d N a f x)) =
+      fun ω => (ω h_f) ^ 2 := by
+    ext ω
+    exact hintegrand ω
+  rw [hintegrand_eq]
+  have hsecond :
+      ∫ ω : Configuration (FinLatticeField d N), ω h_f ^ 2
+        ∂latticeGaussianMeasure d N a mass ha hmass =
+      GaussianField.covariance T h_f h_f := by
+    simpa [T, latticeGaussianMeasure, GaussianField.covariance] using
+      (GaussianField.second_moment_eq_covariance T h_f)
+  rw [hsecond]
+  calc
+    GaussianField.covariance T h_f h_f
+      ≤ mass⁻¹ ^ 2 * ∑ x, h_f x ^ 2 :=
+        covariance_le_mass_inv_sq_norm d N a mass ha hmass h_f
+    _ = mass⁻¹ ^ 2 * (a ^ d * a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2) := by
         congr 1
-        rw [← Fintype.prod_sum
-          (fun _ => fun n : ZMod N =>
-            a / (1 + a * ((signedVal N n).natAbs : ℝ)) ^ 2)]
-    -- Bound each 1D sum by 3
-    _ ≤ S ^ 2 * 3 ^ d := by
+        simp only [h_f, mul_pow, ← Finset.mul_sum]
+        ring
+    _ = mass⁻¹ ^ 2 * (a ^ d * (a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2)) := by
+        ring_nf
+    _ ≤ mass⁻¹ ^ 2 * (1 * C_f) := by
+        apply mul_le_mul_of_nonneg_left _ (sq_nonneg _)
+        apply mul_le_mul _ (hC a ha ha_le N) (by positivity) (by positivity)
+        exact pow_le_one₀ (le_of_lt ha) ha_le
+    _ = mass⁻¹ ^ 2 * C_f := by ring
+
+/-- Polynomial diagonal bound for the lattice Green form on DM basis vectors. -/
+private theorem latticeGreenBilinear_basis_diag_bound [Fact (0 < d)]
+    (mass : ℝ) (hmass : 0 < mass) :
+    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (ha : 0 < a), a ≤ 1 →
+      ∀ (N : ℕ) [NeZero N],
+      latticeGreenBilinear d N a mass
+        (DyninMityaginSpace.basis i)
+        (DyninMityaginSpace.basis i) ≤
+          C * (1 + (i : ℝ)) ^ r := by
+  obtain ⟨C_f, hC_f_pos, r, hC_f⟩ := schwartz_riemann_sum_basis_bound (d := d)
+  refine ⟨mass⁻¹ ^ 2 * C_f, mul_pos (sq_pos_of_pos (inv_pos.mpr hmass)) hC_f_pos, r, ?_⟩
+  intro i a ha ha1 N _
+  have h :=
+    latticeGreenBilinear_diag_bound_of_riemann_bound
+    (d := d) (N := N) mass hmass
+    (DyninMityaginSpace.basis i)
+    (C_f * (1 + (i : ℝ)) ^ r)
+    (fun a ha ha1 N => hC_f i a ha ha1 N) a ha ha1
+  simpa [mul_assoc, mul_left_comm, mul_comm] using h
+
+/-- Cross terms are controlled by diagonal lattice Green terms via
+`2|xy| ≤ x² + y²` modewise in the spectral sum. -/
+private theorem latticeGreenBilinear_abs_le_half_diag_add_diag
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f g : ContinuumTestFunction d) :
+    |latticeGreenBilinear d N a mass f g| ≤
+      (latticeGreenBilinear d N a mass f f +
+        latticeGreenBilinear d N a mass g g) / 2 := by
+  let Af : FinLatticeSites d N → ℝ := fun k =>
+    ∑ x, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
+      latticeTestField d N a f x
+  let Ag : FinLatticeSites d N → ℝ := fun k =>
+    ∑ x, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
+      latticeTestField d N a g x
+  unfold latticeGreenBilinear
+  have hterm :
+      ∀ k : FinLatticeSites d N,
+        |(massEigenvalues d N a mass k)⁻¹ * Af k * Ag k| ≤
+          (massEigenvalues d N a mass k)⁻¹ * ((Af k) ^ 2 + (Ag k) ^ 2) / 2 := by
+    intro k
+    have hLambda_nonneg : 0 ≤ (massEigenvalues d N a mass k)⁻¹ := by
+      positivity [massOperatorMatrix_eigenvalues_pos d N a mass ha hmass k]
+    have hxy_abs : 2 * (|Af k| * |Ag k|) ≤ |Af k| ^ 2 + |Ag k| ^ 2 := by
+      nlinarith [sq_nonneg (|Af k| - |Ag k|)]
+    have hxy : 2 * (|Af k| * |Ag k|) ≤ (Af k) ^ 2 + (Ag k) ^ 2 := by
+      simpa [sq_abs] using hxy_abs
+    have hscaled :
+        (massEigenvalues d N a mass k)⁻¹ * (2 * (|Af k| * |Ag k|)) ≤
+          (massEigenvalues d N a mass k)⁻¹ * ((Af k) ^ 2 + (Ag k) ^ 2) := by
+      exact mul_le_mul_of_nonneg_left hxy hLambda_nonneg
+    have habs :
+        2 * |(massEigenvalues d N a mass k)⁻¹ * Af k * Ag k| =
+          (massEigenvalues d N a mass k)⁻¹ * (2 * (|Af k| * |Ag k|)) := by
+      rw [abs_mul, abs_mul, abs_of_nonneg hLambda_nonneg]
+      ring
+    have hscaled' : 2 * |(massEigenvalues d N a mass k)⁻¹ * Af k * Ag k| ≤
+        (massEigenvalues d N a mass k)⁻¹ * ((Af k) ^ 2 + (Ag k) ^ 2) := by
+      rw [habs]
+      exact hscaled
+    have htwo_pos : (0 : ℝ) < 2 := by norm_num
+    nlinarith
+  calc
+    |∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Af k * Ag k|
+      ≤ ∑ k : FinLatticeSites d N,
+          |(massEigenvalues d N a mass k)⁻¹ * Af k * Ag k| := by
+            exact Finset.abs_sum_le_sum_abs (f := fun k : FinLatticeSites d N =>
+              (massEigenvalues d N a mass k)⁻¹ * Af k * Ag k) (s := Finset.univ)
+    _ ≤ ∑ k : FinLatticeSites d N,
+          (massEigenvalues d N a mass k)⁻¹ * ((Af k) ^ 2 + (Ag k) ^ 2) / 2 := by
+            exact Finset.sum_le_sum fun k _ => hterm k
+    _ = ((∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Af k * Af k) +
+          (∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k)) / 2 := by
+        rw [show (fun k : FinLatticeSites d N =>
+            (massEigenvalues d N a mass k)⁻¹ * ((Af k) ^ 2 + (Ag k) ^ 2) / 2) =
+            fun k => ((massEigenvalues d N a mass k)⁻¹ * Af k * Af k +
+              (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k) / 2 by
+              ext k; ring]
+        calc
+          ∑ k : FinLatticeSites d N,
+              ((massEigenvalues d N a mass k)⁻¹ * Af k * Af k +
+                (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k) / 2
+              = (1 / 2) * ∑ k : FinLatticeSites d N,
+                  ((massEigenvalues d N a mass k)⁻¹ * Af k * Af k +
+                    (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k) := by
+                    rw [Finset.mul_sum]
+                    congr 1
+                    ext k
+                    ring
+          _ = (1 / 2) *
+                ((∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Af k * Af k) +
+                  (∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k)) := by
+                    rw [Finset.sum_add_distrib]
+          _ = ((∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Af k * Af k) +
+                (∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k)) / 2 := by
+                    ring
+/-- Eventual polynomial basis-pair bound for the lattice Green form along any
+continuum-limit sequence `a_n → 0`. -/
+private theorem latticeGreenBilinear_basis_eventually_bound [Fact (0 < d)]
+    (mass : ℝ) (hmass : 0 < mass)
+    (a_seq : ℕ → ℝ) (ha_pos : ∀ n, 0 < a_seq n)
+    (ha_lim : Tendsto a_seq atTop (nhds 0))
+    (N_seq : ℕ → ℕ) [∀ n, NeZero (N_seq n)] :
+    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ,
+      ∀ᶠ n in atTop, ∀ i j,
+        |latticeGreenBilinear d (N_seq n) (a_seq n) mass
+          (DyninMityaginSpace.basis i)
+          (DyninMityaginSpace.basis j)| ≤
+            C * (1 + (i : ℝ)) ^ r * (1 + (j : ℝ)) ^ r := by
+  obtain ⟨C, hC_pos, r, hdiag⟩ := latticeGreenBilinear_basis_diag_bound (d := d) mass hmass
+  have ha_le_one : ∀ᶠ n in atTop, a_seq n ≤ 1 := by
+    have hmem : Set.Iic (1 : ℝ) ∈ nhds (0 : ℝ) :=
+      Iic_mem_nhds (show (0 : ℝ) < 1 by norm_num)
+    exact ha_lim hmem
+  refine ⟨C, hC_pos, r, ?_⟩
+  filter_upwards [ha_le_one] with n hn i j
+  have hii := hdiag i (a_seq n) (ha_pos n) hn (N_seq n)
+  have hjj := hdiag j (a_seq n) (ha_pos n) hn (N_seq n)
+  have hcross :=
+    latticeGreenBilinear_abs_le_half_diag_add_diag
+      (d := d) (N := N_seq n) (a := a_seq n) (mass := mass)
+      (ha := ha_pos n) (hmass := hmass)
+      (DyninMityaginSpace.basis i) (DyninMityaginSpace.basis j)
+  have hpow_i_nonneg : 0 ≤ (1 + (i : ℝ)) ^ r := by positivity
+  have hpow_j_nonneg : 0 ≤ (1 + (j : ℝ)) ^ r := by positivity
+  have hsum_le_prod :
+      (C * (1 + (i : ℝ)) ^ r + C * (1 + (j : ℝ)) ^ r) / 2 ≤
+        C * (1 + (i : ℝ)) ^ r * (1 + (j : ℝ)) ^ r := by
+    have hi_one : 1 ≤ (1 + (i : ℝ)) ^ r := by
+      apply one_le_pow₀
+      linarith
+    have hj_one : 1 ≤ (1 + (j : ℝ)) ^ r := by
+      apply one_le_pow₀
+      linarith
+    have hleft :
+        C * (1 + (i : ℝ)) ^ r ≤ C * (1 + (i : ℝ)) ^ r * (1 + (j : ℝ)) ^ r := by
+      calc
+        C * (1 + (i : ℝ)) ^ r = C * (1 + (i : ℝ)) ^ r * 1 := by ring
+        _ ≤ C * (1 + (i : ℝ)) ^ r * (1 + (j : ℝ)) ^ r := by
+            exact mul_le_mul_of_nonneg_left hj_one
+              (mul_nonneg (le_of_lt hC_pos) hpow_i_nonneg)
+    have hright :
+        C * (1 + (j : ℝ)) ^ r ≤ C * (1 + (i : ℝ)) ^ r * (1 + (j : ℝ)) ^ r := by
+      calc
+        C * (1 + (j : ℝ)) ^ r = 1 * (C * (1 + (j : ℝ)) ^ r) := by ring
+        _ ≤ (1 + (i : ℝ)) ^ r * (C * (1 + (j : ℝ)) ^ r) := by
+            exact mul_le_mul_of_nonneg_right hi_one
+              (mul_nonneg (le_of_lt hC_pos) hpow_j_nonneg)
+        _ = C * (1 + (i : ℝ)) ^ r * (1 + (j : ℝ)) ^ r := by ring
+    have hsum :
+        C * (1 + (i : ℝ)) ^ r + C * (1 + (j : ℝ)) ^ r ≤
+          2 * (C * (1 + (i : ℝ)) ^ r * (1 + (j : ℝ)) ^ r) := by
+      linarith
+    nlinarith [hsum]
+  calc
+    |latticeGreenBilinear d (N_seq n) (a_seq n) mass
+      (DyninMityaginSpace.basis i)
+      (DyninMityaginSpace.basis j)|
+      ≤ (latticeGreenBilinear d (N_seq n) (a_seq n) mass
+            (DyninMityaginSpace.basis i)
+            (DyninMityaginSpace.basis i) +
+          latticeGreenBilinear d (N_seq n) (a_seq n) mass
+            (DyninMityaginSpace.basis j)
+            (DyninMityaginSpace.basis j)) / 2 := hcross
+    _ ≤ (C * (1 + (i : ℝ)) ^ r + C * (1 + (j : ℝ)) ^ r) / 2 := by
         gcongr
-        rw [show (3 : ℝ) ^ d = ∏ _i : Fin d, (3 : ℝ)
-          from by simp [Finset.prod_const]]
-        exact Finset.prod_le_prod
-          (fun i _ => Finset.sum_nonneg
-            (fun n _ => div_nonneg
-              (le_of_lt ha) (sq_nonneg _)))
-          (fun i _ => one_d_zmod_bound N a ha ha1)
+    _ ≤ C * (1 + (i : ℝ)) ^ r * (1 + (j : ℝ)) ^ r := hsum_le_prod
+
+/-! ### Right-continuous bilinear forms for the DM extension theorem -/
+
+private noncomputable def continuumEvalCLM (x : EuclideanSpace ℝ (Fin d)) :
+    ContinuumTestFunction d →L[ℝ] ℝ :=
+  SchwartzMap.mkCLMtoNormedSpace (fun f => f x)
+    (fun f g => by simp [SchwartzMap.add_apply])
+    (fun a f => by simp [SchwartzMap.smul_apply])
+    ⟨{(0, 0)}, 1, zero_le_one, fun f => by
+      simp only [one_mul, Finset.sup_singleton, SchwartzMap.schwartzSeminormFamily_apply]
+      exact SchwartzMap.norm_le_seminorm ℝ f x⟩
+
+@[simp] private theorem continuumEvalCLM_apply
+    (x : EuclideanSpace ℝ (Fin d)) (f : ContinuumTestFunction d) :
+    continuumEvalCLM (d := d) x f = f x := by
+  simp [continuumEvalCLM, SchwartzMap.mkCLMtoNormedSpace]
+
+private noncomputable def latticeModeCoeffCLM (a mass : ℝ)
+    (k : FinLatticeSites d N) :
+    ContinuumTestFunction d →L[ℝ] ℝ :=
+  ∑ x : FinLatticeSites d N,
+    (a ^ d * (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) •
+      continuumEvalCLM (d := d) (physicalPosition d N a x)
+
+@[simp] private theorem latticeModeCoeffCLM_apply
+    (a mass : ℝ) (k : FinLatticeSites d N) (f : ContinuumTestFunction d) :
+    latticeModeCoeffCLM (d := d) (N := N) a mass k f =
+      ∑ x : FinLatticeSites d N,
+        (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
+          latticeTestField d N a f x := by
+  simp [latticeModeCoeffCLM, latticeTestField, evalAtSite, continuumEvalCLM_apply, smul_eq_mul,
+    mul_assoc]
+  apply Finset.sum_congr rfl
+  intro x hx
+  ring
+
+private noncomputable def latticeGreenBilinearRightCLM
+    (a mass : ℝ) (f : ContinuumTestFunction d) :
+    ContinuumTestFunction d →L[ℝ] ℝ :=
+  ∑ k : FinLatticeSites d N,
+    ((massEigenvalues d N a mass k)⁻¹ *
+      (∑ x, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
+        latticeTestField d N a f x)) •
+      latticeModeCoeffCLM (d := d) (N := N) a mass k
+
+@[simp] private theorem latticeGreenBilinearRightCLM_apply
+    (a mass : ℝ) (f g : ContinuumTestFunction d) :
+    latticeGreenBilinearRightCLM (d := d) (N := N) a mass f g =
+      latticeGreenBilinear d N a mass f g := by
+  simp [latticeGreenBilinearRightCLM, latticeGreenBilinear, latticeModeCoeffCLM_apply, mul_assoc,
+    mul_left_comm, mul_comm]
+
+private theorem latticeGreenBilinear_symm
+    (a mass : ℝ) (f g : ContinuumTestFunction d) :
+    latticeGreenBilinear d N a mass f g =
+      latticeGreenBilinear d N a mass g f := by
+  unfold latticeGreenBilinear
+  congr 1
+  ext k
+  ring
+
+private def continuumKernel (mass : ℝ) :
+    EuclideanSpace ℝ (Fin d) → ℝ :=
+  fun k =>
+    (2 * Real.pi) ^ (-(d : ℤ)) / (‖k‖ ^ 2 + mass ^ 2)
+
+private theorem continuumKernel_eq_scaled (mass : ℝ) (hmass : 0 < mass) :
+    continuumKernel d mass =
+      fun k =>
+        (2 * Real.pi) ^ (-(d : ℤ)) * mass⁻¹ ^ 2 *
+          (1 + ‖(mass⁻¹ : ℝ) • k‖ ^ 2) ^ (-1 : ℝ) := by
+  funext k
+  have hmass_ne : mass ≠ 0 := ne_of_gt hmass
+  have hnorm : ‖(mass⁻¹ : ℝ) • k‖ ^ 2 = mass⁻¹ ^ 2 * ‖k‖ ^ 2 := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.mpr hmass)]
+    ring
+  unfold continuumKernel
+  rw [hnorm]
+  have haux : 1 + mass⁻¹ ^ 2 * ‖k‖ ^ 2 = (mass ^ 2 + ‖k‖ ^ 2) / mass ^ 2 := by
+    field_simp [hmass_ne]
+  rw [haux]
+  field_simp [hmass_ne]
+  ring_nf
+
+private theorem continuumKernel_hasTemperateGrowth (mass : ℝ) (hmass : 0 < mass) :
+    (continuumKernel d mass).HasTemperateGrowth := by
+  rw [continuumKernel_eq_scaled (d := d) mass hmass]
+  have hconst :
+      (fun _ : EuclideanSpace ℝ (Fin d) =>
+        (2 * Real.pi) ^ (-(d : ℤ)) * mass⁻¹ ^ 2).HasTemperateGrowth := by
+    fun_prop
+  have hbase :
+      (fun x : EuclideanSpace ℝ (Fin d) => (1 + ‖x‖ ^ 2) ^ (-1 : ℝ)).HasTemperateGrowth := by
+    fun_prop
+  have hscale :
+      (fun k : EuclideanSpace ℝ (Fin d) => (mass⁻¹ : ℝ) • k).HasTemperateGrowth := by
+    fun_prop
+  exact hconst.mul (hbase.comp hscale)
+
+private def continuumGreenWeight (mass : ℝ) (f : ContinuumTestFunction d) :
+    EuclideanSpace ℝ (Fin d) → ℝ :=
+  fun k => continuumKernel d mass k * f k
+
+private theorem continuumGreenWeight_hasTemperateGrowth
+    (mass : ℝ) (hmass : 0 < mass) (f : ContinuumTestFunction d) :
+    (continuumGreenWeight d mass f).HasTemperateGrowth := by
+  unfold continuumGreenWeight
+  exact (continuumKernel_hasTemperateGrowth (d := d) mass hmass).mul f.hasTemperateGrowth
+
+private noncomputable def continuumGreenBilinearRightCLM
+    (mass : ℝ) (hmass : 0 < mass) (f : ContinuumTestFunction d) :
+    ContinuumTestFunction d →L[ℝ] ℝ :=
+  (SchwartzMap.integralCLM ℝ
+      (volume : Measure (EuclideanSpace ℝ (Fin d)))).comp
+    (SchwartzMap.smulLeftCLM ℝ (continuumGreenWeight d mass f))
+
+@[simp] private theorem continuumGreenBilinearRightCLM_apply
+    (mass : ℝ) (hmass : 0 < mass) (f g : ContinuumTestFunction d) :
+    continuumGreenBilinearRightCLM (d := d) mass hmass f g =
+      continuumGreenBilinear d mass f g := by
+  rw [continuumGreenBilinearRightCLM, ContinuousLinearMap.comp_apply, SchwartzMap.integralCLM_apply,
+    SchwartzMap.smulLeftCLM_apply (continuumGreenWeight_hasTemperateGrowth (d := d) mass hmass f)]
+  unfold continuumGreenWeight continuumGreenBilinear continuumKernel
+  have hpointwise :
+      (fun x : EuclideanSpace ℝ (Fin d) =>
+        ((2 * Real.pi) ^ (-(d : ℤ)) / (‖x‖ ^ 2 + mass ^ 2) * f x) • g x) =
+      fun x => (2 * Real.pi) ^ (-(d : ℤ)) * (f x * g x / (‖x‖ ^ 2 + mass ^ 2)) := by
+    funext x
+    have hden : ‖x‖ ^ 2 + mass ^ 2 ≠ 0 := by
+      nlinarith [sq_nonneg ‖x‖, sq_pos_of_pos hmass]
+    simp [smul_eq_mul]
+    field_simp [hden]
+  rw [hpointwise, integral_const_mul]
+  rfl
+
+private theorem continuumGreenBilinear_symm
+    (mass : ℝ) (f g : ContinuumTestFunction d) :
+    continuumGreenBilinear d mass f g =
+      continuumGreenBilinear d mass g f := by
+  unfold continuumGreenBilinear
+  congr 1
+  apply integral_congr_ae
+  filter_upwards with k
+  ring
+
+/-- Extend basis-pair convergence of the lattice Green form to arbitrary
+Schwartz test functions via the generic Dynin-Mityagin bilinear theorem. -/
+theorem latticeGreenBilinear_tendsto_continuum [Fact (0 < d)]
+    (mass : ℝ) (hmass : 0 < mass)
+    (f g : ContinuumTestFunction d)
+    (a_seq : ℕ → ℝ) (ha_pos : ∀ n, 0 < a_seq n)
+    (ha_lim : Tendsto a_seq atTop (nhds 0))
+    (N_seq : ℕ → ℕ) [∀ n, NeZero (N_seq n)]
+    (hNa : Tendsto (fun n => (N_seq n : ℝ) * a_seq n) atTop atTop) :
+    Tendsto
+      (fun n => latticeGreenBilinear d (N_seq n) (a_seq n) mass f g)
+      atTop
+      (nhds (continuumGreenBilinear d mass f g)) := by
+  obtain ⟨C, hC_pos, r, hbound⟩ :=
+    latticeGreenBilinear_basis_eventually_bound (d := d) mass hmass a_seq ha_pos ha_lim N_seq
+  simpa [latticeGreenBilinearRightCLM_apply, continuumGreenBilinearRightCLM_apply] using
+    (GaussianField.tendsto_of_symmetric_basis_tendsto
+      (l := atTop)
+      (B_seq := fun n f =>
+        latticeGreenBilinearRightCLM (d := d) (N := N_seq n) (a := a_seq n) (mass := mass) f)
+      (B := fun f => continuumGreenBilinearRightCLM (d := d) (mass := mass) hmass f)
+      (h_symm_seq := by
+        intro n f g
+        simpa [latticeGreenBilinearRightCLM_apply] using latticeGreenBilinear_symm
+          (d := d) (N := N_seq n) (a := a_seq n) (mass := mass) f g)
+      (h_symm := by
+        intro f g
+        simpa [continuumGreenBilinearRightCLM_apply] using
+          continuumGreenBilinear_symm (d := d) (mass := mass) f g)
+      (h_basis_bound := by
+        refine ⟨C, hC_pos, r, r, ?_⟩
+        filter_upwards [hbound] with n hn i j
+        simpa [latticeGreenBilinearRightCLM_apply] using hn i j)
+      (h_basis_tendsto := by
+        intro i j
+        simpa [latticeGreenBilinearRightCLM_apply, continuumGreenBilinearRightCLM_apply] using
+          latticeGreenBilinear_basis_tendsto_continuum
+            (d := d) mass hmass a_seq ha_pos ha_lim N_seq hNa i j)
+      f g)
+
+/-- The original propagator-convergence statement, now proved by combining the
+spectral rewrite with the generic Dynin-Mityagin bilinear extension theorem. -/
+theorem propagator_convergence [Fact (0 < d)]
+    (mass : ℝ) (hmass : 0 < mass)
+    (f g : ContinuumTestFunction d)
+    (a_seq : ℕ → ℝ) (ha_pos : ∀ n, 0 < a_seq n)
+    (ha_lim : Tendsto a_seq atTop (nhds 0))
+    (N_seq : ℕ → ℕ) [∀ n, NeZero (N_seq n)]
+    (hNa : Tendsto (fun n => (N_seq n : ℝ) * a_seq n) atTop atTop) :
+    Tendsto
+      (fun n => embeddedTwoPoint d (N_seq n) (a_seq n) mass (ha_pos n) hmass f g)
+      atTop
+      (nhds (continuumGreenBilinear d mass f g)) := by
+  have hgreen := latticeGreenBilinear_tendsto_continuum
+    (d := d) (mass := mass) hmass f g a_seq ha_pos ha_lim N_seq hNa
+  simpa [embeddedTwoPoint_eq_latticeGreenBilinear] using hgreen
 
 theorem embeddedTwoPoint_uniform_bound (mass : ℝ) (hmass : 0 < mass)
     (f : ContinuumTestFunction d) :

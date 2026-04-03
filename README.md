@@ -320,6 +320,14 @@ cd pphi2
 lake build
 ```
 
+### Continuous integration
+
+Pull requests and pushes to `main` run [GitHub Actions](.github/workflows/ci.yml)
+using [leanprover/lean-action](https://github.com/leanprover/lean-action): install
+the toolchain from `lean-toolchain`, optionally `lake exe cache get` for Mathlib,
+then `lake build`. Workflow YAML is checked with [actionlint](.github/workflows/actionlint.yml).
+[Dependabot](.github/dependabot.yml) proposes weekly updates for action versions.
+
 ## Documentation
 
 ### Expository

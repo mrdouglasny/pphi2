@@ -76,7 +76,9 @@ Extends Route B to T_{Lt,Ls} with different circle sizes per direction.
 Note: Two axioms are `private`: `fourier_representation_convolution` (GaussianFourier)
 and `gaussian_rp_cov_perfect_square` (OS3_RP_Lattice).
 `schwartz_riemann_sum_bound` (PropagatorConvergence) was proved via Schwartz decay +
-telescoping sum bound.
+telescoping sum bound. The remaining Gaussian propagator debt is now isolated in the
+spectral axiom `latticeGreenBilinear_tendsto_continuum`; `propagator_convergence`
+itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 
 `schwinger2_convergence` was proved from
 `schwinger_n_convergence`, and `pphi2_nonGaussianity` from `continuumLimit_nonGaussian`.
@@ -112,7 +114,7 @@ telescoping sum bound.
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | **0 axioms, 0 sorries** (os3_inheritance removed; OS3 now in OS2_WardIdentity) |
 | 4 | `ContinuumLimit/RPTransfer.lean` | 0 axioms, 0 sorries (intertwining proved, signedVal) |
 | 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 0 sorries |
-| 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`schwartz_riemann_sum_bound` proved) |
+| 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`propagator_convergence` now theorem; remaining axiom is `latticeGreenBilinear_tendsto_continuum`) |
 | 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 0 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/GaussianLimit.lean` | 0 axioms, 0 sorries |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 6 axioms |
@@ -392,25 +394,27 @@ refactoring (functionality consolidated into L2Operator axioms).
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `propagator_convergence` | PropagatorConvergence | Medium | Lattice Riemann sum of Green's function → continuum Fourier integral. Dominated convergence + Schwartz decay. |
+| `latticeGreenBilinear_tendsto_continuum` | PropagatorConvergence | Medium | Spectral lattice Green bilinear on discretized Schwartz functions → continuum Fourier Green bilinear. `propagator_convergence` is now derived via `embeddedTwoPoint_eq_latticeGreenBilinear`. |
 | ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED for `d > 0`** | Tightness via `configuration_tight_of_uniform_second_moments` + integrability through lattice embedding. The excluded `d = 0` case is a separate Dynin-Mityagin / Schwartz-space infrastructure issue. |
-| `gaussianLimit_isGaussian` | GaussianLimit | Medium | Weak limits of Gaussian measures are Gaussian. Bochner-Minlos + pointwise convergence of characteristic functionals. |
+| ~~`gaussianLimit_isGaussian`~~ | GaussianLimit | **PROVED** | Weak limits of Gaussian measures are Gaussian. Proved via 1D evaluation marginals and `weakLimit_centered_gaussianReal`. |
 
 **Proved theorems (GaussianContinuumLimit/):**
 - `gaussianContinuumMeasure_isProbability`: Pushforward of probability measure is probability.
 - `embeddedTwoPoint_eq_covariance`: Change-of-variables reducing pushforward integral to lattice GFF.
+- `embeddedTwoPoint_eq_latticeGreenBilinear`: Canonical reduction of the embedded two-point function to the lattice spectral Green bilinear form.
+- `embeddedTwoPoint_eq_spectral_sum`: Explicit spectral-sum form of the same reduction.
+- `propagator_convergence`: Now a theorem, deduced from `embeddedTwoPoint_eq_latticeGreenBilinear` and the deeper spectral convergence axiom.
 - `gaussian_second_moment_uniform`: Uniform second moment bound from `embeddedTwoPoint_uniform_bound`.
 - `gaussianContinuumLimit_exists`: Subsequential weak limit via Prokhorov extraction.
 - `gaussianContinuumLimit_nontrivial`: `∫ (ω f)² dμ > 0` from `continuumGreenBilinear_pos`.
 - `gaussian_feeds_interacting_tightness`: Bridge — Gaussian bound feeds Cauchy-Schwarz density transfer.
 - `gaussianContinuumMeasures_tight`: Tightness of embedded GFF measures via `configuration_tight_of_uniform_second_moments`, now proved for `d > 0`.
+- `gaussianLimit_isGaussian`: Weak limits of the embedded Gaussian measures are Gaussian.
 - `gaussianContinuumMeasure_sq_integrable`: Integrability of `(ω f)²` through lattice embedding via `pairing_product_integrable`.
 
-**Sorries (provable):**
-- `embeddedTwoPoint_eq_latticeSum`: Pushforward integral → lattice double sum (Fubini + Gaussian integration).
-- `embeddedTwoPoint_uniform_bound`: `E[Φ_a(f)²] ≤ C` from eigenvalue bound + Riemann sum.
+**Open work in this slice:**
+- `latticeGreenBilinear_tendsto_continuum`: remaining analytic convergence core for the Gaussian continuum route.
 - Optional full generality for `gaussianContinuumMeasures_tight` (`d = 0` case): add a dedicated `DyninMityaginSpace (ContinuumTestFunction 0)` instance, then audit `GaussianLimit.lean` and `ContinuumLimit/Convergence.lean` for other `d > 0` dependencies.
-- `continuumGreenBilinear_pos`: `G(f,f) > 0` from Fourier injectivity on Schwartz space.
 
 Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially since |cos(·)| ≤ 1.
 
@@ -715,7 +719,7 @@ infrastructure. Assessment date: 2026-03-04.
 |-------|------|----------|
 | ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** from `fourier_representation_convolution` axiom. |
 | `fourier_representation_convolution` | GaussianFourier | L² Fourier representation identity. Schwartz density + L² convolution theorem (not yet in Mathlib). |
-| `propagator_convergence` | PropagatorConvergence | Lattice Riemann sum → continuum Fourier integral on ℝ^d. Dominated convergence + Schwartz decay. |
+| `latticeGreenBilinear_tendsto_continuum` | PropagatorConvergence | Spectral lattice Green bilinear → continuum Fourier Green bilinear on ℝ^d. Dominated convergence + Schwartz decay. |
 | `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Super-renormalizability gives a² Ward identity bound. No log corrections in d=2. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Fernique + Nelson hypercontractive estimate transferred to limit. |

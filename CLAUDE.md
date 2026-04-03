@@ -19,6 +19,9 @@ lake build
 The project depends on [gaussian-field](https://github.com/mrdouglasny/gaussian-field)
 (expected at `../gaussian-field`) and Mathlib (fetched automatically by lake).
 
+CI: `.github/workflows/ci.yml` runs `lake build` on PRs and pushes to `main` via
+[leanprover/lean-action](https://github.com/leanprover/lean-action).
+
 ## Status Tracking
 
 After finishing a work sequence (proving axioms, eliminating sorries, or any

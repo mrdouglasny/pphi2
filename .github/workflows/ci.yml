@@ -1,0 +1,32 @@
+# Continuous integration: build the default Lake targets on every PR and on pushes to main.
+# Uses the official https://github.com/leanprover/lean-action (same stack as `lake new` templates).
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: lake build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lean toolchain + Lake build
+        uses: leanprover/lean-action@v1
+        with:
+          # `auto-config` (default): run `lake build`; run `lake test` / `lake lint` only if configured.
+          # Compile-time Mathlib linters still run during `lake build` via `weak.linter.mathlibStandardSet`.
+          use-mathlib-cache: auto

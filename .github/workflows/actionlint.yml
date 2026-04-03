@@ -1,0 +1,28 @@
+# Validate workflow YAML (syntax + GitHub Actions best practices).
+# https://github.com/rhysd/actionlint
+
+name: actionlint
+
+on:
+  pull_request:
+    paths:
+      - ".github/**"
+  push:
+    branches: [main]
+    paths:
+      - ".github/**"
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install actionlint
+        run: bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash)
+
+      - name: Run actionlint
+        run: ./actionlint -color
