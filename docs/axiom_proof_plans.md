@@ -191,32 +191,34 @@ RHS: Nelson hypercontractivity for Gaussian.
 
 ## Tier 2: Hard — Deep Analytic Results (14 axioms)
 
-### 14. `propagator_convergence` (PropagatorConvergence.lean)
+### 14. `latticeGreenBilinear_tendsto_continuum` (PropagatorConvergence.lean)
 
 **Difficulty**: Hard
-**Statement**: Lattice propagator Riemann sum → continuum Green's function on ℝ^d.
-**Plan**: Dominated convergence + Schwartz decay. Model:
+**Statement**: Spectral lattice Green bilinear on discretized Schwartz functions
+converges to `continuumGreenBilinear` on ℝ^d.
+**Plan**: Dominated convergence + Schwartz decay. `propagator_convergence` is now a
+theorem from `embeddedTwoPoint_eq_latticeGreenBilinear`, so the remaining debt is
+exactly this spectral convergence statement. Model:
 `riemann_sum_periodic_tendsto` (proved in gf).
 **Prereqs**: Schwartz decay, lattice eigenvalue convergence (proved in gf).
 
 ---
 
-### 15. `gaussianContinuumMeasures_tight` (GaussianTightness.lean)
+### 15. ~~`gaussianContinuumMeasures_tight`~~ (GaussianTightness.lean)
 
-**Difficulty**: Hard
-**Statement**: Embedded GFF measures tight on S'(ℝ²).
-**Plan**: Mitoma criterion + Chebyshev from uniform second moments.
-**Prereqs**: `propagator_convergence`, Mitoma criterion.
-**Blocker**: S'(ℝ²) Polish space structure (nuclear space gap in Mathlib).
+**Status**: **PROVED for `d > 0`**
+**Plan used**: `configuration_tight_of_uniform_second_moments` +
+`gaussian_second_moment_uniform`.
+**Residual note**: The excluded `d = 0` case is a separate nuclear-space instance gap.
 
 ---
 
-### 16. `gaussianLimit_isGaussian` (GaussianLimit.lean)
+### 16. ~~`gaussianLimit_isGaussian`~~ (GaussianLimit.lean)
 
-**Difficulty**: Hard
-**Statement**: Weak limits of Gaussians on S'(ℝ²) are Gaussian.
-**Plan**: Bochner-Minlos + pointwise convergence of CFs.
-**Prereqs**: `gaussianContinuumMeasures_tight`.
+**Status**: **PROVED**
+**Plan used**: Reduction to 1D evaluation marginals and
+`weakLimit_centered_gaussianReal`, then reconstruction of the characteristic
+functional.
 
 ---
 

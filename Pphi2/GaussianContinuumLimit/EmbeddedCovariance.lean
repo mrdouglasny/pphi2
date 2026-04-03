@@ -91,6 +91,18 @@ def continuumGreenBilinear (mass : ℝ)
   ∫ k : EuclideanSpace ℝ (Fin d),
     f.toFun k * g.toFun k / (‖k‖ ^ 2 + mass ^ 2)
 
+/-- The lattice Green bilinear form evaluated on the discretizations of
+continuum test functions. This is the spectral representation of the embedded
+two-point function. -/
+def latticeGreenBilinear (a mass : ℝ)
+    (f g : ContinuumTestFunction d) : ℝ :=
+  ∑ k : FinLatticeSites d N,
+    (massEigenvalues d N a mass k)⁻¹ *
+    (∑ x, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
+      latticeTestField d N a f x) *
+    (∑ x, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
+      latticeTestField d N a g x)
+
 /-! ## Algebraic identities connecting the two-point functions -/
 
 /-- The embedded two-point function connects to the lattice Gaussian integral.
@@ -109,6 +121,22 @@ theorem embeddedTwoPoint_eq_covariance (a mass : ℝ) (ha : 0 < a) (hmass : 0 < 
     ((configuration_eval_measurable f).mul (configuration_eval_measurable g)
       |>.aestronglyMeasurable)]
   rfl
+
+/-- The embedded two-point function is the lattice Gaussian cross moment of the
+induced lattice test fields. -/
+theorem embeddedTwoPoint_eq_lattice_cross_moment (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f g : ContinuumTestFunction d) :
+    embeddedTwoPoint d N a mass ha hmass f g =
+    ∫ ω : Configuration (FinLatticeField d N),
+      ω (latticeTestField d N a f) * ω (latticeTestField d N a g)
+      ∂(latticeGaussianMeasure d N a mass ha hmass) := by
+  unfold embeddedTwoPoint gaussianContinuumMeasure
+  rw [integral_map (latticeEmbedLift_measurable d N a ha).aemeasurable
+    (((configuration_eval_measurable f).mul
+      (configuration_eval_measurable g)).aestronglyMeasurable)]
+  congr 1
+  ext ω
+  rw [latticeEmbedLift_eval_eq d N a ha f ω, latticeEmbedLift_eval_eq d N a ha g ω]
 
 theorem embeddedTwoPoint_eq_latticeSum (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (f g : ContinuumTestFunction d) :
@@ -175,6 +203,23 @@ theorem embeddedTwoPoint_eq_latticeSum (a mass : ℝ) (ha : 0 < a) (hmass : 0 < 
       (evalAtSite d N a f x * evalAtSite d N a g y) := by
     ext ω; ring
   rw [this, integral_mul_const, lattice_cross_moment d N a mass ha hmass]; ring
+
+/-- The embedded two-point function equals the lattice Green bilinear form. -/
+theorem embeddedTwoPoint_eq_latticeGreenBilinear (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f g : ContinuumTestFunction d) :
+    embeddedTwoPoint d N a mass ha hmass f g =
+    latticeGreenBilinear d N a mass f g := by
+  rw [embeddedTwoPoint_eq_lattice_cross_moment, lattice_cross_moment]
+  rw [lattice_covariance_eq_spectral]
+  rfl
+
+/-- The embedded two-point function equals the lattice spectral sum. -/
+theorem embeddedTwoPoint_eq_spectral_sum (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f g : ContinuumTestFunction d) :
+    embeddedTwoPoint d N a mass ha hmass f g =
+    latticeGreenBilinear d N a mass f g := by
+  simpa using embeddedTwoPoint_eq_latticeGreenBilinear
+    (d := d) (N := N) (a := a) (mass := mass) (ha := ha) (hmass := hmass) f g
 
 end Pphi2
 

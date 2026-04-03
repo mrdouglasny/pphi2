@@ -89,46 +89,10 @@ for polynomial functionals. This is already proved in gaussian-field
 (`gaussian_hypercontractive`). Here we state it in the continuum-embedded
 form used by the rest of the proof. -/
 
-/-- The lattice test function corresponding to a continuum test function f under
-the embedding: `g_f(x) = a^d * f(physicalPosition x)`.
-
-This is the element of `FinLatticeField d N` such that for any configuration
-`ω ∈ Configuration (FinLatticeField d N)`, we have
-  `(latticeEmbedLift ω)(f) = ω(g_f)`. -/
-private def embeddedTestFunction (a : ℝ) (f : ContinuumTestFunction d) :
-    FinLatticeField d N :=
-  fun x => a ^ d * f (physicalPosition d N a x)
-
-/-- Key identity: the continuum evaluation `(latticeEmbedLift ω)(f)` equals
-`ω(g_f)` where `g_f` is the embedded test function.
-
-This follows from linearity of ω: the embedding evaluates
-`a^d * Σ_x ω(e_x) * f(a·x)` which equals `ω(Σ_x a^d * f(a·x) * e_x) = ω(g_f)`. -/
-private theorem latticeEmbedLift_eval_eq (a : ℝ) (ha : 0 < a)
-    (ω : Configuration (FinLatticeField d N)) (f : ContinuumTestFunction d) :
-    (latticeEmbedLift d N a ha ω) f = ω (embeddedTestFunction d N a f) := by
-  -- LHS: (latticeEmbedLift ω)(f) = a^d * Σ_x ω(Pi.single x 1) * f(pos x)
-  -- RHS: ω(g_f) where g_f(y) = a^d * f(pos y)
-  -- By linearity of ω: ω(g_f) = ω(Σ_x g_f(x) • e_x) = Σ_x g_f(x) * ω(e_x)
-  -- Unfold definitions to get to raw sums
-  unfold latticeEmbedLift embeddedTestFunction
-  rw [latticeEmbed_eval]
-  simp only [latticeEmbedEval, evalAtSite]
-  -- Goal: a^d * Σ_x ω(e_x) * f(pos x) = ω(fun x => a^d * f(pos x))
-  -- Decompose target function as sum of basis vectors
-  have h_basis : (fun x : FinLatticeSites d N => a ^ d * f (physicalPosition d N a x)) =
-      ∑ x : FinLatticeSites d N,
-        (a ^ d * f (physicalPosition d N a x)) • Pi.single x (1 : ℝ) := by
-    ext1 y
-    simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul,
-      Pi.single_apply, mul_ite, mul_one, mul_zero]
-    classical
-    rw [Finset.sum_eq_single y (fun x _ hxy => if_neg (Ne.symm hxy))
-      (fun h => absurd (Finset.mem_univ y) h), if_pos rfl]
-  rw [h_basis, map_sum]
-  simp only [map_smul, smul_eq_mul]
-  rw [Finset.mul_sum]
-  congr 1; ext1 x; ring
+/- We use the generic embedding bridge from `Embedding.lean`, where
+`latticeTestField` is the discretization of a continuum test function and
+`latticeEmbedLift_eval_eq` identifies continuum evaluation with lattice
+configuration evaluation on that test field. -/
 
 /-- **Gaussian hypercontractivity** in continuum-embedded form.
 
@@ -171,9 +135,9 @@ theorem gaussian_hypercontractivity_continuum
   -- LHS: ∫ |ω f|^{pn} d(map ι μ) = ∫ |(ι ω) f|^{pn} dμ(ω)
   rw [integral_map hι hmeas_p, integral_map hι hmeas_2]
   -- Step 2: Use latticeEmbedLift_eval_eq to rewrite (ι ω) f = ω g_f
-  set g_f := embeddedTestFunction d N a f
+  set g_f := latticeTestField d N a f
   have h_eval : ∀ ω : Configuration (FinLatticeField d N),
-      (ι ω) f = ω g_f := fun ω => latticeEmbedLift_eval_eq d N a ha ω f
+      (ι ω) f = ω g_f := fun ω => latticeEmbedLift_eval_eq d N a ha f ω
   simp_rw [h_eval]
   -- Step 3: Apply gaussian_hypercontractive from gaussian-field
   -- μ = GaussianField.measure (latticeCovariance d N a mass ha hmass)
@@ -1262,7 +1226,7 @@ theorem interacting_moment_bound
   set ι := latticeEmbedLift d N a ha
   set bw := boltzmannWeight d N P a mass
   set Z := partitionFunction d N P a mass ha hmass
-  set g_f := embeddedTestFunction d N a f
+  set g_f := latticeTestField d N a f
   have hZ_pos : 0 < Z := partitionFunction_pos d N P a mass ha hmass
   have hZ_ge_one : 1 ≤ Z := partitionFunction_ge_one d N P mass hmass a ha
   have hι_meas : AEMeasurable ι μ_int :=
@@ -1270,7 +1234,7 @@ theorem interacting_moment_bound
   have hι_meas_gauss : AEMeasurable ι μ_GFF :=
     (latticeEmbedLift_measurable d N a ha).aemeasurable
   have h_eval : ∀ ω : Configuration (FinLatticeField d N),
-      (ι ω) f = ω g_f := fun ω => latticeEmbedLift_eval_eq d N a ha ω f
+      (ι ω) f = ω g_f := fun ω => latticeEmbedLift_eval_eq d N a ha f ω
   -- Step 1: Pull back LHS through integral_map
   -- LHS = ∫ |ω f|^{pn} d(map ι μ_int) = ∫ |(ι ω) f|^{pn} dμ_int
   have hmeas_lhs : AEStronglyMeasurable (fun (ω : Configuration (ContinuumTestFunction d)) =>

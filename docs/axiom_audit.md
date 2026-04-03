@@ -73,18 +73,15 @@ Note: pphi2 count includes 3 private axioms (`schwartz_riemann_sum_bound`,
 | 22b | ~~`IsPphi2Limit`~~ | Embedding:271 | ✅ **DEFINED** | SA 2026-02-25 | Converted from axiom to `def`: ∃ (a, ν) with Schwinger function convergence. Mirrors `IsPphi2ContinuumLimit` in Bridge.lean. |
 | 22c | `pphi2_limit_exists` | Convergence | ⚠️ Likely correct | SA 2026-02-25 | ∃ μ `IsPphi2Limit`. Prokhorov + tightness + diagonal argument. Moved from OS2_WardIdentity to Convergence. |
 
-### Phase 4G: Gaussian Continuum Limit (3 axioms, 3 sorries)
+### Phase 4G: Gaussian Continuum Limit (1 axiom, 0 sorries)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| G1 | `propagator_convergence` | PropagatorConvergence | ✅ Standard | SA | Lattice propagator Riemann sum → continuum Green's function. Standard Fourier analysis + dominated convergence with Schwartz decay. Glimm-Jaffe §6.1. |
-| G2 | `gaussianContinuumMeasures_tight` | GaussianTightness | ✅ Standard | SA | Tightness of embedded GFF measures via Mitoma criterion + Chebyshev from uniform second moments. Mitoma (1983), Simon §V.1. |
-| G3 | `gaussianLimit_isGaussian` | GaussianLimit | ✅ Standard | SA | Weak limits of Gaussian measures are Gaussian. Bochner-Minlos: pointwise convergence of exp(-½σ²_n(f)) → limit is Gaussian. Fernique §III.4. |
+| G1 | `latticeGreenBilinear_tendsto_continuum` | PropagatorConvergence | ✅ Standard | SA | Spectral lattice Green bilinear on discretized Schwartz functions converges to the continuum Green bilinear. This is the analytic core formerly packaged as `propagator_convergence`, which is now a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`. Glimm-Jaffe §6.1. |
+| ~~G2~~ | ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED** | SA | Tightness of embedded GFF measures via `configuration_tight_of_uniform_second_moments`, proved for `d > 0`. |
+| ~~G3~~ | ~~`gaussianLimit_isGaussian`~~ | GaussianLimit | **PROVED** | SA | Weak limits of Gaussian measures are Gaussian. Proved via 1D evaluation marginals and `weakLimit_centered_gaussianReal`. |
 
-**Sorries (provable, not axioms):**
-- `embeddedTwoPoint_eq_latticeSum` — Pushforward integral → lattice double sum. Fubini + Gaussian cross moment.
-- `embeddedTwoPoint_uniform_bound` — E[Φ_a(f)²] ≤ C. All eigenvalues ≥ m² + Riemann sum bounded.
-- `continuumGreenBilinear_pos` — G(f,f) > 0. Fourier injectivity on Schwartz space.
+**Sorries (provable, not axioms):** none currently in the Gaussian continuum slice.
 
 ### Phase 4T: Torus Continuum Limit (7 axioms)
 

@@ -128,6 +128,24 @@ where `a · x` is the physical position of lattice site x. -/
 def evalAtSite (a : ℝ) (f : ContinuumTestFunction d) (x : FinLatticeSites d N) : ℝ :=
   f (physicalPosition d N a x)
 
+/-- The lattice field induced by a continuum test function under the Riemann-sum
+embedding.
+
+This is the field whose pairing with a lattice configuration reproduces the
+evaluation of the embedded distribution on the test function:
+
+  `latticeTestField a f x = a^d · f(a · x)`. -/
+def latticeTestField (a : ℝ) (f : ContinuumTestFunction d) : FinLatticeField d N :=
+  fun x => a ^ d * evalAtSite d N a f x
+
+/-- The induced lattice test field expands in the delta basis. -/
+theorem latticeTestField_expand (a : ℝ) (f : ContinuumTestFunction d) :
+    latticeTestField d N a f =
+    ∑ x : FinLatticeSites d N, (latticeTestField d N a f) x • Pi.single x (1 : ℝ) := by
+  funext y
+  simp only [latticeTestField, Finset.sum_apply, Pi.smul_apply, smul_eq_mul, Pi.single_apply,
+    mul_ite, mul_one, mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
+
 /-- The lattice-to-continuum embedding sends a lattice field φ to
 a tempered distribution `ι_a(φ) ∈ S'(ℝ^d)` defined by:
 
@@ -251,6 +269,19 @@ def latticeEmbedLift (a : ℝ) (ha : 0 < a)
     (ω : Configuration (FinLatticeField d N)) :
     Configuration (ContinuumTestFunction d) :=
   latticeEmbed d N a ha (fun x => ω (Pi.single x 1))
+
+/-- Evaluating the lifted embedding on a test function equals evaluating the
+configuration on the induced lattice test field. -/
+theorem latticeEmbedLift_eval_eq (a : ℝ) (ha : 0 < a)
+    (f : ContinuumTestFunction d) (ω : Configuration (FinLatticeField d N)) :
+    (latticeEmbedLift d N a ha ω) f = ω (latticeTestField d N a f) := by
+  simp only [latticeEmbedLift, latticeEmbed_eval, latticeEmbedEval]
+  conv_rhs => rw [latticeTestField_expand d N a f, map_sum]
+  simp_rw [map_smul, latticeTestField, smul_eq_mul]
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro x _
+  ring
 
 /-- The lifted embedding is measurable.
 
