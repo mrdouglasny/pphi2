@@ -106,6 +106,7 @@ private lemma piCongrLeft_eq_comp_symm {N : ℕ}
     σ_equiv φ (σ_equiv.symm x)
   rwa [σ_equiv.apply_symm_apply] at h
 
+omit hL in
 /-- **Lattice interacting measure is invariant under site symmetries.**
 
 For a bijective site permutation `σ` that preserves the Gaussian density,
@@ -304,6 +305,7 @@ theorem interactingLatticeMeasure_symmetry_invariant
 private def latticeTranslateLM (N : ℕ) (j₁ j₂ : ℤ) :=
   latticeSitePermuteLM N (translateSites N j₁ j₂)
 
+omit hL in
 private theorem interactingLatticeMeasure_translation_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
     (ha : 0 < circleSpacing L N) (hmass : 0 < mass)
@@ -789,7 +791,8 @@ private theorem circleTranslation_continuous_in_s
     -- (continuous on compact), sSup < ε.
     -- Step 1: Bound each pointwise value
     have h_pw : ∀ x, ‖iteratedDeriv k
-        (↑(GaussianField.circleTranslation L s g - GaussianField.circleTranslation L s₀ g)) x‖ < ε := by
+          (↑(GaussianField.circleTranslation L s g -
+            GaussianField.circleTranslation L s₀ g)) x‖ < ε := by
       intro x
       -- The coercion ↑(T_s g - T_{s₀} g) is (fun y => g(y-s) - g(y-s₀))
       have h_coe : ∀ y, (↑(GaussianField.circleTranslation L s g -
@@ -986,7 +989,7 @@ theorem torusTranslation_continuous_in_v
           · exact hbnd₁ a
           · exact hbnd₂ b
       _ ≤ ↑C_pure * (D₁ * (1 + (m : ℝ)) ^ S₁) * (D₂ * (1 + (m : ℝ)) ^ S₂) := by
-          gcongr <;> exact pow_le_pow_left₀ (by positivity) (by assumption) _
+          gcongr
       _ = ↑C_pure * D₁ * D₂ * (1 + (m : ℝ)) ^ (S₁ + S₂) := by
           rw [pow_add]; ring
       _ ≤ ((↑C_pure + 1) * D₁ * D₂) * (1 + (m : ℝ)) ^ (S₁ + S₂) := by
@@ -1843,6 +1846,7 @@ private theorem massOperator_swap_commute (N : ℕ) [NeZero N] (a mass : ℝ)
 
 private def latticeSwapLM (N : ℕ) := latticeSitePermuteLM N (swapSites N)
 
+omit hL in
 private theorem interactingLatticeMeasure_swap_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
     (ha : 0 < circleSpacing L N) (hmass : 0 < mass)
@@ -2013,6 +2017,7 @@ private theorem massOperator_timeReflect_commute (N : ℕ) [NeZero N] (a mass : 
 /-- The lattice time-reflection linear map: `(L_refl g)(x) = g(timeReflectSites x)`. -/
 private def latticeTimeReflectLM (N : ℕ) := latticeSitePermuteLM N (timeReflectSites N)
 
+omit hL in
 private theorem interactingLatticeMeasure_timeReflection_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
     (ha : 0 < circleSpacing L N) (hmass : 0 < mass)

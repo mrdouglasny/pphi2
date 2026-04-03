@@ -181,7 +181,8 @@ theorem ContinuousOn.circleIntegral {f : ℂ → ℂ → E} {s : Set ℂ} (rp : 
     have comp : (fun t ↦ f x (circleMap c1 r t)) = uncurry f ∘ fun t ↦ (x, circleMap c1 r t) := by
       apply funext; intro t; simp
     simp; rw [comp]; apply ContinuousOn.comp fc
-    exact ContinuousOn.prodMk continuousOn_const (Continuous.continuousOn (continuous_circleMap _ _))
+    exact ContinuousOn.prodMk continuousOn_const
+      (Continuous.continuousOn (continuous_circleMap _ _))
     intro t _; simp; exact ⟨xs, by linarith⟩
     exact measurableSet_uIoc
   · apply MeasureTheory.ae_of_all _; intro t _; simp

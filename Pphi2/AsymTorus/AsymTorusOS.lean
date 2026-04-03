@@ -1742,14 +1742,17 @@ theorem asymGf_sub_norm_le_seminorm
       (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mpr
     have hbw_simp : ∀ ω : Configuration (FinLatticeField 2 N),
         (ENNReal.ofReal (bw ω)).toReal = bw ω :=
-      fun ω => ENNReal.toReal_ofReal (le_of_lt (boltzmannWeight_pos 2 N P (asymGeomSpacing Lt Ls N) mass ω))
+      fun ω => ENNReal.toReal_ofReal
+        (le_of_lt (boltzmannWeight_pos 2 N P (asymGeomSpacing Lt Ls N) mass ω))
     simp_rw [hbw_simp]
     apply ((pairing_memLp T gf 2).integrable_sq.mul_const (Real.exp Bb)).mono
     · exact ((configuration_eval_measurable gf).pow_const 2).aestronglyMeasurable.mul
-        (interactionFunctional_measurable 2 N P (asymGeomSpacing Lt Ls N) mass).neg.exp.aestronglyMeasurable
+        (Measurable.aestronglyMeasurable
+          (interactionFunctional_measurable 2 N P (asymGeomSpacing Lt Ls N) mass).neg.exp)
     · exact Filter.Eventually.of_forall fun ω => by
         simp only [Real.norm_eq_abs]
-        rw [abs_of_nonneg (mul_nonneg (sq_nonneg _) (le_of_lt (boltzmannWeight_pos 2 N P _ mass ω))),
+        rw [abs_of_nonneg (mul_nonneg (sq_nonneg _)
+              (le_of_lt (boltzmannWeight_pos 2 N P _ mass ω))),
             abs_of_nonneg (mul_nonneg (sq_nonneg _) (le_of_lt (Real.exp_pos Bb)))]
         exact mul_le_mul_of_nonneg_left (Real.exp_le_exp_of_le (by linarith [hBb ω])) (sq_nonneg _)
   -- Push interacting second moment through torus embedding
@@ -2004,7 +2007,7 @@ theorem asymTorusTranslation_continuous_in_v
           · exact hbnd₁ a
           · exact hbnd₂ b
       _ ≤ ↑C_pure * (D₁ * (1 + (m : ℝ)) ^ S₁) * (D₂ * (1 + (m : ℝ)) ^ S₂) := by
-          gcongr <;> exact pow_le_pow_left₀ (by positivity) (by assumption) _
+          gcongr
       _ = ↑C_pure * D₁ * D₂ * (1 + (m : ℝ)) ^ (S₁ + S₂) := by
           rw [pow_add]; ring
       _ ≤ ((↑C_pure + 1) * D₁ * D₂) * (1 + (m : ℝ)) ^ (S₁ + S₂) := by

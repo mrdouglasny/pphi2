@@ -129,9 +129,13 @@ theorem wickMonomial_add_binomial (n : ℕ) (c₁ c₂ x y : ℝ) :
             (wickMonomial (n + 1 - i + 1) c₂ y +
              ↑(n + 1 - i) * c₂ * wickMonomial (n + 1 - i - 1) c₂ y) := by
         intro i _
-        rw [show (x + y) * (↑((n + 1).choose i) * wickMonomial i c₁ x * wickMonomial (n + 1 - i) c₂ y) =
-              ↑((n + 1).choose i) * (x * wickMonomial i c₁ x) * wickMonomial (n + 1 - i) c₂ y +
-              ↑((n + 1).choose i) * wickMonomial i c₁ x * (y * wickMonomial (n + 1 - i) c₂ y) from by ring]
+        have hrw : (x + y) * (↑((n + 1).choose i) * wickMonomial i c₁ x *
+              wickMonomial (n + 1 - i) c₂ y) =
+            ↑((n + 1).choose i) * (x * wickMonomial i c₁ x) *
+              wickMonomial (n + 1 - i) c₂ y +
+            ↑((n + 1).choose i) * wickMonomial i c₁ x *
+              (y * wickMonomial (n + 1 - i) c₂ y) := by ring
+        rw [hrw]
         rw [wickMonomial_mul_left i, wickMonomial_mul_left (n + 1 - i)]
       rw [Finset.sum_congr rfl key]; clear key ih
       -- After applying the Wick recurrence to each term, we have 4 sub-sums:
@@ -223,12 +227,25 @@ theorem wickMonomial_add_binomial (n : ℕ) (c₁ c₂ x y : ℝ) :
         --     = A + C + [(n+1)c₁S₂ + (n+1)c₂S₂ - nc₁S₂ - c₁S₂ - nc₂S₂ - c₂S₂]
         --     = A + C + 0 = A + C
         have hcancel :
-          ∑ i ∈ range (n + 1), (↑n + 1) * c₁ * (↑(n.choose i) * wickMonomial i c₁ x * wickMonomial (n - i) c₂ y) +
-          ∑ i ∈ range (n + 1), (↑n + 1) * c₂ * (↑(n.choose i) * wickMonomial i c₁ x * wickMonomial (n - i) c₂ y) =
-          ∑ x_1 ∈ range (n + 1), ↑n * c₁ * (↑(n.choose x_1) * wickMonomial x_1 c₁ x * wickMonomial (n - x_1) c₂ y) +
-            ∑ x_1 ∈ range (n + 1), 1 * c₁ * (↑(n.choose x_1) * wickMonomial x_1 c₁ x * wickMonomial (n - x_1) c₂ y) +
-          (∑ x_1 ∈ range (n + 1), ↑n * c₂ * (↑(n.choose x_1) * wickMonomial x_1 c₁ x * wickMonomial (n - x_1) c₂ y) +
-            ∑ x_1 ∈ range (n + 1), 1 * c₂ * (↑(n.choose x_1) * wickMonomial x_1 c₁ x * wickMonomial (n - x_1) c₂ y)) := by
+          ∑ i ∈ range (n + 1),
+              (↑n + 1) * c₁ *
+              (↑(n.choose i) * wickMonomial i c₁ x * wickMonomial (n - i) c₂ y) +
+          ∑ i ∈ range (n + 1),
+              (↑n + 1) * c₂ *
+              (↑(n.choose i) * wickMonomial i c₁ x * wickMonomial (n - i) c₂ y) =
+          ∑ x_1 ∈ range (n + 1),
+              ↑n * c₁ *
+              (↑(n.choose x_1) * wickMonomial x_1 c₁ x * wickMonomial (n - x_1) c₂ y) +
+            ∑ x_1 ∈ range (n + 1),
+              1 * c₁ *
+              (↑(n.choose x_1) * wickMonomial x_1 c₁ x * wickMonomial (n - x_1) c₂ y) +
+          (∑ x_1 ∈ range (n + 1),
+              ↑n * c₂ *
+              (↑(n.choose x_1) * wickMonomial x_1 c₁ x * wickMonomial (n - x_1) c₂ y) +
+            ∑ x_1 ∈ range (n + 1),
+              1 * c₂ *
+              (↑(n.choose x_1) * wickMonomial x_1 c₁ x *
+              wickMonomial (n - x_1) c₂ y)) := by
           simp only [← Finset.sum_add_distrib]
           apply Finset.sum_congr rfl; intro i _; ring
         linarith [h, hcancel]

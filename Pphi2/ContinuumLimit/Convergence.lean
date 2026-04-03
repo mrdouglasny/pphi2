@@ -172,6 +172,7 @@ Instead, we use `GaussianField.prokhorov_configuration` (proved in gaussian-fiel
 which embeds `Configuration E` into `ℕ → ℝ` via the DM basis and applies
 standard Prokhorov there, avoiding Polish/Borel entirely. -/
 
+omit [Fact (0 < d)] in
 /-- Sequential Prokhorov extraction on configuration space.
 
 Uses `GaussianField.prokhorov_configuration` (proved in gaussian-field)

@@ -135,12 +135,14 @@ private lemma integrable_hermiteEval_sqrt_two_half (n : ℕ) :
       simp [halfGaussianDensity]
     rw [hpdf, gaussianPDFReal_zero_half]
     ring
-  rw [ProbabilityTheory.gaussianReal_of_var_ne_zero (μ := (0 : ℝ)) (v := halfVariance) (by norm_num)]
+  rw [ProbabilityTheory.gaussianReal_of_var_ne_zero
+    (μ := (0 : ℝ)) (v := halfVariance) (by norm_num)]
   rw [ProbabilityTheory.gaussianPDF_def]
   have hmeas_half : Measurable halfGaussianDensity := by
     have hdef :
         halfGaussianDensity =
-          fun x : ℝ => Real.toNNReal (ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x) := by
+          fun x : ℝ =>
+            Real.toNNReal (ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x) := by
       funext x
       simp [halfGaussianDensity, Real.toNNReal_of_nonneg, ProbabilityTheory.gaussianPDFReal_nonneg]
     rw [hdef]
@@ -168,13 +170,16 @@ private lemma integral_hermiteEval_sqrt_two_half_eq_zero (n : ℕ) (hn : 1 ≤ n
   rw [ProbabilityTheory.integral_gaussianReal_eq_integral_smul (μ := (0 : ℝ)) (v := halfVariance)
     (by norm_num)]
   have hcongr :
-      ∫ x : ℝ, ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x • hermiteEval n (Real.sqrt 2 * x) =
+      ∫ x : ℝ,
+          ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x •
+            hermiteEval n (Real.sqrt 2 * x) =
         ∫ x : ℝ,
           (Real.sqrt Real.pi)⁻¹ * (hermiteEval n (Real.sqrt 2 * x) * Real.exp (-(x ^ 2))) := by
     refine MeasureTheory.integral_congr_ae ?_
     exact MeasureTheory.ae_of_all _ (fun x => by
       change
-        ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x * hermiteEval n (Real.sqrt 2 * x) =
+        ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x *
+            hermiteEval n (Real.sqrt 2 * x) =
           (Real.sqrt Real.pi)⁻¹ * (hermiteEval n (Real.sqrt 2 * x) * Real.exp (-(x ^ 2)))
       have hpdfhalf :
           ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x =
@@ -183,10 +188,14 @@ private lemma integral_hermiteEval_sqrt_two_half_eq_zero (n : ℕ) (hn : 1 ≤ n
       ring)
   calc
     ∫ x : ℝ,
-        ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x • hermiteEval n (Real.sqrt 2 * x)
-          = ∫ x : ℝ, (Real.sqrt Real.pi)⁻¹ * (hermiteEval n (Real.sqrt 2 * x) * Real.exp (-(x ^ 2))) :=
+        ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x •
+          hermiteEval n (Real.sqrt 2 * x)
+          = ∫ x : ℝ,
+              (Real.sqrt Real.pi)⁻¹ *
+                (hermiteEval n (Real.sqrt 2 * x) * Real.exp (-(x ^ 2))) :=
             hcongr
-    _ = (Real.sqrt Real.pi)⁻¹ * ∫ x : ℝ, hermiteEval n (Real.sqrt 2 * x) * Real.exp (-(x ^ 2)) := by
+    _ = (Real.sqrt Real.pi)⁻¹ *
+          ∫ x : ℝ, hermiteEval n (Real.sqrt 2 * x) * Real.exp (-(x ^ 2)) := by
           rw [MeasureTheory.integral_const_mul]
     _ = 0 := by simp [hbase]
 
@@ -225,7 +234,8 @@ private lemma integral_hermiteEval_standard_eq_zero (n : ℕ) (hn : 1 ≤ n) :
   have htransport := MeasureTheory.integral_map
     ((measurable_const.mul measurable_id).aemeasurable)
     ((continuous_hermiteEval n).measurable.aestronglyMeasurable)
-    (μ := gaussianReal (0 : ℝ) halfVariance) (φ := fun x : ℝ => Real.sqrt 2 * x) (f := hermiteEval n)
+    (μ := gaussianReal (0 : ℝ) halfVariance) (φ := fun x : ℝ => Real.sqrt 2 * x)
+    (f := hermiteEval n)
   rw [htransport]
   simpa [Function.comp, mul_comm] using integral_hermiteEval_sqrt_two_half_eq_zero n hn
 

@@ -193,7 +193,8 @@ private theorem differentiable_intervalIntegral_param
     (hh_cont.comp (Continuous.prodMk continuous_const continuous_id)).aestronglyMeasurable
   -- Step 2: h(t₀, ·) is interval integrable
   have h_int : IntervalIntegrable (h t₀) MeasureTheory.volume a b :=
-    (hh_cont.comp (Continuous.prodMk continuous_const continuous_id)).continuousOn.intervalIntegrable
+    ((hh_cont.comp (Continuous.prodMk continuous_const continuous_id)).continuousOn
+      ).intervalIntegrable
   -- Step 3: Measurability of the derivative at t₀ via difference quotient limit
   have h'_meas : MeasureTheory.AEStronglyMeasurable (fun θ => deriv (h · θ) t₀)
       (MeasureTheory.volume.restrict (Set.uIoc a b)) := by
