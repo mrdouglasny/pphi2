@@ -44,6 +44,7 @@ group of the lattice. Full invariance is restored in the continuum limit:
 import Pphi2.OSAxioms
 import Pphi2.EuclideanComplex
 import Pphi2.GeneralResults.FunctionalAnalysis
+import Pphi2.InteractingMeasure.LatticeEuclideanTime
 import Pphi2.OSforGFF.TimeTranslation
 import Lattice.Symmetry
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
@@ -109,6 +110,17 @@ omit [NeZero N] in
 /-- `latticeTranslation` is definitionally `latticeTranslationFun` from gaussian-field. -/
 private lemma latticeTranslation_eq (v : FinLatticeSites d N) (φ : FinLatticeField d N) :
     latticeTranslation d N v φ = latticeTranslationFun d N v φ := rfl
+
+/-- The manual `LinearMap` used in `latticeMeasure_translation_invariant` agrees with the bundled
+`GaussianField.latticeTranslation` (same action on fields). -/
+private lemma latticeTranslation_linear_toCLM_eq_gaussian (v : FinLatticeSites d N) :
+    ({ toFun := latticeTranslation d N v, map_add' := fun _ _ => rfl,
+        map_smul' := fun _ _ => rfl } :
+        FinLatticeField d N →ₗ[ℝ] FinLatticeField d N).toContinuousLinearMap
+      = GaussianField.latticeTranslation d N v :=
+  ContinuousLinearMap.ext fun φ => by
+    change latticeTranslation d N v φ = latticeTranslationFun d N v φ
+    exact latticeTranslation_eq d N v φ
 
 /-- The mass operator commutes with lattice translation.
 `Q(T_v φ) = T_v(Q φ)` because both -Δ and m² commute with translation. -/
@@ -322,6 +334,40 @@ theorem latticeMeasure_translation_invariant (P : InteractionPolynomial)
   rw [hkey2]
   exact (latticeTranslation_volume_preserving d N (-v)).integral_comp'
     (fun ψ => G_R ψ * ρ ψ)
+
+/-- For `μ = interactingLatticeMeasure`, expectations of integrable `G` are unchanged under
+`latticeConfigEuclideanTimeShift` (dual Euclidean-time translation).
+
+**Proof.** `latticeMeasure_translation_invariant` at `v = latticeEuclideanTimeShift N k`, plus
+`latticeTranslation_linear_toCLM_eq_gaussian`.
+
+**Clustering:** `general_clustering_from_spectral_gap` subtracts `∫ F · ∫ G` with **unshifted** `G`;
+for integrable `G`, `∫ G(τ_k ω) ∂μ = ∫ G ∂μ`, so this is the standard connected correlator
+`Cov(F, G∘τ_k)` formulation. -/
+theorem interactingLatticeMeasure_expectation_configEuclideanTimeShift
+    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (k : ℕ) (G : Configuration (FinLatticeField 2 N) → ℝ)
+    (hG : Integrable G (interactingLatticeMeasure 2 N P a mass ha hmass)) :
+    ∫ ω, G (latticeConfigEuclideanTimeShift N k ω)
+        ∂(interactingLatticeMeasure 2 N P a mass ha hmass) =
+      ∫ ω, G ω ∂(interactingLatticeMeasure 2 N P a mass ha hmass) := by
+  set μ := interactingLatticeMeasure 2 N P a mass ha hmass
+  calc
+    ∫ ω, G (latticeConfigEuclideanTimeShift N k ω) ∂μ
+        = ∫ ω, G
+            (ω.comp (GaussianField.latticeTranslation 2 N (latticeEuclideanTimeShift N k))) ∂μ := by
+          refine integral_congr_ae (ae_of_all μ fun ω => ?_)
+          simp [latticeConfigEuclideanTimeShift]
+    _ = ∫ ω, G (ω.comp
+          ({ toFun := latticeTranslation 2 N (latticeEuclideanTimeShift N k),
+              map_add' := fun _ _ => rfl, map_smul' := fun _ _ => rfl } :
+              FinLatticeField 2 N →ₗ[ℝ] FinLatticeField 2 N).toContinuousLinearMap) ∂μ := by
+          refine integral_congr_ae (ae_of_all μ fun ω => ?_)
+          simp_rw [← latticeTranslation_linear_toCLM_eq_gaussian (d := 2)
+            (v := latticeEuclideanTimeShift N k)]
+    _ = ∫ ω, G ω ∂μ :=
+          latticeMeasure_translation_invariant 2 N P a mass ha hmass
+            (latticeEuclideanTimeShift N k) G hG
 
 /-! ## Translation invariance in the continuum -/
 

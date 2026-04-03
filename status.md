@@ -16,7 +16,18 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-04-02): 23 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-04-03): 23 axioms, 0 sorries.**
+
+Recent corrections (2026-04-03):
+- `general_clustering_from_spectral_gap` — **statement corrected**: `G` is evaluated on
+  `latticeConfigEuclideanTimeShift N R ω` (the integrand now contains the actual translated
+  observable), and the decay exponent is measured against the **cyclic torus time separation**
+  `latticeEuclideanTimeSeparation N R` rather than an inconsistent unbounded `R`. Added
+  `latticeEuclideanTimeShift`, `latticeConfigEuclideanTimeShift`, and
+  `latticeEuclideanTimeSeparation`.
+- `general_clustering_lattice` — removed unused phantom parameter `Nt` (theorem uses section `Ns` only).
+- `Main.lean` — **honest naming**: `massParameter_positive`, `pphi2_exists_os_and_massParameter_positive`;
+  `os_reconstruction` and `pphi2_wightman` kept as `@[deprecated]` aliases.
 
 Recent reductions (2026-04-02):
 - `limit_exponential_moment` sorry — **ELIMINATED**: truncation + MCT proof via
@@ -77,7 +88,7 @@ Note: Two axioms are `private`: `fourier_representation_convolution` (GaussianFo
 and `gaussian_rp_cov_perfect_square` (OS3_RP_Lattice).
 `schwartz_riemann_sum_bound` (PropagatorConvergence) was proved via Schwartz decay +
 telescoping sum bound. The remaining Gaussian propagator debt is now isolated in the
-spectral axiom `latticeGreenBilinear_tendsto_continuum`; `propagator_convergence`
+spectral axiom `latticeGreenBilinear_basis_tendsto_continuum`; `propagator_convergence`
 itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 
 `schwinger2_convergence` was proved from
@@ -114,7 +125,7 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | **0 axioms, 0 sorries** (os3_inheritance removed; OS3 now in OS2_WardIdentity) |
 | 4 | `ContinuumLimit/RPTransfer.lean` | 0 axioms, 0 sorries (intertwining proved, signedVal) |
 | 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 0 sorries |
-| 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`propagator_convergence` now theorem; remaining axiom is `latticeGreenBilinear_tendsto_continuum`) |
+| 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`propagator_convergence` now theorem; remaining axiom is `latticeGreenBilinear_basis_tendsto_continuum`) |
 | 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 0 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/GaussianLimit.lean` | 0 axioms, 0 sorries |
 | 5 | `OSProofs/OS2_WardIdentity.lean` | 6 axioms |
@@ -347,8 +358,8 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | `spectral_gap_uniform` | SpectralGap | Hard | Mass gap bounded below uniformly in a. Key input: the interaction is a bounded perturbation of the free field in the sense of Kato-Rellich, and the free mass gap is m > 0. Needs careful control of the perturbation as a→0. |
 | `spectral_gap_lower_bound` | SpectralGap | Hard | m_phys ≥ c·m_bare. Quantitative bound on the physical mass. |
 | ~~`connectedTwoPoint_nonneg_delta`~~ | OS4_MassGap | ✅ **Proved** | Variance nonnegativity: direct proof via ∫(X-E[X])² ≥ 0. |
-| ~~`two_point_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Exponential decay bound using `finLatticeDelta` and `massGap`. |
-| ~~`general_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Quantified clustering over bounded observables. |
+| ~~`two_point_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Exponential decay bound using `finLatticeDelta`, `massGap`, and the cyclic torus time separation. |
+| ~~`general_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Bounded `F`, `G` with `G` on time-shifted config `latticeConfigEuclideanTimeShift N R ω`, decaying in `latticeEuclideanTimeSeparation N R`. |
 | ~~`clustering_implies_ergodicity`~~ | OS4_Ergodicity | ✅ **Proved** | Exponential clustering → ergodicity of time translations. |
 | ~~`unique_vacuum`~~ | OS4_Ergodicity | ✅ **Proved** | From `transferOperator_ground_simple_spectral`. |
 | ~~`exponential_mixing`~~ | OS4_Ergodicity | ✅ **Proved** | Exponential mixing from mass gap. |
@@ -394,7 +405,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `latticeGreenBilinear_tendsto_continuum` | PropagatorConvergence | Medium | Spectral lattice Green bilinear on discretized Schwartz functions → continuum Fourier Green bilinear. `propagator_convergence` is now derived via `embeddedTwoPoint_eq_latticeGreenBilinear`. |
+| `latticeGreenBilinear_basis_tendsto_continuum` | PropagatorConvergence | Medium | Spectral lattice Green bilinear on Dynin-Mityagin basis pairs → continuum Fourier Green bilinear. `latticeGreenBilinear_tendsto_continuum` and `propagator_convergence` are now derived theorems. |
 | ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED for `d > 0`** | Tightness via `configuration_tight_of_uniform_second_moments` + integrability through lattice embedding. The excluded `d = 0` case is a separate Dynin-Mityagin / Schwartz-space infrastructure issue. |
 | ~~`gaussianLimit_isGaussian`~~ | GaussianLimit | **PROVED** | Weak limits of Gaussian measures are Gaussian. Proved via 1D evaluation marginals and `weakLimit_centered_gaussianReal`. |
 
@@ -413,7 +424,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 - `gaussianContinuumMeasure_sq_integrable`: Integrability of `(ω f)²` through lattice embedding via `pairing_product_integrable`.
 
 **Open work in this slice:**
-- `latticeGreenBilinear_tendsto_continuum`: remaining analytic convergence core for the Gaussian continuum route.
+- `latticeGreenBilinear_basis_tendsto_continuum`: remaining analytic convergence core for the Gaussian continuum route.
 - Optional full generality for `gaussianContinuumMeasures_tight` (`d = 0` case): add a dedicated `DyninMityaginSpace (ContinuumTestFunction 0)` instance, then audit `GaussianLimit.lean` and `ContinuumLimit/Convergence.lean` for other `d > 0` dependencies.
 
 Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially since |cos(·)| ≤ 1.
@@ -510,8 +521,10 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`compTimeReflection2`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfContinuousLinearEquiv` with time reflection as CLE. |
 | ~~`compTimeReflection2_apply`~~ | OSAxioms | ✅ Proved | Follows by `rfl` from the construction. |
 | ~~`SchwartzMap.translate`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfAntilipschitz` with translation (antilipschitz + temperate growth). |
-| ~~`os_reconstruction`~~ | Main | **Proved** | ∃ m₀ > 0 from ⟨mass, hmass⟩. Full Wightman formalism not formalized. |
-| ~~`pphi2_wightman`~~ | Main | **Proved** | Full OS bundle + mass gap existence, from `pphi2_exists` + `os_reconstruction`. |
+| ~~`massParameter_positive`~~ | Main | **Proved** | ∃ m₀ > 0 witnessed by hypothesis `0 < mass` (not OS reconstruction / not Wightman). |
+| ~~`pphi2_exists_os_and_massParameter_positive`~~ | Main | **Proved** | `pphi2_exists` + `massParameter_positive`. |
+| ~~`os_reconstruction`~~ | Main | **Deprecated alias** | Use `massParameter_positive` (since 2026-04-03). |
+| ~~`pphi2_wightman`~~ | Main | **Deprecated alias** | Use `pphi2_exists_os_and_massParameter_positive` (since 2026-04-03). |
 | ~~`pphi2_nontrivial`~~ | Main | **Proved** | Uses `pphi2_nontriviality` axiom. |
 | ~~`pphi2_nonGaussian`~~ | Main | **Proved** | Uses `pphi2_nonGaussianity` axiom. |
 | `pphi2_nontriviality` | Main | Hard | ∫ (ω f)² dμ > 0 for all f ≠ 0. Correlation inequalities (Griffiths, FKG). |
@@ -719,7 +732,7 @@ infrastructure. Assessment date: 2026-03-04.
 |-------|------|----------|
 | ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** from `fourier_representation_convolution` axiom. |
 | `fourier_representation_convolution` | GaussianFourier | L² Fourier representation identity. Schwartz density + L² convolution theorem (not yet in Mathlib). |
-| `latticeGreenBilinear_tendsto_continuum` | PropagatorConvergence | Spectral lattice Green bilinear → continuum Fourier Green bilinear on ℝ^d. Dominated convergence + Schwartz decay. |
+| `latticeGreenBilinear_basis_tendsto_continuum` | PropagatorConvergence | Spectral lattice Green bilinear on Dynin-Mityagin basis pairs → continuum Fourier Green bilinear on ℝ^d. Extend to all test functions by bilinear continuity. |
 | `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Super-renormalizability gives a² Ward identity bound. No log corrections in d=2. |
 | `continuum_exponential_moments` | OS2_WardIdentity | Fernique + Nelson hypercontractive estimate transferred to limit. |
@@ -745,8 +758,8 @@ infrastructure. Assessment date: 2026-03-04.
 | `same_continuum_measure` | Bridge | pphi2 and Phi4 agree at weak coupling. |
 | `os2_from_phi4` | Bridge | OS2 for Phi4 continuum limit. |
 | `measure_determined_by_schwinger` | Bridge | Moment determinacy on S'(ℝ²). |
-| `two_point_clustering_from_spectral_gap` | OS4_MassGap | 2-point clustering from mass gap. |
-| `general_clustering_from_spectral_gap` | OS4_MassGap | General n-point clustering from mass gap. |
+| `two_point_clustering_from_spectral_gap` | OS4_MassGap | 2-point clustering from mass gap with cyclic torus time separation. |
+| `general_clustering_from_spectral_gap` | OS4_MassGap | Bounded observables; `G` on `latticeConfigEuclideanTimeShift`, decay measured in `latticeEuclideanTimeSeparation`. |
 | `second_moment_uniform` | Tightness | Uniform second moments for interacting measure. |
 | `moment_equicontinuity` | Tightness | Equicontinuity of moments in f. |
 | `continuumMeasures_tight` | Tightness | Tightness via Mitoma for interacting measures on S'(ℝ²). |

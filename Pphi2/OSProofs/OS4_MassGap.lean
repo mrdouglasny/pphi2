@@ -25,24 +25,40 @@ Using the transfer matrix eigendecomposition:
 ```
 where φ̂(x) is the multiplication operator by ψ(x) on L²(ℝ^Ns).
 
-Inserting a complete set of energy eigenstates |n⟩ with energies Eₙ:
+The exponents `t` and `N_s - t` record a conventional transfer-matrix ordering along
+the periodic chain; **upper bounds** on the connected correlator on the torus combine
+forward and backward windings into the cyclic (geodesic) time distance `d_cyc` below.
+
+Inserting a complete set of energy eigenstates |n⟩ with energies Eₙ between the
+insertions (transfer-matrix / lattice Markov picture; cf. GRS Ann. Math. **101**
+(1975), Part II, Ch. IV) yields schematically
 ```
-⟨φ(t,x) φ(0,y)⟩ - ⟨φ(x)⟩⟨φ(y)⟩ = Σ_{n≥1} ⟨Ω|φ̂(x)|n⟩⟨n|φ̂(y)|Ω⟩ · e^{-(Eₙ-E₀)|t|}
+⟨φ(t,x) φ(0,y)⟩ - ⟨φ(x)⟩⟨φ(y)⟩
+  ≈ Σ_{n≥1} ⟨Ω|φ̂(x)|n⟩⟨n|φ̂(y)|Ω⟩ · e^{-(Eₙ-E₀) d_cyc a}
+```
+where `d_cyc` is the **geodesic** (cyclic) Euclidean-time distance on the periodic
+time circle, in lattice units, i.e. `d_cyc = min(k, N_s - k)` for the relevant time
+shift `k` between slices.
+
+Since `Eₙ - E₀ ≥ m_phys = E₁ - E₀ > 0` for all `n ≥ 1`:
+```
+|⟨φ(t,x) φ(0,y)⟩ - ⟨φ(x)⟩⟨φ(y)⟩| ≤ C(x,y) · e^{-m_phys · d_cyc · a}
 ```
 
-Since all terms have `Eₙ - E₀ ≥ m_phys = E₁ - E₀ > 0`:
-```
-|⟨φ(t,x) φ(0,y)⟩ - ⟨φ(x)⟩⟨φ(y)⟩| ≤ C(x,y) · e^{-m_phys · |t|}
-```
+**Caution:** one should not read the bare label `t : Fin N_s` as a *directed*
+winding length in the exponent; on a torus the natural single-exponential **upper**
+bound is controlled by shortest arc length (`latticeEuclideanTimeSeparation` below).
 
 ### General observables
 
-For F, G bounded measurable and time-translated G_R(φ) = G(T_R φ):
+For bounded measurable `F`, `G` and the Euclidean time shift `τ_R` implemented
+as `latticeConfigEuclideanTimeShift N_s R` on configurations:
 ```
-|⟨F · G_R⟩ - ⟨F⟩⟨G⟩| ≤ C(F,G) · e^{-m_phys · R}
+|⟨F · (G ∘ τ_R)⟩ - ⟨F⟩⟨G⟩| ≤ C(F,G) · e^{-m_phys · d_cyc(R) · a}
 ```
-
-This is the content of OS4 (clustering / exponential decay of correlations).
+with the same cyclic separation `d_cyc(R) = latticeEuclideanTimeSeparation N_s R`.
+This matches the formal axioms; continuum OS4 (`|τ| → ∞` on ℝ²) is recovered only
+after an infrared / continuum-limit step, not from the bare periodic `N_s` model alone.
 
 ## References
 
@@ -50,9 +66,27 @@ This is the content of OS4 (clustering / exponential decay of correlations).
 - Simon, *The P(φ)₂ Euclidean QFT*, §III.3, §IV.1
 - Simon-Hoegh-Krohn (1972), "Hypercontractive semigroups and two dimensional
   self-coupled Bose fields"
+- Guerra–Rosen–Simon, *Ann. Math.* 101 (1975), Part II (lattice Markov fields;
+  see `refs/GRS1975-p2.md`)
+
+## Reference alignment (finite torus vs. continuum texts)
+
+- **GRS (1975), Simon, Glimm–Jaffe:** clustering and transfer-matrix estimates are
+  usually stated for infinite `ℤ²` or continuum `ℝ²`, with decay in a large Euclidean
+  separation `|τ|` (or the spatial analogue).
+- **This repository’s lattice layer:** we work on the periodic `(ℤ/N_sℤ)²` torus.
+  The axioms `two_point_clustering_from_spectral_gap` and
+  `general_clustering_from_spectral_gap` therefore measure decay in the **cyclic**
+  Euclidean-time separation `latticeEuclideanTimeSeparation`, i.e. geodesic distance
+  on the time circle, **not** an unbounded `R : ℕ` without periodic reduction.
+- **Comparison:** matching the textbook `e^{-m|τ|}` picture requires an infrared step
+  (`N_s → ∞` at fixed physical separation, and/or the continuum limit package) so
+  wrap-around is negligible; see `refs/GRS1975-p2.md` for the infinite-lattice setup
+  in GRS Part II §IV (our `N_s` torus is a finite-volume periodic truncation).
 -/
 
 import Pphi2.TransferMatrix.SpectralGap
+import Pphi2.InteractingMeasure.LatticeEuclideanTime
 import Pphi2.InteractingMeasure.LatticeMeasure
 import Pphi2.InteractingMeasure.Normalization
 import Mathlib.Probability.Moments.Variance
@@ -65,20 +99,37 @@ namespace Pphi2
 
 variable (Ns : ℕ) [NeZero Ns]
 
+/-! ## Euclidean-time shift (see `InteractingMeasure/LatticeEuclideanTime.lean`)
+
+For `μ = interactingLatticeMeasure`, **`∫ G(τ_R ω) ∂μ = ∫ G ∂μ`** for integrable `G` is proved
+as `interactingLatticeMeasure_expectation_configEuclideanTimeShift` in `OS2_WardIdentity.lean`
+(specializing translation invariance). The clustering axiom below is therefore the usual
+`Cov(F, G∘τ_R)` form relative to **translation-invariant** `μ`. -/
+
 /-! ## Spectral gap clustering axioms
 
 The clustering results from the spectral decomposition of the transfer matrix.
+On the periodic `Ns × Ns` lattice, the relevant finite-volume separation is the
+**cyclic Euclidean-time distance**
+  `d_cyc(k) = latticeEuclideanTimeSeparation Ns k`
+rather than an unbounded `R : ℕ`.
+
 Insert a complete set of eigenstates `|n⟩` between φ̂(t,x) and φ̂(0,y):
-  `⟨φ(t,x)φ(0,y)⟩ = Σₙ |⟨Ω|φ̂(x)|n⟩|² exp(-(Eₙ - E₀)|t|a)`
+  `⟨φ(t,x)φ(0,y)⟩ = Σₙ |⟨Ω|φ̂(x)|n⟩|² exp(-(Eₙ - E₀)d_cyc(t)a)`
 
 Since `Eₙ - E₀ ≥ m_phys` for all `n ≥ 1`:
-  `|⟨φ(t,x)φ(0,y)⟩ - ⟨φ(x)⟩⟨φ(y)⟩| ≤ C exp(-m_phys |t| a)`
+  `|⟨φ(t,x)φ(0,y)⟩ - ⟨φ(x)⟩⟨φ(y)⟩| ≤ C exp(-m_phys d_cyc(t) a)`
 
 References: Reed-Simon IV Thm XIII.44; Glimm-Jaffe §6.2;
 Simon P(φ)₂ Theory §III.3. -/
 
 /-- Two-point clustering from spectral gap: the connected two-point function
-decays exponentially at the rate of the mass gap. -/
+decays exponentially at the rate of the mass gap.
+
+**Finite-volume torus form.** The exponent uses the cyclic Euclidean-time
+separation `latticeEuclideanTimeSeparation Ns t.val`, i.e.
+`min(t.val, Ns - t.val)`, which is the genuine geodesic distance on the
+periodic time circle. -/
 axiom two_point_clustering_from_spectral_gap
     (Ns : ℕ) [NeZero Ns] (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass)
@@ -90,10 +141,18 @@ axiom two_point_clustering_from_spectral_gap
     |(∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx * ω δ0y ∂μ) -
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx ∂μ) *
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δ0y ∂μ)| ≤
-      C * Real.exp (-massGap Ns P a mass ha hmass * (t.val : ℝ) * a)
+      C * Real.exp
+        (-massGap Ns P a mass ha hmass *
+          (latticeEuclideanTimeSeparation Ns t.val : ℝ) * a)
 
 /-- General clustering from spectral gap: connected correlators of bounded
-observables decay exponentially with the mass gap rate. -/
+observables decay exponentially with the mass gap rate.
+
+The observable `G` is evaluated on the **time-translated configuration**
+`latticeConfigEuclideanTimeShift Ns R ω`, so the left-hand side depends on `R`
+as in the transfer-matrix / multiplicative ergodic picture
+`⟨F · (τ_R G)⟩ − ⟨F⟩⟨G⟩`. The decay rate is measured against the cyclic
+torus separation `latticeEuclideanTimeSeparation Ns R`. -/
 axiom general_clustering_from_spectral_gap
     (Ns : ℕ) [NeZero Ns] (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
@@ -101,10 +160,13 @@ axiom general_clustering_from_spectral_gap
       (_hF : ∃ C, ∀ ω, |F ω| ≤ C) (_hG : ∃ C, ∀ ω, |G ω| ≤ C),
       ∃ (C_FG : ℝ), 0 ≤ C_FG ∧
       ∀ (R : ℕ),
-        |(∫ ω, F ω * G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) -
+        |(∫ ω, F ω * G (latticeConfigEuclideanTimeShift Ns R ω)
+              ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) -
          (∫ ω, F ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) *
          (∫ ω, G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass))|
-        ≤ C_FG * Real.exp (-massGap Ns P a mass ha hmass * (R : ℝ) * a)
+        ≤ C_FG * Real.exp
+          (-massGap Ns P a mass ha hmass *
+            (latticeEuclideanTimeSeparation Ns R : ℝ) * a)
 
 /-! ## Two-point clustering on the lattice -/
 
@@ -113,9 +175,10 @@ axiom general_clustering_from_spectral_gap
 The connected two-point function decays exponentially with rate
 equal to the mass gap:
 
-  `|⟨φ(t,x) · φ(0,y)⟩ - ⟨φ(x)⟩ · ⟨φ(y)⟩| ≤ C · exp(-m_phys · |t|)`
+  `|⟨φ(t,x) · φ(0,y)⟩ - ⟨φ(x)⟩ · ⟨φ(y)⟩| ≤ C · exp(-m_phys · d_cyc(t) · a)`
 
-where `m_phys = massGap P a mass > 0` is the spectral gap.
+where `d_cyc(t) = latticeEuclideanTimeSeparation Ns t.val` is the cyclic
+time separation on the periodic lattice and `m_phys = massGap … > 0`.
 
 The constant C depends on x, y and the ground state overlaps
 `⟨Ω|φ̂(x)|n⟩`, but is finite because φ̂(x) maps the domain of H
@@ -127,8 +190,7 @@ theorem two_point_clustering_lattice
     -- since we use an Ns × Ns square lattice)
     (t x y : Fin Ns) :
     ∃ C : ℝ, 0 < C ∧
-    -- The connected two-point function decays exponentially:
-    -- |⟨φ(t,x) · φ(0,y)⟩_c| ≤ C · exp(-m_phys · t · a)
+    -- |⟨φ(t,x) · φ(0,y)⟩_c| ≤ C · exp(-m_phys · d_cyc(t) · a)
     -- Expressed via the interacting lattice measure and delta functions:
     let μ := interactingLatticeMeasure 2 Ns P a mass ha hmass
     -- δ_{(t,x)} and δ_{(0,y)} are the delta functions at the two sites
@@ -137,7 +199,9 @@ theorem two_point_clustering_lattice
     |(∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx * ω δ0y ∂μ) -
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δtx ∂μ) *
      (∫ ω : Configuration (FinLatticeField 2 Ns), ω δ0y ∂μ)| ≤
-      C * Real.exp (-massGap Ns P a mass ha hmass * (t.val : ℝ) * a) := by
+      C * Real.exp
+        (-massGap Ns P a mass ha hmass *
+          (latticeEuclideanTimeSeparation Ns t.val : ℝ) * a) := by
   exact two_point_clustering_from_spectral_gap Ns P a mass ha hmass t x y
 
 /-! ## General clustering on the lattice -/
@@ -146,29 +210,32 @@ theorem two_point_clustering_lattice
 
 For observables F, G on configurations and time-translation by R:
 
-  `|E_μ[F · G_R] - E_μ[F] · E_μ[G]| ≤ C(F,G) · exp(-m_phys · R)`
+  `|E_μ[F · G_R] - E_μ[F] · E_μ[G]| ≤ C(F,G) · exp(-m_phys · d_cyc(R) · a)`
 
-where G_R(φ)(t,x) = G(φ)(t+R,x) is the time-translated observable.
+where `G` is composed with `latticeConfigEuclideanTimeShift Ns R` (dual to
+translating the lattice field in Euclidean time) and
+`d_cyc(R) = latticeEuclideanTimeSeparation Ns R`.
 
-This is the abstract version of clustering that becomes OS4 in the
-continuum limit. -/
+This is the finite-volume torus analogue of clustering. The genuine infinite
+separation OS4 statement only emerges after the IR / decompactification limit. -/
 theorem general_clustering_lattice
-    (Nt : ℕ) [NeZero Nt]
     (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     -- For any bounded observables F, G and time separation R, the connected
     -- correlator decays exponentially at the rate of the mass gap:
     -- ∃ m > 0, ∀ bounded F G, ∀ R : ℕ,
-    --   |∫ F(ω) · G(T_R ω) dμ - (∫ F dμ)(∫ G dμ)| ≤ C(F,G) · exp(-m · R · a)
+    --   |∫ F(ω) · G(τ_R ω) dμ - (∫ F dμ)(∫ G dμ)| ≤ C(F,G) · exp(-m · R · a)
     ∃ (m : ℝ), 0 < m ∧ m ≤ massGap Ns P a mass ha hmass ∧
     ∀ (F G : Configuration (FinLatticeField 2 Ns) → ℝ)
       (_hF : ∃ C, ∀ ω, |F ω| ≤ C) (_hG : ∃ C, ∀ ω, |G ω| ≤ C),
       ∃ (C_FG : ℝ), 0 ≤ C_FG ∧
       ∀ (R : ℕ),
-        |(∫ ω, F ω * G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) -
+        |(∫ ω, F ω * G (latticeConfigEuclideanTimeShift Ns R ω)
+              ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) -
          (∫ ω, F ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass)) *
          (∫ ω, G ω ∂(interactingLatticeMeasure 2 Ns P a mass ha hmass))|
-        ≤ C_FG * Real.exp (-m * (R : ℝ) * a) := by
+        ≤ C_FG * Real.exp
+          (-m * (latticeEuclideanTimeSeparation Ns R : ℝ) * a) := by
   refine ⟨massGap Ns P a mass ha hmass, massGap_pos Ns P a mass ha hmass, le_refl _, ?_⟩
   intro F G hF hG
   exact general_clustering_from_spectral_gap Ns P a mass ha hmass F G hF hG
@@ -184,12 +251,12 @@ The mass gap (exponential decay rate) is bounded below uniformly in a:
 
   `∃ m₀ > 0, ∀ a ∈ (0, a₀], mass gap ≥ m₀`
 
-Combined with the clustering bound, this gives:
-
-  `|⟨F · G_R⟩ - ⟨F⟩⟨G⟩| ≤ C(F,G) · exp(-m₀ · R)`
-
-uniformly in a. In the continuum limit a → 0, the limiting measure
-inherits the same exponential clustering bound.
+Combined with `general_clustering_lattice`, for each fixed `N_s` this yields a bound
+of the form `|Cov(F, G∘τ_R)| ≤ C(F,G) · exp(-m₀ · d_cyc(R) · a)` uniformly for
+`a` in the spectral-gap window, where `d_cyc(R) = latticeEuclideanTimeSeparation Ns R`.
+In the continuum limit `a → 0`, the inherited OS4 statement is still phrased via
+the continuum clustering functional (see the continuum OS layer), not by the bare
+integer `R` alone.
 
 This is the key input from `spectral_gap_uniform`. -/
 theorem clustering_uniform (P : InteractionPolynomial)

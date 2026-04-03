@@ -17,8 +17,10 @@ axioms:
 - **OS3 (Reflection Positivity):** The RP matrix Σᵢⱼ cᵢcⱼ Re(Z[fᵢ − Θfⱼ]) ≥ 0.
 - **OS4 (Clustering):** Z[f + Tₐg] → Z[f]·Z[g] as ‖a‖ → ∞.
 
-By the Osterwalder-Schrader reconstruction theorem, this yields a relativistic
-Wightman QFT in 1+1 Minkowski spacetime with a positive mass gap.
+By the Osterwalder-Schrader reconstruction theorem, the corresponding
+mathematical theorem in the literature yields a relativistic Wightman QFT in
+1+1 Minkowski spacetime with a positive mass gap. This repository currently
+formalizes the Euclidean OS side, not the reconstruction step itself.
 
 This is the theorem originally proved by Glimm-Jaffe (1968–1973), Nelson (1973),
 and Simon, with contributions from Guerra-Rosen-Simon and others.
@@ -53,7 +55,9 @@ The construction proceeds in six phases:
    positivity (OS3).
 
 3. **Spectral gap** — Show T has a spectral gap (λ₀ > λ₁) by Perron-Frobenius.
-   This gives the mass gap and exponential clustering (OS4).
+   This is the lattice mass gap; OS4 on the periodic torus is phrased with **cyclic**
+   Euclidean-time separation (`latticeEuclideanTimeSeparation` in `OS4_MassGap.lean`),
+   and the textbook continuum clustering picture is recovered after IR/continuum limits.
 
 4. **Continuum limit** — Embed lattice measures into S'(ℝ²), prove tightness
    (Mitoma + Nelson's hypercontractive estimate), extract a convergent
@@ -79,7 +83,7 @@ OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
 The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
-**23 axioms, 0 sorries** (pphi2) + **3 axioms** (gaussian-field) = **26 combined**.
+**23 axioms, 0 sorries** (pphi2) + **3 axioms** (gaussian-field) = **26 combined** (axioms only).
 
 ### Route B: T²_L (symmetric torus) — OS0–OS2
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
@@ -207,9 +211,9 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-- **pphi2:** 23 axioms, 5 sorries in the active build; `cylinderIR_os0` (OS0 analyticity) now proved via `analyticOnNhd_integral` + exponential moment transfer; Route C's 21 axioms remain preserved in `future/`
+- **pphi2:** 23 axioms, 0 sorries in the active build; `cylinderIR_os0` (OS0 analyticity) is now proved via `analyticOnNhd_integral` + exponential moment transfer; Route C's 21 axioms remain preserved in `future/`
 - **Route B (torus):** 0 axioms, 0 sorries — the most developed route
-- **Route B' IR limit:** 3 axioms, 5 sorries — OS0 analyticity proved from uniform exponential moments + BC weak convergence; what remains is the uniform second-moment bound, uniform exponential moment, and OS3
+- **Route B' IR limit:** 3 axioms, 0 sorries — OS0 analyticity proved from uniform exponential moments + BC weak convergence; what remains is the uniform second-moment bound, uniform exponential moment, and OS3
 - **Shared foundations layer:** `Common/QFT/Euclidean/Formulations.lean` and
   `Common/QFT/Euclidean/ReconstructionInterfaces.lean` separate concrete
   measure models, tensor-moment Schwinger data, distributional Schwinger data,

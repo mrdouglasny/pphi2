@@ -77,7 +77,7 @@ Note: pphi2 count includes 3 private axioms (`schwartz_riemann_sum_bound`,
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| G1 | `latticeGreenBilinear_tendsto_continuum` | PropagatorConvergence | ✅ Standard | SA | Spectral lattice Green bilinear on discretized Schwartz functions converges to the continuum Green bilinear. This is the analytic core formerly packaged as `propagator_convergence`, which is now a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`. Glimm-Jaffe §6.1. |
+| G1 | `latticeGreenBilinear_basis_tendsto_continuum` | PropagatorConvergence | ✅ Standard | SA | Spectral lattice Green bilinear on Dynin-Mityagin basis pairs converges to the continuum Green bilinear. This is the analytic core formerly packaged as `propagator_convergence`; the full `latticeGreenBilinear_tendsto_continuum` statement is now a theorem via bilinear continuity and `embeddedTwoPoint_eq_latticeGreenBilinear`. Glimm-Jaffe §6.1. |
 | ~~G2~~ | ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED** | SA | Tightness of embedded GFF measures via `configuration_tight_of_uniform_second_moments`, proved for `d > 0`. |
 | ~~G3~~ | ~~`gaussianLimit_isGaussian`~~ | GaussianLimit | **PROVED** | SA | Weak limits of Gaussian measures are Gaussian. Proved via 1D evaluation marginals and `weakLimit_centered_gaussianReal`. |
 
@@ -249,9 +249,9 @@ meaningful mathematical types.
 - `rp_from_transfer_positivity` — **PROVED** $⟨f, T^n f⟩_{L²} ≥ 0$ via `transferOperatorCLM`
 
 ### OS4: Clustering & Ergodicity
-- `two_point_clustering_lattice` — Exponential decay bound using `finLatticeDelta` and `massGap` (sorry)
-- `general_clustering_lattice` — Quantified clustering over bounded observables (sorry)
-- `clustering_implies_ergodicity` — Measure-theoretic ergodicity criterion (sorry)
+- `two_point_clustering_lattice` — Exponential decay bound using `finLatticeDelta`, `massGap`, and the cyclic torus time separation (proved from `two_point_clustering_from_spectral_gap`)
+- `general_clustering_lattice` — Bounded `F`, `G` with `G` evaluated on `latticeConfigEuclideanTimeShift N R ω`, with decay measured in the cyclic torus separation `latticeEuclideanTimeSeparation N R` (proved from `general_clustering_from_spectral_gap`; **2026-04-03:** repaired from the inconsistent unbounded-`R` torus form)
+- `clustering_implies_ergodicity` — **PROVED** measure-theoretic ergodicity criterion from clustering
 - `unique_vacuum` — **PROVED** from `transferEigenvalue_ground_simple`
 
 ### Continuum Limit & Convergence
@@ -270,10 +270,12 @@ meaningful mathematical types.
 
 ### Main Assembly & Bridge
 - `schwinger_agreement` — n-point Schwinger function equality between lattice and Phi4 limits (sorry)
-- `pphi2_nontrivial` — $∫ (ω f)² dμ > 0$ for all $f ≠ 0$ (sorry)
-- `pphi2_nonGaussian` — $∫ (ω f)⁴ dμ - 3(∫ (ω f)² dμ)² ≠ 0$ (sorry)
-- `os_reconstruction` — OS reconstruction yields mass gap $m₀ > 0$ (proved: `⟨mass, hmass⟩`)
-- `pphi2_wightman` — Full OS bundle + mass gap existence (proved from `pphi2_exists` + `os_reconstruction`)
+- `pphi2_nontrivial` — **PROVED** theorem wrapping axiom `pphi2_nontriviality`
+- `pphi2_nonGaussian` — **PROVED** theorem wrapping `pphi2_nonGaussianity`
+- `massParameter_positive` — $\exists m₀ > 0$ witnessed by hypothesis `0 < mass` (not OS reconstruction / not Wightman)
+- `pphi2_exists_os_and_massParameter_positive` — `pphi2_exists` + `massParameter_positive`
+- `os_reconstruction` — **Deprecated** alias of `massParameter_positive` (since 2026-04-03)
+- `pphi2_wightman` — **Deprecated** alias of `pphi2_exists_os_and_massParameter_positive` (since 2026-04-03)
 
 ---
 
@@ -321,8 +323,8 @@ The following were previously axioms and are now theorems:
 | 33 | `exponential_moment_schwartz_bound` | OS2_WardIdentity | ⚠️ Likely correct | Gaussian integral bound. Uses L¹ + L² norms as proxy for H⁻¹ norm via Sobolev. |
 | 34 | `complex_gf_invariant_of_real_gf_invariant` | OS2_WardIdentity | ✅ Standard | Cramér-Wold + Lévy uniqueness. Correctly elevates real GF invariance to complex. |
 | 35 | `os4_clustering_implies_ergodicity` | OS2_WardIdentity | ⚠️ Likely correct | Clustering → ergodicity via Cesàro + reality of Z[f]. |
-| 36 | `two_point_clustering_from_spectral_gap` | OS4_MassGap | ✅ Standard | Spectral gap → 2-pt exponential clustering. Correct: uses `transferEigenvalue` and `massGap`. |
-| 37 | `general_clustering_from_spectral_gap` | OS4_MassGap | ✅ Standard | Extends to bounded observables. |
+| 36 | `two_point_clustering_from_spectral_gap` | OS4_MassGap | ✅ Standard (updated 2026-04-03) | Spectral gap → 2-pt exponential clustering on the periodic torus, with decay measured in the cyclic time separation `latticeEuclideanTimeSeparation N t.val`. |
+| 37 | `general_clustering_from_spectral_gap` | OS4_MassGap | ✅ Standard (updated 2026-04-03) | Bounded observables; **`G` on `latticeConfigEuclideanTimeShift N R ω`** and decay measured in the cyclic torus separation `latticeEuclideanTimeSeparation N R`, avoiding the inconsistent unbounded-`R` torus form. |
 | 38 | `transferOperator_inner_nonneg` | L2Operator | ✅ Standard | ⟨f, Tf⟩ ≥ 0 from Perron-Frobenius (strictly positive kernel). Reed-Simon IV Thm XIII.44. |
 
 ### Session 2: Final 9 sorry eliminations (9 new axioms, self-audited)

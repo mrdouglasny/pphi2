@@ -932,7 +932,20 @@ private theorem continuumKernel_eq_scaled (mass : ℝ) (hmass : 0 < mass) :
     field_simp [hmass_ne]
   rw [haux]
   field_simp [hmass_ne]
-  ring_nf
+  have hsum_ne : mass ^ 2 + ‖k‖ ^ 2 ≠ 0 := by positivity
+  have hm2_ne : mass ^ 2 ≠ 0 := pow_ne_zero 2 hmass_ne
+  have hinv_pow :
+      (((mass ^ 2 + ‖k‖ ^ 2) / mass ^ 2) : ℝ) ^ (-1 : ℝ) =
+        mass ^ 2 / (mass ^ 2 + ‖k‖ ^ 2) := by
+    rw [Real.rpow_neg_one]
+    field_simp [hm2_ne, hsum_ne]
+  have hlast :
+      (‖k‖ ^ 2 + mass ^ 2) * (((mass ^ 2 + ‖k‖ ^ 2) / mass ^ 2) ^ (-1 : ℝ)) =
+        mass ^ 2 := by
+    rw [hinv_pow]
+    field_simp [hmass_ne, hsum_ne]
+    ring
+  exact hlast.symm
 
 private theorem continuumKernel_hasTemperateGrowth (mass : ℝ) (hmass : 0 < mass) :
     (continuumKernel d mass).HasTemperateGrowth := by

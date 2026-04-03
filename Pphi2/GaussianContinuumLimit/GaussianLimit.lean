@@ -12,7 +12,7 @@ and the bridge to the interacting case.
 
 - `gaussianContinuumLimit_exists` — existence of a subsequential weak limit
 - `gaussianContinuumLimit_nontrivial` — `∫ (ω f)² dμ > 0` for f ≠ 0
-- `gaussianLimit_isGaussian` — (axiom) weak limits of Gaussians are Gaussian
+- `gaussianLimit_isGaussian` — weak limits of Gaussians are Gaussian
 - `IsGaussianContinuumLimit` — predicate for the Gaussian continuum limit
 
 ## Mathematical background

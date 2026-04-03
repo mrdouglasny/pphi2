@@ -282,7 +282,8 @@ def unitTimeDir : SpaceTime d := EuclideanSpace.single timeIndex (1 : ℝ)
 lemma continuous_timeShift_param (x : SpaceTime d) : Continuous (fun s : ℝ => timeShift s x) := by
   have h_shift : (fun s : ℝ => timeShift s x) = (fun s => x + s • unitTimeDir) := by
     funext s; simp only [timeShift, unitTimeDir, EuclideanSpace.single]
-    ext i; simp only [PiLp.add_apply, PiLp.smul_apply, smul_eq_mul, timeIndex]
+    ext i
+    simp only [PiLp.add_apply, PiLp.smul_apply, smul_eq_mul, timeIndex]
     by_cases h : i = (⟨0, Fact.out⟩ : Fin d) <;> simp_all [Fin.ext_iff]
   rw [h_shift]
   exact continuous_const.add (continuous_id.smul continuous_const)
@@ -313,6 +314,10 @@ lemma iteratedFDeriv_timeTranslationSchwartz
     iteratedFDeriv ℝ n f (x + h • unitTimeDir) := by
   -- timeTranslationSchwartz h f = f ∘ (· + h • unitTimeDir)
   have h_shift_eq : timeShiftConst h = h • (unitTimeDir : SpaceTime d) := by
+    have hi0 (j : Fin d) : j.val = 0 ↔ j = timeIndex := by
+      constructor
+      · intro hv; ext; simpa [timeIndex] using hv
+      · rintro rfl; rfl
     ext i
     simp only [timeShiftConst, unitTimeDir, EuclideanSpace.single, timeIndex]
     -- LHS: if i.val = 0 then h else 0
