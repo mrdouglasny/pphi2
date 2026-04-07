@@ -10,6 +10,7 @@ structure layers for the canonical `P(Φ)₂` spacetime `ℝ²`, with coordinate
 -/
 
 import Pphi2.Backgrounds.EuclideanTime
+import Pphi2.OSforGFF.TimeTranslation
 
 noncomputable section
 
@@ -142,5 +143,21 @@ abbrev SchwartzMap.translate (a : SpaceTime2) : TestFunction2 →L[ℝ] TestFunc
     (f : TestFunction2) (x : SpaceTime2) :
     SchwartzMap.translate a f x = f (x - a) :=
   EuclideanPlaneBackground.translate_apply plane2Background a f x
+
+theorem sub_timeTranslationVector2_eq_timeShift_neg [Fact (0 < 2)]
+    (t : ℝ) (x : SpaceTime2) :
+    x - timeTranslationVector2 t = TimeTranslation.timeShift (-t) x := by
+  ext i
+  fin_cases i
+  · simp [TimeTranslation.timeShift, sub_eq_add_neg]
+  · simp [TimeTranslation.timeShift, sub_eq_add_neg]
+
+@[simp] theorem translate_timeTranslationVector2_eq_timeTranslationSchwartz_neg
+    [Fact (0 < 2)] (t : ℝ) (f : TestFunction2) :
+    SchwartzMap.translate (timeTranslationVector2 t) f =
+      TimeTranslation.timeTranslationSchwartz (-t) f := by
+  ext x
+  rw [SchwartzMap.translate_apply, TimeTranslation.timeTranslationSchwartz_apply,
+    sub_timeTranslationVector2_eq_timeShift_neg]
 
 end Pphi2
