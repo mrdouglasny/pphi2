@@ -149,6 +149,21 @@ lemma timeShift_antilipschitz (s : ℝ) : AntilipschitzWith 1 (timeShift (d := d
 def timeShiftConst (s : ℝ) : SpaceTime d :=
   WithLp.toLp 2 (fun i => if i.val = 0 then s else 0)
 
+/-- The unit time direction vector `e₀`. -/
+def unitTimeDir : SpaceTime d := EuclideanSpace.single timeIndex (1 : ℝ)
+
+@[simp] lemma norm_unitTimeDir : ‖(unitTimeDir : SpaceTime d)‖ = 1 := by
+  simpa [unitTimeDir] using
+    (PiLp.norm_single (p := (2 : ENNReal)) timeIndex (1 : ℝ))
+
+/-- `timeShiftConst` is the scalar multiple `s • e₀`. -/
+lemma timeShiftConst_eq_smul_unitTimeDir (s : ℝ) :
+    timeShiftConst (d := d) s = s • unitTimeDir := by
+  ext i
+  simp only [timeShiftConst, unitTimeDir, EuclideanSpace.single, timeIndex]
+  simp only [PiLp.smul_apply, smul_eq_mul]
+  by_cases h : i = timeIndex <;> simp [h, Fin.ext_iff]
+
 /-- timeShift s equals addition of a constant. -/
 lemma timeShift_eq_add_const (s : ℝ) (u : SpaceTime d) :
     timeShift s u = u + timeShiftConst s := by
@@ -156,6 +171,17 @@ lemma timeShift_eq_add_const (s : ℝ) (u : SpaceTime d) :
   ext i
   simp only [PiLp.add_apply]
   split_ifs with h <;> ring
+
+/-- timeShift is translation by `s • e₀`. -/
+lemma timeShift_eq_add_smul_unitTimeDir (s : ℝ) (u : SpaceTime d) :
+    timeShift s u = u + s • unitTimeDir := by
+  rw [timeShift_eq_add_const, timeShiftConst_eq_smul_unitTimeDir]
+
+/-- As a function, `timeShift s` is the affine map `u ↦ u + s • e₀`. -/
+lemma timeShift_eq_fun_add_smul_unitTimeDir (s : ℝ) :
+    timeShift (d := d) s = fun u => u + s • unitTimeDir := by
+  funext u
+  exact timeShift_eq_add_smul_unitTimeDir s u
 
 /-- Time shift has temperate growth (key for Schwartz composition).
     This follows because timeShift is an affine map (id + constant). -/
@@ -167,31 +193,25 @@ lemma timeShift_hasTemperateGrowth (s : ℝ) :
     have h_eq :
         fderiv ℝ (timeShift (d := d) s) = fun _ => ContinuousLinearMap.id ℝ (SpaceTime d) := by
       ext x v
-      have h :
-          timeShift (d := d) s = fun u => u + timeShiftConst s :=
-        funext (timeShift_eq_add_const s)
-      rw [h]
+      rw [timeShift_eq_fun_add_smul_unitTimeDir]
       simp only [fderiv_add_const, fderiv_id', ContinuousLinearMap.id_apply]
     rw [h_eq]
     exact Function.HasTemperateGrowth.const _
   -- timeShift is differentiable
   have h_diff : Differentiable ℝ (timeShift (d := d) s) := by
     intro x
-    have h :
-        timeShift (d := d) s = fun u => u + timeShiftConst s :=
-      funext (timeShift_eq_add_const s)
-    rw [h]
+    rw [timeShift_eq_fun_add_smul_unitTimeDir]
     exact differentiableAt_id.add_const _
   -- Polynomial bound: ‖timeShift s x‖ ≤ C * (1 + ‖x‖)^k
   have h_bound :
       ∀ x : SpaceTime d,
-        ‖timeShift s x‖ ≤ (1 + ‖timeShiftConst (d := d) s‖) * (1 + ‖x‖) ^ 1 := by
+        ‖timeShift s x‖ ≤ (1 + ‖s • (unitTimeDir : SpaceTime d)‖) * (1 + ‖x‖) ^ 1 := by
     intro x
-    rw [timeShift_eq_add_const, pow_one]
-    calc ‖x + timeShiftConst s‖
-        ≤ ‖x‖ + ‖timeShiftConst s‖ := norm_add_le _ _
-      _ ≤ (1 + ‖timeShiftConst (d := d) s‖) * (1 + ‖x‖) := by
-          nlinarith [norm_nonneg x, norm_nonneg (timeShiftConst (d := d) s)]
+    rw [timeShift_eq_add_smul_unitTimeDir, pow_one]
+    calc ‖x + s • (unitTimeDir : SpaceTime d)‖
+        ≤ ‖x‖ + ‖s • (unitTimeDir : SpaceTime d)‖ := norm_add_le _ _
+      _ ≤ (1 + ‖s • (unitTimeDir : SpaceTime d)‖) * (1 + ‖x‖) := by
+          nlinarith [norm_nonneg x, norm_nonneg (s • (unitTimeDir : SpaceTime d))]
   exact Function.HasTemperateGrowth.of_fderiv h_fderiv_temperate h_diff h_bound
 
 /-! ## Time Translation on Schwartz Functions
@@ -215,6 +235,12 @@ is a linear map on the Schwartz space.
 def timeTranslationSchwartzCLM (s : ℝ) : TestFunction d →L[ℝ] TestFunction d :=
   SchwartzMap.compCLMOfAntilipschitz ℝ (timeShift_hasTemperateGrowth s) (timeShift_antilipschitz s)
 
+/-- `timeTranslationSchwartzCLM` evaluates by precomposition with `timeShift s`. -/
+@[simp] lemma timeTranslationSchwartzCLM_apply (s : ℝ) (f : TestFunction d) (u : SpaceTime d) :
+    timeTranslationSchwartzCLM s f u = f (timeShift s u) := by
+  simp only [timeTranslationSchwartzCLM, SchwartzMap.compCLMOfAntilipschitz_apply,
+    Function.comp_apply]
+
 /-- Time translation on real-valued Schwartz functions.
     (T_s f)(u) = f(timeShift s u) = f(t + s, x)
 
@@ -236,6 +262,20 @@ lemma timeTranslationSchwartz_apply (s : ℝ) (f : TestFunction d) (u : SpaceTim
     (timeTranslationSchwartz s f) u = f (timeShift s u) := by
   simp only [timeTranslationSchwartz, timeTranslationSchwartzCLM,
     SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
+
+/-- The Schwartz time-translation acts by evaluation at `u + s • e₀`. -/
+@[simp] lemma timeTranslationSchwartz_apply_add_smul_unitTimeDir
+    (s : ℝ) (f : TestFunction d) (u : SpaceTime d) :
+    (timeTranslationSchwartz s f) u = f (u + s • unitTimeDir) := by
+  rw [timeTranslationSchwartz_apply, timeShift_eq_add_smul_unitTimeDir]
+
+/-- As a function, `timeTranslationSchwartz s f` is `u ↦ f (u + s • e₀)`. -/
+lemma timeTranslationSchwartz_eq_fun_add_smul_unitTimeDir
+    (s : ℝ) (f : TestFunction d) :
+    (timeTranslationSchwartz s f : SpaceTime d → ℝ) =
+      fun u => f (u + s • unitTimeDir) := by
+  funext u
+  exact timeTranslationSchwartz_apply_add_smul_unitTimeDir s f u
 
 
 /-- Time translation is a group homomorphism: T_{s+t} = T_s ∘ T_t -/
@@ -275,16 +315,11 @@ The following lemmas establish the pointwise FTC formula:
 This provides the mathematical foundation for the Lipschitz bound theorem below.
 -/
 
-/-- The unit time direction vector in SpaceTime d. -/
-def unitTimeDir : SpaceTime d := EuclideanSpace.single timeIndex (1 : ℝ)
-
 /-- timeShift is continuous in the time parameter s -/
 lemma continuous_timeShift_param (x : SpaceTime d) : Continuous (fun s : ℝ => timeShift s x) := by
   have h_shift : (fun s : ℝ => timeShift s x) = (fun s => x + s • unitTimeDir) := by
-    funext s; simp only [timeShift, unitTimeDir, EuclideanSpace.single]
-    ext i
-    simp only [PiLp.add_apply, PiLp.smul_apply, smul_eq_mul, timeIndex]
-    by_cases h : i = (⟨0, Fact.out⟩ : Fin d) <;> simp_all [Fin.ext_iff]
+    funext s
+    simpa [PiLp.add_apply] using timeShift_eq_add_smul_unitTimeDir (d := d) s x
   rw [h_shift]
   exact continuous_const.add (continuous_id.smul continuous_const)
 
@@ -312,27 +347,7 @@ lemma iteratedFDeriv_timeTranslationSchwartz
     (n : ℕ) (h : ℝ) (f : TestFunction d) (x : SpaceTime d) :
     iteratedFDeriv ℝ n (timeTranslationSchwartz h f) x =
     iteratedFDeriv ℝ n f (x + h • unitTimeDir) := by
-  -- timeTranslationSchwartz h f = f ∘ (· + h • unitTimeDir)
-  have h_shift_eq : timeShiftConst h = h • (unitTimeDir : SpaceTime d) := by
-    have hi0 (j : Fin d) : j.val = 0 ↔ j = timeIndex := by
-      constructor
-      · intro hv; ext; simpa [timeIndex] using hv
-      · rintro rfl; rfl
-    ext i
-    simp only [timeShiftConst, unitTimeDir, EuclideanSpace.single, timeIndex]
-    -- LHS: if i.val = 0 then h else 0
-    -- RHS: h * (Pi.single timeIndex 1) i = h * (if i = timeIndex then 1 else 0)
-    simp only [PiLp.smul_apply, smul_eq_mul]
-    simp only [PiLp.single]
-    split_ifs with hi1 <;> simp_all [Pi.single_apply, Fin.ext_iff]
-  have h_eq : ∀ z, timeTranslationSchwartz h f z = f (z + h • unitTimeDir) := by
-    intro z
-    rw [timeTranslationSchwartz_apply, timeShift_eq_add_const, h_shift_eq]
-  have hfun :
-      (timeTranslationSchwartz h f : SpaceTime d → ℝ) =
-        fun z => f (z + h • unitTimeDir) :=
-    funext h_eq
-  conv_lhs => rw [hfun]
+  conv_lhs => rw [timeTranslationSchwartz_eq_fun_add_smul_unitTimeDir]
   exact iteratedFDeriv_comp_add_right n _ x
 
 set_option maxHeartbeats 400000 in
@@ -395,8 +410,7 @@ theorem schwartz_timeTranslation_lipschitz_seminorm
   -- g(1) = iteratedFDeriv ℝ n f (x + h • unitTimeDir)
   let y := h • (unitTimeDir : SpaceTime d)
   have hy : ‖y‖ = |h| := by
-    simp only [y, unitTimeDir, norm_smul, Real.norm_eq_abs]
-    rw [PiLp.norm_single, norm_one, mul_one]
+    simp [y, norm_smul, Real.norm_eq_abs, norm_unitTimeDir]
   -- Use Mean Value estimate: ‖g(1) - g(0)‖ ≤ |h| · sup ‖D^{n+1} f(path)‖ · ‖unitTimeDir‖
   -- Since the path is from x to x + h•e₀, the bound involves |h|
   -- We bound this by the seminorm, absorbing weight shift via Peetre
@@ -748,14 +762,15 @@ lemma continuous_timeTranslationSchwartz (f : TestFunction d) :
   have h_group : ∀ s, timeTranslationSchwartz s f =
       timeTranslationSchwartzCLM s₀ (timeTranslationSchwartz (s - s₀) f) := by
     intro s
-    ext u
-    simp only [timeTranslationSchwartz_apply, timeTranslationSchwartzCLM,
-      SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
-    -- Need: f(timeShift s u) = f(timeShift (s-s₀) (timeShift s₀ u))
-    -- By timeShift_add: timeShift (s-s₀) (timeShift s₀ u) = timeShift ((s-s₀)+s₀) u = timeShift s u
-    congr 1
-    rw [← timeShift_add]
-    ring_nf
+    calc
+      timeTranslationSchwartz s f
+          = timeTranslationSchwartz (s₀ + (s - s₀)) f := by
+              congr 1
+              ring
+      _ = timeTranslationSchwartz s₀ (timeTranslationSchwartz (s - s₀) f) := by
+            rw [timeTranslationSchwartz_add]
+      _ = timeTranslationSchwartzCLM s₀ (timeTranslationSchwartz (s - s₀) f) := by
+            rfl
   -- Rewrite using the group structure
   have h_eq : (fun s => timeTranslationSchwartz s f) =
       (fun s => timeTranslationSchwartzCLM s₀ (timeTranslationSchwartz (s - s₀) f)) :=
