@@ -1676,11 +1676,15 @@ theorem asymGf_sub_norm_le_seminorm
         Complex.exp (Complex.I * ↑(ω f))) μ := fun f =>
     (integrable_const (1 : ℂ)).mono
       (Complex.continuous_exp.measurable.comp (measurable_const.mul
-        (Complex.continuous_ofReal.measurable.comp (configuration_eval_measurable f)))).aestronglyMeasurable
-      (ae_of_all _ fun ω => by rw [norm_one, mul_comm Complex.I]; exact le_of_eq (Complex.norm_exp_ofReal_mul_I _))
+        (Complex.continuous_ofReal.measurable.comp
+          (configuration_eval_measurable f)))).aestronglyMeasurable
+      (ae_of_all _ fun ω => by
+        rw [norm_one, mul_comm Complex.I]
+        exact le_of_eq (Complex.norm_exp_ofReal_mul_I _))
   have h_gf_eq : asymTorusGeneratingFunctional Lt Ls μ g -
       asymTorusGeneratingFunctional Lt Ls μ h = ∫ ω, F ω ∂μ := by
-    simp only [asymTorusGeneratingFunctional, F]; exact (integral_sub (h_int_exp g) (h_int_exp h)).symm
+    simp only [asymTorusGeneratingFunctional, F]
+    exact (integral_sub (h_int_exp g) (h_int_exp h)).symm
   have hF_lip : ∀ ω, ‖F ω‖ ≤ |ω (g - h)| := fun ω => by
     have : F ω = Complex.exp (Complex.I * ↑(ω h)) *
         (Complex.exp (Complex.I * ↑(ω g - ω h)) - 1) := by
@@ -1695,7 +1699,8 @@ theorem asymGf_sub_norm_le_seminorm
                 _ = |ω g - ω h| := by rw [abs_div, abs_of_pos (by norm_num : (0:ℝ) < 2)]; ring
       : ‖Complex.exp (Complex.I * ↑(ω g - ω h)) - 1‖ ≤ |ω g - ω h|).trans (by rw [map_sub])
   have hF_sq : ∀ ω, ‖F ω‖ ^ 2 ≤ (ω (g - h)) ^ 2 := fun ω =>
-    (sq_le_sq' (by linarith [norm_nonneg (F ω), abs_nonneg (ω (g - h))]) (hF_lip ω)).trans (le_of_eq (sq_abs _))
+    (sq_le_sq' (by linarith [norm_nonneg (F ω), abs_nonneg (ω (g - h))]) (hF_lip ω)).trans
+      (le_of_eq (sq_abs _))
   have hF_bd2 : ∀ ω, ‖F ω‖ ≤ 2 := fun ω =>
     (norm_sub_le _ _).trans (by rw [mul_comm Complex.I (↑(ω g) : ℂ), Complex.norm_exp_ofReal_mul_I,
       mul_comm Complex.I (↑(ω h) : ℂ), Complex.norm_exp_ofReal_mul_I]; norm_num)
@@ -1721,8 +1726,10 @@ theorem asymGf_sub_norm_le_seminorm
       (ω (g - h)) ^ 2) μ := by
     change Integrable _ (asymTorusInteractingMeasure Lt Ls N P mass hmass)
     unfold asymTorusInteractingMeasure
-    rw [integrable_map_measure ((configuration_eval_measurable (g - h)).pow_const 2).aestronglyMeasurable hι_meas]
-    have h_eq : (fun ω => (ω (g - h)) ^ 2) ∘ ι = fun ω => (ω gf) ^ 2 := by ext ω; simp [Function.comp, h_eval]
+    rw [integrable_map_measure
+      ((configuration_eval_measurable (g - h)).pow_const 2).aestronglyMeasurable hι_meas]
+    have h_eq : (fun ω => (ω (g - h)) ^ 2) ∘ ι = fun ω => (ω gf) ^ 2 := by
+      ext ω; simp [Function.comp, h_eval]
     rw [h_eq]
     set bw := boltzmannWeight 2 N P (asymGeomSpacing Lt Ls N) mass
     obtain ⟨Bb, hBb⟩ := interactionFunctional_bounded_below 2 N P
@@ -1759,7 +1766,8 @@ theorem asymGf_sub_norm_le_seminorm
   have h_int_torus : ∫ ω : Configuration (AsymTorusTestFunction Lt Ls),
       (ω (g - h)) ^ 2 ∂μ ≤ 3 * Real.sqrt K * (p (g - h)) ^ 2 := by
     change ∫ ω, (ω (g - h)) ^ 2 ∂(Measure.map ι μ_int) ≤ _
-    rw [integral_map hι_meas ((configuration_eval_measurable (g - h)).pow_const 2).aestronglyMeasurable]
+    rw [integral_map hι_meas
+      ((configuration_eval_measurable (g - h)).pow_const 2).aestronglyMeasurable]
     simp_rw [h_eval]; exact h_int_bound
   -- ‖Z[g]-Z[h]‖² ≤ C*(p(g-h))² by Jensen + Cauchy-Schwarz + second moment
   have h_sq_bound : ‖asymTorusGeneratingFunctional Lt Ls μ g -
@@ -1779,7 +1787,8 @@ theorem asymGf_sub_norm_le_seminorm
           ConvexOn.map_integral_le (Even.convexOn_pow (n := 2) even_two)
             (continuousOn_pow 2) isClosed_univ
             (ae_of_all _ fun _ => Set.mem_univ _) hF_norm_int hF_sq_int'
-      _ ≤ ∫ ω, (ω (g - h)) ^ 2 ∂μ := integral_mono hF_sq_int' hX_sq_int (fun ω => hF_sq ω)
+      _ ≤ ∫ ω, (ω (g - h)) ^ 2 ∂μ :=
+          integral_mono hF_sq_int' hX_sq_int (fun ω => hF_sq ω)
       _ ≤ 3 * Real.sqrt K * (p (g - h)) ^ 2 := h_int_torus
   -- Take square root: ‖Z[g]-Z[h]‖ ≤ √(3√K) * p(g-h) ≤ B * p(g-h)
   calc ‖asymTorusGeneratingFunctional Lt Ls μ g -
@@ -1860,13 +1869,16 @@ private theorem circleTranslation_continuous_in_s
   rw [Filter.Eventually, Metric.mem_nhds_iff]
   exact ⟨δ, hδ_pos, fun s hs => by
     have h_pw : ∀ x, ‖iteratedDeriv k
-        (↑(GaussianField.circleTranslation L s g - GaussianField.circleTranslation L s₀ g)) x‖ < ε := by
+          (↑(GaussianField.circleTranslation L s g -
+            GaussianField.circleTranslation L s₀ g)) x‖ < ε := by
       intro x
       have h_coe : ∀ y, (↑(GaussianField.circleTranslation L s g -
-          GaussianField.circleTranslation L s₀ g) : ℝ → ℝ) y = g (y - s) - g (y - s₀) := by
+              GaussianField.circleTranslation L s₀ g) : ℝ → ℝ) y =
+            g (y - s) - g (y - s₀) := by
         intro y; rfl
       have h_deriv : iteratedDeriv k
-          (↑(GaussianField.circleTranslation L s g - GaussianField.circleTranslation L s₀ g)) x =
+          (↑(GaussianField.circleTranslation L s g -
+            GaussianField.circleTranslation L s₀ g)) x =
           h (x - s) - h (x - s₀) := by
         have hTs_cd : ContDiffAt ℝ k (fun y => g (y - s)) x :=
           (g.smooth.comp (contDiff_id.sub contDiff_const)).contDiffAt.of_le
