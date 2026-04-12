@@ -727,7 +727,8 @@ theorem analyticAt_hasFPowerSeriesOnBall_of_bound
   -- The diagonal of q equals the diagonal of p₀, so q sums to f.
   -- We show hasSum by the identity theorem.
   have h_series : HasFPowerSeriesOnBall f q x₀ (ENNReal.ofReal ρ) := by
-    have hq_pos : 0 < q.radius := lt_of_lt_of_le (by positivity : (0 : ℝ≥0∞) < ENNReal.ofReal ρ) q_radius
+    have hq_pos : 0 < q.radius :=
+      lt_of_lt_of_le (by positivity : (0 : ℝ≥0∞) < ENNReal.ofReal ρ) q_radius
     -- q.sum represents q on eball 0 q.radius
     have hq_fps : HasFPowerSeriesOnBall q.sum q 0 q.radius := q.hasFPowerSeriesOnBall hq_pos
     -- On a neighborhood of 0, f(x₀ + y) = q.sum y
@@ -743,7 +744,8 @@ theorem analyticAt_hasFPowerSeriesOnBall_of_bound
       --                    = (n! : ℝ)⁻¹ • iteratedFDeriv ℂ n f x₀ (fun _ => y)
       -- and (↑n!)⁻¹ • v = ((n! : ℂ)⁻¹ : ℂ) • v for v : ℂ
       -- We need to match the ℝ-scalar and ℂ-scalar versions.
-      have h_term_eq : ∀ n, q n (fun _ => y) = (↑(n.factorial) : ℂ)⁻¹ • iteratedFDeriv ℂ n f x₀ (fun _ => y) := by
+      have h_term_eq : ∀ n, q n (fun _ => y) =
+          (↑(n.factorial) : ℂ)⁻¹ • iteratedFDeriv ℂ n f x₀ (fun _ => y) := by
         intro n
         -- q n = (↑(n!))⁻¹ • (iteratedFDeriv ℂ n f x₀) where scalar is ℝ
         -- Need: (r • M) v = (↑r : ℂ) • (M v) for r : ℝ, M : ContinuousMultilinearMap, v
