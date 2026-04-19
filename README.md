@@ -79,7 +79,7 @@ OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
 The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
-**23 axioms, 0 sorries** (pphi2) + **3 axioms** (gaussian-field) = **26 combined**.
+**22 axioms, 0 sorries** (pphi2) + **3 axioms** (gaussian-field) = **25 combined**.
 
 ### Route B: T²_L (symmetric torus) — OS0–OS2
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
@@ -207,7 +207,7 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-- **pphi2:** 23 axioms, 5 sorries in the active build; `cylinderIR_os0` (OS0 analyticity) now proved via `analyticOnNhd_integral` + exponential moment transfer; Route C's 21 axioms remain preserved in `future/`
+- **pphi2:** 22 axioms, 0 sorries in the active build; `continuumMeasures_tight` (Route A tightness on S'(ℝ^d)) ported from the torus pipeline (Mitoma-Chebyshev + `interacting_moment_bound` + `gaussian_second_moment_uniform`); `cylinderIR_os0` (OS0 analyticity) proved via `analyticOnNhd_integral` + exponential moment transfer; Route C's 21 axioms remain preserved in `future/`
 - **Route B (torus):** 0 axioms, 0 sorries — the most developed route
 - **Route B' IR limit:** 3 axioms, 5 sorries — OS0 analyticity proved from uniform exponential moments + BC weak convergence; what remains is the uniform second-moment bound, uniform exponential moment, and OS3
 - **Shared foundations layer:** `Common/QFT/Euclidean/Formulations.lean` and

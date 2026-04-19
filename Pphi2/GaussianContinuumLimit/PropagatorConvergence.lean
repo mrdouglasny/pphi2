@@ -930,9 +930,9 @@ private theorem continuumKernel_eq_scaled (mass : ℝ) (hmass : 0 < mass) :
   rw [hnorm]
   have haux : 1 + mass⁻¹ ^ 2 * ‖k‖ ^ 2 = (mass ^ 2 + ‖k‖ ^ 2) / mass ^ 2 := by
     field_simp [hmass_ne]
-  rw [haux]
+  rw [haux, Real.rpow_neg_one]
   field_simp [hmass_ne]
-  ring_nf
+  ring
 
 private theorem continuumKernel_hasTemperateGrowth (mass : ℝ) (hmass : 0 < mass) :
     (continuumKernel d mass).HasTemperateGrowth := by
