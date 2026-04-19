@@ -78,6 +78,58 @@ end ComplexAnalysis
 
 /-! ### Helper: analyticity of coordinate update map -/
 
+/-- On a compact set `K ⊆ (Fin n → ℂ)`, all imaginary parts are uniformly bounded. -/
+theorem compact_im_bound {n : ℕ} {K : Set (Fin n → ℂ)} (hK : IsCompact K) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ z ∈ K, ∀ i : Fin n, |Complex.im (z i)| ≤ C := by
+  by_cases hKe : K.Nonempty
+  · obtain ⟨M, hM⟩ := hK.isBounded.exists_norm_le
+    exact ⟨M, le_trans (norm_nonneg _) (hM _ hKe.some_mem), fun z hz i =>
+      (Complex.abs_im_le_norm (z i)).trans ((norm_le_pi_norm z i).trans (hM z hz))⟩
+  · exact ⟨0, le_refl _, fun z hz => absurd ⟨z, hz⟩ hKe⟩
+
+/-- On a compact set `K ⊆ (Fin n → ℂ)`, both real and imaginary parts are uniformly bounded. -/
+theorem compact_re_im_bound {n : ℕ} {K : Set (Fin n → ℂ)} (hK : IsCompact K) :
+    ∃ C : ℝ, 0 ≤ C ∧
+      ∀ z ∈ K, ∀ i : Fin n, |Complex.re (z i)| ≤ C ∧ |Complex.im (z i)| ≤ C := by
+  by_cases hKe : K.Nonempty
+  · obtain ⟨M, hM⟩ := hK.isBounded.exists_norm_le
+    refine ⟨M, le_trans (norm_nonneg _) (hM _ hKe.some_mem), ?_⟩
+    intro z hz i
+    constructor
+    · exact (Complex.abs_re_le_norm (z i)).trans ((norm_le_pi_norm z i).trans (hM z hz))
+    · exact (Complex.abs_im_le_norm (z i)).trans ((norm_le_pi_norm z i).trans (hM z hz))
+  · exact ⟨0, le_refl _, fun z hz => absurd ⟨z, hz⟩ hKe⟩
+
+/-- Split a two-term exponential into a sum of one-variable exponentials. -/
+theorem exp_mul_add_le (c a b : ℝ) (hc : 0 ≤ c) :
+    Real.exp (c * (a + b)) ≤ Real.exp (2 * c * a) + Real.exp (2 * c * b) := by
+  by_cases hab : a ≤ b
+  · have h1 : c * (a + b) ≤ 2 * c * b := by nlinarith
+    exact (Real.exp_le_exp_of_le h1).trans (le_add_of_nonneg_left (Real.exp_pos _).le)
+  · have hab' : b ≤ a := le_of_not_ge hab
+    have h1 : c * (a + b) ≤ 2 * c * a := by nlinarith
+    exact (Real.exp_le_exp_of_le h1).trans (le_add_of_nonneg_right (Real.exp_pos _).le)
+
+/-- For nonnegative `aᵢ`, one can dominate `exp(c * ∑ aᵢ)` by a finite sum of one-variable
+exponentials. This is useful for turning compact-set bounds into integrable dominators. -/
+theorem exp_mul_sum_le {n : ℕ} (hn : 0 < n) (c : ℝ) (hc : 0 ≤ c)
+    (a : Fin n → ℝ) :
+    Real.exp (c * ∑ i : Fin n, a i) ≤
+      ∑ i : Fin n, Real.exp (↑n * c * a i) := by
+  have hne : (Finset.univ : Finset (Fin n)).Nonempty :=
+    ⟨⟨0, hn⟩, Finset.mem_univ _⟩
+  set M := Finset.univ.sup' hne a
+  have hM : ∀ i, a i ≤ M := fun i => Finset.le_sup' a (Finset.mem_univ i)
+  have h_sum_le : ∑ i : Fin n, a i ≤ ↑n * M :=
+    (Finset.sum_le_sum (fun i _ => hM i)).trans
+      (by simp [Finset.sum_const, nsmul_eq_mul])
+  have h1 : Real.exp (c * ∑ i, a i) ≤ Real.exp (↑n * c * M) :=
+    Real.exp_le_exp_of_le (by nlinarith)
+  obtain ⟨j, _, hj⟩ := Finset.exists_mem_eq_sup' hne a
+  exact h1.trans ((congr_arg Real.exp (by rw [← hj])).le.trans
+    (Finset.single_le_sum (f := fun i => Real.exp (↑n * c * a i))
+      (fun i _ => (Real.exp_pos _).le) (Finset.mem_univ j)))
+
 /-- The map `t ↦ Function.update z₀ j t` is analytic as a function `ℂ → (Fin n → ℂ)`.
 This is an affine embedding of a coordinate line. -/
 theorem analyticAt_update {n : ℕ} (z₀ : Fin n → ℂ) (j : Fin n) (t₀ : ℂ) :

@@ -16,8 +16,9 @@ group of the lattice. Full invariance is restored in the continuum limit:
 - **Rotations:** Via a Ward identity argument. The SO(2) generator J acts on
   lattice observables, producing an anomaly term O_break from the
   nearest-neighbor action breaking rotation symmetry. The key observation:
-  dim(O_break) = 4 > d = 2, so the anomaly is RG-irrelevant. Its coefficient
-  vanishes as O(a²) in the continuum limit.
+  dim(O_break) = 4 > d = 2, so the anomaly is RG-irrelevant. In the
+  super-renormalizable `P(Φ)₂` setting the formalized bound is
+  `O(a² |log a|^p)`, which still vanishes as `a → 0`.
 
   **Key simplification for P(Φ)₂:** The theory is super-renormalizable, so
   logarithmic corrections are at most polynomial in |log a| (Glimm-Jaffe
@@ -27,11 +28,11 @@ group of the lattice. Full invariance is restored in the continuum limit:
 
 - `translation_invariance_lattice` — lattice measure is translation-invariant
 - `translation_invariance_continuum` — continuum limit is translation-invariant
-- `ward_identity_lattice` — Ward identity with anomaly term
+- `ward_identity_lattice` — current formal Ward-identity slot on the lattice side
 - `anomaly_scaling_dimension` — dim(O_break) = 4
-- `anomaly_vanishes` — coefficient of O_break is O(a²)
-- `rotation_invariance_continuum` — full SO(2) invariance in the limit
-- `os2_inheritance` — full E(2) invariance of the continuum limit
+- `anomaly_vanishes` — one-point rotation anomaly is `O(a² |log a|^p)` and hence vanishes
+- `rotation_invariance_continuum` — continuum SO(2) invariance from anomaly decay
+- `os2_for_continuum_limit` — full E(2) invariance of the continuum limit
 
 ## References
 
@@ -44,6 +45,7 @@ group of the lattice. Full invariance is restored in the continuum limit:
 import Pphi2.OSAxioms
 import Pphi2.EuclideanComplex
 import Pphi2.GeneralResults.FunctionalAnalysis
+import Pphi2.InteractingMeasure.LatticeEuclideanTime
 import Pphi2.OSforGFF.TimeTranslation
 import Lattice.Symmetry
 import Mathlib.Analysis.Distribution.SchwartzSpace.Deriv
@@ -109,6 +111,17 @@ omit [NeZero N] in
 /-- `latticeTranslation` is definitionally `latticeTranslationFun` from gaussian-field. -/
 private lemma latticeTranslation_eq (v : FinLatticeSites d N) (φ : FinLatticeField d N) :
     latticeTranslation d N v φ = latticeTranslationFun d N v φ := rfl
+
+/-- The manual `LinearMap` used in `latticeMeasure_translation_invariant` agrees with the bundled
+`GaussianField.latticeTranslation` (same action on fields). -/
+private lemma latticeTranslation_linear_toCLM_eq_gaussian (v : FinLatticeSites d N) :
+    ({ toFun := latticeTranslation d N v, map_add' := fun _ _ => rfl,
+        map_smul' := fun _ _ => rfl } :
+        FinLatticeField d N →ₗ[ℝ] FinLatticeField d N).toContinuousLinearMap
+      = GaussianField.latticeTranslation d N v :=
+  ContinuousLinearMap.ext fun φ => by
+    change latticeTranslation d N v φ = latticeTranslationFun d N v φ
+    exact latticeTranslation_eq d N v φ
 
 /-- The mass operator commutes with lattice translation.
 `Q(T_v φ) = T_v(Q φ)` because both -Δ and m² commute with translation. -/
@@ -323,6 +336,40 @@ theorem latticeMeasure_translation_invariant (P : InteractionPolynomial)
   exact (latticeTranslation_volume_preserving d N (-v)).integral_comp'
     (fun ψ => G_R ψ * ρ ψ)
 
+/-- For `μ = interactingLatticeMeasure`, expectations of integrable `G` are unchanged under
+`latticeConfigEuclideanTimeShift` (dual Euclidean-time translation).
+
+**Proof.** `latticeMeasure_translation_invariant` at `v = latticeEuclideanTimeShift N k`, plus
+`latticeTranslation_linear_toCLM_eq_gaussian`.
+
+**Clustering:** `general_clustering_from_spectral_gap` subtracts `∫ F · ∫ G` with **unshifted** `G`;
+for integrable `G`, `∫ G(τ_k ω) ∂μ = ∫ G ∂μ`, so this is the standard connected correlator
+`Cov(F, G∘τ_k)` formulation. -/
+theorem interactingLatticeMeasure_expectation_configEuclideanTimeShift
+    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (k : ℕ) (G : Configuration (FinLatticeField 2 N) → ℝ)
+    (hG : Integrable G (interactingLatticeMeasure 2 N P a mass ha hmass)) :
+    ∫ ω, G (latticeConfigEuclideanTimeShift N k ω)
+        ∂(interactingLatticeMeasure 2 N P a mass ha hmass) =
+      ∫ ω, G ω ∂(interactingLatticeMeasure 2 N P a mass ha hmass) := by
+  set μ := interactingLatticeMeasure 2 N P a mass ha hmass
+  calc
+    ∫ ω, G (latticeConfigEuclideanTimeShift N k ω) ∂μ
+        = ∫ ω, G
+            (ω.comp (GaussianField.latticeTranslation 2 N (latticeEuclideanTimeShift N k))) ∂μ := by
+          refine integral_congr_ae (ae_of_all μ fun ω => ?_)
+          simp [latticeConfigEuclideanTimeShift]
+    _ = ∫ ω, G (ω.comp
+          ({ toFun := latticeTranslation 2 N (latticeEuclideanTimeShift N k),
+              map_add' := fun _ _ => rfl, map_smul' := fun _ _ => rfl } :
+              FinLatticeField 2 N →ₗ[ℝ] FinLatticeField 2 N).toContinuousLinearMap) ∂μ := by
+          refine integral_congr_ae (ae_of_all μ fun ω => ?_)
+          simp_rw [← latticeTranslation_linear_toCLM_eq_gaussian (d := 2)
+            (v := latticeEuclideanTimeShift N k)]
+    _ = ∫ ω, G ω ∂μ :=
+          latticeMeasure_translation_invariant 2 N P a mass ha hmass
+            (latticeEuclideanTimeShift N k) G hG
+
 /-! ## Translation invariance in the continuum -/
 
 /-- **Translation invariance of the continuum limit.**
@@ -518,6 +565,44 @@ theorem anomaly_scaling_dimension (_P : InteractionPolynomial) (a mass : ℝ)
       nlinarith
     nlinarith [sq_nonneg (k i), sq_nonneg a]
 
+/-! ### One-point canonical CF rotation defect -/
+
+/-- The pointwise characteristic-functional defect integrand for comparing `f` with its
+Euclidean transform by `R`. This is the OS2 specialization of the generic characteristic-integrand
+difference from `GeneralResults/FunctionalAnalysis`. -/
+abbrev rotationCFPointwiseDefectIntegrand (f : TestFunction2) (R : O2) :
+    FieldConfig2 → ℂ :=
+  configuration_cexp_eval_sub_integrand f (euclideanAction2 ⟨R, 0⟩ f)
+
+/-- The pointwise norm of the one-point characteristic-functional rotation defect observable. -/
+abbrev rotationCFPointwiseDefect (f : TestFunction2) (R : O2) :
+    FieldConfig2 → ℝ :=
+  configuration_cexp_eval_dist f (euclideanAction2 ⟨R, 0⟩ f)
+
+/-- The one-point characteristic-functional rotation defect for the canonical
+continuum-embedded lattice measure at spacing `a`. -/
+def rotationCFDefect (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (f : TestFunction2) (a : ℝ) (ha : 0 < a) (R : O2) : ℝ :=
+  haveI : IsProbabilityMeasure (continuumMeasure 2 N P a mass ha hmass) :=
+    continuumMeasure_isProbability 2 N P a mass ha hmass
+  ‖generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (euclideanAction2 ⟨R, 0⟩ f) -
+    generatingFunctional (continuumMeasure 2 N P a mass ha hmass) f‖
+
+/-- The norm of the integrated CF defect is bounded by the integral of the
+pointwise defect observable. -/
+theorem rotationCFDefect_le_pointwiseDefectIntegral (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass) (f : TestFunction2)
+    (a : ℝ) (ha : 0 < a) (R : O2) :
+    rotationCFDefect (N := N) P mass hmass f a ha R ≤
+      ∫ ω : FieldConfig2,
+        rotationCFPointwiseDefect f R ω
+          ∂(continuumMeasure 2 N P a mass ha hmass) := by
+  let μ : Measure FieldConfig2 := continuumMeasure 2 N P a mass ha hmass
+  haveI : IsProbabilityMeasure μ := continuumMeasure_isProbability 2 N P a mass ha hmass
+  simpa [rotationCFDefect, rotationCFPointwiseDefect, EuclideanOS.generatingFunctional] using
+    (norm_configuration_expIntegral_sub_le_integral_cexp_eval_dist
+      (μ := μ) f (euclideanAction2 ⟨R, 0⟩ f))
+
 /-- **The rotation anomaly is O(a² |log a|^p) from super-renormalizability.**
 
 In Fourier space, the anomaly operator O_break carries an explicit factor
@@ -532,44 +617,72 @@ the anomaly has scaling dimension 4, giving a² suppression, but the Wick
 ordering and renormalization generate at most polynomial-in-log corrections.
 
 Reference: Glimm-Jaffe §19.3, Theorem 19.3.1; Symanzik (1983); Duch (2024). -/
-axiom anomaly_bound_from_superrenormalizability (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) (n : ℕ)
-    (f : Fin n → ContinuumTestFunction 2) :
+axiom rotation_cf_pointwise_defect_polylog_bound (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (f : TestFunction2) :
     ∃ (C : ℝ) (p : ℕ), 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-    ∀ (i : Fin n) (R : O2),
+      ∀ (R : O2),
+        ∫ ω : FieldConfig2,
+          rotationCFPointwiseDefect f R ω
+            ∂(continuumMeasure 2 N P a mass ha hmass) ≤
+        C * a ^ 2 * (1 + |Real.log a|) ^ p
+
+/-- The previous CF-defect bound is derived from the pointwise observable bound
+by `‖∫g‖ ≤ ∫‖g‖`. -/
+theorem rotation_cf_defect_polylog_bound (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (f : TestFunction2) :
+    ∃ (C : ℝ) (p : ℕ), 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+      ∀ (R : O2), rotationCFDefect (N := N) P mass hmass f a ha R ≤
+        C * a ^ 2 * (1 + |Real.log a|) ^ p := by
+  rcases rotation_cf_pointwise_defect_polylog_bound (N := N) P mass hmass f with
+    ⟨C, p, hC, hpoly⟩
+  refine ⟨C, p, hC, ?_⟩
+  intro a ha hle R
+  exact (rotationCFDefect_le_pointwiseDefectIntegral (N := N) P mass hmass f a ha R).trans
+    (hpoly a ha hle R)
+
+/-- Super-renormalizable one-point control of the rotation anomaly. -/
+theorem anomaly_bound_from_superrenormalizability (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (f : TestFunction2) :
+    ∃ (C : ℝ) (p : ℕ), 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∀ (R : O2),
     haveI : IsProbabilityMeasure (continuumMeasure 2 N P a mass ha hmass) :=
       continuumMeasure_isProbability 2 N P a mass ha hmass
-    ‖generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (euclideanAction2 ⟨R, 0⟩ (f i)) -
-     generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (f i)‖ ≤
-      C * a ^ 2 * (1 + |Real.log a|) ^ p
+    ‖generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (euclideanAction2 ⟨R, 0⟩ f) -
+     generatingFunctional (continuumMeasure 2 N P a mass ha hmass) f‖ ≤
+      C * a ^ 2 * (1 + |Real.log a|) ^ p := by
+  rcases rotation_cf_defect_polylog_bound (N := N) P mass hmass f with ⟨C, p, hC, hpoly⟩
+  refine ⟨C, p, hC, ?_⟩
+  intro a ha hle R
+  simpa [rotationCFDefect] using hpoly a ha hle R
 
-/-- **The anomaly vanishes as O(a² |log a|^p).**
+/-- **The one-point characteristic-functional rotation defect vanishes.**
 
-For any n-point Schwinger function with test functions f₁,...,fₙ ∈ S(ℝ²):
+For each real test function `f ∈ S(ℝ²)` and orthogonal transformation `R ∈ O(2)`,
+the canonical continuum-embedded lattice generating functionals satisfy
 
-  `|⟨Φ(f₁)···Φ(fₙ) · O_break⟩_a| ≤ C(f₁,...,fₙ) · a² · (1 + |log a|)^p`
-
-where C is uniform in a (depends on the Schwartz norms of the fᵢ) and
-p is a fixed power depending on the degree of the interaction polynomial.
+  `‖Z_a[R · f] - Z_a[f]‖ ≤ C(f) · a² · (1 + |log a|)^p`.
 
 The a² factor comes from the dimension-4 anomaly operator; the log factors
 arise from Wick ordering and renormalization in the super-renormalizable theory.
-Crucially, in d=2 these are at most polynomial in |log a| (not essential),
-so the bound still vanishes as a → 0. -/
+Crucially, in d=2 these are at most polynomial in `|log a|`, so the defect still
+vanishes as `a → 0`. -/
 theorem anomaly_vanishes (P : InteractionPolynomial) (mass : ℝ)
-    (hmass : 0 < mass) (n : ℕ) (f : Fin n → ContinuumTestFunction 2) :
-    -- The rotation anomaly of the lattice generating functional vanishes as a → 0.
-    -- For each rotation R ∈ O(2), the generating functional Z_a[R·fᵢ] - Z_a[fᵢ]
-    -- is O(a² |log a|^p), where Z_a is the generating functional of the
-    -- continuum-embedded lattice measure.
+    (hmass : 0 < mass) (f : TestFunction2) :
+    -- The one-point rotation anomaly of the lattice generating functional
+    -- vanishes as a → 0. For each rotation R ∈ O(2),
+    -- Z_a[R·f] - Z_a[f] is O(a² |log a|^p), where Z_a is the generating
+    -- functional of the continuum-embedded lattice measure.
     ∃ (C : ℝ) (p : ℕ), 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-    ∀ (i : Fin n) (R : O2),
+    ∀ (R : O2),
     haveI : IsProbabilityMeasure (continuumMeasure 2 N P a mass ha hmass) :=
       continuumMeasure_isProbability 2 N P a mass ha hmass
-    ‖generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (euclideanAction2 ⟨R, 0⟩ (f i)) -
-     generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (f i)‖ ≤
+    ‖generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (euclideanAction2 ⟨R, 0⟩ f) -
+     generatingFunctional (continuumMeasure 2 N P a mass ha hmass) f‖ ≤
       C * a ^ 2 * (1 + |Real.log a|) ^ p := by
-  exact anomaly_bound_from_superrenormalizability (N := N) P mass hmass n f
+  exact anomaly_bound_from_superrenormalizability (N := N) P mass hmass f
 
 /-! ## Rotation invariance in the continuum -/
 
@@ -583,20 +696,82 @@ Proof outline (Ward identity argument):
    the rotation-breaking operator from the nearest-neighbor action.
 2. dim(O_break) = 4 > d = 2 (from Fourier analysis: Δ_lattice - Δ = O(a²k⁴)),
    so the anomaly is RG-irrelevant.
-3. Super-renormalizability of P(Φ)₂ ⟹ no log corrections ⟹ |anomaly| ≤ C · a².
+3. Super-renormalizability of P(Φ)₂ implies at most polynomial log corrections,
+   so `|anomaly| ≤ C · a² · (1 + |log a|)^p`.
 4. In the weak limit: `⟨δ_J F⟩_μ = 0`, so Schwinger functions are SO(2)-invariant.
 5. Reflections: time reflection Θ is a symmetry (from OS3/RP). Combined with
    SO(2), this generates all of O(2).
 6. Schwinger functions determine μ (nuclearity of S(ℝ²)) ⟹ `Z[R·f] = Z[f]`.
 
 Refs: Symanzik (1983), Lüscher-Weisz (1985), Duch (2024). -/
-axiom rotation_invariance_continuum (P : InteractionPolynomial)
+theorem rotation_invariance_continuum (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     [IsProbabilityMeasure μ]
     (h_limit : IsPphi2Limit μ P mass)
     (R : O2) (f : TestFunction2) :
-    generatingFunctional μ (euclideanAction2 ⟨R, 0⟩ f) = generatingFunctional μ f
+    generatingFunctional μ (euclideanAction2 ⟨R, 0⟩ f) = generatingFunctional μ f := by
+  have hcanon :
+      ∃ (N0 : ℕ) (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n),
+        (∀ n, a n ≤ 1) ∧
+        Filter.Tendsto a Filter.atTop (nhds 0) ∧
+        ∀ (f : TestFunction2),
+          Filter.Tendsto
+            (fun n =>
+              ∫ ω : FieldConfig2,
+                Complex.exp (Complex.I * ↑(ω f))
+                  ∂(continuumMeasure 2 (Nat.succ N0) P (a n) mass (ha_pos n) hmass))
+            Filter.atTop
+            (nhds (generatingFunctional μ f)) :=
+    canonical_continuumMeasure_cf_tendsto P mass hmass μ h_limit
+  obtain ⟨N0, a, ha_pos, ha_le, ha_tend, hcf⟩ := hcanon
+  let N : ℕ := Nat.succ N0
+  haveI : NeZero N := ⟨Nat.succ_ne_zero N0⟩
+  have h_rot_tend := hcf (euclideanAction2 ⟨R, 0⟩ f)
+  have h_id_tend := hcf f
+  obtain ⟨C, p, _hC, h_anom⟩ := anomaly_vanishes (N := N) P mass hmass f
+  have h_norm_bound :
+      ∀ n, ‖(∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω (euclideanAction2 ⟨R, 0⟩ f)))
+              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)) -
+          (∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω f))
+              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass))‖
+          ≤ C * a n ^ 2 * (1 + |Real.log (a n)|) ^ p := by
+    intro n
+    haveI : IsProbabilityMeasure (continuumMeasure 2 N P (a n) mass (ha_pos n) hmass) :=
+      continuumMeasure_isProbability 2 N P (a n) mass (ha_pos n) hmass
+    simpa [EuclideanOS.generatingFunctional] using h_anom (a n) (ha_pos n) (ha_le n) R
+  have h_sub :
+      Filter.Tendsto
+        (fun n =>
+          (∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω (euclideanAction2 ⟨R, 0⟩ f)))
+              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)) -
+          (∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω f))
+              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)))
+        Filter.atTop
+        (nhds (generatingFunctional μ (euclideanAction2 ⟨R, 0⟩ f) - generatingFunctional μ f)) :=
+    h_rot_tend.sub h_id_tend
+  have h_diff :
+      Filter.Tendsto
+        (fun n =>
+          (∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω (euclideanAction2 ⟨R, 0⟩ f)))
+              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)) -
+          (∫ ω : FieldConfig2,
+            Complex.exp (Complex.I * ↑(ω f))
+              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)))
+        Filter.atTop (nhds 0) := by
+    apply squeeze_zero_norm (fun n => h_norm_bound n)
+    simpa [mul_assoc] using
+      ((tendsto_zero_pow_mul_one_add_abs_log_pow
+          a ha_tend ha_pos ha_le 2 p (by norm_num)).const_mul C)
+  have h_eq0 :
+      generatingFunctional μ (euclideanAction2 ⟨R, 0⟩ f) - generatingFunctional μ f = 0 :=
+    tendsto_nhds_unique h_sub h_diff
+  exact sub_eq_zero.mp h_eq0
 
 /-! ## OS3: pass RP matrices to the limit
 
@@ -604,34 +779,6 @@ axiom rotation_invariance_continuum (P : InteractionPolynomial)
 continuum measures themselves. Combined with characteristic-functional
 convergence, this lets us pass each RP matrix entry to the limit directly in
 the standard `OS3_ReflectionPositivity` formulation. -/
-
-/-- `Re(Z[g]) = ∫ cos(⟨ω, g⟩) dμ` — the real part of the generating functional
-is the integral of cosine of the distribution pairing.
-
-Proof: Euler's formula gives `exp(it) = cos(t) + i·sin(t)`, so
-`Re(exp(it)) = cos(t)`. Pull `Re` through `∫` via `reCLM.integral_comp_comm`. -/
-private lemma generatingFunctional_re_eq_integral_cos
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ] (g : TestFunction2) :
-    (generatingFunctional μ g).re = ∫ ω : FieldConfig2, Real.cos (ω g) ∂μ := by
-  simp only [Pphi2.generatingFunctional, EuclideanOS.generatingFunctional]
-  have hint : Integrable (fun ω : FieldConfig2 => Complex.exp (Complex.I * ↑(ω g))) μ :=
-    (integrable_const (1 : ℂ)).mono
-      ((Complex.measurable_ofReal.comp (configuration_eval_measurable g)).const_mul Complex.I
-        |>.cexp).aestronglyMeasurable
-      (ae_of_all μ fun ω => by
-        simp only [norm_one]
-        rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
-        exact le_of_eq (Complex.norm_exp_ofReal_mul_I _))
-  calc (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re
-      = Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) := rfl
-    _ = ∫ ω, Complex.reCLM (Complex.exp (Complex.I * ↑(ω g))) ∂μ :=
-        (ContinuousLinearMap.integral_comp_comm _ hint).symm
-    _ = ∫ ω, Real.cos (ω g) ∂μ := by
-        congr 1; ext ω
-        change (Complex.exp (Complex.I * ↑(ω g))).re = Real.cos (ω g)
-        rw [mul_comm, Complex.exp_mul_I]
-        simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-              Complex.cos_ofReal_re, Complex.sin_ofReal_re]
 
 /-- **OS3 transfers from the approximating continuum measures.**
 
@@ -714,8 +861,8 @@ Each axiom is proved from the lattice construction via a specific mechanism:
   translation invariance (exact symmetry) + density of rational translations +
   continuity of the translation action on S'(ℝ²). Rotation invariance follows from
   the Ward identity: the rotation anomaly O_break has scaling dimension 4 > d = 2,
-  making it RG-irrelevant with coefficient O(a²). Super-renormalizability of P(Φ)₂
-  ensures no logarithmic corrections, so the anomaly vanishes in the continuum limit.
+  making it RG-irrelevant with coefficient `O(a² |log a|^p)` in the
+  super-renormalizable `P(Φ)₂` setting, hence still vanishing in the continuum limit.
 
 - **OS4 (Clustering):** The uniform spectral gap `m_phys ≥ m₀ > 0` from
   `spectral_gap_uniform` gives exponential clustering on the lattice:
@@ -723,285 +870,6 @@ Each axiom is proved from the lattice construction via a specific mechanism:
   this transfers to the weak limit. The clustering bound on the characteristic
   functional `Z[f + T_a g] - Z[f]·Z[g]` follows from the exponential decay of
   connected correlations. -/
-
-/-- **Exponential moments of the continuum limit** (Fernique + Nelson).
-
-For any test function `f ∈ S(ℝ²)`, there exists `c > 0` such that the
-exponential moment `∫ exp(c · |⟨ω, f⟩|) dμ(ω)` is finite.
-
-This is the key analytic estimate that transfers from the lattice to the
-continuum limit. On the lattice, it follows from:
-- **Free field:** Fernique's theorem gives Gaussian exponential moments.
-- **Interaction:** The Wick-ordered interaction preserves the exponential
-  moment structure (Glimm-Jaffe, §19.1; Simon, §V.2).
-- **Uniform in a:** Nelson's hypercontractive estimate gives
-  `‖:φⁿ:‖_{Lp} ≤ (p-1)^{n/2} · ‖:φⁿ:‖_{L2}`, uniformly in lattice spacing.
-
-Transfer to the limit: the exponential moment bound is a lower-semicontinuous
-functional under weak convergence, so the bound passes to the limit μ.
-
-This single axiom feeds both OS0 (analyticity) and OS1 (regularity).
-
-**Strengthening note:** The axiom states `∀ c > 0` (all exponential moments)
-rather than `∃ c > 0`. This is the correct mathematical statement: Fernique's
-theorem gives Gaussian moments for all c, and Nelson's hypercontractive estimate
-preserves this for the interacting measure. The stronger form is needed to
-establish integrability of `exp(|⟨ω, f⟩|)` (the c = 1 case) in the OS1 proof. -/
-axiom continuum_exponential_moments (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (h_limit : IsPphi2Limit μ P mass)
-    (f : TestFunction2) :
-    ∀ (c : ℝ), 0 < c →
-    Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ
-
-/-- **Analyticity of the complex generating functional from exponential moments.**
-
-If the measure μ has all exponential moments (`∀ f c > 0, ∫ exp(c|ω(f)|) dμ < ∞`),
-then the complex generating functional `z ↦ Z_ℂ[Σ zᵢ Jᵢ]` is jointly analytic
-in `z ∈ ℂⁿ` for any finite collection of complex test functions Jᵢ.
-
-The proof combines:
-1. **Power series representation:** Each ω-integrand `exp(i Σ zᵢ⟨ω,Jᵢ⟩)` is entire
-   in z, so the integral has a termwise convergent power series with moments
-   as coefficients.
-2. **Exponential moment bounds** justify term-by-term integration (dominated
-   convergence with majorant `exp(Σ |Im zᵢ| · |⟨ω, Jᵢ⟩|)`).
-3. Alternatively: single-variable analyticity (dominated convergence + Morera)
-   combined with **Hartogs' theorem** gives joint analyticity.
-
-References: Simon, P(φ)₂ Theory, §I.2; Reed-Simon II §X.7 (Hartogs). -/
-axiom analyticOn_generatingFunctionalC
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (h_moments : ∀ (f : TestFunction2) (c : ℝ), 0 < c →
-        Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ)
-    (n : ℕ) (J : Fin n → TestFunction2ℂ) :
-    AnalyticOn ℂ (fun z : Fin n → ℂ =>
-      generatingFunctionalℂ μ (∑ i, z i • J i)) Set.univ
-
-/-- **OS0 for the continuum limit** from exponential moments.
-
-The generating functional `Z[Σ zᵢJᵢ] = ∫ exp(i · Σ zᵢ⟨ω, Jᵢ⟩) dμ` is
-entire analytic in `z ∈ ℂⁿ`. Follows from `analyticOn_generatingFunctionalC`
-and `continuum_exponential_moments`. -/
-theorem os0_for_continuum_limit (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ)
-    (h_limit : IsPphi2Limit μ P mass) :
-    @OS0_Analyticity μ hμ := by
-  have h_exp := continuum_exponential_moments P mass hmass μ h_limit
-  intro n J
-  exact analyticOn_generatingFunctionalC μ h_exp n J
-
-/-- **Exponential moment bound via Schwartz norms.**
-
-The exponential moment `∫ exp(|ω(g)|) dμ` is bounded by
-`exp(c · (‖g‖₁ + ‖g‖₂²))` for some universal constant c > 0.
-
-This combines:
-1. **Jensen + covariance:** `E[exp(|X|)] ≤ exp(C · Var(X))` for `X = ω(g)`
-2. **H⁻¹ norm bound:** `Var(ω(g)) = ‖g‖²_{H⁻¹(μ)} ≤ C ‖g‖²_{H⁻¹}`
-3. **Sobolev embedding:** `‖g‖²_{H⁻¹} ≤ c' · (‖g‖₁ + ‖g‖₂²)` in d=2
-
-Reference: Simon P(φ)₂ Theory §I.3; Nelson, J. Funct. Anal. (1973). -/
-axiom exponential_moment_schwartz_bound
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (h_moments : ∀ (f : TestFunction2) (c : ℝ), 0 < c →
-        Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ) :
-    ∃ (c : ℝ), 0 < c ∧ ∀ (g : TestFunction2),
-      ∫ ω : FieldConfig2, Real.exp (|ω g|) ∂μ ≤
-        Real.exp (c * (∫ x, ‖g x‖ ∂volume + ∫ x, ‖g x‖ ^ (2 : ℝ) ∂volume))
-
-/-- **OS1 for the continuum limit** from exponential moments.
-
-The regularity bound `‖Z[J]‖ ≤ exp(c · (‖J‖₁ + ‖J‖_p^p))` holds for
-complex test functions J ∈ S(ℝ², ℂ).
-
-Proof chain from `continuum_exponential_moments`:
-1. Write J = f + ig with f = Re(J), g = Im(J) real Schwartz functions.
-2. `Z[J] = ∫ exp(i⟨ω, f⟩ - ⟨ω, g⟩) dμ`, so `|Z[J]| ≤ ∫ exp(|⟨ω, g⟩|) dμ`.
-3. By `continuum_exponential_moments` for g: `∫ exp(c|⟨ω,g⟩|) dμ < ∞`.
-4. Jensen's inequality + covariance estimate: `∫ exp(|⟨ω,g⟩|) dμ ≤ exp(C · ‖g‖²_{H⁻¹})`.
-   (The H⁻¹ norm controls the variance of the Gaussian part; the Wick-ordered
-   interaction only improves the bound.)
-5. Since `‖g‖²_{H⁻¹} ≤ c' · (‖J‖₁ + ‖J‖₂²)`, this gives OS1 with p = 2. -/
-theorem os1_for_continuum_limit (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ)
-    (h_limit : IsPphi2Limit μ P mass) :
-    @OS1_Regularity μ hμ := by
-  have h_exp := continuum_exponential_moments P mass hmass μ h_limit
-  -- Step 1: |Z_ℂ[J]| ≤ ∫ exp(|⟨ω, Im(J)⟩|) dμ
-  -- (from |exp(i⟨ω,Re J⟩ - ⟨ω,Im J⟩)| = exp(-⟨ω,Im J⟩) ≤ exp(|⟨ω,Im J⟩|))
-  have h_bound : ∀ (J : TestFunction2ℂ),
-      ‖generatingFunctionalℂ μ J‖ ≤
-        ∫ ω : FieldConfig2, Real.exp (|ω (schwartzIm J)|) ∂μ := by
-    intro J
-    -- Integrability of exp(|ω(Im J)|) from the strengthened exponential moments axiom
-    have hint_abs : Integrable (fun ω : FieldConfig2 => Real.exp (|ω (schwartzIm J)|)) μ := by
-      have := h_exp (schwartzIm J) 1 one_pos; simp only [one_mul] at this; exact this
-    -- Pointwise bound: ‖exp(i·Re - Im)‖ ≤ exp(|Im|)
-    -- Because ‖exp(z)‖ = exp(Re z), and Re(i·a - b) = -b, and exp(-b) ≤ exp(|b|)
-    have h_le : ∀ ω : FieldConfig2,
-        ‖Complex.exp (Complex.I * (↑(ω (schwartzRe J)) + Complex.I * ↑(ω (schwartzIm J))))‖ ≤
-        Real.exp (|ω (schwartzIm J)|) := by
-      intro ω
-      rw [Complex.norm_exp]
-      apply Real.exp_le_exp.mpr
-      -- Re(i·(a + i·b)) = -b ≤ |b|
-      have h_re : (Complex.I * (↑(ω (schwartzRe J)) + Complex.I * ↑(ω (schwartzIm J)))).re =
-          -(ω (schwartzIm J)) := by
-        simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-              Complex.ofReal_re, Complex.ofReal_im]
-      rw [h_re]
-      exact (le_abs_self (-(ω (schwartzIm J)))).trans_eq (abs_neg _)
-    -- Chain: ‖Z[J]‖ ≤ ∫ ‖integrand‖ ≤ ∫ exp(|y|)
-    exact (norm_integral_le_integral_norm _).trans
-      (integral_mono_of_nonneg
-        (ae_of_all μ fun ω => norm_nonneg _)
-        hint_abs
-        (ae_of_all μ h_le))
-  -- Step 2: Exponential moments for Im(J) give ∫ exp(|⟨ω, Im J⟩|) dμ < ∞
-  have h_exp_im : ∀ (J : TestFunction2ℂ),
-      ∀ (c : ℝ), 0 < c →
-      Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω (schwartzIm J)|)) μ := by
-    intro J c hc; exact h_exp (schwartzIm J) c hc
-  -- Step 3: ∫ exp(|⟨ω,g⟩|) dμ ≤ exp(C · (‖g‖₁ + ‖g‖₂²))
-  -- (Jensen + covariance bound: Var(⟨ω,g⟩) ≤ C‖g‖²_{H⁻¹} ≤ C'(‖g‖₁+‖g‖₂²))
-  have h_exp_norm_bound : ∃ (c : ℝ), 0 < c ∧ ∀ (g : TestFunction2),
-      ∫ ω : FieldConfig2, Real.exp (|ω g|) ∂μ ≤
-        Real.exp (c * (∫ x, ‖g x‖ ∂volume + ∫ x, ‖g x‖ ^ (2 : ℝ) ∂volume)) :=
-    exponential_moment_schwartz_bound μ h_exp
-  -- Step 4: Combine: ‖Z_ℂ[J]‖ ≤ exp(c(‖Im J‖₁ + ‖Im J‖₂²)) ≤ exp(c(‖J‖₁ + ‖J‖₂²))
-  obtain ⟨c, hc, h_norm⟩ := h_exp_norm_bound
-  -- Combination: h_bound + h_norm + (‖Im J‖ ≤ ‖J‖) gives OS1
-  exact ⟨2, c, one_le_two, le_refl _, hc, fun J => by
-    calc ‖generatingFunctionalℂ μ J‖
-        ≤ ∫ ω : FieldConfig2, Real.exp |ω (schwartzIm J)| ∂μ := h_bound J
-      _ ≤ Real.exp (c * ((∫ x, ‖schwartzIm J x‖) + ∫ x, ‖schwartzIm J x‖ ^ (2 : ℝ))) :=
-            h_norm (schwartzIm J)
-      _ ≤ Real.exp (c * ((∫ x : SpaceTime2, ‖J x‖) + ∫ x : SpaceTime2, ‖J x‖ ^ (2 : ℝ))) := by
-            apply Real.exp_le_exp.mpr
-            apply mul_le_mul_of_nonneg_left _ (le_of_lt hc)
-            have hIm : ∀ x, ‖schwartzIm J x‖ ≤ ‖J x‖ :=
-              fun x => RCLike.norm_im_le_norm (J x)
-            apply add_le_add
-            · exact integral_mono
-                (SchwartzMap.integrable (schwartzIm J)).norm
-                (SchwartzMap.integrable J).norm hIm
-            · exact integral_mono
-                (schwartz_integrable_norm_rpow (schwartzIm J) two_pos)
-                (schwartz_integrable_norm_rpow J two_pos)
-                (fun x => Real.rpow_le_rpow (norm_nonneg _) (hIm x) (by norm_num))⟩
-
-/-- **Complex generating functional invariance from real invariance.**
-
-If the real generating functional is g-invariant for all real test functions,
-then the complex generating functional is also g-invariant.
-
-**Proof**: Define analytic families `F(z) = Z_ℂ[Re(J) + z·Im(J)]` and
-`G(z) = Z_ℂ[g·Re(J) + z·g·Im(J)]`. Both are entire (from exponential
-moments via `analyticOn_generatingFunctionalC`). They agree on ℝ (reduces
-to real GF invariance). By the identity theorem for analytic functions,
-`F = G` on all of ℂ. Evaluating at `z = i` gives `Z_ℂ[J] = Z_ℂ[g·J]`. -/
-theorem complex_gf_invariant_of_real_gf_invariant
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (h_moments : ∀ (f : TestFunction2) (c : ℝ), 0 < c →
-      Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ)
-    (g : E2)
-    (h_real : ∀ f : TestFunction2,
-      generatingFunctional μ f = generatingFunctional μ (euclideanAction2 g f))
-    (J : TestFunction2ℂ) :
-    generatingFunctionalℂ μ J = generatingFunctionalℂ μ (euclideanAction2ℂ g J) := by
-  let JF : Fin 2 → TestFunction2ℂ :=
-    ![schwartzOfReal (schwartzRe J), schwartzOfReal (schwartzIm J)]
-  let JG : Fin 2 → TestFunction2ℂ :=
-    ![schwartzOfReal (euclideanAction2 g (schwartzRe J)),
-      schwartzOfReal (euclideanAction2 g (schwartzIm J))]
-  let ψ : ℂ → Fin 2 → ℂ := fun z => ![(1 : ℂ), z]
-  let F : ℂ → ℂ := fun z => generatingFunctionalℂ μ (∑ i : Fin 2, (ψ z i) • JF i)
-  let G : ℂ → ℂ := fun z => generatingFunctionalℂ μ (∑ i : Fin 2, (ψ z i) • JG i)
-  have hψ_analytic : AnalyticOn ℂ ψ Set.univ := by
-    refine AnalyticOn.pi (fun i => ?_)
-    fin_cases i
-    · simpa using (analyticOn_const : AnalyticOn ℂ (fun _ : ℂ => (1 : ℂ)) Set.univ)
-    · simpa using (analyticOn_id : AnalyticOn ℂ (fun z : ℂ => z) Set.univ)
-  have hF_analytic : AnalyticOn ℂ F Set.univ := by
-    have hbase : AnalyticOn ℂ (fun w : Fin 2 → ℂ =>
-        generatingFunctionalℂ μ (∑ i : Fin 2, w i • JF i)) Set.univ :=
-      analyticOn_generatingFunctionalC μ h_moments 2 JF
-    exact hbase.comp hψ_analytic (by intro z hz; simp [Set.mem_univ])
-  have hG_analytic : AnalyticOn ℂ G Set.univ := by
-    have hbase : AnalyticOn ℂ (fun w : Fin 2 → ℂ =>
-        generatingFunctionalℂ μ (∑ i : Fin 2, w i • JG i)) Set.univ :=
-      analyticOn_generatingFunctionalC μ h_moments 2 JG
-    exact hbase.comp hψ_analytic (by intro z hz; simp [Set.mem_univ])
-  have h_real_axis : ∀ r : ℝ, F r = G r := by
-    intro r
-    have hF_r : F r = generatingFunctional μ (schwartzRe J + r • schwartzIm J) := by
-      simpa [F, ψ, JF, Fin.sum_univ_two] using
-        (generatingFunctionalℂ_ofReal_add_real_smul μ (schwartzRe J) (schwartzIm J) r)
-    have hG_r : G r = generatingFunctional μ
-        (euclideanAction2 g (schwartzRe J) + r • euclideanAction2 g (schwartzIm J)) := by
-      simpa [G, ψ, JG, Fin.sum_univ_two] using
-        (generatingFunctionalℂ_ofReal_add_real_smul μ
-          (euclideanAction2 g (schwartzRe J)) (euclideanAction2 g (schwartzIm J)) r)
-    rw [hF_r, hG_r]
-    simpa [ContinuousLinearMap.map_add, ContinuousLinearMap.map_smul] using
-      h_real (schwartzRe J + r • schwartzIm J)
-  have hF_nhd : AnalyticOnNhd ℂ F Set.univ := (analyticOn_univ.mp hF_analytic)
-  have hG_nhd : AnalyticOnNhd ℂ G Set.univ := (analyticOn_univ.mp hG_analytic)
-  have hfreq : ∃ᶠ z : ℂ in nhdsWithin (0 : ℂ) ({0}ᶜ), F z = G z := by
-    rw [Filter.frequently_iff]
-    intro U hU
-    rcases Metric.mem_nhdsWithin_iff.mp hU with ⟨ε, hε, hUball⟩
-    have hball : (ε / 2 : ℂ) ∈ Metric.ball (0 : ℂ) ε := by
-      rw [Metric.mem_ball, Complex.dist_eq, sub_zero]
-      have hnorm : ‖(ε / 2 : ℂ)‖ = |ε| / 2 := by simp
-      rw [hnorm]
-      have hεabs : |ε| = ε := abs_of_pos hε
-      rw [hεabs]
-      linarith
-    have hne : (ε / 2 : ℂ) ≠ 0 := by
-      exact_mod_cast (show (ε / 2 : ℝ) ≠ 0 by linarith)
-    refine ⟨(ε / 2 : ℂ), ?_, ?_⟩
-    · exact hUball ⟨hball, hne⟩
-    · simpa using h_real_axis (ε / 2)
-  have h_eq : Set.EqOn F G Set.univ := by
-    simpa using
-      hF_nhd.eqOn_of_preconnected_of_frequently_eq hG_nhd
-        isPreconnected_univ (by simp : (0 : ℂ) ∈ Set.univ) hfreq
-  have hJ_decomp :
-      J = schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J) :=
-    schwartz_decompose J
-  have hJg_decomp : euclideanAction2ℂ g J =
-      schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
-      (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J)) := by
-    simpa [euclideanAction2, euclideanAction2ℂ, continuumEuclideanAction,
-      continuumEuclideanActionComplex] using
-      (schwartz_decompose_actionComplex (B := plane2Background) g J)
-  have hF_I : F Complex.I = generatingFunctionalℂ μ
-      (schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J)) := by
-    simp [F, ψ, JF, Fin.sum_univ_two]
-  have hG_I : G Complex.I = generatingFunctionalℂ μ
-      (schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
-        (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J))) := by
-    simp [G, ψ, JG, Fin.sum_univ_two]
-  have hGF_J : generatingFunctionalℂ μ J =
-      generatingFunctionalℂ μ
-        (schwartzOfReal (schwartzRe J) + (Complex.I : ℂ) • schwartzOfReal (schwartzIm J)) :=
-    congrArg (generatingFunctionalℂ μ) hJ_decomp
-  have hGF_gJ : generatingFunctionalℂ μ (euclideanAction2ℂ g J) =
-      generatingFunctionalℂ μ
-        (schwartzOfReal (euclideanAction2 g (schwartzRe J)) +
-          (Complex.I : ℂ) • schwartzOfReal (euclideanAction2 g (schwartzIm J))) :=
-    congrArg (generatingFunctionalℂ μ) hJg_decomp
-  calc
-    generatingFunctionalℂ μ J = F Complex.I := hGF_J.trans hF_I.symm
-    _ = G Complex.I := h_eq (by simp)
-    _ = generatingFunctionalℂ μ (euclideanAction2ℂ g J) := hG_I.trans hGF_gJ.symm
 
 /-- **OS2 for the continuum limit** from translation + rotation invariance.
 
@@ -1050,332 +918,7 @@ theorem os2_for_continuum_limit (P : InteractionPolynomial)
   intro g J
   exact complex_gf_invariant_of_real_gf_invariant μ h_moments g (h_real_invariance g) J
 
-/-- **Exponential clustering of the continuum limit** from spectral gap.
-
-For any test functions `f, g ∈ S(ℝ²)`, there exist `m₀, C > 0` such that
-
-  `‖Z[f + τ_a g] - Z[f] · Z[g]‖ ≤ C · exp(-m₀ · ‖a‖)`
-
-for all translations a ∈ ℝ². This is stronger than OS4 (exponential rate
-rather than just convergence to zero).
-
-Proof chain from the lattice:
-1. `spectral_gap_uniform`: the transfer matrix T has mass gap m_phys ≥ m₀ > 0
-   uniformly in lattice spacing a (Perron-Frobenius + compactness).
-2. Spectral decomposition of T gives lattice exponential clustering:
-   `|⟨F · (T_R G)⟩_a - ⟨F⟩_a · ⟨G⟩_a| ≤ ‖F‖_∞ · ‖G‖_∞ · exp(-m₀ · R)`.
-3. Apply to `F = exp(i⟨·, ι_a f⟩)`, `G = exp(i⟨·, ι_a g⟩)` (bounded continuous):
-   `|Z_a[f + τ_R g] - Z_a[f] · Z_a[g]| ≤ C(f,g) · exp(-m₀ · R)`.
-4. Weak convergence `ν_a ⇀ μ` preserves the bound for bounded continuous
-   observables: the LHS converges to the continuum quantity, and the RHS
-   is independent of a. -/
-axiom continuum_exponential_clustering (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (h_limit : IsPphi2Limit μ P mass)
-    (f g : TestFunction2) :
-    ∃ (m₀ C : ℝ), 0 < m₀ ∧ 0 < C ∧
-    ∀ (a : SpaceTime2),
-    ‖generatingFunctional μ (f + SchwartzMap.translate a g)
-     - generatingFunctional μ f * generatingFunctional μ g‖
-    ≤ C * Real.exp (-m₀ * ‖a‖)
-
-/-- **OS4 for the continuum limit** from exponential clustering.
-
-The ε-δ formulation of OS4 follows immediately from the exponential bound:
-given `ε > 0`, choose `R` large enough that `C · exp(-m₀ · R) < ε`.
-
-Proof chain from `continuum_exponential_clustering`:
-1. Get m₀, C > 0 and the bound `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`.
-2. Set `R = max(1, (1/m₀) · log(C/ε))`.
-3. For `‖a‖ > R`: `C · exp(-m₀ · ‖a‖) < C · exp(-m₀ · R) ≤ C · (ε/C) = ε`. -/
-theorem os4_for_continuum_limit (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure (Configuration (ContinuumTestFunction 2)))
-    (hμ : IsProbabilityMeasure μ)
-    (h_limit : IsPphi2Limit μ P mass) :
-    @OS4_Clustering μ hμ := by
-  intro f g ε hε
-  -- Step 1: Get exponential clustering bound
-  obtain ⟨m₀, C, hm₀, hC, h_bound⟩ := continuum_exponential_clustering P mass hmass μ h_limit f g
-  -- Step 2: Choose R so that C · exp(-m₀ · R) < ε
-  refine ⟨max 1 (Real.log (C / ε) / m₀), lt_max_of_lt_left one_pos, fun a ha => ?_⟩
-  -- Step 3: ‖a‖ > R ≥ 1, so ‖a‖ > 0 and exp(-m₀‖a‖) < 1
-  have ha_pos : (0 : ℝ) < ‖a‖ :=
-    lt_of_lt_of_le one_pos (le_of_lt (lt_of_le_of_lt (le_max_left _ _) ha))
-  -- Step 4: Bound ≤ C · exp(-m₀ · ‖a‖) < ε
-  calc ‖generatingFunctional μ (f + SchwartzMap.translate a g)
-         - generatingFunctional μ f * generatingFunctional μ g‖
-      ≤ C * Real.exp (-m₀ * ‖a‖) := h_bound a
-    _ < ε := by
-        -- m₀ · ‖a‖ > 0 so exp(-m₀·‖a‖) < 1, giving C·exp(...) < C.
-        -- Also ‖a‖ > log(C/ε)/m₀ so m₀·‖a‖ > log(C/ε),
-        -- giving exp(-m₀·‖a‖) < ε/C, so C·exp(...) < ε.
-        have hCε_pos : (0 : ℝ) < C / ε := div_pos hC hε
-        have ha_gt : ‖a‖ > Real.log (C / ε) / m₀ :=
-          lt_of_le_of_lt (le_max_right _ _) ha
-        have hm₀a_gt : Real.log (C / ε) < m₀ * ‖a‖ := by
-          have h : Real.log (C / ε) / m₀ < ‖a‖ :=
-            lt_of_le_of_lt (le_max_right _ _) ha
-          nlinarith [div_mul_cancel₀ (Real.log (C / ε)) (ne_of_gt hm₀)]
-        have hexp_lt : Real.exp (-m₀ * ‖a‖) < Real.exp (-Real.log (C / ε)) := by
-          apply Real.exp_lt_exp.mpr
-          linarith
-        have hexp_simp : Real.exp (-Real.log (C / ε)) = ε / C := by
-          rw [Real.exp_neg, Real.exp_log hCε_pos, inv_div]
-        rw [hexp_simp] at hexp_lt
-        have hC_pos := hC
-        calc C * Real.exp (-m₀ * ‖a‖)
-            < C * (ε / C) := by apply mul_lt_mul_of_pos_left hexp_lt hC_pos
-          _ = ε := by field_simp
-
 /-! ## Textbook axioms for clustering → ergodicity -/
-
-/-- **Textbook axiom: Z₂ symmetry of the P(Φ)₂ measure.**
-
-The P(Φ)₂ continuum limit measure μ is invariant under field negation φ → -φ:
-  Measure.map (Neg.neg) μ = μ
-
-This follows from:
-1. The GFF is a centered Gaussian, hence invariant under φ → -φ.
-2. The interaction P(φ) is even (`InteractionPolynomial.eval_neg`: P(-φ) = P(φ)),
-   so the Boltzmann weight exp(-V_a(φ)) is invariant under φ → -φ.
-3. Therefore each lattice measure dμ_a = (1/Z) exp(-V_a) dμ_{GFF} is Z₂-symmetric.
-4. Z₂ symmetry is preserved under weak limits (since field negation is
-   continuous in the weak-* topology on S'(ℝ²)).
-
-Reference: Simon, *The P(φ)₂ Euclidean QFT*, §II.3;
-Glimm-Jaffe, *Quantum Physics*, §6.1. -/
-theorem pphi2_measure_neg_invariant (P : InteractionPolynomial)
-    (mass : ℝ) (_hmass : 0 < mass)
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (h_limit : IsPphi2Limit μ P mass) :
-    Measure.map (Neg.neg : FieldConfig2 → FieldConfig2) μ = μ := by
-  rcases h_limit with ⟨_a, _ν, _hprob, _ha_tend, _ha_pos, _hmom, hneg, _hcf, _hlat,
-    _hweakconv, _happrox_os3⟩
-  exact hneg
-
-/-- Negation on Configuration is measurable w.r.t. the cylindrical σ-algebra. -/
-theorem configuration_neg_measurable :
-    @Measurable FieldConfig2 FieldConfig2
-      instMeasurableSpaceConfiguration instMeasurableSpaceConfiguration
-      (Neg.neg : FieldConfig2 → FieldConfig2) :=
-  configuration_measurable_of_eval_measurable _ fun f =>
-    (configuration_eval_measurable f).neg
-
-/-- The generating functional of a Z₂-symmetric measure is real-valued.
-
-Proof: conj(Z[f]) = conj(∫ exp(iωf) dμ) = ∫ exp(-iωf) dμ
-     = ∫ exp(i(-ω)f) dμ = ∫ exp(iωf) d(map(-) μ) = ∫ exp(iωf) dμ = Z[f].
-So Z[f] = conj(Z[f]), hence Im(Z[f]) = 0. -/
-theorem pphi2_generating_functional_real (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (h_limit : IsPphi2Limit μ P mass)
-    (f : TestFunction2) :
-    (generatingFunctional μ f).im = 0 := by
-  have h_sym := pphi2_measure_neg_invariant P mass hmass μ h_limit
-  -- Strategy: show conj(Z[f]) = Z[f], then Im = 0.
-  -- conj(Z[f]) = conj(∫ exp(iωf) dμ) = ∫ conj(exp(iωf)) dμ   [integral_conj]
-  --            = ∫ exp(-iωf) dμ                                  [conj of exp]
-  --            = ∫ exp(i(-ω)f) dμ                                [(-ω)f = -(ωf)]
-  --            = ∫ exp(iωf) d(map(-) μ)                          [change of vars]
-  --            = ∫ exp(iωf) dμ = Z[f]                            [h_sym]
-  simp only [Pphi2.generatingFunctional, EuclideanOS.generatingFunctional]
-  set g := fun ω : FieldConfig2 => Complex.exp (Complex.I * ↑(ω f))
-  -- Step 1: conj(∫ g dμ) = ∫ conj(g) dμ via integral_conj
-  have hconj : starRingEnd ℂ (∫ ω, g ω ∂μ) = ∫ ω, starRingEnd ℂ (g ω) ∂μ :=
-    (integral_conj (f := g)).symm
-  -- Step 2: conj(exp(i·r)) = exp(-i·r) for real r
-  have hconj_exp : ∀ ω : FieldConfig2,
-      starRingEnd ℂ (g ω) = Complex.exp (Complex.I * ↑((-ω) f)) := by
-    intro ω
-    simp only [g]
-    rw [← Complex.exp_conj]
-    congr 1
-    rw [map_mul, Complex.conj_I, Complex.conj_ofReal]
-    simp only [show (-ω) f = -(ω f) from rfl, Complex.ofReal_neg]
-    ring
-  -- Step 3: ∫ exp(i(-ω)f) dμ = ∫ exp(iωf) d(map(-) μ) by change of variables
-  -- Then use h_sym to get = ∫ exp(iωf) dμ
-  have hcov : ∫ ω, Complex.exp (Complex.I * ↑((-ω) f)) ∂μ = ∫ ω, g ω ∂μ := by
-    have heq : (fun ω : FieldConfig2 => Complex.exp (Complex.I * ↑((-ω) f))) =
-        g ∘ Neg.neg := by
-      ext ω; simp only [g, Function.comp]
-    rw [heq]
-    -- ∫ (g ∘ Neg.neg) dμ = ∫ g d(map Neg.neg μ) = ∫ g dμ  by h_sym
-    have hasm : AEStronglyMeasurable g (Measure.map Neg.neg μ) := by
-      rw [h_sym]
-      exact ((Complex.measurable_ofReal.comp (configuration_eval_measurable f)).const_mul
-        Complex.I |>.cexp).aestronglyMeasurable
-    have := MeasureTheory.integral_map configuration_neg_measurable.aemeasurable hasm
-    -- integral_map: ∫ g ∂(map Neg μ) = ∫ (g ∘ Neg) ∂μ
-    -- h_sym: map Neg μ = μ, so ∫ g ∂μ = ∫ (g ∘ Neg) ∂μ
-    rw [h_sym] at this
-    exact this.symm
-  -- Combine: conj(Z[f]) = Z[f]
-  have hself_conj : starRingEnd ℂ (∫ ω, g ω ∂μ) = ∫ ω, g ω ∂μ := by
-    rw [hconj]
-    simp_rw [hconj_exp]
-    exact hcov
-  -- conj(z) = z implies z.im = 0
-  have := Complex.conj_eq_iff_im.mp hself_conj
-  exact this
-
-/-- **Continuity of the generating functional under translations.**
-
-The map t ↦ Z[f + τ_{(t,0)} g] is continuous in t : ℝ. This follows from
-the dominated convergence theorem applied to the integral
-∫ exp(i⟨ω, f + τ_{(t,0)} g⟩) dμ(ω), since the integrand is bounded by 1
-and converges pointwise as the test function varies continuously.
-
-Reference: Reed-Simon II, §IX.3 (continuity of characteristic functions). -/
-theorem generatingFunctional_translate_continuous
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (f g : TestFunction2) :
-    Continuous (fun t : ℝ =>
-      generatingFunctional μ (f + SchwartzMap.translate (timeTranslationVector2 t) g)) := by
-  -- Define the test function as a function of t
-  set h : ℝ → TestFunction2 := fun t =>
-    f + SchwartzMap.translate (timeTranslationVector2 t) g with hh_def
-  -- The generating functional is ∫ exp(i * ω(h(t))) dμ(ω)
-  -- Apply DCT: F t ω = exp(i * ω(h(t))), bound = 1
-  change Continuous (fun t => ∫ ω : FieldConfig2, Complex.exp (Complex.I * ↑(ω (h t))) ∂μ)
-  apply MeasureTheory.continuous_of_dominated
-  -- 1. AEStronglyMeasurable for each t
-  · intro t
-    exact ((Complex.measurable_ofReal.comp (configuration_eval_measurable (h t))).const_mul
-      Complex.I |>.cexp).aestronglyMeasurable
-  -- 2. Norm bound: ‖exp(i * ω(h(t)))‖ ≤ 1 for all t, ω
-  · intro t
-    exact ae_of_all μ fun ω => by
-      rw [show Complex.I * ↑(ω (h t)) = ↑(ω (h t)) * Complex.I from mul_comm _ _]
-      exact le_of_eq (Complex.norm_exp_ofReal_mul_I _)
-  -- 3. Integrable bound: ∫ 1 dμ < ∞ (probability measure)
-  · exact integrable_const 1
-  -- 4. Pointwise continuity: for each ω, t ↦ exp(i * ω(h(t))) is continuous
-  · exact ae_of_all μ fun ω => by
-      apply Complex.continuous_exp.comp
-      apply Continuous.mul continuous_const
-      apply Complex.continuous_ofReal.comp
-      -- Need: t ↦ ω(h(t)) is continuous
-      -- ω is a continuous linear functional, so it suffices that t ↦ h(t) is continuous
-      -- h(t) = f + translate(t,0) g, and ω(h(t)) = ω(f) + ω(translate(t,0) g)
-      -- So we need t ↦ ω(translate(t,0) g) continuous
-      show Continuous (fun t => ω (h t))
-      simp only [hh_def, map_add]
-      apply Continuous.add continuous_const
-      -- Need: t ↦ ω(translate(t,0) g) continuous
-      -- ω is continuous, and translate(t,0) g is continuous in t (Schwartz topology)
-      apply ω.continuous.comp
-      -- Need: t ↦ translate(t,0) g continuous in Schwartz topology
-      -- This is the key step using TimeTranslation infrastructure
-      haveI : Fact (0 < 2) := ⟨by norm_num⟩
-      -- translate(t,0) g and timeTranslationSchwartz(-t) g agree pointwise
-      have h_eq : (fun t => SchwartzMap.translate
-          (timeTranslationVector2 t) g) =
-          (fun t => TimeTranslation.timeTranslationSchwartz (-t) g) := by
-        funext t
-        ext x
-        simp only [SchwartzMap.translate_apply, TimeTranslation.timeTranslationSchwartz,
-          TimeTranslation.timeTranslationSchwartzCLM,
-          SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
-        congr 1
-        -- Need: x - (t, 0) = timeShift(-t)(x) as elements of SpaceTime 2
-        ext i
-        fin_cases i <;> simp [TimeTranslation.timeShift, sub_eq_add_neg]
-      rw [h_eq]
-      exact (TimeTranslation.continuous_timeTranslationSchwartz g).comp (continuous_neg)
-
-/-- **Norm bound on the generating functional.**
-
-For any probability measure μ, the generating functional satisfies
-‖Z[f]‖ ≤ 1. This follows from:
-  ‖Z[f]‖ = ‖∫ exp(i⟨ω,f⟩) dμ(ω)‖ ≤ ∫ ‖exp(i⟨ω,f⟩)‖ dμ(ω) = ∫ 1 dμ = 1. -/
-theorem norm_generatingFunctional_le_one
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (f : TestFunction2) :
-    ‖generatingFunctional μ f‖ ≤ 1 := by
-  simp only [Pphi2.generatingFunctional, EuclideanOS.generatingFunctional]
-  calc ‖∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂μ‖
-      ≤ ∫ ω, ‖Complex.exp (Complex.I * ↑(ω f))‖ ∂μ :=
-        norm_integral_le_integral_norm _
-    _ = ∫ _ : FieldConfig2, (1 : ℝ) ∂μ := by
-        congr 1; ext ω; exact Complex.norm_exp_I_mul_ofReal (ω f)
-    _ = 1 := by
-        rw [integral_const, probReal_univ, smul_eq_mul, mul_one]
-
-/-- **Clustering implies ergodicity for P(Φ)₂ measures.**
-
-For the P(Φ)₂ Euclidean measure, OS4_Clustering implies OS4_Ergodicity.
-The proof uses three ingredients:
-
-1. **Clustering → pointwise convergence:** `Z[f + τ_a g] → Z[f]·Z[g]` as `‖a‖ → ∞`.
-
-2. **Reality of Z[f]:** The P(Φ)₂ measure with even polynomial P is φ → -φ
-   symmetric, making Z[f] = Z̄[f] real. Then `Re(Z[f]·Z[g]) = Z[f].re · Z[g].re`.
-
-3. **Cesàro mean convergence:** The time-averaged `(1/T) ∫₀ᵀ Re(Z[f+τ_{(t,0)} g]) dt`
-   converges to the limit `Z[f].re · Z[g].re`, since the integrand converges
-   with exponential rate (from the mass gap).
-
-References: Glimm-Jaffe Ch. 6; Simon, The P(φ)₂ Theory, Ch. V;
-Reed-Simon I §XIII.12 (mean ergodic theorem). -/
-theorem os4_clustering_implies_ergodicity (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
-    (h_limit : IsPphi2Limit μ P mass)
-    (h_cluster : OS4_Clustering μ) :
-    OS4_Ergodicity μ := by
-  intro f g
-  set L := (generatingFunctional μ f).re * (generatingFunctional μ g).re
-  -- Step 1: Show Re(Z[f]·Z[g]) = Re(Z[f])·Re(Z[g]) using reality of Z
-  have hf_real := pphi2_generating_functional_real P mass hmass μ h_limit f
-  have hg_real := pphi2_generating_functional_real P mass hmass μ h_limit g
-  have h_re_product : (generatingFunctional μ f * generatingFunctional μ g).re = L := by
-    simp only [Complex.mul_re, L]
-    rw [hf_real, hg_real]
-    ring
-  -- Step 2: Define the integrand h(t) = Re(Z[f + τ_{(t,0)} g])
-  set h_fun : ℝ → ℝ := fun t =>
-    (generatingFunctional μ (f + SchwartzMap.translate (timeTranslationVector2 t) g)).re
-  -- Step 3: Show Z[f + τ_t g] → Z[f]·Z[g] in ℂ using clustering
-  have h_Z_tend : Filter.Tendsto
-      (fun t : ℝ => generatingFunctional μ (f + SchwartzMap.translate
-        (timeTranslationVector2 t) g))
-      Filter.atTop (nhds (generatingFunctional μ f * generatingFunctional μ g)) := by
-    rw [Metric.tendsto_atTop]
-    intro ε hε
-    obtain ⟨R, hR, h_bound⟩ := h_cluster f g ε hε
-    use R + 1
-    intro t ht
-    have h_norm_ge : ‖timeTranslationVector2 t‖ > R := by
-      have h1 := PiLp.norm_apply_le
-        (timeTranslationVector2 t) (0 : Fin 2)
-      have h2 : (timeTranslationVector2 t).ofLp (0 : Fin 2) = t := by
-        simp
-      rw [h2, Real.norm_eq_abs] at h1
-      linarith [le_abs_self t]
-    rw [Complex.dist_eq]
-    exact h_bound _ h_norm_ge
-  -- Step 4: Take Re: continuous Re ∘ Z-tendsto gives h(t) → L
-  have h_ptwise : Filter.Tendsto h_fun Filter.atTop (nhds L) := by
-    rw [show L = (generatingFunctional μ f * generatingFunctional μ g).re from h_re_product.symm]
-    have h_re_cont : Filter.Tendsto Complex.re
-        (nhds (generatingFunctional μ f * generatingFunctional μ g))
-        (nhds (generatingFunctional μ f * generatingFunctional μ g).re) :=
-      Complex.continuous_re.continuousAt
-    exact h_re_cont.comp h_Z_tend
-  -- Step 5: h is bounded (|Re(z)| ≤ ‖z‖ ≤ 1)
-  have h_bounded : ∃ M : ℝ, ∀ t, |h_fun t| ≤ M := by
-    use 1
-    intro t
-    exact (Complex.abs_re_le_norm _).trans (norm_generatingFunctional_le_one μ _)
-  -- Step 6: h is measurable (from continuity of Z under translations)
-  have h_meas : Measurable h_fun :=
-    (Complex.continuous_re.comp (generatingFunctional_translate_continuous μ f g)).measurable
-  -- Step 7: Apply Cesàro convergence
-  exact cesaro_set_integral_tendsto h_fun L h_meas h_bounded h_ptwise
 
 /-- **The continuum limit satisfies all five OS axioms.**
 
@@ -1383,8 +926,7 @@ Assembles all results: OS3 is proved by passing the RP matrix inequalities of
 the approximating continuum measures to the limit through characteristic
 functional convergence. OS0, OS1, OS2, OS4 follow from the lattice
 construction via the mechanisms described above. -/
-theorem continuumLimit_satisfies_fullOS
-    (P : InteractionPolynomial)
+theorem continuumLimit_satisfies_fullOS (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (ContinuumTestFunction 2)))
     (hμ : IsProbabilityMeasure μ)

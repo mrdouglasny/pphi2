@@ -1,18 +1,26 @@
-/- 
+/-
 Copyright (c) 2026 Michael R. Douglas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Matteo Cipollina, Michael R. Douglas
 
 # Euclidean Plane Backgrounds
 
-This file introduces a first genuine background layer for the continuum
-side of the project. Rather than hard-coding `ℝ^d`, Schwartz test
-functions, tempered distributions, and Euclidean motions separately in
-downstream files, we package the ambient Euclidean background and derive
-the standard objects from it.
+**(Mathlib-facing):** `EuclideanSpace ℝ (Fin d)`, `SchwartzMap`, `Configuration` (Gaussian-field
+tempered distributions), `LinearIsometryEquiv`, and the composition theorems used below. No
+`InteractionPolynomial`, lattice measure, or OS axioms appear here.
 
-The first instance is the Euclidean plane background used by the current
-`P(Φ)₂` formalization. Future torus/cylinder backgrounds can grow beside
-this layer rather than being introduced only through route-local APIs.
+**(this repository):** `EuclideanPlaneBackground` is only a **1-field** carrier `dim : ℕ`.
+Everything else is either an **`abbrev`** to a Mathlib type or a **`def` proved equivalent**
+to standard operations (`translate_apply`, `action` via `SchwartzMap.compCLMOfAntilipschitz`).
+See `docs/mathlib_prerequisite_layering.md`.
+
+## Content
+
+We package the ambient Euclidean background and derive motions and translation on Schwartz
+space once, instead of duplicating `ℝ^d` APIs across the continuum limit and OS layers.
+
+The first instance is the plane background for `P(Φ)₂` (`planeBackground 2`). Torus/cylinder
+backgrounds can extend the same pattern beside route-local code.
 -/
 
 import GaussianField.Construction
@@ -98,10 +106,30 @@ noncomputable def actionComplex {B : EuclideanPlaneBackground}
     (inversePointAction_hasTemperateGrowth g)
     (inversePointAction_antilipschitz g)
 
+/-- `action` is pullback along the inverse affine point action `x ↦ g.R.symm (x - g.t)`. -/
+theorem action_apply {B : EuclideanPlaneBackground} (g : Motion B)
+    (f : RealTestFunction B) (x : SpaceTime B) :
+    action g f x = f (inversePointAction g x) := by
+  simp only [action, SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
+
+/-- `actionComplex` is pullback along the inverse affine point action
+`x ↦ g.R.symm (x - g.t)`. -/
+theorem actionComplex_apply {B : EuclideanPlaneBackground} (g : Motion B)
+    (f : ComplexTestFunction B) (x : SpaceTime B) :
+    actionComplex g f x = f (inversePointAction g x) := by
+  simp only [actionComplex, SchwartzMap.compCLMOfAntilipschitz_apply, Function.comp_apply]
+
 /-- The pure translation motion with identity orthogonal part. -/
 def translationMotion (B : EuclideanPlaneBackground) (t : SpaceTime B) : Motion B where
   R := LinearIsometryEquiv.refl ℝ (SpaceTime B)
   t := t
+
+/-- For a pure translation motion, the inverse point action is `x ↦ x - t`. -/
+@[simp] theorem inversePointAction_translationMotion
+    (B : EuclideanPlaneBackground) (t x : SpaceTime B) :
+    inversePointAction (translationMotion B t) x = x - t := by
+  change (LinearIsometryEquiv.refl ℝ (SpaceTime B)).symm (x - t) = x - t
+  rfl
 
 /-- Translation of a real Schwartz function by a spacetime vector. -/
 noncomputable def translate (B : EuclideanPlaneBackground) (v : SpaceTime B) :
@@ -117,23 +145,22 @@ noncomputable def translateComplex (B : EuclideanPlaneBackground) (v : SpaceTime
 theorem translate_apply (B : EuclideanPlaneBackground) (v : SpaceTime B)
     (f : RealTestFunction B) (x : SpaceTime B) :
     translate B v f x = f (x - v) := by
-  simp only [translate, action, SchwartzMap.compCLMOfAntilipschitz_apply,
-    Function.comp_apply, inversePointAction, translationMotion]
-  congr 1
+  simp [translate, action_apply]
 
 /-- `translateComplex` acts by precomposition with `x ↦ x - v`. -/
 theorem translateComplex_apply (B : EuclideanPlaneBackground) (v : SpaceTime B)
     (f : ComplexTestFunction B) (x : SpaceTime B) :
     translateComplex B v f x = f (x - v) := by
-  simp only [translateComplex, actionComplex, SchwartzMap.compCLMOfAntilipschitz_apply,
-    Function.comp_apply, inversePointAction, translationMotion]
-  congr 1
+  simp [translateComplex, actionComplex_apply]
 
 end EuclideanPlaneBackground
 
 /-- The canonical Euclidean plane background of dimension `d`. -/
 abbrev planeBackground (d : ℕ) : EuclideanPlaneBackground where
   dim := d
+
+@[simp] lemma planeBackground_dim (d : ℕ) : (planeBackground d).dim = d :=
+  rfl
 
 /-- Euclidean spacetime `ℝ^d` used by continuum test functions. -/
 abbrev ContinuumSpaceTime (d : ℕ) :=
@@ -159,17 +186,57 @@ abbrev ContinuumOrthogonalGroup (d : ℕ) :=
 abbrev ContinuumMotion (d : ℕ) :=
   EuclideanPlaneBackground.Motion (planeBackground d)
 
+/-! ### P-characterization of continuum abbreviations
+
+These are definitional equalities to standard Mathlib types (`rfl`). Use them in `rw`/`simp`
+to discharge “notational” distance between `Continuum*` names and `EuclideanSpace`/`SchwartzMap`. -/
+
+@[simp] theorem ContinuumSpaceTime_eq (d : ℕ) :
+    ContinuumSpaceTime d = EuclideanSpace ℝ (Fin d) :=
+  rfl
+
+@[simp] theorem ContinuumTestFunction_eq (d : ℕ) :
+    ContinuumTestFunction d = SchwartzMap (EuclideanSpace ℝ (Fin d)) ℝ :=
+  rfl
+
+@[simp] theorem ContinuumComplexTestFunction_eq (d : ℕ) :
+    ContinuumComplexTestFunction d = SchwartzMap (EuclideanSpace ℝ (Fin d)) ℂ :=
+  rfl
+
+@[simp] theorem ContinuumFieldConfig_eq (d : ℕ) :
+    ContinuumFieldConfig d = Configuration (SchwartzMap (EuclideanSpace ℝ (Fin d)) ℝ) :=
+  rfl
+
+@[simp] theorem ContinuumOrthogonalGroup_eq (d : ℕ) :
+    ContinuumOrthogonalGroup d =
+      (EuclideanSpace ℝ (Fin d) ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin d)) :=
+  rfl
+
 /-- Pull back a real Schwartz function on `ℝ^d` along a Euclidean motion. -/
 noncomputable def continuumEuclideanAction {d : ℕ}
     (g : ContinuumMotion d) :
     ContinuumTestFunction d →L[ℝ] ContinuumTestFunction d :=
   EuclideanPlaneBackground.action g
 
+/-- `continuumEuclideanAction` is pullback along `x ↦ g.R.symm (x - g.t)`. -/
+theorem continuumEuclideanAction_apply {d : ℕ} (g : ContinuumMotion d)
+    (f : ContinuumTestFunction d) (x : ContinuumSpaceTime d) :
+    continuumEuclideanAction g f x =
+      f (EuclideanPlaneBackground.inversePointAction g x) :=
+  EuclideanPlaneBackground.action_apply g f x
+
 /-- Pull back a complex Schwartz function on `ℝ^d` along a Euclidean motion. -/
 noncomputable def continuumEuclideanActionComplex {d : ℕ}
     (g : ContinuumMotion d) :
     ContinuumComplexTestFunction d →L[ℝ] ContinuumComplexTestFunction d :=
   EuclideanPlaneBackground.actionComplex g
+
+/-- `continuumEuclideanActionComplex` is pullback along `x ↦ g.R.symm (x - g.t)`. -/
+theorem continuumEuclideanActionComplex_apply {d : ℕ} (g : ContinuumMotion d)
+    (f : ContinuumComplexTestFunction d) (x : ContinuumSpaceTime d) :
+    continuumEuclideanActionComplex g f x =
+      f (EuclideanPlaneBackground.inversePointAction g x) :=
+  EuclideanPlaneBackground.actionComplex_apply g f x
 
 /-- Translation of a real Schwartz function by `v ∈ ℝ^d`. -/
 noncomputable def schwartzTranslate (d : ℕ) (v : ContinuumSpaceTime d) :

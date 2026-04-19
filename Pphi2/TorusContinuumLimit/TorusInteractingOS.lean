@@ -1683,24 +1683,7 @@ private lemma gf_re_eq_cos_integral
     [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
     (torusGeneratingFunctional L μ g).re =
     ∫ ω : Configuration (TorusTestFunction L), Real.cos (ω g) ∂μ := by
-  unfold torusGeneratingFunctional
-  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re =
-    Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
-  have hint : Integrable (fun ω : Configuration (TorusTestFunction L) =>
-      Complex.exp (Complex.I * ↑(ω g))) μ := by
-    apply (integrable_const (1 : ℂ)).mono
-    · exact (Complex.continuous_exp.measurable.comp
-        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
-          (configuration_eval_measurable g)))).aestronglyMeasurable
-    · apply ae_of_all; intro ω; simp only [norm_one]
-      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
-      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
-  rw [← ContinuousLinearMap.integral_comp_comm Complex.reCLM hint]
-  congr 1 with ω
-  simp only [Complex.reCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
-    Complex.add_re, Complex.mul_re, Complex.I_re, mul_zero,
-    Complex.sin_ofReal_im, Complex.I_im, mul_one, sub_self, add_zero]
-  exact Complex.cos_ofReal_re (ω g)
+  simpa [torusGeneratingFunctional] using configuration_expIntegral_re_eq_integral_cos μ g
 
 /-- Decomposition: the generating functional's imaginary part is the sine integral. -/
 private lemma gf_im_eq_sin_integral
@@ -1708,24 +1691,7 @@ private lemma gf_im_eq_sin_integral
     [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
     (torusGeneratingFunctional L μ g).im =
     ∫ ω : Configuration (TorusTestFunction L), Real.sin (ω g) ∂μ := by
-  unfold torusGeneratingFunctional
-  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).im =
-    Complex.imCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
-  have hint : Integrable (fun ω : Configuration (TorusTestFunction L) =>
-      Complex.exp (Complex.I * ↑(ω g))) μ := by
-    apply (integrable_const (1 : ℂ)).mono
-    · exact (Complex.continuous_exp.measurable.comp
-        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
-          (configuration_eval_measurable g)))).aestronglyMeasurable
-    · apply ae_of_all; intro ω; simp only [norm_one]
-      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
-      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
-  rw [← ContinuousLinearMap.integral_comp_comm Complex.imCLM hint]
-  congr 1 with ω
-  simp only [Complex.imCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
-    Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-    Complex.cos_ofReal_im, Complex.sin_ofReal_re, Complex.sin_ofReal_im]
-  ring
+  simpa [torusGeneratingFunctional] using configuration_expIntegral_im_eq_integral_sin μ g
 
 /-- **Translation invariance of the interacting continuum limit.**
 
