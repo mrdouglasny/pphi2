@@ -596,22 +596,53 @@ private theorem massOperator_indep_of_positiveTime
 
 /-- **Second Fubini + COV + perfect square for Gaussian RP (factored form).**
 
-After factoring `G(u)` out of the inner integral, shows the result is ≥ 0.
+After factoring `G(u)` out of the inner integral, shows the RP integral is ≥ 0.
 
-**Proof decomposition** (for future formalization):
+## Irreducible mathematical content
+
+The conclusion is that the specific Gaussian-weighted integral is ≥ 0. The
+**only** genuinely mathematical step is the **COV identity**:
+
+  `∫ v₋, GΘ(0,(v₋,v₀))·exp(-½C(v₋,v₀)) dv₋`
+  `  = exp(-½C((0,v₀))) · ∫ u', G(u',(0,v₀))·exp(-½A(u',(0,v₀))) du'`
+
+This identity expresses the time-reflection symmetry of the Gaussian measure
+on the negative-time sector — after the substitution `v₋ = σ·u'` where
+`σ : isNT ≃ isPT` is site-level time reflection:
+
+- The integrand `GΘ(0,(v₋,v₀))` becomes `G(u',(0,v₀))` because
+  `fieldReflection2D` turns S₋ values into S₊ values (and S₊ values into 0),
+  then `G` only sees S₊ values by `PositiveTimeSupported`.
+- The quadratic form `C(v₋,v₀)` becomes `A(u',(0,v₀)) + C((0,v₀))`, by
+  `massOperatorMatrix_timeNeg_invariant` (proved in this file): the mass
+  operator matrix `Q` satisfies `Q(θx,θy) = Q(x,y)` for `θ` the site-level
+  time negation, so `⟨φ_R(σ·u', v₀), Q(φ_R(σ·u', v₀))⟩ = ⟨Θφ_R, Q(Θφ_R)⟩`
+  where `Θφ_R` is the field with `u'` at S₊, `0` at S₋, `v₀` at B. The
+  quadratic form of that field decomposes as `A(u',(0,v₀)) + C((0,v₀))`
+  because S₊-S₋ cross terms vanish by `massOperator_cross_block_zero`.
+
+Substituting these back, the outer integral becomes
+`∫ u, G(u,0) · ∫ v₀ · exp(-½C_BB(v₀)) · w(v₀) · exp(-½A(u,v₀)) ·`
+`∫ u', G(u',(0,v₀))·exp(-½A(u',(0,v₀))) du' · du dv₀`,
+which after Fubini swap `u ↔ v₀` and collecting factors becomes a positive
+measure against a **perfect square**:
+
+  `∫ v₀ w(v₀)·exp(-½C_BB(v₀)) · [∫ u G(u,0)·exp(-½A(u,(0,v₀))) du]² ≥ 0`.
+
+## Proof plumbing
+
 1. **Second Fubini**: Split `v = (v₋, v₀)` via `MeasurableEquiv.piEquivPiSubtypeProd`
-   where `v₋` ranges over S₋ (negative time) and `v₀` over B (boundary).
+   on the `isNT` predicate, reducing `∫ v` to `∫ v₀ ∫ v₋`.
 2. **Factor out**: `w(v₀)` and `exp(-½A(u,v₀))` don't depend on `v₋`
-   (by `hw_boundary` and `hA_indep`), so pull them out of the `v₋`-integral.
-3. **COV identity**: Time-reflection bijects S₋ ≃ S₊ (volume-preserving),
-   and `massOperatorMatrix_timeNeg_invariant` gives Q(θx,θy) = Q(x,y).
-   After substitution: `∫ v₋, GΘ(v₋,v₀)·exp(-½C(v₋,v₀))`
-   `= exp(-½C_BB(v₀)) · ∫ u', G(u')·exp(-½A(u',v₀))`.
-4. **Fubini swap**: Exchange `u ↔ v₀` integration order.
-5. **Perfect square**: `∫ v₀, w(v₀)·exp(-½C_BB(v₀))·[∫ u, G(u)·exp(-½A(u,v₀))]² ≥ 0`
-   by `integral_nonneg` + `mul_nonneg` + `sq_nonneg`.
+   (`hw_boundary`, `hA_indep`), so pull out of the `v₋`-integral.
+3. **COV identity** (irreducible step above), via
+   `volume_preserving_piCongrLeft` + site-level `isNT ≃ isPT` + `Q`-invariance.
+4. **Fubini swap**: Exchange `u ↔ v₀` integration order via `integral_integral_swap`.
+5. **Perfect square**: `integral_nonneg` + `mul_nonneg` + `sq_nonneg`.
 
-The hardest step is (3), the COV identity. Steps (1,2,4,5) are Fubini plumbing.
+Steps (1, 2, 4, 5) are measure-theoretic plumbing. Step (3) is the real mathematical
+content and relies on `massOperatorMatrix_timeNeg_invariant` (already proved
+here, line 502) plus the site-level time-reflection bijection.
 
 Reference: Glimm-Jaffe Ch. 6.1, Osterwalder-Seiler (1978) §3. -/
 private axiom gaussian_rp_cov_perfect_square
