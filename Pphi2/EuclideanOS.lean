@@ -13,6 +13,7 @@ specialization to the distinguished 2D background.
 -/
 
 import Pphi2.Backgrounds.EuclideanTime
+import Pphi2.GeneralResults.FunctionalAnalysis
 import Mathlib.Analysis.Analytic.Basic
 
 noncomputable section
@@ -36,55 +37,49 @@ def generatingFunctional {B : EuclideanPlaneBackground}
     (f : EuclideanPlaneBackground.RealTestFunction B) : ℂ :=
   ∫ ω : EuclideanPlaneBackground.Distribution B, Complex.exp (Complex.I * ↑(ω f)) ∂μ
 
+/-- `Re(Z[f]) = ∫ cos(⟨ω, f⟩) dμ`. This is Euler's formula plus commutation of
+`Complex.reCLM` with the Bochner integral. -/
+theorem generatingFunctional_re_eq_integral_cos {B : EuclideanPlaneBackground}
+    (μ : Measure (EuclideanPlaneBackground.Distribution B)) [IsProbabilityMeasure μ]
+    (f : EuclideanPlaneBackground.RealTestFunction B) :
+    (generatingFunctional μ f).re =
+      ∫ ω : EuclideanPlaneBackground.Distribution B, Real.cos (ω f) ∂μ := by
+  simpa [generatingFunctional, EuclideanPlaneBackground.RealTestFunction,
+    EuclideanPlaneBackground.Distribution] using
+    (configuration_expIntegral_re_eq_integral_cos
+      (E := SchwartzMap (EuclideanPlaneBackground.SpaceTime B) ℝ)
+      (μ := (show Measure (Configuration (SchwartzMap (EuclideanPlaneBackground.SpaceTime B) ℝ))
+        from μ))
+      f)
+
+/-- `Im(Z[f]) = ∫ sin(⟨ω, f⟩) dμ`. This is Euler's formula plus commutation of
+`Complex.imCLM` with the Bochner integral. -/
+theorem generatingFunctional_im_eq_integral_sin {B : EuclideanPlaneBackground}
+    (μ : Measure (EuclideanPlaneBackground.Distribution B)) [IsProbabilityMeasure μ]
+    (f : EuclideanPlaneBackground.RealTestFunction B) :
+    (generatingFunctional μ f).im =
+      ∫ ω : EuclideanPlaneBackground.Distribution B, Real.sin (ω f) ∂μ := by
+  simpa [generatingFunctional, EuclideanPlaneBackground.RealTestFunction,
+    EuclideanPlaneBackground.Distribution] using
+    (configuration_expIntegral_im_eq_integral_sin
+      (E := SchwartzMap (EuclideanPlaneBackground.SpaceTime B) ℝ)
+      (μ := (show Measure (Configuration (SchwartzMap (EuclideanPlaneBackground.SpaceTime B) ℝ))
+        from μ))
+      f)
+
 /-- Extract the real part of a complex Schwartz function as a real Schwartz
 function. -/
 def schwartzRe {B : EuclideanPlaneBackground}
     (J : EuclideanPlaneBackground.ComplexTestFunction B) :
     EuclideanPlaneBackground.RealTestFunction B :=
-  SchwartzMap.mk (fun x => (J x).re)
-    (Complex.reCLM.contDiff.comp J.smooth')
-    (by
-      intro k n
-      obtain ⟨C, hC⟩ := J.decay' k n
-      use C * ‖Complex.reCLM‖
-      intro x
-      have h_eq : (fun y => (J y).re) = Complex.reCLM ∘ J.toFun := rfl
-      rw [h_eq, ContinuousLinearMap.iteratedFDeriv_comp_left Complex.reCLM
-        J.smooth'.contDiffAt (WithTop.coe_le_coe.mpr le_top)]
-      calc ‖x‖ ^ k * ‖Complex.reCLM.compContinuousMultilinearMap
-              (iteratedFDeriv ℝ n J.toFun x)‖
-          ≤ ‖x‖ ^ k * (‖Complex.reCLM‖ * ‖iteratedFDeriv ℝ n J.toFun x‖) :=
-            mul_le_mul_of_nonneg_left
-              (ContinuousLinearMap.norm_compContinuousMultilinearMap_le _ _)
-              (pow_nonneg (norm_nonneg _) _)
-        _ = ‖Complex.reCLM‖ * (‖x‖ ^ k * ‖iteratedFDeriv ℝ n J.toFun x‖) := by ring
-        _ ≤ ‖Complex.reCLM‖ * C := mul_le_mul_of_nonneg_left (hC x) (norm_nonneg _)
-        _ = C * ‖Complex.reCLM‖ := by ring)
+  J.postcompCLM Complex.reCLM
 
 /-- Extract the imaginary part of a complex Schwartz function as a real
 Schwartz function. -/
 def schwartzIm {B : EuclideanPlaneBackground}
     (J : EuclideanPlaneBackground.ComplexTestFunction B) :
     EuclideanPlaneBackground.RealTestFunction B :=
-  SchwartzMap.mk (fun x => (J x).im)
-    (Complex.imCLM.contDiff.comp J.smooth')
-    (by
-      intro k n
-      obtain ⟨C, hC⟩ := J.decay' k n
-      use C * ‖Complex.imCLM‖
-      intro x
-      have h_eq : (fun y => (J y).im) = Complex.imCLM ∘ J.toFun := rfl
-      rw [h_eq, ContinuousLinearMap.iteratedFDeriv_comp_left Complex.imCLM
-        J.smooth'.contDiffAt (WithTop.coe_le_coe.mpr le_top)]
-      calc ‖x‖ ^ k * ‖Complex.imCLM.compContinuousMultilinearMap
-              (iteratedFDeriv ℝ n J.toFun x)‖
-          ≤ ‖x‖ ^ k * (‖Complex.imCLM‖ * ‖iteratedFDeriv ℝ n J.toFun x‖) :=
-            mul_le_mul_of_nonneg_left
-              (ContinuousLinearMap.norm_compContinuousMultilinearMap_le _ _)
-              (pow_nonneg (norm_nonneg _) _)
-        _ = ‖Complex.imCLM‖ * (‖x‖ ^ k * ‖iteratedFDeriv ℝ n J.toFun x‖) := by ring
-        _ ≤ ‖Complex.imCLM‖ * C := mul_le_mul_of_nonneg_left (hC x) (norm_nonneg _)
-        _ = C * ‖Complex.imCLM‖ := by ring)
+  J.postcompCLM Complex.imCLM
 
 /-- The complex generating functional `Z[J]` for a complex Schwartz source. -/
 def generatingFunctionalℂ {B : EuclideanPlaneBackground}

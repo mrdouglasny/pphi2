@@ -32,7 +32,7 @@ by lattice RP (`lattice_rp`).
 - Simon, *The P(φ)₂ Euclidean QFT*, Ch. III
 -/
 
-import Pphi2.ContinuumLimit.AxiomInheritance
+import Pphi2.ContinuumLimit.TimeReflection
 import Pphi2.OSProofs.OS3_RP_Lattice
 
 noncomputable section
@@ -87,6 +87,7 @@ lemma siteTimeReflection_involutive :
     Function.Involutive (siteTimeReflection N : FinLatticeSites 2 N → FinLatticeSites 2 N) := by
   intro x; ext i; simp [siteTimeReflection]; split <;> simp [neg_neg]
 
+omit [NeZero N] in
 lemma fieldTimeReflection_single (x : FinLatticeSites 2 N) :
     fieldTimeReflection N (Pi.single x 1) =
     Pi.single (siteTimeReflection N x) (1 : ℝ) := by
@@ -131,9 +132,9 @@ theorem latticeEmbedLift_intertwines_reflection (a : ℝ) (ha : 0 < a)
   have hRHS : ∀ x : FinLatticeSites 2 N,
       (latticeConfigReflection N ω) (Pi.single x 1) =
       ω (Pi.single (siteTimeReflection N x) 1) := by
-    intro x; show ω (fieldTimeReflectionLinear N (Pi.single x 1)) = _
-    rw [show (fieldTimeReflectionLinear N) (Pi.single x 1) =
-      fieldTimeReflection N (Pi.single x 1) from rfl, fieldTimeReflection_single N x]
+    intro x
+    change ω (fieldTimeReflection N (Pi.single x 1)) = _
+    rw [fieldTimeReflection_single N x]
   simp_rw [hRHS]; unfold latticeEmbedEval; congr 1
   -- Reindex LHS sum by the involution Θ: substitute x = Θy
   have hinv := siteTimeReflection_involutive N

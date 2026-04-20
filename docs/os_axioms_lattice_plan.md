@@ -193,7 +193,8 @@ symmetry group of ℤ² (translations by a, 90° rotations, reflections).
 
 **For proof of principle:** Use **Option B** (Ward identities) to test the
 same pipeline as O(3). The power-counting argument is simpler because
-P(Φ)₂ is super-renormalizable (no log corrections fighting the a² decay).
+P(Φ)₂ is super-renormalizable (at most polynomial log corrections, so they do
+not overpower the a² decay).
 
 **Reuse from OSforGFF:** `OS2_GFF.lean` proves Euclidean invariance for the
 free field via covariance invariance. For P(Φ)₂ on the lattice, we need the
@@ -512,7 +513,7 @@ theory (a universality theorem), but this is not required for the proof of princ
 | Counterterms | Mass only: c_a ~ log(1/a) | Running coupling β(a) |
 | Mass gap mechanism | Confining potential | Asymptotic freedom |
 | RP on lattice | Easy (scalar transfer matrix) | Medium (need S² geometry) |
-| Euclidean invariance | Easy (no log corrections) | Hard (logs fight a² decay) |
+| Euclidean invariance | Easier (only polynomial log corrections) | Hard (logs fight a² decay) |
 | Cluster expansion | Standard (Glimm-Jaffe-Spencer) | Advanced (Bałaban-style) |
 | TRG needed? | Optional (spectral gap suffices) | Essential (for mass gap bounds) |
 | Literature | Complete (1970s) | Partial (active research) |

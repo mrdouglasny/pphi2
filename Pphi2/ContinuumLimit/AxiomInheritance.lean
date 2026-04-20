@@ -1,6 +1,7 @@
 /-
 Copyright (c) 2026 Michael R. Douglas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Matteo Cipollina, Michael R. Douglas
 
 # OS Axioms Pass to the Continuum Limit
 
@@ -9,10 +10,13 @@ limit measure μ = lim ν_{aₙ}.
 
 ## Main results
 
-- `os0_inheritance` — analyticity from uniform exponential bounds
-- `os1_inheritance` — regularity from uniform moment bounds
-- `os3_inheritance` — RP from weak closure (provable)
-- `os4_inheritance` — clustering from uniform mass gap
+- `continuum_exponential_moment_bound` — mixed `L¹`/Green exponential
+  moment input
+- `canonical_continuumMeasure_cf_tendsto` — canonical coupled UV/IR
+  approximants converge in characteristic functionals
+- `continuum_exponential_clustering` — continuum OS4 exponential clustering input
+- `os0_for_continuum_limit`, `os1_for_continuum_limit`,
+  `os4_for_continuum_limit` — theorem wrappers into the generic OS bundle
 
 ## Mathematical background
 
@@ -49,10 +53,12 @@ restoration requires the Ward identity argument (see OS2_WardIdentity.lean).
 - Simon, *The P(φ)₂ Euclidean QFT*, §V
 -/
 
+import Pphi2.ContinuumLimit.CharacteristicFunctional
 import Pphi2.ContinuumLimit.Convergence
+import Pphi2.GaussianContinuumLimit.PropagatorConvergence
 import Pphi2.OSProofs.OS3_RP_Inheritance
 import Pphi2.OSProofs.OS4_MassGap
-import Mathlib.Topology.Algebra.Module.FiniteDimension
+import Pphi2.ContinuumLimit.TimeReflection
 
 noncomputable section
 
@@ -96,76 +102,314 @@ theorem os1_inheritance (_P : InteractionPolynomial)
   simp at h2
   linarith
 
-/-! ## OS3: Reflection Positivity -/
+/-- **Continuum-limit exponential moment bound in mixed `L¹`/Green form.**
 
-/-- Time reflection as a linear map on ℝ²: (t,x) ↦ (-t,x). -/
-private def timeReflLinear : EuclideanSpace ℝ (Fin 2) →ₗ[ℝ] EuclideanSpace ℝ (Fin 2) where
-  toFun p := (WithLp.equiv 2 (Fin 2 → ℝ)).symm (fun i =>
-    if i = (0 : Fin 2) then -(WithLp.equiv 2 (Fin 2 → ℝ) p i) else WithLp.equiv 2 (Fin 2 → ℝ) p i)
-  map_add' p q := by ext i; simp [WithLp.equiv]; split <;> ring
-  map_smul' c p := by ext i; simp [WithLp.equiv, smul_eq_mul]
+This is the root analytic input used downstream for OS0 and OS1. We assume a
+mixed exponential-moment envelope
 
-private lemma timeReflLinear_involutive : Function.Involutive timeReflLinear := by
-  intro p; ext i; simp [timeReflLinear, WithLp.equiv]; split <;> ring
+`∫ exp(|⟨ω, f⟩|) dμ(ω) ≤ exp(c₁ ‖f‖_{L¹} + c₂ G(f,f))`,
 
-private noncomputable def timeReflCLE : EuclideanSpace ℝ (Fin 2) ≃L[ℝ] EuclideanSpace ℝ (Fin 2) :=
-  (LinearEquiv.ofInvolutive timeReflLinear timeReflLinear_involutive).toContinuousLinearEquiv
+where `G` is the continuum Green quadratic form. The linear `L¹` term is the
+natural small-field correction needed by the standard OS1 regularity axiom,
+while the Green term captures the Gaussian covariance scale.
 
-noncomputable def continuumTimeReflection :
-    ContinuumTestFunction 2 →L[ℝ] ContinuumTestFunction 2 :=
-  SchwartzMap.compCLMOfContinuousLinearEquiv ℝ timeReflCLE
+The all-`c` exponential-moment integrability used in OS0 follows by scaling
+`f ↦ c • f`, and OS1 then follows from the deterministic bound
+`G(f,f) ≤ C(m) · ‖f‖²_{L²}`.
 
-/-- Evaluation of `continuumTimeReflection`: negates the 0th coordinate.
-`(Θf)(p) = f((-p₀, p₁, ...))`. -/
-@[simp]
-theorem continuumTimeReflection_apply_coord (f : ContinuumTestFunction 2)
-    (p : EuclideanSpace ℝ (Fin 2)) :
-    (continuumTimeReflection f) p =
-    f ((WithLp.equiv 2 (Fin 2 → ℝ)).symm (fun i =>
-      if i = (0 : Fin 2) then -(WithLp.equiv 2 (Fin 2 → ℝ) p i)
-      else WithLp.equiv 2 (Fin 2 → ℝ) p i)) := by
-  simp [continuumTimeReflection, timeReflCLE, timeReflLinear,
-    SchwartzMap.compCLMOfContinuousLinearEquiv, LinearEquiv.ofInvolutive]
+Literature guide: this is the continuum bridge used here to match the standard
+OS1 `L¹ + Lᵖᵖ` growth condition without claiming the false pure quadratic
+bound `exp(c · G(f,f))`. -/
+axiom continuum_exponential_moment_bound (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass) :
+    ∃ c₁ c₂ : ℝ, 0 < c₁ ∧ 0 < c₂ ∧
+      ∀ (f : TestFunction2),
+        Integrable (fun ω : FieldConfig2 => Real.exp (|ω f|)) μ ∧
+        ∫ ω : FieldConfig2, Real.exp (|ω f|) ∂μ ≤
+          Real.exp
+            (c₁ * (∫ x, ‖f x‖ ∂volume) +
+              c₂ * continuumGreenBilinear 2 mass f f)
 
-/-- Time reflection on distributions (the dual action).
+/-- **Exponential moments of the continuum limit** for all positive scales.
 
-For `ω ∈ S'(ℝ²)`, `(Θ*ω)(f) = ω(Θf)` where `Θf(t,x) = f(-t,x)`.
-This is the composition of the continuous linear functional ω with the
-time reflection CLM on Schwartz space. -/
-def distribTimeReflection :
-    Configuration (ContinuumTestFunction 2) →
-    Configuration (ContinuumTestFunction 2) :=
-  fun ω => ω.comp continuumTimeReflection
+This follows from `continuum_exponential_moment_bound` by scaling the
+test function `f ↦ c • f`. -/
+theorem continuum_exponential_moments (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass)
+    (f : TestFunction2) :
+    ∀ (c : ℝ), 0 < c →
+    Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ := by
+  intro c hc
+  obtain ⟨c₁, c₂, hc₁, hc₂, hbound⟩ :=
+    continuum_exponential_moment_bound P mass hmass μ h_limit
+  refine (hbound (c • f)).1.congr ?_
+  exact ae_of_all μ fun ω => by
+    simp [map_smul, smul_eq_mul, abs_mul, abs_of_pos hc]
 
-/-- `distribTimeReflection` evaluation: `(Θ*ω)(f) = ω(Θf)`. -/
-@[simp]
-theorem distribTimeReflection_apply
-    (ω : Configuration (ContinuumTestFunction 2))
-    (f : ContinuumTestFunction 2) :
-    distribTimeReflection ω f = ω (continuumTimeReflection f) := rfl
+/-- **Exponential moment bound via Schwartz norms.**
 
-/-- `distribTimeReflection` is continuous on Configuration space.
+The exponential moment `∫ exp(|ω(g)|) dμ` is bounded by
+`exp(c · (‖g‖₁ + ‖g‖₂²))` for some universal constant `c > 0`.
 
-Each evaluation `(distribTimeReflection ω) f = ω (continuumTimeReflection f)`
-is continuous in ω (it's `WeakDual.eval_continuous` at the fixed test function
-`continuumTimeReflection f`). Continuity of `distribTimeReflection` follows
-from the universal property of the weak-* topology. -/
-theorem distribTimeReflection_continuous :
-    Continuous distribTimeReflection := by
-  apply WeakDual.continuous_of_continuous_eval
-  intro f
-  change Continuous (fun ω : GaussianField.Configuration (ContinuumTestFunction 2) =>
-    (distribTimeReflection ω) f)
-  simp only [distribTimeReflection_apply]
-  exact WeakDual.eval_continuous (continuumTimeReflection f)
+This combines `continuum_exponential_moment_bound` with the deterministic
+estimate `continuumGreenBilinear_le_mass_inv_sq`. -/
+theorem exponential_moment_schwartz_bound
+    (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass) :
+    ∃ (c : ℝ), 0 < c ∧ ∀ (g : TestFunction2),
+      ∫ ω : FieldConfig2, Real.exp (|ω g|) ∂μ ≤
+        Real.exp (c * (∫ x, ‖g x‖ ∂volume + ∫ x, ‖g x‖ ^ (2 : ℝ) ∂volume)) := by
+  obtain ⟨c₁, c₂, hc₁, hc₂, hbound⟩ :=
+    continuum_exponential_moment_bound P mass hmass μ h_limit
+  let Cmass : ℝ := (2 * Real.pi) ^ (-(2 : ℤ)) * (mass ^ 2)⁻¹
+  have hCmass_nonneg : 0 ≤ Cmass := by
+    dsimp [Cmass]
+    positivity
+  let c : ℝ := max c₁ (c₂ * Cmass)
+  have hc_nonneg : 0 ≤ c := by
+    dsimp [c]
+    exact le_max_of_le_left (le_of_lt hc₁)
+  refine ⟨c, lt_of_lt_of_le hc₁ (le_max_left _ _), ?_⟩
+  intro g
+  let L1 : ℝ := ∫ x : SpaceTime2, ‖g x‖ ∂volume
+  let L2 : ℝ := ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume
+  obtain ⟨_, hg_bound⟩ := hbound g
+  have hL2_eq :
+      ∫ x : SpaceTime2, (g x) ^ 2 =
+        ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) := by
+    congr 1
+    ext x
+    rw [show (2 : ℝ) = (2 : ℕ) by norm_num, Real.rpow_natCast, Real.norm_eq_abs, sq_abs]
+  have hGreen :
+      continuumGreenBilinear 2 mass g g ≤
+        Cmass * L2 := by
+    calc
+      continuumGreenBilinear 2 mass g g
+          ≤ Cmass * ∫ x : SpaceTime2, (g x) ^ 2 :=
+        continuumGreenBilinear_le_mass_inv_sq (d := 2) mass hmass g
+      _ = Cmass * ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) := by rw [hL2_eq]
+      _ = Cmass * L2 := by simp [L2]
+  have hc₁_le : c₁ ≤ c := le_max_left _ _
+  have hc₂_le : c₂ * Cmass ≤ c := le_max_right _ _
+  have hL1_nonneg : 0 ≤ L1 := by
+    dsimp [L1]
+    exact integral_nonneg fun _ => abs_nonneg _
+  have hL2_nonneg : 0 ≤ L2 := by
+    dsimp [L2]
+    apply integral_nonneg
+    intro x
+    positivity
+  calc
+    ∫ ω : FieldConfig2, Real.exp (|ω g|) ∂μ
+        ≤ Real.exp
+            (c₁ * (∫ x : SpaceTime2, ‖g x‖ ∂volume) +
+              c₂ * continuumGreenBilinear 2 mass g g) :=
+      hg_bound
+    _ ≤ Real.exp (c₁ * L1 + c₂ * (Cmass * L2)) := by
+      apply Real.exp_le_exp_of_le
+      gcongr
+    _ ≤ Real.exp (c * (L1 + L2)) := by
+      apply Real.exp_le_exp_of_le
+      calc
+        c₁ * L1 + c₂ * (Cmass * L2)
+            = c₁ * L1 + (c₂ * Cmass) * L2 := by ring
+        _ ≤ c * L1 + c * L2 := by
+          gcongr
+        _ = c * (L1 + L2) := by ring
+    _ = Real.exp (c * (∫ x : SpaceTime2, ‖g x‖ ∂volume +
+          ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume)) := by
+        simp [L1, L2]
+
+/-- **OS0 for the continuum limit** from exponential moments.
+
+The generating functional `Z[Σ zᵢJᵢ] = ∫ exp(i · Σ zᵢ⟨ω, Jᵢ⟩) dμ` is entire
+analytic in `z ∈ ℂⁿ`. This is the direct packaging of
+`continuum_exponential_moments` and `analyticOn_generatingFunctionalC` into the
+generic OS0 axiom bundle. -/
+theorem os0_for_continuum_limit (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2)
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
+    @EuclideanOS.OS0_Analyticity plane2Background μ hμ := by
+  have h_exp := continuum_exponential_moments P mass hmass μ h_limit
+  intro n J
+  exact analyticOn_generatingFunctionalC μ h_exp n J
+
+/-- **OS1 for the continuum limit** from exponential moments.
+
+The regularity bound `‖Z[J]‖ ≤ exp(c · (‖J‖₁ + ‖J‖₂²))` follows by bounding the
+complex source through its imaginary part and then applying
+`exponential_moment_schwartz_bound`. -/
+theorem os1_for_continuum_limit (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2)
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
+    @EuclideanOS.OS1_Regularity plane2Background μ hμ := by
+  have h_exp := continuum_exponential_moments P mass hmass μ h_limit
+  have h_bound : ∀ (J : TestFunction2ℂ),
+      ‖EuclideanOS.generatingFunctionalℂ (B := plane2Background) μ J‖ ≤
+        ∫ ω : FieldConfig2, Real.exp (|ω (EuclideanOS.schwartzIm J)|) ∂μ := by
+    intro J
+    have hint_abs : Integrable
+        (fun ω : FieldConfig2 => Real.exp (|ω (EuclideanOS.schwartzIm J)|)) μ := by
+      have := h_exp (EuclideanOS.schwartzIm J) 1 one_pos
+      simpa only [one_mul] using this
+    have h_le : ∀ ω : FieldConfig2,
+        ‖Complex.exp
+            (Complex.I * (↑(ω (EuclideanOS.schwartzRe J)) +
+              Complex.I * ↑(ω (EuclideanOS.schwartzIm J))))‖ ≤
+          Real.exp (|ω (EuclideanOS.schwartzIm J)|) := by
+      intro ω
+      rw [Complex.norm_exp]
+      apply Real.exp_le_exp.mpr
+      have h_re :
+          (Complex.I * (↑(ω (EuclideanOS.schwartzRe J)) +
+            Complex.I * ↑(ω (EuclideanOS.schwartzIm J)))).re =
+            -(ω (EuclideanOS.schwartzIm J)) := by
+        simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+          Complex.ofReal_re, Complex.ofReal_im]
+      rw [h_re]
+      exact (le_abs_self (-(ω (EuclideanOS.schwartzIm J)))).trans_eq (abs_neg _)
+    exact (norm_integral_le_integral_norm _).trans
+      (integral_mono_of_nonneg
+        (ae_of_all μ fun ω => norm_nonneg _)
+        hint_abs
+        (ae_of_all μ h_le))
+  obtain ⟨c, hc, h_norm⟩ := exponential_moment_schwartz_bound P mass hmass μ h_limit
+  refine ⟨2, c, one_le_two, le_refl _, hc, ?_⟩
+  intro J
+  calc ‖EuclideanOS.generatingFunctionalℂ (B := plane2Background) μ J‖
+      ≤ ∫ ω : FieldConfig2, Real.exp |ω (EuclideanOS.schwartzIm J)| ∂μ := h_bound J
+    _ ≤ Real.exp
+          (c * ((∫ x, ‖EuclideanOS.schwartzIm J x‖) +
+            ∫ x, ‖EuclideanOS.schwartzIm J x‖ ^ (2 : ℝ))) :=
+        h_norm (EuclideanOS.schwartzIm J)
+    _ ≤ Real.exp
+          (c * ((∫ x : SpaceTime2, ‖J x‖) +
+            ∫ x : SpaceTime2, ‖J x‖ ^ (2 : ℝ))) := by
+        apply Real.exp_le_exp.mpr
+        apply mul_le_mul_of_nonneg_left _ (le_of_lt hc)
+        have hIm : ∀ x, ‖EuclideanOS.schwartzIm J x‖ ≤ ‖J x‖ :=
+          fun x => RCLike.norm_im_le_norm (J x)
+        apply add_le_add
+        · exact integral_mono
+            (SchwartzMap.integrable (EuclideanOS.schwartzIm J)).norm
+            (SchwartzMap.integrable J).norm hIm
+        · exact integral_mono
+            (schwartz_integrable_norm_rpow (EuclideanOS.schwartzIm J) two_pos)
+            (schwartz_integrable_norm_rpow J two_pos)
+            (fun x => Real.rpow_le_rpow (norm_nonneg _) (hIm x) (by norm_num))
+
+/-! ## Canonical approximant convergence input -/
+
+/-- **Canonical characteristic-functional convergence from the coupled lattice construction.**
+
+The abstract marker predicate `IsPphi2Limit μ P mass` only records the
+existence of some approximating sequence. For the Ward-identity step we need a
+stronger statement tying `μ` to the specific continuum-embedded lattice measures
+appearing in the formalized anomaly estimate.
+
+The bridge asserted here is intentionally explicit about its scope: there are
+canonical sequences of lattice sizes `N_n` and spacings `a_n` with
+`a_n → 0`, `N_n → ∞`, and physical volume `N_n * a_n → ∞`, such that the
+corresponding coupled UV/IR family `continuumMeasure 2 (N_n) P (a_n) mass`
+converges to `μ` in characteristic functionals. This is the bridge where the
+abstract limit marker is tied back to the concrete `P(Φ)₂` approximants used in
+the Ward estimate. -/
+axiom canonical_continuumMeasure_cf_tendsto (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass) :
+    ∃ (N : ℕ → ℕ) (a : ℕ → ℝ) (hN_pos : ∀ n, 0 < N n) (ha_pos : ∀ n, 0 < a n),
+      (∀ n, a n ≤ 1) ∧
+      Filter.Tendsto a Filter.atTop (nhds 0) ∧
+      Filter.Tendsto N Filter.atTop Filter.atTop ∧
+      Filter.Tendsto (fun n => (N n : ℝ) * a n) Filter.atTop Filter.atTop ∧
+      ∀ (f : TestFunction2),
+        Filter.Tendsto
+          (fun n =>
+            letI : NeZero (N n) := ⟨Nat.ne_of_gt (hN_pos n)⟩
+            ∫ ω : FieldConfig2,
+              Complex.exp (Complex.I * ↑(ω f)) ∂
+                (continuumMeasure 2 (N n) P (a n) mass (ha_pos n) hmass))
+          Filter.atTop
+          (nhds (EuclideanOS.generatingFunctional (B := plane2Background) μ f))
+
+/-- **Exponential clustering of the continuum limit** from spectral gap.
+
+For any test functions `f, g ∈ S(ℝ²)`, there exist `m₀, C > 0` such that
+
+  `‖Z[f + τ_a g] - Z[f] · Z[g]‖ ≤ C · exp(-m₀ · ‖a‖)`
+
+for all translations `a ∈ ℝ²`. This is the substantive continuum-limit OS4
+input, transferred from the lattice spectral gap. -/
+axiom continuum_exponential_clustering (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
+    (h_limit : IsPphi2Limit μ P mass)
+    (f g : TestFunction2) :
+    ∃ (m₀ C : ℝ), 0 < m₀ ∧ 0 < C ∧
+    ∀ (a : SpaceTime2),
+    ‖EuclideanOS.generatingFunctional (B := plane2Background) μ
+        (f + SchwartzMap.translate a g)
+      - EuclideanOS.generatingFunctional (B := plane2Background) μ f *
+          EuclideanOS.generatingFunctional (B := plane2Background) μ g‖
+    ≤ C * Real.exp (-m₀ * ‖a‖)
+
+/-- **OS4 for the continuum limit** from exponential clustering.
+
+The ε-δ formulation of OS4 follows immediately from the exponential bound:
+given `ε > 0`, choose `R` large enough that `C · exp(-m₀ · R) < ε`. -/
+theorem os4_for_continuum_limit (P : InteractionPolynomial)
+    (mass : ℝ) (hmass : 0 < mass)
+    (μ : Measure (Configuration (ContinuumTestFunction 2)))
+    (hμ : IsProbabilityMeasure μ)
+    (h_limit : IsPphi2Limit μ P mass) :
+    @EuclideanOS.OS4_Clustering plane2Background μ hμ := by
+  intro f g ε hε
+  obtain ⟨m₀, C, hm₀, hC, h_bound⟩ := continuum_exponential_clustering P mass hmass μ h_limit f g
+  refine ⟨max 1 (Real.log (C / ε) / m₀), lt_max_of_lt_left one_pos, fun a ha => ?_⟩
+  have ha_pos : (0 : ℝ) < ‖a‖ :=
+    lt_of_lt_of_le one_pos (le_of_lt (lt_of_le_of_lt (le_max_left _ _) ha))
+  calc ‖EuclideanOS.generatingFunctional (B := plane2Background) μ
+          (f + SchwartzMap.translate a g)
+         - EuclideanOS.generatingFunctional (B := plane2Background) μ f *
+            EuclideanOS.generatingFunctional (B := plane2Background) μ g‖
+      ≤ C * Real.exp (-m₀ * ‖a‖) := h_bound a
+    _ < ε := by
+        have hCε_pos : (0 : ℝ) < C / ε := div_pos hC hε
+        have hm₀a_gt : Real.log (C / ε) < m₀ * ‖a‖ := by
+          have h : Real.log (C / ε) / m₀ < ‖a‖ :=
+            lt_of_le_of_lt (le_max_right _ _) ha
+          nlinarith [div_mul_cancel₀ (Real.log (C / ε)) (ne_of_gt hm₀)]
+        have hexp_lt : Real.exp (-m₀ * ‖a‖) < Real.exp (-Real.log (C / ε)) := by
+          apply Real.exp_lt_exp.mpr
+          linarith
+        have hexp_simp : Real.exp (-Real.log (C / ε)) = ε / C := by
+          rw [Real.exp_neg, Real.exp_log hCε_pos, inv_div]
+        rw [hexp_simp] at hexp_lt
+        calc C * Real.exp (-m₀ * ‖a‖)
+            < C * (ε / C) := by
+                apply mul_lt_mul_of_pos_left hexp_lt hC
+          _ = ε := by field_simp
 
 -- OS3 inheritance is now `os3_for_continuum_limit` in `OS2_WardIdentity.lean`,
 -- stated directly in the standard `OS3_ReflectionPositivity` form.
 
 -- NOTE: os0_inheritance and os4_inheritance were removed as dead axioms
 -- (only used in SatisfiesOS0134 bundle which was never consumed downstream).
--- The actual OS0 proof chain goes through continuum_exponential_moments →
--- analyticOn_generatingFunctionalC → os0_for_continuum_limit (OS2_WardIdentity.lean).
+-- The actual OS0/OS1 proof chains now live here:
+-- continuum_exponential_moments → analyticOn_generatingFunctionalC → os0_for_continuum_limit
+-- continuum_exponential_moment_bound → exponential_moment_schwartz_bound
+--   → os1_for_continuum_limit.
 -- OS4 goes through continuum_exponential_clustering → os4_for_continuum_limit.
 
 end Pphi2

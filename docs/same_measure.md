@@ -13,7 +13,7 @@ using the simplest available argument for each axiom:
 
 | Axiom | Easiest in | Why | Hard in the other |
 |---|---|---|---|
-| **OS2** (Euclidean invariance) | **Phi4** | Manifest: (−Δ+m²)⁻¹ and ∫:φ⁴:dx are E(2)-invariant. Only translation invariance needs restoration (infinite-volume limit). | **pphi2**: Requires Ward identity argument — anomaly has dim 4 > d=2, must show it's RG-irrelevant with no log corrections |
+| **OS2** (Euclidean invariance) | **Phi4** | Manifest: (−Δ+m²)⁻¹ and ∫:φ⁴:dx are E(2)-invariant. Only translation invariance needs restoration (infinite-volume limit). | **pphi2**: Requires Ward identity argument — anomaly has dim 4 > d=2, must show it's RG-irrelevant with at most polynomial log corrections |
 | **OS3** (Reflection positivity) | **pphi2** | Transfer matrix T is positive ⟹ action decomposes as S⁺ + S⁺∘Θ ⟹ perfect square ⟹ RP on lattice. Then RP is closed under weak limits (proved). | **Phi4**: Needs Dirichlet/Neumann covariance bracketing, checkerboard decomposition, multiple reflection bounds, determinant estimates |
 
 The bridging theorem is:

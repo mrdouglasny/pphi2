@@ -15,6 +15,15 @@ exported here for the distinguished plane background used by `P(Φ)₂`.
 The concrete formulas match those in `OSforGFF/OS_Axioms.lean`, adapted from
 `d = 4` to `d = 2`, while factoring through the shared abstraction layer in
 `Common.QFT.*`.
+
+## P vs X (layering)
+
+- **P:** `EuclideanSpace`, `SchwartzMap`, `MeasureTheory`, and the `Backgrounds/EuclideanPlane`
+  abbreviations — see `ContinuumSpaceTime_eq` and companion lemmas (definitional equality to Mathlib).
+- **X:** this file’s **OS0–OS4 bundles** for `FieldConfig2` / `TestFunction2`, i.e. the
+  Osterwalder–Schrader (1973, 1975) axiom pattern specialized to the `P(Φ)₂` plane background.
+
+Reference map: `docs/mathlib_prerequisite_layering.md`.
 -/
 
 import Pphi2.EuclideanOS

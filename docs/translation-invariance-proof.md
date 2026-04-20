@@ -98,8 +98,9 @@ separate translation invariance proofs: once Z is translation-invariant,
 it determines the measure mu_P uniquely, and all Schwinger functions inherit
 the symmetry automatically.
 
-The **exponential moment bound** E_P[exp(|omega(f)|)] <= K * exp(G(f,f))
-(already proved) gives even stronger control, bounding ALL moments simultaneously.
+The continuum inheritance layer now uses a mixed exponential-moment bridge of
+the form E_P[exp(|omega(f)|)] <= exp(c₁‖f‖_{L¹} + c₂ G(f,f)), which is strong
+enough for OS0/OS1 while avoiding the false pure-quadratic small-scaling claim.
 
 ## Axioms Used
 

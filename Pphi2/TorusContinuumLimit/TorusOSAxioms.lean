@@ -45,6 +45,7 @@ t ∈ (0, L/2), which is the correct half for RP with periodic BCs.
 
 import Pphi2.TorusContinuumLimit.TorusGaussianLimit
 import Pphi2.TorusContinuumLimit.TorusPropagatorConvergence
+import Pphi2.GeneralResults.FunctionalAnalysis
 import Pphi2.GeneralResults.ComplexAnalysis
 import Torus.Symmetry
 import HeatKernel.GreenInvariance
@@ -864,18 +865,7 @@ private lemma torusGeneratingFunctional_re_eq_integral_cos
     [IsProbabilityMeasure μ] (g : TorusTestFunction L) :
     (torusGeneratingFunctional L μ g).re =
     ∫ ω : Configuration (TorusTestFunction L), Real.cos (ω g) ∂μ := by
-  unfold torusGeneratingFunctional
-  -- Move .re inside the integral using Complex.reCLM
-  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re =
-    Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl,
-    ← ContinuousLinearMap.integral_comp_comm Complex.reCLM
-      (torusExpEval_integrable L μ g)]
-  congr 1 with ω
-  -- Re(exp(I * r)) = cos(r) by Euler's formula
-  simp only [Complex.reCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
-    Complex.add_re, Complex.mul_re, Complex.I_re, mul_zero,
-    Complex.sin_ofReal_im, Complex.I_im, mul_one, sub_self, add_zero]
-  exact Complex.cos_ofReal_re (ω g)
+  simpa [torusGeneratingFunctional] using configuration_expIntegral_re_eq_integral_cos μ g
 
 /-! ### OS3 definition (matrix form) -/
 

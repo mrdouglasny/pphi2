@@ -187,7 +187,7 @@ Main theorem: `cylinderInteracting_satisfies_OS`
 | **OS proved** | OS1–OS4 | OS0–OS2 | none (all axiom'd) |
 | **OS axiom'd** | OS0 | OS0 only | OS0–OS3 |
 | **OS3 strategy** | Transfer matrix | Dropped (→ cylinder) | Laplace factorization |
-| **Axioms** | 25 | **1** + 1 sorry | 23 + 1 sorry |
+| **Axioms** | 23 | **1** + 1 sorry | 23 + 1 sorry |
 
 ### Upstream (gaussian-field repo, cylinder branch): 12 axioms
 Cylinder module: `cylinderMassOperator`, `cylinderGreen_pos`,
@@ -195,5 +195,5 @@ Cylinder module: `cylinderMassOperator`, `cylinderGreen_pos`,
 Tightness: `configuration_tight_of_uniform_second_moments` proved (0 sorries).
 False PolishSpace/BorelSpace axioms removed; `prokhorov_configuration` used instead.
 
-### Grand total: 54 axioms + 2 sorries (pphi2) + 12 axioms (gaussian-field cylinder)
+### Grand total: 47 axioms + 2 sorries (pphi2) + 12 axioms (gaussian-field cylinder)
 ### Nelson estimate: PROVED (see `docs/nelson-estimate.md`)
