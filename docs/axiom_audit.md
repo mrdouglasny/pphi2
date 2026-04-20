@@ -102,13 +102,13 @@ inputs.
 |---|------|------|--------|----------|-------|
 | 22 | ~~`latticeMeasure_translation_invariant`~~ | OS2_WardIdentity | ✅ **PROVED** | DT 2026-02-25 | Lattice measure invariant under cyclic translation. |
 | 23 | ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | ✅ **PROVED** | SA 2026-03-07 | `Z[τ_v f] = Z[f]`. From `cf_tendsto` + `lattice_inv` via `tendsto_nhds_unique_of_eventuallyEq`. |
-| 24 | `rotation_cf_pointwise_defect_polylog_bound` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-04-12 | Strengthened one-point Ward input: bounds the expectation of the pointwise characteristic-functional defect observable `rotationCFPointwiseDefect`. The old direct defect-level bound is now theorem-derived by `norm_integral_le_integral_norm`. |
-| 25 | ~~`rotation_invariance_continuum`~~ | OS2_WardIdentity | ✅ **PROVED** | SA 2026-04-12 | `Z[R·f] = Z[f]` for `R ∈ O(2)`. Uses the canonical UV bridge + `anomaly_vanishes` + logarithmic asymptotics. |
-| 26 | `canonical_continuumMeasure_cf_tendsto` | AxiomInheritance | ⚠️ Design bridge | SA 2026-04-12 | For some fixed finite lattice size `Nat.succ N0`, the canonical UV family `continuumMeasure 2 (Nat.succ N0) P a_n mass` converges CF-wise to `μ`. This is the explicit bridge from abstract `IsPphi2Limit` to the concrete approximants used by the Ward estimate. |
-| 27 | `continuum_exponential_moment_green_bound` | AxiomInheritance | ⚠️ Likely correct | SA 2026-04-12 | Simon/Nelson Green-form bound `∫ exp(|ω f|) dμ ≤ exp(c₁‖f‖₁ + c₂ G(f,f))`. Root analytic input; `continuum_exponential_moments` and `exponential_moment_schwartz_bound` are theorem-derived from it. |
+| 24 | `rotation_cf_defect_polylog_bound` | OS2_WardIdentity | ⚠️ Likely correct | SA 2026-04-19 | Remaining Ward input: direct polynomial-log `a²` bound for the one-point characteristic-functional defect `rotationCFDefect`, stated uniformly in the lattice size `N`. Replaces the stronger pointwise-defect formulation. |
+| 25 | ~~`rotation_invariance_continuum`~~ | OS2_WardIdentity | ✅ **PROVED** | SA 2026-04-19 | `Z[R·f] = Z[f]` for `R ∈ O(2)`. Uses the coupled canonical UV/IR bridge + the uniform defect bound + logarithmic asymptotics. |
+| 26 | `canonical_continuumMeasure_cf_tendsto` | AxiomInheritance | ⚠️ Design bridge | SA 2026-04-19 | Coupled UV/IR bridge: canonical `continuumMeasure 2 (N n) P (a n) mass` converges CF-wise to `μ` along `a_n → 0`, `N_n → ∞`, and physical volume `(N_n : ℝ) * a_n → ∞`. |
+| 27 | `continuum_exponential_moment_bound` | AxiomInheritance | ⚠️ Design bridge | SA 2026-04-19 | Project-level mixed `L¹`/Green bridge `∫ exp(|ω f|) dμ ≤ exp(c₁∫|f| + c₂ G(f,f))`. This fixes the false pure-quadratic claim while matching the downstream OS0/OS1 wrappers. |
 | 28 | ~~`analyticOn_generatingFunctionalC`~~ | CharacteristicFunctional | ✅ **PROVED** | DT 2026-02-25 | Exp moments → joint analyticity (Hartogs + dominated convergence). |
-| 29 | ~~`continuum_exponential_moments`~~ | AxiomInheritance | **Proved** | SA 2026-04-12 | Derived by scaling from `continuum_exponential_moment_green_bound`. |
-| 30 | ~~`exponential_moment_schwartz_bound`~~ | AxiomInheritance | **Proved** | SA 2026-04-12 | Derived from `continuum_exponential_moment_green_bound` + `continuumGreenBilinear_le_mass_inv_sq`. |
+| 29 | ~~`continuum_exponential_moments`~~ | AxiomInheritance | **Proved** | SA 2026-04-12 | Derived by scaling from `continuum_exponential_moment_bound`. |
+| 30 | ~~`exponential_moment_schwartz_bound`~~ | AxiomInheritance | **Proved** | SA 2026-04-12 | Derived from `continuum_exponential_moment_bound` + `continuumGreenBilinear_le_mass_inv_sq`. |
 | 31 | `continuum_exponential_clustering` | AxiomInheritance | ⚠️ Correct for P(Φ)₂ | Gemini 2026-03-07 | `‖Z[f + τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀‖a‖)`. Spectral-gap input for continuum OS4. |
 | ~~32~~ | ~~`complex_gf_invariant_of_real_gf_invariant`~~ | CharacteristicFunctional | **Proved** | | Identity theorem for analytic functions: F(z)=G(z) on ℝ → F=G on ℂ, evaluate at `z = i`. |
 | ~~33~~ | ~~`pphi2_measure_neg_invariant`~~ | CharacteristicFunctional | **Proved** | 2026-02-25 | Z₂ symmetry: map Neg.neg μ = μ. From even P + GFF symmetry + weak limit closure. |
@@ -119,7 +119,7 @@ inputs.
 - `anomaly_vanishes` (`OS2_WardIdentity`): one-point characteristic-functional anomaly satisfies `‖Z_a[R·f] - Z_a[f]‖ ≤ C·a²·(1 + |log a|)^p`
 - `os3_for_continuum_limit` (`OS2_WardIdentity`): trig identity decomposition + inline approximant RP (**fully proved**)
 - `os0_for_continuum_limit` (`AxiomInheritance`): exponential moments → OS0_Analyticity
-- `os1_for_continuum_limit` (`AxiomInheritance`): Green-form bound → OS1_Regularity (**fully proved**)
+- `os1_for_continuum_limit` (`AxiomInheritance`): mixed `L¹`/Green bound → OS1_Regularity (**fully proved**)
 - `os2_for_continuum_limit` (`OS2_WardIdentity`): translation + rotation → OS2_EuclideanInvariance
 - `os4_for_continuum_limit` (`AxiomInheritance`): exponential clustering → OS4_Clustering (**fully proved**)
 
@@ -158,16 +158,16 @@ All four infrastructure axioms have been replaced with theorems.
 Most active axioms verified by GR or DT.
 Current self-audit / pending targeted re-review items in the refactored Ward /
 inheritance surface:
-- `rotation_cf_pointwise_defect_polylog_bound`
+- `rotation_cf_defect_polylog_bound`
 - `canonical_continuumMeasure_cf_tendsto`
-- `continuum_exponential_moment_green_bound`
+- `continuum_exponential_moment_bound`
 
 ### Notes from DT review (2026-02-25)
 
 **Batch review of 19 new axioms (sorry→axiom conversion):**
 - 15 Correct, 2 Likely correct, 1 Suspicious, 0 Wrong
 - **Fixed SUSPICIOUS**: `anomaly_bound_from_superrenormalizability` — missing log factors per Glimm-Jaffe Thm 19.3.1. Now `C·a²·(1+|log a|)^p` instead of `C·a²`.
-- **Likely correct**: `lattice_rp_matrix` (cos vs exp(i) — correct, both equivalent formulations), `exponential_moment_schwartz_bound` (non-standard norm but correct bound). In the current branch, the old direct anomaly axiom is factored through the stronger pointwise defect input `rotation_cf_pointwise_defect_polylog_bound`, which has not yet been externally re-reviewed.
+- **Likely correct**: `lattice_rp_matrix` (cos vs exp(i) — correct, both equivalent formulations), `exponential_moment_schwartz_bound` (non-standard norm but correct bound). The remaining Ward axiom is now the direct `N`-uniform defect-level input `rotation_cf_defect_polylog_bound`; the pointwise defect API survives only as proved support lemmas and is no longer axiomatized.
 - **Fixed 6 overly-strong axioms**: `translation_invariance_continuum`, `rotation_invariance_continuum`, `continuum_exponential_moments`, `os0_inheritance`, `os3_inheritance`, `os4_inheritance` — all now require `IsPphi2Limit μ P mass`
 - **Added 3 new axioms**: `IsPphi2Limit` (marker predicate, later converted to def), `pphi2_limit_exists` (Prokhorov existence, moved to Convergence.lean), `IsPphi2ContinuumLimit.toIsPphi2Limit` (bridge, later proved as theorem)
 
@@ -229,12 +229,12 @@ inheritance surface:
 
 **Severity**: LOW
 **Issue**: the current branch replaced the old direct OS2 / OS0 inputs by the
-stronger pointwise defect axiom `rotation_cf_pointwise_defect_polylog_bound`
-and the new root analytic bridge `continuum_exponential_moment_green_bound`.
-These are plausible and match the intended Simon/Glimm-Jaffe story, but the
+direct defect-level Ward axiom `rotation_cf_defect_polylog_bound`
+and the new root analytic bridge `continuum_exponential_moment_bound`.
+These are plausible and match the intended constructive-QFT story, but the
 external review provenance in this file predates the refactor.
-**Action**: request a fresh DT / GR-style review for the strengthened pointwise
-Ward bound and the Green-form continuum exponential-moment input.
+**Action**: request a fresh DT / GR-style review for the uniform Ward-defect
+bound and the continuum exponential-moment bridge in Schwartz norms.
 
 ---
 
@@ -329,7 +329,7 @@ The following were previously axioms and are now theorems:
 |---|------|------|--------|-------|
 | 28 | `latticeMeasure_translation_invariant` | OS2_WardIdentity | ⚠️ Likely correct | Lattice translation invariance. Change-of-variables on torus. **Note:** correctly uses `ω.comp L_v.toContinuousLinearMap`. |
 | 29 | `translation_invariance_continuum` | OS2_WardIdentity | ⚠️ Overly strong | Claims for ANY μ (P, mass unused). Correct for the intended use (continuum limit) but strictly this says all probability measures are translation-invariant. Trivially true for `Measure.dirac 0`. |
-| 30 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | ⚠️ Likely correct | Historical direct defect-level bound. Correct physics is `O(a² (1 + |log a|)^p)` in the current branch; this slot is now factored through `rotation_cf_pointwise_defect_polylog_bound` plus a derived norm estimate. |
+| 30 | `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | ⚠️ Likely correct | Wrapper theorem around the uniform defect-level axiom `rotation_cf_defect_polylog_bound`. Correct physics is `O(a² (1 + |log a|)^p)`. |
 | 31 | `continuum_exponential_moments` | OS2_WardIdentity | ⚠️ Overly strong | Claims ∀ c > 0, Integrable(exp(c|ω f|)) for ANY μ. Same issue as #29 — correct for continuum limit, too strong for arbitrary μ. |
 | 32 | `analyticOn_generatingFunctionalC` | OS2_WardIdentity | ✅ Standard | Requires h_moments hypothesis → AnalyticOn. Correctly stated with Hartogs + dominated convergence. |
 | 33 | `exponential_moment_schwartz_bound` | OS2_WardIdentity | ⚠️ Likely correct | Gaussian integral bound. Uses L¹ + L² norms as proxy for H⁻¹ norm via Sobolev. |

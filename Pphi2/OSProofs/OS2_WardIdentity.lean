@@ -603,44 +603,22 @@ theorem rotationCFDefect_le_pointwiseDefectIntegral (P : InteractionPolynomial)
     (norm_configuration_expIntegral_sub_le_integral_cexp_eval_dist
       (μ := μ) f (euclideanAction2 ⟨R, 0⟩ f))
 
-/-- **The rotation anomaly is O(a² |log a|^p) from super-renormalizability.**
+/-- **Uniform defect-level Ward bound.**
 
-In Fourier space, the anomaly operator O_break carries an explicit factor
-of `a²` (from `anomaly_scaling_dimension`). The remaining integral is
-bounded by Schwartz norms of the test functions via Nelson's hypercontractive
-estimate. In P(Φ)₂, super-renormalizability limits the logarithmic corrections
-to at most polynomial powers of |log a| (unlike d=4 theories where RG flow
-generates essential log divergences).
-
-The bound `C · a² · (1 + |log a|)^p` follows from Glimm-Jaffe Theorem 19.3.1:
-the anomaly has scaling dimension 4, giving a² suppression, but the Wick
-ordering and renormalization generate at most polynomial-in-log corrections.
+This is the explicit OS2 input used in the continuum rotation argument. For a
+fixed test function `f`, the one-point characteristic-functional defect is
+bounded by `C · a² · (1 + |log a|)^p`, uniformly in the finite lattice size
+`N`.
 
 Reference: Glimm-Jaffe §19.3, Theorem 19.3.1; Symanzik (1983); Duch (2024). -/
-axiom rotation_cf_pointwise_defect_polylog_bound (P : InteractionPolynomial)
+axiom rotation_cf_defect_polylog_bound (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (f : TestFunction2) :
-    ∃ (C : ℝ) (p : ℕ), 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-      ∀ (R : O2),
-        ∫ ω : FieldConfig2,
-          rotationCFPointwiseDefect f R ω
-            ∂(continuumMeasure 2 N P a mass ha hmass) ≤
-        C * a ^ 2 * (1 + |Real.log a|) ^ p
-
-/-- The previous CF-defect bound is derived from the pointwise observable bound
-by `‖∫g‖ ≤ ∫‖g‖`. -/
-theorem rotation_cf_defect_polylog_bound (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    (f : TestFunction2) :
-    ∃ (C : ℝ) (p : ℕ), 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-      ∀ (R : O2), rotationCFDefect (N := N) P mass hmass f a ha R ≤
-        C * a ^ 2 * (1 + |Real.log a|) ^ p := by
-  rcases rotation_cf_pointwise_defect_polylog_bound (N := N) P mass hmass f with
-    ⟨C, p, hC, hpoly⟩
-  refine ⟨C, p, hC, ?_⟩
-  intro a ha hle R
-  exact (rotationCFDefect_le_pointwiseDefectIntegral (N := N) P mass hmass f a ha R).trans
-    (hpoly a ha hle R)
+    ∃ (C : ℝ) (p : ℕ), 0 < C ∧
+      ∀ (N : ℕ) [_hN : NeZero N] (a : ℝ) (ha : 0 < a), a ≤ 1 →
+        ∀ (R : O2),
+          rotationCFDefect (N := N) P mass hmass f a ha R ≤
+            C * a ^ 2 * (1 + |Real.log a|) ^ p
 
 /-- Super-renormalizable one-point control of the rotation anomaly. -/
 theorem anomaly_bound_from_superrenormalizability (P : InteractionPolynomial)
@@ -653,10 +631,10 @@ theorem anomaly_bound_from_superrenormalizability (P : InteractionPolynomial)
     ‖generatingFunctional (continuumMeasure 2 N P a mass ha hmass) (euclideanAction2 ⟨R, 0⟩ f) -
      generatingFunctional (continuumMeasure 2 N P a mass ha hmass) f‖ ≤
       C * a ^ 2 * (1 + |Real.log a|) ^ p := by
-  rcases rotation_cf_defect_polylog_bound (N := N) P mass hmass f with ⟨C, p, hC, hpoly⟩
+  rcases rotation_cf_defect_polylog_bound P mass hmass f with ⟨C, p, hC, hpoly⟩
   refine ⟨C, p, hC, ?_⟩
   intro a ha hle R
-  simpa [rotationCFDefect] using hpoly a ha hle R
+  simpa [rotationCFDefect] using hpoly N a ha hle R
 
 /-- **The one-point characteristic-functional rotation defect vanishes.**
 
@@ -712,57 +690,50 @@ theorem rotation_invariance_continuum (P : InteractionPolynomial)
     (R : O2) (f : TestFunction2) :
     generatingFunctional μ (euclideanAction2 ⟨R, 0⟩ f) = generatingFunctional μ f := by
   have hcanon :
-      ∃ (N0 : ℕ) (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n),
+      ∃ (N : ℕ → ℕ) (a : ℕ → ℝ) (hN_pos : ∀ n, 0 < N n) (ha_pos : ∀ n, 0 < a n),
         (∀ n, a n ≤ 1) ∧
         Filter.Tendsto a Filter.atTop (nhds 0) ∧
+        Filter.Tendsto N Filter.atTop Filter.atTop ∧
+        Filter.Tendsto (fun n => (N n : ℝ) * a n) Filter.atTop Filter.atTop ∧
         ∀ (f : TestFunction2),
           Filter.Tendsto
             (fun n =>
+              letI : NeZero (N n) := ⟨Nat.ne_of_gt (hN_pos n)⟩
               ∫ ω : FieldConfig2,
                 Complex.exp (Complex.I * ↑(ω f))
-                  ∂(continuumMeasure 2 (Nat.succ N0) P (a n) mass (ha_pos n) hmass))
+                  ∂(continuumMeasure 2 (N n) P (a n) mass (ha_pos n) hmass))
             Filter.atTop
             (nhds (generatingFunctional μ f)) :=
     canonical_continuumMeasure_cf_tendsto P mass hmass μ h_limit
-  obtain ⟨N0, a, ha_pos, ha_le, ha_tend, hcf⟩ := hcanon
-  let N : ℕ := Nat.succ N0
-  haveI : NeZero N := ⟨Nat.succ_ne_zero N0⟩
-  have h_rot_tend := hcf (euclideanAction2 ⟨R, 0⟩ f)
-  have h_id_tend := hcf f
-  obtain ⟨C, p, _hC, h_anom⟩ := anomaly_vanishes (N := N) P mass hmass f
+  obtain ⟨N, a, hN_pos, ha_pos, ha_le, ha_tend, _hN_tend, _hphys_tend, hcf⟩ := hcanon
+  let Zseq : TestFunction2 → ℕ → ℂ := fun g n =>
+    letI : NeZero (N n) := ⟨Nat.ne_of_gt (hN_pos n)⟩
+    ∫ ω : FieldConfig2,
+      Complex.exp (Complex.I * ↑(ω g)) ∂
+        (continuumMeasure 2 (N n) P (a n) mass (ha_pos n) hmass)
+  have h_rot_tend :
+      Filter.Tendsto (Zseq (euclideanAction2 ⟨R, 0⟩ f)) Filter.atTop
+        (nhds (generatingFunctional μ (euclideanAction2 ⟨R, 0⟩ f))) := by
+    simpa [Zseq] using hcf (euclideanAction2 ⟨R, 0⟩ f)
+  have h_id_tend :
+      Filter.Tendsto (Zseq f) Filter.atTop (nhds (generatingFunctional μ f)) := by
+    simpa [Zseq] using hcf f
+  obtain ⟨C, p, _hC, h_anom⟩ := rotation_cf_defect_polylog_bound P mass hmass f
   have h_norm_bound :
-      ∀ n, ‖(∫ ω : FieldConfig2,
-            Complex.exp (Complex.I * ↑(ω (euclideanAction2 ⟨R, 0⟩ f)))
-              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)) -
-          (∫ ω : FieldConfig2,
-            Complex.exp (Complex.I * ↑(ω f))
-              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass))‖
+      ∀ n, ‖Zseq (euclideanAction2 ⟨R, 0⟩ f) n - Zseq f n‖
           ≤ C * a n ^ 2 * (1 + |Real.log (a n)|) ^ p := by
     intro n
-    haveI : IsProbabilityMeasure (continuumMeasure 2 N P (a n) mass (ha_pos n) hmass) :=
-      continuumMeasure_isProbability 2 N P (a n) mass (ha_pos n) hmass
-    simpa [EuclideanOS.generatingFunctional] using h_anom (a n) (ha_pos n) (ha_le n) R
+    letI : NeZero (N n) := ⟨Nat.ne_of_gt (hN_pos n)⟩
+    simpa [Zseq, rotationCFDefect] using h_anom (N n) (a n) (ha_pos n) (ha_le n) R
   have h_sub :
       Filter.Tendsto
-        (fun n =>
-          (∫ ω : FieldConfig2,
-            Complex.exp (Complex.I * ↑(ω (euclideanAction2 ⟨R, 0⟩ f)))
-              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)) -
-          (∫ ω : FieldConfig2,
-            Complex.exp (Complex.I * ↑(ω f))
-              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)))
+        (fun n => Zseq (euclideanAction2 ⟨R, 0⟩ f) n - Zseq f n)
         Filter.atTop
         (nhds (generatingFunctional μ (euclideanAction2 ⟨R, 0⟩ f) - generatingFunctional μ f)) :=
     h_rot_tend.sub h_id_tend
   have h_diff :
       Filter.Tendsto
-        (fun n =>
-          (∫ ω : FieldConfig2,
-            Complex.exp (Complex.I * ↑(ω (euclideanAction2 ⟨R, 0⟩ f)))
-              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)) -
-          (∫ ω : FieldConfig2,
-            Complex.exp (Complex.I * ↑(ω f))
-              ∂(continuumMeasure 2 N P (a n) mass (ha_pos n) hmass)))
+        (fun n => Zseq (euclideanAction2 ⟨R, 0⟩ f) n - Zseq f n)
         Filter.atTop (nhds 0) := by
     apply squeeze_zero_norm (fun n => h_norm_bound n)
     simpa [mul_assoc] using

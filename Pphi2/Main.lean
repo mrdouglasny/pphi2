@@ -83,7 +83,7 @@ continuum-embedded lattice measures), μ satisfies all five OS axioms.
 
 This combines:
 - OS0 (Analyticity): `os0_for_continuum_limit` — exponential moments + analyticity
-- OS1 (Regularity): `os1_for_continuum_limit` — Green-form exponential moment bound
+- OS1 (Regularity): `os1_for_continuum_limit` — mixed `L¹`/Green exponential moment bound
 - OS2 (Euclidean Invariance): `os2_for_continuum_limit` — translations + Ward identity
 - OS3 (Reflection Positivity): `os3_for_continuum_limit` — passed to the
   limit from the RP approximants via characteristic-functional convergence

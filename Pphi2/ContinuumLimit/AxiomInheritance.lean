@@ -10,10 +10,10 @@ limit measure μ = lim ν_{aₙ}.
 
 ## Main results
 
-- `continuum_exponential_moment_green_bound` — Simon/Nelson Green-form
-  exponential moment input
-- `canonical_continuumMeasure_cf_tendsto` — canonical UV approximants for a
-  fixed finite lattice size converge in characteristic functionals
+- `continuum_exponential_moment_bound` — mixed `L¹`/Green exponential
+  moment input
+- `canonical_continuumMeasure_cf_tendsto` — canonical coupled UV/IR
+  approximants converge in characteristic functionals
 - `continuum_exponential_clustering` — continuum OS4 exponential clustering input
 - `os0_for_continuum_limit`, `os1_for_continuum_limit`,
   `os4_for_continuum_limit` — theorem wrappers into the generic OS bundle
@@ -102,23 +102,29 @@ theorem os1_inheritance (_P : InteractionPolynomial)
   simp at h2
   linarith
 
-/-- **Continuum-limit exponential moment bound in Green-form.**
+/-- **Continuum-limit exponential moment bound in mixed `L¹`/Green form.**
 
-The continuum-limit measure satisfies the textbook Simon/Nelson estimate
+This is the root analytic input used downstream for OS0 and OS1. We assume a
+mixed exponential-moment envelope
 
-`∫ exp(|⟨ω, f⟩|) dμ(ω) ≤ exp(c₁ · ‖f‖₁ + c₂ · G(f,f))`,
+`∫ exp(|⟨ω, f⟩|) dμ(ω) ≤ exp(c₁ ‖f‖_{L¹} + c₂ G(f,f))`,
 
-where `G` is the continuum Green quadratic form. This is the single
-substantive continuum-limit input from which both the all-`c` exponential
-moment integrability used in OS0 and the Schwartz-norm bound used in OS1 are
-derived downstream.
+where `G` is the continuum Green quadratic form. The linear `L¹` term is the
+natural small-field correction needed by the standard OS1 regularity axiom,
+while the Green term captures the Gaussian covariance scale.
 
-Reference: Simon, *The P(φ)₂ Euclidean QFT*, §V.2; Nelson (1973). -/
-axiom continuum_exponential_moment_green_bound (P : InteractionPolynomial)
+The all-`c` exponential-moment integrability used in OS0 follows by scaling
+`f ↦ c • f`, and OS1 then follows from the deterministic bound
+`G(f,f) ≤ C(m) · ‖f‖²_{L²}`.
+
+Literature guide: this is the continuum bridge used here to match the standard
+OS1 `L¹ + Lᵖᵖ` growth condition without claiming the false pure quadratic
+bound `exp(c · G(f,f))`. -/
+axiom continuum_exponential_moment_bound (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (h_limit : IsPphi2Limit μ P mass) :
-    ∃ (c₁ c₂ : ℝ), 0 < c₁ ∧ 0 < c₂ ∧
+    ∃ c₁ c₂ : ℝ, 0 < c₁ ∧ 0 < c₂ ∧
       ∀ (f : TestFunction2),
         Integrable (fun ω : FieldConfig2 => Real.exp (|ω f|)) μ ∧
         ∫ ω : FieldConfig2, Real.exp (|ω f|) ∂μ ≤
@@ -128,7 +134,7 @@ axiom continuum_exponential_moment_green_bound (P : InteractionPolynomial)
 
 /-- **Exponential moments of the continuum limit** for all positive scales.
 
-This follows from `continuum_exponential_moment_green_bound` by scaling the
+This follows from `continuum_exponential_moment_bound` by scaling the
 test function `f ↦ c • f`. -/
 theorem continuum_exponential_moments (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
@@ -139,7 +145,7 @@ theorem continuum_exponential_moments (P : InteractionPolynomial)
     Integrable (fun ω : FieldConfig2 => Real.exp (c * |ω f|)) μ := by
   intro c hc
   obtain ⟨c₁, c₂, hc₁, hc₂, hbound⟩ :=
-    continuum_exponential_moment_green_bound P mass hmass μ h_limit
+    continuum_exponential_moment_bound P mass hmass μ h_limit
   refine (hbound (c • f)).1.congr ?_
   exact ae_of_all μ fun ω => by
     simp [map_smul, smul_eq_mul, abs_mul, abs_of_pos hc]
@@ -149,7 +155,7 @@ theorem continuum_exponential_moments (P : InteractionPolynomial)
 The exponential moment `∫ exp(|ω(g)|) dμ` is bounded by
 `exp(c · (‖g‖₁ + ‖g‖₂²))` for some universal constant `c > 0`.
 
-This combines `continuum_exponential_moment_green_bound` with the deterministic
+This combines `continuum_exponential_moment_bound` with the deterministic
 estimate `continuumGreenBilinear_le_mass_inv_sq`. -/
 theorem exponential_moment_schwartz_bound
     (P : InteractionPolynomial)
@@ -160,14 +166,19 @@ theorem exponential_moment_schwartz_bound
       ∫ ω : FieldConfig2, Real.exp (|ω g|) ∂μ ≤
         Real.exp (c * (∫ x, ‖g x‖ ∂volume + ∫ x, ‖g x‖ ^ (2 : ℝ) ∂volume)) := by
   obtain ⟨c₁, c₂, hc₁, hc₂, hbound⟩ :=
-    continuum_exponential_moment_green_bound P mass hmass μ h_limit
+    continuum_exponential_moment_bound P mass hmass μ h_limit
   let Cmass : ℝ := (2 * Real.pi) ^ (-(2 : ℤ)) * (mass ^ 2)⁻¹
   have hCmass_nonneg : 0 ≤ Cmass := by
     dsimp [Cmass]
     positivity
   let c : ℝ := max c₁ (c₂ * Cmass)
+  have hc_nonneg : 0 ≤ c := by
+    dsimp [c]
+    exact le_max_of_le_left (le_of_lt hc₁)
   refine ⟨c, lt_of_lt_of_le hc₁ (le_max_left _ _), ?_⟩
   intro g
+  let L1 : ℝ := ∫ x : SpaceTime2, ‖g x‖ ∂volume
+  let L2 : ℝ := ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume
   obtain ⟨_, hg_bound⟩ := hbound g
   have hL2_eq :
       ∫ x : SpaceTime2, (g x) ^ 2 =
@@ -177,55 +188,43 @@ theorem exponential_moment_schwartz_bound
     rw [show (2 : ℝ) = (2 : ℕ) by norm_num, Real.rpow_natCast, Real.norm_eq_abs, sq_abs]
   have hGreen :
       continuumGreenBilinear 2 mass g g ≤
-        Cmass * ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) := by
+        Cmass * L2 := by
     calc
       continuumGreenBilinear 2 mass g g
           ≤ Cmass * ∫ x : SpaceTime2, (g x) ^ 2 :=
         continuumGreenBilinear_le_mass_inv_sq (d := 2) mass hmass g
       _ = Cmass * ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) := by rw [hL2_eq]
+      _ = Cmass * L2 := by simp [L2]
   have hc₁_le : c₁ ≤ c := le_max_left _ _
   have hc₂_le : c₂ * Cmass ≤ c := le_max_right _ _
-  have hL1_nonneg : 0 ≤ ∫ x : SpaceTime2, ‖g x‖ ∂volume :=
-    integral_nonneg fun _ => norm_nonneg _
-  have hL2_nonneg : 0 ≤ ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume := by
+  have hL1_nonneg : 0 ≤ L1 := by
+    dsimp [L1]
+    exact integral_nonneg fun _ => abs_nonneg _
+  have hL2_nonneg : 0 ≤ L2 := by
+    dsimp [L2]
     apply integral_nonneg
     intro x
     positivity
   calc
     ∫ ω : FieldConfig2, Real.exp (|ω g|) ∂μ
         ≤ Real.exp
-            (c₁ * (∫ x, ‖g x‖ ∂volume) +
+            (c₁ * (∫ x : SpaceTime2, ‖g x‖ ∂volume) +
               c₂ * continuumGreenBilinear 2 mass g g) :=
       hg_bound
-    _ ≤ Real.exp
-          (c₁ * (∫ x : SpaceTime2, ‖g x‖ ∂volume) +
-            c₂ * (Cmass * ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume)) := by
-        apply Real.exp_le_exp_of_le
-        exact add_le_add le_rfl
-          (mul_le_mul_of_nonneg_left hGreen (le_of_lt hc₂))
-    _ ≤ Real.exp
-          (c * (∫ x : SpaceTime2, ‖g x‖ ∂volume +
-            ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume)) := by
-        apply Real.exp_le_exp_of_le
-        have h1 :
-            c₁ * (∫ x : SpaceTime2, ‖g x‖ ∂volume) ≤
-              c * (∫ x : SpaceTime2, ‖g x‖ ∂volume) :=
-          mul_le_mul_of_nonneg_right hc₁_le hL1_nonneg
-        have h2 :
-            c₂ * (Cmass * ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume) ≤
-              c * (∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume) := by
-          calc
-            c₂ * (Cmass * ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume) =
-                (c₂ * Cmass) * ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume := by ring
-            _ ≤ c * (∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume) :=
-              mul_le_mul_of_nonneg_right hc₂_le hL2_nonneg
-        have hsum :
-            c₁ * (∫ x : SpaceTime2, ‖g x‖ ∂volume) +
-                c₂ * (Cmass * ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume) ≤
-              c * (∫ x : SpaceTime2, ‖g x‖ ∂volume) +
-                c * (∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume) :=
-          add_le_add h1 h2
-        exact hsum.trans_eq (by ring)
+    _ ≤ Real.exp (c₁ * L1 + c₂ * (Cmass * L2)) := by
+      apply Real.exp_le_exp_of_le
+      gcongr
+    _ ≤ Real.exp (c * (L1 + L2)) := by
+      apply Real.exp_le_exp_of_le
+      calc
+        c₁ * L1 + c₂ * (Cmass * L2)
+            = c₁ * L1 + (c₂ * Cmass) * L2 := by ring
+        _ ≤ c * L1 + c * L2 := by
+          gcongr
+        _ = c * (L1 + L2) := by ring
+    _ = Real.exp (c * (∫ x : SpaceTime2, ‖g x‖ ∂volume +
+          ∫ x : SpaceTime2, ‖g x‖ ^ (2 : ℝ) ∂volume)) := by
+        simp [L1, L2]
 
 /-- **OS0 for the continuum limit** from exponential moments.
 
@@ -311,32 +310,36 @@ theorem os1_for_continuum_limit (P : InteractionPolynomial)
 
 /-! ## Canonical approximant convergence input -/
 
-/-- **Canonical characteristic-functional convergence from the lattice construction.**
+/-- **Canonical characteristic-functional convergence from the coupled lattice construction.**
 
 The abstract marker predicate `IsPphi2Limit μ P mass` only records the
 existence of some approximating sequence. For the Ward-identity step we need a
 stronger statement tying `μ` to the specific continuum-embedded lattice measures
 appearing in the formalized anomaly estimate.
 
-The bridge asserted here is intentionally explicit about its scope: there is
-some fixed finite lattice size `Nat.succ N0`, together with a spacing sequence
-`a_n → 0`, such that the corresponding canonical UV family
-`continuumMeasure 2 (Nat.succ N0) P (a_n) mass` converges to `μ` in
-characteristic functionals. This is a fixed-volume UV bridge, not a standalone
-formalization of the full plane `a → 0`, `N → ∞` route. -/
+The bridge asserted here is intentionally explicit about its scope: there are
+canonical sequences of lattice sizes `N_n` and spacings `a_n` with
+`a_n → 0`, `N_n → ∞`, and physical volume `N_n * a_n → ∞`, such that the
+corresponding coupled UV/IR family `continuumMeasure 2 (N_n) P (a_n) mass`
+converges to `μ` in characteristic functionals. This is the bridge where the
+abstract limit marker is tied back to the concrete `P(Φ)₂` approximants used in
+the Ward estimate. -/
 axiom canonical_continuumMeasure_cf_tendsto (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure FieldConfig2) [IsProbabilityMeasure μ]
     (h_limit : IsPphi2Limit μ P mass) :
-    ∃ (N0 : ℕ) (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n),
+    ∃ (N : ℕ → ℕ) (a : ℕ → ℝ) (hN_pos : ∀ n, 0 < N n) (ha_pos : ∀ n, 0 < a n),
       (∀ n, a n ≤ 1) ∧
       Filter.Tendsto a Filter.atTop (nhds 0) ∧
+      Filter.Tendsto N Filter.atTop Filter.atTop ∧
+      Filter.Tendsto (fun n => (N n : ℝ) * a n) Filter.atTop Filter.atTop ∧
       ∀ (f : TestFunction2),
         Filter.Tendsto
           (fun n =>
+            letI : NeZero (N n) := ⟨Nat.ne_of_gt (hN_pos n)⟩
             ∫ ω : FieldConfig2,
               Complex.exp (Complex.I * ↑(ω f)) ∂
-                (continuumMeasure 2 (Nat.succ N0) P (a n) mass (ha_pos n) hmass))
+                (continuumMeasure 2 (N n) P (a n) mass (ha_pos n) hmass))
           Filter.atTop
           (nhds (EuclideanOS.generatingFunctional (B := plane2Background) μ f))
 
@@ -405,7 +408,7 @@ theorem os4_for_continuum_limit (P : InteractionPolynomial)
 -- (only used in SatisfiesOS0134 bundle which was never consumed downstream).
 -- The actual OS0/OS1 proof chains now live here:
 -- continuum_exponential_moments → analyticOn_generatingFunctionalC → os0_for_continuum_limit
--- continuum_exponential_moment_green_bound → exponential_moment_schwartz_bound
+-- continuum_exponential_moment_bound → exponential_moment_schwartz_bound
 --   → os1_for_continuum_limit.
 -- OS4 goes through continuum_exponential_clustering → os4_for_continuum_limit.
 

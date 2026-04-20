@@ -16,7 +16,7 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-04-07 18:18): 21 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-04-19 22:44): 21 axioms, 0 sorries.**
 
 Recent corrections (2026-04-03):
 - `general_clustering_from_spectral_gap` — **statement corrected**: `G` is evaluated on
@@ -122,7 +122,7 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 4 | `ContinuumLimit/Hypercontractivity.lean` | 0 axioms, 0 sorries (`wickConstant_eq_variance` now proved generically; `wickConstant_eq_variance_two_dim` remains as a 2D corollary) |
 | 4 | `ContinuumLimit/Tightness.lean` | 1 axiom |
 | 4 | `ContinuumLimit/Convergence.lean` | 1 axiom, 0 sorries (`continuumLimit` and `pphi2_limit_exists` proved) |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | **3 axioms, 0 sorries** (`continuum_exponential_moment_green_bound`, `canonical_continuumMeasure_cf_tendsto`, `continuum_exponential_clustering`; derived OS0/OS1/OS4 inheritance wrappers live here) |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | **3 axioms, 0 sorries** (`continuum_exponential_moment_bound`, `canonical_continuumMeasure_cf_tendsto`, `continuum_exponential_clustering`; derived OS0/OS1/OS4 inheritance wrappers live here) |
 | 4 | `ContinuumLimit/CharacteristicFunctional.lean` | 0 axioms, 0 sorries (complex analyticity, complex-from-real invariance, Z₂/reality, translation continuity, ergodicity support) |
 | 4 | `ContinuumLimit/TimeReflection.lean` | 0 axioms, 0 sorries (continuum time reflection on Schwartz space and distributions) |
 | 4 | `ContinuumLimit/RPTransfer.lean` | 0 axioms, 0 sorries (intertwining proved, signedVal) |
@@ -398,7 +398,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `schwinger_n_convergence` | Convergence | Hard | n-point Schwinger functions converge along subsequence. Diagonal subsequence extraction. |
 | `continuumLimit_nontrivial` | Convergence | Hard | ∫ (ω f)² dμ > 0 for some f. Free field two-point function gives lower bound. |
 | `continuumLimit_nonGaussian` | Convergence | Hard | Connected 4-point function ≠ 0. Perturbation theory gives O(λ) contribution. |
-| `continuum_exponential_moment_green_bound` | AxiomInheritance | Hard | Simon/Nelson Green-form exponential moment input used to derive the OS0/OS1 wrappers. |
+| `continuum_exponential_moment_bound` | AxiomInheritance | Hard | Mixed `L¹`/Green exponential-moment input `∫ exp(|ω f|) ≤ exp(c₁∫|f| + c₂ G(f,f))` used to derive the OS0/OS1 wrappers. |
 | ~~`os3_for_continuum_limit`~~ | OS2_WardIdentity | ✅ **Proved** | Standard OS3 from inline approximant RP in `IsPphi2Limit` + entrywise characteristic-functional convergence. |
 | `continuum_exponential_clustering` | AxiomInheritance | Hard | Continuum characteristic-functional clustering input from the spectral-gap package. |
 | ~~`os0_for_continuum_limit / os1_for_continuum_limit / os4_for_continuum_limit`~~ | AxiomInheritance | **Theorem** | Derived wrappers packaging the analytic and clustering inputs into the generic OS bundle. |
@@ -498,12 +498,12 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`os4_clustering_implies_ergodicity`~~ | CharacteristicFunctional | ✅ **Proved** | OS4_Clustering → OS4_Ergodicity via reality of Z + Cesàro convergence. |
 | ~~`latticeMeasure_translation_invariant`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — density bridge + change of variables. BW and ρ invariant under translation, Lebesgue measure preserved by `piCongrLeft`. |
 | ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — strengthened `IsPphi2Limit` with `cf_tendsto` + `lattice_inv` fields; continuum invariance via `tendsto_nhds_unique_of_eventuallyEq`. |
-| `rotation_cf_pointwise_defect_polylog_bound` | OS2_WardIdentity | Hard | Remaining OS2 axiom: one-point super-renormalizable bound on the expectation of the canonical pointwise characteristic-functional defect observable `rotationCFPointwiseDefect`; the defect-level bound for `rotationCFDefect` is theorem-derived from the generic functional-analysis estimate `norm_configuration_expIntegral_sub_le_integral_cexp_eval_dist`. |
-| `canonical_continuumMeasure_cf_tendsto` | AxiomInheritance | Hard | For some fixed finite lattice size `Nat.succ N0`, the canonical UV family `continuumMeasure 2 (Nat.succ N0) P a_n mass` converges in characteristic functionals to `μ` along `a_n → 0`, `0 < a_n ≤ 1`. This is the explicit bridge from abstract `IsPphi2Limit` to the concrete approximants used by the Ward estimate. |
-| `continuum_exponential_moment_green_bound` | AxiomInheritance | Hard | Textbook Simon/Nelson continuum bound `∫ exp(|ω f|) dμ ≤ exp(c₁‖f‖₁ + c₂ G(f,f))`. Single remaining OS0/OS1 analytic input. |
+| `rotation_cf_defect_polylog_bound` | OS2_WardIdentity | Hard | Remaining OS2 axiom: one-point super-renormalizable bound on the canonical characteristic-functional defect `rotationCFDefect`, uniform in the lattice size `N` and scaling like `C·a²·(1+|log a|)^p`. |
+| `canonical_continuumMeasure_cf_tendsto` | AxiomInheritance | Hard | Coupled UV/IR bridge: canonical `continuumMeasure 2 (N n) P (a n) mass` approximants converge in characteristic functionals to `μ` along `a_n → 0`, `N_n → ∞`, and physical volume `(N_n : ℝ) * a_n → ∞`. |
+| `continuum_exponential_moment_bound` | AxiomInheritance | Hard | Project-level continuum exponential-moment bridge `∫ exp(|ω f|) dμ ≤ exp(c₁∫|f| + c₂ G(f,f))`. Single remaining OS0/OS1 analytic input. |
 | ~~`analyticOn_generatingFunctionalC`~~ | CharacteristicFunctional | ~~Medium~~ | **Proved** — via `analyticOnNhd_integral`, the finite-source pairing rewrite, and compact domination from exponential moments of `schwartzRe`/`schwartzIm`. |
-| ~~`continuum_exponential_moments`~~ | AxiomInheritance | ~~Hard~~ | **Proved** — derived by scaling from `continuum_exponential_moment_green_bound`. Feeds OS0 + OS1. |
-| ~~`exponential_moment_schwartz_bound`~~ | AxiomInheritance | ~~Medium~~ | **Proved** — combines `continuum_exponential_moment_green_bound` with `continuumGreenBilinear_le_mass_inv_sq`. |
+| ~~`continuum_exponential_moments`~~ | AxiomInheritance | ~~Hard~~ | **Proved** — derived by scaling from `continuum_exponential_moment_bound`. Feeds OS0 + OS1. |
+| ~~`exponential_moment_schwartz_bound`~~ | AxiomInheritance | ~~Medium~~ | **Proved** — combines `continuum_exponential_moment_bound` with `continuumGreenBilinear_le_mass_inv_sq`. |
 | ~~`rotation_invariance_continuum`~~ | OS2_WardIdentity | Hard | **Proved** — canonical CF convergence for `continuumMeasure` + `anomaly_vanishes` + Mathlib logarithmic asymptotics yield `Z[R·f] = Z[f]`. Feeds OS2. |
 | `continuum_exponential_clustering` | AxiomInheritance | Hard | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap → exp clustering. Feeds OS4. |
 
@@ -514,7 +514,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 - `norm_configuration_expIntegral_sub_le_integral_cexp_eval_dist`: generic CF defect control theorem (**proved**, in `FunctionalAnalysis`)
 - `rotationCFPointwiseDefectIntegrand` / `rotationCFPointwiseDefect`: OS2 specialization of the generic CF defect API (**proved** abbreviations)
 - `rotationCFDefect`: concrete one-point canonical CF rotation defect (**proved** definition)
-- `rotation_cf_defect_polylog_bound`: defect-level bound (**proved**, derived from `rotation_cf_pointwise_defect_polylog_bound` by `norm_integral_le_integral_norm`)
+- `rotation_cf_defect_polylog_bound`: uniform defect-level Ward bound (**axiom**)
 - `anomaly_bound_from_superrenormalizability`: one-point CF anomaly bound (**proved**, derived from `rotation_cf_defect_polylog_bound`)
 - `anomaly_vanishes`: one-point anomaly satisfies `‖Z_a[R·f] - Z_a[f]‖ ≤ C·a²·(1 + |log a|)^p` and hence vanishes (**proved**, from `anomaly_bound_from_superrenormalizability` + logarithmic asymptotics)
 - `complex_gf_invariant_of_real_gf_invariant`: complex Euclidean invariance from real invariance + analyticity (**proved**, now in `CharacteristicFunctional`)
@@ -734,7 +734,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `integral_operator_l2_kernel_compact` | L2Operator | General HS theorem: convolution-form L² kernel integral operators are compact. Reed-Simon I, Thm VI.23. |
 | ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | **Proved** — `tendsto_nhds_unique_of_eventuallyEq` from `cf_tendsto` + `lattice_inv`. |
 | `analyticOn_generatingFunctionalC` | CharacteristicFunctional | Analyticity of complex generating functional from exponential moments via Morera. |
-| `continuum_exponential_moment_green_bound` | AxiomInheritance | Simon/Nelson Green-form exponential moment input for OS0 + OS1. |
+| `continuum_exponential_moment_bound` | AxiomInheritance | Mixed `L¹`/Green exponential-moment input `∫ exp(|ω f|) ≤ exp(c₁∫|f| + c₂ G(f,f))` for OS0 + OS1. |
 | `os3_inheritance` | AxiomInheritance | RP transfers through weak limits. From `lattice_rp_matrix` + `rp_closed_under_weak_limit` (proved). |
 | `os0_inheritance` | AxiomInheritance | Uniform moment bounds + pointwise convergence → limit has all moments finite. |
 | `torus_interacting_tightness` | TorusInteractingLimit | Cauchy-Schwarz density transfer from Gaussian tightness. |
@@ -747,13 +747,13 @@ infrastructure. Assessment date: 2026-03-04.
 | `fourier_representation_convolution` | GaussianFourier | L² Fourier representation identity. Schwartz density + L² convolution theorem (not yet in Mathlib). |
 | `latticeGreenBilinear_basis_tendsto_continuum` | PropagatorConvergence | Spectral lattice Green bilinear on Dynin-Mityagin basis pairs → continuum Fourier Green bilinear on ℝ^d. Extend to all test functions by bilinear continuity. |
 | `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
-| `rotation_cf_pointwise_defect_polylog_bound` | OS2_WardIdentity | Minimal remaining OS2 axiom: polynomial-log `a²` bound for the expectation of the canonical pointwise CF defect observable `rotationCFPointwiseDefect`, now expressed via the generic characteristic-functional defect API. |
-| `continuum_exponential_moment_green_bound` | AxiomInheritance | Simon/Nelson Green-form continuum exponential moment bound; source for derived OS0/OS1 estimates. |
+| `rotation_cf_defect_polylog_bound` | OS2_WardIdentity | Minimal remaining OS2 axiom: polynomial-log `a²` bound for the canonical CF defect `rotationCFDefect`, uniform in the lattice size `N`. |
+| `continuum_exponential_moment_bound` | AxiomInheritance | Project-level continuum exponential-moment bridge `∫ exp(|ω f|) ≤ exp(c₁∫|f| + c₂ G(f,f))`; source for derived OS0/OS1 estimates. |
 | ~~`wickMonomial_latticeGaussian`~~ | Hypercontractivity | **Theorem** (see `Hypercontractivity.lean`). |
 | ~~`wickConstant_eq_variance`~~ | Hypercontractivity | **Theorem** (generic proof via `GeneralResults/LatticeProductDFT.lean`; 2D corollary retained in `Hypercontractivity.lean`). |
 | ~~`gaussian_hermite_zero_mean`~~ | Hypercontractivity | **Theorem** (see `GaussianHermiteMean.lean`). |
 | ~~`wickPolynomial_uniform_bounded_below`~~ | WickPolynomial | ✅ **Proved** via coefficient continuity + compactness + leading term dominance. |
-| `canonical_continuumMeasure_cf_tendsto` | AxiomInheritance | Canonical `continuumMeasure` approximants converge CF-wise to `μ`; bridge needed to apply the Ward anomaly bound to an abstract `IsPphi2Limit`. |
+| `canonical_continuumMeasure_cf_tendsto` | AxiomInheritance | Coupled canonical `continuumMeasure` approximants converge CF-wise to `μ`; bridge needed to apply the Ward anomaly bound to an abstract `IsPphi2Limit`. |
 | `continuum_exponential_clustering` | AxiomInheritance | Spectral gap → exponential clustering in continuum. |
 
 ### Tier 5: Very hard / infrastructure gaps
