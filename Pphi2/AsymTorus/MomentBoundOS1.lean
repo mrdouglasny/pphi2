@@ -35,15 +35,38 @@ bound after pullback.
 These results give a clean reduction of the Route B′ IR-limit exponential
 moment axiom to the (still-to-be-proved) property that the concrete UV-limit
 asymmetric torus measures satisfy `MeasureHasGreenMomentBound` with constants
-uniform in `Lt`. That uniform property can be established by refactoring
-`asymTorusInteractingMeasure_exponentialMomentBound_cutoff` to bound the
-lattice second moment by the continuum torus Green's function instead of by
-the Lt-dependent Sobolev seminorm currently used.
+**uniform in `Lt`**.
+
+## Audit status (deep_think_gemini, 2026-04-21)
+
+The predicate `MeasureHasGreenMomentBound` is **tight**: `G_{Lt,Ls}(f, f)` equals
+`‖f‖²_{H⁻¹(T_{Lt,Ls})}` by definition of the Sobolev norm. The quantifier
+structure of `cylinderPullback_expMoment_uniform_bound` is the correct
+composition for downstream use. See `docs/axiom_audit.md` (2026-04-21 entry).
+
+**Caveat on Lt-uniformity**: deriving the Lt-uniform `K, C` is **not** an
+elementary consequence of Nelson's estimate + Cauchy-Schwarz. The naive
+density transfer yields constants with explicit volume dependence:
+`K_Nelson ≤ exp(K'·Lt·Ls)` (from `V_a ≥ -C·Vol`) and `log Z ≥ p·Vol`
+(extensive pressure). These do not cancel cleanly; volume-independent bounds
+require **locality**, i.e., cluster expansion (weak coupling), correlation
+inequalities (GKS/FKG for φ⁴-type P), or chessboard estimates (from reflection
+positivity). This is a Glimm-Jaffe-Spencer-level result, comparable in
+difficulty to `spectral_gap_uniform`.
+
+The foreseeable formalization path is therefore to introduce a **single
+clean upstream axiom** expressing the volume-uniform P(φ)₂ exponential moment
+bound (citing Glimm-Jaffe Ch. 18–19 or Simon Ch. VIII) and deriving the
+Route B′ IR-limit axioms from it via this file's theorems. This replaces the
+three current IRLimit axioms with one, but does not reduce them to elementary
+calculations.
 
 ## References
 
-- Glimm-Jaffe §19.4 (Nelson's estimate in volume-independent form)
+- Glimm-Jaffe, *Quantum Physics*, Ch. 18 (volume-independent bounds via
+  cluster expansion), Ch. 19 (Nelson's estimate, Wick-ordering)
 - Simon, *The P(φ)₂ Euclidean QFT*, Ch. VIII
+- Glimm-Jaffe-Spencer (1974–), *Commun. Math. Phys.* — cluster expansion
 -/
 
 import Pphi2.IRLimit.CylinderEmbedding
