@@ -289,7 +289,25 @@ private lemma cylinderExp_mul_sum_le {n : ℕ} (hn : 0 < n) (c : ℝ) (hc : 0 �
 
 Via compact support density: for `f ∈ C_c^∞((0,R) × S¹)` and `Lt > 2R`,
 `embed f` has no wrap-around, so torus RP applies. Pass through IR limit.
-Extend by density of `C_c^∞` in the positive Schwartz space. -/
+Extend by density of `C_c^∞` in the positive Schwartz space.
+
+**Prerequisites before this axiom can be discharged:**
+
+1. `AsymSatisfiesTorusOS` must be extended with a compactly-supported OS3
+   clause: for `f : Fin n → CylinderTestFunction Ls` with
+   `tsupport(f i) ⊆ (0, Lt/2) × S¹_Ls` (no wrap-around through the torus
+   time boundary), the RP matrix is positive semidefinite on the asymmetric
+   torus measure. This is provable from lattice RP (`torusLattice_rp`-style
+   result on the asymmetric torus) + UV limit transfer.
+
+2. Pullback through `cylinderPullbackMeasure` (direct, at finite Lt).
+
+3. Density of `C_c^∞((0, R) × S¹_Ls)` in `cylinderPositiveTimeSubmodule` in
+   the relevant Schwartz topology (for the final extension step).
+
+The IR-limit transfer (step 4 of the proof: RP matrix entries are bounded
+continuous in `ω`, so Prokhorov extraction preserves RP) is mechanical once
+the above prerequisites are in place. -/
 
 axiom cylinderIR_os3
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)

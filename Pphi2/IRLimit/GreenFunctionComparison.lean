@@ -98,7 +98,16 @@ NOTE: The quadratic bound requires the specific interacting measure structure
 (Nelson estimate + Gaussian hypercontractivity + density transfer), not just
 abstract OS axioms. The cutoff-level density-transfer step is proved above; the
 remaining axiom packages the passage to the torus UV limit together with the
-genuinely new uniform-in-`Lt` cylinder seminorm control. -/
+genuinely new uniform-in-`Lt` cylinder seminorm control.
+
+**Structural gap** (blocker for the proof): like
+`cylinderIR_uniform_exponential_moment`, this axiom would be derivable by
+differentiating the OS1 CF bound (Cauchy bound on 2nd derivative at `t=0`)
+if `AsymSatisfiesTorusOS.os1` guaranteed its continuous bound `q_torus`
+satisfied `q_torus(g) ≤ C' · G_torus_Lt(g, g)`. The current abstract OS1
+does not. `AsymSatisfiesTorusOS` must be extended with a `G_torus`-compatible
+OS1 clause before this axiom can be discharged; that refactor is scheduled
+separately. -/
 axiom cylinderIR_uniform_second_moment
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (C : ℝ) (q : Seminorm ℝ (CylinderTestFunction Ls)),
