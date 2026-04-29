@@ -45,9 +45,25 @@ pulled-back torus interacting measure is bounded uniformly in Lt:
 where `q` is a continuous seminorm on `CylinderTestFunction Ls` and
 `K, C > 0` are constants independent of `f` and `Lt`.
 
-**Proof chain**: From `AsymSatisfiesTorusOS.os1` (torus exponential moment
-bound), applied to `g = embed(f)`, combined with the method of images
-bound `‖embed f‖ ≤ C · q(f)` from `torusGreen_uniform_bound`.
+**Proof strategy (requires infrastructure refactor):**
+
+The intended chain is: `AsymSatisfiesTorusOS.os1` (torus exponential moment)
+bounds `∫ exp(|ω g|) dμ ≤ exp(c · q_torus(g))` for `g = embed f`. Composing
+with `torusGreen_uniform_bound` (`G_torus_Lt(embed f, embed f) ≤ C·q_cyl(f)²`
+uniformly in `Lt ≥ 1`) gives the uniform cylinder bound — *provided*
+`q_torus(g) ≤ C' · G_torus_Lt(g, g)` for the OS1 bound.
+
+**Structural gap** (blocker): `AsymTorusOS1_Regularity` currently takes the
+form `‖Z_μ(f_re + i·f_im)‖ ≤ exp(c·(q_torus(f_re) + q_torus(f_im)))` for an
+**abstract continuous `q_torus`**. Nothing in the type guarantees
+`q_torus(g) ≤ C' · G_torus_Lt(g, g)`. The concrete `q_torus` produced by
+`asymTorusInteracting_exponentialMomentBound` is Sobolev-seminorm based
+(`mass⁻² · (Lt·Ls·C₀t²·C₀s²·p₀(f)² + 1) + |log K_cut|`), which has an
+**explicit `Lt` factor** that breaks uniformity in the cylinder limit.
+
+To prove this axiom, `AsymSatisfiesTorusOS` must be extended with a
+`G_torus`-compatible OS1 clause (or the axiom must be specialized to the
+concrete UV-limit measure). That refactor is scheduled separately.
 
 This is the key input for OS0 analyticity of the IR limit. -/
 axiom cylinderIR_uniform_exponential_moment

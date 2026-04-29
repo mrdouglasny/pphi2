@@ -457,4 +457,67 @@ Notes on ⚠️ axioms:
 - Trèves, *Topological Vector Spaces, Distributions, and Kernels* — tensor product CLMs
 - Fernique (1975) — Gaussian measures on nuclear spaces
 
+---
+
+## Audit entry 2026-04-21: MomentBoundOS1 infrastructure + Route B′ refactor premise
+
+This is a design-level audit (not a new axiom) of the Green-function-controlled
+OS1 refactor path for Route B′.
+
+**New file:** `Pphi2/AsymTorus/MomentBoundOS1.lean` (214 lines, 0 axioms, 0 sorries).
+Introduces:
+- `MeasureHasGreenMomentBound mass K C μ` — predicate asserting
+  `∫ exp(|ω f|) dμ ≤ K · exp(C · G_{Lt,Ls}(f, f))`.
+- `cylinderPullback_expMoment_{eq, le_green, uniform_bound}` — three theorems
+  composing the pullback with `torusGreen_uniform_bound` (gaussian-field) to
+  give the uniform-in-`Lt` cylinder bound that matches
+  `cylinderIR_uniform_exponential_moment`.
+
+### Gemini deep-think verdict (2026-04-21)
+
+**Point 1 (predicate correctness): GREEN.** The identification
+`G_{Lt,Ls}(f, f) = ‖f‖²_{H⁻¹(T_{Lt,Ls})}` is tight by definition of the
+Sobolev norm. For the GFF, `∫ exp(ω(f)) dμ_{GFF} = exp(½ G(f,f))` exactly,
+and the interacting-case bound inherits the quadratic-in-Green form through
+Cauchy-Schwarz density transfer. No slack.
+
+**Point 2 (Lt-uniformity of K, C): YELLOW / important correction.**
+Our initial intuition that volume dependencies in `K_Nelson ≤ exp(K'·Vol)`
+and `Z ≥ exp(p·Vol)` would cancel in the density-transfer ratio is
+**insufficient**. The naive Cauchy-Schwarz of `exp(-V)/Z` does not give
+volume-independent constants; it gives constants with explicit
+volume-exponential dependence that do not cancel cleanly. True Lt-uniformity
+is a "cornerstone" result for P(φ)₂, proved via:
+- **Cluster expansion** (weak coupling) — Glimm-Jaffe-Spencer
+- **Correlation inequalities** (GKS, FKG — available for e.g. φ⁴)
+- **Chessboard estimates** (from reflection positivity)
+
+Any derivation of "concrete UV-limit family satisfies uniform
+`MeasureHasGreenMomentBound`" from first principles is book-length
+(Glimm-Jaffe Ch. 18–19 or Simon Ch. VIII). Formalization path: introduce
+a single axiom expressing the uniform-in-volume P(φ)₂ exponential moment
+bound, citing the literature, and derive the three current IRLimit axioms
+from it via `MomentBoundOS1.lean`. This replaces 3 axioms with 1 deeper
+axiom but does **not** reduce to elementary calculations.
+
+**Point 3 (quantifier composition): GREEN.** `MeasureHasGreenMomentBound`
+is a concrete analytic property supporting OS0 specifically; it is not a
+replacement for `AsymSatisfiesTorusOS` but rather evidence for one of its
+clauses. The `∃ K' C' q, ∀ Lt μ hμ f, ...` structure in
+`cylinderPullback_expMoment_uniform_bound` correctly lifts a uniform-in-Lt
+Green-moment bound on the torus family to a uniform-in-Lt cylinder bound.
+
+### Implication for Route B′ plan
+
+The `MomentBoundOS1.lean` infrastructure is correct and reusable. The
+hard work is still in front of us: proving (or axiomatizing at a cleaner
+level) the Lt-uniform `MeasureHasGreenMomentBound` for the concrete
+UV-limit family. This is comparable in difficulty to Route A's
+`spectral_gap_uniform`. Not a quick-session target.
+
+The three existing IRLimit axioms
+(`cylinderIR_uniform_second_moment`,
+`cylinderIR_uniform_exponential_moment`, `cylinderIR_os3`) remain as
+the live axioms pending this deeper work.
+
 **Audit Date**: 2026-03-19

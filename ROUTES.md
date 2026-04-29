@@ -1,199 +1,223 @@
-# P(φ)₂ Interacting Measure Constructions
+# P(φ)₂ Interacting Measure — Construction Routes
 
-Three constructions of interacting P(φ)₂ measures on three spacetimes.
-All share the general framework (`InteractingMeasure/General.lean`):
+Three live routes + one preserved route. All share the interacting-measure
+framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
-```
-dμ_V = (1/Z) exp(-V) dμ_free,   Z = ∫ exp(-V) dμ_free
-```
+**Current state** (`scripts/count_axioms.sh`, 2026-04-29):
+**pphi2 total: 20 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry.**
 
 ---
 
-## Route A: Lattice → Euclidean ℝ²
+## Route A: Lattice → S'(ℝ²)
 
-**Purpose:** Main theorem — existence of P(φ)₂ QFT satisfying OS0–OS4.
+**Purpose:** Main theorem — P(φ)₂ QFT on the Euclidean plane satisfying OS0–OS4.
 
 **Spacetime:** ℝ² (2D Euclidean plane).
 
-### Regularized field
-- Configuration space: `FinLatticeField 2 N = FinLatticeSites 2 N → ℝ`
-- Field at a point: `φ(x)` — function evaluation on lattice sites
-- No sorry needed: lattice configurations ARE functions
+**Main theorem:** `pphi2_exists_os_and_massParameter_positive` (`Main.lean`) —
+structurally assembled, conditional on the remaining axioms.
 
-### Interaction
-```
-V_a(φ) = a² Σ_{x ∈ (ℤ/Nℤ)²} :P(φ(x)):_{c_a}
-```
-where `c_a = wickConstant 2 N a mass`. Fully concrete, 0 axioms.
-Bounded below: proved.
+### Files and axiom count
 
-### Continuum limit
-1. Embed lattice into continuum via Riemann sum: `ι_a(φ)(f) = a² Σ_x φ(x) f(ax)`
-2. Tightness of `{(ι_a)_* μ_a}_{a→0}` (axiom — Nelson bounds + Mitoma)
-3. Prokhorov extracts weakly convergent subsequence
-4. Limit lives on `Configuration(SchwartzMap(ℝ²) ℝ)`
+| Cluster | Files | Axioms |
+|--------|-------|--------|
+| Transfer matrix + spectrum | `TransferMatrix/L2Operator`, `GaussianFourier`, `SpectralGap` | 4 |
+| Lattice RP | `OSProofs/OS3_RP_Lattice` | 1 |
+| Lattice clustering / OS4 | `OSProofs/OS4_MassGap` | 2 |
+| Ward identity / continuum OS2 | `OSProofs/OS2_WardIdentity` | 1 |
+| Propagator convergence | `GaussianContinuumLimit/PropagatorConvergence` | 1 |
+| Continuum limit / non-Gaussianity | `ContinuumLimit/Convergence` | 1 |
+| Continuum inheritance | `ContinuumLimit/AxiomInheritance` | 3 |
+| Main assembly | `Main.lean` | 1 |
+| **Route A total** | | **14** |
 
 ### OS axiom strategy
-| Axiom | Status | Method |
-|-------|--------|--------|
-| OS0 (Analyticity) | axiom | Vitali convergence for analytic functions under weak limits |
-| OS1 (Regularity) | proved | Uniform moment bounds transfer to limit |
-| OS2 (Euclidean invariance) | proved | Translation: lattice symmetry. Rotation: Ward identity + superrenormalizability |
-| OS3 (Reflection positivity) | proved | Transfer matrix → lattice RP → closed under weak limits |
-| OS4 (Clustering/mass gap) | proved | Perron-Frobenius spectral gap for 1D transfer matrix |
 
-### Spacetime dependence
-- OS2 rotation: Ward identity anomaly bound uses d=2 superrenormalizability
-- OS3: transfer matrix decomposition uses d=2 (1D spatial slices)
-- OS4: Jentzsch/Perron-Frobenius on 1D transfer matrix, d=2 specific
+| OS axiom | Status | Method |
+|----------|--------|--------|
+| OS0 analyticity | axiom chain | Vitali on analytic functions under weak limits (`analyticOn_generatingFunctionalC`) |
+| OS1 regularity | proved conditional on Ward-chain | exponential-moment Schwartz bound |
+| OS2 translation | proved conditional | lattice translation invariance + CF continuity |
+| OS2 rotation | axiom | Ward identity + `anomaly_bound_from_superrenormalizability` |
+| OS3 reflection positivity | proved conditional on `gaussian_rp_cov_perfect_square` | transfer matrix + lattice-to-continuum RP inheritance |
+| OS4 clustering + ergodicity | proved conditional | uniform mass gap (`spectral_gap_uniform`) + exp clustering |
 
-### Status: 25 axioms, 0 sorries
-Main theorem: `pphi2_exists`
+### Remaining axiom categories
+
+- **Deep mathematical content (multi-week work each)**:
+  `spectral_gap_uniform`, `spectral_gap_lower_bound`, `continuumLimit_nonGaussian`,
+  `pphi2_nontriviality`, `anomaly_bound_from_superrenormalizability`,
+  `rotation_invariance_continuum`, `continuum_exponential_clustering`.
+- **Mathlib-upstream**: `integral_operator_l2_kernel_compact` (HS theorem, Reed-Simon),
+  `fourier_representation_convolution` (L² convolution theorem, not yet in Mathlib).
+- **Self-contained classical** (textbook but long): `gaussian_rp_cov_perfect_square`,
+  `latticeGreenBilinear_basis_tendsto_continuum`.
+
+### Tightness and convergence infrastructure
+- `continuumMeasures_tight` — **PROVED** (ported from torus pipeline, 2026-04-19)
+- `gaussianContinuumMeasures_tight` — **PROVED** for `d > 0`
+- `prokhorov_configuration_sequential` — **PROVED** via gaussian-field
+- `continuumLimit` (subsequential Prokhorov extraction) — **PROVED**
+- `pphi2_limit_exists` — proved, currently using a trivial δ₀ witness
 
 ---
 
-## Route B: Lattice → Torus T²_L
+## Route B: Lattice → T²_L (UV warm-up)  ✅ DONE
 
-**Purpose:** Finite-volume warm-up for Route A.
+**Purpose:** UV-limit warm-up isolating the `a → 0` step from IR issues.
 
-**Spacetime:** T²_L = (ℝ/Lℤ)² (2D torus of side length L).
+**Spacetime:** T²_L = (ℝ/Lℤ)² (2D torus, fixed side L).
 
-### Regularized field
-Same as Route A: `FinLatticeField 2 N`, field is `φ(x)`.
+**Main theorem:** `torusInteractingLimit_exists` (`TorusContinuumLimit/TorusInteractingLimit.lean`)
+— **fully proved**, not conditional on any Route-B-local axioms.
 
-### Interaction
-Same lattice interaction as Route A, with `a = L/N`.
+### Files and axiom count
 
-### Interacting measure
-Pushforward of Route A lattice measure under torus embedding:
-```lean
-torusInteractingMeasure N P mass = Measure.map (torusEmbedLift L N) (interactingLatticeMeasure ...)
-```
-No new field evaluation — inherits everything from the lattice.
+| Files | Axioms | Sorries |
+|-------|--------|---------|
+| `TorusContinuumLimit/*.lean` | 0 | 0 |
+| `NelsonEstimate/*.lean` | 0 | 0 |
+| **Route B total** | **0** | **0** |
 
-### Continuum limit
-Lattice spacing `a = L/N → 0` as `N → ∞`. Same Prokhorov strategy as Route A.
-Gaussian limit identified with torus Green's function.
+### OS axioms proved
 
-### OS axiom strategy
-| Axiom | Status | Method |
-|-------|--------|--------|
-| OS0 (Analyticity) | axiom | Same as Route A |
-| OS1 (Regularity) | proved | Moment bounds |
-| OS2 (Translation) | proved | Manifest from lattice periodicity |
-| OS3 (RP) | dropped | Natural on cylinder S¹×ℝ, not torus T² |
+| OS axiom | Status | Theorem |
+|----------|--------|---------|
+| OS0 analyticity | **proved** | `torusGaussianLimit_os0`, `torusInteractingLimit_os0` |
+| OS1 regularity | **proved** | `torusInteractingLimit_os1` |
+| OS2 translation invariance | **proved** | baked into lattice measure, transferred through UV |
+| OS3 | **intentionally out of scope** | No natural time-reflection on T²; deferred to Route B′ |
+| OS4 | **intentionally out of scope** | No thermodynamic limit at finite L; deferred to Route A |
 
-### Spacetime dependence
-- Finite volume: no IR divergences, simpler analysis
-- Discrete spatial spectrum (periodic boundary)
-- No rotation invariance needed
-- No natural time reflection (periodic time) → OS3 deferred to cylinder
-
-### Status: 1 axiom, 1 sorry
-Main theorem: `torusInteractingLimit_exists` — **PROVED**
-
-**Proved (formerly axioms):**
-- `configuration_tight_of_uniform_second_moments` → theorem in gaussian-field (`GaussianField.Tightness`)
-- `torusLimit_covariance_eq` → theorem via Gaussian characteristic function
-- `nelson_exponential_estimate` → theorem via physical volume identity a²N²=L²
-- `gaussian_measure_unique_of_covariance` → theorem via complex MGF extension
-  (1 sorry: `pushforward_eq_of_eval_eq` — Cramér-Wold, in `MeasureUniqueness.lean`)
-
-**Deleted (OS3 not on torus):**
-- `torusPositiveTimeSubmodule`, `torusLattice_rp`, `TorusOS3_ReflectionPositivity` — removed
-
-**Remaining 1 axiom:**
-1. `torusGeneratingFunctionalℂ_analyticOnNhd` — OS0 analyticity of generating functional
-   (proved in OSforGFF via parametric integral analyticity, 849 lines, needs adaptation)
-
-**Remaining 1 sorry:**
-1. `pushforward_eq_of_eval_eq` — equal 1D marginals → equal measures (Cramér-Wold)
-   (in `MeasureUniqueness.lean`)
+Route B is structurally the simplest and the first to be closed. It served as
+the template for porting tightness to Route A (`continuumMeasures_tight`).
 
 ---
 
-## Route C: Direct on Cylinder S¹_L × ℝ
+## Route B′: Asymmetric Torus UV → Cylinder IR limit
 
-**Purpose:** Direct Nelson/Simon construction, natural for OS reconstruction.
+**Purpose:** Recover OS3 using cylinder geometry where time-reflection is natural.
 
-**Spacetime:** S¹_L × ℝ (circle × real line).
+**Spacetime:** S¹_Ls × ℝ (spatial circle × Euclidean time line).
 
-### Regularized field
-- Configuration space: `Configuration(CylinderTestFunction L)` where
-  `CylinderTestFunction L = C∞(S¹_L) ⊗̂ 𝓢(ℝ)` (distributions, not functions)
-- Field at a point:
-  ```
-  φ_Λ(θ,t)(ω) = Σ_{n=0}^{2Λ} fourierBasisFun(n)(θ) · X_n(t)(ω)
-  ```
-  where `X_n(t)` = `cylinderOUProcessEval` (**sorry** — isonormal Gaussian extension)
-- Wick constant: `cylinderWickConstant L mass Λ = Σ_{n=0}^{2Λ} 1/(2ω_n L)`
+**Main theorem (target):** `routeBPrime_cylinder_OS` (`IRLimit/CylinderOS.lean`) —
+structurally assembled, conditional on 3 IR-limit axioms.
 
-### The sorry
-`cylinderOUProcessEval` is sorry'd because evaluating the OU process at time t
-requires extending ω from nuclear test functions to L²(ℝ). The resolvent kernel
-`exp(-ω_n|t-s|)/√(2ω_n)` is L² but not Schwartz.
+### Pipeline
 
-**Alternative (not yet implemented):** Work with function-valued configurations
-for the regularized theory. With UV cutoff Λ, the field is determined by (2Λ+1)
-continuous paths — one per spatial mode. On this space, field evaluation is
-trivial (function evaluation), eliminating the sorry.
+1. **UV (`AsymTorus/`)**: Lattice → asymmetric torus T_{Lt,Ls} with differently-sized
+   time (Lt) and space (Ls) circles. UV limit `a → 0` at fixed (Lt, Ls). OS0, OS1, OS2
+   proved via method-of-images propagator on the asymmetric torus. **0 axioms, 0 sorries.**
+2. **IR (`IRLimit/`)**: Cylinder pullback at finite Lt, then IR limit Lt → ∞ to obtain
+   a measure on S'(S¹_Ls × ℝ). OS0, OS2-translation and OS2-time-reflection are proved
+   at each finite Lt (periodization intertwines shifts). Prokhorov extraction through
+   the IR limit is proved in `IRLimit/IRTightness.lean`. OS3 via density on
+   compactly-supported positive-time test functions.
 
-### Interaction
-Two cutoffs — spatial UV and temporal IR:
-```
-V_{Λ,T}(ω) = ∫₀ᴸ ∫₋ᵀᵀ :P(φ_Λ(θ,t)(ω)):_{c_Λ} dt dθ
-```
-Bounded below: proved.
+### Files and axiom count
 
-### Continuum limit
-Two-step (no lattice):
-1. **UV limit** (Λ→∞): `cylinderUVLimitMeasure` = weak-lim of (1/Z) exp(-V_{Λ,T}) dμ_free
-2. **IR limit** (T→∞): `cylinderMeasure` = weak-lim of UV-limit measures
-Both use hypercontractivity for uniform bounds → tightness → Prokhorov.
+| Files | Axioms | Sorries |
+|-------|--------|---------|
+| `AsymTorus/*.lean` (UV) | 0 | 0 |
+| `IRLimit/Periodization.lean` | 0 | 0 |
+| `IRLimit/CylinderEmbedding.lean` | 0 | 0 |
+| `IRLimit/CovarianceConvergence*.lean` | 0 | 0 |
+| `IRLimit/IRTightness.lean` | 0 | 0 |
+| `IRLimit/GreenFunctionComparison.lean` | **1** (`cylinderIR_uniform_second_moment`) | 0 |
+| `IRLimit/UniformExponentialMoment.lean` | **1** (`cylinderIR_uniform_exponential_moment`) | 0 |
+| `IRLimit/CylinderOS.lean` | **1** (`cylinderIR_os3`) | 0 |
+| **Route B′ total** | **3** | **0** |
 
-### OS axiom strategy
-| Axiom | Status | Method |
-|-------|--------|--------|
-| OS0 (Analyticity) | axiom | Exponential moment bounds through both limits |
-| OS1 (Regularity) | axiom | Density transfer from Gaussian |
-| OS2 (Spatial) | axiom | V invariant under θ-translation on S¹_L |
-| OS2 (Time translation) | axiom | Broken at finite T, restored in T→∞ limit |
-| OS2 (Time reflection) | axiom | V and domain [-T,T] are Θ-symmetric |
-| OS3 (RP) | axiom | Lattice RP preserved under weak limits (RP infrastructure proved: `cylinderMatrixRP_of_weakLimit`) |
+### OS axioms
 
-### Spacetime dependence
-- Spatial S¹_L: Fourier decomposition, clean mode-by-mode analysis
-- Temporal ℝ: natural positive-time half-space for OS reconstruction
-- Time translation invariance requires careful IR limit argument
-- No rotation invariance (not a symmetry of S¹_L × ℝ)
+| OS axiom | Status | Method |
+|----------|--------|--------|
+| OS0 analyticity | **proved** | uniform exp moment + BC weak convergence + `analyticOnNhd_integral` |
+| OS2 time translation | **proved** | periodization intertwines shifts exactly |
+| OS2 time reflection | **proved** | periodization + torus time-reflection invariance |
+| OS2 spatial translation | **proved** | inherited from torus spatial invariance |
+| OS3 reflection positivity | **1 axiom** (`cylinderIR_os3`) | compactly-supported positive-time test functions + torus RP at finite Lt + density |
 
-### Key difference from Routes A/B
-Routes A and B: lattice → configurations are functions → field at a point is trivial.
-Route C: starts in continuum → configurations are distributions → field at a point needs isonormal extension (sorry).
+### Remaining axioms — proof routes
 
-### Status: 23 axioms + 1 sorry
-Main theorem: `cylinderInteracting_satisfies_OS`
+- **`cylinderIR_uniform_second_moment`** (`GreenFunctionComparison.lean:102`):
+  `E_{ν_Lt}[(ω f)²] ≤ C·q(f)²` uniformly in Lt ≥ 1. Needed for IR tightness.
+  Proof chain already staged:
+  - `cylinderPullback_second_moment_eq` (proved): pullback identity.
+  - `cylinderPullback_second_moment_density_transfer_cutoff` (proved): finite-cutoff
+    density transfer via Cauchy-Schwarz on the interacting Boltzmann weight.
+  - Remaining: package the torus UV limit + uniform-in-Lt method-of-images bound
+    `torusGreen_uniform_bound` (proved in gaussian-field) into a single statement.
+  - Difficulty: mostly plumbing, no new mathematical content.
+- **`cylinderIR_uniform_exponential_moment`** (`UniformExponentialMoment.lean:53`):
+  `∫ exp(|ωf|) dν_Lt ≤ K·exp(C·q(f)²)` uniformly in Lt ≥ 1. Needed for OS0 and OS1.
+  Proof chain:
+  - `AsymSatisfiesTorusOS.os1` provides the torus exponential-moment bound.
+  - Method-of-images bound `‖embed f‖ ≤ C·q(f)` uniformly in Lt.
+  - Compose: pullback + density transfer + method-of-images.
+  - Difficulty: parallel to the second-moment case.
+- **`cylinderIR_os3`** (`CylinderOS.lean:294`):
+  RP of the IR-limit cylinder measure. Proof strategy (see docstring):
+  1. At finite Lt and for `f ∈ C_c^∞((0, Lt/2) × S¹_Ls)`, `embed f` has no wrap-around;
+     the torus measure satisfies RP across t = 0 (proved via the asymmetric-torus OS3
+     construction, if/when that's completed for AsymTorus — see note below).
+  2. Under the cylinder pullback `cylinderPullbackMeasure`, RP transfers exactly at
+     each finite Lt (no loss).
+  3. RP is closed under weak limits (standard: matrix entries are bounded continuous
+     in ω, so RP passes through Prokhorov extraction).
+  4. Density of `C_c^∞((0, Lt/2) × S¹_Ls)` in `cylinderPositiveTimeSubmodule` in
+     the relevant Schwartz topology extends RP to all positive-time Schwartz test
+     functions.
+  - Difficulty: largest of the three; requires establishing RP on AsymTorus first.
+
+### Note: AsymTorus OS3 status
+`AsymSatisfiesTorusOS` currently bundles OS0, OS1, OS2-translation,
+OS2-time-reflection — but **not** OS3. To prove `cylinderIR_os3`, step 1 of the
+proof route above requires extending `AsymSatisfiesTorusOS` with a compactly-supported
+OS3 clause (or a separate theorem on compactly-supported test functions with no
+wrap-around). This extension is a prerequisite for Route B′ completion.
 
 ---
 
-## Comparison
+## Route C: Direct cylinder construction (inactive, preserved)
 
-| | Route A (ℝ²) | Route B (T²) | Route C (S¹×ℝ) |
-|--|--|--|--|
-| **Purpose** | Main theorem (OS0–OS4) | UV limit warm-up (OS0–OS2) | OS reconstruction (OS3 natural here) |
-| **Configurations** | Functions (lattice) | Functions (lattice) | Distributions (continuum) |
-| **Field at a point** | `φ(x)` (trivial) | `φ(x)` (trivial) | sorry (isonormal) |
-| **Limit type** | a → 0 (single) | N → ∞ (single) | Λ→∞ then T→∞ (two-step) |
-| **OS proved** | OS1–OS4 | OS0–OS2 | none (all axiom'd) |
-| **OS axiom'd** | OS0 | OS0 only | OS0–OS3 |
-| **OS3 strategy** | Transfer matrix | Dropped (→ cylinder) | Laplace factorization |
-| **Axioms** | 23 | **1** + 1 sorry | 23 + 1 sorry |
+**Purpose:** Alternative direct Nelson/Simon-style cylinder construction with two
+cutoffs (UV Λ and IR T). Preserved in `future/CylinderContinuumLimit/` but not
+in the active build.
 
-### Upstream (gaussian-field repo, cylinder branch): 12 axioms
-Cylinder module: `cylinderMassOperator`, `cylinderGreen_pos`,
-`cylinderMassOperator_equivariant_of_heat_comm`, Fourier multiplier + RP axioms.
-Tightness: `configuration_tight_of_uniform_second_moments` proved (0 sorries).
-False PolishSpace/BorelSpace axioms removed; `prokhorov_configuration` used instead.
+**Files:** `future/CylinderContinuumLimit/*.lean` (6 files, **21 axioms**).
 
-### Grand total: 47 axioms + 2 sorries (pphi2) + 12 axioms (gaussian-field cylinder)
-### Nelson estimate: PROVED (see `docs/nelson-estimate.md`)
+**Status:** **Superseded by Route B′**. Route B′ reuses all of Route B's UV infrastructure
+and avoids the isonormal-extension sorry that blocked Route C's `cylinderOUProcessEval`.
+
+---
+
+## Cross-route and upstream
+
+### Bridge (`Bridge.lean`, 3 axioms)
+Connects Pphi2 and Phi4 constructions. Separate workstream from Route A's main theorem.
+- `measure_determined_by_schwinger` (moment determinacy, Dimock-Glimm / Gel'fand-Vilenkin)
+- `schwinger_agreement` (weak-coupling cluster expansion, Guerra-Rosen-Simon)
+- `os2_from_phi4`
+
+### Upstream gaussian-field
+**2 axioms, 3 sorries.** Cylinder Green-function, method-of-images, and
+Schwartz-nuclear-extension infrastructure. See `../gaussian-field/status.md`.
+
+---
+
+## Grand total
+
+| Route | Axioms | Sorries |
+|-------|--------|---------|
+| Route A (main line, ex-Bridge) | 14 | 0 |
+| Route B (torus UV) | 0 | 0 |
+| Route B′ (cylinder IR limit) | 3 | 0 |
+| Bridge (cross-formulation) | 3 | 0 |
+| **pphi2 total** | **20** | **0** |
+| gaussian-field (upstream) | 2 | 3 |
+
+Route B is the "done" route. Route B′ is the next candidate for a focused completion
+effort — its 3 axioms are structurally clear with documented proof routes, and no
+Route-B′-internal axiom is blocked by external work (unlike Route A's
+`fourier_representation_convolution`, which waits on Mathlib's L² convolution theorem).

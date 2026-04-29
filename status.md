@@ -16,7 +16,15 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-04-19 22:44): 21 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-04-29): 20 axioms, 0 sorries.**
+
+Recent reductions (2026-04-19):
+- `continuumMeasures_tight` (Tightness.lean) — **PROVED** (axiom → theorem). Port of the
+  torus tightness pipeline to ℝ^d: `continuum_second_moment_uniform` derived from
+  `interacting_moment_bound` (at `n=1, p=2`) + `gaussian_second_moment_uniform` gives the
+  uniform second moment; tightness then follows from
+  `configuration_tight_of_uniform_second_moments` (Mitoma-Chebyshev on the nuclear dual).
+  Requires `[Fact (0 < d)]` for the `DyninMityaginSpace (ContinuumTestFunction d)` instance.
 
 Recent corrections (2026-04-03):
 - `general_clustering_from_spectral_gap` — **statement corrected**: `G` is evaluated on
@@ -120,7 +128,7 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def) |
 | 4 | `ContinuumLimit/Hypercontractivity.lean` | 0 axioms, 0 sorries (`wickConstant_eq_variance` now proved generically; `wickConstant_eq_variance_two_dim` remains as a 2D corollary) |
-| 4 | `ContinuumLimit/Tightness.lean` | 1 axiom |
+| 4 | `ContinuumLimit/Tightness.lean` | **0 axioms, 0 sorries** (`continuumMeasures_tight` proved from Mitoma-Chebyshev + `interacting_moment_bound`) |
 | 4 | `ContinuumLimit/Convergence.lean` | 1 axiom, 0 sorries (`continuumLimit` and `pphi2_limit_exists` proved) |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | **3 axioms, 0 sorries** (`continuum_exponential_moment_bound`, `canonical_continuumMeasure_cf_tendsto`, `continuum_exponential_clustering`; derived OS0/OS1/OS4 inheritance wrappers live here) |
 | 4 | `ContinuumLimit/CharacteristicFunctional.lean` | 0 axioms, 0 sorries (complex analyticity, complex-from-real invariance, Z₂/reality, translation continuity, ergodicity support) |
@@ -382,7 +390,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 | ~~`latticeEmbedLift_measurable`~~ | Embedding | ✅ Proved | `configuration_measurable_of_eval_measurable` + `configuration_eval_measurable`. |
 | `second_moment_uniform` | Tightness | Hard | ∫|Φ_a(f)|² dν_a ≤ C(f) uniformly in a. Key input: Nelson's hypercontractive estimate + convergence of lattice propagator. |
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
-| `continuumMeasures_tight` | Tightness | Hard | Tightness via Mitoma criterion + Chebyshev + uniform second moments. Combines second_moment_uniform with Mitoma's theorem. |
+| ~~`continuumMeasures_tight`~~ | Tightness | **PROVED** | Mitoma-Chebyshev + uniform second moments. `continuum_second_moment_uniform` derives the uniform bound from `interacting_moment_bound` (at `n=1, p=2`) + `gaussian_second_moment_uniform`. |
 | ~~`gaussian_hypercontractivity_continuum`~~ | Hypercontractivity | **Proved** | Gaussian hypercontractivity in continuum-embedded form. Proved from `gaussian_hypercontractive` (gaussian-field) via pushforward + `latticeEmbedLift_eval_eq`. |
 | ~~`wickMonomial_latticeGaussian`~~ | Hypercontractivity | **Theorem** | Proved from `wickConstant_eq_variance` + marginal Gaussian + `gaussian_hermite_zero_mean`. |
 | ~~`wickConstant_eq_variance`~~ | Hypercontractivity | **Theorem** | Proved generically from `GeneralResults/LatticeProductDFT.lean`: product-DFT Parseval plus the abstract spectral covariance formula identify the site variance with the Wick constant in arbitrary dimension. |
@@ -775,7 +783,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `general_clustering_from_spectral_gap` | OS4_MassGap | Bounded observables; `G` on `latticeConfigEuclideanTimeShift`, decay measured in `latticeEuclideanTimeSeparation`. |
 | `second_moment_uniform` | Tightness | Uniform second moments for interacting measure. |
 | `moment_equicontinuity` | Tightness | Equicontinuity of moments in f. |
-| `continuumMeasures_tight` | Tightness | Tightness via Mitoma for interacting measures on S'(ℝ²). |
+| ~~`continuumMeasures_tight`~~ | Tightness | **PROVED** via `configuration_tight_of_uniform_second_moments` + `continuum_second_moment_uniform` (ported from torus tightness pipeline). |
 | ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED for `d > 0`** — Tightness via `configuration_tight_of_uniform_second_moments`; the remaining `d = 0` case is a separate Dynin-Mityagin / Schwartz-space infrastructure issue. |
 | `gaussianLimit_isGaussian` | GaussianLimit | Weak limits of Gaussians are Gaussian (S'(ℝ²) version). |
 
