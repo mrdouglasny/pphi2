@@ -50,6 +50,9 @@ uniformly bounded for Schwartz f, giving `E[Φ_a(f)²] ≤ C/m²`.
 
 - Glimm-Jaffe, *Quantum Physics*, §6.1
 - Simon, *The P(φ)₂ Euclidean QFT*, Ch. I
+
+**Layering:** the remaining analytic input is isolated in `latticeGreenBilinear_basis_tendsto_continuum`;
+see the reference map in `docs/mathlib_prerequisite_layering.md` (text anchor ↔ P vs X).
 -/
 
 import Pphi2.GaussianContinuumLimit.EmbeddedCovariance
@@ -880,10 +883,12 @@ private noncomputable def latticeModeCoeffCLM (a mass : ℝ)
       ∑ x : FinLatticeSites d N,
         (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
           latticeTestField d N a f x := by
-  simp [latticeModeCoeffCLM, latticeTestField, evalAtSite, continuumEvalCLM_apply, smul_eq_mul,
-    mul_assoc]
+  unfold latticeModeCoeffCLM
+  rw [ContinuousLinearMap.sum_apply]
   apply Finset.sum_congr rfl
   intro x hx
+  rw [ContinuousLinearMap.smul_apply, continuumEvalCLM_apply, latticeTestField, evalAtSite,
+    smul_eq_mul]
   ring
 
 private noncomputable def latticeGreenBilinearRightCLM
@@ -899,8 +904,12 @@ private noncomputable def latticeGreenBilinearRightCLM
     (a mass : ℝ) (f g : ContinuumTestFunction d) :
     latticeGreenBilinearRightCLM (d := d) (N := N) a mass f g =
       latticeGreenBilinear d N a mass f g := by
-  simp [latticeGreenBilinearRightCLM, latticeGreenBilinear, latticeModeCoeffCLM_apply, mul_assoc,
-    mul_left_comm, mul_comm]
+  unfold latticeGreenBilinearRightCLM latticeGreenBilinear
+  rw [ContinuousLinearMap.sum_apply]
+  apply Finset.sum_congr rfl
+  intro x hx
+  rw [ContinuousLinearMap.smul_apply, latticeModeCoeffCLM_apply]
+  rw [smul_eq_mul]
 
 private theorem latticeGreenBilinear_symm
     (a mass : ℝ) (f g : ContinuumTestFunction d) :
@@ -960,7 +969,7 @@ private theorem continuumGreenWeight_hasTemperateGrowth
   exact (continuumKernel_hasTemperateGrowth (d := d) mass hmass).mul f.hasTemperateGrowth
 
 private noncomputable def continuumGreenBilinearRightCLM
-    (mass : ℝ) (hmass : 0 < mass) (f : ContinuumTestFunction d) :
+    (mass : ℝ) (_hmass : 0 < mass) (f : ContinuumTestFunction d) :
     ContinuumTestFunction d →L[ℝ] ℝ :=
   (SchwartzMap.integralCLM ℝ
       (volume : Measure (EuclideanSpace ℝ (Fin d)))).comp
@@ -1010,30 +1019,69 @@ theorem latticeGreenBilinear_tendsto_continuum [Fact (0 < d)]
       (nhds (continuumGreenBilinear d mass f g)) := by
   obtain ⟨C, hC_pos, r, hbound⟩ :=
     latticeGreenBilinear_basis_eventually_bound (d := d) mass hmass a_seq ha_pos ha_lim N_seq
-  simpa [latticeGreenBilinearRightCLM_apply, continuumGreenBilinearRightCLM_apply] using
-    (GaussianField.tendsto_of_symmetric_basis_tendsto
+  have h_symm_seq :
+      ∀ n f g,
+        ((fun f =>
+          latticeGreenBilinearRightCLM (d := d) (N := N_seq n) (a := a_seq n) (mass := mass) f)
+            f) g =
+        ((fun f =>
+          latticeGreenBilinearRightCLM (d := d) (N := N_seq n) (a := a_seq n) (mass := mass) f)
+            g) f := by
+    intro n f g
+    rw [latticeGreenBilinearRightCLM_apply, latticeGreenBilinearRightCLM_apply]
+    exact latticeGreenBilinear_symm
+      (d := d) (N := N_seq n) (a := a_seq n) (mass := mass) f g
+  have h_symm :
+      ∀ f g,
+        ((fun f => continuumGreenBilinearRightCLM (d := d) (mass := mass) hmass f) f) g =
+        ((fun f => continuumGreenBilinearRightCLM (d := d) (mass := mass) hmass f) g) f := by
+    intro f g
+    rw [continuumGreenBilinearRightCLM_apply, continuumGreenBilinearRightCLM_apply]
+    exact continuumGreenBilinear_symm (d := d) (mass := mass) f g
+  have h_basis_bound :
+      ∃ C' > 0, ∃ r₁ r₂ : ℕ,
+        ∀ᶠ n in atTop, ∀ i j,
+          |((fun f =>
+              latticeGreenBilinearRightCLM (d := d) (N := N_seq n) (a := a_seq n) (mass := mass) f)
+              (DyninMityaginSpace.basis i)) (DyninMityaginSpace.basis j)| ≤
+            C' * (1 + ↑i) ^ r₁ * (1 + ↑j) ^ r₂ := by
+    refine ⟨C, hC_pos, r, r, ?_⟩
+    filter_upwards [hbound] with n hn i j
+    rw [latticeGreenBilinearRightCLM_apply]
+    exact hn i j
+  have h_basis_tendsto :
+      ∀ i j,
+        Tendsto
+          (fun n =>
+            ((fun f =>
+              latticeGreenBilinearRightCLM (d := d) (N := N_seq n) (a := a_seq n) (mass := mass) f)
+              (DyninMityaginSpace.basis i)) (DyninMityaginSpace.basis j))
+          atTop
+          (nhds (((fun f => continuumGreenBilinearRightCLM (d := d) (mass := mass) hmass f)
+            (DyninMityaginSpace.basis i)) (DyninMityaginSpace.basis j))) := by
+    intro i j
+    have h :=
+      latticeGreenBilinear_basis_tendsto_continuum
+        (d := d) mass hmass a_seq ha_pos ha_lim N_seq hNa i j
+    convert h using 1
+    · ext n
+      rw [latticeGreenBilinearRightCLM_apply]
+    · rw [continuumGreenBilinearRightCLM_apply]
+  have hmain :=
+    GaussianField.tendsto_of_symmetric_basis_tendsto
       (l := atTop)
       (B_seq := fun n f =>
         latticeGreenBilinearRightCLM (d := d) (N := N_seq n) (a := a_seq n) (mass := mass) f)
       (B := fun f => continuumGreenBilinearRightCLM (d := d) (mass := mass) hmass f)
-      (h_symm_seq := by
-        intro n f g
-        simpa [latticeGreenBilinearRightCLM_apply] using latticeGreenBilinear_symm
-          (d := d) (N := N_seq n) (a := a_seq n) (mass := mass) f g)
-      (h_symm := by
-        intro f g
-        simpa [continuumGreenBilinearRightCLM_apply] using
-          continuumGreenBilinear_symm (d := d) (mass := mass) f g)
-      (h_basis_bound := by
-        refine ⟨C, hC_pos, r, r, ?_⟩
-        filter_upwards [hbound] with n hn i j
-        simpa [latticeGreenBilinearRightCLM_apply] using hn i j)
-      (h_basis_tendsto := by
-        intro i j
-        simpa [latticeGreenBilinearRightCLM_apply, continuumGreenBilinearRightCLM_apply] using
-          latticeGreenBilinear_basis_tendsto_continuum
-            (d := d) mass hmass a_seq ha_pos ha_lim N_seq hNa i j)
-      f g)
+      (h_symm_seq := h_symm_seq)
+      (h_symm := h_symm)
+      (h_basis_bound := h_basis_bound)
+      (h_basis_tendsto := h_basis_tendsto)
+      f g
+  convert hmain using 1
+  · ext n
+    rw [latticeGreenBilinearRightCLM_apply]
+  · rw [continuumGreenBilinearRightCLM_apply]
 
 /-- The original propagator-convergence statement, now proved by combining the
 spectral rewrite with the generic Dynin-Mityagin bilinear extension theorem. -/
@@ -1162,6 +1210,53 @@ theorem continuumGreenBilinear_pos (mass : ℝ) (hmass : 0 < mass)
       exact ne_of_gt (div_pos (mul_self_pos.mpr hk₀) (hden_pos k₀))
     -- Integral positive by `integral_pos_of_integrable_nonneg_nonzero`
     exact integral_pos_of_integrable_nonneg_nonzero hg_cont hg_int hg_nonneg hg_k₀
+
+/-- **Mass-gap upper bound on the continuum Green quadratic form.**
+
+Since `‖k‖² + m² ≥ m²`, the covariance kernel is pointwise bounded by `m⁻²`.
+Therefore
+`G(f,f) ≤ (2π)^(-d) * m⁻² * ∫ f(x)^2 dx`.
+
+This is the deterministic L²-side of the OS1 regularity estimate. -/
+theorem continuumGreenBilinear_le_mass_inv_sq (mass : ℝ) (_hmass : 0 < mass)
+    (f : ContinuumTestFunction d) :
+    continuumGreenBilinear d mass f f ≤
+      (2 * Real.pi) ^ (-(d : ℤ)) * (mass ^ 2)⁻¹ *
+        ∫ k : EuclideanSpace ℝ (Fin d), (f k) ^ 2 := by
+  unfold continuumGreenBilinear
+  have hconst_nonneg : 0 ≤ (2 * Real.pi) ^ (-(d : ℤ)) := by positivity
+  have hf_sq_int : Integrable (fun k : EuclideanSpace ℝ (Fin d) => (f k) ^ 2)
+      (MeasureTheory.volume : Measure (EuclideanSpace ℝ (Fin d))) :=
+    (f.memLp 2).integrable_sq
+  have hint_upper : Integrable
+      (fun k : EuclideanSpace ℝ (Fin d) => (mass ^ 2)⁻¹ * (f k) ^ 2) := by
+    exact hf_sq_int.const_mul _
+  have h_int_le :
+      ∫ k : EuclideanSpace ℝ (Fin d), f.toFun k * f.toFun k / (‖k‖ ^ 2 + mass ^ 2) ≤
+        ∫ k : EuclideanSpace ℝ (Fin d), (mass ^ 2)⁻¹ * (f k) ^ 2 := by
+    apply integral_mono_of_nonneg
+    · exact ae_of_all _ (fun k =>
+        div_nonneg (mul_self_nonneg (a := f.toFun k))
+          (by positivity : 0 ≤ ‖k‖ ^ 2 + mass ^ 2))
+    · exact hint_upper
+    · exact ae_of_all _ (fun k => by
+        change f k * f k / (‖k‖ ^ 2 + mass ^ 2) ≤ (mass ^ 2)⁻¹ * (f k) ^ 2
+        rw [← sq]
+        calc
+          f k ^ 2 / (‖k‖ ^ 2 + mass ^ 2) ≤ f k ^ 2 / mass ^ 2 := by
+            apply div_le_div_of_nonneg_left (sq_nonneg (f k)) (by positivity)
+            nlinarith [sq_nonneg ‖k‖]
+          _ = (mass ^ 2)⁻¹ * (f k) ^ 2 := by rw [div_eq_mul_inv, mul_comm])
+  calc
+    (2 * Real.pi) ^ (-(d : ℤ)) *
+        ∫ k : EuclideanSpace ℝ (Fin d), f.toFun k * f.toFun k / (‖k‖ ^ 2 + mass ^ 2)
+      ≤ (2 * Real.pi) ^ (-(d : ℤ)) *
+          ∫ k : EuclideanSpace ℝ (Fin d), (mass ^ 2)⁻¹ * (f k) ^ 2 :=
+        mul_le_mul_of_nonneg_left h_int_le hconst_nonneg
+    _ = (2 * Real.pi) ^ (-(d : ℤ)) * (mass ^ 2)⁻¹ *
+          ∫ k : EuclideanSpace ℝ (Fin d), (f k) ^ 2 := by
+        rw [integral_const_mul]
+        ring
 
 end Pphi2
 

@@ -55,30 +55,14 @@ private lemma cylinderExpIntegral_re_eq_integral_cos
     [IsProbabilityMeasure μ] (g : CylinderTestFunction Ls) :
     (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re =
     ∫ ω : Configuration (CylinderTestFunction Ls), Real.cos (ω g) ∂μ := by
-  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re =
-    Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
-  rw [← ContinuousLinearMap.integral_comp_comm Complex.reCLM
-    (cylinderExpEval_integrable Ls μ g)]
-  congr 1 with ω
-  simp only [Complex.reCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
-    Complex.add_re, Complex.mul_re, Complex.I_re, mul_zero,
-    Complex.sin_ofReal_im, Complex.I_im, mul_one, sub_self, add_zero]
-  exact Complex.cos_ofReal_re (ω g)
+  simpa using configuration_expIntegral_re_eq_integral_cos μ g
 
 private lemma cylinderExpIntegral_im_eq_integral_sin
     (μ : Measure (Configuration (CylinderTestFunction Ls)))
     [IsProbabilityMeasure μ] (g : CylinderTestFunction Ls) :
     (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).im =
     ∫ ω : Configuration (CylinderTestFunction Ls), Real.sin (ω g) ∂μ := by
-  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).im =
-    Complex.imCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
-  rw [← ContinuousLinearMap.integral_comp_comm Complex.imCLM
-    (cylinderExpEval_integrable Ls μ g)]
-  congr 1 with ω
-  simp only [Complex.imCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
-    Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-    Complex.cos_ofReal_im, Complex.sin_ofReal_re, Complex.sin_ofReal_im]
-  ring
+  simpa using configuration_expIntegral_im_eq_integral_sin μ g
 
 /-! ## IR Limit Existence
 

@@ -16,7 +16,7 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-04-19): 22 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-04-29): 20 axioms, 0 sorries.**
 
 Recent reductions (2026-04-19):
 - `continuumMeasures_tight` (Tightness.lean) — **PROVED** (axiom → theorem). Port of the
@@ -25,6 +25,17 @@ Recent reductions (2026-04-19):
   uniform second moment; tightness then follows from
   `configuration_tight_of_uniform_second_moments` (Mitoma-Chebyshev on the nuclear dual).
   Requires `[Fact (0 < d)]` for the `DyninMityaginSpace (ContinuumTestFunction d)` instance.
+
+Recent corrections (2026-04-03):
+- `general_clustering_from_spectral_gap` — **statement corrected**: `G` is evaluated on
+  `latticeConfigEuclideanTimeShift N R ω` (the integrand now contains the actual translated
+  observable), and the decay exponent is measured against the **cyclic torus time separation**
+  `latticeEuclideanTimeSeparation N R` rather than an inconsistent unbounded `R`. Added
+  `latticeEuclideanTimeShift`, `latticeConfigEuclideanTimeShift`, and
+  `latticeEuclideanTimeSeparation`.
+- `general_clustering_lattice` — removed unused phantom parameter `Nt` (theorem uses section `Ns` only).
+- `Main.lean` — **honest naming**: `massParameter_positive`, `pphi2_exists_os_and_massParameter_positive`;
+  `os_reconstruction` and `pphi2_wightman` kept as `@[deprecated]` aliases.
 
 Recent reductions (2026-04-02):
 - `limit_exponential_moment` sorry — **ELIMINATED**: truncation + MCT proof via
@@ -85,7 +96,7 @@ Note: Two axioms are `private`: `fourier_representation_convolution` (GaussianFo
 and `gaussian_rp_cov_perfect_square` (OS3_RP_Lattice).
 `schwartz_riemann_sum_bound` (PropagatorConvergence) was proved via Schwartz decay +
 telescoping sum bound. The remaining Gaussian propagator debt is now isolated in the
-spectral axiom `latticeGreenBilinear_tendsto_continuum`; `propagator_convergence`
+spectral axiom `latticeGreenBilinear_basis_tendsto_continuum`; `propagator_convergence`
 itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 
 `schwinger2_convergence` was proved from
@@ -119,18 +130,20 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 4 | `ContinuumLimit/Hypercontractivity.lean` | 0 axioms, 0 sorries (`wickConstant_eq_variance` now proved generically; `wickConstant_eq_variance_two_dim` remains as a 2D corollary) |
 | 4 | `ContinuumLimit/Tightness.lean` | **0 axioms, 0 sorries** (`continuumMeasures_tight` proved from Mitoma-Chebyshev + `interacting_moment_bound`) |
 | 4 | `ContinuumLimit/Convergence.lean` | 1 axiom, 0 sorries (`continuumLimit` and `pphi2_limit_exists` proved) |
-| 4 | `ContinuumLimit/AxiomInheritance.lean` | **0 axioms, 0 sorries** (os3_inheritance removed; OS3 now in OS2_WardIdentity) |
+| 4 | `ContinuumLimit/AxiomInheritance.lean` | **3 axioms, 0 sorries** (`continuum_exponential_moment_bound`, `canonical_continuumMeasure_cf_tendsto`, `continuum_exponential_clustering`; derived OS0/OS1/OS4 inheritance wrappers live here) |
+| 4 | `ContinuumLimit/CharacteristicFunctional.lean` | 0 axioms, 0 sorries (complex analyticity, complex-from-real invariance, Z₂/reality, translation continuity, ergodicity support) |
+| 4 | `ContinuumLimit/TimeReflection.lean` | 0 axioms, 0 sorries (continuum time reflection on Schwartz space and distributions) |
 | 4 | `ContinuumLimit/RPTransfer.lean` | 0 axioms, 0 sorries (intertwining proved, signedVal) |
 | 4G | `GaussianContinuumLimit/EmbeddedCovariance.lean` | 0 axioms, 0 sorries |
-| 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`propagator_convergence` now theorem; remaining axiom is `latticeGreenBilinear_tendsto_continuum`) |
+| 4G | `GaussianContinuumLimit/PropagatorConvergence.lean` | 1 axiom, 0 sorries (`propagator_convergence` now theorem; remaining axiom is `latticeGreenBilinear_basis_tendsto_continuum`) |
 | 4G | `GaussianContinuumLimit/GaussianTightness.lean` | 0 axioms, 0 sorries |
 | 4G | `GaussianContinuumLimit/GaussianLimit.lean` | 0 axioms, 0 sorries |
-| 5 | `OSProofs/OS2_WardIdentity.lean` | 6 axioms |
+| 5 | `OSProofs/OS2_WardIdentity.lean` | 1 axiom |
 | — | `GeneralResults/ComplexAnalysis.lean` | **0 axioms** (`osgood_separately_analytic` proved via Osgood/) |
 | — | `GeneralResults/Osgood/Multilinear.lean` | 0 axioms (multilinear map infrastructure, from Irving) |
 | — | `GeneralResults/Osgood/Osgood2.lean` | 0 axioms (2-variable Osgood, adapted from Irving) |
 | — | `GeneralResults/Osgood/OsgoodN.lean` | **0 axioms, 0 sorries** (n-variable Osgood by induction) |
-| — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results) |
+| — | `GeneralResults/FunctionalAnalysis.lean` | 0 axioms (pure Mathlib results: Cesàro, Schwartz `L^p`, trig identities, logarithmic decay near `0`, generic characteristic-functional defect control) |
 | — | `GeneralResults/ResolventFourierAnalysis.lean` | 0 axioms (Fourier/resolvent kernel identities) |
 | — | `GeneralResults/SchwartzCutoff.lean` | 0 axioms (smooth cutoff operators on Schwartz space) |
 | — | `Common/QFT/Euclidean/Formulations.lean` | 0 axioms (shared measure / Schwinger / reconstruction-input interfaces) |
@@ -355,8 +368,8 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | `spectral_gap_uniform` | SpectralGap | Hard | Mass gap bounded below uniformly in a. Key input: the interaction is a bounded perturbation of the free field in the sense of Kato-Rellich, and the free mass gap is m > 0. Needs careful control of the perturbation as a→0. |
 | `spectral_gap_lower_bound` | SpectralGap | Hard | m_phys ≥ c·m_bare. Quantitative bound on the physical mass. |
 | ~~`connectedTwoPoint_nonneg_delta`~~ | OS4_MassGap | ✅ **Proved** | Variance nonnegativity: direct proof via ∫(X-E[X])² ≥ 0. |
-| ~~`two_point_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Exponential decay bound using `finLatticeDelta` and `massGap`. |
-| ~~`general_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Quantified clustering over bounded observables. |
+| ~~`two_point_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Exponential decay bound using `finLatticeDelta`, `massGap`, and the cyclic torus time separation. |
+| ~~`general_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Bounded `F`, `G` with `G` on time-shifted config `latticeConfigEuclideanTimeShift N R ω`, decaying in `latticeEuclideanTimeSeparation N R`. |
 | ~~`clustering_implies_ergodicity`~~ | OS4_Ergodicity | ✅ **Proved** | Exponential clustering → ergodicity of time translations. |
 | ~~`unique_vacuum`~~ | OS4_Ergodicity | ✅ **Proved** | From `transferOperator_ground_simple_spectral`. |
 | ~~`exponential_mixing`~~ | OS4_Ergodicity | ✅ **Proved** | Exponential mixing from mass gap. |
@@ -393,16 +406,16 @@ refactoring (functionality consolidated into L2Operator axioms).
 | `schwinger_n_convergence` | Convergence | Hard | n-point Schwinger functions converge along subsequence. Diagonal subsequence extraction. |
 | `continuumLimit_nontrivial` | Convergence | Hard | ∫ (ω f)² dμ > 0 for some f. Free field two-point function gives lower bound. |
 | `continuumLimit_nonGaussian` | Convergence | Hard | Connected 4-point function ≠ 0. Perturbation theory gives O(λ) contribution. |
-| `os0_inheritance` | AxiomInheritance | Medium | OS0 transfers: uniform moment bounds + pointwise convergence → limit has all moments finite. |
+| `continuum_exponential_moment_bound` | AxiomInheritance | Hard | Mixed `L¹`/Green exponential-moment input `∫ exp(|ω f|) ≤ exp(c₁∫|f| + c₂ G(f,f))` used to derive the OS0/OS1 wrappers. |
 | ~~`os3_for_continuum_limit`~~ | OS2_WardIdentity | ✅ **Proved** | Standard OS3 from inline approximant RP in `IsPphi2Limit` + entrywise characteristic-functional convergence. |
-| `os4_inheritance` | AxiomInheritance | Med/Hard | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
-| ~~`continuumLimit_satisfies_os0134`~~ | AxiomInheritance | **Theorem** | Assembly of os0/os1/os3/os4 inheritance results. |
+| `continuum_exponential_clustering` | AxiomInheritance | Hard | Continuum characteristic-functional clustering input from the spectral-gap package. |
+| ~~`os0_for_continuum_limit / os1_for_continuum_limit / os4_for_continuum_limit`~~ | AxiomInheritance | **Theorem** | Derived wrappers packaging the analytic and clustering inputs into the generic OS bundle. |
 
 ### Phase 4G: Gaussian continuum limit
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `latticeGreenBilinear_tendsto_continuum` | PropagatorConvergence | Medium | Spectral lattice Green bilinear on discretized Schwartz functions → continuum Fourier Green bilinear. `propagator_convergence` is now derived via `embeddedTwoPoint_eq_latticeGreenBilinear`. |
+| `latticeGreenBilinear_basis_tendsto_continuum` | PropagatorConvergence | Medium | Spectral lattice Green bilinear on Dynin-Mityagin basis pairs → continuum Fourier Green bilinear. `latticeGreenBilinear_tendsto_continuum` and `propagator_convergence` are now derived theorems. |
 | ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED for `d > 0`** | Tightness via `configuration_tight_of_uniform_second_moments` + integrability through lattice embedding. The excluded `d = 0` case is a separate Dynin-Mityagin / Schwartz-space infrastructure issue. |
 | ~~`gaussianLimit_isGaussian`~~ | GaussianLimit | **PROVED** | Weak limits of Gaussian measures are Gaussian. Proved via 1D evaluation marginals and `weakLimit_centered_gaussianReal`. |
 
@@ -421,7 +434,7 @@ refactoring (functionality consolidated into L2Operator axioms).
 - `gaussianContinuumMeasure_sq_integrable`: Integrability of `(ω f)²` through lattice embedding via `pairing_product_integrable`.
 
 **Open work in this slice:**
-- `latticeGreenBilinear_tendsto_continuum`: remaining analytic convergence core for the Gaussian continuum route.
+- `latticeGreenBilinear_basis_tendsto_continuum`: remaining analytic convergence core for the Gaussian continuum route.
 - Optional full generality for `gaussianContinuumMeasures_tight` (`d = 0` case): add a dedicated `DyninMityaginSpace (ContinuumTestFunction 0)` instance, then audit `GaussianLimit.lean` and `ContinuumLimit/Convergence.lean` for other `d > 0` dependencies.
 
 Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially since |cos(·)| ≤ 1.
@@ -484,30 +497,41 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 |-------|------|-----------|-------------|
 | ~~`latticeAction_translation_invariant`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — relabeling via `Equiv.subRight`. |
 | ~~`cesaro_set_integral_tendsto`~~ | GeneralResults/FunctionalAnalysis | ~~Medium~~ | **Proved** — moved to GeneralResults as pure Mathlib result. |
-| ~~`pphi2_generating_functional_real`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — from `pphi2_measure_neg_invariant` via conj(Z[f])=Z[f]. |
-| ~~`pphi2_measure_neg_invariant`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — Z₂ symmetry baked into `IsPphi2Limit` definition. |
-| ~~`generatingFunctional_translate_continuous`~~ | OS2_WardIdentity | ~~Easy~~ | **Proved** — via DCT (bound 1) + `continuous_timeTranslationSchwartz` from TimeTranslation.lean. |
-| ~~`norm_generatingFunctional_le_one`~~ | OS2_WardIdentity | ✅ **Proved** | ‖Z[f]‖ ≤ 1 from norm_integral ≤ ∫ norm + ‖exp(ix)‖=1. |
-| ~~`os4_clustering_implies_ergodicity`~~ | OS2_WardIdentity | ✅ **Proved** | OS4_Clustering → OS4_Ergodicity via reality of Z + Cesàro convergence. |
+| ~~`tendsto_zero_pow_mul_one_add_abs_log_pow`~~ | GeneralResults/FunctionalAnalysis | ~~Medium~~ | **Proved** — generalized positive-power log-decay lemma: `a_n^m (1 + |log a_n|)^p → 0` for every natural `m ≥ 1`, with the former square case now a corollary used by OS2. |
+| ~~`norm_configuration_expIntegral_sub_le_integral_cexp_eval_dist`~~ | GeneralResults/FunctionalAnalysis | ~~Medium~~ | **Proved** — generic characteristic-functional defect estimate `‖∫e^{i⟨ω,g⟩} - ∫e^{i⟨ω,f⟩}‖ ≤ ∫‖e^{i⟨ω,g⟩} - e^{i⟨ω,f⟩}‖`, now specialized by OS2. |
+| ~~`pphi2_generating_functional_real`~~ | CharacteristicFunctional | ~~Medium~~ | **Proved** — from `pphi2_measure_neg_invariant` via conj(Z[f])=Z[f]. |
+| ~~`pphi2_measure_neg_invariant`~~ | CharacteristicFunctional | ~~Medium~~ | **Proved** — Z₂ symmetry baked into `IsPphi2Limit` definition. |
+| ~~`generatingFunctional_translate_continuous`~~ | CharacteristicFunctional | ~~Easy~~ | **Proved** — via DCT (bound 1) + `continuous_timeTranslationSchwartz` from TimeTranslation.lean. |
+| ~~`norm_generatingFunctional_le_one`~~ | CharacteristicFunctional | ✅ **Proved** | ‖Z[f]‖ ≤ 1 from norm_integral ≤ ∫ norm + ‖exp(ix)‖=1. |
+| ~~`os4_clustering_implies_ergodicity`~~ | CharacteristicFunctional | ✅ **Proved** | OS4_Clustering → OS4_Ergodicity via reality of Z + Cesàro convergence. |
 | ~~`latticeMeasure_translation_invariant`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — density bridge + change of variables. BW and ρ invariant under translation, Lebesgue measure preserved by `piCongrLeft`. |
 | ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | ~~Medium~~ | **Proved** — strengthened `IsPphi2Limit` with `cf_tendsto` + `lattice_inv` fields; continuum invariance via `tendsto_nhds_unique_of_eventuallyEq`. |
-| `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Hard | Super-renormalizability gives `‖Z_a[R·f] - Z_a[f]‖ ≤ C·a²`. No logarithmic corrections in d=2. Key input for Ward identity. |
-| `continuum_exponential_moments` | OS2_WardIdentity | Hard | `∀ c > 0, Integrable (exp(c·\|ω f\|)) μ`. Fernique + Nelson, transferred to limit. Feeds OS0 + OS1. |
-| `analyticOn_generatingFunctionalC` | OS2_WardIdentity | Medium | Analyticity of complex generating functional. From exponential moments via Morera's theorem. |
-| `exponential_moment_schwartz_bound` | OS2_WardIdentity | Medium | Exponential moment bound in Schwartz seminorms: `∫ exp(c·\|ω f\|) dμ ≤ exp(C·p(f)^q)`. For OS1 regularity. |
-| `rotation_invariance_continuum` | OS2_WardIdentity | Hard | `Z[R·f] = Z[f]` for R ∈ O(2). Ward identity + anomaly irrelevance. Feeds OS2. |
-| `continuum_exponential_clustering` | OS2_WardIdentity | Hard | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap → exp clustering. Feeds OS4. |
+| `rotation_cf_defect_polylog_bound` | OS2_WardIdentity | Hard | Remaining OS2 axiom: one-point super-renormalizable bound on the canonical characteristic-functional defect `rotationCFDefect`, uniform in the lattice size `N` and scaling like `C·a²·(1+|log a|)^p`. |
+| `canonical_continuumMeasure_cf_tendsto` | AxiomInheritance | Hard | Coupled UV/IR bridge: canonical `continuumMeasure 2 (N n) P (a n) mass` approximants converge in characteristic functionals to `μ` along `a_n → 0`, `N_n → ∞`, and physical volume `(N_n : ℝ) * a_n → ∞`. |
+| `continuum_exponential_moment_bound` | AxiomInheritance | Hard | Project-level continuum exponential-moment bridge `∫ exp(|ω f|) dμ ≤ exp(c₁∫|f| + c₂ G(f,f))`. Single remaining OS0/OS1 analytic input. |
+| ~~`analyticOn_generatingFunctionalC`~~ | CharacteristicFunctional | ~~Medium~~ | **Proved** — via `analyticOnNhd_integral`, the finite-source pairing rewrite, and compact domination from exponential moments of `schwartzRe`/`schwartzIm`. |
+| ~~`continuum_exponential_moments`~~ | AxiomInheritance | ~~Hard~~ | **Proved** — derived by scaling from `continuum_exponential_moment_bound`. Feeds OS0 + OS1. |
+| ~~`exponential_moment_schwartz_bound`~~ | AxiomInheritance | ~~Medium~~ | **Proved** — combines `continuum_exponential_moment_bound` with `continuumGreenBilinear_le_mass_inv_sq`. |
+| ~~`rotation_invariance_continuum`~~ | OS2_WardIdentity | Hard | **Proved** — canonical CF convergence for `continuumMeasure` + `anomaly_vanishes` + Mathlib logarithmic asymptotics yield `Z[R·f] = Z[f]`. Feeds OS2. |
+| `continuum_exponential_clustering` | AxiomInheritance | Hard | `‖Z[f+τ_a g] - Z[f]Z[g]‖ ≤ C·exp(-m₀·‖a‖)`. Spectral gap → exp clustering. Feeds OS4. |
 
 **Proof chain theorems** (all fully proved, no sorries):
 - `ward_identity_lattice`: Ward identity bound (**proved**)
 - `anomaly_scaling_dimension`: lattice dispersion Taylor error bound (**proved**, cos_bound + crude bound)
-- `anomaly_vanishes`: ‖Z[R·f] - Z[f]‖ ≤ C·a² (**proved**, from anomaly_bound_from_superrenormalizability)
-- `os0_for_continuum_limit`: exponential moments → OS0_Analyticity (**proved**)
-- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (**proved**)
+- `configuration_cexp_eval_sub_integrand` / `configuration_cexp_eval_dist`: generic characteristic-functional defect observables (**proved** definitions, in `FunctionalAnalysis`)
+- `norm_configuration_expIntegral_sub_le_integral_cexp_eval_dist`: generic CF defect control theorem (**proved**, in `FunctionalAnalysis`)
+- `rotationCFPointwiseDefectIntegrand` / `rotationCFPointwiseDefect`: OS2 specialization of the generic CF defect API (**proved** abbreviations)
+- `rotationCFDefect`: concrete one-point canonical CF rotation defect (**proved** definition)
+- `rotation_cf_defect_polylog_bound`: uniform defect-level Ward bound (**axiom**)
+- `anomaly_bound_from_superrenormalizability`: one-point CF anomaly bound (**proved**, derived from `rotation_cf_defect_polylog_bound`)
+- `anomaly_vanishes`: one-point anomaly satisfies `‖Z_a[R·f] - Z_a[f]‖ ≤ C·a²·(1 + |log a|)^p` and hence vanishes (**proved**, from `anomaly_bound_from_superrenormalizability` + logarithmic asymptotics)
+- `complex_gf_invariant_of_real_gf_invariant`: complex Euclidean invariance from real invariance + analyticity (**proved**, now in `CharacteristicFunctional`)
+- `os0_for_continuum_limit`: exponential moments → OS0_Analyticity (**proved**, now in `AxiomInheritance`)
+- `os1_for_continuum_limit`: exponential moments → OS1_Regularity (**proved**, now in `AxiomInheritance`)
 - `os2_for_continuum_limit`: translation + rotation → OS2_EuclideanInvariance (**proved**)
-- `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (**proved**, ε-δ from exp decay)
-- `os4_clustering_implies_ergodicity`: OS4_Clustering → OS4_Ergodicity (**proved**, via reality of Z + Cesàro convergence)
-- `norm_generatingFunctional_le_one`: ‖Z[f]‖ ≤ 1 (**proved**, norm_integral_le + ‖exp(ix)‖ = 1)
+- `os4_for_continuum_limit`: exponential clustering → OS4_Clustering (**proved**, now in `AxiomInheritance`; ε-δ from exp decay)
+- `os4_clustering_implies_ergodicity`: OS4_Clustering → OS4_Ergodicity (**proved**, now in `CharacteristicFunctional`; via reality of Z + Cesàro convergence)
+- `norm_generatingFunctional_le_one`: ‖Z[f]‖ ≤ 1 (**proved**, now in `CharacteristicFunctional`; norm_integral_le + ‖exp(ix)‖ = 1)
 
 ### Phase 6: OS axioms and assembly
 
@@ -518,8 +542,10 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`compTimeReflection2`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfContinuousLinearEquiv` with time reflection as CLE. |
 | ~~`compTimeReflection2_apply`~~ | OSAxioms | ✅ Proved | Follows by `rfl` from the construction. |
 | ~~`SchwartzMap.translate`~~ | OSAxioms | ✅ Proved | Constructed via `SchwartzMap.compCLMOfAntilipschitz` with translation (antilipschitz + temperate growth). |
-| ~~`os_reconstruction`~~ | Main | **Proved** | ∃ m₀ > 0 from ⟨mass, hmass⟩. Full Wightman formalism not formalized. |
-| ~~`pphi2_wightman`~~ | Main | **Proved** | Full OS bundle + mass gap existence, from `pphi2_exists` + `os_reconstruction`. |
+| ~~`massParameter_positive`~~ | Main | **Proved** | ∃ m₀ > 0 witnessed by hypothesis `0 < mass` (not OS reconstruction / not Wightman). |
+| ~~`pphi2_exists_os_and_massParameter_positive`~~ | Main | **Proved** | `pphi2_exists` + `massParameter_positive`. |
+| ~~`os_reconstruction`~~ | Main | **Deprecated alias** | Use `massParameter_positive` (since 2026-04-03). |
+| ~~`pphi2_wightman`~~ | Main | **Deprecated alias** | Use `pphi2_exists_os_and_massParameter_positive` (since 2026-04-03). |
 | ~~`pphi2_nontrivial`~~ | Main | **Proved** | Uses `pphi2_nontriviality` axiom. |
 | ~~`pphi2_nonGaussian`~~ | Main | **Proved** | Uses `pphi2_nonGaussianity` axiom. |
 | `pphi2_nontriviality` | Main | Hard | ∫ (ω f)² dμ > 0 for all f ≠ 0. Correlation inequalities (Griffiths, FKG). |
@@ -565,7 +591,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`rp_closed_under_weak_limit`~~ | OS3_RP_Inheritance | **Proved** — RP closed under weak limits. |
 | ~~`reflection_positivity_lattice`~~ | OS3_RP_Lattice | **Converted** to `lattice_rp` axiom. |
 | ~~`continuumLimit`~~ | Convergence | **Proved** — Apply configuration-space sequential Prokhorov axiom to the tight family (`prokhorov_configuration_sequential` + `continuumMeasures_tight`). |
-| ~~`continuumTimeReflection`~~ | AxiomInheritance | **Proved** — defined via `compCLMOfContinuousLinearEquiv`. |
+| ~~`continuumTimeReflection`~~ | TimeReflection | **Proved** — defined via `compCLMOfContinuousLinearEquiv`. |
 | ~~`so2Generator`~~ | OS2_WardIdentity | **Proved** — SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ via `smulLeftCLM` + `lineDerivOpCLM`. |
 | ~~`pphi2_exists`~~ | OS2_WardIdentity | **Proved** — Main existence theorem. Uses `continuumLimit_satisfies_fullOS`. |
 
@@ -642,8 +668,8 @@ The following theorems have complete proofs (no sorry):
 | `prokhorov_sequential` | Convergence | Generic Polish-space sequential Prokhorov theorem (proved) |
 | `wickPolynomial_bounded_below` | WickPolynomial | Wick polynomial bounded below — from leading term domination via `poly_even_degree_bounded_below` |
 | `poly_even_degree_bounded_below` | WickPolynomial | Even-degree polynomial with positive leading coeff is bounded below — `eval_eq_sum_range` + coefficient bound + `Continuous.exists_forall_le` |
-| `pphi2_generating_functional_real` | OS2_WardIdentity | Im(Z[f])=0 via conj(Z[f])=Z[f] from Z₂ symmetry |
-| `generatingFunctional_translate_continuous` | OS2_WardIdentity | t ↦ Z[f + τ_{(t,0)} g] continuous via DCT + `continuous_timeTranslationSchwartz` |
+| `pphi2_generating_functional_real` | CharacteristicFunctional | Im(Z[f])=0 via conj(Z[f])=Z[f] from Z₂ symmetry |
+| `generatingFunctional_translate_continuous` | CharacteristicFunctional | t ↦ Z[f + τ_{(t,0)} g] continuous via DCT + `continuous_timeTranslationSchwartz` |
 | `InteractionPolynomial.eval_neg` | Polynomial | P(-τ) = P(τ) from even polynomial symmetry |
 | `field_second_moment_finite` | Normalization | ∫\|ω(δ_x)\|² dμ_a < ∞ — `integrable_withDensity_iff` + `pairing_product_integrable` + domination by exp(B)·f² |
 | `field_all_moments_finite` | Normalization | ∫\|ω(δ_x)\|^p dμ_a < ∞ for all p — `pairing_is_gaussian` + `integrable_pow_of_mem_interior_integrableExpSet` |
@@ -657,8 +683,8 @@ The following theorems have complete proofs (no sorry):
 | `latticeEmbed_eval` | Embedding | Evaluation formula — `rfl` from construction |
 | `transferOperator_spectral` | L2Operator | Spectral decomposition — `compact_selfAdjoint_spectral` from gaussian-field |
 | `latticeEmbed_measurable` | Embedding | `configuration_measurable_of_eval_measurable` + `continuous_apply` for each coordinate |
-| `norm_generatingFunctional_le_one` | OS2_WardIdentity | ‖Z[f]‖ ≤ 1 via norm_integral + ‖exp(ix)‖ = 1 + measure_univ = 1 |
-| `os4_clustering_implies_ergodicity` | OS2_WardIdentity | Clustering → Ergodicity via reality of Z[f], Cesàro convergence, and characteristic function bound |
+| `norm_generatingFunctional_le_one` | CharacteristicFunctional | ‖Z[f]‖ ≤ 1 via norm_integral + ‖exp(ix)‖ = 1 + measure_univ = 1 |
+| `os4_clustering_implies_ergodicity` | CharacteristicFunctional | Clustering → Ergodicity via reality of Z[f], Cesàro convergence, and characteristic function bound |
 | `transferWeight_measurable` | L2Operator | Transfer weight w(ψ) = exp(-(a/2)·h(ψ)) is measurable — continuity chain via `wickMonomial_continuous` |
 | `transferWeight_bound` | L2Operator | Transfer weight is essentially bounded — from `wickPolynomial_bounded_below` + exponentiation |
 | `transferGaussian_memLp` | L2Operator | Gaussian kernel ∈ L¹ — product factorization + `integrable_exp_neg_mul_sq` |
@@ -715,8 +741,8 @@ infrastructure. Assessment date: 2026-03-04.
 | ~~`hilbert_schmidt_isCompact`~~ | L2Operator | **PROVED** from `integral_operator_l2_kernel_compact` + `tensor_kernel_memLp` + `mul_conv_integral_rep`. |
 | `integral_operator_l2_kernel_compact` | L2Operator | General HS theorem: convolution-form L² kernel integral operators are compact. Reed-Simon I, Thm VI.23. |
 | ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | **Proved** — `tendsto_nhds_unique_of_eventuallyEq` from `cf_tendsto` + `lattice_inv`. |
-| `analyticOn_generatingFunctionalC` | OS2_WardIdentity | Analyticity of complex generating functional from exponential moments via Morera. |
-| `exponential_moment_schwartz_bound` | OS2_WardIdentity | Exponential moment bound in Schwartz seminorms for OS1. |
+| `analyticOn_generatingFunctionalC` | CharacteristicFunctional | Analyticity of complex generating functional from exponential moments via Morera. |
+| `continuum_exponential_moment_bound` | AxiomInheritance | Mixed `L¹`/Green exponential-moment input `∫ exp(|ω f|) ≤ exp(c₁∫|f| + c₂ G(f,f))` for OS0 + OS1. |
 | `os3_inheritance` | AxiomInheritance | RP transfers through weak limits. From `lattice_rp_matrix` + `rp_closed_under_weak_limit` (proved). |
 | `os0_inheritance` | AxiomInheritance | Uniform moment bounds + pointwise convergence → limit has all moments finite. |
 | `torus_interacting_tightness` | TorusInteractingLimit | Cauchy-Schwarz density transfer from Gaussian tightness. |
@@ -727,16 +753,16 @@ infrastructure. Assessment date: 2026-03-04.
 |-------|------|----------|
 | ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** from `fourier_representation_convolution` axiom. |
 | `fourier_representation_convolution` | GaussianFourier | L² Fourier representation identity. Schwartz density + L² convolution theorem (not yet in Mathlib). |
-| `latticeGreenBilinear_tendsto_continuum` | PropagatorConvergence | Spectral lattice Green bilinear → continuum Fourier Green bilinear on ℝ^d. Dominated convergence + Schwartz decay. |
+| `latticeGreenBilinear_basis_tendsto_continuum` | PropagatorConvergence | Spectral lattice Green bilinear on Dynin-Mityagin basis pairs → continuum Fourier Green bilinear on ℝ^d. Extend to all test functions by bilinear continuity. |
 | `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
-| `anomaly_bound_from_superrenormalizability` | OS2_WardIdentity | Super-renormalizability gives a² Ward identity bound. No log corrections in d=2. |
-| `continuum_exponential_moments` | OS2_WardIdentity | Fernique + Nelson hypercontractive estimate transferred to limit. |
+| `rotation_cf_defect_polylog_bound` | OS2_WardIdentity | Minimal remaining OS2 axiom: polynomial-log `a²` bound for the canonical CF defect `rotationCFDefect`, uniform in the lattice size `N`. |
+| `continuum_exponential_moment_bound` | AxiomInheritance | Project-level continuum exponential-moment bridge `∫ exp(|ω f|) ≤ exp(c₁∫|f| + c₂ G(f,f))`; source for derived OS0/OS1 estimates. |
 | ~~`wickMonomial_latticeGaussian`~~ | Hypercontractivity | **Theorem** (see `Hypercontractivity.lean`). |
 | ~~`wickConstant_eq_variance`~~ | Hypercontractivity | **Theorem** (generic proof via `GeneralResults/LatticeProductDFT.lean`; 2D corollary retained in `Hypercontractivity.lean`). |
 | ~~`gaussian_hermite_zero_mean`~~ | Hypercontractivity | **Theorem** (see `GaussianHermiteMean.lean`). |
 | ~~`wickPolynomial_uniform_bounded_below`~~ | WickPolynomial | ✅ **Proved** via coefficient continuity + compactness + leading term dominance. |
-| `rotation_invariance_continuum` | OS2_WardIdentity | Ward identity + anomaly irrelevance for O(2). |
-| `continuum_exponential_clustering` | OS2_WardIdentity | Spectral gap → exponential clustering in continuum. |
+| `canonical_continuumMeasure_cf_tendsto` | AxiomInheritance | Coupled canonical `continuumMeasure` approximants converge CF-wise to `μ`; bridge needed to apply the Ward anomaly bound to an abstract `IsPphi2Limit`. |
+| `continuum_exponential_clustering` | AxiomInheritance | Spectral gap → exponential clustering in continuum. |
 
 ### Tier 5: Very hard / infrastructure gaps
 
@@ -753,8 +779,8 @@ infrastructure. Assessment date: 2026-03-04.
 | `same_continuum_measure` | Bridge | pphi2 and Phi4 agree at weak coupling. |
 | `os2_from_phi4` | Bridge | OS2 for Phi4 continuum limit. |
 | `measure_determined_by_schwinger` | Bridge | Moment determinacy on S'(ℝ²). |
-| `two_point_clustering_from_spectral_gap` | OS4_MassGap | 2-point clustering from mass gap. |
-| `general_clustering_from_spectral_gap` | OS4_MassGap | General n-point clustering from mass gap. |
+| `two_point_clustering_from_spectral_gap` | OS4_MassGap | 2-point clustering from mass gap with cyclic torus time separation. |
+| `general_clustering_from_spectral_gap` | OS4_MassGap | Bounded observables; `G` on `latticeConfigEuclideanTimeShift`, decay measured in `latticeEuclideanTimeSeparation`. |
 | `second_moment_uniform` | Tightness | Uniform second moments for interacting measure. |
 | `moment_equicontinuity` | Tightness | Equicontinuity of moments in f. |
 | ~~`continuumMeasures_tight`~~ | Tightness | **PROVED** via `configuration_tight_of_uniform_second_moments` + `continuum_second_moment_uniform` (ported from torus tightness pipeline). |

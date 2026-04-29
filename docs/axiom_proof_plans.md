@@ -1,7 +1,7 @@
 # pphi2 Axiom Proof Plans
 
-**Updated**: 2026-03-09
-**pphi2**: 41 axioms, 0 sorries | **gaussian-field**: 14 axioms, 0 sorries
+**Updated**: 2026-04-03
+**Status note**: exact axiom counts move quickly; see `status.md` for the current inventory.
 
 See [axiom_audit.md](axiom_audit.md) for correctness ratings and verification
 status. See [mathlib_candidates.md](mathlib_candidates.md) for results
@@ -45,7 +45,7 @@ fourier_representation_convolution ──→ (already used; proving removes 1 ax
 
 ---
 
-## Tier 1: Moderate — Provable Now (13 axioms)
+## Tier 1: Moderate — Provable Now
 
 ### 1. `transferOperator_isCompact` (L2Operator.lean)
 
@@ -189,16 +189,17 @@ RHS: Nelson hypercontractivity for Gaussian.
 
 ---
 
-## Tier 2: Hard — Deep Analytic Results (14 axioms)
+## Tier 2: Hard — Deep Analytic Results
 
-### 14. `latticeGreenBilinear_tendsto_continuum` (PropagatorConvergence.lean)
+### 14. `latticeGreenBilinear_basis_tendsto_continuum` (PropagatorConvergence.lean)
 
 **Difficulty**: Hard
-**Statement**: Spectral lattice Green bilinear on discretized Schwartz functions
+**Statement**: Spectral lattice Green bilinear on Dynin-Mityagin basis pairs
 converges to `continuumGreenBilinear` on ℝ^d.
-**Plan**: Dominated convergence + Schwartz decay. `propagator_convergence` is now a
-theorem from `embeddedTwoPoint_eq_latticeGreenBilinear`, so the remaining debt is
-exactly this spectral convergence statement. Model:
+**Plan**: Dominated convergence + Schwartz decay on the basis, then extend to all
+test functions by bilinear continuity. `propagator_convergence` is now a theorem
+from `embeddedTwoPoint_eq_latticeGreenBilinear`, so the remaining debt is
+exactly this basis-level spectral convergence statement. Model:
 `riemann_sum_periodic_tendsto` (proved in gf).
 **Prereqs**: Schwartz decay, lattice eigenvalue convergence (proved in gf).
 
@@ -295,9 +296,12 @@ no phase transition.
 ### 24. `two_point_clustering_from_spectral_gap` (OS4_MassGap.lean)
 
 **Difficulty**: Hard
-**Statement**: Connected 2-point function decays exponentially.
+**Statement**: Connected 2-point function decays exponentially in the **cyclic torus
+time separation**.
 **Plan**: Spectral decomposition: ⟨f, T^n g⟩ = λ₀ⁿ⟨f,e₀⟩⟨e₀,g⟩ + O(λ₁ⁿ).
-Since λ₁/λ₀ = exp(-gap), get exponential decay.
+On a periodic time circle, combine the forward and backward winding contributions
+into a bound in `min(n, N-n)`. Since λ₁/λ₀ = exp(-gap), get exponential decay
+in the cyclic distance.
 **Prereqs**: `spectral_gap_uniform` (#22), spectral decomposition (proved).
 
 ---
@@ -305,8 +309,10 @@ Since λ₁/λ₀ = exp(-gap), get exponential decay.
 ### 25. `general_clustering_from_spectral_gap` (OS4_MassGap.lean)
 
 **Difficulty**: Hard
-**Statement**: Bounded-observable clustering from spectral gap.
-**Plan**: Schwarz inequality extension of #24.
+**Statement**: Bounded-observable clustering from spectral gap, with decay measured
+in the cyclic torus time separation.
+**Plan**: Schwarz inequality / transfer-matrix extension of #24, preserving the
+cyclic-distance geometry of the periodic time direction.
 **Prereqs**: `two_point_clustering_from_spectral_gap` (#24).
 
 ---

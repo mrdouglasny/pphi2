@@ -30,6 +30,7 @@ The only difference: asymmetric spacings (Lt/N vs Ls/N) in each direction.
 -/
 
 import Pphi2.AsymTorus.AsymTorusInteractingLimit
+import Pphi2.GeneralResults.FunctionalAnalysis
 import Pphi2.GeneralResults.ComplexAnalysis
 import Pphi2.OSProofs.OS2_WardIdentity
 import GaussianField.Density
@@ -130,24 +131,7 @@ private lemma asymGf_re_eq_cos_integral
     [IsProbabilityMeasure μ] (g : AsymTorusTestFunction Lt Ls) :
     (asymTorusGeneratingFunctional Lt Ls μ g).re =
     ∫ ω : Configuration (AsymTorusTestFunction Lt Ls), Real.cos (ω g) ∂μ := by
-  unfold asymTorusGeneratingFunctional
-  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).re =
-    Complex.reCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
-  have hint : Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
-      Complex.exp (Complex.I * ↑(ω g))) μ := by
-    apply (integrable_const (1 : ℂ)).mono
-    · exact (Complex.continuous_exp.measurable.comp
-        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
-          (configuration_eval_measurable g)))).aestronglyMeasurable
-    · apply ae_of_all; intro ω; simp only [norm_one]
-      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
-      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
-  rw [← ContinuousLinearMap.integral_comp_comm Complex.reCLM hint]
-  congr 1 with ω
-  simp only [Complex.reCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
-    Complex.add_re, Complex.mul_re, Complex.I_re, mul_zero,
-    Complex.sin_ofReal_im, Complex.I_im, mul_one, sub_self, add_zero]
-  exact Complex.cos_ofReal_re (ω g)
+  simpa [asymTorusGeneratingFunctional] using configuration_expIntegral_re_eq_integral_cos μ g
 
 /-- Decomposition: the generating functional's imaginary part is the sine integral. -/
 private lemma asymGf_im_eq_sin_integral
@@ -155,24 +139,7 @@ private lemma asymGf_im_eq_sin_integral
     [IsProbabilityMeasure μ] (g : AsymTorusTestFunction Lt Ls) :
     (asymTorusGeneratingFunctional Lt Ls μ g).im =
     ∫ ω : Configuration (AsymTorusTestFunction Lt Ls), Real.sin (ω g) ∂μ := by
-  unfold asymTorusGeneratingFunctional
-  rw [show (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ).im =
-    Complex.imCLM (∫ ω, Complex.exp (Complex.I * ↑(ω g)) ∂μ) from rfl]
-  have hint : Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
-      Complex.exp (Complex.I * ↑(ω g))) μ := by
-    apply (integrable_const (1 : ℂ)).mono
-    · exact (Complex.continuous_exp.measurable.comp
-        (measurable_const.mul (Complex.continuous_ofReal.measurable.comp
-          (configuration_eval_measurable g)))).aestronglyMeasurable
-    · apply ae_of_all; intro ω; simp only [norm_one]
-      rw [show Complex.I * ↑(ω g) = ↑(ω g) * Complex.I from mul_comm _ _]
-      exact le_of_eq (Complex.norm_exp_ofReal_mul_I (ω g))
-  rw [← ContinuousLinearMap.integral_comp_comm Complex.imCLM hint]
-  congr 1 with ω
-  simp only [Complex.imCLM_apply, mul_comm Complex.I, Complex.exp_mul_I,
-    Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-    Complex.cos_ofReal_im, Complex.sin_ofReal_re, Complex.sin_ofReal_im]
-  ring
+  simpa [asymTorusGeneratingFunctional] using configuration_expIntegral_im_eq_integral_sin μ g
 
 /-! ## Intermediate lemmas (cutoff-level invariances)
 
@@ -1020,34 +987,6 @@ private theorem asymTorusInteracting_exponentialMomentBound
 
 ### Helper lemmas for OS0 -/
 
-/-- On a compact set `K ⊆ (Fin n → ℂ)`, imaginary parts are uniformly bounded. -/
-private lemma asymCompact_im_bound {n : ℕ} {K : Set (Fin n → ℂ)} (hK : IsCompact K) :
-    ∃ C : ℝ, 0 ≤ C ∧ ∀ z ∈ K, ∀ i : Fin n, |Complex.im (z i)| ≤ C := by
-  by_cases hKe : K.Nonempty
-  · obtain ⟨M, hM⟩ := hK.isBounded.exists_norm_le
-    exact ⟨M, le_trans (norm_nonneg _) (hM _ hKe.some_mem), fun z hz i =>
-      (Complex.abs_im_le_norm (z i)).trans ((norm_le_pi_norm z i).trans (hM z hz))⟩
-  · exact ⟨0, le_refl _, fun z hz => absurd ⟨z, hz⟩ hKe⟩
-
-/-- For `aᵢ ≥ 0`: `exp(c · Σ aᵢ) ≤ Σ exp(n·c·aᵢ)`. -/
-private lemma asymExp_mul_sum_le {n : ℕ} (hn : 0 < n) (c : ℝ) (hc : 0 ≤ c)
-    (a : Fin n → ℝ) :
-    Real.exp (c * ∑ i : Fin n, a i) ≤
-    ∑ i : Fin n, Real.exp (↑n * c * a i) := by
-  have hne : (Finset.univ : Finset (Fin n)).Nonempty :=
-    ⟨⟨0, hn⟩, Finset.mem_univ _⟩
-  set M := Finset.univ.sup' hne a
-  have hM : ∀ i, a i ≤ M := fun i => Finset.le_sup' a (Finset.mem_univ i)
-  have h_sum_le : ∑ i : Fin n, a i ≤ ↑n * M :=
-    (Finset.sum_le_sum (fun i _ => hM i)).trans
-      (by simp [Finset.sum_const, nsmul_eq_mul])
-  have h1 : Real.exp (c * ∑ i, a i) ≤ Real.exp (↑n * c * M) :=
-    Real.exp_le_exp_of_le (by nlinarith)
-  obtain ⟨j, _, hj⟩ := Finset.exists_mem_eq_sup' hne a
-  exact h1.trans ((congr_arg Real.exp (by rw [← hj])).le.trans
-    (Finset.single_le_sum (f := fun i => Real.exp (↑n * c * a i))
-      (fun i _ => (Real.exp_pos _).le) (Finset.mem_univ j)))
-
 /-- OS0: Analyticity of the asymmetric torus generating functional.
 
 Proved by `analyticOnNhd_integral` with pointwise analyticity of exp and
@@ -1092,7 +1031,7 @@ private theorem asymTorusInteracting_os0
       (Complex.measurable_ofReal.comp (configuration_eval_measurable _)))))
   · -- Domination: on compact K, ‖F(z, ω)‖ ≤ bound(ω) integrable
     intro K hK
-    obtain ⟨C_K, hC_K_nn, hC_K⟩ := asymCompact_im_bound hK
+    obtain ⟨C_K, hC_K_nn, hC_K⟩ := compact_im_bound hK
     obtain ⟨q_exp, _, hq_exp_bound⟩ :=
       asymTorusInteracting_exponentialMomentBound Lt Ls P mass hmass μ φ hφ hconv
     by_cases hn : n = 0
@@ -1146,7 +1085,7 @@ private theorem asymTorusInteracting_os0
                       mul_le_mul_of_nonneg_right (hC_K z hz i) (abs_nonneg _))
                 _ = C_K * ∑ i, |ω (J i)| := (Finset.mul_sum _ _ _).symm
           _ ≤ bound ω :=
-              asymExp_mul_sum_le (Nat.pos_of_ne_zero hn) C_K hC_K_nn _
+              exp_mul_sum_le (Nat.pos_of_ne_zero hn) C_K hC_K_nn _
 
 /-- **OS1 for the asymmetric torus interacting continuum limit.**
 

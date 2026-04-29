@@ -5,11 +5,11 @@
 > **Generated**: 2026-03-20
 
 ## Overview
-Assembles the Gaussian continuum limit: existence of a subsequential weak limit, nontriviality ($\int (\omega f)^2\, d\mu > 0$ for $f \ne 0$), Gaussianity of weak limits (axiom via Bochner-Minlos), the `IsGaussianContinuumLimit` predicate, and a bridge theorem connecting Gaussian uniform moments to interacting tightness.
+Assembles the Gaussian continuum limit: existence of a subsequential weak limit, nontriviality ($\int (\omega f)^2\, d\mu > 0$ for $f \ne 0$), Gaussianity of weak limits (proved via characteristic-function convergence / Bochner-Minlos uniqueness), the `IsGaussianContinuumLimit` predicate, and a bridge theorem connecting Gaussian uniform moments to interacting tightness.
 
 ## Status
-**Main result**: `gaussianContinuumLimit_exists` proved; 1 axiom
-**Length**: 205 lines, 1 structure + 3 theorems + 1 axiom
+**Main result**: `gaussianContinuumLimit_exists` proved; 0 axioms
+**Declarations**: 1 structure + 4 theorems
 
 ---
 
@@ -19,8 +19,8 @@ For $a_n \to 0$, the embedded Gaussian measures have a weakly convergent subsequ
 ### `gaussianContinuumLimit_nontrivial` (theorem, proved)
 $\int (\omega f)^2\, d\mu > 0$ for $f \ne 0$, given the two-point function equals $G(f,f)$. **Proved** from `continuumGreenBilinear_pos`.
 
-### `gaussianLimit_isGaussian` (axiom)
-Weak limits of Gaussian measures are Gaussian. If $\mu_n$ are centered Gaussian and $\mu_n \rightharpoonup \mu$, then $\int e^{\omega(f)}\, d\mu = \exp(\frac{1}{2}\int (\omega f)^2\, d\mu)$.
+### `gaussianLimit_isGaussian` (theorem, proved)
+Weak limits of Gaussian measures are Gaussian. If $\mu_n$ are centered Gaussian and $\mu_n \rightharpoonup \mu$, then the limit characteristic functional is still Gaussian, so $\mu$ is Gaussian with the limiting covariance.
 
 ### `IsGaussianContinuumLimit` (structure)
 ```lean
@@ -32,4 +32,4 @@ Predicate: $\mu$ is a probability measure, Gaussian, has covariance $= G(f,f)$, 
 The Gaussian uniform bound $E_{\text{GFF}}[\Phi_a(f)^2] \le C$ feeds the interacting tightness via Cauchy-Schwarz.
 
 ---
-*This file has **1** structure and **3** theorems (0 with sorry) + **1** axiom.*
+*This file has **1** structure and **4** theorems (0 with sorry, 0 axioms).*

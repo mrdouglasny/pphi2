@@ -8,11 +8,12 @@ This file packages the standard real/complex Schwartz-function conversions and
 their interaction with Euclidean motions and generating functionals for an
 arbitrary Euclidean background.
 
-The canonical 2D API in `Pphi2/OSforGFF/ComplexTestFunction.lean` then becomes
-just a thin specialization layer.
+The canonical 2D API is the specialization to `plane2Background` via
+`Pphi2/Backgrounds/EuclideanPlane2D.lean`.
 -/
 
 import Pphi2.EuclideanOS
+import Pphi2.GeneralResults.ComplexAnalysis
 
 noncomputable section
 
@@ -25,25 +26,7 @@ namespace Pphi2
 def schwartzOfReal {B : EuclideanPlaneBackground}
     (f : EuclideanPlaneBackground.RealTestFunction B) :
     EuclideanPlaneBackground.ComplexTestFunction B :=
-  SchwartzMap.mk (fun x => (f x : ℂ))
-    (Complex.ofRealCLM.contDiff.comp f.smooth')
-    (by
-      intro k n
-      obtain ⟨C, hC⟩ := f.decay' k n
-      use C * ‖Complex.ofRealCLM‖
-      intro x
-      have h_eq : (fun y => ((f y : ℝ) : ℂ)) = Complex.ofRealCLM ∘ f.toFun := rfl
-      rw [h_eq, ContinuousLinearMap.iteratedFDeriv_comp_left Complex.ofRealCLM
-        f.smooth'.contDiffAt (WithTop.coe_le_coe.mpr le_top)]
-      calc ‖x‖ ^ k * ‖Complex.ofRealCLM.compContinuousMultilinearMap
-              (iteratedFDeriv ℝ n f.toFun x)‖
-          ≤ ‖x‖ ^ k * (‖Complex.ofRealCLM‖ * ‖iteratedFDeriv ℝ n f.toFun x‖) :=
-            mul_le_mul_of_nonneg_left
-              (ContinuousLinearMap.norm_compContinuousMultilinearMap_le _ _)
-              (pow_nonneg (norm_nonneg _) _)
-        _ = ‖Complex.ofRealCLM‖ * (‖x‖ ^ k * ‖iteratedFDeriv ℝ n f.toFun x‖) := by ring
-        _ ≤ ‖Complex.ofRealCLM‖ * C := mul_le_mul_of_nonneg_left (hC x) (norm_nonneg _)
-        _ = C * ‖Complex.ofRealCLM‖ := by ring)
+  f.postcompCLM Complex.ofRealCLM
 
 @[simp] theorem schwartzOfReal_apply {B : EuclideanPlaneBackground}
     (f : EuclideanPlaneBackground.RealTestFunction B)
@@ -63,6 +46,82 @@ def schwartzOfReal {B : EuclideanPlaneBackground}
   ext x
   change (((f x : ℝ) : ℂ)).im = 0
   simp [Complex.ofReal_im]
+
+@[simp] theorem schwartzOfReal_add {B : EuclideanPlaneBackground}
+    (f g : EuclideanPlaneBackground.RealTestFunction B) :
+    schwartzOfReal (f + g) = schwartzOfReal f + schwartzOfReal g := by
+  ext x
+  change (((f + g) x : ℝ) : ℂ) = ((f x : ℂ) + (g x : ℂ))
+  simp
+
+@[simp] theorem schwartzOfReal_real_smul {B : EuclideanPlaneBackground}
+    (r : ℝ) (f : EuclideanPlaneBackground.RealTestFunction B) :
+    schwartzOfReal (r • f) = (r : ℂ) • schwartzOfReal f := by
+  ext x
+  change (((r • f) x : ℝ) : ℂ) = (r : ℂ) * (f x : ℂ)
+  simp
+
+@[simp] theorem schwartzRe_ofReal_add_real_smul {B : EuclideanPlaneBackground}
+    (f h : EuclideanPlaneBackground.RealTestFunction B) (r : ℝ) :
+    EuclideanOS.schwartzRe (schwartzOfReal f + (r : ℂ) • schwartzOfReal h) = f + r • h := by
+  ext x
+  change Complex.re ((f x : ℂ) + (r : ℂ) * (h x : ℂ)) = f x + r * h x
+  simp [Complex.add_re, Complex.mul_re]
+
+@[simp] theorem schwartzIm_ofReal_add_real_smul {B : EuclideanPlaneBackground}
+    (f h : EuclideanPlaneBackground.RealTestFunction B) (r : ℝ) :
+    EuclideanOS.schwartzIm (schwartzOfReal f + (r : ℂ) • schwartzOfReal h) = 0 := by
+  ext x
+  change Complex.im ((f x : ℂ) + (r : ℂ) * (h x : ℂ)) = 0
+  simp [Complex.add_im, Complex.mul_im]
+
+@[simp] theorem schwartzRe_complex_smul {B : EuclideanPlaneBackground}
+    (z : ℂ) (J : EuclideanPlaneBackground.ComplexTestFunction B) :
+    EuclideanOS.schwartzRe (z • J) =
+      z.re • EuclideanOS.schwartzRe J - z.im • EuclideanOS.schwartzIm J := by
+  ext x
+  change Complex.re (z * J x) = z.re * Complex.re (J x) - z.im * Complex.im (J x)
+  simp [Complex.mul_re]
+
+@[simp] theorem schwartzIm_complex_smul {B : EuclideanPlaneBackground}
+    (z : ℂ) (J : EuclideanPlaneBackground.ComplexTestFunction B) :
+    EuclideanOS.schwartzIm (z • J) =
+      z.re • EuclideanOS.schwartzIm J + z.im • EuclideanOS.schwartzRe J := by
+  ext x
+  change Complex.im (z * J x) = z.re * Complex.im (J x) + z.im * Complex.re (J x)
+  simp [Complex.mul_im]
+
+theorem schwartzRe_sum_complex_smul {B : EuclideanPlaneBackground} {n : ℕ}
+    (z : Fin n → ℂ) (J : Fin n → EuclideanPlaneBackground.ComplexTestFunction B) :
+    EuclideanOS.schwartzRe (∑ i, z i • J i) =
+      ∑ i, ((z i).re • EuclideanOS.schwartzRe (J i) -
+        (z i).im • EuclideanOS.schwartzIm (J i)) := by
+  ext x
+  simp [EuclideanOS.schwartzRe, EuclideanOS.schwartzIm, Complex.mul_re, Finset.sum_sub_distrib]
+
+theorem schwartzIm_sum_complex_smul {B : EuclideanPlaneBackground} {n : ℕ}
+    (z : Fin n → ℂ) (J : Fin n → EuclideanPlaneBackground.ComplexTestFunction B) :
+    EuclideanOS.schwartzIm (∑ i, z i • J i) =
+      ∑ i, ((z i).re • EuclideanOS.schwartzIm (J i) +
+        (z i).im • EuclideanOS.schwartzRe (J i)) := by
+  ext x
+  simp [EuclideanOS.schwartzIm, EuclideanOS.schwartzRe, Complex.mul_im, Finset.sum_add_distrib]
+
+/-- The complex pairing with a finite complex source family is linear in the coefficients. -/
+lemma pairing_sum_complex_smul {B : EuclideanPlaneBackground} {n : ℕ}
+    (ω : EuclideanPlaneBackground.Distribution B)
+    (z : Fin n → ℂ) (J : Fin n → EuclideanPlaneBackground.ComplexTestFunction B) :
+    ((ω (EuclideanOS.schwartzRe (∑ i, z i • J i)) : ℂ) +
+        Complex.I * (ω (EuclideanOS.schwartzIm (∑ i, z i • J i)) : ℂ)) =
+      ∑ i : Fin n,
+        z i * ((ω (EuclideanOS.schwartzRe (J i)) : ℂ) +
+          Complex.I * (ω (EuclideanOS.schwartzIm (J i)) : ℂ)) := by
+  rw [schwartzRe_sum_complex_smul, schwartzIm_sum_complex_smul]
+  apply Complex.ext
+  · simp [map_sum, map_add, map_sub, map_smul, smul_eq_mul, Complex.mul_re,
+      Complex.mul_im, Finset.sum_add_distrib, Finset.sum_sub_distrib]
+  · simp [map_sum, map_add, map_sub, map_smul, smul_eq_mul, Complex.mul_re,
+      Complex.mul_im, Finset.sum_add_distrib, Finset.sum_sub_distrib]
 
 @[simp] theorem actionComplex_schwartzOfReal {B : EuclideanPlaneBackground}
     (g : EuclideanPlaneBackground.Motion B)
@@ -94,18 +153,10 @@ lemma generatingFunctionalℂ_ofReal_add_real_smul {B : EuclideanPlaneBackground
     EuclideanOS.generatingFunctionalℂ μ (schwartzOfReal f + (r : ℂ) • schwartzOfReal h) =
       EuclideanOS.generatingFunctional μ (f + r • h) := by
   unfold EuclideanOS.generatingFunctionalℂ EuclideanOS.generatingFunctional
-  have hre :
-      EuclideanOS.schwartzRe (schwartzOfReal f + (r : ℂ) • schwartzOfReal h) = f + r • h := by
-    ext x
-    change Complex.re ((f x : ℂ) + (r : ℂ) * (h x : ℂ)) = f x + r * h x
-    simp [Complex.add_re, Complex.mul_re]
-  have him :
-      EuclideanOS.schwartzIm (schwartzOfReal f + (r : ℂ) • schwartzOfReal h) = 0 := by
-    ext x
-    change Complex.im ((f x : ℂ) + (r : ℂ) * (h x : ℂ)) = 0
-    simp [Complex.add_im, Complex.mul_im]
-  simp_rw [hre, him]
-  simp
+  refine integral_congr_ae ?_
+  exact ae_of_all _ fun ω => by
+    rw [schwartzRe_ofReal_add_real_smul, schwartzIm_ofReal_add_real_smul]
+    simp [map_zero]
 
 lemma schwartz_decompose {B : EuclideanPlaneBackground}
     (J : EuclideanPlaneBackground.ComplexTestFunction B) :
@@ -133,5 +184,14 @@ lemma schwartz_decompose_actionComplex {B : EuclideanPlaneBackground}
           (Complex.I : ℂ) •
             schwartzOfReal (EuclideanPlaneBackground.action g (EuclideanOS.schwartzIm J)) := by
         rw [schwartzRe_actionComplex, schwartzIm_actionComplex]
+
+/-- Same as `schwartz_decompose_actionComplex` for the `Continuum*` motion/pullback names in
+`Backgrounds/EuclideanPlane.lean` (definitional specialisation to `planeBackground d`). -/
+theorem schwartz_decompose_continuumEuclideanActionComplex {d : ℕ}
+    (g : ContinuumMotion d) (J : ContinuumComplexTestFunction d) :
+    continuumEuclideanActionComplex g J =
+      schwartzOfReal (continuumEuclideanAction g (EuclideanOS.schwartzRe J)) +
+        (Complex.I : ℂ) • schwartzOfReal (continuumEuclideanAction g (EuclideanOS.schwartzIm J)) :=
+  schwartz_decompose_actionComplex g J
 
 end Pphi2

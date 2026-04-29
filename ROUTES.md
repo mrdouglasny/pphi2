@@ -3,8 +3,8 @@
 Three live routes + one preserved route. All share the interacting-measure
 framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
-**Current state** (`scripts/count_axioms.sh`, 2026-04-19):
-**pphi2 total: 22 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry.**
+**Current state** (`scripts/count_axioms.sh`, 2026-04-29):
+**pphi2 total: 20 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry.**
 
 ---
 
@@ -24,11 +24,12 @@ structurally assembled, conditional on the remaining axioms.
 | Transfer matrix + spectrum | `TransferMatrix/L2Operator`, `GaussianFourier`, `SpectralGap` | 4 |
 | Lattice RP | `OSProofs/OS3_RP_Lattice` | 1 |
 | Lattice clustering / OS4 | `OSProofs/OS4_MassGap` | 2 |
-| Ward identity / continuum OS2 | `OSProofs/OS2_WardIdentity` | 6 |
+| Ward identity / continuum OS2 | `OSProofs/OS2_WardIdentity` | 1 |
 | Propagator convergence | `GaussianContinuumLimit/PropagatorConvergence` | 1 |
 | Continuum limit / non-Gaussianity | `ContinuumLimit/Convergence` | 1 |
+| Continuum inheritance | `ContinuumLimit/AxiomInheritance` | 3 |
 | Main assembly | `Main.lean` | 1 |
-| **Route A total** | | **16** |
+| **Route A total** | | **14** |
 
 ### OS axiom strategy
 
@@ -209,11 +210,11 @@ Schwartz-nuclear-extension infrastructure. See `../gaussian-field/status.md`.
 
 | Route | Axioms | Sorries |
 |-------|--------|---------|
-| Route A (main line, ex-Bridge) | 16 | 0 |
+| Route A (main line, ex-Bridge) | 14 | 0 |
 | Route B (torus UV) | 0 | 0 |
 | Route B′ (cylinder IR limit) | 3 | 0 |
 | Bridge (cross-formulation) | 3 | 0 |
-| **pphi2 total** | **22** | **0** |
+| **pphi2 total** | **20** | **0** |
 | gaussian-field (upstream) | 2 | 3 |
 
 Route B is the "done" route. Route B′ is the next candidate for a focused completion
