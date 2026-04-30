@@ -887,6 +887,34 @@ private theorem T_conv_eq_T_mul_schwartz
     with w hL hR
   rw [hL]; exact hR.symm
 
+/-- **Step 7**: extend from Schwartz to all of `Lp ℝ 2` via Schwartz density.
+The CLMs `T_conv g hg` and `T_mul g hg` agree on the dense Schwartz subset
+(by step 6) and are both continuous, so `DenseRange.equalizer` gives the
+full equality of functions. Since both are CLMs, that lifts to CLM equality. -/
+private theorem T_conv_eq_T_mul
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) (hg_cont : Continuous g) :
+    T_conv Ns g hg = T_mul Ns g hg := by
+  -- Function equality of the underlying maps via DenseRange.equalizer
+  have h_dense :
+      DenseRange (SchwartzMap.toLpCLM ℝ ℝ 2
+        (volume : Measure (EuclideanSpace ℝ (Fin Ns)))) :=
+    SchwartzMap.denseRange_toLpCLM (E := EuclideanSpace ℝ (Fin Ns))
+      (F := ℝ) (p := 2)
+      (μ := (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
+      (ENNReal.ofNat_ne_top)
+  have h_eq_fun :
+      (T_conv Ns g hg :
+        Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2 →
+        Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) =
+      (T_mul Ns g hg :
+        Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2 →
+        Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) := by
+    refine h_dense.equalizer (T_conv Ns g hg).continuous (T_mul Ns g hg).continuous ?_
+    funext s
+    exact T_conv_eq_T_mul_schwartz Ns g hg hg_cont s
+  -- Lift function equality to CLM equality
+  exact DFunLike.coe_injective h_eq_fun
+
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
