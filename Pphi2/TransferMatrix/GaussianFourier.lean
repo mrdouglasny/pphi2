@@ -654,6 +654,71 @@ private theorem liftL2_ℝC_schwartz_eq
        ((schwartzComplexLift Ns s).toLp 2 : EuclideanSpace ℝ (Fin Ns) → ℂ) w
   rw [hw, hsCw, schwartzComplexLift_apply, hsw]
 
+/-- Convolution-side coercion: the Lp ℂ 2 element
+`liftL2_ℝC (convCLM g_E hg_E (s.toLp 2))` agrees a.e. with the explicit
+function `w ↦ ((realConv volume g_E s w : ℝ) : ℂ)`. This is the convolution
+analogue of `liftL2_ℝC_schwartz_eq` (but only as an a.e. coercion identity,
+since the RHS isn't constructed via `MemLp.toLp` here). -/
+private theorem liftL2_ℝC_convCLM_schwartz_coeFn
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    (liftL2_ℝC Ns
+        (convCLM (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg) (s.toLp 2))
+      : EuclideanSpace ℝ (Fin Ns) → ℂ) =ᵐ[volume]
+      fun w => ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ) := by
+  have h_lift := liftL2_ℝC_spec (Ns := Ns)
+    (convCLM (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg) (s.toLp 2))
+  have h_conv := convCLM_spec (gEuclidean Ns g)
+    (gEuclidean_memLp (Ns := Ns) g hg) (s.toLp 2)
+  have h_s : (s.toLp 2 : EuclideanSpace ℝ (Fin Ns) → ℝ) =ᵐ[volume] s :=
+    SchwartzMap.coeFn_toLp s 2 _
+  -- swap `s.toLp 2` for `s` inside `realConv` via `convolution_congr`
+  have h_realConv_eq :
+      realConv volume (gEuclidean Ns g) (s.toLp 2 : EuclideanSpace ℝ (Fin Ns) → ℝ) =
+      realConv volume (gEuclidean Ns g) s := by
+    unfold realConv
+    exact MeasureTheory.convolution_congr (ContinuousLinearMap.lsmul ℝ ℝ)
+      Filter.EventuallyEq.rfl h_s
+  filter_upwards [h_lift, h_conv] with w hw hcw
+  rw [hw, hcw]
+  exact congrArg (Complex.ofReal) (congrFun h_realConv_eq w)
+
+/-- The complex-lifted real convolution `w ↦ ((realConv volume g_E s w : ℝ) : ℂ)`
+is in `L²` (deduced from the L² membership of the underlying real Lp element
+`liftL2_ℝC (convCLM g_E hg_E (s.toLp 2))` plus the a.e. identity above). -/
+private theorem realConvComplexLift_memLp_two
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    MemLp (fun w => ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ))
+      2 (volume : Measure (EuclideanSpace ℝ (Fin Ns))) := by
+  -- Use the `liftL2_ℝC ∘ convCLM` Lp element's L² membership, then transport
+  -- via the a.e. coercion identity proved above.
+  set f := liftL2_ℝC Ns
+    (convCLM (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg) (s.toLp 2))
+  have hf_memLp : MemLp (f : EuclideanSpace ℝ (Fin Ns) → ℂ) 2 volume := Lp.memLp f
+  have h_ae := liftL2_ℝC_convCLM_schwartz_coeFn (Ns := Ns) g hg s
+  exact MemLp.ae_eq h_ae hf_memLp
+
+/-- The Lp ℂ 2 element on the convolution side equals the explicit `MemLp.toLp`. -/
+private theorem liftL2_ℝC_convCLM_schwartz_eq_toLp
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    liftL2_ℝC Ns
+        (convCLM (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg) (s.toLp 2))
+      = (realConvComplexLift_memLp_two (Ns := Ns) g hg s).toLp
+        (fun w => ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ)) := by
+  apply Subtype.coe_injective
+  apply MeasureTheory.AEEqFun.ext
+  have h_lhs := liftL2_ℝC_convCLM_schwartz_coeFn (Ns := Ns) g hg s
+  have h_rhs :
+      ((realConvComplexLift_memLp_two (Ns := Ns) g hg s).toLp
+          (fun w => ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ))
+        : EuclideanSpace ℝ (Fin Ns) → ℂ)
+      =ᵐ[volume] fun w => ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ) :=
+    MemLp.coeFn_toLp _
+  filter_upwards [h_lhs, h_rhs] with w hl hr
+  exact hl.trans hr.symm
+
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
