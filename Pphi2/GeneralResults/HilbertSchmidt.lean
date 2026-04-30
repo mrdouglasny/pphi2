@@ -89,15 +89,158 @@ representative `x ↦ ∫ K(x, y) · (bᵢ)(y) dμ(y) = ⟨K(x, ·), bᵢ⟩_{L�
 `K(x, ·) ∈ L²(μ)` for a.e. `x` by Fubini. Parseval applied to the slice
 `K(x, ·)` gives `Σᵢ |⟨K(x, ·), bᵢ⟩|² = ‖K(x, ·)‖²_{L²(μ)}`, and integrating in
 `x` via Tonelli yields `Σᵢ ‖T bᵢ‖² = ∫ ‖K(x, ·)‖² dμ(x) = ‖K‖²_{L²(μ⊗μ)}`. -/
-axiom hs_basis_norm_summable
+private theorem hs_basis_norm_sq_eq_integral
+    {G : Type*} [MeasurableSpace G] {μ : Measure G}
+    (f : Lp ℝ 2 μ) :
+    ‖f‖ ^ 2 = ∫ x, ((f : G → ℝ) x) ^ 2 ∂μ := by
+  calc
+    ‖f‖ ^ 2 = inner ℝ f f := by rw [← real_inner_self_eq_norm_sq]
+    _ = ∫ x, ((f : G → ℝ) x) ^ 2 ∂μ := by
+      rw [MeasureTheory.L2.inner_def]
+      simp [pow_two]
+
+private theorem hs_slice_inner_eq_integral
+    {G : Type*} [MeasurableSpace G] {μ : Measure G}
+    {K₀ : G × G → ℝ} {x : G}
+    (hxslice : MemLp (fun y => K₀ (x, y)) 2 μ)
+    {ι : Type*} (b : HilbertBasis ι ℝ (Lp ℝ 2 μ)) (i : ι) :
+    inner ℝ (b i) (hxslice.toLp (fun y => K₀ (x, y))) =
+      ∫ y, (b i : G → ℝ) y * K₀ (x, y) ∂μ := by
+  rw [MeasureTheory.L2.inner_def]
+  refine integral_congr_ae ?_
+  filter_upwards [MemLp.coeFn_toLp hxslice] with y hy
+  calc
+    inner ℝ ((b i : G → ℝ) y) ((hxslice.toLp (fun y => K₀ (x, y))) y)
+      = inner ℝ ((b i : G → ℝ) y) (K₀ (x, y)) := by simp [hy]
+    _ = (b i : G → ℝ) y * K₀ (x, y) := by
+          simpa using (RCLike.inner_apply' ((b i : G → ℝ) y) (K₀ (x, y)))
+
+private theorem hs_slice_norm_sq_eq_integral
+    {G : Type*} [MeasurableSpace G] {μ : Measure G}
+    {K₀ : G × G → ℝ} {x : G}
+    (hxslice : MemLp (fun y => K₀ (x, y)) 2 μ) :
+    ‖hxslice.toLp (fun y => K₀ (x, y))‖ ^ 2 =
+      ∫ y, K₀ (x, y) ^ 2 ∂μ := by
+  calc
+    ‖hxslice.toLp (fun y => K₀ (x, y))‖ ^ 2
+      = inner ℝ (hxslice.toLp (fun y => K₀ (x, y))) (hxslice.toLp (fun y => K₀ (x, y))) := by
+          rw [← real_inner_self_eq_norm_sq]
+    _ = ∫ y, K₀ (x, y) ^ 2 ∂μ := by
+      rw [MeasureTheory.L2.inner_def]
+      refine integral_congr_ae ?_
+      filter_upwards [MemLp.coeFn_toLp hxslice] with y hy
+      calc
+        inner ℝ
+            ((hxslice.toLp (fun y => K₀ (x, y))) y)
+            ((hxslice.toLp (fun y => K₀ (x, y))) y)
+          = inner ℝ (K₀ (x, y)) (K₀ (x, y)) := by simp [hy]
+        _ = K₀ (x, y) ^ 2 := by
+              simp [pow_two]
+
+theorem hs_basis_norm_summable
     {G : Type*} [MeasurableSpace G] {μ : Measure G} [SigmaFinite μ]
     (K : G → G → ℝ)
-    (_hK : MemLp (Function.uncurry K) 2 (μ.prod μ))
+    (hK : MemLp (Function.uncurry K) 2 (μ.prod μ))
     (T : (Lp ℝ 2 μ) →L[ℝ] (Lp ℝ 2 μ))
-    (_hT : ∀ f : Lp ℝ 2 μ,
+    (hT : ∀ f : Lp ℝ 2 μ,
       (T f : G → ℝ) =ᵐ[μ] fun x => ∫ y, K x y * (f : G → ℝ) y ∂μ)
     {ι : Type*} (b : HilbertBasis ι ℝ (Lp ℝ 2 μ)) :
-    Summable (fun i : ι => ‖T (b i)‖ ^ 2)
+    Summable (fun i : ι => ‖T (b i)‖ ^ 2) := by
+  classical
+  let K₀ : G × G → ℝ := hK.aestronglyMeasurable.mk (Function.uncurry K)
+  have hK₀_meas : StronglyMeasurable K₀ := hK.aestronglyMeasurable.stronglyMeasurable_mk
+  have hK₀_ae : Function.uncurry K =ᵐ[μ.prod μ] K₀ := hK.aestronglyMeasurable.ae_eq_mk
+  have hK₀_mem : MemLp K₀ 2 (μ.prod μ) := (memLp_congr_ae hK₀_ae).mp hK
+  have hK₀_sq : Integrable (fun z => K₀ z ^ 2) (μ.prod μ) := hK₀_mem.integrable_sq
+  have hK₀_ae_slices : ∀ᵐ x ∂μ, ∀ᵐ y ∂μ, K x y = K₀ (x, y) := by
+    simpa [Function.uncurry] using (MeasureTheory.Measure.ae_ae_of_ae_prod hK₀_ae)
+  have hT₀ :
+      ∀ i : ι, (T (b i) : G → ℝ) =ᵐ[μ] fun x =>
+        ∫ y, K₀ (x, y) * (b i : G → ℝ) y ∂μ := by
+    intro i
+    refine (hT (b i)).trans ?_
+    filter_upwards [hK₀_ae_slices] with x hx
+    apply integral_congr_ae
+    filter_upwards [hx] with y hy
+    simp [hy]
+  have hT₀_finset :
+      ∀ S : Finset ι, ∀ᵐ x ∂μ, ∀ i ∈ S,
+        (T (b i) : G → ℝ) x = ∫ y, K₀ (x, y) * (b i : G → ℝ) y ∂μ := by
+    intro S
+    induction S using Finset.induction_on with
+    | empty =>
+        exact Filter.Eventually.of_forall (fun x i hi => False.elim (by simp at hi))
+    | insert a s ha hs =>
+        have hae := hT₀ a
+        have hse := hs
+        filter_upwards [hae, hse] with x hxa hxs i hi
+        rcases Finset.mem_insert.mp hi with rfl | hi'
+        · exact hxa
+        · exact hxs i hi'
+  have hsum_bound :
+      ∀ S : Finset ι,
+        ∑ i ∈ S, ‖T (b i)‖ ^ 2 ≤ ∫ x, ∫ y, K₀ (x, y) ^ 2 ∂μ ∂μ := by
+    intro S
+    let F : G → ℝ := fun x => ∑ i ∈ S, ((T (b i) : G → ℝ) x) ^ 2
+    let Gs : G → ℝ := fun x => ∫ y, K₀ (x, y) ^ 2 ∂μ
+    have hF_int : Integrable F μ := by
+      refine integrable_finset_sum S ?_
+      intro i hi
+      simpa using (Lp.memLp (T (b i))).integrable_sq
+    have hGs_int : Integrable Gs μ := by
+      simpa [Gs] using hK₀_sq.integral_prod_left
+    have hT₀S :
+        ∀ᵐ x ∂μ, ∀ i ∈ S,
+          (T (b i) : G → ℝ) x = ∫ y, K₀ (x, y) * (b i : G → ℝ) y ∂μ :=
+      hT₀_finset S
+    have hpointwise : ∀ᵐ x ∂μ, F x ≤ Gs x := by
+      filter_upwards [hK₀_sq.prod_right_ae, hT₀S] with x hx_sq hxT
+      have hslice_meas : AEStronglyMeasurable (fun y => K₀ (x, y)) μ :=
+        (hK₀_meas.comp_measurable measurable_prodMk_left).aestronglyMeasurable
+      have hslice_mem : MemLp (fun y => K₀ (x, y)) 2 μ :=
+        (memLp_two_iff_integrable_sq hslice_meas).2 hx_sq
+      let kx : Lp ℝ 2 μ := hslice_mem.toLp (fun y => K₀ (x, y))
+      have hk_norm : ‖kx‖ ^ 2 = Gs x := by
+        simpa [kx, Gs] using hs_slice_norm_sq_eq_integral (K₀ := K₀) hslice_mem
+      have hk_inner :
+          ∀ i ∈ S, (T (b i) : G → ℝ) x = inner ℝ (b i) kx := by
+        intro i hi
+        calc
+          (T (b i) : G → ℝ) x = ∫ y, K₀ (x, y) * (b i : G → ℝ) y ∂μ := hxT i hi
+          _ = ∫ y, (b i : G → ℝ) y * K₀ (x, y) ∂μ := by simp_rw [mul_comm]
+          _ = inner ℝ (b i) kx := by
+                symm
+                simpa [kx] using hs_slice_inner_eq_integral (K₀ := K₀) hslice_mem b i
+      have hF_eq : F x = ∑ i ∈ S, ‖inner ℝ (b i) kx‖ ^ 2 := by
+        simp only [F]
+        refine Finset.sum_congr rfl ?_
+        intro i hi
+        rw [hk_inner i hi]
+        have hsq : inner ℝ (b i) kx ^ 2 = ‖inner ℝ (b i) kx‖ ^ 2 := by
+          have habs : inner ℝ (b i) kx ^ 2 = |inner ℝ (b i) kx| ^ 2 := by
+            exact (sq_abs (inner ℝ (b i) kx)).symm
+          rw [Real.norm_eq_abs]
+          exact habs
+        exact hsq
+      have hBessel : ∑ i ∈ S, ‖inner ℝ (b i) kx‖ ^ 2 ≤ ‖kx‖ ^ 2 :=
+        b.orthonormal.sum_inner_products_le (s := S) kx
+      exact hF_eq.trans_le (hBessel.trans_eq hk_norm)
+    calc
+      ∑ i ∈ S, ‖T (b i)‖ ^ 2 = ∑ i ∈ S, ∫ x, ((T (b i) : G → ℝ) x) ^ 2 ∂μ := by
+        refine Finset.sum_congr rfl ?_
+        intro i hi
+        simpa using hs_basis_norm_sq_eq_integral (T (b i))
+      _ = ∫ x, F x ∂μ := by
+        have hFin :
+            ∫ x, F x ∂μ = ∑ i ∈ S, ∫ x, ((T (b i) : G → ℝ) x) ^ 2 ∂μ := by
+          simpa [F] using
+            (integral_finset_sum S (fun i hi => by
+              simpa using (Lp.memLp (T (b i))).integrable_sq))
+        exact hFin.symm
+      _ ≤ ∫ x, Gs x ∂μ := by
+        simpa [Gs] using integral_mono_ae hF_int hGs_int hpointwise
+      _ = ∫ x, ∫ y, K₀ (x, y) ^ 2 ∂μ ∂μ := rfl
+  exact summable_of_sum_le (fun i => by positivity) hsum_bound
 
 /-! ### Scaffolding for the operator-theoretic Hilbert-Schmidt criterion
 
@@ -117,7 +260,7 @@ remaining op-norm-convergence half is the genuine analytic content that needs
 
 section HSCriterion
 
-variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] [CompleteSpace H]
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H]
 variable {ι : Type*} (b : HilbertBasis ι ℝ H) (T : H →L[ℝ] H)
 
 /-- The rank-1 operator `x ↦ ⟨bᵢ, x⟩ • T(bᵢ)`. -/
@@ -171,6 +314,8 @@ private theorem hasSum_rank1Op_apply (x : H) :
     HasSum (fun i : ι => rank1Op b T i x) (T x) := by
   simpa [rank1Op_apply, HilbertBasis.repr_apply_apply] using
     (b.hasSum_repr x).mapL T
+
+variable [CompleteSpace H]
 
 /-- The truncation residual is the `tsum` over the complement. -/
 private theorem sub_truncatedOp_apply_eq_tsum (S : Finset ι) (x : H) :
