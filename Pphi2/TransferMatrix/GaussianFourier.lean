@@ -605,6 +605,55 @@ private theorem T_mul_apply_schwartz
           (liftL2_ℝC Ns (s.toLp 2))) := by
   rfl
 
+/-! ### Step 6 helpers: Schwartz base-case packaging
+
+The next-and-final analytic step in the
+`fourier_representation_convolution` proof is the equality
+`T_conv s = T_mul s` for Schwartz `s` (the "Schwartz base case" of the
+CLM-firewall density argument). The helpers below are the Schwartz-side
+packaging that the codex attempts kept stalling on. -/
+
+/-- The complex Schwartz lift of a real Schwartz function: post-compose with
+the real-to-complex CLM. -/
+private noncomputable def schwartzComplexLift
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    𝓢(EuclideanSpace ℝ (Fin Ns), ℂ) :=
+  s.postcompCLM (Complex.ofRealCLM)
+
+omit [NeZero Ns] in
+/-- Pointwise: the complex Schwartz lift evaluates to `(s w : ℂ)`. -/
+private theorem schwartzComplexLift_apply
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ))
+    (w : EuclideanSpace ℝ (Fin Ns)) :
+    (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ) w = (s w : ℂ) := rfl
+
+omit [NeZero Ns] in
+/-- The Schwartz-side `liftL2_ℝC` identification. As elements of `Lp ℂ 2`:
+
+    `liftL2_ℝC (s.toLp 2) = (schwartzComplexLift s).toLp 2`.
+
+This is one of the two Schwartz-base-case Lp identifications that the
+previous codex attempts could not push through smoothly. With this lemma in
+hand, the convolution-side analogue plus
+`SchwartzMap.toLp_fourier_eq` and the textbook bridge axiom
+`fourierTransform_lp_eq_fourierIntegral` close the Schwartz base case. -/
+private theorem liftL2_ℝC_schwartz_eq
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    liftL2_ℝC Ns (s.toLp 2) = (schwartzComplexLift Ns s).toLp 2 := by
+  apply Subtype.coe_injective
+  apply MeasureTheory.AEEqFun.ext
+  have h_lift := liftL2_ℝC_spec (Ns := Ns) (s.toLp 2)
+  have h_s : (s.toLp 2 : EuclideanSpace ℝ (Fin Ns) → ℝ) =ᵐ[volume] s :=
+    SchwartzMap.coeFn_toLp s 2 _
+  have h_sC :
+      ((schwartzComplexLift Ns s).toLp 2 : EuclideanSpace ℝ (Fin Ns) → ℂ)
+        =ᵐ[volume] schwartzComplexLift Ns s :=
+    SchwartzMap.coeFn_toLp (schwartzComplexLift Ns s) 2 _
+  filter_upwards [h_lift, h_s, h_sC] with w hw hsw hsCw
+  change (liftL2_ℝC Ns (s.toLp 2) : EuclideanSpace ℝ (Fin Ns) → ℂ) w =
+       ((schwartzComplexLift Ns s).toLp 2 : EuclideanSpace ℝ (Fin Ns) → ℂ) w
+  rw [hw, hsCw, schwartzComplexLift_apply, hsw]
+
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
