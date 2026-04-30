@@ -444,6 +444,167 @@ private axiom fourierTransform_lp_eq_fourierIntegral
     Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ (hL2.toLp h)
       =ᵐ[(volume : Measure (EuclideanSpace ℝ (Fin Ns)))] 𝓕 h
 
+private abbrev gEuclidean
+    (g : SpatialField Ns → ℝ) :
+    EuclideanSpace ℝ (Fin Ns) → ℝ :=
+  fun v => g ((WithLp.equiv 2 _) v)
+
+omit [NeZero Ns] in
+private theorem gEuclidean_memLp
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    MemLp (gEuclidean Ns g) 1
+      (volume : Measure (EuclideanSpace ℝ (Fin Ns))) := by
+  simpa [gEuclidean] using
+    hg.comp_measurePreserving (PiLp.volume_preserving_ofLp (ι := Fin Ns))
+
+/-- The real-to-complex lift on Euclidean `L²`. -/
+private noncomputable def liftL2_ℝC :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2 →L[ℝ]
+      Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+  ContinuousLinearMap.compLpL (p := (2 : ENNReal))
+    (μ := (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
+    Complex.ofRealCLM
+
+omit [NeZero Ns] in
+private theorem liftL2_ℝC_spec
+    (f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2) :
+    liftL2_ℝC Ns f =ᵐ[(volume : Measure (EuclideanSpace ℝ (Fin Ns)))]
+      fun w => ((f w : ℝ) : ℂ) := by
+  simpa [liftL2_ℝC] using
+    (ContinuousLinearMap.coeFn_compLpL
+      (p := (2 : ENNReal))
+      (μ := (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
+      Complex.ofRealCLM f)
+
+/-- The Euclidean `L²` Fourier transform viewed as a real continuous linear map. -/
+private noncomputable def fourierRealCLM :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 →L[ℝ]
+      Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+  LinearMap.mkContinuous
+    { toFun := fun f => Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ f
+      map_add' := by intro f h; simp
+      map_smul' := by
+        intro c f
+        simpa using
+          (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ).map_smul (c : ℂ) f }
+    1
+    (by
+      intro f
+      simp [MeasureTheory.Lp.norm_fourier_eq (E := EuclideanSpace ℝ (Fin Ns)) (F := ℂ) f])
+
+omit [NeZero Ns] in
+private theorem gHat_memLp_top
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    MemLp (gHat Ns g) ⊤
+      (volume : Measure (EuclideanSpace ℝ (Fin Ns))) := by
+  have hcont : Continuous (gHat Ns g) := ghat_continuous (Ns := Ns) g hg
+  refine memLp_top_of_bound
+    hcont.aestronglyMeasurable
+    (max 1 (∫ v : EuclideanSpace ℝ (Fin Ns), ‖(g ((WithLp.equiv 2 _) v) : ℂ)‖))
+    (ae_of_all _ fun w => ?_)
+  exact
+    (VectorFourier.norm_fourierIntegral_le_integral_norm _ _ _ _ w).trans (le_max_right _ _)
+
+private noncomputable def gHatLp
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ ⊤ :=
+  (gHat_memLp_top (Ns := Ns) g hg).toLp (gHat Ns g)
+
+set_option maxHeartbeats 800000 in
+-- Elaborating the complex-valued L∞ multiplier follows the same heavy Holder path
+-- as `fourierWeightCLM`.
+private noncomputable def fourierWeightComplexCLM
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 →L[ℂ]
+      Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 := by
+  let p : ENNReal := ⊤
+  let q : ENNReal := 2
+  let r : ENNReal := 2
+  let T :
+      Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ ⊤ →L[ℂ]
+        (Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 →L[ℂ]
+          Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) :=
+    ContinuousLinearMap.holderL
+      (μ := (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
+      (p := p) (q := q) (r := r)
+      (B := ContinuousLinearMap.lsmul ℂ ℂ)
+  exact T (gHatLp Ns g hg)
+
+omit [NeZero Ns] in
+private theorem fourierWeightComplexCLM_spec
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) :
+    fourierWeightComplexCLM Ns g hg h =ᵐ[volume]
+      fun w => (gHat Ns g w) * h w := by
+  have hholder :
+      fourierWeightComplexCLM Ns g hg h =ᵐ[volume]
+        fun w =>
+          (((gHat_memLp_top (Ns := Ns) g hg).toLp (gHat Ns g) :
+            Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ ⊤) w) • h w := by
+    simpa [fourierWeightComplexCLM, gHatLp] using
+      (ContinuousLinearMap.coeFn_holder
+        (B := ContinuousLinearMap.lsmul ℂ ℂ)
+        (r := (2 : ENNReal))
+        (gHatLp Ns g hg) h)
+  have hcoeff :
+      (((gHat_memLp_top (Ns := Ns) g hg).toLp (gHat Ns g) :
+        Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ ⊤)) =ᵐ[volume] gHat Ns g :=
+    MemLp.coeFn_toLp (gHat_memLp_top (Ns := Ns) g hg)
+  filter_upwards [hholder, hcoeff] with w hw hw'
+  simpa [hw', smul_eq_mul] using hw
+
+/-- Complex Fourier weight multiplication, regarded as a real continuous linear map. -/
+private noncomputable def fourierWeightComplexRealCLM
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 →L[ℝ]
+      Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+  LinearMap.mkContinuous
+    { toFun := fun h => fourierWeightComplexCLM Ns g hg h
+      map_add' := by intro h₁ h₂; simp
+      map_smul' := by
+        intro c h
+        simpa using (fourierWeightComplexCLM Ns g hg).map_smul (c : ℂ) h }
+    ‖fourierWeightComplexCLM Ns g hg‖
+    (fun h => (fourierWeightComplexCLM Ns g hg).le_opNorm h)
+
+/-- Fourier-side convolution operator on Euclidean real `L²`. -/
+private noncomputable def T_conv
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2 →L[ℝ]
+      Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+  (fourierRealCLM Ns).comp <|
+    (liftL2_ℝC Ns).comp <|
+      convCLM (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg)
+
+/-- Fourier-side multiplication operator on Euclidean real `L²`. -/
+private noncomputable def T_mul
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2 →L[ℝ]
+      Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+  (fourierWeightComplexRealCLM Ns g hg).comp <|
+    (fourierRealCLM Ns).comp <|
+      liftL2_ℝC Ns
+
+omit [NeZero Ns] in
+private theorem T_conv_apply_schwartz
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    T_conv Ns g hg (s.toLp 2) =
+      Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ
+        (liftL2_ℝC Ns
+          (convCLM (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg) (s.toLp 2))) := by
+  rfl
+
+omit [NeZero Ns] in
+private theorem T_mul_apply_schwartz
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    T_mul Ns g hg (s.toLp 2) =
+      fourierWeightComplexCLM Ns g hg
+        (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ
+          (liftL2_ℝC Ns (s.toLp 2))) := by
+  rfl
+
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
@@ -649,6 +810,39 @@ theorem gaussian_conv_strictlyPD :
   rw [hG_eq]
   convert fourier_gaussian_pos (by norm_num : (0 : ℝ) < 1/2) w using 3
   simp [ofReal_ofNat]
+
+/-!
+Status note for `fourier_representation_convolution` (2026-04-30):
+
+Proved helpers left in this file:
+- `gEuclidean_memLp`
+- `liftL2_ℝC`
+- `liftL2_ℝC_spec`
+- `fourierRealCLM`
+- `gHat_memLp_top`
+- `gHatLp`
+- `fourierWeightComplexCLM`
+- `fourierWeightComplexCLM_spec`
+- `fourierWeightComplexRealCLM`
+- `T_conv`
+- `T_mul`
+- `T_conv_apply_schwartz`
+- `T_mul_apply_schwartz`
+
+Remaining gap:
+The file still needs the Schwartz base-case equality
+`T_conv_eq_T_mul_schwartz`, then the dense-range extension
+`T_conv_eq_T_mul`, and finally the Plancherel scalar identity that replaces
+the axiom `fourier_representation_convolution`. The obstruction is the
+Lp-representative comparison step that combines
+`fourierTransform_lp_eq_fourierIntegral`,
+`Real.fourier_smul_convolution_eq`, and `SchwartzMap.toLp_fourier_eq`
+into a single equality in `Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2`.
+Concretely, the missing API-level bridge is an ergonomic way to turn the
+a.e. pointwise identity from `fourierTransform_lp_eq_fourierIntegral`
+together with `fourierWeightComplexCLM_spec` into equality of `Lp`
+elements without redoing the `MemLp.toLp_congr`/multiplier packaging by hand.
+-/
 
 end Pphi2
 
