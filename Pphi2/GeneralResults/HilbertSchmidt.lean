@@ -164,6 +164,127 @@ private theorem truncatedOp_isCompactOperator (S : Finset ι) :
     rw [truncatedOp, Finset.sum_insert ha]
     exact (rank1Op_isCompactOperator b T a).add (by simpa [truncatedOp] using ih)
 
+variable (hT_summable : Summable (fun i : ι => ‖T (b i)‖ ^ 2))
+
+/-- The full Hilbert-basis expansion of `T x` in rank-1 pieces. -/
+private theorem hasSum_rank1Op_apply (x : H) :
+    HasSum (fun i : ι => rank1Op b T i x) (T x) := by
+  simpa [rank1Op_apply, HilbertBasis.repr_apply_apply] using
+    (b.hasSum_repr x).mapL T
+
+/-- The truncation residual is the `tsum` over the complement. -/
+private theorem sub_truncatedOp_apply_eq_tsum (S : Finset ι) (x : H) :
+    (T - truncatedOp b T S) x =
+      ∑' i : {i // i ∉ S}, (inner ℝ (b i.1) x) • T (b i.1) := by
+  have hsummable : Summable (fun i : ι => rank1Op b T i x) :=
+    (hasSum_rank1Op_apply b T x).summable
+  have hsum := hsummable.sum_add_tsum_subtype_compl S
+  have htsum : ∑' i : ι, rank1Op b T i x = T x :=
+    (hasSum_rank1Op_apply b T x).tsum_eq
+  change T x - truncatedOp b T S x = _
+  rw [sub_eq_iff_eq_add']
+  rw [← htsum]
+  simpa [truncatedOp, rank1Op_apply, add_comm, add_left_comm, add_assoc] using hsum.symm
+
+/-- Pointwise Bessel-tail bound for the truncation residual. -/
+private theorem norm_sub_truncatedOp_apply_le
+    (hT_summable : Summable (fun i : ι => ‖T (b i)‖ ^ 2)) (S : Finset ι) (x : H) :
+    ‖(T - truncatedOp b T S) x‖ ≤
+      Real.sqrt (∑' i : {i // i ∉ S}, ‖T (b i.1)‖ ^ 2) * ‖x‖ := by
+  let f : {i // i ∉ S} → ℝ := fun i => ‖inner ℝ (b i.1) x‖
+  let g : {i // i ∉ S} → ℝ := fun i => ‖T (b i.1)‖
+  have hf_summable : Summable (fun i : {i // i ∉ S} => f i ^ 2) := by
+    exact ((b.orthonormal.inner_products_summable x).subtype _)
+  have hg_summable : Summable (fun i : {i // i ∉ S} => g i ^ 2) := by
+    simpa [g] using Summable.subtype hT_summable {i : ι | i ∉ S}
+  have hf_summable_rpow : Summable (fun i : {i // i ∉ S} => f i ^ (2 : ℝ)) := by
+    simpa [Real.rpow_natCast] using hf_summable
+  have hg_summable_rpow : Summable (fun i : {i // i ∉ S} => g i ^ (2 : ℝ)) := by
+    simpa [Real.rpow_natCast] using hg_summable
+  have hholder :=
+    Real.summable_and_inner_le_Lp_mul_Lq_tsum_of_nonneg HolderConjugate.two_two
+      (fun i => norm_nonneg _)
+      (fun i => norm_nonneg _)
+      hf_summable_rpow
+      hg_summable_rpow
+  have hfg :
+      ∑' i : {i // i ∉ S}, f i * g i ≤
+        Real.sqrt (∑' i : {i // i ∉ S}, f i ^ 2) *
+          Real.sqrt (∑' i : {i // i ∉ S}, g i ^ 2) := by
+    calc
+      ∑' i : {i // i ∉ S}, f i * g i
+        ≤ (∑' i : {i // i ∉ S}, f i ^ (2 : ℝ)) ^ (1 / (2 : ℝ)) *
+            (∑' i : {i // i ∉ S}, g i ^ (2 : ℝ)) ^ (1 / (2 : ℝ)) := hholder.2
+      _ = Real.sqrt (∑' i : {i // i ∉ S}, f i ^ 2) *
+            Real.sqrt (∑' i : {i // i ∉ S}, g i ^ 2) := by
+              simp [Real.sqrt_eq_rpow, one_div]
+  have hBessel :
+      ∑' i : {i // i ∉ S}, f i ^ 2 ≤ ‖x‖ ^ 2 := by
+    have hsplit := (b.orthonormal.inner_products_summable x).tsum_subtype_add_tsum_subtype_compl
+      {i : ι | i ∈ S}
+    calc
+      ∑' i : {i // i ∉ S}, f i ^ 2
+        ≤ ∑' i : {i // i ∈ S}, ‖inner ℝ (b i.1) x‖ ^ 2
+            + ∑' i : {i // i ∉ S}, ‖inner ℝ (b i.1) x‖ ^ 2 := by
+              exact le_add_of_nonneg_left (tsum_nonneg fun i => by positivity)
+      _ = ∑' i : ι, ‖inner ℝ (b i) x‖ ^ 2 := by
+            simpa [f] using hsplit
+      _ ≤ ‖x‖ ^ 2 := b.orthonormal.tsum_inner_products_le x
+  have hsqrt :
+      Real.sqrt (∑' i : {i // i ∉ S}, f i ^ 2) ≤ ‖x‖ := by
+    calc
+      Real.sqrt (∑' i : {i // i ∉ S}, f i ^ 2)
+        ≤ Real.sqrt (‖x‖ ^ 2) := Real.sqrt_le_sqrt hBessel
+      _ = ‖x‖ := by
+        rw [Real.sqrt_sq_eq_abs]
+        exact abs_of_nonneg (norm_nonneg _)
+  have hprod_summable : Summable (fun i : {i // i ∉ S} => f i * g i) := hholder.1
+  have hnorm_summable :
+      Summable (fun i : {i // i ∉ S} => ‖(inner ℝ (b i.1) x) • T (b i.1)‖) := by
+    simpa [f, g, norm_smul] using hprod_summable
+  have hnorm :
+      ‖∑' i : {i // i ∉ S}, (inner ℝ (b i.1) x) • T (b i.1)‖
+        ≤ ∑' i : {i // i ∉ S}, f i * g i := by
+    simpa [f, g, norm_smul] using (norm_tsum_le_tsum_norm hnorm_summable)
+  calc
+    ‖(T - truncatedOp b T S) x‖
+      = ‖∑' i : {i // i ∉ S}, (inner ℝ (b i.1) x) • T (b i.1)‖ := by
+          rw [sub_truncatedOp_apply_eq_tsum b T S x]
+    _ ≤ ∑' i : {i // i ∉ S}, f i * g i := hnorm
+    _ ≤ Real.sqrt (∑' i : {i // i ∉ S}, f i ^ 2) *
+          Real.sqrt (∑' i : {i // i ∉ S}, g i ^ 2) := hfg
+    _ ≤ Real.sqrt (∑' i : {i // i ∉ S}, ‖T (b i.1)‖ ^ 2) * ‖x‖ := by
+          simpa [g, mul_comm] using
+            (mul_le_mul_of_nonneg_right hsqrt (Real.sqrt_nonneg (∑' i : {i // i ∉ S}, g i ^ 2)))
+
+/-- Operator-norm control by the `ℓ²` tail. -/
+private theorem opNorm_sub_truncatedOp_le
+    (hT_summable : Summable (fun i : ι => ‖T (b i)‖ ^ 2)) (S : Finset ι) :
+    ‖T - truncatedOp b T S‖ ≤
+      Real.sqrt (∑' i : {i // i ∉ S}, ‖T (b i.1)‖ ^ 2) := by
+  refine ContinuousLinearMap.opNorm_le_bound _ (Real.sqrt_nonneg _) ?_
+  intro x
+  exact norm_sub_truncatedOp_apply_le b T hT_summable S x
+
+/-- The finite-rank truncations converge to `T` in operator norm. -/
+private theorem tendsto_truncatedOp
+    (hT_summable : Summable (fun i : ι => ‖T (b i)‖ ^ 2)) :
+    Filter.Tendsto (fun S : Finset ι => truncatedOp b T S) Filter.atTop (nhds T) := by
+  rw [tendsto_iff_norm_sub_tendsto_zero]
+  have htail :
+      Filter.Tendsto
+        (fun S : Finset ι => ∑' i : {i // i ∉ S}, ‖T (b i.1)‖ ^ 2)
+        Filter.atTop (nhds 0) := by
+    simpa using tendsto_tsum_compl_atTop_zero (fun i : ι => ‖T (b i)‖ ^ 2)
+  have hsqrt :
+      Filter.Tendsto
+        (fun S : Finset ι => Real.sqrt (∑' i : {i // i ∉ S}, ‖T (b i.1)‖ ^ 2))
+        Filter.atTop (nhds 0) := by
+    simpa using Real.continuous_sqrt.continuousAt.tendsto.comp htail
+  refine squeeze_zero (fun S => norm_nonneg _) ?_ hsqrt
+  intro S
+  simpa [norm_sub_rev] using opNorm_sub_truncatedOp_le b T hT_summable S
+
 end HSCriterion
 
 /-- **Hilbert-Schmidt criterion for compactness.**
@@ -187,12 +308,19 @@ closure on bounded sets, so `T_S` is compact (proved as
 `truncatedOp_isCompactOperator`); the operator-norm convergence half (the
 Bessel residual bound combined with a tail-of-summable argument) remains as
 the sole open analytic step. -/
-axiom isCompactOperator_of_basis_norm_summable
+theorem isCompactOperator_of_basis_norm_summable
     {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] [CompleteSpace H]
     {ι : Type*} (b : HilbertBasis ι ℝ H)
     (T : H →L[ℝ] H)
-    (_hT_summable : Summable (fun i : ι => ‖T (b i)‖ ^ 2)) :
-    IsCompactOperator T
+    (hT_summable : Summable (fun i : ι => ‖T (b i)‖ ^ 2)) :
+    IsCompactOperator T := by
+  refine isCompactOperator_of_tendsto
+    (F := fun S : Finset ι => truncatedOp b T S)
+    (f := T)
+    (tendsto_truncatedOp b T hT_summable) ?_
+  filter_upwards [Filter.Eventually.of_forall (fun S : Finset ι =>
+    truncatedOp_isCompactOperator b T S)] with S hS
+  exact hS
 
 /-! ## Convolution-to-standard-form bridge (proved)
 
