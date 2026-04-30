@@ -719,6 +719,41 @@ private theorem liftL2_ℝC_convCLM_schwartz_eq_toLp
   filter_upwards [h_lhs, h_rhs] with w hl hr
   exact hl.trans hr.symm
 
+/-- The complex lift of the Euclidean function `g_E`, used as the `f₁` argument
+in `Real.fourier_smul_convolution_eq`. -/
+private noncomputable def gEuclideanComplex (g : SpatialField Ns → ℝ) :
+    EuclideanSpace ℝ (Fin Ns) → ℂ :=
+  fun w => ((gEuclidean Ns g w : ℝ) : ℂ)
+
+omit [NeZero Ns] in
+/-- Pointwise: the lifted real convolution equals the complex convolution of the
+real-to-complex lifts. -/
+private theorem realConvComplexLift_eq_complex_convolution
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) (w : EuclideanSpace ℝ (Fin Ns)) :
+    ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ) =
+      MeasureTheory.convolution (gEuclideanComplex Ns g)
+        (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ)
+        (ContinuousLinearMap.lsmul ℂ ℂ) volume w := by
+  -- Both sides equal `∫ t, (g_E t : ℂ) * (s (w - t) : ℂ) dt`.
+  unfold realConv MeasureTheory.convolution
+  -- Use `integral_ofReal` to push `(· : ℂ)` inside the LHS integral.
+  rw [show (((∫ (t : EuclideanSpace ℝ (Fin Ns)),
+              ((ContinuousLinearMap.lsmul ℝ ℝ) (gEuclidean Ns g t))
+                ((s : EuclideanSpace ℝ (Fin Ns) → ℝ) (w - t))) : ℝ) : ℂ) =
+        ∫ (t : EuclideanSpace ℝ (Fin Ns)),
+          (((((ContinuousLinearMap.lsmul ℝ ℝ) (gEuclidean Ns g t))
+            ((s : EuclideanSpace ℝ (Fin Ns) → ℝ) (w - t))) : ℝ) : ℂ)
+        from (integral_ofReal (𝕜 := ℂ)).symm]
+  apply integral_congr_ae
+  filter_upwards with t
+  -- Pointwise:
+  -- LHS: ((g_E t * s (w - t) : ℝ) : ℂ) = (g_E t : ℂ) * (s (w - t) : ℂ)
+  -- RHS: (lsmul ℂ ℂ) (gEuclideanComplex Ns g t) (schwartzComplexLift Ns s (w - t))
+  --      = (g_E t : ℂ) * (s (w - t) : ℂ)
+  simp [ContinuousLinearMap.lsmul_apply, gEuclideanComplex,
+    schwartzComplexLift, Complex.ofReal_mul]
+
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
