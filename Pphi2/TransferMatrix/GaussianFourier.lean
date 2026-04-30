@@ -816,6 +816,78 @@ private theorem realConvComplexLift_memLp_one
   exact memLp_one_iff_integrable.mpr h_int
 
 set_option maxHeartbeats 800000 in
+-- LHS coercion identification (heavy elaboration: chains 5 a.e. equalities).
+/-- LHS coercion: `(T_conv s.toLp 2 : ℝⁿ → ℂ) =ᵐ fun ξ => 𝓕 g_C ξ * 𝓕 s_C ξ`. -/
+private theorem T_conv_apply_schwartz_coeFn_ae
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) (hg_cont : Continuous g)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    (T_conv Ns g hg (s.toLp 2) : EuclideanSpace ℝ (Fin Ns) → ℂ) =ᵐ[volume]
+    fun ξ => (𝓕 (gEuclideanComplex Ns g)) ξ *
+      (𝓕 (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ)) ξ := by
+  rw [T_conv_apply_schwartz Ns g hg s,
+      liftL2_ℝC_convCLM_schwartz_eq_toLp (Ns := Ns) g hg s]
+  refine (fourierTransform_lp_eq_fourierIntegral Ns
+    (realConvComplexLift_memLp_one (Ns := Ns) g hg s)
+    (realConvComplexLift_memLp_two (Ns := Ns) g hg s)).trans ?_
+  apply Filter.Eventually.of_forall
+  intro ξ
+  have h_eq : (fun w => ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ))
+              = MeasureTheory.convolution (gEuclideanComplex Ns g)
+                  (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ)
+                  (ContinuousLinearMap.lsmul ℂ ℂ) volume :=
+    funext fun w => realConvComplexLift_eq_complex_convolution (Ns := Ns) g hg s w
+  rw [h_eq]
+  have hg_C_int := gEuclideanComplex_integrable (Ns := Ns) g hg
+  have hg_C_cont := gEuclideanComplex_continuous (Ns := Ns) g hg_cont
+  have hs_C_int := schwartzComplexLift_integrable (Ns := Ns) s
+  have hs_C_cont : Continuous
+      (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ) :=
+    (schwartzComplexLift Ns s).continuous
+  have := Real.fourier_smul_convolution_eq (E := EuclideanSpace ℝ (Fin Ns))
+    (F₁ := ℂ) hg_C_int hs_C_int hg_C_cont hs_C_cont ξ
+  simpa [smul_eq_mul] using this
+
+set_option maxHeartbeats 800000 in
+-- RHS coercion identification.
+/-- RHS coercion: `(T_mul s.toLp 2 : ℝⁿ → ℂ) =ᵐ fun ξ => 𝓕 g_C ξ * 𝓕 s_C ξ`. -/
+private theorem T_mul_apply_schwartz_coeFn_ae
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    (T_mul Ns g hg (s.toLp 2) : EuclideanSpace ℝ (Fin Ns) → ℂ) =ᵐ[volume]
+    fun ξ => (𝓕 (gEuclideanComplex Ns g)) ξ *
+      (𝓕 (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ)) ξ := by
+  -- Define the Schwartz Fourier `s_C^ : 𝓢(_, ℂ)` explicitly so the
+  -- final equality of underlying ℂ-functions has a clean Schwartz form.
+  set s_C_hat : 𝓢(EuclideanSpace ℝ (Fin Ns), ℂ) := 𝓕 (schwartzComplexLift Ns s)
+  have h_fourier : Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ
+              ((schwartzComplexLift Ns s).toLp 2)
+            = s_C_hat.toLp 2 := SchwartzMap.toLp_fourier_eq _
+  rw [T_mul_apply_schwartz Ns g hg s, liftL2_ℝC_schwartz_eq Ns s, h_fourier]
+  -- Now: fourierWeightComplexCLM g hg (s_C_hat.toLp 2)
+  have h_spec := fourierWeightComplexCLM_spec (Ns := Ns) g hg (s_C_hat.toLp 2)
+  have h_inner :
+      ((s_C_hat.toLp 2 : EuclideanSpace ℝ (Fin Ns) → ℂ))
+        =ᵐ[volume] s_C_hat :=
+    SchwartzMap.coeFn_toLp s_C_hat 2 _
+  filter_upwards [h_spec, h_inner] with w hw hwc
+  rw [hw, hwc]
+  -- gHat Ns g w = 𝓕 (gEuclideanComplex Ns g) w  (rfl, since the casts agree).
+  rfl
+
+/-- **Step 6**: the Schwartz base case `T_conv s = T_mul s` for the
+CLM-firewall density argument. -/
+private theorem T_conv_eq_T_mul_schwartz
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) (hg_cont : Continuous g)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    T_conv Ns g hg (s.toLp 2) = T_mul Ns g hg (s.toLp 2) := by
+  apply Subtype.coe_injective
+  apply MeasureTheory.AEEqFun.ext
+  filter_upwards [T_conv_apply_schwartz_coeFn_ae (Ns := Ns) g hg hg_cont s,
+                  T_mul_apply_schwartz_coeFn_ae (Ns := Ns) g hg s]
+    with w hL hR
+  rw [hL]; exact hR.symm
+
+set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
   `⟨f, g⋆f⟩_ℝ = ∫ Re(ĝ_ℂ(w)) · ‖f̂_ℂ(w)‖² dw`
