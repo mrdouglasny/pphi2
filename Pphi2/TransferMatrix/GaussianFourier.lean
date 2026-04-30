@@ -62,6 +62,71 @@ private theorem fourier_ae_nonzero_of_nonzero
 
 /-! ## Transport from real `L²(SpatialField)` to complex `L²(EuclideanSpace)` -/
 
+/-- Pullback along `WithLp.ofLp : EuclideanSpace → SpatialField` as a real `L²` isometry. -/
+private noncomputable def toEuclideanRealL2 :
+    L2SpatialField Ns →ₗᵢ[ℝ] Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2 :=
+  Lp.compMeasurePreservingₗᵢ (𝕜 := ℝ) (p := (2 : ENNReal))
+    (WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns)
+    (PiLp.volume_preserving_ofLp (ι := Fin Ns))
+
+/-- Pullback along `WithLp.toLp : SpatialField → EuclideanSpace` as a real `L²` isometry. -/
+private noncomputable def fromEuclideanRealL2 :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2 →ₗᵢ[ℝ] L2SpatialField Ns :=
+  Lp.compMeasurePreservingₗᵢ (𝕜 := ℝ) (p := (2 : ENNReal))
+    (WithLp.toLp 2 : SpatialField Ns → EuclideanSpace ℝ (Fin Ns))
+    (PiLp.volume_preserving_toLp (ι := Fin Ns))
+
+omit [NeZero Ns] in
+private theorem fromEuclideanRealL2_toEuclideanRealL2
+    (f : L2SpatialField Ns) :
+    fromEuclideanRealL2 Ns (toEuclideanRealL2 Ns f) = f := by
+  change
+    MeasureTheory.Lp.compMeasurePreserving
+      (WithLp.toLp 2 : SpatialField Ns → EuclideanSpace ℝ (Fin Ns))
+      (PiLp.volume_preserving_toLp (ι := Fin Ns))
+      (MeasureTheory.Lp.compMeasurePreserving
+        (WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns)
+        (PiLp.volume_preserving_ofLp (ι := Fin Ns)) f) = f
+  rw [← MeasureTheory.Lp.compMeasurePreserving_comp_apply
+    (g := f)
+    (f := (WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns))
+    (hf := PiLp.volume_preserving_ofLp (ι := Fin Ns))
+    (f' := (WithLp.toLp 2 : SpatialField Ns → EuclideanSpace ℝ (Fin Ns)))
+    (hf' := PiLp.volume_preserving_toLp (ι := Fin Ns))]
+  have hfun :
+      (WithLp.ofLp ∘ WithLp.toLp 2 : SpatialField Ns → SpatialField Ns) = id := by
+    funext x
+    rfl
+  simpa [hfun] using
+    (MeasureTheory.Lp.compMeasurePreserving_id_apply
+      (E := ℝ) (p := (2 : ENNReal)) f)
+
+omit [NeZero Ns] in
+private theorem toEuclideanRealL2_fromEuclideanRealL2
+    (f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2) :
+    toEuclideanRealL2 Ns (fromEuclideanRealL2 Ns f) = f := by
+  change
+    MeasureTheory.Lp.compMeasurePreserving
+      (WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns)
+      (PiLp.volume_preserving_ofLp (ι := Fin Ns))
+      (MeasureTheory.Lp.compMeasurePreserving
+        (WithLp.toLp 2 : SpatialField Ns → EuclideanSpace ℝ (Fin Ns))
+        (PiLp.volume_preserving_toLp (ι := Fin Ns)) f) = f
+  rw [← MeasureTheory.Lp.compMeasurePreserving_comp_apply
+    (g := f)
+    (f := (WithLp.toLp 2 : SpatialField Ns → EuclideanSpace ℝ (Fin Ns)))
+    (hf := PiLp.volume_preserving_toLp (ι := Fin Ns))
+    (f' := (WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns))
+    (hf' := PiLp.volume_preserving_ofLp (ι := Fin Ns))]
+  have hfun :
+      (WithLp.toLp 2 ∘ WithLp.ofLp :
+        EuclideanSpace ℝ (Fin Ns) → EuclideanSpace ℝ (Fin Ns)) = id := by
+    funext x
+    rfl
+  simpa [hfun] using
+    (MeasureTheory.Lp.compMeasurePreserving_id_apply
+      (E := ℝ) (p := (2 : ENNReal)) f)
+
 /-- Real-to-complex embedding on `L²(SpatialField Ns)`. -/
 private noncomputable def toComplexSpatialL2CLM :
     L2SpatialField Ns →L[ℝ] Lp (α := SpatialField Ns) ℂ 2 :=
@@ -183,6 +248,171 @@ private theorem fHat_continuous :
 
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
+omit [NeZero Ns] in
+/-- The Fourier transform of `g_ℂ` (the complex-valued lift of `g`) is continuous.
+Needed for measurability of the Fourier representation integrand. -/
+private theorem ghat_continuous
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Continuous (𝓕 (fun (v : EuclideanSpace ℝ (Fin Ns)) =>
+      (g ((WithLp.equiv 2 _) v) : ℂ))) := by
+  set g_ℂ : EuclideanSpace ℝ (Fin Ns) → ℂ := fun v => (g ((WithLp.equiv 2 _) v) : ℂ)
+  have hg_int : Integrable g (volume : Measure (SpatialField Ns)) :=
+    memLp_one_iff_integrable.mp hg
+  have hmp : MeasurePreserving (WithLp.equiv 2 (SpatialField Ns))
+      (volume : Measure (EuclideanSpace ℝ (Fin Ns)))
+      (volume : Measure (SpatialField Ns)) :=
+    PiLp.volume_preserving_ofLp (ι := Fin Ns)
+  have h1 : Integrable (g ∘ (WithLp.equiv 2 _))
+      (volume : Measure (EuclideanSpace ℝ (Fin Ns))) :=
+    hmp.integrable_comp_of_integrable hg_int
+  have h_g_int : Integrable g_ℂ volume := h1.ofReal
+  exact VectorFourier.fourierIntegral_continuous Real.continuous_fourierChar
+    continuous_inner h_g_int
+
+private abbrev gHatReC
+    (g : SpatialField Ns → ℝ) :
+    EuclideanSpace ℝ (Fin Ns) → ℂ :=
+  fun w => ((gHat Ns g w).re : ℂ)
+
+omit [NeZero Ns] in
+private theorem gHatRe_bound
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    ∀ w, ‖gHatReC Ns g w‖ ≤
+      max 1 (∫ v : EuclideanSpace ℝ (Fin Ns),
+        ‖(g ((WithLp.equiv 2 _) v) : ℂ)‖) := by
+  intro w
+  have hnorm :
+      ‖gHat Ns g w‖ ≤
+        ∫ v : EuclideanSpace ℝ (Fin Ns), ‖(g ((WithLp.equiv 2 _) v) : ℂ)‖ :=
+    VectorFourier.norm_fourierIntegral_le_integral_norm _ _ _ _ w
+  calc
+    ‖gHatReC Ns g w‖ = |(gHat Ns g w).re| := by
+      simp [gHatReC, Real.norm_eq_abs]
+    _ ≤ ‖gHat Ns g w‖ := abs_re_le_norm _
+    _ ≤ max 1 (∫ v : EuclideanSpace ℝ (Fin Ns), ‖(g ((WithLp.equiv 2 _) v) : ℂ)‖) :=
+      hnorm.trans (le_max_right _ _)
+
+omit [NeZero Ns] in
+private theorem gHatRe_memLp_top
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    MemLp (gHatReC Ns g) ⊤
+      (volume : Measure (EuclideanSpace ℝ (Fin Ns))) := by
+  have hcont : Continuous (gHatReC Ns g) :=
+    continuous_ofReal.comp (continuous_re.comp (ghat_continuous (Ns := Ns) g hg))
+  refine memLp_top_of_bound
+    hcont.aestronglyMeasurable
+    (max 1 (∫ v : EuclideanSpace ℝ (Fin Ns), ‖(g ((WithLp.equiv 2 _) v) : ℂ)‖))
+    (ae_of_all _ (gHatRe_bound (Ns := Ns) g hg))
+
+private noncomputable def gHatReLp
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ ⊤ :=
+  (gHatRe_memLp_top (Ns := Ns) g hg).toLp (gHatReC Ns g)
+
+set_option maxHeartbeats 800000 in
+-- Elaborating `holderL` and the induced `Lp`-multiplier can exceed the default budget.
+private noncomputable def fourierWeightCLM
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 →L[ℂ]
+      Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 := by
+  let p : ENNReal := ⊤
+  let q : ENNReal := 2
+  let r : ENNReal := 2
+  let T :
+      Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ ⊤ →L[ℂ]
+        (Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 →L[ℂ]
+          Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) :=
+    ContinuousLinearMap.holderL
+      (μ := (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
+      (p := p) (q := q) (r := r)
+      (B := ContinuousLinearMap.lsmul ℂ ℂ)
+  exact T (gHatReLp Ns g hg)
+
+set_option maxHeartbeats 800000 in
+omit [NeZero Ns] in
+private theorem fourierWeightCLM_spec
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) :
+    fourierWeightCLM Ns g hg h =ᵐ[volume]
+      fun w => (gHatReC Ns g w) • h w := by
+  have hholder :
+      fourierWeightCLM Ns g hg h =ᵐ[volume]
+        fun w =>
+          (((gHatRe_memLp_top (Ns := Ns) g hg).toLp (gHatReC Ns g) :
+            Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ ⊤) w) • h w := by
+    simpa [fourierWeightCLM, gHatReLp] using
+      (ContinuousLinearMap.coeFn_holder
+        (B := ContinuousLinearMap.lsmul ℂ ℂ)
+        (r := (2 : ENNReal))
+        (gHatReLp Ns g hg) h)
+  have hcoeff :
+      (((gHatRe_memLp_top (Ns := Ns) g hg).toLp (gHatReC Ns g) :
+        Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ ⊤)) =ᵐ[volume] gHatReC Ns g :=
+    MemLp.coeFn_toLp (gHatRe_memLp_top (Ns := Ns) g hg)
+  filter_upwards [hholder, hcoeff] with w hw hw'
+  simpa [hw'] using hw
+
+omit [NeZero Ns] in
+private theorem fourierQuadForm_continuous
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Continuous (fun h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 =>
+      (@inner ℂ _ _ h (fourierWeightCLM Ns g hg h)).re) :=
+  continuous_re.comp <|
+    Continuous.inner continuous_id ((fourierWeightCLM Ns g hg).continuous.comp continuous_id)
+
+set_option maxHeartbeats 800000 in
+omit [NeZero Ns] in
+private theorem fourierQuadForm_eq_integral
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) :
+    (@inner ℂ _ _ h (fourierWeightCLM Ns g hg h)).re =
+      ∫ w : EuclideanSpace ℝ (Fin Ns),
+        (gHat Ns g w).re * ‖(h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2 := by
+  rw [MeasureTheory.L2.inner_def]
+  change RCLike.re (∫ a : EuclideanSpace ℝ (Fin Ns),
+    inner ℂ (h a) ((fourierWeightCLM Ns g hg h) a) ∂volume) =
+      ∫ w : EuclideanSpace ℝ (Fin Ns),
+        (gHat Ns g w).re * ‖(h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2
+  have hre :
+      ∫ a : EuclideanSpace ℝ (Fin Ns),
+        RCLike.re (inner ℂ (h a) ((fourierWeightCLM Ns g hg h) a)) ∂volume =
+      RCLike.re (∫ a : EuclideanSpace ℝ (Fin Ns),
+        inner ℂ (h a) ((fourierWeightCLM Ns g hg h) a) ∂volume) :=
+    integral_re (MeasureTheory.L2.integrable_inner h (fourierWeightCLM Ns g hg h))
+  rw [← hre]
+  apply integral_congr_ae
+  filter_upwards [fourierWeightCLM_spec (Ns := Ns) g hg h] with w hw
+  rw [hw]
+  have hnorm :
+      ‖(h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2 =
+        ((h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w).re ^ 2 +
+        ((h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w).im ^ 2 := by
+    simpa [Complex.sq_norm, Complex.normSq_apply, sq, add_comm, add_left_comm, add_assoc] using
+      (Complex.sq_norm ((h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w))
+  rw [hnorm]
+  simp [gHatReC]
+  ring
+
+omit [NeZero Ns] in
+private theorem fourierIntegralQuadForm_continuous
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Continuous (fun f : L2SpatialField Ns =>
+      ∫ w : EuclideanSpace ℝ (Fin Ns),
+        (gHat Ns g w).re *
+        ‖(fHat Ns f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2) := by
+  have hEq :
+      (fun f : L2SpatialField Ns =>
+        (@inner ℂ _ _ (fHat Ns f) (fourierWeightCLM Ns g hg (fHat Ns f))).re) =
+      (fun f : L2SpatialField Ns =>
+        ∫ w : EuclideanSpace ℝ (Fin Ns),
+          (gHat Ns g w).re *
+          ‖(fHat Ns f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2) := by
+    funext f
+    exact fourierQuadForm_eq_integral (Ns := Ns) g hg (fHat Ns f)
+  exact hEq ▸ ((fourierQuadForm_continuous (Ns := Ns) g hg).comp (fHat_continuous (Ns := Ns)))
+
+set_option maxHeartbeats 800000 in
+-- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
   `⟨f, g⋆f⟩_ℝ = ∫ Re(ĝ_ℂ(w)) · ‖f̂_ℂ(w)‖² dw`
 
@@ -211,29 +441,6 @@ private axiom fourier_representation_convolution
     ∫ w : EuclideanSpace ℝ (Fin Ns),
       (gHat Ns g w).re *
       ‖(fHat Ns f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2
-
-set_option maxHeartbeats 800000 in
--- Gaussian Fourier integral convergence
-omit [NeZero Ns] in
-/-- The Fourier transform of g_C (the complex-valued lift of g) is continuous.
-Needed for measurability of the Fourier representation integrand. -/
-private theorem ghat_continuous
-    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
-    Continuous (𝓕 (fun (v : EuclideanSpace ℝ (Fin Ns)) =>
-      (g ((WithLp.equiv 2 _) v) : ℂ))) := by
-  set g_ℂ : EuclideanSpace ℝ (Fin Ns) → ℂ := fun v => (g ((WithLp.equiv 2 _) v) : ℂ)
-  have hg_int : Integrable g (volume : Measure (SpatialField Ns)) :=
-    memLp_one_iff_integrable.mp hg
-  have hmp : MeasurePreserving (WithLp.equiv 2 (SpatialField Ns))
-      (volume : Measure (EuclideanSpace ℝ (Fin Ns)))
-      (volume : Measure (SpatialField Ns)) :=
-    PiLp.volume_preserving_ofLp (ι := Fin Ns)
-  have h1 : Integrable (g ∘ (WithLp.equiv 2 _))
-      (volume : Measure (EuclideanSpace ℝ (Fin Ns))) :=
-    hmp.integrable_comp_of_integrable hg_int
-  have h_g_int : Integrable g_ℂ volume := h1.ofReal
-  exact VectorFourier.fourierIntegral_continuous Real.continuous_fourierChar
-    continuous_inner h_g_int
 
 omit [NeZero Ns] in
 /-- The integrand `Re(ĝ(w)) * ‖f̂(w)‖²` in the Fourier representation is integrable.
