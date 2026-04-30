@@ -35,16 +35,114 @@ holds a.e. in `x`, then `T` is a compact operator.
 **Reference**: Reed-Simon I, Theorem VI.23; Simon §III.2.
 -/
 
+import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
+import Mathlib.Analysis.InnerProductSpace.l2Space
 import Mathlib.MeasureTheory.Integral.Bochner.Set
 import Mathlib.MeasureTheory.Integral.Prod
+import Mathlib.MeasureTheory.Group.Prod
 import Mathlib.MeasureTheory.Measure.Haar.Basic
+import Mathlib.MeasureTheory.Measure.Haar.Unique
 import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.Analysis.Normed.Operator.Compact
 
 namespace Pphi2.GeneralResults
 
-open MeasureTheory Real
+open MeasureTheory Real Filter
+
+noncomputable section
+
+/-- The standard-form kernel associated to a convolution-form kernel:
+`Kstd x y = K x (x - y)`. -/
+private def standardKernelOfConvolution {G : Type*} [Sub G] (K : G → G → ℝ) : G → G → ℝ :=
+  fun x y => K x (x - y)
+
+/-- The change of variables `(x, y) ↦ (x, x - y)` preserves `μ.prod μ`. -/
+private theorem measurePreserving_standardKernelOfConvolution
+    {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
+    [MeasurableSpace G] [BorelSpace G] [T2Space G]
+    [LocallyCompactSpace G] [SecondCountableTopology G]
+    {μ : Measure G} [μ.IsAddHaarMeasure] :
+    MeasurePreserving (fun z : G × G => (z.1, z.1 - z.2)) (μ.prod μ) (μ.prod μ) := by
+  let ψ : G × G → G × G := fun z => (z.1, z.2 - z.1)
+  have hψ : MeasurePreserving ψ (μ.prod μ) (μ.prod μ) := by
+    simpa [ψ, sub_eq_add_neg] using (measurePreserving_prod_sub (μ := μ) (ν := μ))
+  have hneg : MeasurePreserving (fun z : G × G => (z.1, -z.2)) (μ.prod μ) (μ.prod μ) := by
+    exact MeasurePreserving.prod (MeasurePreserving.id (μ := μ))
+      (Measure.measurePreserving_neg (μ := μ))
+  convert hneg.comp hψ using 1
+  ext z
+  · rfl
+  · change z.1 - z.2 = -((z.2 - z.1))
+    abel
+
+/-- The standard-form kernel has the same `L²` membership as the convolution-form kernel. -/
+private theorem standardKernelOfConvolution_memLp
+    {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
+    [MeasurableSpace G] [BorelSpace G] [T2Space G]
+    [LocallyCompactSpace G] [SecondCountableTopology G]
+    {μ : Measure G} [μ.IsAddHaarMeasure]
+    (K : G → G → ℝ)
+    (hK : MemLp (Function.uncurry K) 2 (μ.prod μ)) :
+    MemLp (Function.uncurry (standardKernelOfConvolution K)) 2 (μ.prod μ) := by
+  change MemLp (fun z : G × G => K z.1 (z.1 - z.2)) 2 (μ.prod μ)
+  simpa [Function.comp, Function.uncurry] using
+    hK.comp_measurePreserving (measurePreserving_standardKernelOfConvolution (μ := μ))
+
+/-- For fixed `x`, the substitution `y = x - t` rewrites the convolution-form integral as the
+standard-form integral. -/
+private theorem convolution_integral_eq_standard_integral
+    {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
+    [MeasurableSpace G] [BorelSpace G] [T2Space G]
+    [LocallyCompactSpace G] [SecondCountableTopology G]
+    {μ : Measure G} [μ.IsAddHaarMeasure]
+    (K : G → G → ℝ) (f : G → ℝ) (x : G) :
+    (∫ t, K x t * f (x - t) ∂μ) = ∫ y, standardKernelOfConvolution K x y * f y ∂μ := by
+  let g : G → ℝ := fun y => standardKernelOfConvolution K x y * f y
+  have hmp : MeasurePreserving (fun y : G => x - y) μ μ :=
+    Measure.measurePreserving_sub_left (μ := μ) x
+  simpa [g, standardKernelOfConvolution, sub_sub_cancel] using
+    MeasurePreserving.integral_comp hmp (measurableEmbedding_subLeft x) g
+
+/-- The convolution-form a.e. representation of `T` rewrites to the standard form with
+`standardKernelOfConvolution K`. -/
+private theorem convolution_ae_eq_standard
+    {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
+    [MeasurableSpace G] [BorelSpace G] [T2Space G]
+    [LocallyCompactSpace G] [SecondCountableTopology G]
+    {μ : Measure G} [μ.IsAddHaarMeasure]
+    (K : G → G → ℝ)
+    (T : (Lp ℝ 2 μ) →L[ℝ] (Lp ℝ 2 μ))
+    (hT : ∀ f : Lp ℝ 2 μ,
+      (T f : G → ℝ) =ᵐ[μ] fun x => ∫ t, K x t * (f : G → ℝ) (x - t) ∂μ) :
+    ∀ f : Lp ℝ 2 μ,
+      (T f : G → ℝ) =ᵐ[μ] fun x =>
+        ∫ y, standardKernelOfConvolution K x y * (f : G → ℝ) y ∂μ := by
+  intro f
+  refine (hT f).trans ?_
+  exact Filter.Eventually.of_forall (fun x =>
+    convolution_integral_eq_standard_integral (μ := μ) K (f : G → ℝ) x)
+
+/-- Hilbert-Schmidt compactness in standard kernel form.
+
+Missing piece: this is where the ONB-of-the-base-space argument should live. Concretely, one needs
+to construct finite-rank truncations from a Hilbert basis of `L²(μ)`, prove operator-norm
+convergence using the Hilbert-Schmidt bound, and then apply
+`isCompactOperator_of_tendsto`. Mathlib has the compact-operator closure theorem and abstract
+Hilbert-basis API, but this file still lacks the product-space/Fubini + Parseval bridge needed to
+formalize the slice coefficients `aᵢ(x) = ⟪K(x, ·), eᵢ⟫`. -/
+private theorem integral_operator_l2_kernel_compact_standard
+    {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
+    [MeasurableSpace G] [BorelSpace G] [T2Space G]
+    [LocallyCompactSpace G] [SecondCountableTopology G]
+    {μ : Measure G} [μ.IsAddHaarMeasure]
+    (K : G → G → ℝ)
+    (hK : MemLp (Function.uncurry K) 2 (μ.prod μ))
+    (T : (Lp ℝ 2 μ) →L[ℝ] (Lp ℝ 2 μ))
+    (hT : ∀ f : Lp ℝ 2 μ,
+      (T f : G → ℝ) =ᵐ[μ] fun x => ∫ y, K x y * (f : G → ℝ) y ∂μ) :
+    IsCompactOperator T := by
+  sorry
 
 /-- **Hilbert-Schmidt compactness theorem (convolution-kernel form).**
 
@@ -72,6 +170,12 @@ theorem integral_operator_l2_kernel_compact
     (hT : ∀ f : Lp ℝ 2 μ,
       (T f : G → ℝ) =ᵐ[μ] fun x => ∫ t, K x t * (f : G → ℝ) (x - t) ∂μ) :
     IsCompactOperator T := by
-  sorry
+  exact integral_operator_l2_kernel_compact_standard
+    (standardKernelOfConvolution K)
+    (standardKernelOfConvolution_memLp (μ := μ) K hK)
+    T
+    (convolution_ae_eq_standard (μ := μ) K T hT)
+
+end
 
 end Pphi2.GeneralResults
