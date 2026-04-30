@@ -111,7 +111,8 @@ theorem cylinderIRLimit_exists
         ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n))))
       atTop (nhds (∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν))) := by
   -- Step 1: Uniform second moment bound from cylinderIR_uniform_second_moment
-  obtain ⟨C, q, hC, hq_cont, h_moment⟩ :=
+  -- (additive form `C₁ q(f)² + C₂`, derived from the exp-moment axiom)
+  obtain ⟨C₁, C₂, q, hC₁, hC₂, hq_cont, h_moment⟩ :=
     cylinderIR_uniform_second_moment Ls P mass hmass
   obtain ⟨K, Cexp, qexp, hK_pos, hCexp_pos, hqexp_cont, h_exp⟩ :=
     cylinderIR_uniform_exponential_moment Ls P mass hmass
@@ -161,7 +162,7 @@ theorem cylinderIRLimit_exists
       ∀ f : CylinderTestFunction Ls, ∃ C' : ℝ, ∀ n,
         ∫ ω : Configuration (CylinderTestFunction Ls), (ω f) ^ 2 ∂(νseq n) ≤ C' := by
     intro f
-    refine ⟨C * q f ^ 2, fun n => ?_⟩
+    refine ⟨C₁ * q f ^ 2 + C₂, fun n => ?_⟩
     haveI : Fact (0 < Lt (n + N0)) := hLt (n + N0)
     haveI : IsProbabilityMeasure (μ (n + N0)) := hμ_prob (n + N0)
     simpa [νseq] using
