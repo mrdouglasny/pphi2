@@ -99,6 +99,73 @@ axiom hs_basis_norm_summable
     {ι : Type*} (b : HilbertBasis ι ℝ (Lp ℝ 2 μ)) :
     Summable (fun i : ι => ‖T (b i)‖ ^ 2)
 
+/-! ### Scaffolding for the operator-theoretic Hilbert-Schmidt criterion
+
+The textbook axiom `isCompactOperator_of_basis_norm_summable` is the
+operator-theoretic step "summable squared basis norms ⟹ compact" (Reed-Simon
+I, Theorem VI.22(a)). The classical proof uses finite-rank truncations and
+the Bessel residual bound: the finite-rank truncation `T_S` is built from
+rank-1 operators `x ↦ ⟨bᵢ, x⟩ • T(bᵢ)`, each compact (as it factors through
+`ℝ`), and `‖T - T_S‖²_{op} ≤ Σ_{i ∉ S} ‖T(bᵢ)‖² → 0` along
+`Filter.atTop`.
+
+The two helpers `rank1Op_isCompactOperator` and `truncatedOp_isCompactOperator`
+below discharge the "build T_S; T_S is compact" half of that proof. The
+remaining op-norm-convergence half is the genuine analytic content that needs
+ℓ²-Cauchy-Schwarz on `tsum`s; it is left for a future iteration and is the
+**only** reason the surrounding result still appears as an `axiom`. -/
+
+section HSCriterion
+
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] [CompleteSpace H]
+variable {ι : Type*} (b : HilbertBasis ι ℝ H) (T : H →L[ℝ] H)
+
+/-- The rank-1 operator `x ↦ ⟨bᵢ, x⟩ • T(bᵢ)`. -/
+private noncomputable def rank1Op (i : ι) : H →L[ℝ] H :=
+  ContinuousLinearMap.smulRight (innerSL ℝ (b i)) (T (b i))
+
+@[simp] private theorem rank1Op_apply (i : ι) (x : H) :
+    rank1Op b T i x = (inner ℝ (b i) x) • T (b i) := by
+  simp [rank1Op]
+
+/-- Each rank-1 operator factors through `ℝ` — locally compact — hence is compact. -/
+private theorem rank1Op_isCompactOperator (i : ι) :
+    IsCompactOperator (rank1Op b T i) := by
+  -- Factor: rank1Op b T i = (smulRight 1 (T (b i))) ∘L (innerSL ℝ (b i))
+  -- Source ℝ of the outer map is locally compact, so the outer map is compact;
+  -- pre-composing with a CLM keeps compactness.
+  have h_outer :
+      IsCompactOperator
+        (ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ) (T (b i))) :=
+    isCompactOperator_of_locallyCompactSpace_rng _
+  have hcomp :
+      rank1Op b T i =
+        (ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ) (T (b i))).comp
+          (innerSL ℝ (b i)) := by
+    ext x
+    simp [rank1Op]
+  rw [hcomp]
+  exact h_outer.comp_clm _
+
+/-- The truncated operator `T_S x := Σ_{i ∈ S} ⟨bᵢ, x⟩ • T(bᵢ)`. -/
+private noncomputable def truncatedOp (S : Finset ι) : H →L[ℝ] H :=
+  ∑ i ∈ S, rank1Op b T i
+
+/-- The truncated operator is compact (finite sum of rank-1 operators). -/
+private theorem truncatedOp_isCompactOperator (S : Finset ι) :
+    IsCompactOperator (truncatedOp b T S) := by
+  classical
+  induction S using Finset.induction_on with
+  | empty =>
+    simpa [truncatedOp] using
+      (isCompactOperator_zero (M₁ := H) (M₂ := H))
+  | insert a s ha ih =>
+    show IsCompactOperator (truncatedOp b T (insert a s))
+    rw [truncatedOp, Finset.sum_insert ha]
+    exact (rank1Op_isCompactOperator b T a).add (by simpa [truncatedOp] using ih)
+
+end HSCriterion
+
 /-- **Hilbert-Schmidt criterion for compactness.**
 
 A bounded operator `T` on a real Hilbert space is compact whenever there exists
@@ -108,12 +175,18 @@ a Hilbert basis `b` such that `Σᵢ ‖T (bᵢ)‖²` is summable.
 are compact).
 
 **Proof sketch**: Define finite-rank truncations `T_S x := Σ_{i ∈ S} ⟨bᵢ, x⟩ •
-(T bᵢ)` for `S : Finset ι`. The range of `T_S` lies in the finite-dimensional
-subspace `span{T bᵢ : i ∈ S}`, hence has compact closure on bounded sets, so
-`T_S` is compact. The Bessel residual gives
+(T bᵢ)` for `S : Finset ι` (see `truncatedOp` above). The range of `T_S` lies
+in the finite-dimensional subspace `span{T bᵢ : i ∈ S}`, hence has compact
+closure on bounded sets, so `T_S` is compact (proved as
+`truncatedOp_isCompactOperator`). The Bessel residual gives
 `‖T - T_S‖²_{op} ≤ Σ_{i ∉ S} ‖T bᵢ‖²`, which tends to `0` along
 `(Filter.atTop : Filter (Finset ι))` by summability. By
-`isCompactOperator_of_tendsto`, `T` is compact. -/
+`isCompactOperator_of_tendsto`, `T` is compact.
+
+**Status**: the truncation/compactness half is proved (see `truncatedOp` and
+`truncatedOp_isCompactOperator`); the operator-norm convergence half (the
+Bessel residual bound combined with a tail-of-summable argument) remains as
+the sole open analytic step. -/
 axiom isCompactOperator_of_basis_norm_summable
     {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] [CompleteSpace H]
     {ι : Type*} (b : HilbertBasis ι ℝ H)
