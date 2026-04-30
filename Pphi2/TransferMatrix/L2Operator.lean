@@ -37,7 +37,7 @@ This gives `T = M_w ∘ Conv_G ∘ M_w` where:
 import Pphi2.TransferMatrix.TransferMatrix
 import Pphi2.TransferMatrix.L2Multiplication
 import Pphi2.TransferMatrix.L2Convolution
-import Pphi2.GeneralResults.HilbertSchmidtCompact
+import Pphi2.GeneralResults.HilbertSchmidt
 import GaussianField.SpectralTheorem
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
