@@ -726,6 +726,47 @@ private noncomputable def gEuclideanComplex (g : SpatialField Ns → ℝ) :
   fun w => ((gEuclidean Ns g w : ℝ) : ℂ)
 
 omit [NeZero Ns] in
+/-- The complex-lifted Euclidean `g` is integrable. -/
+private theorem gEuclideanComplex_integrable
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    Integrable (gEuclideanComplex Ns g) volume := by
+  unfold gEuclideanComplex
+  -- gEuclidean Ns g is integrable (transported via measure-preserving map)
+  have hg_E_int : Integrable (gEuclidean Ns g) volume := by
+    have := (gEuclidean_memLp (Ns := Ns) g hg)
+    exact memLp_one_iff_integrable.mp this
+  -- complex lift preserves integrability
+  exact hg_E_int.ofReal
+
+omit [NeZero Ns] in
+/-- The complex-lifted Euclidean `g` is continuous, given `g` continuous. -/
+private theorem gEuclideanComplex_continuous
+    (g : SpatialField Ns → ℝ) (hg_cont : Continuous g) :
+    Continuous (gEuclideanComplex Ns g) := by
+  unfold gEuclideanComplex gEuclidean
+  exact Complex.continuous_ofReal.comp (hg_cont.comp (PiLp.continuous_ofLp 2 _))
+
+omit [NeZero Ns] in
+/-- The complex Schwartz lift is integrable. -/
+private theorem schwartzComplexLift_integrable
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    Integrable
+      (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ) volume :=
+  (schwartzComplexLift Ns s).integrable
+
+omit [NeZero Ns] in
+/-- The complex convolution `g_C ⋆ s_C` is integrable (Young L¹×L¹→L¹). -/
+private theorem complex_convolution_integrable
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    Integrable (MeasureTheory.convolution (gEuclideanComplex Ns g)
+        (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ)
+        (ContinuousLinearMap.lsmul ℂ ℂ) volume) volume :=
+  (gEuclideanComplex_integrable (Ns := Ns) g hg).integrable_convolution
+    (ContinuousLinearMap.lsmul ℂ ℂ)
+    (schwartzComplexLift_integrable (Ns := Ns) s)
+
+omit [NeZero Ns] in
 /-- Pointwise: the lifted real convolution equals the complex convolution of the
 real-to-complex lifts. -/
 private theorem realConvComplexLift_eq_complex_convolution
@@ -753,6 +794,26 @@ private theorem realConvComplexLift_eq_complex_convolution
   --      = (g_E t : ℂ) * (s (w - t) : ℂ)
   simp [ContinuousLinearMap.lsmul_apply, gEuclideanComplex,
     schwartzComplexLift, Complex.ofReal_mul]
+
+omit [NeZero Ns] in
+/-- The complex-lifted real convolution is in `L¹(volume)`. -/
+private theorem realConvComplexLift_memLp_one
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) :
+    MemLp (fun w => ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ))
+      1 (volume : Measure (EuclideanSpace ℝ (Fin Ns))) := by
+  -- Pointwise = complex convolution, which is L¹.
+  have h_int : Integrable (MeasureTheory.convolution (gEuclideanComplex Ns g)
+      (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ)
+      (ContinuousLinearMap.lsmul ℂ ℂ) volume) volume :=
+    complex_convolution_integrable (Ns := Ns) g hg s
+  have h_eq : (fun w => ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ))
+              = MeasureTheory.convolution (gEuclideanComplex Ns g)
+                  (schwartzComplexLift Ns s : EuclideanSpace ℝ (Fin Ns) → ℂ)
+                  (ContinuousLinearMap.lsmul ℂ ℂ) volume :=
+    funext fun w => realConvComplexLift_eq_complex_convolution (Ns := Ns) g hg s w
+  rw [h_eq]
+  exact memLp_one_iff_integrable.mpr h_int
 
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
