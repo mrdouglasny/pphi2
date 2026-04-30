@@ -429,14 +429,23 @@ Mathlib has the **Schwartz** form of this identification as
 form is needed in this file because `g ⋆ s` (for `g ∈ L¹` and `s` Schwartz)
 is in `L¹ ∩ L²` but not Schwartz.
 
-**Reference**: Folland, *Real Analysis*, §8.3, Plancherel; Reed-Simon I §IX.4.
+**Reference**: Folland, *Real Analysis*, §8.3, Theorem 8.22 (Plancherel);
+Reed-Simon I §IX.4, Theorem IX.13.
 
-**Proof strategy**: Both sides — `f ↦ Lp.fourierTransformₗᵢ (f.toLp 2)` and
-`f ↦ (𝓕 f).toLp 2` (or its a.e. variant) — are continuous in `f` for the
-appropriate L¹+L² topology on the joint space of L¹∩L² functions. They agree
-on the dense Schwartz subset by `SchwartzMap.toLp_fourier_eq`. A density
-argument closes; the technical part is choosing a topology on L¹∩L² that
-makes both maps continuous. -/
+**Proof strategy** (Gemini deep-think 2026-04-30, one-line sketch): take a
+Schwartz sequence `(sₙ)` with `sₙ → h` in both `L¹` and `L²`; the
+`L²`-continuity of `Lp.fourierTransformₗᵢ` makes `𝓕 sₙ` converge in `L²` to
+the L²-side LHS, while the `L¹ → L^∞` continuity of the classical Fourier
+integral makes `𝓕 sₙ` converge uniformly (hence a.e.) to the RHS — both
+limits must therefore agree a.e.
+
+**Audit (Gemini deep-think 2026-04-30)**: PASS on (a) type correctness,
+(b) strength vs Folland 8.22 / Reed-Simon IX.13, (c) non-vacuity (LHS is the
+abstract Plancherel limit, RHS the concrete L¹ integral — the equality is
+the substantive content of the theorem), (d) hypothesis sufficiency
+(`MemLp h 1` + `MemLp h 2` is exactly what the references use; works for
+`Ns = 0` as a trivial case via Dirac measure on a one-point space), (e)
+`=ᵐ[volume]` is the natural formulation. -/
 private axiom fourierTransform_lp_eq_fourierIntegral
     {h : EuclideanSpace ℝ (Fin Ns) → ℂ}
     (hL1 : MemLp h 1 (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
