@@ -411,6 +411,39 @@ private theorem fourierIntegralQuadForm_continuous
     exact fourierQuadForm_eq_integral (Ns := Ns) g hg (fHat Ns f)
   exact hEq ▸ ((fourierQuadForm_continuous (Ns := Ns) g hg).comp (fHat_continuous (Ns := Ns)))
 
+/-- **L¹∩L² Plancherel agreement** (textbook).
+
+For `h : ℝⁿ → ℂ` that is both in `L¹(volume)` and in `L²(volume)`, the L²
+Fourier transform of the `Lp ℂ 2` representative of `h` agrees a.e. with the
+classical Fourier integral `𝓕 h` (defined for L¹ inputs by
+`MeasureTheory.fourierIntegral`).
+
+This is the standard density-and-isometry extension that defines
+`Lp.fourierTransformₗᵢ` in the first place: the L² transform is constructed
+as the unique continuous extension of the classical Fourier integral from
+the Schwartz subspace, and the resulting extension automatically agrees with
+the L¹ classical Fourier integral on the overlap `L¹ ∩ L²`.
+
+Mathlib has the **Schwartz** form of this identification as
+`SchwartzMap.toLp_fourier_eq`, but no direct `L¹ ∩ L²` form. The general
+form is needed in this file because `g ⋆ s` (for `g ∈ L¹` and `s` Schwartz)
+is in `L¹ ∩ L²` but not Schwartz.
+
+**Reference**: Folland, *Real Analysis*, §8.3, Plancherel; Reed-Simon I §IX.4.
+
+**Proof strategy**: Both sides — `f ↦ Lp.fourierTransformₗᵢ (f.toLp 2)` and
+`f ↦ (𝓕 f).toLp 2` (or its a.e. variant) — are continuous in `f` for the
+appropriate L¹+L² topology on the joint space of L¹∩L² functions. They agree
+on the dense Schwartz subset by `SchwartzMap.toLp_fourier_eq`. A density
+argument closes; the technical part is choosing a topology on L¹∩L² that
+makes both maps continuous. -/
+private axiom fourierTransform_lp_eq_fourierIntegral
+    {h : EuclideanSpace ℝ (Fin Ns) → ℂ}
+    (hL1 : MemLp h 1 (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
+    (hL2 : MemLp h 2 (volume : Measure (EuclideanSpace ℝ (Fin Ns)))) :
+    Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ (hL2.toLp h)
+      =ᵐ[(volume : Measure (EuclideanSpace ℝ (Fin Ns)))] 𝓕 h
+
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
@@ -420,18 +453,31 @@ This is the L² generalization of the standard identity that, for Schwartz funct
 follows from the convolution theorem (`Real.fourier_smul_convolution_eq`) and
 Parseval's identity (`SchwartzMap.integral_sesq_fourier_fourier`).
 
-**Proof strategy** (Schwartz density, `DenseRange.equalizer`):
-1. Both sides are continuous functions `L² → ℝ`:
-   - LHS: `f ↦ ⟨f, g⋆f⟩` is continuous since `convCLM` is a CLM and inner is continuous.
-   - RHS: `f ↦ ∫ Re(ĝ)·‖f̂‖²` is continuous since `|Re(ĝ)| ≤ ‖g‖₁` (bounded multiplier)
-     and `f ↦ f̂` is an isometry (Plancherel).
-2. For Schwartz `s`, `g` (continuous+integrable) and `s` (Schwartz ⊂ continuous ∩ integrable)
-   satisfy `Real.fourier_smul_convolution_eq`, giving `𝓕(g_ℂ ⋆ s_ℂ) = ĝ_ℂ · ŝ_ℂ` pointwise.
-3. Combined with Parseval, the identity holds for Schwartz functions.
-4. By `SchwartzMap.denseRange_toLpCLM` + `DenseRange.equalizer`, it extends to L².
+**Proof strategy** (CLM firewall + Schwartz density, *Gemini deep-think 2026-04-30*):
+The identity is best proved as an equality of continuous linear maps from
+`Lp ℝ 2 → Lp ℂ 2`, **not** as an equality of integral expressions:
 
-This requires the L² convolution theorem, which is a standard result not yet in Mathlib.
-See the TODO at `Mathlib.Analysis.Convolution` and Folland §8.3.
+  T_conv f := 𝓕 (liftL2 (convCLM g hg f))            (real → complex → conv → 𝓕)
+  T_mul  f := gHat_ℂ • 𝓕 (liftL2 f)                   (real → complex → 𝓕 → multiply)
+
+By `ContinuousLinearMap.ext_of_denseRange` on `SchwartzMap.denseRange_toLpCLM`
+(Schwartz dense in L²), it suffices to verify `T_conv s = T_mul s` for Schwartz
+`s`. For such `s`, `g ⋆ s ∈ L¹ ∩ L²` and Mathlib's
+`Real.fourier_smul_convolution_eq` gives `𝓕_{L¹}(g ⋆ s) = ĝ · ŝ` a.e.
+Combined with `fourierTransform_lp_eq_fourierIntegral` (the textbook axiom
+above) and `SchwartzMap.toLp_fourier_eq`, this yields `T_conv s = T_mul s`.
+
+After the CLM equality, Plancherel-via-`Lp.inner_fourier_eq` reduces the
+identity `⟨f, convCLM g hg f⟩_ℝ = ∫ Re(ĝ)·|f̂|²` to expanding the inner
+product `⟨𝓕 (liftL2 f), gHat_ℂ • 𝓕 (liftL2 f)⟩_ℂ` as an integral and taking
+real parts via `MeasureTheory.integral_re`.
+
+**Status (2026-04-30)**: stated as axiom; the supporting helpers
+(`liftL2`-style real↔complex L² isometry, `gHatRe_*`, `fourierWeightCLM`,
+both-sides-continuous lemmas, `integrand_integrable`) are all proved above.
+The remaining gap is the Lp-coercion gymnastics in the Schwartz-base-case
+chain — four codex attempts stalled on elaboration time around `Lp.ext` /
+multiplier packaging there.
 
 References: Folland, *Real Analysis*, §8.3; Reed-Simon I, §IX.4. -/
 private axiom fourier_representation_convolution
