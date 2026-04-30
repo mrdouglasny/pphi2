@@ -476,6 +476,47 @@ private theorem liftL2_ℝC_spec
       (μ := (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
       Complex.ofRealCLM f)
 
+omit [NeZero Ns] in
+/-- The transported complex Euclidean representative is exactly the lifted
+transported real representative. -/
+private theorem toEuclideanComplexL2_eq_lift
+    (f : L2SpatialField Ns) :
+    toEuclideanComplexL2 Ns f = liftL2_ℝC Ns (toEuclideanRealL2 Ns f) := by
+  apply Subtype.coe_injective
+  apply MeasureTheory.AEEqFun.ext
+  have h_complex :
+      (toEuclideanComplexL2 Ns f : EuclideanSpace ℝ (Fin Ns) → ℂ) =ᵐ[volume]
+      fun w => ((f ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) : ℝ) : ℂ) := by
+    have h_pull :
+        (toEuclideanComplexL2 Ns f : EuclideanSpace ℝ (Fin Ns) → ℂ) =ᵐ[volume]
+        fun w =>
+          (toComplexSpatialL2CLM Ns f : SpatialField Ns → ℂ)
+            ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) := by
+      simpa [toEuclideanComplexL2, pullToEuclideanL2] using
+        (MeasureTheory.Lp.coeFn_compMeasurePreserving
+          (g := (toComplexSpatialL2CLM Ns f))
+          (hf := PiLp.volume_preserving_ofLp (ι := Fin Ns)))
+    have h_spatial :
+        (toComplexSpatialL2CLM Ns f : SpatialField Ns → ℂ) =ᵐ[volume]
+        fun x => ((f x : ℝ) : ℂ) := by
+      simpa [toComplexSpatialL2CLM] using
+        (ContinuousLinearMap.coeFn_compLpL
+          (p := (2 : ENNReal))
+          (μ := (volume : Measure (SpatialField Ns)))
+          (@RCLike.ofRealCLM ℂ _) f)
+    exact h_pull.trans <|
+      (PiLp.volume_preserving_ofLp (ι := Fin Ns)).quasiMeasurePreserving.ae_eq_comp h_spatial
+  have h_real :
+      (toEuclideanRealL2 Ns f : EuclideanSpace ℝ (Fin Ns) → ℝ) =ᵐ[volume]
+      fun w => f ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) := by
+    simpa [toEuclideanRealL2] using
+      (MeasureTheory.Lp.coeFn_compMeasurePreserving
+        (g := f)
+        (hf := PiLp.volume_preserving_ofLp (ι := Fin Ns)))
+  have h_lift := liftL2_ℝC_spec (Ns := Ns) (toEuclideanRealL2 Ns f)
+  filter_upwards [h_complex, h_real, h_lift] with w hwc hwr hwl
+  simp [hwl, hwr, hwc]
+
 /-- The Euclidean `L²` Fourier transform viewed as a real continuous linear map. -/
 private noncomputable def fourierRealCLM :
     Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 →L[ℝ]
@@ -552,6 +593,34 @@ private theorem fourierWeightComplexCLM_spec
     MemLp.coeFn_toLp (gHat_memLp_top (Ns := Ns) g hg)
   filter_upwards [hholder, hcoeff] with w hw hw'
   simpa [hw', smul_eq_mul] using hw
+
+omit [NeZero Ns] in
+/-- Real `L²` inner products are the real parts of the corresponding complex
+inner products after `liftL2_ℝC`. -/
+private theorem inner_eq_re_inner_liftL2
+    (f h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℝ 2) :
+    @inner ℝ _ _ f h = (@inner ℂ _ _ (liftL2_ℝC Ns f) (liftL2_ℝC Ns h)).re := by
+  rw [MeasureTheory.L2.inner_def, MeasureTheory.L2.inner_def]
+  calc
+    ∫ a : EuclideanSpace ℝ (Fin Ns), inner ℝ (f a) (h a) ∂volume
+      = ∫ a : EuclideanSpace ℝ (Fin Ns),
+          RCLike.re (inner ℂ ((liftL2_ℝC Ns f) a) ((liftL2_ℝC Ns h) a)) ∂volume := by
+            apply integral_congr_ae
+            have hf := liftL2_ℝC_spec (Ns := Ns) f
+            have hh := liftL2_ℝC_spec (Ns := Ns) h
+            filter_upwards [hf, hh] with a hfa hha
+            rw [hfa, hha]
+            calc
+              inner ℝ (f a) (h a) = (h a) * (f a) := by
+                have h_inner : inner ℝ (f a) (h a) = (h a : ℝ) * star (f a) :=
+                  RCLike.inner_apply (f a) (h a)
+                simpa using h_inner
+              _ = RCLike.re (inner ℂ ((f a : ℂ)) ((h a : ℂ))) := by
+                simp [RCLike.inner_apply, Complex.conj_ofReal, mul_comm]
+    _ = (@inner ℂ _ _ (liftL2_ℝC Ns f) (liftL2_ℝC Ns h)).re := by
+          rw [MeasureTheory.L2.inner_def]
+          exact integral_re
+            (MeasureTheory.L2.integrable_inner (liftL2_ℝC Ns f) (liftL2_ℝC Ns h))
 
 /-- Complex Fourier weight multiplication, regarded as a real continuous linear map. -/
 private noncomputable def fourierWeightComplexRealCLM
@@ -915,6 +984,117 @@ private theorem T_conv_eq_T_mul
   -- Lift function equality to CLM equality
   exact DFunLike.coe_injective h_eq_fun
 
+omit [NeZero Ns] in
+/-- Transport the spatial convolution operator to Euclidean `L²`. -/
+private theorem toEuclideanRealL2_convCLM
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) (f : L2SpatialField Ns) :
+    toEuclideanRealL2 Ns (convCLM g hg f) =
+      convCLM (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg) (toEuclideanRealL2 Ns f) := by
+  apply Subtype.coe_injective
+  apply MeasureTheory.AEEqFun.ext
+  have h_lhs :
+      (toEuclideanRealL2 Ns (convCLM g hg f) : EuclideanSpace ℝ (Fin Ns) → ℝ) =ᵐ[volume]
+      fun w =>
+        (convCLM g hg f : SpatialField Ns → ℝ)
+          ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) := by
+    simpa [toEuclideanRealL2] using
+      (MeasureTheory.Lp.coeFn_compMeasurePreserving
+        (g := convCLM g hg f)
+        (hf := PiLp.volume_preserving_ofLp (ι := Fin Ns)))
+  have h_lhs_conv :
+      (fun w =>
+        (convCLM g hg f : SpatialField Ns → ℝ)
+          ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w)) =ᵐ[volume]
+      fun w =>
+        realConv volume g f
+          ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) := by
+    exact (PiLp.volume_preserving_ofLp (ι := Fin Ns)).quasiMeasurePreserving.ae_eq_comp
+      (convCLM_spec g hg f)
+  have h_rhs_input :
+      (toEuclideanRealL2 Ns f : EuclideanSpace ℝ (Fin Ns) → ℝ) =ᵐ[volume]
+      fun w => f ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) := by
+    simpa [toEuclideanRealL2] using
+      (MeasureTheory.Lp.coeFn_compMeasurePreserving
+        (g := f)
+        (hf := PiLp.volume_preserving_ofLp (ι := Fin Ns)))
+  have h_realConv_transport :
+      realConv volume (gEuclidean Ns g)
+          (fun w => f ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w)) =
+        fun w =>
+          realConv volume g f
+            ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) := by
+    funext w
+    unfold realConv MeasureTheory.convolution gEuclidean
+    simpa using
+      (MeasurePreserving.integral_comp
+        (PiLp.volume_preserving_ofLp (ι := Fin Ns))
+        (MeasurableEquiv.toLp 2 (SpatialField Ns)).symm.measurableEmbedding
+        (fun x : SpatialField Ns =>
+          g x * f (((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) - x)))
+  have h_rhs_conv :
+      realConv volume (gEuclidean Ns g) (toEuclideanRealL2 Ns f : EuclideanSpace ℝ (Fin Ns) → ℝ) =
+        fun w =>
+          realConv volume g f
+            ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) := by
+    calc
+      realConv volume (gEuclidean Ns g) (toEuclideanRealL2 Ns f : EuclideanSpace ℝ (Fin Ns) → ℝ)
+          = realConv volume (gEuclidean Ns g)
+              (fun w => f ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w)) := by
+              unfold realConv
+              exact MeasureTheory.convolution_congr (ContinuousLinearMap.lsmul ℝ ℝ)
+                Filter.EventuallyEq.rfl h_rhs_input
+      _ = fun w =>
+            realConv volume g f
+              ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) :=
+        h_realConv_transport
+  have h_rhs :
+      (convCLM (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg) (toEuclideanRealL2 Ns f) :
+          EuclideanSpace ℝ (Fin Ns) → ℝ) =ᵐ[volume]
+      fun w =>
+        realConv volume g f
+          ((WithLp.ofLp : EuclideanSpace ℝ (Fin Ns) → SpatialField Ns) w) := by
+    have h_spec := convCLM_spec (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg)
+      (toEuclideanRealL2 Ns f)
+    filter_upwards [h_spec] with w hw
+    rw [hw, h_rhs_conv]
+  exact h_lhs.trans (h_lhs_conv.trans h_rhs.symm)
+
+set_option maxHeartbeats 800000 in
+-- Elaborating the complex-weight quadratic form follows the same heavy L² coercion
+-- path as the already-proved real-part-weight version above.
+omit [NeZero Ns] in
+/-- Expanding the real part of the complex-weight Fourier quadratic form. -/
+private theorem fourierQuadFormComplex_eq_integral
+    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) :
+    (@inner ℂ _ _ h (fourierWeightComplexCLM Ns g hg h)).re =
+      ∫ w : EuclideanSpace ℝ (Fin Ns),
+        (gHat Ns g w).re * ‖(h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2 := by
+  rw [MeasureTheory.L2.inner_def]
+  change RCLike.re (∫ a : EuclideanSpace ℝ (Fin Ns),
+    inner ℂ (h a) ((fourierWeightComplexCLM Ns g hg h) a) ∂volume) =
+      ∫ w : EuclideanSpace ℝ (Fin Ns),
+        (gHat Ns g w).re * ‖(h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2
+  have hre :
+      ∫ a : EuclideanSpace ℝ (Fin Ns),
+        RCLike.re (inner ℂ (h a) ((fourierWeightComplexCLM Ns g hg h) a)) ∂volume =
+      RCLike.re (∫ a : EuclideanSpace ℝ (Fin Ns),
+        inner ℂ (h a) ((fourierWeightComplexCLM Ns g hg h) a) ∂volume) :=
+    integral_re (MeasureTheory.L2.integrable_inner h (fourierWeightComplexCLM Ns g hg h))
+  rw [← hre]
+  apply integral_congr_ae
+  filter_upwards [fourierWeightComplexCLM_spec (Ns := Ns) g hg h] with w hw
+  rw [hw]
+  have hnorm :
+      ‖(h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2 =
+        ((h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w).re ^ 2 +
+        ((h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w).im ^ 2 := by
+    simpa [Complex.sq_norm, Complex.normSq_apply, sq, add_comm, add_left_comm, add_assoc] using
+      (Complex.sq_norm ((h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w))
+  rw [hnorm]
+  simp [RCLike.inner_apply, Complex.mul_re, Complex.conj_re, Complex.conj_im]
+  ring
+
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
@@ -951,13 +1131,67 @@ chain — four codex attempts stalled on elaboration time around `Lp.ext` /
 multiplier packaging there.
 
 References: Folland, *Real Analysis*, §8.3; Reed-Simon I, §IX.4. -/
-private axiom fourier_representation_convolution
+private theorem fourier_representation_convolution
     (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
     (hg_cont : Continuous g) (f : L2SpatialField Ns) :
     @inner ℝ _ _ f (convCLM g hg f) =
     ∫ w : EuclideanSpace ℝ (Fin Ns),
       (gHat Ns g w).re *
-      ‖(fHat Ns f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2
+      ‖(fHat Ns f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2 := by
+  let fE := toEuclideanRealL2 Ns f
+  let hE := convCLM (gEuclidean Ns g) (gEuclidean_memLp (Ns := Ns) g hg) fE
+  let Ff : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2 :=
+    Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ (liftL2_ℝC Ns fE)
+  have h0 :
+      @inner ℝ _ _ f (convCLM g hg f) =
+      @inner ℝ _ _ fE (toEuclideanRealL2 Ns (convCLM g hg f)) := by
+    simpa [fE] using ((toEuclideanRealL2 Ns).inner_map_map f (convCLM g hg f)).symm
+  have h1 :
+      @inner ℝ _ _ fE (toEuclideanRealL2 Ns (convCLM g hg f)) =
+      @inner ℝ _ _ fE hE := by
+    simpa [fE, hE] using congrArg (fun h => @inner ℝ _ _ fE h)
+      (toEuclideanRealL2_convCLM (Ns := Ns) g hg f)
+  have h2 :
+      @inner ℝ _ _ fE hE =
+      (@inner ℂ _ _ (liftL2_ℝC Ns fE) (liftL2_ℝC Ns hE)).re := by
+    simpa [fE, hE] using inner_eq_re_inner_liftL2 (Ns := Ns) fE hE
+  have h3 :
+      (@inner ℂ _ _ (liftL2_ℝC Ns fE) (liftL2_ℝC Ns hE)).re =
+      (@inner ℂ _ _ Ff
+        (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ
+          (liftL2_ℝC Ns hE))).re := by
+    simpa [Ff] using congrArg Complex.re
+      (Lp.inner_fourier_eq (liftL2_ℝC Ns fE) (liftL2_ℝC Ns hE)).symm
+  have h4 :
+      (@inner ℂ _ _ Ff
+        (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ
+          (liftL2_ℝC Ns hE))).re =
+      (@inner ℂ _ _ Ff (T_conv Ns g hg fE)).re := by
+    rfl
+  have h5 :
+      (@inner ℂ _ _ Ff (T_conv Ns g hg fE)).re =
+      (@inner ℂ _ _ Ff (T_mul Ns g hg fE)).re := by
+    rw [T_conv_eq_T_mul (Ns := Ns) g hg hg_cont]
+  have h6 :
+      (@inner ℂ _ _ Ff (T_mul Ns g hg fE)).re =
+      (@inner ℂ _ _ Ff (fourierWeightComplexCLM Ns g hg Ff)).re := by
+    rfl
+  have h7 :
+      (@inner ℂ _ _ Ff (fourierWeightComplexCLM Ns g hg Ff)).re =
+      ∫ w : EuclideanSpace ℝ (Fin Ns),
+        (gHat Ns g w).re * ‖(Ff : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2 := by
+    simpa [Ff] using fourierQuadFormComplex_eq_integral (Ns := Ns) g hg Ff
+  have h8 :
+      (∫ w : EuclideanSpace ℝ (Fin Ns),
+        (gHat Ns g w).re * ‖(Ff : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2) =
+      ∫ w : EuclideanSpace ℝ (Fin Ns),
+        (gHat Ns g w).re * ‖(fHat Ns f : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w‖ ^ 2 := by
+    have h_ft : Ff = fHat Ns f := by
+      simpa [Ff, fE, fHat] using congrArg
+        (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ)
+        (toEuclideanComplexL2_eq_lift (Ns := Ns) f).symm
+    simpa [h_ft]
+  exact h0.trans (h1.trans (h2.trans (h3.trans (h4.trans (h5.trans (h6.trans (h7.trans h8)))))))
 
 omit [NeZero Ns] in
 /-- The integrand `Re(ĝ(w)) * ‖f̂(w)‖²` in the Fourier representation is integrable.
@@ -1025,7 +1259,6 @@ private theorem support_pos_of_ae_nonzero
   rw [ae_iff]
   exact h_zero
 
-omit [NeZero Ns] in
 theorem inner_convCLM_pos_of_fourier_pos
     (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
     (hg_cont : Continuous g)
