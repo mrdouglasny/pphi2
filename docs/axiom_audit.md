@@ -1,10 +1,17 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-03-21
-**pphi2**: 32 axioms, 0 sorries (active build) | **gaussian-field**: 14 axioms, 0 sorries
+**Updated**: 2026-04-25
+**pphi2**: 19 axioms, 0 sorries (active build) | **gaussian-field**: 14 axioms, 0 sorries
 
-Note: pphi2 count includes 3 private axioms (`schwartz_riemann_sum_bound`,
-`fourier_representation_convolution`, `gaussian_rp_cov_perfect_square`).
+Note: pphi2 count includes 2 private axioms (`fourier_representation_convolution`,
+`gaussian_rp_cov_perfect_square`).
+
+**2026-04-25**: `cylinderIR_uniform_second_moment` converted from axiom to
+**theorem** by deriving it from `cylinderIR_uniform_exponential_moment` via the
+elementary inequality `x² ≤ 2 e^|x|` and a scaling optimization. Statement now
+in additive form `C₁ q(f)² + C₂` (the form actually consumed by IR-tightness;
+the strict multiplicative form would require an extra a.s. argument). Net axiom
+count: 20 → 19.
 
 ## Verification Sources
 
@@ -22,7 +29,7 @@ Note: pphi2 count includes 3 private axioms (`schwartz_riemann_sum_bound`,
 
 ---
 
-## pphi2 Axioms (25 active)
+## pphi2 Axioms (19 active)
 
 ### Phase 1: Wick Ordering (1 active axiom, 1 proved)
 
@@ -415,8 +422,8 @@ Notes on ⚠️ axioms:
 |---|------|----------|--------|----------|-------|
 | 1 | `cylinderToTorusEmbed_comp_timeTranslation` | CylinderEmbedding:99 | ✅ Standard | ✅ Gemini (2026-03-19) | Periodization intertwines time translation. Reindexing sum over ℤ. |
 | 2 | `cylinderToTorusEmbed_comp_timeReflection` | CylinderEmbedding:106 | ✅ Standard | ✅ Gemini (2026-03-19) | Periodization intertwines time reflection. Reindex k → -k. |
-| 3 | `cylinderIR_uniform_second_moment` | GreenFunctionComparison:52 | ✅ Standard | ✅ Gemini (2026-03-19) | Pullback → OS1 regularity → method of images. Uniform in Lt ≥ 1. |
-| 4 | `cylinderIR_uniform_exponential_moment` | UniformExponentialMoment:53 | ✅ Standard | ✅ Gemini (2026-03-19) | Nelson/Fröhlich + method of images. Sufficient for Vitali/Montel. |
+| 3 | ~~`cylinderIR_uniform_second_moment`~~ | UniformExponentialMoment.lean | ✅ **THEOREM** (2026-04-25) | — | Derived from axiom #4 via `x² ≤ 2 e^|x|` + scaling optimization. Statement now in additive form `C₁ q(f)² + C₂` (the form actually consumed by IR-tightness). |
+| 4 | `cylinderIR_uniform_exponential_moment` | UniformExponentialMoment:69 | ✅ Standard | ✅ Gemini (2026-03-19) | Nelson/Fröhlich + method of images. Sufficient for Vitali/Montel. |
 | 5 | `cylinderIRLimit_exists` | IRTightness:60 | ✅ Standard | ✅ Gemini (2026-03-19) | Mitoma tightness → Prokhorov → Lévy continuity. Char. functional convergence correct. |
 | 6 | `cylinderIR_os0` | CylinderOS:130 | ✅ Standard | ✅ Gemini (2026-03-19) | Uniform exp moments → Vitali/Montel → analyticity. |
 | 7 | `cylinderIR_os3` | CylinderOS:144 | ✅ Standard | ✅ Gemini (2026-03-19) | No wrap-around for Lt > 2R confirmed valid. Density of C_c^∞ confirmed. |

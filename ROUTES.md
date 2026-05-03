@@ -3,8 +3,11 @@
 Three live routes + one preserved route. All share the interacting-measure
 framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
-**Current state** (`scripts/count_axioms.sh`, 2026-04-29):
-**pphi2 total: 20 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry.**
+**Current state** (`scripts/count_axioms.sh`, 2026-05-03):
+**pphi2 total: 19 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry**
+(per pphi2's currently-pinned gaussian-field SHA; the upstream
+gaussian-field origin/main has since moved further — see
+`gaussian-field/status.md` for its current standalone counts).
 
 ---
 
@@ -123,10 +126,10 @@ structurally assembled, conditional on 3 IR-limit axioms.
 | `IRLimit/CylinderEmbedding.lean` | 0 | 0 |
 | `IRLimit/CovarianceConvergence*.lean` | 0 | 0 |
 | `IRLimit/IRTightness.lean` | 0 | 0 |
-| `IRLimit/GreenFunctionComparison.lean` | **1** (`cylinderIR_uniform_second_moment`) | 0 |
-| `IRLimit/UniformExponentialMoment.lean` | **1** (`cylinderIR_uniform_exponential_moment`) | 0 |
+| `IRLimit/GreenFunctionComparison.lean` | 0 | 0 |
+| `IRLimit/UniformExponentialMoment.lean` | **1** (`cylinderIR_uniform_exponential_moment`; `cylinderIR_uniform_second_moment` derived as theorem 2026-04-25) | 0 |
 | `IRLimit/CylinderOS.lean` | **1** (`cylinderIR_os3`) | 0 |
-| **Route B′ total** | **3** | **0** |
+| **Route B′ total** | **2** | **0** |
 
 ### OS axioms
 
@@ -140,16 +143,12 @@ structurally assembled, conditional on 3 IR-limit axioms.
 
 ### Remaining axioms — proof routes
 
-- **`cylinderIR_uniform_second_moment`** (`GreenFunctionComparison.lean:102`):
-  `E_{ν_Lt}[(ω f)²] ≤ C·q(f)²` uniformly in Lt ≥ 1. Needed for IR tightness.
-  Proof chain already staged:
-  - `cylinderPullback_second_moment_eq` (proved): pullback identity.
-  - `cylinderPullback_second_moment_density_transfer_cutoff` (proved): finite-cutoff
-    density transfer via Cauchy-Schwarz on the interacting Boltzmann weight.
-  - Remaining: package the torus UV limit + uniform-in-Lt method-of-images bound
-    `torusGreen_uniform_bound` (proved in gaussian-field) into a single statement.
-  - Difficulty: mostly plumbing, no new mathematical content.
-- **`cylinderIR_uniform_exponential_moment`** (`UniformExponentialMoment.lean:53`):
+- ~~**`cylinderIR_uniform_second_moment`**~~ — **converted to theorem 2026-04-25**
+  in `UniformExponentialMoment.lean`, deriving from
+  `cylinderIR_uniform_exponential_moment` via the elementary inequality
+  `x² ≤ 2 e^|x|` and a scaling optimization. Statement now in additive form
+  `C₁ q(f)² + C₂` (the form actually consumed by IR-tightness).
+- **`cylinderIR_uniform_exponential_moment`** (`UniformExponentialMoment.lean:69`):
   `∫ exp(|ωf|) dν_Lt ≤ K·exp(C·q(f)²)` uniformly in Lt ≥ 1. Needed for OS0 and OS1.
   Proof chain:
   - `AsymSatisfiesTorusOS.os1` provides the torus exponential-moment bound.
@@ -212,10 +211,10 @@ Schwartz-nuclear-extension infrastructure. See `../gaussian-field/status.md`.
 |-------|--------|---------|
 | Route A (main line, ex-Bridge) | 14 | 0 |
 | Route B (torus UV) | 0 | 0 |
-| Route B′ (cylinder IR limit) | 3 | 0 |
+| Route B′ (cylinder IR limit) | 2 | 0 |
 | Bridge (cross-formulation) | 3 | 0 |
-| **pphi2 total** | **20** | **0** |
-| gaussian-field (upstream) | 2 | 3 |
+| **pphi2 total** | **19** | **0** |
+| gaussian-field (upstream, pphi2-pinned) | 2 | 3 |
 
 Route B is the "done" route. Route B′ is the next candidate for a focused completion
 effort — its 3 axioms are structurally clear with documented proof routes, and no
