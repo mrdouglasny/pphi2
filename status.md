@@ -16,7 +16,15 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-04-29): 20 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-03): 19 axioms, 0 sorries.**
+
+Recent reduction (2026-04-30, this PR): `cylinderIR_uniform_second_moment`
+in `IRLimit/UniformExponentialMoment.lean` converted from axiom to theorem,
+derived from `cylinderIR_uniform_exponential_moment` via the elementary
+inequality `x² ≤ 2·exp(|x|)` plus a scaling optimisation. The new
+theorem packages `Integrable (fun ω => (ω f)²) ν` alongside the
+additive bound `∫(ωf)² ≤ C₁·q(f)² + C₂`, derived from the same
+exp-moment input (no circularity).
 
 Recent reductions (2026-04-19):
 - `continuumMeasures_tight` (Tightness.lean) — **PROVED** (axiom → theorem). Port of the

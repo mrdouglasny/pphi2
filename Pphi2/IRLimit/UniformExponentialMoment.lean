@@ -91,15 +91,27 @@ private lemma sq_le_two_mul_exp_abs (x : ℝ) : x ^ 2 ≤ 2 * Real.exp |x| := by
 
 /-- **Uniform second moment bound** for cylinder pullback measures.
 
-For any cylinder test function `f`, the second moment under the pulled-back
-torus interacting measure satisfies
-  `∫ (ω f)² dν_{Lt} ≤ C₁ · q(f)² + C₂`
-with continuous seminorm `q` and constants `C₁, C₂ > 0` independent of
-`Lt ≥ 1`. This is what the IR-tightness consumer needs (an `f`-dependent
-bound uniform in `Lt`, with continuous `f`-dependence).
+For each fixed cylinder test function `f`, the second moment under the
+pulled-back torus interacting measure is finite, and is bounded
+**uniformly in `Lt ≥ 1`** by the additive expression
+  `∫ (ω f)² dν_{Lt} ≤ C₁ · q(f)² + C₂`,
+where `C₁, C₂ > 0` and the seminorm `q` are independent of `Lt` and `f`.
 
-**Proof.** Apply `cylinderIR_uniform_exponential_moment` to the scaled test
-function `λ • f` (any `λ > 0`):
+The bound is **per-f** (not a uniform Hilbertian-seminorm bound in the
+Mitoma sense) and the additive `C₂` is **essential** to the scaling
+argument used here — the strict multiplicative form `C · q(f)²` would
+require a separate a.s.-vanishing argument for the `q(f) = 0` corner.
+The IR-tightness consumer (`IRTightness.lean`) only needs an
+`f`-dependent bound uniform in `Lt`, so this additive form suffices.
+
+The conclusion bundles `Integrable (fun ω => (ω f)²) ν` so the consumer
+gets integrability without a separate derivation; both come from the
+same exp-moment input (`cylinderIR_uniform_exponential_moment`) without
+circularity (integrability uses `Real.exp |ω f|` as dominator;
+the bound uses the rescaled `Real.exp |ω(λ•f)|`).
+
+**Proof of the bound.** Apply `cylinderIR_uniform_exponential_moment` to
+the scaled test function `λ • f` (any `λ > 0`):
   `∫ exp(|ω(λf)|) dν ≤ K · exp(C λ² q(f)²)`.
 The pointwise inequality `(λx)² ≤ 2 exp(λ|x|)` (from
 `Real.quadratic_le_exp_of_nonneg`) gives
@@ -107,9 +119,14 @@ The pointwise inequality `(λx)² ≤ 2 exp(λ|x|)` (from
 Choose `λ² = 1 / (C (q(f)² + 1))`, so `Cλ²q(f)² ≤ 1`:
   `∫ (ω f)² dν ≤ 2K · C · (q(f)² + 1) · e = (2KCe) q(f)² + (2KCe)`.
 
-Hence `C₁ = C₂ = 2KCe`. The additive `C₂` is unavoidable in this scaling
-argument: the strict multiplicative form `C · q(f)²` would require an
-extra a.s.-vanishing argument for the `q(f) = 0` corner. -/
+Hence `C₁ = C₂ = 2KCe`.
+
+**Proof of integrability.** Apply the exp-moment at `λ = 1` (i.e. the
+test function `f` itself) to get `Integrable (Real.exp ∘ |· f|) ν`. By
+the pointwise bound `(ω f)² ≤ 2 · Real.exp |ω f|` (the `λ = 1` case of
+the same helper) and `Integrable.mono'` against the AE-strong
+measurability of `(· f) ^ 2` (composition of `configuration_eval_measurable`
+with `pow_const 2`), `(ω f)²` is integrable. -/
 theorem cylinderIR_uniform_second_moment
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (C₁ C₂ : ℝ) (q : Seminorm ℝ (CylinderTestFunction Ls)),
@@ -119,6 +136,8 @@ theorem cylinderIR_uniform_second_moment
       [hμ : IsProbabilityMeasure μ]
       (_ : @AsymSatisfiesTorusOS Lt Ls _ _ μ hμ)
       (f : CylinderTestFunction Ls),
+    Integrable (fun ω : Configuration (CylinderTestFunction Ls) =>
+      (ω f) ^ 2) (cylinderPullbackMeasure Lt Ls μ) ∧
     ∫ ω : Configuration (CylinderTestFunction Ls),
       (ω f) ^ 2 ∂(cylinderPullbackMeasure Lt Ls μ) ≤
     C₁ * q f ^ 2 + C₂ := by
@@ -139,8 +158,22 @@ theorem cylinderIR_uniform_second_moment
   have hlam_sq : lam ^ 2 = 1 / α :=
     Real.sq_sqrt (one_div_pos.mpr hα_pos).le
   have hlam2_pos : (0:ℝ) < lam ^ 2 := by positivity
-  -- Apply exp moment to (lam • f)
+  -- Apply exp moment at λ = 1 (for integrability of (ωf)²)
+  obtain ⟨h_int_one, _⟩ := hbound Lt hLt μ hOS f
+  -- Apply exp moment to (lam • f) (for the moment bound)
   obtain ⟨h_int_lam, h_bd_lam⟩ := hbound Lt hLt μ hOS (lam • f)
+  -- AE-strong measurability of (ω f)² via configuration_eval_measurable
+  have h_meas_sq : AEStronglyMeasurable
+      (fun ω : Configuration (CylinderTestFunction Ls) => (ω f) ^ 2) ν :=
+    ((configuration_eval_measurable f).pow_const 2).aestronglyMeasurable
+  -- Integrability of (ω f)² via domination by 2 * Real.exp |ω f|
+  have h_int_sq : Integrable (fun ω : Configuration (CylinderTestFunction Ls) =>
+      (ω f) ^ 2) ν := by
+    refine (h_int_one.const_mul 2).mono' h_meas_sq (ae_of_all _ fun ω => ?_)
+    have h := sq_le_two_mul_exp_abs (ω f)
+    rw [Real.norm_of_nonneg (sq_nonneg _)]
+    exact h
+  refine ⟨h_int_sq, ?_⟩
   -- Linearity of ω: ω(λ•f) = λ * ω f
   have h_eval : ∀ ω : Configuration (CylinderTestFunction Ls),
       ω (lam • f) = lam * ω f := by

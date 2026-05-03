@@ -3,8 +3,11 @@
 Three live routes + one preserved route. All share the interacting-measure
 framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
-**Current state** (`scripts/count_axioms.sh`, 2026-04-29):
-**pphi2 total: 20 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry.**
+**Current state** (`scripts/count_axioms.sh`, 2026-05-03):
+**pphi2 total: 19 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry**
+(per pphi2's currently-pinned gaussian-field SHA; the upstream
+gaussian-field origin/main has since moved further — see
+`gaussian-field/status.md` for its current standalone counts).
 
 ---
 
@@ -208,10 +211,10 @@ Schwartz-nuclear-extension infrastructure. See `../gaussian-field/status.md`.
 |-------|--------|---------|
 | Route A (main line, ex-Bridge) | 14 | 0 |
 | Route B (torus UV) | 0 | 0 |
-| Route B′ (cylinder IR limit) | 3 | 0 |
+| Route B′ (cylinder IR limit) | 2 | 0 |
 | Bridge (cross-formulation) | 3 | 0 |
-| **pphi2 total** | **20** | **0** |
-| gaussian-field (upstream) | 2 | 3 |
+| **pphi2 total** | **19** | **0** |
+| gaussian-field (upstream, pphi2-pinned) | 2 | 3 |
 
 Route B is the "done" route. Route B′ is the next candidate for a focused completion
 effort — its 3 axioms are structurally clear with documented proof routes, and no

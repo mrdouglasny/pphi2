@@ -166,8 +166,8 @@ theorem cylinderIRLimit_exists
     haveI : Fact (0 < Lt (n + N0)) := hLt (n + N0)
     haveI : IsProbabilityMeasure (μ (n + N0)) := hμ_prob (n + N0)
     simpa [νseq] using
-      h_moment (Lt (n + N0)) (hN0 (n + N0) (Nat.le_add_left _ _))
-        (μ (n + N0)) (hμ_os (n + N0)) f
+      (h_moment (Lt (n + N0)) (hN0 (n + N0) (Nat.le_add_left _ _))
+        (μ (n + N0)) (hμ_os (n + N0)) f).2
   have hν_tight : ∀ ε : ℝ, 0 < ε →
       ∃ K : Set (Configuration (CylinderTestFunction Ls)), IsCompact K ∧
         ∀ n, 1 - ε ≤ ((νseq n) K).toReal := by
