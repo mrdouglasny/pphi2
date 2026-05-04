@@ -27,19 +27,17 @@ The proof composes:
    standard-form kernel `K_std(x, y) := K(x, x − y)` with the same `L²(μ⊗μ)`
    norm and the same induced operator.
 
-2. **Hilbert-Schmidt summability** (textbook axiom `hs_basis_norm_summable`):
-   for any Hilbert basis `b` of `L²(μ)`, `Σᵢ ‖T (b i)‖²_{L²(μ)} < ∞`. The textbook
+2. **Hilbert-Schmidt summability** (`hs_basis_norm_summable`, proved):
+   for any Hilbert basis `b` of `L²(μ)`, `Σᵢ ‖T (b i)‖²_{L²(μ)} < ∞`. The
    proof is one Parseval-on-the-slice step plus Tonelli.
 
-3. **Operator-theoretic HS ⟹ compact** (textbook axiom
-   `isCompactOperator_of_basis_norm_summable`): a bounded operator with
-   summable squared basis norms is compact, via finite-rank truncation and the
-   Bessel residual.
+3. **Operator-theoretic HS ⟹ compact** (`isCompactOperator_of_basis_norm_summable`,
+   proved): a bounded operator with summable squared basis norms is compact,
+   via finite-rank truncation and the Bessel residual.
 
-Both textbook axioms are well-cited (Reed-Simon I, Theorem VI.22) and each is
-independently provable; they are split out here so the *composition* compiles
-cleanly while the unproved analytic infrastructure remains explicit and
-auditable.
+Both helpers (Reed-Simon I, Theorem VI.22) are split out as standalone
+theorems so they can be reused independently and so the main composition
+reads cleanly.
 
 ## References
 
@@ -66,13 +64,12 @@ open MeasureTheory Real Filter
 
 noncomputable section
 
-/-! ## Textbook axioms
+/-! ## Hilbert-Schmidt helpers
 
-Two analytic facts are taken as textbook axioms here. Each is one well-known
-theorem from Reed-Simon I §VI.6, both independently provable in Mathlib once
-the supporting Hilbert-Schmidt API is built. They are listed here to make the
-proof of the main theorem compile cleanly while the analytic gap remains
-explicitly tracked. -/
+Two analytic facts factored out as standalone theorems. Each is one well-known
+result from Reed-Simon I §VI.6, proved here against Mathlib's current API.
+They are split out to make the proof of the main theorem read cleanly and to
+make the two reusable pieces independently citable. -/
 
 /-- **Hilbert-Schmidt summability of basis norms.**
 
@@ -244,19 +241,17 @@ theorem hs_basis_norm_summable
 
 /-! ### Scaffolding for the operator-theoretic Hilbert-Schmidt criterion
 
-The textbook axiom `isCompactOperator_of_basis_norm_summable` is the
-operator-theoretic step "summable squared basis norms ⟹ compact" (Reed-Simon
-I, Theorem VI.22(a)). The classical proof uses finite-rank truncations and
-the Bessel residual bound: the finite-rank truncation `T_S` is built from
-rank-1 operators `x ↦ ⟨bᵢ, x⟩ • T(bᵢ)`, each compact (as it factors through
-`ℝ`), and `‖T - T_S‖²_{op} ≤ Σ_{i ∉ S} ‖T(bᵢ)‖² → 0` along
-`Filter.atTop`.
+`isCompactOperator_of_basis_norm_summable` below is the operator-theoretic
+step "summable squared basis norms ⟹ compact" (Reed-Simon I,
+Theorem VI.22(a)). The classical proof uses finite-rank truncations and the
+Bessel residual bound: the finite-rank truncation `T_S` is built from rank-1
+operators `x ↦ ⟨bᵢ, x⟩ • T(bᵢ)`, each compact (as it factors through `ℝ`),
+and `‖T - T_S‖²_{op} ≤ Σ_{i ∉ S} ‖T(bᵢ)‖² → 0` along `Filter.atTop`.
 
 The two helpers `rank1Op_isCompactOperator` and `truncatedOp_isCompactOperator`
-below discharge the "build T_S; T_S is compact" half of that proof. The
-remaining op-norm-convergence half is the genuine analytic content that needs
-ℓ²-Cauchy-Schwarz on `tsum`s; it is left for a future iteration and is the
-**only** reason the surrounding result still appears as an `axiom`. -/
+below discharge the "build T_S; T_S is compact" half; `tendsto_truncatedOp`
+discharges the operator-norm convergence half via the Bessel residual on the
+summable tail. -/
 
 section HSCriterion
 
@@ -449,10 +444,9 @@ closure on bounded sets, so `T_S` is compact (proved as
 `(Filter.atTop : Filter (Finset ι))` by summability. By
 `isCompactOperator_of_tendsto`, `T` is compact.
 
-**Status**: the truncation/compactness half is proved (see `truncatedOp` and
-`truncatedOp_isCompactOperator`); the operator-norm convergence half (the
-Bessel residual bound combined with a tail-of-summable argument) remains as
-the sole open analytic step. -/
+Both halves are discharged: `truncatedOp_isCompactOperator` for compactness
+of each `T_S`, and `tendsto_truncatedOp` for the Bessel-residual operator-norm
+convergence. -/
 theorem isCompactOperator_of_basis_norm_summable
     {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] [CompleteSpace H]
     {ι : Type*} (b : HilbertBasis ι ℝ H)
@@ -556,7 +550,7 @@ private theorem convolution_ae_eq_standard
 
 The standard-form integral operator with kernel `K ∈ L²(μ ⊗ μ)` is compact.
 
-This composes the two textbook axioms `hs_basis_norm_summable` (kernel ⟹
+This composes the two helper theorems `hs_basis_norm_summable` (kernel ⟹
 summable basis norms) and `isCompactOperator_of_basis_norm_summable`
 (summable basis norms ⟹ compact operator). -/
 private theorem integral_operator_l2_kernel_compact_standard
@@ -583,7 +577,7 @@ continuous linear map representing the convolution-style integral operator
 
 The convolution form is reduced to the standard form via the Haar-invariant
 substitution `(x, y) ↦ (x, x − y)`, then `integral_operator_l2_kernel_compact_standard`
-finishes via the two textbook axioms above.
+finishes via the two helper theorems above.
 
 **Reference**: Reed-Simon I, Theorem VI.23. -/
 theorem integral_operator_l2_kernel_compact
