@@ -3,6 +3,34 @@
 Formal construction of the P(Φ)₂ Euclidean quantum field theory in Lean 4,
 following the Glimm-Jaffe/Nelson lattice approach.
 
+> ### ⚠️ Notice (2026-05-07): lattice-action normalisation under review
+>
+> A scaling-analysis review of the lattice action and Wick-subtraction
+> conventions has identified a likely **normalisation bug**: pphi2's lattice
+> action drops the `a^d` Riemann-sum prefactor on the kinetic term that
+> Glimm–Jaffe and Guerra–Rosen–Simon use, with the consequence that the
+> Wick-subtracted interaction `V_a` is `a^{2k_{top}}`-times smaller than the
+> textbook one and **vanishes in the continuum limit**. Under this analysis,
+> the limit measure constructed by `torusInteractingLimit_exists` and
+> consumed by `torusInteracting_satisfies_OS` is the **free Gaussian field**,
+> not the interacting P(φ)₂ theory.
+>
+> The OS0–OS2 theorems remain true as Lean statements (the free GFF
+> satisfies them), but the axioms `continuumLimit_nonGaussian` and
+> `pphi2_nontriviality` would be **false** under the current normalisation
+> rather than open. Routes A, B, B′, and pphi2N all inherit the same lattice
+> action and are likely affected.
+>
+> **Diagnosis + proposed fix**:
+> [`docs/lattice-action-normalization-fix.md`](docs/lattice-action-normalization-fix.md)
+> (Glimm–Jaffe-aligned action `S = (a^d/2)⟨φ, M_a φ⟩`, real dynamical-cutoff
+> Nelson estimate, ~6–10 weeks of focused work).
+>
+> **Status**: not yet vetted — the doc lists seven open questions for
+> Gemini deep-think / Codex review before any code changes. Treat the
+> existing `torusInteracting_satisfies_OS` and the OS0–OS4 chain in
+> `Pphi2/Main.lean` as **provisional** until the vetting concludes.
+
 ## What this project proves
 
 **Main theorem** (`Pphi2/Main.lean`): For any even polynomial P of degree ≥ 4
