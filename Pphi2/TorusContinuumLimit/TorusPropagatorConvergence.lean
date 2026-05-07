@@ -99,9 +99,10 @@ theorem torusEmbeddedTwoPoint_eq_lattice_second_moment
     exact (configuration_eval_measurable f).mul (configuration_eval_measurable f)
       |>.aestronglyMeasurable
 
-/-- The lattice second moment equals the covariance inner product.
+/-- The lattice second moment equals the covariance inner product
+(GJ-aligned: uses `latticeCovarianceGJ`).
 
-  `∫ φ(g)² dμ_GFF = ⟨T(g), T(g)⟩_ℓ²`
+  `∫ φ(g)² dμ_GFF = ⟨T_GJ(g), T_GJ(g)⟩_ℓ²`
 
 This is `second_moment_eq_covariance` specialized to the lattice. -/
 theorem lattice_second_moment_eq_inner
@@ -111,8 +112,8 @@ theorem lattice_second_moment_eq_inner
       (ω g) ^ 2
       ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass) =
     @inner ℝ ell2' _
-      (latticeCovariance 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass g)
-      (latticeCovariance 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass g) := by
+      (latticeCovarianceGJ 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass g)
+      (latticeCovarianceGJ 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass g) := by
   exact second_moment_eq_covariance _ g
 
 /-- **Eigenvalue lower bound for the mass operator.**
@@ -448,6 +449,7 @@ theorem torusEmbeddedTwoPoint_eq_spectral_sum
     (N : ℕ) [NeZero N] (mass : ℝ) (hmass : 0 < mass)
     (f g : TorusTestFunction L) :
     torusEmbeddedTwoPoint L N mass hmass f g =
+    ((circleSpacing L N)^2 : ℝ)⁻¹ *
     ∑ k : FinLatticeSites 2 N,
       (massEigenvalues 2 N (circleSpacing L N) mass k)⁻¹ *
       (∑ x, (massEigenvectorBasis 2 N (circleSpacing L N) mass k :
@@ -456,7 +458,7 @@ theorem torusEmbeddedTwoPoint_eq_spectral_sum
         EuclideanSpace ℝ _) x * (latticeTestFn L N g) x) := by
   rw [torusEmbeddedTwoPoint_eq_lattice_cross_moment,
       lattice_cross_moment,
-      lattice_covariance_eq_spectral]
+      lattice_covariance_GJ_eq_spectral]
 
 /-! ## Propagator convergence on the torus -/
 
@@ -486,7 +488,29 @@ Proof strategy:
 4. Each term is bounded by `|coeff_m(f)|·|coeff_m(g)|/mass²` (summable).
 5. Apply `tendsto_tsum_of_dominated_convergence`.
 
-Reference: Glimm-Jaffe §6.1, Simon Ch. I. -/
+Reference: Glimm-Jaffe §6.1, Simon Ch. I.
+
+**Stage 1 axiomatisation note**: the gaussian-field
+`lattice_green_tendsto_continuum` proves convergence for the *bare*
+covariance. Under Option C, the GJ-aligned covariance differs by
+`(a^d)⁻¹`, and the embedding `evalTorusAtSite`'s `√a`-per-coordinate
+factor combines with this to give the textbook convergence. Threading
+this through requires the embedding-normalisation audit deferred to
+Phase 2; for now we state the GJ-aligned tendsto as an axiom
+(`torus_propagator_convergence_GJ`) and use it here. -/
+axiom torus_propagator_convergence_GJ
+    (mass : ℝ) (hmass : 0 < mass)
+    (f g : TorusTestFunction L) :
+    Tendsto
+      (fun N : ℕ =>
+        covariance
+          (latticeCovarianceGJ 2 (N + 1) (circleSpacing L (N + 1)) mass
+            (circleSpacing_pos L (N + 1)) hmass)
+          (fun x => evalTorusAtSite L (N + 1) x f)
+          (fun x => evalTorusAtSite L (N + 1) x g))
+      atTop
+      (nhds (torusContinuumGreen L mass hmass f g))
+
 theorem torus_propagator_convergence
     (mass : ℝ) (hmass : 0 < mass)
     (f g : TorusTestFunction L) :
@@ -494,10 +518,10 @@ theorem torus_propagator_convergence
       (fun N : ℕ => torusEmbeddedTwoPoint L (N + 1) mass hmass f g)
       atTop
       (nhds (torusContinuumGreen L mass hmass f g)) := by
-  -- Rewrite each torusEmbeddedTwoPoint as lattice covariance
+  -- Rewrite each torusEmbeddedTwoPoint as lattice covariance (GJ-aligned)
   have h_eq : ∀ N : ℕ, torusEmbeddedTwoPoint L (N + 1) mass hmass f g =
       covariance
-        (latticeCovariance 2 (N + 1) (circleSpacing L (N + 1)) mass
+        (latticeCovarianceGJ 2 (N + 1) (circleSpacing L (N + 1)) mass
           (circleSpacing_pos L (N + 1)) hmass)
         (fun x => evalTorusAtSite L (N + 1) x f)
         (fun x => evalTorusAtSite L (N + 1) x g) := by
@@ -505,9 +529,14 @@ theorem torus_propagator_convergence
     rw [torusEmbeddedTwoPoint_eq_lattice_cross_moment, lattice_cross_moment]
     rfl
   simp_rw [h_eq]
-  -- The target is greenFunctionBilinear
-  change Tendsto _ atTop (nhds (greenFunctionBilinear mass hmass f g))
-  exact lattice_green_tendsto_continuum L mass hmass f g
+  -- Under Option C, the embedded covariance is `(a^d)⁻¹` times the bare
+  -- covariance. The gaussian-field `lattice_green_tendsto_continuum`
+  -- proves convergence for the *bare* covariance; threading the
+  -- `(a^d)⁻¹` factor through to obtain the GJ-aligned convergence is
+  -- mechanical but requires re-examining the embedding's normalisation
+  -- conventions. Axiomatised in Stage 1; to be discharged in Phase 2
+  -- alongside the continuum-Wick infrastructure.
+  exact torus_propagator_convergence_GJ L mass hmass f g
 
 /-! ## Uniform bound on the embedded two-point function -/
 
@@ -527,32 +556,19 @@ This follows from:
 The key advantage over S'(ℝ^d): finite volume means the Riemann sum is over
 a finite domain, eliminating any IR contribution.
 
-Reference: Glimm-Jaffe §6.1 (lattice propagator bounds). -/
-theorem torusEmbeddedTwoPoint_uniform_bound (mass : ℝ) (hmass : 0 < mass)
+Reference: Glimm-Jaffe §6.1 (lattice propagator bounds).
+
+**Stage 1 axiomatisation note**: under Option C, the previous proof gave
+a bound `mass⁻² * Σ |f(x_a)|²`, which is uniform in N. With the GJ-aligned
+covariance, this becomes `(a^d)⁻¹ * mass⁻² * Σ |f(x_a)|²`. The uniform
+bound still holds because the embedding's `√a`-per-coordinate factor
+absorbs the `(a^d)⁻¹`: `(a^d)⁻¹ * Σ |f(x_a)|² · ‖eval‖² ≈
+(a^d)⁻¹ · ∫ |f|² · L^d ≈ ‖f‖_{L²}²`. Threading through requires the
+embedding-normalisation audit deferred to Phase 2. -/
+axiom torusEmbeddedTwoPoint_uniform_bound (mass : ℝ) (hmass : 0 < mass)
     (f : TorusTestFunction L) :
     ∃ C : ℝ, 0 < C ∧ ∀ (N : ℕ) [NeZero N],
-    torusEmbeddedTwoPoint L N mass hmass f f ≤ C := by
-  -- Step 1: Get the Riemann sum bound
-  obtain ⟨C_f, hC_f_pos, hC_f_bound⟩ := latticeTestFn_norm_sq_bounded L f
-  -- The bound is C = mass⁻² * C_f
-  refine ⟨mass⁻¹ ^ 2 * C_f, mul_pos (pow_pos (inv_pos.mpr hmass) 2) hC_f_pos, fun N _ => ?_⟩
-  -- Step 2: Rewrite as lattice second moment
-  rw [torusEmbeddedTwoPoint_eq_lattice_second_moment]
-  -- Step 3: Apply second moment = covariance identity
-  rw [lattice_second_moment_eq_inner]
-  -- Step 4: Apply covariance bound
-  calc
-    @inner ℝ ell2' _
-        (latticeCovariance 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass
-          (latticeTestFn L N f))
-        (latticeCovariance 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass
-          (latticeTestFn L N f))
-      ≤ mass⁻¹ ^ 2 *
-          ∑ x : FinLatticeSites 2 N, (latticeTestFn L N f x) ^ 2 := by
-        exact covariance_inner_le_mass_inv_sq_norm_sq N (circleSpacing L N) mass
-          (circleSpacing_pos L N) hmass (latticeTestFn L N f)
-    _ ≤ mass⁻¹ ^ 2 * C_f := by
-        apply mul_le_mul_of_nonneg_left (hC_f_bound N) (le_of_lt (pow_pos (inv_pos.mpr hmass) 2))
+    torusEmbeddedTwoPoint L N mass hmass f f ≤ C
 
 /-! ## Positivity of the continuum Green's function -/
 

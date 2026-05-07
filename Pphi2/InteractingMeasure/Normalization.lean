@@ -106,7 +106,7 @@ theorem field_second_moment_finite (P : InteractionPolynomial) (a mass : ℝ)
   -- Step 3: Get Gaussian integrability of (ω δx)²
   have h_sq_int : Integrable (fun ω : Configuration (FinLatticeField d N) =>
       (ω δx) ^ 2) μ_GFF := by
-    have := pairing_product_integrable (latticeCovariance d N a mass ha hmass) δx δx
+    have := pairing_product_integrable (latticeCovarianceGJ d N a mass ha hmass) δx δx
     simp only [sq]
     exact this
   -- Step 4: Dominate (ω δx)² * bw ω by (ω δx)² * exp(B)
@@ -166,7 +166,7 @@ theorem field_all_moments_finite (P : InteractionPolynomial) (a mass : ℝ)
   -- Pushforward by ω ↦ ω δx is a Gaussian; all moments of Gaussians are finite
   have h_pow_int : Integrable (fun ω : Configuration (FinLatticeField d N) =>
       (ω δx) ^ p) μ_GFF := by
-    set T := latticeCovariance d N a mass ha hmass
+    set T := latticeCovarianceGJ d N a mass ha hmass
     -- x^p is integrable under gaussianReal (Gaussian has all polynomial moments)
     have h_gauss := pairing_is_gaussian T δx
     have h_int_gauss : Integrable (fun x : ℝ => x ^ p)
