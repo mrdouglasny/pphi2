@@ -4,10 +4,29 @@ Three live routes + one preserved route. All share the interacting-measure
 framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
 **Current state** (`scripts/count_axioms.sh`, 2026-05-03):
-**pphi2 total: 19 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry**
+**pphi2 total: 18 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry**
 (per pphi2's currently-pinned gaussian-field SHA; the upstream
 gaussian-field origin/main has since moved further — see
 `gaussian-field/status.md` for its current standalone counts).
+
+Recent reductions:
+
+* 2026-04-29: `integral_operator_l2_kernel_compact` — the Hilbert-Schmidt
+  compactness theorem in convolution-kernel form — converted from axiom to
+  fully-proved theorem in `Pphi2/GeneralResults/HilbertSchmidt.lean`.
+  Downstream `transferOperator_isCompact` axiom footprint reduced to just
+  `[propext, Classical.choice, Quot.sound]`.
+* 2026-04-30 (this branch): `fourier_representation_convolution` (Fourier
+  identity for the convolution quadratic form) discharged as theorem in
+  `Pphi2/TransferMatrix/GaussianFourier.lean`, replaced by one cited
+  textbook axiom `fourierTransform_lp_eq_fourierIntegral` (Folland §8.3 /
+  Reed-Simon I §IX.4 — the L¹∩L² Plancherel agreement that Mathlib doesn't
+  yet package).
+* 2026-04-30 (PR #11, merged main): `cylinderIR_uniform_second_moment`
+  converted from axiom to theorem.
+
+Net: Transfer-matrix cluster 4 → 2 axioms (this branch). Route B′
+cylinder IR limit 3 → 2 axioms (PR #11). Total pphi2 axioms 22 → 18.
 
 ---
 
@@ -24,7 +43,7 @@ structurally assembled, conditional on the remaining axioms.
 
 | Cluster | Files | Axioms |
 |--------|-------|--------|
-| Transfer matrix + spectrum | `TransferMatrix/L2Operator`, `GaussianFourier`, `SpectralGap` | 4 |
+| Transfer matrix + spectrum | `TransferMatrix/L2Operator`, `GaussianFourier`, `SpectralGap` | 3 |
 | Lattice RP | `OSProofs/OS3_RP_Lattice` | 1 |
 | Lattice clustering / OS4 | `OSProofs/OS4_MassGap` | 2 |
 | Ward identity / continuum OS2 | `OSProofs/OS2_WardIdentity` | 1 |
@@ -32,7 +51,7 @@ structurally assembled, conditional on the remaining axioms.
 | Continuum limit / non-Gaussianity | `ContinuumLimit/Convergence` | 1 |
 | Continuum inheritance | `ContinuumLimit/AxiomInheritance` | 3 |
 | Main assembly | `Main.lean` | 1 |
-| **Route A total** | | **14** |
+| **Route A total** | | **13** |
 
 ### OS axiom strategy
 
@@ -51,8 +70,11 @@ structurally assembled, conditional on the remaining axioms.
   `spectral_gap_uniform`, `spectral_gap_lower_bound`, `continuumLimit_nonGaussian`,
   `pphi2_nontriviality`, `anomaly_bound_from_superrenormalizability`,
   `rotation_invariance_continuum`, `continuum_exponential_clustering`.
-- **Mathlib-upstream**: `integral_operator_l2_kernel_compact` (HS theorem, Reed-Simon),
-  `fourier_representation_convolution` (L² convolution theorem, not yet in Mathlib).
+- **Mathlib-upstream**: `fourier_representation_convolution` (L² convolution
+  theorem, not yet in Mathlib). (`integral_operator_l2_kernel_compact` —
+  the Reed-Simon HS theorem — was an axiom; **proved 2026-04-29** in
+  `Pphi2/GeneralResults/HilbertSchmidt.lean`. Belongs in Mathlib or
+  SpectralThm long-term.)
 - **Self-contained classical** (textbook but long): `gaussian_rp_cov_perfect_square`,
   `latticeGreenBilinear_basis_tendsto_continuum`.
 
@@ -209,14 +231,17 @@ Schwartz-nuclear-extension infrastructure. See `../gaussian-field/status.md`.
 
 | Route | Axioms | Sorries |
 |-------|--------|---------|
-| Route A (main line, ex-Bridge) | 14 | 0 |
+| Route A (main line, ex-Bridge) | 13 | 0 |
 | Route B (torus UV) | 0 | 0 |
 | Route B′ (cylinder IR limit) | 2 | 0 |
 | Bridge (cross-formulation) | 3 | 0 |
-| **pphi2 total** | **19** | **0** |
+| **pphi2 total** | **18** | **0** |
 | gaussian-field (upstream, pphi2-pinned) | 2 | 3 |
 
-Route B is the "done" route. Route B′ is the next candidate for a focused completion
-effort — its 3 axioms are structurally clear with documented proof routes, and no
-Route-B′-internal axiom is blocked by external work (unlike Route A's
-`fourier_representation_convolution`, which waits on Mathlib's L² convolution theorem).
+Route B is the "done" route. Route B′ is structurally clear (its 2
+axioms have documented proof routes). Route A's transfer-matrix
+cluster lost `fourier_representation_convolution` and
+`integral_operator_l2_kernel_compact` (this PR) — only the cited
+textbook bridge axiom `fourierTransform_lp_eq_fourierIntegral` remains
+on the L²-convolution side, waiting for upstream Mathlib's L¹∩L²
+Plancherel-agreement lemma.

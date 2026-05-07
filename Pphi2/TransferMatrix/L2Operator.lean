@@ -37,6 +37,7 @@ This gives `T = M_w ∘ Conv_G ∘ M_w` where:
 import Pphi2.TransferMatrix.TransferMatrix
 import Pphi2.TransferMatrix.L2Multiplication
 import Pphi2.TransferMatrix.L2Convolution
+import Pphi2.GeneralResults.HilbertSchmidt
 import GaussianField.SpectralTheorem
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
@@ -488,32 +489,12 @@ theorem transferOperator_isSelfAdjoint (P : InteractionPolynomial) (a mass : ℝ
     _ = @inner ℝ _ _ (A f) (B (A g)) := hB' _ _
     _ = @inner ℝ _ _ f (A (B (A g))) := hA' _ _
 
-/-- Convolution-form integral operators with square-integrable kernels are compact
-(Hilbert-Schmidt theorem).
-
-If `K ∈ L²(μ ⊗ μ)` and `T` is a continuous linear map on `L²(μ)` satisfying
-`(Tf)(x) = ∫ K(x,t) f(x-t) dμ(t)` a.e., then `T` is compact.
-
-This is the convolution-kernel form of the Hilbert-Schmidt compactness theorem.
-The standard-kernel form uses `∫ K(x,y) f(y) dy`; the two are related by the
-substitution `y = x - t`, which preserves `‖K‖_{L²}` on Haar-measure spaces.
-
-The proof approximates `K` by finite-rank kernels `Kₙ → K` in `L²`, shows the
-corresponding operators `T_{Kₙ}` are finite-rank (hence compact), and proves
-`T_{Kₙ} → T` in operator norm via `isCompactOperator_of_tendsto`.
-
-**Reference**: Reed-Simon I, Theorem VI.23; Simon §III.2. -/
-axiom integral_operator_l2_kernel_compact
-    {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
-    [MeasurableSpace G] [BorelSpace G] [T2Space G]
-    [LocallyCompactSpace G] [SecondCountableTopology G]
-    {μ : Measure G} [μ.IsAddHaarMeasure]
-    (K : G → G → ℝ)
-    (hK : MemLp (Function.uncurry K) 2 (μ.prod μ))
-    (T : (Lp ℝ 2 μ) →L[ℝ] (Lp ℝ 2 μ))
-    (hT : ∀ f : Lp ℝ 2 μ,
-      (T f : G → ℝ) =ᵐ[μ] fun x => ∫ t, K x t * (f : G → ℝ) (x - t) ∂μ) :
-    IsCompactOperator T
+-- `integral_operator_l2_kernel_compact` (Hilbert-Schmidt compactness in
+-- convolution-kernel form) is proved as a theorem in
+-- `Pphi2.GeneralResults.HilbertSchmidt`. The reference there is the canonical
+-- statement; we re-export it here for compatibility with downstream callers
+-- that previously imported from this module.
+export Pphi2.GeneralResults (integral_operator_l2_kernel_compact)
 
 /-- The tensor product kernel `K(x,t) = w(x) · g(t)` is in `L²(μ ⊗ μ)` when
 `w ∈ L²` and `g ∈ L²`.
@@ -625,12 +606,20 @@ theorem hilbert_schmidt_isCompact
 
 /-- The transfer operator is compact on L²(ℝ^Ns).
 
-The kernel `K(ψ,ψ') = w(ψ) G(ψ-ψ') w(ψ')` satisfies
-`|K(ψ,ψ')|² ≤ w(ψ)² w(ψ')²` (since `G ≤ 1`), and `w ∈ L²`
-(from Gaussian decay, `transferWeight_memLp_two`), so `K ∈ L²(ℝ^Ns × ℝ^Ns)`
-and the operator is Hilbert-Schmidt, hence compact.
+**Proof**: Apply `hilbert_schmidt_isCompact` to the factorization
+`T = M_w ∘ Conv_G ∘ M_w`. Hilbert-Schmidt compactness is used only on the
+inner pair `M_w ∘ Conv_G`, whose convolution kernel `K(x,t) = w(x) · G(t)`
+lies in `L²(μ ⊗ μ)` because `w ∈ L²` (from Gaussian decay,
+`transferWeight_memLp_two`) and `G ∈ L¹` with `‖G‖_∞ ≤ 1` — so
+`‖K‖²_{L²(μ⊗μ)} = ‖w‖²₂ · ‖G‖²₂ ≤ ‖w‖²₂ · ‖G‖₁ < ∞`. The right-hand
+`M_w` factor is then composed in as a bounded CLM, preserving compactness.
 
-**Proof**: Verified hypotheses of `hilbert_schmidt_isCompact`:
+(Hilbert-Schmidt compactness applied directly to the full kernel
+`K(ψ,ψ') = w(ψ) G(ψ-ψ') w(ψ')` would also work, but routing through the
+inner pair is what `hilbert_schmidt_isCompact` actually does and avoids
+re-proving the L² product bound for the full kernel.)
+
+Hypotheses verified for `hilbert_schmidt_isCompact`:
 - `w = transferWeight` is measurable, essentially bounded, and in L²
 - `G = transferGaussian` is in L¹ and satisfies `‖G‖_∞ ≤ 1` -/
 theorem transferOperator_isCompact (P : InteractionPolynomial) (a mass : ℝ)

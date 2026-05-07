@@ -16,7 +16,7 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-03): 19 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-03): 18 axioms, 0 sorries.**
 
 Recent reduction (2026-04-30, this PR): `cylinderIR_uniform_second_moment`
 in `IRLimit/UniformExponentialMoment.lean` converted from axiom to theorem,
