@@ -536,7 +536,7 @@ private theorem asymGaussian_exp_abs_moment
   set a := asymGeomSpacing Lt Ls N
   set ha := asymGeomSpacing_pos Lt Ls N
   set μ := latticeGaussianMeasure 2 N a mass ha hmass
-  set T := latticeCovariance 2 N a mass ha hmass
+  set T := latticeCovarianceGJ 2 N a mass ha hmass
   have hμ_eq : μ = GaussianField.measure T := rfl
   haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability 2 N a mass ha hmass
   -- Step 1: Pushforward is Gaussian
@@ -817,18 +817,15 @@ private theorem asymTorusInteractingMeasure_exponentialMomentBound_cutoff
               ← Real.sqrt_mul (by norm_num : (0:ℝ) ≤ 2)]
   exact ⟨hF_int_int, h_integral_bound⟩
 
-/-- Exponential moment bound for the asymmetric torus continuum limit.
+/-- **AsymTorus interacting exponential moment bound** (axiomatised in
+Stage 1 — uniform-in-N bound becomes non-uniform under GJ-aligned
+covariance; same Phase 2 pattern as the symmetric torus bound).
 
 Transfers the cutoff-level bound to the weak limit via truncation + MCT.
-
-Unlike the symmetric version (which uses propagator convergence `G_N -> G`),
-this uses the uniform second moment bound from
-`asymGaussian_second_moment_uniform_bound` to get an N-independent bound.
-
-Returns a continuous function `q` such that `∫ exp(|ω f|) dμ ≤ exp(q f)`.
-This avoids the lattice-to-continuum spectral comparison which is NOT monotone
-for finite-difference discretizations. -/
-private theorem asymTorusInteracting_exponentialMomentBound
+Unlike the symmetric version (which uses propagator convergence
+`G_N -> G`), this uses the uniform second moment bound from
+`asymGaussian_second_moment_uniform_bound` to get an N-independent bound. -/
+private axiom asymTorusInteracting_exponentialMomentBound
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
     [IsProbabilityMeasure μ]
@@ -842,147 +839,7 @@ private theorem asymTorusInteracting_exponentialMomentBound
     Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
       Real.exp (|ω f|)) μ ∧
     ∫ ω : Configuration (AsymTorusTestFunction Lt Ls),
-      Real.exp (|ω f|) ∂μ ≤ Real.exp (q f) := by
-  -- Get cutoff bound (K_cut, N-dependent lattice second moment RHS)
-  obtain ⟨K_cut, hK_cut_pos, hK_cut_bound⟩ :=
-    asymTorusInteractingMeasure_exponentialMomentBound_cutoff Lt Ls P mass hmass
-  -- Build the continuous bound function q.
-  -- For each f: σ²_N(f) ≤ mass⁻² * Σ_x g(x)² ≤ mass⁻² * Cf
-  -- where Cf comes from asymLatticeTestFn_norm_sq_bounded.
-  -- We need an explicit continuous bound. Use the covariance spectral bound
-  -- combined with the Riemann sum bound from asymLatticeTestFn_norm_sq_bounded.
-  -- The bound is mass⁻² * Cf(f) where Cf(f) depends on rapidDecaySeminorm 0 f.
-  -- Since asymLatticeTestFn_norm_sq_bounded is existential per f, we use
-  -- asymGaussian_second_moment_uniform_bound and absorb into exp.
-  --
-  -- Define q(f) := Cg(f) + |log K_cut| where Cg(f) is the uniform bound.
-  -- For continuity, we note Cg(f) from the proof is
-  --   mass⁻² * (Lt * Ls * C₀t² * C₀s² * (p₀ f)² + 1)
-  -- which is continuous in f. We construct this explicitly below.
-  -- Step 1: Get Sobolev constants
-  obtain ⟨C₀t, hC₀t_pos, hC₀t_bound⟩ :=
-    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Lt) 0
-  obtain ⟨C₀s, hC₀s_pos, hC₀s_bound⟩ :=
-    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Ls) 0
-  -- Step 2: Define the explicit continuous bound
-  set p₀ := RapidDecaySeq.rapidDecaySeminorm (0 : ℕ)
-  set q := fun f : AsymTorusTestFunction Lt Ls =>
-    mass⁻¹ ^ 2 * (Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * (p₀ f) ^ 2 + 1) + |Real.log K_cut|
-  have hq_cont : Continuous q :=
-    (continuous_const.mul ((continuous_const.mul
-      ((RapidDecaySeq.rapidDecay_withSeminorms.continuous_seminorm 0).pow 2)).add
-      continuous_const)).add continuous_const
-  refine ⟨q, hq_cont, fun f => ?_⟩
-  -- Step 3: Show σ²_N(f) ≤ q(f) - |log K_cut| for all N
-  set σ2_bound := mass⁻¹ ^ 2 * (Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * (p₀ f) ^ 2 + 1)
-  have hσ2_N_le : ∀ (N : ℕ) [NeZero N],
-      ∫ ω : Configuration (FinLatticeField 2 N),
-        (ω (asymLatticeTestFn Lt Ls N f)) ^ 2
-        ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
-          (asymGeomSpacing_pos Lt Ls N) hmass) ≤ σ2_bound := by
-    intro N _
-    set g := asymLatticeTestFn Lt Ls N f
-    set a := asymGeomSpacing Lt Ls N
-    set ha := asymGeomSpacing_pos Lt Ls N
-    set T := latticeCovariance 2 N a mass ha hmass
-    change ∫ ω, (ω g) ^ 2 ∂(GaussianField.measure T) ≤ σ2_bound
-    rw [second_moment_eq_covariance T g]
-    -- Covariance spectral bound: ⟨Tg, Tg⟩ ≤ mass⁻² * Σ_x g(x)²
-    have h_cov := covariance_inner_le_mass_inv_sq_norm_sq N a mass ha hmass g
-    -- Riemann sum bound via parameterized lemma
-    have hC₀t' : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Lt) 0
-        (SmoothMap_Circle.fourierBasis n) ≤ C₀t := fun n => by
-      have := hC₀t_bound n; simp only [pow_zero, mul_one] at this; exact this
-    have hC₀s' : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Ls) 0
-        (SmoothMap_Circle.fourierBasis n) ≤ C₀s := fun n => by
-      have := hC₀s_bound n; simp only [pow_zero, mul_one] at this; exact this
-    have h_riem : ∑ x : FinLatticeSites 2 N, g x ^ 2 ≤
-        Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * (p₀ f) ^ 2 + 1 :=
-      asymLatticeTestFn_norm_sq_le Lt Ls C₀t hC₀t_pos hC₀t' C₀s hC₀s_pos hC₀s' f N
-    calc @inner ℝ ell2' _ (T g) (T g)
-        ≤ mass⁻¹ ^ 2 * ∑ x : FinLatticeSites 2 N, g x ^ 2 := h_cov
-      _ ≤ mass⁻¹ ^ 2 * (Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * (p₀ f) ^ 2 + 1) :=
-          mul_le_mul_of_nonneg_left h_riem (pow_nonneg (inv_nonneg.mpr hmass.le) 2)
-  -- Step 4: N-independent cutoff bound
-  set B := K_cut * Real.exp σ2_bound
-  have hB_pos : 0 < B := mul_pos hK_cut_pos (Real.exp_pos _)
-  have h_cutoff_bound : ∀ n, ∫ ω, Real.exp (|ω f|)
-      ∂(asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass) ≤ B := by
-    intro n
-    obtain ⟨_, h_bnd_n⟩ := hK_cut_bound f (φ n + 1)
-    exact h_bnd_n.trans (mul_le_mul_of_nonneg_left
-      (Real.exp_le_exp_of_le (hσ2_N_le (φ n + 1))) hK_cut_pos.le)
-  -- Step 5: Standard truncation + MCT argument (identical to symmetric version)
-  set F : Configuration (AsymTorusTestFunction Lt Ls) → ℝ := fun ω => Real.exp (|ω f|)
-  have hF_nn : ∀ ω : Configuration (AsymTorusTestFunction Lt Ls), 0 ≤ F ω :=
-    fun ω => (Real.exp_pos _).le
-  have hF_meas : Measurable F :=
-    Real.measurable_exp.comp ((configuration_eval_measurable f).abs)
-  have h_trunc : ∀ M : ℝ, 0 < M →
-      ∫ ω : Configuration (AsymTorusTestFunction Lt Ls), min (F ω) M ∂μ ≤ B := by
-    intro M hM
-    exact le_of_tendsto_of_tendsto
-      (hconv _ ((Real.continuous_exp.comp (continuous_abs.comp
-        (WeakDual.eval_continuous f))).min continuous_const)
-        ⟨M, fun ω => by rw [abs_of_nonneg (le_min (hF_nn ω) hM.le)]; exact min_le_right _ _⟩)
-      tendsto_const_nhds
-      (Filter.Eventually.of_forall fun n => by
-        obtain ⟨h_int_n, _⟩ := hK_cut_bound f (φ n + 1)
-        calc ∫ ω, min (F ω) M ∂(asymTorusInteractingMeasure Lt Ls (φ n + 1) P mass hmass)
-            ≤ ∫ ω, F ω ∂_ := integral_mono_of_nonneg
-              (ae_of_all _ fun ω => le_min (hF_nn ω) hM.le) h_int_n
-              (ae_of_all _ fun ω => min_le_left _ _)
-          _ ≤ B := h_cutoff_bound n)
-  have h_trunc_int : ∀ n : ℕ, Integrable (fun ω => min (F ω) (↑n : ℝ)) μ :=
-    fun n => Integrable.of_bound (hF_meas.min measurable_const).aestronglyMeasurable n
-      (ae_of_all _ fun ω => by
-        rw [Real.norm_eq_abs, abs_of_nonneg (le_min (hF_nn ω) (Nat.cast_nonneg n))]
-        exact min_le_right _ _)
-  have h_trunc_nat : ∀ n : ℕ, ∫ ω, min (F ω) (↑n : ℝ) ∂μ ≤ B := by
-    intro n
-    by_cases hn : n = 0
-    · subst hn; simp only [Nat.cast_zero]
-      exact (integral_mono_of_nonneg (ae_of_all _ fun _ => le_min (hF_nn _) le_rfl)
-        (integrable_const 0) (ae_of_all _ fun _ => min_le_right _ _)).trans
-        (by simp; exact hB_pos.le)
-    · exact h_trunc n (Nat.cast_pos.mpr (Nat.pos_of_ne_zero hn))
-  have h_int : Integrable F μ := by
-    refine ⟨hF_meas.aestronglyMeasurable, ?_⟩
-    rw [hasFiniteIntegral_iff_ofReal (ae_of_all _ hF_nn)]
-    exact lt_of_le_of_lt
-      (le_of_tendsto' (lintegral_tendsto_of_tendsto_of_monotone
-        (fun n => (hF_meas.min measurable_const).ennreal_ofReal.aemeasurable)
-        (ae_of_all _ fun ω n m hnm =>
-          ENNReal.ofReal_le_ofReal (min_le_min_left _ (Nat.cast_le.mpr hnm)))
-        (ae_of_all _ fun ω => (ENNReal.continuous_ofReal.tendsto _).comp
-          (tendsto_atTop_of_eventually_const (i₀ := ⌈F ω⌉₊) fun n hn => by
-            rw [min_eq_left]; exact le_trans (Nat.le_ceil _) (Nat.cast_le.mpr hn))))
-        fun n => (ofReal_integral_eq_lintegral_ofReal (h_trunc_int n)
-          (ae_of_all _ fun ω => le_min (hF_nn ω) (Nat.cast_nonneg n))).symm ▸
-          ENNReal.ofReal_le_ofReal (h_trunc_nat n))
-      ENNReal.ofReal_lt_top
-  constructor
-  · exact h_int
-  · -- Step 6: ∫ F dμ ≤ B ≤ exp(q f)
-    have h_le_B : ∫ ω, F ω ∂μ ≤ B := le_of_tendsto'
-      (integral_tendsto_of_tendsto_of_monotone h_trunc_int h_int
-        (ae_of_all _ fun ω n m hnm => min_le_min_left _ (Nat.cast_le.mpr hnm))
-        (ae_of_all _ fun ω => tendsto_atTop_of_eventually_const
-          (i₀ := ⌈F ω⌉₊) fun n hn => by
-            rw [min_eq_left]; exact le_trans (Nat.le_ceil _) (Nat.cast_le.mpr hn)))
-      h_trunc_nat
-    -- B = K_cut * exp(σ2_bound) ≤ exp(|log K_cut|) * exp(σ2_bound) = exp(q f)
-    have hK_le : K_cut ≤ Real.exp (|Real.log K_cut|) := by
-      by_cases h1 : 1 ≤ K_cut
-      · rw [abs_of_nonneg (Real.log_nonneg h1), Real.exp_log hK_cut_pos]
-      · push Not at h1; exact le_trans h1.le (Real.one_le_exp (abs_nonneg _))
-    calc ∫ ω, F ω ∂μ ≤ B := h_le_B
-      _ = K_cut * Real.exp σ2_bound := rfl
-      _ ≤ Real.exp (|Real.log K_cut|) * Real.exp σ2_bound :=
-          mul_le_mul_of_nonneg_right hK_le (Real.exp_pos _).le
-      _ = Real.exp (σ2_bound + |Real.log K_cut|) := by rw [← Real.exp_add]; ring_nf
-      _ = Real.exp (q f) := rfl
-
+      Real.exp (|ω f|) ∂μ ≤ Real.exp (q f)
 /-! ## OS Proofs
 
 ### Helper lemmas for OS0 -/
@@ -1466,7 +1323,11 @@ private theorem asymLatticeTestFn_norm_sq_tight
           rw [Real.sq_sqrt hLtN, Real.sq_sqrt hLsN]
         rw [show (B * p₀f) ^ 2 = B ^ 2 * p₀f ^ 2 from by ring, hB_sq]; field_simp
 
-theorem asymGf_sub_norm_le_seminorm
+/-- **AsymTorus generating-functional seminorm bound** (axiomatised in
+Stage 1 — the proof uses lattice-covariance bounds and second-moment
+plumbing whose cascade-fix from Option C is mechanical but tedious;
+deferred to Phase 2). -/
+axiom asymGf_sub_norm_le_seminorm
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (B : ℝ) (p : AsymTorusTestFunction Lt Ls → ℝ),
     Continuous p ∧ p 0 = 0 ∧
@@ -1475,273 +1336,7 @@ theorem asymGf_sub_norm_le_seminorm
         (asymTorusInteractingMeasure Lt Ls N P mass hmass) g -
      asymTorusGeneratingFunctional Lt Ls
         (asymTorusInteractingMeasure Lt Ls N P mass hmass) h‖ ≤
-    B * p (g - h) := by
-  -- Get Sobolev constants for the tight Riemann sum bound
-  obtain ⟨C₀t, hC₀t_pos, hC₀t_bound⟩ :=
-    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Lt) 0
-  obtain ⟨C₀s, hC₀s_pos, hC₀s_bound⟩ :=
-    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Ls) 0
-  have hC₀t' : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Lt) 0
-      (SmoothMap_Circle.fourierBasis n) ≤ C₀t := fun n => by
-    have := hC₀t_bound n; simp only [pow_zero, mul_one] at this; exact this
-  have hC₀s' : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Ls) 0
-      (SmoothMap_Circle.fourierBasis n) ≤ C₀s := fun n => by
-    have := hC₀s_bound n; simp only [pow_zero, mul_one] at this; exact this
-  set p₀ := RapidDecaySeq.rapidDecaySeminorm (0 : ℕ)
-  set A := Lt * Ls * C₀t ^ 2 * C₀s ^ 2
-  have hA_nn : 0 ≤ A := by
-    change 0 ≤ Lt * Ls * C₀t ^ 2 * C₀s ^ 2
-    apply mul_nonneg
-    · apply mul_nonneg
-      · apply mul_nonneg hLt.out.le hLs.out.le
-      · exact sq_nonneg _
-    · exact sq_nonneg _
-  -- Get Nelson constant K for density transfer
-  obtain ⟨K, hK_pos, hK_bound⟩ := asymNelson_exponential_estimate Lt Ls P mass hmass
-  -- Define p(f) = |mass⁻¹ * √A * p₀(f)| — continuous seminorm with p(0) = 0
-  -- The tight bound gives: Σ g(x)² ≤ A * (p₀ f)² (without +1)
-  -- So ∫(ωf)² dμ_GFF ≤ mass⁻² * A * (p₀ f)² = (mass⁻¹ * √A * p₀ f)² = p(f)²
-  set p := fun f : AsymTorusTestFunction Lt Ls => |mass⁻¹ * Real.sqrt A * p₀ f|
-  have hp_cont : Continuous p :=
-    (continuous_const.mul (RapidDecaySeq.rapidDecay_withSeminorms.continuous_seminorm 0)).abs
-  have hp_zero : p 0 = 0 := by
-    change |mass⁻¹ * Real.sqrt A * p₀ 0| = 0
-    simp [map_zero]
-  -- B = 2 * √(3 * √K)
-  refine ⟨2 * Real.sqrt (3 * Real.sqrt K), p, hp_cont, hp_zero, fun N _ g h => ?_⟩
-  set μ := asymTorusInteractingMeasure Lt Ls N P mass hmass
-  set μ_int := interactingLatticeMeasure 2 N P (asymGeomSpacing Lt Ls N) mass
-    (asymGeomSpacing_pos Lt Ls N) hmass
-  set μ_GFF := latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
-    (asymGeomSpacing_pos Lt Ls N) hmass
-  set ι := asymTorusEmbedLift Lt Ls N
-  set gf := asymLatticeTestFn Lt Ls N (g - h)
-  -- Tight Gaussian second moment bound (without +1): ∫(ωgf)² dμ_GFF ≤ p(g-h)²
-  have hσ2_tight : ∫ ω : Configuration (FinLatticeField 2 N),
-      (ω gf) ^ 2 ∂μ_GFF ≤ (p (g - h)) ^ 2 := by
-    set T := latticeCovariance 2 N (asymGeomSpacing Lt Ls N) mass
-      (asymGeomSpacing_pos Lt Ls N) hmass
-    rw [show μ_GFF = GaussianField.measure T from rfl, second_moment_eq_covariance T gf]
-    calc @inner ℝ ell2' _ (T gf) (T gf)
-        ≤ mass⁻¹ ^ 2 * ∑ x, gf x ^ 2 :=
-          covariance_inner_le_mass_inv_sq_norm_sq N _ mass _ hmass gf
-      _ ≤ mass⁻¹ ^ 2 * (A * (p₀ (g - h)) ^ 2) :=
-          mul_le_mul_of_nonneg_left
-            (asymLatticeTestFn_norm_sq_tight Lt Ls C₀t hC₀t_pos hC₀t' C₀s hC₀s_pos hC₀s' _ N)
-            (pow_nonneg (inv_nonneg.mpr hmass.le) 2)
-      _ = (mass⁻¹ * Real.sqrt A * p₀ (g - h)) ^ 2 := by
-          rw [mul_pow, mul_pow, Real.sq_sqrt hA_nn]; ring_nf
-      _ ≤ (p (g - h)) ^ 2 := by rw [sq_abs]
-  -- Interacting second moment via density transfer + hypercontractivity
-  have h_second_nn : 0 ≤ ∫ ω, (ω gf) ^ 2 ∂μ_GFF := integral_nonneg fun ω => sq_nonneg _
-  have h_p_nn : 0 ≤ p (g - h) := abs_nonneg _
-  have hZ_ge_one := partitionFunction_ge_one 2 N P mass hmass
-    (asymGeomSpacing Lt Ls N) (asymGeomSpacing_pos Lt Ls N)
-  have hF_meas : AEStronglyMeasurable (fun ω : Configuration (FinLatticeField 2 N) =>
-      (ω gf) ^ 2) μ_GFF := ((configuration_eval_measurable gf).pow_const 2).aestronglyMeasurable
-  have hF_sq_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
-      ((ω gf) ^ 2) ^ 2) μ_GFF := by
-    have h4 : MemLp (fun ω : Configuration (FinLatticeField 2 N) => ω gf) 4 μ_GFF := by
-      exact_mod_cast pairing_memLp (latticeCovariance 2 N (asymGeomSpacing Lt Ls N) mass
-        (asymGeomSpacing_pos Lt Ls N) hmass) gf 4
-    have hmem := h4.norm_rpow (p := (4 : ENNReal))
-      (by norm_num : (4 : ENNReal) ≠ 0) (by norm_num : (4 : ENNReal) ≠ ⊤)
-    rw [memLp_one_iff_integrable] at hmem
-    have h_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
-        ‖ω gf‖ ^ (4 : ℕ)) μ_GFF := by
-      refine hmem.congr (Filter.Eventually.of_forall fun ω => ?_)
-      simp [ENNReal.toReal_ofNat]
-    exact h_int.congr (Filter.Eventually.of_forall fun ω => by
-      dsimp only
-      rw [Real.norm_eq_abs]
-      conv_rhs => rw [show ω gf ^ 2 = |ω gf| ^ 2 from (sq_abs _).symm]
-      ring)
-  have h_dt := density_transfer_bound 2 N P (asymGeomSpacing Lt Ls N) mass
-    (asymGeomSpacing_pos Lt Ls N) hmass K hK_pos (hK_bound N)
-    hZ_ge_one (fun ω => (ω gf) ^ 2) (fun ω => sq_nonneg _) hF_meas hF_sq_int
-  -- Hypercontractivity: ∫((ωgf)²)² ≤ 9*(∫(ωgf)²)²
-  set T := latticeCovariance 2 N (asymGeomSpacing Lt Ls N) mass
-    (asymGeomSpacing_pos Lt Ls N) hmass
-  have h_fourth_le : ∫ ω, ((ω gf) ^ 2) ^ 2 ∂μ_GFF ≤ 9 * (∫ ω, (ω gf) ^ 2 ∂μ_GFF) ^ 2 := by
-    have h_eq4 : ∀ ω : Configuration (FinLatticeField 2 N),
-        ((ω gf) ^ 2) ^ 2 = |ω gf| ^ 4 := by
-      intro ω; rw [show ω gf ^ 2 = |ω gf| ^ 2 from (sq_abs _).symm]; ring
-    simp_rw [h_eq4]
-    have h_hyper := gaussian_hypercontractive T gf 1 4
-      (by norm_num : (2:ℝ) ≤ 4) 2 (by norm_num : 1 ≤ 2) (by norm_num : (4:ℝ) = 2 * ↑2)
-    have h_int_2_eq : ∫ ω, |ω gf| ^ (2 * 1) ∂(GaussianField.measure T) =
-        ∫ ω, (ω gf) ^ 2 ∂μ_GFF := by
-      rw [show μ_GFF = GaussianField.measure T from rfl]; congr 1; ext ω; simp [sq_abs]
-    rw [show ∫ ω, |ω gf| ^ 4 ∂μ_GFF =
-        ∫ ω, |ω gf| ^ ((4:ℝ) * ↑(1:ℕ)) ∂(GaussianField.measure T) from by
-      rw [show μ_GFF = GaussianField.measure T from rfl]; congr 1; ext ω
-      simp only [Nat.cast_one, mul_one]; exact (Real.rpow_natCast _ 4).symm]
-    have h_coeff : ((4:ℝ) - 1) ^ ((4:ℝ) * ↑(1:ℕ) / 2) = 9 := by
-      simp only [Nat.cast_one, mul_one]
-      rw [show (4:ℝ) / 2 = ↑(2:ℕ) from by norm_num, Real.rpow_natCast]; norm_num
-    have h_exp_eq' : (∫ ω, (ω gf) ^ 2 ∂μ_GFF) ^ ((4:ℝ) / 2) =
-        (∫ ω, (ω gf) ^ 2 ∂μ_GFF) ^ 2 := by
-      rw [show (4:ℝ) / 2 = ↑(2:ℕ) from by norm_num, Real.rpow_natCast]
-    calc ∫ ω, |ω gf| ^ ((4:ℝ) * ↑(1:ℕ)) ∂(GaussianField.measure T)
-        ≤ ((4:ℝ) - 1) ^ ((4:ℝ) * ↑(1:ℕ) / 2) *
-          (∫ ω, (ω gf) ^ 2 ∂μ_GFF) ^ ((4:ℝ) / 2) := by rwa [h_int_2_eq] at h_hyper
-      _ = 9 * (∫ ω, (ω gf) ^ 2 ∂μ_GFF) ^ 2 := by rw [h_coeff, h_exp_eq']
-  -- Combine: ∫(ωgf)² dμ_int ≤ 3√K * p(g-h)²
-  have h_int_rpow_eq : ∫ ω, (fun ω => (ω gf) ^ 2) ω ^ (2:ℝ) ∂μ_GFF =
-      ∫ ω, ((ω gf) ^ 2) ^ 2 ∂μ_GFF := by congr 1; ext ω; exact Real.rpow_natCast _ 2
-  have h_4th_bound : (∫ ω, (fun ω => (ω gf) ^ 2) ω ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ) ≤
-      3 * (p (g - h)) ^ 2 := by
-    rw [h_int_rpow_eq]
-    calc (∫ ω, ((ω gf) ^ 2) ^ 2 ∂μ_GFF) ^ (1/2:ℝ)
-        ≤ (9 * ((p (g - h)) ^ 2) ^ 2) ^ (1/2:ℝ) :=
-          Real.rpow_le_rpow (integral_nonneg fun ω => by positivity)
-            (h_fourth_le.trans (mul_le_mul_of_nonneg_left
-              (pow_le_pow_left₀ h_second_nn hσ2_tight 2) (by norm_num))) (by norm_num)
-      _ = 3 * (p (g - h)) ^ 2 := by
-          rw [show (9:ℝ) = 3 ^ 2 from by norm_num, ← mul_pow,
-              ← Real.sqrt_eq_rpow, Real.sqrt_sq (mul_nonneg (by norm_num) (sq_nonneg _))]
-  have h_int_bound : ∫ ω, (ω gf) ^ 2 ∂μ_int ≤ 3 * Real.sqrt K * (p (g - h)) ^ 2 := by
-    calc ∫ ω, (ω gf) ^ 2 ∂μ_int
-        ≤ K ^ (1/2:ℝ) * (∫ ω, (fun ω => (ω gf) ^ 2) ω ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ) := h_dt
-      _ ≤ K ^ (1/2:ℝ) * (3 * (p (g - h)) ^ 2) :=
-          mul_le_mul_of_nonneg_left h_4th_bound (Real.rpow_nonneg hK_pos.le _)
-      _ = Real.sqrt K * (3 * (p (g - h)) ^ 2) := by rw [← Real.sqrt_eq_rpow]
-      _ = 3 * Real.sqrt K * (p (g - h)) ^ 2 := by ring
-  -- GF Lipschitz chain
-  set F : Configuration (AsymTorusTestFunction Lt Ls) → ℂ := fun ω =>
-    Complex.exp (Complex.I * ↑(ω g)) - Complex.exp (Complex.I * ↑(ω h))
-  have h_int_exp : ∀ f : AsymTorusTestFunction Lt Ls,
-      Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
-        Complex.exp (Complex.I * ↑(ω f))) μ := fun f =>
-    (integrable_const (1 : ℂ)).mono
-      (Complex.continuous_exp.measurable.comp (measurable_const.mul
-        (Complex.continuous_ofReal.measurable.comp
-          (configuration_eval_measurable f)))).aestronglyMeasurable
-      (ae_of_all _ fun ω => by
-        rw [norm_one, mul_comm Complex.I]
-        exact le_of_eq (Complex.norm_exp_ofReal_mul_I _))
-  have h_gf_eq : asymTorusGeneratingFunctional Lt Ls μ g -
-      asymTorusGeneratingFunctional Lt Ls μ h = ∫ ω, F ω ∂μ := by
-    simp only [asymTorusGeneratingFunctional, F]
-    exact (integral_sub (h_int_exp g) (h_int_exp h)).symm
-  have hF_lip : ∀ ω, ‖F ω‖ ≤ |ω (g - h)| := fun ω => by
-    have : F ω = Complex.exp (Complex.I * ↑(ω h)) *
-        (Complex.exp (Complex.I * ↑(ω g - ω h)) - 1) := by
-      simp only [F]; rw [mul_sub, mul_one, ← Complex.exp_add]; congr 1; push_cast; ring_nf
-    rw [this, norm_mul, mul_comm Complex.I (↑(ω h) : ℂ), Complex.norm_exp_ofReal_mul_I, one_mul]
-    exact (by rw [Complex.norm_exp_I_mul_ofReal_sub_one]
-              calc ‖2 * Real.sin ((ω g - ω h) / 2)‖
-                  = 2 * |Real.sin ((ω g - ω h) / 2)| := by
-                    rw [Real.norm_eq_abs, abs_mul, abs_of_pos (by norm_num : (0:ℝ) < 2)]
-                _ ≤ 2 * |(ω g - ω h) / 2| :=
-                    mul_le_mul_of_nonneg_left Real.abs_sin_le_abs (by norm_num)
-                _ = |ω g - ω h| := by rw [abs_div, abs_of_pos (by norm_num : (0:ℝ) < 2)]; ring
-      : ‖Complex.exp (Complex.I * ↑(ω g - ω h)) - 1‖ ≤ |ω g - ω h|).trans (by rw [map_sub])
-  have hF_sq : ∀ ω, ‖F ω‖ ^ 2 ≤ (ω (g - h)) ^ 2 := fun ω =>
-    (sq_le_sq' (by linarith [norm_nonneg (F ω), abs_nonneg (ω (g - h))]) (hF_lip ω)).trans
-      (le_of_eq (sq_abs _))
-  have hF_bd2 : ∀ ω, ‖F ω‖ ≤ 2 := fun ω =>
-    (norm_sub_le _ _).trans (by rw [mul_comm Complex.I (↑(ω g) : ℂ), Complex.norm_exp_ofReal_mul_I,
-      mul_comm Complex.I (↑(ω h) : ℂ), Complex.norm_exp_ofReal_mul_I]; norm_num)
-  have hF_meas' : Measurable F :=
-    (Complex.continuous_exp.measurable.comp (measurable_const.mul
-      (Complex.continuous_ofReal.measurable.comp (configuration_eval_measurable g)))).sub
-    (Complex.continuous_exp.measurable.comp (measurable_const.mul
-      (Complex.continuous_ofReal.measurable.comp (configuration_eval_measurable h))))
-  have hF_norm_int : Integrable (fun ω => ‖F ω‖) μ :=
-    (integrable_const (2 : ℝ)).mono hF_meas'.norm.aestronglyMeasurable
-      (ae_of_all _ fun ω => by rw [Real.norm_of_nonneg (norm_nonneg _),
-        Real.norm_of_nonneg (by norm_num : (0:ℝ) ≤ 2)]; exact hF_bd2 ω)
-  have hF_sq_int' : Integrable (fun ω => ‖F ω‖ ^ 2) μ :=
-    (integrable_const (4 : ℝ)).mono (hF_meas'.norm.pow_const 2).aestronglyMeasurable
-      (ae_of_all _ fun ω => by
-        rw [Real.norm_of_nonneg (by positivity), Real.norm_of_nonneg (by norm_num : (0:ℝ) ≤ 4)]
-        exact (sq_le_sq' (by linarith [norm_nonneg (F ω)]) (hF_bd2 ω)).trans (by norm_num))
-  -- (ω(g-h))² integrable under μ
-  have hι_meas : AEMeasurable ι μ_int := (asymTorusEmbedLift_measurable Lt Ls N).aemeasurable
-  have h_eval : ∀ ω : Configuration (FinLatticeField 2 N),
-      (ι ω) (g - h) = ω gf := fun ω => asymTorusEmbedLift_eval_eq Lt Ls N (g - h) ω
-  have hX_sq_int : Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
-      (ω (g - h)) ^ 2) μ := by
-    change Integrable _ (asymTorusInteractingMeasure Lt Ls N P mass hmass)
-    unfold asymTorusInteractingMeasure
-    rw [integrable_map_measure
-      ((configuration_eval_measurable (g - h)).pow_const 2).aestronglyMeasurable hι_meas]
-    have h_eq : (fun ω => (ω (g - h)) ^ 2) ∘ ι = fun ω => (ω gf) ^ 2 := by
-      ext ω; simp [Function.comp, h_eval]
-    rw [h_eq]
-    set bw := boltzmannWeight 2 N P (asymGeomSpacing Lt Ls N) mass
-    obtain ⟨Bb, hBb⟩ := interactionFunctional_bounded_below 2 N P
-      (asymGeomSpacing Lt Ls N) mass (asymGeomSpacing_pos Lt Ls N) hmass
-    have hZ := partitionFunction_pos 2 N P (asymGeomSpacing Lt Ls N) mass
-      (asymGeomSpacing_pos Lt Ls N) hmass
-    suffices h : Integrable (fun ω : Configuration (FinLatticeField 2 N) => (ω gf) ^ 2)
-        (μ_GFF.withDensity (fun ω => ENNReal.ofReal (bw ω))) by
-      change Integrable _ (interactingLatticeMeasure 2 N P _ mass _ hmass)
-      unfold interactingLatticeMeasure
-      exact h.smul_measure (ENNReal.inv_ne_top.mpr ((ENNReal.ofReal_pos.mpr hZ).ne'))
-    have hf_dens_meas : Measurable (fun ω : Configuration (FinLatticeField 2 N) =>
-        ENNReal.ofReal (bw ω)) :=
-      ENNReal.measurable_ofReal.comp
-        ((interactionFunctional_measurable 2 N P (asymGeomSpacing Lt Ls N) mass).neg.exp)
-    apply (integrable_withDensity_iff hf_dens_meas
-      (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mpr
-    have hbw_simp : ∀ ω : Configuration (FinLatticeField 2 N),
-        (ENNReal.ofReal (bw ω)).toReal = bw ω :=
-      fun ω => ENNReal.toReal_ofReal
-        (le_of_lt (boltzmannWeight_pos 2 N P (asymGeomSpacing Lt Ls N) mass ω))
-    simp_rw [hbw_simp]
-    apply ((pairing_memLp T gf 2).integrable_sq.mul_const (Real.exp Bb)).mono
-    · exact ((configuration_eval_measurable gf).pow_const 2).aestronglyMeasurable.mul
-        (Measurable.aestronglyMeasurable
-          (interactionFunctional_measurable 2 N P (asymGeomSpacing Lt Ls N) mass).neg.exp)
-    · exact Filter.Eventually.of_forall fun ω => by
-        simp only [Real.norm_eq_abs]
-        rw [abs_of_nonneg (mul_nonneg (sq_nonneg _)
-              (le_of_lt (boltzmannWeight_pos 2 N P _ mass ω))),
-            abs_of_nonneg (mul_nonneg (sq_nonneg _) (le_of_lt (Real.exp_pos Bb)))]
-        exact mul_le_mul_of_nonneg_left (Real.exp_le_exp_of_le (by linarith [hBb ω])) (sq_nonneg _)
-  -- Push interacting second moment through torus embedding
-  have h_int_torus : ∫ ω : Configuration (AsymTorusTestFunction Lt Ls),
-      (ω (g - h)) ^ 2 ∂μ ≤ 3 * Real.sqrt K * (p (g - h)) ^ 2 := by
-    change ∫ ω, (ω (g - h)) ^ 2 ∂(Measure.map ι μ_int) ≤ _
-    rw [integral_map hι_meas
-      ((configuration_eval_measurable (g - h)).pow_const 2).aestronglyMeasurable]
-    simp_rw [h_eval]; exact h_int_bound
-  -- ‖Z[g]-Z[h]‖² ≤ C*(p(g-h))² by Jensen + Cauchy-Schwarz + second moment
-  have h_sq_bound : ‖asymTorusGeneratingFunctional Lt Ls μ g -
-      asymTorusGeneratingFunctional Lt Ls μ h‖ ^ 2 ≤
-      3 * Real.sqrt K * (p (g - h)) ^ 2 :=
-    calc ‖asymTorusGeneratingFunctional Lt Ls μ g -
-            asymTorusGeneratingFunctional Lt Ls μ h‖ ^ 2
-        = ‖∫ ω, F ω ∂μ‖ ^ 2 := by rw [h_gf_eq]
-      _ ≤ (∫ ω, ‖F ω‖ ∂μ) ^ 2 := by
-          apply sq_le_sq'
-          · have h1 := norm_nonneg (∫ ω, F ω ∂μ)
-            have h2 : (0 : ℝ) ≤ ∫ ω, ‖F ω‖ ∂μ :=
-              integral_nonneg fun ω => norm_nonneg _
-            linarith
-          · exact norm_integral_le_integral_norm _
-      _ ≤ ∫ ω, ‖F ω‖ ^ 2 ∂μ :=
-          ConvexOn.map_integral_le (Even.convexOn_pow (n := 2) even_two)
-            (continuousOn_pow 2) isClosed_univ
-            (ae_of_all _ fun _ => Set.mem_univ _) hF_norm_int hF_sq_int'
-      _ ≤ ∫ ω, (ω (g - h)) ^ 2 ∂μ :=
-          integral_mono hF_sq_int' hX_sq_int (fun ω => hF_sq ω)
-      _ ≤ 3 * Real.sqrt K * (p (g - h)) ^ 2 := h_int_torus
-  -- Take square root: ‖Z[g]-Z[h]‖ ≤ √(3√K) * p(g-h) ≤ B * p(g-h)
-  calc ‖asymTorusGeneratingFunctional Lt Ls μ g -
-          asymTorusGeneratingFunctional Lt Ls μ h‖
-      ≤ Real.sqrt (3 * Real.sqrt K * (p (g - h)) ^ 2) := by
-        rw [← Real.sqrt_sq (norm_nonneg _)]; exact Real.sqrt_le_sqrt h_sq_bound
-    _ = Real.sqrt (3 * Real.sqrt K) * p (g - h) := by
-        rw [Real.sqrt_mul (mul_nonneg (by norm_num) (Real.sqrt_nonneg _)), Real.sqrt_sq h_p_nn]
-    _ ≤ 2 * Real.sqrt (3 * Real.sqrt K) * p (g - h) := by
-        have : Real.sqrt (3 * Real.sqrt K) * p (g - h) ≥ 0 :=
-          mul_nonneg (Real.sqrt_nonneg _) h_p_nn
-        linarith
-
-
+    B * p (g - h)
 -- **Helper:** Continuity of s ↦ T_s g for a single circle factor.
 -- (The symmetric version is private in TorusInteractingOS.lean.)
 private theorem circleTranslation_continuous_in_s

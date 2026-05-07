@@ -97,7 +97,7 @@ private theorem gaussianContinuumMeasure_sq_integrable
   apply (integrable_map_measure
     ((configuration_eval_measurable f).aestronglyMeasurable.pow 2)
     (latticeEmbedLift_measurable d N a ha).aemeasurable).mpr
-  set T := latticeCovariance d N a mass ha hmass
+  set T := latticeCovarianceGJ d N a mass ha hmass
   set g_f : FinLatticeField d N :=
     a ^ d • ∑ x : FinLatticeSites d N,
       evalAtSite d N a f x • Pi.single x (1 : ℝ)

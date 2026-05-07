@@ -235,3 +235,83 @@ These are structurally harmless but provide no mathematical content. Priority fo
 - Symanzik, "Continuum limit and improved action in lattice theories" (1983)
 - Huebner et al., "Restoration of Rotational Symmetry in the Continuum Limit" (arXiv:1204.4146)
 - Mehler, "Ueber die Entwicklung einer Function von beliebig vielen Variablen" (1866)
+
+---
+
+## Lattice-Action Normalisation Diagnosis Vetting (2026-05-07)
+
+**Topic**: Diagnosis in `docs/lattice-action-normalization-fix.md` —
+pphi2's lattice action lacks the `a^d` Riemann-sum prefactor on the
+kinetic term, causing the Wick-subtracted interaction `V_a` to scale
+as `a^{dk}` and vanish in the continuum limit.
+
+### Verdict per question
+
+- **Q1 (rescaling derivation)** — CORRECT.
+  - `α = a^{d/2}` for general `d`.
+  - `:φ_x^{2k}:_{wickConstant} = a^{dk} :Φ(x_a)^{2k}:_{c_textbook}`.
+  - Conclusion `V_a → 0` for `d ≥ 2, k ≥ 2` confirmed.
+- **Q2 (Wick subtraction)** — CORRECT.
+  - `c_a := G_a(0,0) = (1/L^d)Σ_k 1/λ_k` is the unique correct
+    subtraction for the `a^d`-rescaled action.
+- **Q3 (GRS conventions)** — REFINED.
+  - GRS-style "absorb `a^d` into Hamiltonian sum" is internally
+    consistent only with compensating coefficient rescaling
+    `λ_k → a^{-d(k-1)} λ_k`. pphi2 does neither rescaling, so it
+    fell into the gap between two equivalent conventions.
+- **Q4 (alternative fixes)** — RESOLVED.
+  - (a) Polynomial coefficient rescaling: works mathematically but is
+    "ugly formalisation".
+  - (b) Embedding redefinition: doesn't work — `μ_a^P → μ_a^{GFF}`
+    happens at the lattice level, before any embedding.
+  - **Rewriting the action is the only robust path.**
+- **Q5 (uncertainties §5)** — CONFIRMED.
+  - U1 dimensional analysis holds (`α = a^{d/2}`).
+  - U3 mixed-degree polynomials all vanish; theory cleanly free
+    regardless of `β`.
+  - U6 resolved as Q3 above.
+- **Q6 (other Lean formalisations)** — UNCHARTED.
+  - No mature constructive-QFT or discrete-random-field
+    formalisations have pushed far enough into continuum limits to
+    hit this trap. Mathlib's probability uses counting measures and
+    doesn't attempt Riemann-sum continuum limits.
+- **Q7 (cost estimate)** — REVISED.
+  - Phase 2 (dynamical-cutoff Nelson) more realistic at **6–8 weeks**
+    rather than 2–4. Reason: measure-theoretic friction in
+    interactive provers when splitting integration domain into
+    small-field / large-field events, bounding Gaussian tails on the
+    latter, and recombining.
+
+### Closing question from Gemini
+
+*"Before you commit resources to overhauling
+`gaussian-field/Lattice/Covariance.lean`, how cleanly does the
+existing Cauchy–Schwarz density-transfer machinery in Route B
+separate the functional analytic bounds from the underlying lattice
+variance definitions?"*
+
+**Answer** (audit in §3.5 of the diagnosis doc):
+
+The `density_transfer_bound` lemma
+(`Pphi2/ContinuumLimit/Hypercontractivity.lean:1072`) consumes
+`(K, hK_pos, hK)` (Nelson) and `hZ : 1 ≤ Z` (partition function
+lower bound) as opaque numerical hypotheses. It does **not**
+reference `wickConstant`, eigenvalues, the action, or `a^d` factors.
+Pure Hölder p=q=2 + `MemLp` plumbing — **normalisation-independent**.
+
+Three lattice-touching sites:
+
+1. `partitionFunction_ge_one` — Jensen + GFF-centering. **Stable.**
+2. `interactionFunctional_bounded_below` — fixed-`a, N` lemma still
+   holds with worse `a`-dependent `B`. None of its ~12 call sites
+   use uniformity in `N`, so they survive. **Mechanical.**
+3. `nelson_exponential_estimate_lattice` — the actual work of
+   Phase 2 (dynamical-cutoff). 4 direct call sites of the easy
+   `wickConstant ≤ m^{-2}` bound all reroute through the new proof.
+
+**Net assessment**: ~95% of OS chain (tightness, second-moment,
+weak limit, OS0/OS1/OS2 theorems, Asymtorus, IR-limit) inherits
+via the abstract `(K, Z ≥ 1)` interface. Surgery contained in 3
+files: `gaussian-field/Lattice/Covariance.lean`,
+`Pphi2/WickOrdering/Counterterm.lean`,
+`Pphi2/NelsonEstimate/NelsonEstimate.lean`.

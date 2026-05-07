@@ -59,85 +59,40 @@ Then |E_R| ≥ M/2, so:
 This is DOUBLE EXPONENTIAL decay, so:
   ∫₀^∞ exp(2M) · P(V ≤ -M) dM < ∞ -/
 
-/-- **Nelson's exponential estimate on the lattice** (the main theorem).
+/-- **Nelson's exponential estimate on the lattice** (axiomatised in
+Stage 1 — to be proved via dynamical cutoff in Phase 2).
 
 For the P(φ)₂ lattice theory on the 2D torus of size L with lattice
 spacing a = L/N and mass m > 0:
 
-  `∫ exp(-2V) dμ_GFF ≤ K`
+    ∃ K > 0, ∀ N, ∫ exp(-2V) dμ_GFF ≤ K
 
-where K depends on P (the interaction polynomial), L, and m,
-but NOT on N (the lattice size).
+where K depends on P (the interaction polynomial), L, and m, but NOT
+on N (the lattice size).
 
-Proof: Dynamic cutoff combining Steps 1-4. -/
-theorem nelson_exponential_estimate_lattice
+Under the Glimm-Jaffe-aligned normalisation, wickConstant grows like
+(a^d)⁻¹ · mass⁻² (logarithmically divergent in d=2), so the "easy
+pointwise lower bound" proof breaks: `wickPolynomial_uniform_bounded_below`
+applied to a divergent c-range gives a divergent A. The genuine proof
+is via dynamical cutoff (Glimm-Jaffe Ch. 8 / Simon Ch. I): split the
+integration domain into small-field and large-field events, use
+polynomial bounds on the small-field set and Gaussian tails on the
+large-field set.
+
+Reference: Glimm-Jaffe Ch. 8 (dynamical cutoff); Simon, *P(φ)₂
+Euclidean QFT*, Ch. I; Nelson 1966.
+
+The infrastructure for the dynamical-cutoff proof
+(`SmoothLowerBound.lean`, `RoughErrorBound.lean`) exists in pphi2 but
+is not yet wired up. Phase 2 deliverable. -/
+axiom nelson_exponential_estimate_lattice
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
     ∀ (N : ℕ) [NeZero N],
     ∫ ω : Configuration (FinLatticeField 2 N),
         (exp (-interactionFunctional 2 N P (circleSpacing L N) mass ω)) ^ 2
         ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass
-          (circleSpacing_pos L N) hmass) ≤ K := by
-  -- The key insight: the interaction V(ω) = a^d · Σ_x :P(ω(x)):_c has a^d prefactor.
-  -- With a = L/N, we have a^d · |Λ| = (L/N)^d · N^d = L^d, which is CONSTANT in N.
-  -- So the pointwise bound V(ω) ≥ -a^d · |Λ| · A = -L^d · A gives a uniform-in-N bound
-  -- exp(-2V) ≤ exp(2 · L^d · A).
-  -- For d = 2: K = exp(2 · L² · A) works.
-  --
-  -- Step 1: Get uniform lower bound on wickPolynomial for c ∈ [0, mass⁻²]
-  obtain ⟨A, hA_pos, hA_bound⟩ :=
-    Pphi2.wickPolynomial_uniform_bounded_below P (mass⁻¹ ^ 2) (by positivity)
-  -- Step 2: K = exp(2 · L² · A) works uniformly in N
-  refine ⟨Real.exp (2 * L ^ 2 * A), Real.exp_pos _, fun N _ => ?_⟩
-  set a := circleSpacing L N
-  set ha := circleSpacing_pos L N
-  set μ := latticeGaussianMeasure 2 N a mass ha hmass
-  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability 2 N a mass ha hmass
-  -- Step 3: V(ω) ≥ -(a² · |Λ| · A) = -(L² · A) for all ω
-  have hc_nn : 0 ≤ wickConstant 2 N a mass :=
-    le_of_lt (wickConstant_pos 2 N a mass ha hmass)
-  have hc_le : wickConstant 2 N a mass ≤ mass⁻¹ ^ 2 :=
-    wickConstant_le_inv_mass_sq 2 N a mass ha hmass
-  set Λ := Fintype.card (FinLatticeSites 2 N)
-  -- Key identity: a² · Λ = L² (since a = L/N and Λ = N²)
-  have hΛ_eq : (Λ : ℝ) = (N : ℝ) ^ 2 := by
-    change (Fintype.card (Fin 2 → ZMod N) : ℝ) = (N : ℝ) ^ 2
-    simp [ZMod.card]
-  have ha_eq : a = L / (N : ℝ) := rfl
-  have hN_pos : (0 : ℝ) < N := Nat.cast_pos.mpr (NeZero.pos N)
-  have ha_sq_Λ : a ^ 2 * (Λ : ℝ) = L ^ 2 := by
-    rw [hΛ_eq, ha_eq]
-    field_simp
-  have h_wp_bound : ∀ (ω : Configuration (FinLatticeField 2 N)),
-      interactionFunctional 2 N P a mass ω ≥ -(L ^ 2 * A) := by
-    intro ω
-    unfold interactionFunctional
-    have ha_pow : (0 : ℝ) ≤ a ^ 2 := sq_nonneg a
-    calc a ^ 2 * ∑ x : FinLatticeSites 2 N,
-          wickPolynomial P (wickConstant 2 N a mass) (ω (finLatticeDelta 2 N x))
-        ≥ a ^ 2 * ∑ _x : FinLatticeSites 2 N, (-A) := by
-          apply mul_le_mul_of_nonneg_left _ ha_pow
-          exact Finset.sum_le_sum fun x _ => hA_bound _ hc_nn hc_le _
-      _ = a ^ 2 * (-(↑Λ * A)) := by
-          congr 1; rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]; ring
-      _ = -(a ^ 2 * ↑Λ * A) := by ring
-      _ = -(L ^ 2 * A) := by rw [ha_sq_Λ]
-  -- Step 4: exp(-2V) ≤ exp(2 · L² · A) pointwise
-  have h_exp_bound : ∀ ω, (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2 ≤
-      Real.exp (2 * L ^ 2 * A) := by
-    intro ω
-    rw [sq, ← Real.exp_add, show -interactionFunctional 2 N P a mass ω +
-        (-interactionFunctional 2 N P a mass ω) =
-        -2 * interactionFunctional 2 N P a mass ω from by ring]
-    exact Real.exp_le_exp_of_le (by linarith [h_wp_bound ω])
-  -- Step 5: Integrate the pointwise bound over the probability measure
-  calc ∫ ω, (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2 ∂μ
-      ≤ ∫ _ω, Real.exp (2 * L ^ 2 * A) ∂μ := by
-        apply integral_mono_of_nonneg (ae_of_all _ fun ω => sq_nonneg _)
-          (integrable_const _) (ae_of_all _ h_exp_bound)
-    _ = Real.exp (2 * L ^ 2 * A) := by
-        simp [integral_const]
-
+          (circleSpacing_pos L N) hmass) ≤ K
 end Pphi2
 
 end

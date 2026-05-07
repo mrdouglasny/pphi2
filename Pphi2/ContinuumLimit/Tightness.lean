@@ -156,10 +156,10 @@ private theorem continuumMeasure_sq_integrable
   -- Step 3: L² integrability of (ω g_f)*(ω g_f) under μ_GFF via pairing_product_integrable
   have h_sq_int : Integrable (fun ω : Configuration (FinLatticeField d N) =>
       (ω g_f) * (ω g_f)) μ_GFF := by
-    have : μ_GFF = GaussianField.measure (latticeCovariance d N a mass ha hmass) := rfl
+    have : μ_GFF = GaussianField.measure (latticeCovarianceGJ d N a mass ha hmass) := rfl
     rw [this]
     exact pairing_product_integrable
-      (latticeCovariance d N a mass ha hmass) g_f g_f
+      (latticeCovarianceGJ d N a mass ha hmass) g_f g_f
   -- Step 4: dominate (ω g_f)*(ω g_f) * bw ω by (ω g_f)*(ω g_f) * exp(B)
   apply (h_sq_int.mul_const (Real.exp B)).mono
   · exact

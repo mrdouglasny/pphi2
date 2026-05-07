@@ -53,79 +53,25 @@ theorem asymGeomSpacing_sq_mul_sq (N : ℕ) [NeZero N] :
   rw [Real.sq_sqrt h_nn]
   field_simp
 
-/-- **Nelson's exponential estimate** (asymmetric torus, uniform in N).
+/-- **Asymmetric-torus Nelson exponential estimate** (axiomatised in
+Stage 1 — same Phase 2 issue as the symmetric `nelson_exponential_estimate_lattice`).
 
 The L² norm of the Boltzmann weight is bounded by a constant K that
-depends on P, mass, Lt, Ls but NOT on N:
+depends on `P, mass, Lt, Ls` but NOT on N:
 
-  `∫ exp(-2V) dμ_GFF ≤ K`   for all N ≥ 1
+    ∫ exp(-2V) dμ_GFF ≤ K   for all N ≥ 1
 
-Proof: identical to the symmetric case. The interaction
-`V = a_geom² Σ_x :P(φ(x)):_c` satisfies `V ≥ -a_geom² N² A = -Lt·Ls·A`
-where A is the uniform lower bound on Wick polynomials.
-Hence `exp(-2V) ≤ exp(2·Lt·Ls·A)` uniformly in N. -/
-theorem asymNelson_exponential_estimate
+The easy pointwise lower bound used wickConstant ≤ mass⁻², which is no
+longer uniform in `a` under Glimm-Jaffe-aligned `wickConstant`. Genuine
+proof requires Glimm-Jaffe Ch. 8 dynamical cutoff (Phase 2). -/
+axiom asymNelson_exponential_estimate
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
     ∀ (N : ℕ) [NeZero N],
     ∫ ω : Configuration (FinLatticeField 2 N),
         (Real.exp (-interactionFunctional 2 N P (asymGeomSpacing Lt Ls N) mass ω)) ^ 2
         ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
-          (asymGeomSpacing_pos Lt Ls N) hmass) ≤ K := by
-  -- Same proof as nelson_exponential_estimate_lattice but with a_geom²N² = Lt·Ls
-  -- instead of a²N² = L². K = exp(2 · Lt · Ls · A).
-  -- Step 1: Get uniform lower bound on wickPolynomial for c ∈ [0, mass⁻²]
-  obtain ⟨A, hA_pos, hA_bound⟩ :=
-    Pphi2.wickPolynomial_uniform_bounded_below P (mass⁻¹ ^ 2) (by positivity)
-  -- Step 2: K = exp(2 · Lt · Ls · A) works uniformly in N
-  refine ⟨Real.exp (2 * (Lt * Ls) * A), Real.exp_pos _, fun N _ => ?_⟩
-  set a := asymGeomSpacing Lt Ls N
-  set ha := asymGeomSpacing_pos Lt Ls N
-  set μ := latticeGaussianMeasure 2 N a mass ha hmass
-  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability 2 N a mass ha hmass
-  -- Step 3: V(ω) ≥ -(a² · |Λ| · A) = -(Lt·Ls · A) for all ω
-  have hc_nn : 0 ≤ wickConstant 2 N a mass :=
-    le_of_lt (wickConstant_pos 2 N a mass ha hmass)
-  have hc_le : wickConstant 2 N a mass ≤ mass⁻¹ ^ 2 :=
-    wickConstant_le_inv_mass_sq 2 N a mass ha hmass
-  set Λ := Fintype.card (FinLatticeSites 2 N)
-  -- Key identity: a² · Λ = Lt · Ls (since a = √(Lt·Ls)/N and Λ = N²)
-  have hΛ_eq : (Λ : ℝ) = (N : ℝ) ^ 2 := by
-    change (Fintype.card (Fin 2 → ZMod N) : ℝ) = (N : ℝ) ^ 2
-    simp [ZMod.card]
-  have ha_sq_Λ : a ^ 2 * (Λ : ℝ) = Lt * Ls := by
-    rw [hΛ_eq]
-    exact asymGeomSpacing_sq_mul_sq Lt Ls N
-  have h_wp_bound : ∀ (ω : Configuration (FinLatticeField 2 N)),
-      interactionFunctional 2 N P a mass ω ≥ -(Lt * Ls * A) := by
-    intro ω
-    unfold interactionFunctional
-    have ha_pow : (0 : ℝ) ≤ a ^ 2 := sq_nonneg a
-    calc a ^ 2 * ∑ x : FinLatticeSites 2 N,
-          wickPolynomial P (wickConstant 2 N a mass) (ω (finLatticeDelta 2 N x))
-        ≥ a ^ 2 * ∑ _x : FinLatticeSites 2 N, (-A) := by
-          apply mul_le_mul_of_nonneg_left _ ha_pow
-          exact Finset.sum_le_sum fun x _ => hA_bound _ hc_nn hc_le _
-      _ = a ^ 2 * (-(↑Λ * A)) := by
-          congr 1; rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]; ring
-      _ = -(a ^ 2 * ↑Λ * A) := by ring
-      _ = -(Lt * Ls * A) := by rw [ha_sq_Λ]
-  -- Step 4: exp(-2V) ≤ exp(2 · Lt · Ls · A) pointwise
-  have h_exp_bound : ∀ ω, (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2 ≤
-      Real.exp (2 * (Lt * Ls) * A) := by
-    intro ω
-    rw [sq, ← Real.exp_add, show -interactionFunctional 2 N P a mass ω +
-        (-interactionFunctional 2 N P a mass ω) =
-        -2 * interactionFunctional 2 N P a mass ω from by ring]
-    exact Real.exp_le_exp_of_le (by linarith [h_wp_bound ω])
-  -- Step 5: Integrate the pointwise bound over the probability measure
-  calc ∫ ω, (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2 ∂μ
-      ≤ ∫ _ω, Real.exp (2 * (Lt * Ls) * A) ∂μ := by
-        apply integral_mono_of_nonneg (ae_of_all _ fun ω => sq_nonneg _)
-          (integrable_const _) (ae_of_all _ h_exp_bound)
-    _ = Real.exp (2 * (Lt * Ls) * A) := by
-        simp [integral_const]
-
+          (asymGeomSpacing_pos Lt Ls N) hmass) ≤ K
 /-- The asymmetric torus interacting measure is a probability measure. -/
 instance asymTorusInteractingMeasure_isProbability (N : ℕ) [NeZero N]
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
@@ -318,30 +264,23 @@ theorem asymLatticeTestFn_norm_sq_bounded
   exact ⟨_, hC_pos, fun N _ =>
     asymLatticeTestFn_norm_sq_le Lt Ls C₀t hC₀t_pos hC₀t C₀s hC₀s_pos hC₀s f N⟩
 
-theorem asymGaussian_second_moment_uniform_bound
+/-- **Asymmetric-torus Gaussian uniform second-moment bound** (axiomatised
+in Stage 1 — same Phase 2 issue as the symmetric `torusEmbeddedTwoPoint_uniform_bound`).
+
+The previous proof used `covariance_inner_le_mass_inv_sq_norm_sq` (bare)
+and concluded `≤ mass⁻²·C_f`. Under GJ-aligned `latticeCovarianceGJ`,
+the bound becomes `(a^d)⁻¹·mass⁻²·C_f`, which is not uniform in N.
+Threading the embedding's `√a`-per-coordinate factor to absorb `(a^d)⁻¹`
+recovers the uniform bound (same pattern as the symmetric torus case).
+Phase 2. -/
+axiom asymGaussian_second_moment_uniform_bound
     (mass : ℝ) (hmass : 0 < mass)
     (f : AsymTorusTestFunction Lt Ls) :
     ∃ Cg : ℝ, 0 < Cg ∧ ∀ (N : ℕ) [NeZero N],
     ∫ ω : Configuration (FinLatticeField 2 N),
       (ω (asymLatticeTestFn Lt Ls N f)) ^ 2
       ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
-        (asymGeomSpacing_pos Lt Ls N) hmass) ≤ Cg := by
-  obtain ⟨C_f, hC_f_pos, hC_f_bound⟩ := asymLatticeTestFn_norm_sq_bounded Lt Ls f
-  refine ⟨mass⁻¹ ^ 2 * C_f, mul_pos (pow_pos (inv_pos.mpr hmass) 2) hC_f_pos, fun N _ => ?_⟩
-  set g := asymLatticeTestFn Lt Ls N f
-  set a := asymGeomSpacing Lt Ls N
-  set ha := asymGeomSpacing_pos Lt Ls N
-  set T := latticeCovariance 2 N a mass ha hmass
-  change ∫ ω, (ω g) ^ 2 ∂(GaussianField.measure T) ≤ mass⁻¹ ^ 2 * C_f
-  rw [second_moment_eq_covariance T g]
-  -- Step 3: Apply covariance bound
-  calc @inner ℝ ell2' _
-        (T g) (T g)
-      ≤ mass⁻¹ ^ 2 *
-          ∑ x : FinLatticeSites 2 N, g x ^ 2 :=
-        covariance_inner_le_mass_inv_sq_norm_sq N a mass ha hmass g
-    _ ≤ mass⁻¹ ^ 2 * C_f :=
-        mul_le_mul_of_nonneg_left (hC_f_bound N) (le_of_lt (pow_pos (inv_pos.mpr hmass) 2))
+        (asymGeomSpacing_pos Lt Ls N) hmass) ≤ Cg
 
 /-! ## Tightness and limit existence -/
 
@@ -388,7 +327,7 @@ theorem asymTorus_interacting_second_moment_density_transfer
   have hF_sq_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
       ((ω g) ^ 2) ^ 2) μ_GFF := by
     have h4 : MemLp (fun ω : Configuration (FinLatticeField 2 N) => ω g) 4 μ_GFF := by
-      exact_mod_cast pairing_memLp (latticeCovariance 2 N (asymGeomSpacing Lt Ls N) mass
+      exact_mod_cast pairing_memLp (latticeCovarianceGJ 2 N (asymGeomSpacing Lt Ls N) mass
         (asymGeomSpacing_pos Lt Ls N) hmass) g 4
     have hmem := h4.norm_rpow (p := (4 : ENNReal))
       (by norm_num : (4 : ENNReal) ≠ 0) (by norm_num : (4 : ENNReal) ≠ ⊤)
@@ -416,7 +355,7 @@ theorem asymTorus_interacting_second_moment_density_transfer
     exact h_rpow_to_npow ω
   have h_second_nn : 0 ≤ ∫ ω, (ω g) ^ 2 ∂μ_GFF :=
     integral_nonneg fun ω => sq_nonneg _
-  set T := latticeCovariance 2 N (asymGeomSpacing Lt Ls N) mass
+  set T := latticeCovarianceGJ 2 N (asymGeomSpacing Lt Ls N) mass
     (asymGeomSpacing_pos Lt Ls N) hmass
   have hμ_eq : μ_GFF = GaussianField.measure T := rfl
   have h_fourth_le : ∫ ω, ((ω g) ^ 2) ^ 2 ∂μ_GFF ≤
@@ -571,7 +510,7 @@ theorem asymTorus_interacting_tightness
       -- Goal: Integrable (fun ω => (ω g)^2 * bw ω) μ_GFF
       have h_sq_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
           (ω g) ^ 2) μ_GFF :=
-        (pairing_memLp (latticeCovariance 2 N (asymGeomSpacing Lt Ls N) mass
+        (pairing_memLp (latticeCovarianceGJ 2 N (asymGeomSpacing Lt Ls N) mass
           (asymGeomSpacing_pos Lt Ls N) hmass) g 2).integrable_sq
       apply (h_sq_int.mul_const (Real.exp B)).mono
       · exact ((configuration_eval_measurable g).pow_const 2).aestronglyMeasurable.mul

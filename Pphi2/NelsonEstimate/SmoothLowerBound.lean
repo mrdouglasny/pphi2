@@ -128,6 +128,8 @@ theorem smooth_interaction_lower_bound_log (ha : 0 < a) (hmass : 0 < mass)
   -- V_S ≥ -6 L^d c_S² ≥ -6 L^d (K₁(1+|log T|))² = -6 L^d K₁² (1+|log T|)²
   have hc_S_nn : 0 ≤ smoothWickConstant d N a mass T := by
     unfold smoothWickConstant
+    have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+    apply mul_nonneg (le_of_lt (inv_pos.mpr ha_d_pos))
     apply mul_nonneg (by positivity)
     apply Finset.sum_nonneg; intro m _
     exact le_of_lt (smoothCovEigenvalue_pos d N a mass T hT m ha hmass)

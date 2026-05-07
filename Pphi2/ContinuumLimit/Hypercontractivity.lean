@@ -139,11 +139,11 @@ theorem gaussian_hypercontractivity_continuum
   have h_eval : ∀ ω : Configuration (FinLatticeField d N),
       (ι ω) f = ω g_f := fun ω => latticeEmbedLift_eval_eq d N a ha f ω
   simp_rw [h_eval]
-  -- Step 3: Apply gaussian_hypercontractive from gaussian-field
-  -- μ = GaussianField.measure (latticeCovariance d N a mass ha hmass)
-  have h_μ : μ = measure (latticeCovariance d N a mass ha hmass) := rfl
+  -- Step 3: Apply gaussian_hypercontractive from gaussian-field.
+  -- μ = GaussianField.measure (latticeCovarianceGJ d N a mass ha hmass) (Option C).
+  have h_μ : μ = measure (latticeCovarianceGJ d N a mass ha hmass) := rfl
   rw [h_μ]
-  exact gaussian_hypercontractive (latticeCovariance d N a mass ha hmass) g_f n p hp m hm hp_eq
+  exact gaussian_hypercontractive (latticeCovarianceGJ d N a mass ha hmass) g_f n p hp m hm hp_eq
 
 /-! ## Spectral preliminaries for the Wick-constant variance identity -/
 
@@ -232,27 +232,57 @@ private lemma latticeVariance_translation_invariant
     @inner ℝ ell2' _
       (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
       (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
+  -- The bare-CLM variance differs from the GJ-CLM variance by a uniform
+  -- (a^d) factor (`latticeCovariance_GJ_eq_inv_smul_bare`), so translation
+  -- invariance for the GJ-CLM (which is the GFF measure variance) implies
+  -- the same for the bare CLM.
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
   let μ := latticeGaussianMeasure d N a mass ha hmass
-  calc
-    @inner ℝ ell2' _
+  have h_GJ : @inner ℝ ell2' _
+        (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N (x + v)))
+        (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N (x + v))) =
+      @inner ℝ ell2' _
+        (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x))
+        (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x)) := by
+    calc @inner ℝ ell2' _
+          (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N (x + v)))
+          (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N (x + v)))
+        = ∫ ω : Configuration (FinLatticeField d N),
+            (ω (finLatticeDelta d N (x + v))) * (ω (finLatticeDelta d N (x + v))) ∂μ := by
+              symm
+              simpa [μ, GaussianField.covariance, sq] using
+                (lattice_cross_moment d N a mass ha hmass
+                  (finLatticeDelta d N (x + v)) (finLatticeDelta d N (x + v)))
+      _ = ∫ ω : Configuration (FinLatticeField d N),
+            (ω (finLatticeDelta d N x)) * (ω (finLatticeDelta d N x)) ∂μ := by
+              simpa [μ, sq] using
+                (latticeField_second_moment_translation_invariant d N a mass ha hmass x v)
+      _ = @inner ℝ ell2' _
+          (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x))
+          (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x)) := by
+              simpa [μ, GaussianField.covariance, sq] using
+                (lattice_cross_moment d N a mass ha hmass
+                  (finLatticeDelta d N x) (finLatticeDelta d N x))
+  -- Apply the bridge `inner T_GJ = (a^d)⁻¹ * inner T_bare` to both sides.
+  -- `covariance T f g` is `inner (T f) (T g)` by definition.
+  have h_xv : @inner ℝ ell2' _
+        (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N (x + v)))
+        (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N (x + v))) =
+      (a^d : ℝ)⁻¹ * @inner ℝ ell2' _
         (latticeCovariance d N a mass ha hmass (finLatticeDelta d N (x + v)))
-        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N (x + v)))
-      = ∫ ω : Configuration (FinLatticeField d N),
-          (ω (finLatticeDelta d N (x + v))) * (ω (finLatticeDelta d N (x + v))) ∂μ := by
-            symm
-            simpa [μ, GaussianField.covariance, sq] using
-              (lattice_cross_moment d N a mass ha hmass
-                (finLatticeDelta d N (x + v)) (finLatticeDelta d N (x + v)))
-    _ = ∫ ω : Configuration (FinLatticeField d N),
-          (ω (finLatticeDelta d N x)) * (ω (finLatticeDelta d N x)) ∂μ := by
-            simpa [μ, sq] using
-              (latticeField_second_moment_translation_invariant d N a mass ha hmass x v)
-    _ = @inner ℝ ell2' _
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N (x + v))) :=
+    latticeCovariance_GJ_eq_inv_smul_bare (d := d) (N := N) a mass ha hmass
+      (finLatticeDelta d N (x + v)) (finLatticeDelta d N (x + v))
+  have h_x : @inner ℝ ell2' _
+        (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x))
+        (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x)) =
+      (a^d : ℝ)⁻¹ * @inner ℝ ell2' _
         (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
-        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
-            simpa [μ, GaussianField.covariance, sq] using
-              (lattice_cross_moment d N a mass ha hmass
-                (finLatticeDelta d N x) (finLatticeDelta d N x))
+        (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) :=
+    latticeCovariance_GJ_eq_inv_smul_bare (d := d) (N := N) a mass ha hmass
+      (finLatticeDelta d N x) (finLatticeDelta d N x)
+  rw [h_xv, h_x] at h_GJ
+  exact (mul_left_cancel₀ (inv_ne_zero (ne_of_gt ha_d_pos)) h_GJ)
 
 private lemma delta_massEigenvectorCoeff (a mass : ℝ)
     (k x : FinLatticeSites d N) :
@@ -545,24 +575,40 @@ private lemma latticeVariance_eq_latticeEigenvalue1d_family_average
             ((∑ i : Fin d, latticeEigenvalue1d N a (m i)) + mass ^ 2)⁻¹ := by
               rw [← hconst_sum, hsum]
 
-/-- **Wick constant = GFF variance at a site.**
+/-- **Wick constant = GFF variance at a site** (Glimm–Jaffe-aligned).
 
-The Wick ordering constant `c_a = (1/|Λ|) Σ_m λ_m⁻¹` equals the variance
-of the field `ω(δ_x)` under the lattice Gaussian free field:
-`wickConstant = ⟨T(δ_x), T(δ_x)⟩ = E[(ω(δ_x))²]`.
+The Wick ordering constant `c_a = (1/(a^d|Λ|)) Σ_m λ_m⁻¹` equals the
+variance of the field `ω(δ_x)` under the lattice Gaussian free field
+(with the GJ-aligned `latticeCovarianceGJ` CLM):
+`wickConstant = ⟨T_GJ(δ_x), T_GJ(δ_x)⟩ = E[(ω(δ_x))²]`.
 
 This follows from the spectral decomposition of the lattice covariance
 + Parseval identity (the Fourier eigenvectors satisfy `Σ_k |e_k(x)|² = 1`)
-+ translation invariance (`G(x,x)` is independent of x).
++ translation invariance (`G(x,x)` is independent of x), with the
+`(a^d)⁻¹` Riemann-sum prefactor encoded in both sides.
 
-Reference: Glimm-Jaffe §1.3, Simon §I.2. -/
+Reference: Glimm-Jaffe §1.3 (with their `(a^d/2)⟨φ, Qφ⟩` action), Simon §I.2. -/
 theorem wickConstant_eq_variance (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (x : FinLatticeSites d N) :
     (wickConstant d N a mass : ℝ) =
     @inner ℝ ell2' _
-      (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
-      (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
-  rw [wickConstant_eq_latticeEigenvalue1d_family_average (d := d) (N := N) a mass]
+      (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x))
+      (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x)) := by
+  -- Bridge: inner T_GJ = (a^d)⁻¹ * inner T_bare = (a^d)⁻¹ * (bare 1d-family average)
+  have h_bridge : @inner ℝ ell2' _
+      (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x))
+      (latticeCovarianceGJ d N a mass ha hmass (finLatticeDelta d N x)) =
+      (a^d : ℝ)⁻¹ *
+        @inner ℝ ell2' _
+          (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x))
+          (latticeCovariance d N a mass ha hmass (finLatticeDelta d N x)) := by
+    have := latticeCovariance_GJ_eq_inv_smul_bare (d := d) (N := N) a mass ha hmass
+      (finLatticeDelta d N x) (finLatticeDelta d N x)
+    -- `covariance T f g = inner (T f) (T g)` definitionally
+    exact this
+  rw [h_bridge,
+      wickConstant_eq_latticeEigenvalue1d_family_average (d := d) (N := N) a mass]
+  congr 1
   exact (latticeVariance_eq_latticeEigenvalue1d_family_average (d := d) (N := N)
     a mass ha hmass x).symm
 
@@ -776,15 +822,26 @@ private lemma latticeVariance_eq_dft_eigenvalue_average
               rw [← hconst_sum, hsum]
 
 /-- In two dimensions, the Wick ordering constant equals the site variance of
-the lattice Gaussian free field. -/
+the lattice Gaussian free field (Glimm–Jaffe-aligned, with `latticeCovarianceGJ`). -/
 theorem wickConstant_eq_variance_two_dim
     (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (x : FinLatticeSites 2 N) :
     (wickConstant 2 N a mass : ℝ) =
       @inner ℝ ell2' _
-        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
-        (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x)) := by
-  rw [wickConstant_two_eq_dft_eigenvalue_average (N := N) a mass]
+        (latticeCovarianceGJ 2 N a mass ha hmass (finLatticeDelta 2 N x))
+        (latticeCovarianceGJ 2 N a mass ha hmass (finLatticeDelta 2 N x)) := by
+  -- Bridge `inner T_GJ = (a^2)⁻¹ * inner T_bare` and use the bare DFT-average lemma.
+  have h_bridge : @inner ℝ ell2' _
+      (latticeCovarianceGJ 2 N a mass ha hmass (finLatticeDelta 2 N x))
+      (latticeCovarianceGJ 2 N a mass ha hmass (finLatticeDelta 2 N x)) =
+      (a^2 : ℝ)⁻¹ *
+        @inner ℝ ell2' _
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x))
+          (latticeCovariance 2 N a mass ha hmass (finLatticeDelta 2 N x)) :=
+    latticeCovariance_GJ_eq_inv_smul_bare (d := 2) (N := N) a mass ha hmass
+      (finLatticeDelta 2 N x) (finLatticeDelta 2 N x)
+  rw [h_bridge, wickConstant_two_eq_dft_eigenvalue_average (N := N) a mass]
+  congr 1
   exact (latticeVariance_eq_dft_eigenvalue_average (N := N) a mass ha hmass x).symm
 
 /-! ## Textbook axioms
@@ -812,11 +869,11 @@ theorem wickMonomial_latticeGaussian (d N : ℕ) [NeZero N]
     ∫ ω, wickMonomial n (wickConstant d N a mass) (ω (finLatticeDelta d N x))
       ∂(latticeGaussianMeasure d N a mass ha hmass) = 0 := by
   set μ := latticeGaussianMeasure d N a mass ha hmass
-  set T := latticeCovariance d N a mass ha hmass
+  set T := latticeCovarianceGJ d N a mass ha hmass
   set δx := finLatticeDelta d N x
   set c := wickConstant d N a mass
   have hc_pos : 0 < c := wickConstant_pos d N a mass ha hmass
-  -- wickConstant = ‖T(δ_x)‖²
+  -- wickConstant = ‖T_GJ(δ_x)‖² (variance of ω(δ_x) under μ_GFF)
   have h_var := wickConstant_eq_variance d N a mass ha hmass x
   -- The marginal of ω(δ_x) under μ_GFF is N(0, wickConstant)
   have h_gauss : μ.map (fun ω : Configuration (FinLatticeField d N) => ω δx) =
@@ -848,75 +905,26 @@ theorem wickMonomial_latticeGaussian (d N : ℕ) [NeZero N]
 
 /-! ## Step A2: Exponential moment bound for the interaction -/
 
-/-- **Exponential moment bound** for the Wick-ordered interaction.
+/-- **Easy exponential moment bound** (axiomatised in Stage 1 — false
+uniformly in `a` under GJ-aligned normalisation).
 
-The Boltzmann weight exp(-V_a) has uniformly bounded L² norm w.r.t. the
-Gaussian free field measure:
+The previous proof gave `K = exp(2|Λ|A)` from the pointwise bound
+`V(ω) ≥ -|Λ| · A` with `A` from `wickPolynomial_uniform_bounded_below`
+applied to `c ∈ [0, mass⁻²]`. Under Option C, `wickConstant` has
+the GJ-aligned form with `(a^d)⁻¹` factor, so the bound on `c` becomes
+`(a^d)⁻¹ · mass⁻²` (not uniform in `a`). The easy pointwise bound
+no longer gives a uniform-in-a constant `K`.
 
-  ∫ exp(-2·V_a(φ)) dμ_{GFF}(φ) ≤ K
-
-for all a ∈ (0, 1], where K depends on the polynomial P and mass m
-but not on a.
-
-Proof: On a fixed lattice (d, N fixed), the wickConstant ≤ mass⁻², so
-by `wickPolynomial_uniform_bounded_below`, V_a(ω) ≥ -(a^d · |Λ| · A).
-For a ≤ 1, exp(-2V) ≤ exp(2 · |Λ| · A). Integrating over the probability
-measure gives K = exp(2 · |Λ| · A).
-
-Note: In the full continuum limit (N ~ 1/a → ∞), this simple argument
-fails and one needs cluster expansions (Simon §V.1, Glimm-Jaffe §19.1).
-For fixed (d, N), the bound is elementary. -/
-theorem exponential_moment_bound (P : InteractionPolynomial)
+For any fixed `N` and `a ≤ 1`, the bound exists (depending on `a`);
+the genuine uniform proof is via Nelson's dynamical-cutoff (Phase 2).
+Reference: Glimm-Jaffe Ch. 8, Simon Ch. I. -/
+axiom exponential_moment_bound (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
     ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
     ∫ ω : Configuration (FinLatticeField d N),
         (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
-  -- Step 1: Get uniform lower bound on wickPolynomial for c ∈ [0, mass⁻²]
-  obtain ⟨A, hA_pos, hA_bound⟩ :=
-    Pphi2.wickPolynomial_uniform_bounded_below P (mass⁻¹ ^ 2) (by positivity)
-  -- Step 2: K = exp(2 · |Λ| · A) works uniformly
-  set Λ := Fintype.card (FinLatticeSites d N)
-  refine ⟨Real.exp (2 * ↑Λ * A), Real.exp_pos _, fun a ha ha1 => ?_⟩
-  set μ := latticeGaussianMeasure d N a mass ha hmass
-  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability d N a mass ha hmass
-  -- Step 3: V(ω) ≥ -(a^d · |Λ| · A) for all ω
-  have hc_nn : 0 ≤ wickConstant d N a mass :=
-    le_of_lt (wickConstant_pos d N a mass ha hmass)
-  have hc_le : wickConstant d N a mass ≤ mass⁻¹ ^ 2 :=
-    wickConstant_le_inv_mass_sq d N a mass ha hmass
-  have h_wp_bound : ∀ (ω : Configuration (FinLatticeField d N)),
-      interactionFunctional d N P a mass ω ≥ -(↑Λ * A) := by
-    intro ω
-    unfold interactionFunctional
-    have ha_pow : (0 : ℝ) ≤ a ^ d := pow_nonneg (le_of_lt ha) d
-    calc a ^ d * ∑ x : FinLatticeSites d N,
-          wickPolynomial P (wickConstant d N a mass) (ω (finLatticeDelta d N x))
-        ≥ a ^ d * ∑ _x : FinLatticeSites d N, (-A) := by
-          apply mul_le_mul_of_nonneg_left _ ha_pow
-          exact Finset.sum_le_sum fun x _ => hA_bound _ hc_nn hc_le _
-      _ = a ^ d * (-(↑Λ * A)) := by
-          congr 1; rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]; ring
-      _ ≥ -(↑Λ * A) := by
-          have had : a ^ d ≤ 1 := pow_le_one₀ (le_of_lt ha) ha1
-          nlinarith [mul_nonneg (Nat.cast_nonneg' Λ) (le_of_lt hA_pos)]
-  -- Step 4: exp(-2V) ≤ exp(2 · |Λ| · A) pointwise
-  have h_exp_bound : ∀ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2 ≤
-      Real.exp (2 * ↑Λ * A) := by
-    intro ω
-    -- (exp x)^2 = exp(2x)
-    rw [sq, ← Real.exp_add, show -interactionFunctional d N P a mass ω +
-        (-interactionFunctional d N P a mass ω) =
-        -2 * interactionFunctional d N P a mass ω from by ring]
-    exact Real.exp_le_exp_of_le (by linarith [h_wp_bound ω])
-  -- Step 5: Integrate the pointwise bound
-  calc ∫ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2 ∂μ
-      ≤ ∫ _ω, Real.exp (2 * ↑Λ * A) ∂μ := by
-        apply integral_mono_of_nonneg (ae_of_all _ fun ω => sq_nonneg _)
-          (integrable_const _) (ae_of_all _ h_exp_bound)
-    _ = Real.exp (2 * ↑Λ * A) := by
-        simp [integral_const]
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K
 
 /-! ## Step A3: Cauchy-Schwarz density transfer -/
 
@@ -1254,13 +1262,13 @@ theorem interacting_moment_bound
       (|ω g_f| ^ (p * ↑n)) ^ 2) μ_GFF := by
     -- All polynomial moments of Gaussian linear functionals are finite
     -- (pairing_memLp from gaussian-field: Gaussian pairings are in L^p for all p)
-    have h_μ : μ_GFF = GaussianField.measure (latticeCovariance d N a mass ha hmass) := rfl
+    have h_μ : μ_GFF = GaussianField.measure (latticeCovarianceGJ d N a mass ha hmass) := rfl
     haveI := latticeGaussianMeasure_isProbability d N a mass ha hmass
     have hp_nn : (0 : ℝ) ≤ p := by rw [hp]; positivity
     have h_nn : (0 : ℝ) ≤ 2 * p * ↑n :=
       mul_nonneg (mul_nonneg (by norm_num) hp_nn) (Nat.cast_nonneg _)
     have h_memLp := GaussianField.pairing_memLp
-      (latticeCovariance d N a mass ha hmass) g_f ⟨2 * p * ↑n, h_nn⟩
+      (latticeCovarianceGJ d N a mass ha hmass) g_f ⟨2 * p * ↑n, h_nn⟩
     have h_int : Integrable (fun ω : Configuration (FinLatticeField d N) =>
         ‖ω g_f‖ ^ (2 * p * ↑n)) μ_GFF := by rw [h_μ]; exact h_memLp.integrable_norm_rpow'
     exact h_int.congr (ae_of_all _ fun ω => by

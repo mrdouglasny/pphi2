@@ -494,7 +494,7 @@ theorem torusGaussianMeasure_isGaussian (N : ℕ) [NeZero N]
   -- Abbreviations
   set a := circleSpacing L N
   set ha := circleSpacing_pos L N
-  set T := latticeCovariance 2 N a mass ha hmass
+  set T := latticeCovarianceGJ 2 N a mass ha hmass
   set μ_lat := latticeGaussianMeasure 2 N a mass ha hmass
   set g := latticeTestFn L N f
   -- Step 1: Unfold torusContinuumMeasure as pushforward and apply integral_map
