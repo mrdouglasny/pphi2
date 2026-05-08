@@ -16,11 +16,11 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-07): 27 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-08): 26 axioms, 0 sorries** (pphi2)
+**+ 4 axioms, 1 sorry** (gaussian-field) = **30 combined**.
 
-Recent change (2026-05-07, Phase 2 partial): **3 of 11 Stage 1 axioms
-discharged** (32 axioms combined; pphi2 27, gaussian-field 5, was 35
-combined post-Stage 1):
+Recent change (2026-05-08, Phase 2 partial): **5 of 11 Stage 1 axioms
+discharged** (was 35 combined post-Stage 1, now 30):
 
 * `roughCovariance_sq_summable` (CovarianceSplit.lean): RHS gains `a^d`
   factor; original 30-line proof preserved with `field_simp`.
@@ -30,6 +30,17 @@ combined post-Stage 1):
 * `normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`
   (gaussian-field Density.lean): proved via density unfolding +
   `Finset.mul_sum` to fold `a^d` into the action.
+* `normalizedGaussianDensityMeasure_linearFourier` (gaussian-field
+  Density.lean, 2026-05-08): GJ-aligned Gaussian Fourier identity. Adapts
+  the original 290-line bare-form proof; `(a^d/2)` factor folds into
+  eigenvalues via a parallel helper `integral_massEigenbasis_cexp_GJ`.
+  Numerator/denominator share a `(a^d)^{-n/2}` Jacobian that cancels in
+  the ratio, yielding `exp(-(1/2) ⟨T_GJ f, T_GJ f⟩)` via
+  `lattice_covariance_GJ_eq_spectral`.
+* `torus_propagator_convergence_GJ` (TorusPropagatorConvergence.lean):
+  discharged via the `(a^d)⁻¹ · (L/N)² = 1` cancellation between the
+  GJ-aligned embedding factors in `evalTorusAtSiteGJ` and
+  `latticeCovarianceGJ`.
 
 Remaining 10 Stage 1 axioms each require substantive Phase 2 work
 (embedding-normalisation audit on `circleRestriction` to drop `√(L/N)`
@@ -215,7 +226,7 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 6 | `FormulationAdapter.lean` | 0 axioms, 0 sorries (exports `Pphi2` into the shared formulation layer) |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
-| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 2 axioms, 0 sorries (Stage 1: `torus_propagator_convergence_GJ` and `torusEmbeddedTwoPoint_uniform_bound` axiomatised — embedding-normalisation audit needed to thread `(a^d)⁻¹` through the existing bare-CLM convergence in gaussian-field; Phase 2). `torus_propagator_convergence` proved from the GJ axiom. |
+| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 0 sorries (`torusEmbeddedTwoPoint_uniform_bound`; Phase 2 discharge 2026-05-08 of `torus_propagator_convergence_GJ` via the `(a^d)⁻¹ · (L/N)² = 1` cancellation between `evalTorusAtSiteGJ` and `latticeCovarianceGJ`). `torus_propagator_convergence` is now a theorem. |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
 | 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 0 axioms, 0 sorries |

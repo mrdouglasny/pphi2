@@ -127,13 +127,16 @@ OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
 The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
-**27 axioms, 0 sorries** (pphi2) + **5 axioms** (gaussian-field) = **32 combined** (axioms only).
+**26 axioms, 0 sorries** (pphi2) + **4 axioms, 1 sorry** (gaussian-field) = **30 combined**.
 Stage 1 lattice-action fix raised the count from 22 to 35; Phase 2
-partial discharge has brought it back down to 32 (3 axioms proved:
-`roughCovariance_sq_summable`, `smoothVariance_le_log` (trivial-`C`
-form), and the gaussian-field density bridge
-`normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`).
-The 10 remaining Stage 1 axioms all require either the real Nelson
+partial discharge has brought it back down to 30 (5 axioms proved:
+`roughCovariance_sq_summable`, `smoothVariance_le_log` (trivial-`C` form),
+the gaussian-field density bridge
+`normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`,
+the GJ-aligned Gaussian Fourier identity
+`normalizedGaussianDensityMeasure_linearFourier`, and
+`torus_propagator_convergence_GJ`).
+The remaining Stage 1 axioms each require either the real Nelson
 dynamical-cutoff (Glimm–Jaffe Ch. 8, ~6-8 wk per Gemini estimate) or
 the embedding-normalisation audit on `circleRestriction` (drop the
 `√(L/N)` per-coord factor for GJ-aligned embeddings).
@@ -279,7 +282,7 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-- **pphi2:** 15 axioms, 0 sorries in the active build (rechecked 2026-05-08). `continuumMeasures_tight` (Route A tightness on S'(ℝ^d)) is proved (Mitoma-Chebyshev + `interacting_moment_bound` + `gaussian_second_moment_uniform`). `fourierTransform_lp_eq_fourierIntegral`, `cylinderIR_os0`, `cylinderIR_uniform_exponential_moment`, the Route B′ OS3 limit transfer, `analyticOn_generatingFunctionalC`, `continuum_exponential_moments`, `exponential_moment_schwartz_bound`, `complex_gf_invariant_of_real_gf_invariant`, and the final `os0_for_continuum_limit`/`os1_for_continuum_limit`/`os4_for_continuum_limit` wrappers are theorem-derived. The continuum-limit inheritance layer is split between `ContinuumLimit/AxiomInheritance.lean`, `ContinuumLimit/CharacteristicFunctional.lean`, and `ContinuumLimit/TimeReflection.lean`. The remaining analytic debt includes the mixed `L¹`/Green exponential-moment bridge `∫ exp(|ω f|) ≤ exp(c₁ ∫|f| + c₂ G(f,f))`, the coupled canonical characteristic-functional bridge `continuumMeasure 2 (N n) P (a n) mass → μ` with `a_n → 0` and `(N n : ℝ) * a n → ∞`, and the spectral-gap-to-clustering input. The remaining Ward-identity debt in `OS2_WardIdentity.lean` is the `N`-uniform polynomial-log `a²` bound for the canonical defect `rotationCFDefect`; the pointwise observable API `rotationCFPointwiseDefect` remains available as a proved support layer, and the log-decay prerequisite is handled by `tendsto_zero_pow_mul_one_add_abs_log_pow` for arbitrary natural powers `m ≥ 1`. Route C's 21 axioms remain preserved in `future/`
+- **pphi2:** 26 axioms, 0 sorries in the active build (rechecked 2026-05-08). `continuumMeasures_tight` (Route A tightness on S'(ℝ^d)) is proved (Mitoma-Chebyshev + `interacting_moment_bound` + `gaussian_second_moment_uniform`). `cylinderIR_os0`, `analyticOn_generatingFunctionalC`, `continuum_exponential_moments`, `exponential_moment_schwartz_bound`, `complex_gf_invariant_of_real_gf_invariant`, and the final `os0_for_continuum_limit`/`os1_for_continuum_limit`/`os4_for_continuum_limit` wrappers are theorem-derived. The continuum-limit inheritance layer is split between `ContinuumLimit/AxiomInheritance.lean`, `ContinuumLimit/CharacteristicFunctional.lean`, and `ContinuumLimit/TimeReflection.lean`. The remaining analytic debt includes the mixed `L¹`/Green exponential-moment bridge `∫ exp(|ω f|) ≤ exp(c₁ ∫|f| + c₂ G(f,f))`, the coupled canonical characteristic-functional bridge `continuumMeasure 2 (N n) P (a n) mass → μ` with `a_n → 0` and `(N n : ℝ) * a n → ∞`, and the spectral-gap-to-clustering input. The remaining Ward-identity debt in `OS2_WardIdentity.lean` is the `N`-uniform polynomial-log `a²` bound for the canonical defect `rotationCFDefect`; the pointwise observable API `rotationCFPointwiseDefect` remains available as a proved support layer, and the log-decay prerequisite is handled by `tendsto_zero_pow_mul_one_add_abs_log_pow` for arbitrary natural powers `m ≥ 1`. Route C's 21 axioms remain preserved in `future/`
 - **Route B (torus):** 0 axioms, 0 sorries — the most developed route
 - **Route B' IR limit:** 0 local axioms, 0 sorries — OS0 analyticity is proved from uniform exponential moments plus bounded-continuous weak convergence; OS2 uses the narrowed `AsymTorusSequenceHasCylinderOS2Symmetry` input, with a proved bridge from `AsymSatisfiesTorusOS`; OS3 is transferred from `CylinderMeasureSequenceEventuallyReflectionPositive`; the remaining nonlocal inputs are the eventual Green-moment bound `AsymTorusSequenceHasUniformGreenMomentBound` and eventual pullback RP for the concrete asymmetric-torus family
 - **Shared foundations layer:** `Common/QFT/Euclidean/Formulations.lean` and
