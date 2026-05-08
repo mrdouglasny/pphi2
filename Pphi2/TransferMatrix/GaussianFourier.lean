@@ -11,11 +11,11 @@ Proves `⟨f, G⋆f⟩ > 0` for nonzero `f ∈ L²(ℝⁿ)` by:
 2. Using the Fourier representation `⟨f, G⋆f⟩ = ∫ Ĝ(k) ‖f̂(k)‖² dk`
 3. Deriving strict positivity from (1) + (2) + Plancherel injectivity
 
-The main theorem `inner_convCLM_pos_of_fourier_pos` is fully proved modulo
-the private textbook bridge axiom `fourierTransform_lp_eq_fourierIntegral`.
-The downstream Fourier representation identity
-`fourier_representation_convolution` is now a private theorem built from that
-bridge plus the Schwartz/density infrastructure in this file.
+The main theorem `inner_convCLM_pos_of_fourier_pos` is fully proved. The
+formerly axiomatized bridge `fourierTransform_lp_eq_fourierIntegral` is now a
+private theorem, and the downstream Fourier representation identity
+`fourier_representation_convolution` is built from that bridge plus the
+Schwartz/density infrastructure in this file.
 
 ## References
 
@@ -413,7 +413,9 @@ private theorem fourierIntegralQuadForm_continuous
     exact fourierQuadForm_eq_integral (Ns := Ns) g hg (fHat Ns f)
   exact hEq ▸ ((fourierQuadForm_continuous (Ns := Ns) g hg).comp (fHat_continuous (Ns := Ns)))
 
+omit [NeZero Ns] in
 set_option maxHeartbeats 800000 in
+-- The proof elaborates several distribution/Lp Fourier coercions and Fubini identities.
 /-- **L¹∩L² Plancherel agreement** (textbook).
 
 For `h : ℝⁿ → ℂ` that is both in `L¹(volume)` and in `L²(volume)`, the L²
