@@ -3,29 +3,44 @@
 Three live routes + one preserved route. All share the interacting-measure
 framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
-**Current state** (`scripts/count_axioms.sh`, 2026-05-08):
-**pphi2 total: 15 axioms, 0 sorries. pinned Lake GaussianField: 4 axioms, 0 sorries.**
+**Current state** (`scripts/count_axioms.sh`, 2026-05-08, on
+`fix/lattice-action-normalization`):
+**pphi2 total: 23 axioms, 0 sorries. pinned Lake GaussianField: 5 axioms, 1 sorry.**
 
-Recent reductions:
+The 8-axiom delta over `main` (which is at 15) is the surviving
+Stage 1 GJ-aligned cohort introduced when the lattice action was renormalised
+to the Glimm–Jaffe convention `S = (a^d/2)⟨φ, M_a φ⟩`. 5 of the original
+11 Stage 1 axioms have been discharged in Phase 2.
 
-* 2026-04-29: `integral_operator_l2_kernel_compact` — the Hilbert-Schmidt
-  compactness theorem in convolution-kernel form — converted from axiom to
-  fully-proved theorem in `Pphi2/GeneralResults/HilbertSchmidt.lean`.
-  Downstream `transferOperator_isCompact` axiom footprint reduced to just
-  `[propext, Classical.choice, Quot.sound]`.
-* 2026-05-08: `fourierTransform_lp_eq_fourierIntegral` discharged as theorem
-  in `Pphi2/TransferMatrix/GaussianFourier.lean` via Mathlib's
-  tempered-distribution Fourier compatibility, the classical Fourier Fubini
-  identity, and equality of locally integrable functions from compactly
-  supported smooth tests. The convolution quadratic-form identity
-  `fourier_representation_convolution` is therefore axiom-free inside
-  `GaussianFourier.lean`.
+Recent reductions (this branch):
+
+* 2026-05-08 (PR #14, merged main): `fourierTransform_lp_eq_fourierIntegral`
+  discharged as theorem in `Pphi2/TransferMatrix/GaussianFourier.lean` via
+  Mathlib's tempered-distribution Fourier compatibility, the classical
+  Fourier Fubini identity, and equality of locally integrable functions
+  from compactly supported smooth tests. The convolution quadratic-form
+  identity `fourier_representation_convolution` is therefore axiom-free
+  inside `GaussianFourier.lean`. PR #14 also refactored
+  `cylinderIR_uniform_exponential_moment` and `cylinderIR_os3` to consume
+  explicit Green-moment / RP inputs (axioms → theorems).
+* 2026-05-08 (this branch, Phase 2 partial):
+  `normalizedGaussianDensityMeasure_linearFourier` discharged in
+  gaussian-field via the GJ-adapted `integral_massEigenbasis_cexp_GJ`
+  helper; `torus_propagator_convergence_GJ` discharged in pphi2 via the
+  `(a^d)⁻¹ · (L/N)² = 1` cancellation between `evalTorusAtSiteGJ` and
+  `latticeCovarianceGJ`. `roughCovariance_sq_summable` and
+  `smoothVariance_le_log` (trivial-`C` form) discharged in
+  `NelsonEstimate/CovarianceSplit.lean`.
+* 2026-04-29: `integral_operator_l2_kernel_compact` — Hilbert-Schmidt
+  compactness in convolution-kernel form — converted from axiom to
+  theorem in `Pphi2/GeneralResults/HilbertSchmidt.lean`.
 * 2026-04-30 (PR #11, merged main): `cylinderIR_uniform_second_moment`
   converted from axiom to theorem.
 
-Net: Transfer-matrix cluster 4 → 2 axioms after the Hilbert-Schmidt/Fourier
-work, and Route B′ cylinder IR limit 3 → 0 local axioms. Total pphi2 axioms
-22 → 15.
+Net of Stage 1 + Phase 2 + PR #14: Stage 1 raised pphi2 22 → 29 axioms
+(plus 2 in gaussian-field); Phase 2 partial discharge + PR #14 brought
+the combined count from 35 to 28 (5 Stage 1 GJ axioms + 3 main-track
+axioms discharged).
 
 ---
 

@@ -421,6 +421,49 @@ estimate (§4) reflects this.
 
 ## 4. Plan
 
+### Progress (as of 2026-05-08)
+
+**Phase 0 (vetting): done.** **Phase 1 (action change): done** — landed on
+`fix/lattice-action-normalization` and the corresponding gaussian-field
+branch. **Phase 2 (Nelson's estimate proper): partial** — 5 of 11 Stage 1
+axioms discharged, the heavy dynamical-cutoff piece still pending. Combined
+axiom count: 35 (post-Stage 1) → 28 (current).
+
+Discharged so far in Phase 2:
+
+* `roughCovariance_sq_summable` (CovarianceSplit.lean) — proved theorem
+  with `field_simp` + `a^d` rescale of original 30-line proof.
+* `smoothVariance_le_log` (CovarianceSplit.lean) — proved with the trivial
+  `C = (a^d)⁻¹ · mass⁻²` bound. The textbook tight `C = O(1)` uniform in `a`
+  remains the real Phase 2 deliverable, but the trivial bound suffices for
+  the consumers.
+* `normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`
+  (gaussian-field Density.lean) — density unfolding + `Finset.mul_sum`.
+* `normalizedGaussianDensityMeasure_linearFourier` (gaussian-field
+  Density.lean) — adapts the original 290-line bare-form Fourier proof via
+  the new `integral_massEigenbasis_cexp_GJ` helper. The `(a^d)^{−n/2}`
+  Jacobian factors cancel in the numerator/denominator ratio, yielding
+  `exp(−(1/2) ⟨T_GJ f, T_GJ f⟩)` via `lattice_covariance_GJ_eq_spectral`.
+* `torus_propagator_convergence_GJ` (TorusPropagatorConvergence.lean) —
+  discharged via the `(a^d)⁻¹ · (L/N)² = 1` cancellation between the
+  GJ-aligned `evalTorusAtSiteGJ` and `latticeCovarianceGJ`.
+
+Still axiomatised (8 in pphi2):
+
+* `nelson_exponential_estimate_lattice` (NelsonEstimate.lean)
+* `exponential_moment_bound` (Hypercontractivity.lean)
+* `asymNelson_exponential_estimate`, `asymGaussian_second_moment_uniform_bound`
+  (AsymTorusInteractingLimit.lean)
+* `asymTorusInteracting_exponentialMomentBound`, `asymGf_sub_norm_le_seminorm`
+  (AsymTorusOS.lean)
+* `torusEmbeddedTwoPoint_le_seminorm` (TorusInteractingOS.lean)
+* `torusEmbeddedTwoPoint_uniform_bound` (TorusPropagatorConvergence.lean)
+
+These all reduce, in different shapes, to the genuine dynamical-cutoff
+Nelson estimate (Glimm–Jaffe Ch. 8). The infrastructure files
+`SmoothLowerBound.lean` and `RoughErrorBound.lean` are in place but not
+yet wired up.
+
 ### Phase 0 — vetting
 
 **Done (2026-05-07)**: Gemini deep-think confirmed the diagnosis on Q1,
