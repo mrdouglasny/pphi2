@@ -16,11 +16,21 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-08): 26 axioms, 0 sorries** (pphi2)
-**+ 4 axioms, 1 sorry** (gaussian-field) = **30 combined**.
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-08, post PR #14): 23 axioms, 0 sorries** (pphi2)
+**+ 5 axioms, 1 sorry** (gaussian-field) = **28 combined**.
 
-Recent change (2026-05-08, Phase 2 partial): **5 of 11 Stage 1 axioms
-discharged** (was 35 combined post-Stage 1, now 30):
+Recent change (2026-05-08, post PR #14 merge): **5 Stage 1 GJ axioms
+discharged in Phase 2** plus three additional pphi2 axioms cleared by
+PR #14 (`fourierTransform_lp_eq_fourierIntegral` private axiom -> proved
+theorem via Mathlib's tempered-distribution embedding;
+`cylinderIR_uniform_exponential_moment` and `cylinderIR_os3` refactored
+to consume explicit `MeasureHasGreenMomentBound` /
+`CylinderMeasureSequenceEventuallyReflectionPositive` inputs). The
+gaussian-field count rose from 4 to 5 because PR #14's
+`scripts/count_axioms.sh` now scans the previously-unaudited
+`SchwartzFourier/` directory.
+
+The five Phase 2 GJ-axiom discharges:
 
 * `roughCovariance_sq_summable` (CovarianceSplit.lean): RHS gains `a^d`
   factor; original 30-line proof preserved with `field_simp`.
