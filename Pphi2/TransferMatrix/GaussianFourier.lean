@@ -420,11 +420,16 @@ Fourier transform of the `Lp ℂ 2` representative of `h` agrees a.e. with the
 classical Fourier integral `𝓕 h` (defined for L¹ inputs by
 `MeasureTheory.fourierIntegral`).
 
-This is the standard density-and-isometry extension that defines
-`Lp.fourierTransformₗᵢ` in the first place: the L² transform is constructed
-as the unique continuous extension of the classical Fourier integral from
-the Schwartz subspace, and the resulting extension automatically agrees with
-the L¹ classical Fourier integral on the overlap `L¹ ∩ L²`.
+This is the standard compatibility statement for the two Mathlib Fourier
+interfaces: the `L²` Plancherel transform and the pointwise `L¹` Fourier
+integral. The proof avoids an explicit approximation sequence by passing
+through Mathlib's tempered-distribution embedding. The `L²` transform agrees
+with the distributional Fourier transform by
+`MeasureTheory.Lp.fourier_toTemperedDistribution_eq`; testing against
+Schwartz functions and using Fubini identifies the resulting distribution
+with the classical Fourier integral. Finally
+`ae_eq_of_integral_contDiff_smul_eq` converts equality of distributions
+against compactly supported smooth real test functions into a.e. equality.
 
 Mathlib has the **Schwartz** form of this identification as
 `SchwartzMap.toLp_fourier_eq`, but no direct `L¹ ∩ L²` form. The general
@@ -434,12 +439,10 @@ is in `L¹ ∩ L²` but not Schwartz.
 **Reference**: Folland, *Real Analysis*, §8.3, Theorem 8.22 (Plancherel);
 Reed-Simon I §IX.4, Theorem IX.13.
 
-**Proof strategy** (Gemini deep-think 2026-04-30, one-line sketch): take a
-Schwartz sequence `(sₙ)` with `sₙ → h` in both `L¹` and `L²`; the
-`L²`-continuity of `Lp.fourierTransformₗᵢ` makes `𝓕 sₙ` converge in `L²` to
-the L²-side LHS, while the `L¹ → L^∞` continuity of the classical Fourier
-integral makes `𝓕 sₙ` converge uniformly (hence a.e.) to the RHS — both
-limits must therefore agree a.e.
+The only convention-sensitive step is the right-hand Fourier kernel returned
+by `VectorFourier.integral_bilin_fourierIntegral_eq_flip`: it uses
+`(innerₗ E).flip`, which is identified with the usual Fourier kernel by
+symmetry of the real inner product.
 
 **Audit (Gemini deep-think 2026-04-30)**: PASS on (a) type correctness,
 (b) strength vs Folland 8.22 / Reed-Simon IX.13, (c) non-vacuity (LHS is the
@@ -448,12 +451,82 @@ the substantive content of the theorem), (d) hypothesis sufficiency
 (`MemLp h 1` + `MemLp h 2` is exactly what the references use; works for
 `Ns = 0` as a trivial case via Dirac measure on a one-point space), (e)
 `=ᵐ[volume]` is the natural formulation. -/
-private axiom fourierTransform_lp_eq_fourierIntegral
+private theorem fourierTransform_lp_eq_fourierIntegral
     {h : EuclideanSpace ℝ (Fin Ns) → ℂ}
     (hL1 : MemLp h 1 (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
     (hL2 : MemLp h 2 (volume : Measure (EuclideanSpace ℝ (Fin Ns)))) :
     Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ (hL2.toLp h)
-      =ᵐ[(volume : Measure (EuclideanSpace ℝ (Fin Ns)))] 𝓕 h
+      =ᵐ[(volume : Measure (EuclideanSpace ℝ (Fin Ns)))] 𝓕 h := by
+  let E := EuclideanSpace ℝ (Fin Ns)
+  let fL2 : Lp (α := E) ℂ 2 := hL2.toLp h
+  have hh_int : Integrable h (volume : Measure E) := by
+    exact memLp_one_iff_integrable.mp hL1
+  have hF_cont : Continuous (𝓕 h : E → ℂ) := by
+    exact VectorFourier.fourierIntegral_continuous Real.continuous_fourierChar
+      continuous_inner hh_int
+  have h_left_loc : LocallyIntegrable
+      ((Lp.fourierTransformₗᵢ E ℂ fL2 : Lp (α := E) ℂ 2) : E → ℂ)
+      (volume : Measure E) := by
+    exact (Lp.memLp (Lp.fourierTransformₗᵢ E ℂ fL2)).locallyIntegrable (by norm_num)
+  have h_right_loc : LocallyIntegrable (𝓕 h : E → ℂ) (volume : Measure E) := by
+    exact hF_cont.locallyIntegrable
+  refine ae_eq_of_integral_contDiff_smul_eq h_left_loc h_right_loc ?_
+  intro g hgdiff hgsupp
+  have hu_supp : HasCompactSupport (Complex.ofRealCLM ∘ g : E → ℂ) :=
+    hgsupp.comp_left rfl
+  have hu_diff : ContDiff ℝ (↑(⊤ : ℕ∞)) (Complex.ofRealCLM ∘ g : E → ℂ) := by
+    exact Complex.ofRealCLM.contDiff.comp hgdiff
+  let u : 𝓢(E, ℂ) := hu_supp.toSchwartzMap hu_diff
+  have hdist0 := congrArg (fun T : 𝓢'(E, ℂ) => T u)
+    (MeasureTheory.Lp.fourier_toTemperedDistribution_eq (E := E) (F := ℂ) fL2)
+  have hdist :
+      ∫ x : E, u x •
+          ((Lp.fourierTransformₗᵢ E ℂ fL2 : Lp (α := E) ℂ 2) x) ∂(volume : Measure E)
+        = ∫ x : E, (𝓕 u) x • fL2 x ∂(volume : Measure E) := by
+    simpa [fL2] using hdist0.symm
+  have hflip :
+      VectorFourier.fourierIntegral Real.fourierChar volume ((innerₗ E).flip) h =
+        (𝓕 h : E → ℂ) := by
+    ext x
+    rw [Real.fourier_eq]
+    apply integral_congr_ae
+    apply Filter.Eventually.of_forall
+    intro v
+    simp [real_inner_comm]
+  have hfubini :
+      ∫ x : E, (𝓕 u) x • h x ∂(volume : Measure E)
+        = ∫ x : E, u x • (𝓕 h : E → ℂ) x ∂(volume : Measure E) := by
+    have hmain := VectorFourier.integral_bilin_fourierIntegral_eq_flip
+      (V := E) (W := E) (E := ℂ) (F := ℂ) (G := ℂ)
+      (M := ContinuousLinearMap.lsmul ℂ ℂ)
+      (e := Real.fourierChar) (μ := (volume : Measure E)) (ν := (volume : Measure E))
+      (L := innerₗ E)
+      Real.continuous_fourierChar continuous_inner
+      (u.integrable) hh_int
+    rw [hflip] at hmain
+    simpa only [ContinuousLinearMap.lsmul_apply] using hmain
+  have hcoe : (fL2 : E → ℂ) =ᵐ[(volume : Measure E)] h := by
+    simpa [fL2] using hL2.coeFn_toLp
+  calc
+    ∫ x : E, g x •
+        ((Lp.fourierTransformₗᵢ E ℂ fL2 : Lp (α := E) ℂ 2) x) ∂(volume : Measure E)
+        = ∫ x : E, u x •
+            ((Lp.fourierTransformₗᵢ E ℂ fL2 : Lp (α := E) ℂ 2) x) ∂(volume : Measure E) := by
+          apply integral_congr_ae
+          apply Filter.Eventually.of_forall
+          intro x
+          simp [u]
+    _ = ∫ x : E, (𝓕 u) x • fL2 x ∂(volume : Measure E) := hdist
+    _ = ∫ x : E, (𝓕 u) x • h x ∂(volume : Measure E) := by
+          apply integral_congr_ae
+          filter_upwards [hcoe] with x hx
+          rw [hx]
+    _ = ∫ x : E, u x • (𝓕 h : E → ℂ) x ∂(volume : Measure E) := hfubini
+    _ = ∫ x : E, g x • (𝓕 h : E → ℂ) x ∂(volume : Measure E) := by
+          apply integral_congr_ae
+          apply Filter.Eventually.of_forall
+          intro x
+          simp [u]
 
 private abbrev gEuclidean
     (g : SpatialField Ns → ℝ) :
@@ -1369,8 +1442,11 @@ theorem gaussian_conv_strictlyPD :
 Status note for the Fourier representation bridge (2026-05-08):
 
 The downstream Fourier representation identity
-`fourier_representation_convolution` is now a private theorem. It is built from
-the private textbook bridge axiom `fourierTransform_lp_eq_fourierIntegral` and
+`fourier_representation_convolution` is now a private theorem. The former
+private bridge `fourierTransform_lp_eq_fourierIntegral` is also a theorem:
+it is proved via Mathlib's tempered-distribution compatibility for the L²
+Fourier transform, the classical Fourier Fubini identity, and
+`ae_eq_of_integral_contDiff_smul_eq`. The convolution representation uses
 the following helper infrastructure:
 - `gEuclidean_memLp`
 - `liftL2_ℝC`
@@ -1386,12 +1462,10 @@ the following helper infrastructure:
 - `T_conv_apply_schwartz`
 - `T_mul_apply_schwartz`
 
-Remaining gap:
-eliminate `fourierTransform_lp_eq_fourierIntegral` by proving the standard
-`L¹ ∩ L²` representative theorem for Mathlib's Lp Fourier transform. Once that
-bridge is proved, the existing `fourier_representation_convolution`,
-`inner_convCLM_pos_of_fourier_pos`, and Gaussian strict-positive-definiteness
-chain become axiom-free without changing their statements.
+There is no longer a private axiom in this file. The existing
+`fourier_representation_convolution`, `inner_convCLM_pos_of_fourier_pos`, and
+Gaussian strict-positive-definiteness chain are axiom-free within
+`GaussianFourier.lean`.
 -/
 
 end Pphi2
