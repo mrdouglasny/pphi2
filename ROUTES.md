@@ -5,14 +5,16 @@ framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
 **Current state** (`scripts/count_axioms.sh`, 2026-05-08, on
 `fix/lattice-action-normalization`):
-**pphi2 total: 21 axioms, 0 sorries. pinned Lake GaussianField: 5 axioms, 1 sorry.**
+**pphi2 total: 19 axioms, 0 sorries. pinned Lake GaussianField: 5 axioms, 1 sorry.**
 
-The 6-axiom delta over `main` (which is at 15) is the surviving
+The 4-axiom delta over `main` (which is at 15) is the surviving
 Stage 1 GJ-aligned cohort introduced when the lattice action was renormalised
-to the Glimm–Jaffe convention `S = (a^d/2)⟨φ, M_a φ⟩`. 7 of the original
-11 Stage 1 axioms have been discharged in Phase 2 (Cluster B partial:
-both symmetric-torus uniform bounds done; the asymmetric pair waits on
-an `evalAsymAtFinSiteGJ` refactor mirroring the symmetric `evalTorusAtSiteGJ`).
+to the Glimm–Jaffe convention `S = (a^d/2)⟨φ, M_a φ⟩`. 9 of the original
+11 Stage 1 axioms have been discharged in Phase 2 (**Cluster B complete**:
+both symmetric and asymmetric uniform-bound pairs proved via the
+`(a^d)⁻¹ · a_geom² = 1` cancellation; the asym side now has its own
+GJ-aligned embedding `evalAsymAtFinSiteGJ` mirroring `evalTorusAtSiteGJ`).
+Remaining 4 are all in **Cluster A** (Nelson dynamical-cutoff family).
 
 Recent reductions (this branch):
 

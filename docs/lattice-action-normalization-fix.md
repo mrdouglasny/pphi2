@@ -425,16 +425,13 @@ estimate (§4) reflects this.
 
 **Phase 0 (vetting): done.** **Phase 1 (action change): done** — landed on
 `fix/lattice-action-normalization` and the corresponding gaussian-field
-branch. **Phase 2 (Nelson's estimate proper): partial** — 7 of 11 Stage 1
-axioms discharged. Combined axiom count: 35 (post-Stage 1) → 26 (current).
+branch. **Phase 2 (Nelson's estimate proper): partial** — 9 of 11 Stage 1
+axioms discharged. Combined axiom count: 35 (post-Stage 1) → 24 (current).
+**Cluster B is complete.**
 
-The remaining 4 Stage 1 axioms split into two clusters:
-
-- **Cluster A (Nelson dynamical-cutoff)**: 4 axioms reducing to the same
-  Glimm–Jaffe Ch. 8 estimate. Multi-week deliverable.
-- **Cluster B (embedding-normalisation, asymmetric branch)**: 2 axioms
-  awaiting an `evalAsymAtFinSiteGJ` refactor analogous to the symmetric
-  `evalTorusAtSiteGJ`. ~1 week.
+The remaining 4 Stage 1 axioms are all in **Cluster A (Nelson
+dynamical-cutoff)** — all four reduce to the same Glimm–Jaffe Ch. 8
+estimate. Multi-week deliverable.
 
 Discharged so far in Phase 2:
 
@@ -455,21 +452,23 @@ Discharged so far in Phase 2:
   `torusEmbeddedTwoPoint_le_seminorm_tight` which factors the explicit
   `mass⁻² · L² · C₀⁴ · p₀(f)²` bound.
 * `torusEmbeddedTwoPoint_le_seminorm` (TorusInteractingOS.lean) — Cluster
-  B 2/2 (symmetric branch). Discharged via the same tight helper, witness
+  B 2/4 (symmetric branch). Discharged via the same tight helper, witness
   `mass⁻¹ · L · C₀² · rapidDecaySeminorm 0 f`.
+* `asymGaussian_second_moment_uniform_bound` (AsymTorusInteractingLimit.lean)
+  — Cluster B 3/4. Required adding a GJ-aligned asym embedding
+  `evalAsymAtFinSiteGJ := asymGeomSpacing • evalAsymAtFinSite` (analog of
+  symmetric `evalTorusAtSiteGJ`) and threading it through `asymLatticeTestFn`
+  / `asymTorusEmbedLift`. Same `(a²)⁻¹ · a_geom² = 1` cancellation pattern.
+* `asymGf_sub_norm_le_seminorm` (AsymTorusOS.lean) — Cluster B 4/4
+  (asymmetric seminorm form). Same GJ asym embedding, witness
+  `mass⁻¹ · √(Lt·Ls) · C₀t · C₀s · rapidDecaySeminorm 0 (g - h)`.
 
-Still axiomatised (6 in pphi2):
+Still axiomatised (4 in pphi2, all Cluster A):
 
-* Cluster A — `nelson_exponential_estimate_lattice` (NelsonEstimate.lean),
-  `exponential_moment_bound` (Hypercontractivity.lean),
-  `asymNelson_exponential_estimate`, `asymTorusInteracting_exponentialMomentBound`
-  (AsymTorus/{AsymTorusInteractingLimit,AsymTorusOS}.lean).
-* Cluster B asymmetric — `asymGaussian_second_moment_uniform_bound`,
-  `asymGf_sub_norm_le_seminorm`. Discharge requires introducing
-  `evalAsymAtFinSiteGJ := asymGeomSpacing • evalAsymAtFinSite` in the
-  asym embedding (analog of the symmetric `evalTorusAtSiteGJ`), updating
-  `asymTorusEmbedLift` to use it, and chasing the cancellation through
-  the existing `asymLatticeTestFn_norm_sq_le` infrastructure.
+* `nelson_exponential_estimate_lattice` (NelsonEstimate.lean)
+* `exponential_moment_bound` (Hypercontractivity.lean)
+* `asymNelson_exponential_estimate` (AsymTorusInteractingLimit.lean)
+* `asymTorusInteracting_exponentialMomentBound` (AsymTorusOS.lean)
 
 The Cluster A four reduce to the same dynamical-cutoff Nelson estimate
 (Glimm–Jaffe Ch. 8); `SmoothLowerBound.lean` and `RoughErrorBound.lean`

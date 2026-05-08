@@ -16,8 +16,8 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-08, post PR #14 + Cluster B partial): 21 axioms, 0 sorries** (pphi2)
-**+ 5 axioms, 1 sorry** (gaussian-field) = **26 combined**.
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-08, Cluster B complete): 19 axioms, 0 sorries** (pphi2)
+**+ 5 axioms, 1 sorry** (gaussian-field) = **24 combined**.
 
 Recent change (2026-05-08, post PR #14 merge): **5 Stage 1 GJ axioms
 discharged in Phase 2** plus three additional pphi2 axioms cleared by
@@ -249,8 +249,8 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 4T | `NelsonEstimate/CovarianceSplit.lean` | **0 axioms, 0 sorries** (Phase 2 partial discharge 2026-05-07: `roughCovariance_sq_summable` and `smoothVariance_le_log` (trivial-`C`-form) both axiom → proved theorem). |
 | 4T | `NelsonEstimate/{SmoothLowerBound,RoughErrorBound}.lean` | 0 axioms, 0 sorries (Phase 2 infrastructure, ready to wire into the real Nelson proof). |
 | B' | `AsymTorus/AsymTorusEmbedding.lean` | 0 axioms, 0 sorries |
-| B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 2 axioms, 0 sorries (Stage 1: `asymNelson_exponential_estimate`, `asymGaussian_second_moment_uniform_bound` axiomatised — same Phase 2 pattern as the symmetric torus). |
-| B' | `AsymTorus/AsymTorusOS.lean` | 2 axioms, 0 sorries (Stage 1: `asymTorusInteracting_exponentialMomentBound`, `asymGf_sub_norm_le_seminorm` axiomatised; OS0–OS2 still proved from these). |
+| B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 1 axiom, 0 sorries (`asymNelson_exponential_estimate` only — Cluster A Nelson estimate; Phase 2 Cluster B complete 2026-05-08: `asymGaussian_second_moment_uniform_bound` discharged via the new `evalAsymAtFinSiteGJ` GJ asym embedding). |
+| B' | `AsymTorus/AsymTorusOS.lean` | 1 axiom, 0 sorries (`asymTorusInteracting_exponentialMomentBound` only — Cluster A; Phase 2 Cluster B complete 2026-05-08: `asymGf_sub_norm_le_seminorm` discharged via the same `(a²)⁻¹·a_geom² = 1` cancellation pattern as the symmetric pair). |
 | 6 | `Bridge.lean` | 3 axioms, 0 sorries |
 | B'IR | `IRLimit/Periodization.lean` | 0 axioms, 0 sorries (re-exports from gaussian-field) |
 | B'IR | `IRLimit/CylinderEmbedding.lean` | **0 axioms, 0 sorries** (intertwining proved via NTP pure tensor density) |
