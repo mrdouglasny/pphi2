@@ -59,6 +59,7 @@ infrastructure for extensions beyond Wick monomials.
 import Pphi2.ContinuumLimit.Embedding
 import Pphi2.GeneralResults.GaussianHermiteMean
 import Pphi2.GeneralResults.LatticeProductDFT
+import Pphi2.NelsonEstimate.PolynomialChaosBridge
 import GaussianField.Density
 import GaussianField.HypercontractiveNat
 import Lattice.CirculantDFT2d
@@ -905,26 +906,30 @@ theorem wickMonomial_latticeGaussian (d N : ℕ) [NeZero N]
 
 /-! ## Step A2: Exponential moment bound for the interaction -/
 
-/-- **Easy exponential moment bound** (axiomatised in Stage 1 — false
-uniformly in `a` under GJ-aligned normalisation).
+/-- **Exponential moment bound for the interaction**, derived from
+`nelson_exponential_estimate_master_bounded` in
+`Pphi2/NelsonEstimate/PolynomialChaosBridge.lean`.
 
-The previous proof gave `K = exp(2|Λ|A)` from the pointwise bound
-`V(ω) ≥ -|Λ| · A` with `A` from `wickPolynomial_uniform_bounded_below`
-applied to `c ∈ [0, mass⁻²]`. Under Option C, `wickConstant` has
-the GJ-aligned form with `(a^d)⁻¹` factor, so the bound on `c` becomes
-`(a^d)⁻¹ · mass⁻²` (not uniform in `a`). The easy pointwise bound
-no longer gives a uniform-in-a constant `K`.
-
-For any fixed `N` and `a ≤ 1`, the bound exists (depending on `a`);
-the genuine uniform proof is via Nelson's dynamical-cutoff (Phase 2).
-Reference: Glimm-Jaffe Ch. 8, Simon Ch. I. -/
-axiom exponential_moment_bound (P : InteractionPolynomial)
+This is the Phase 2 master statement: for the lattice GFF on
+`(ℤ/Nℤ)^d` with spacing `a` and mass `m > 0`,
+$$
+  \int \exp(-2 V_a(\omega))^2 \, d\mu_{\rm GFF} \le K
+$$
+uniformly in `0 < a ≤ 1` and `N`. The bridge axiom in
+`PolynomialChaosBridge.lean` carries the substantive content
+(Glimm-Jaffe Ch. 8 dynamical-cutoff via polynomial-chaos
+concentration); this theorem just exposes it under the original axiom
+shape so that downstream consumers don't need to be re-wired. -/
+theorem exponential_moment_bound (P : InteractionPolynomial)
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
     ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
     ∫ ω : Configuration (FinLatticeField d N),
         (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
+  obtain ⟨K, hK_pos, hbound⟩ :=
+    nelson_exponential_estimate_master_bounded d P mass hmass
+  exact ⟨K, hK_pos, fun a ha ha_le => hbound a ha ha_le N⟩
 
 /-! ## Step A3: Cauchy-Schwarz density transfer -/
 

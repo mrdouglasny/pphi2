@@ -53,25 +53,31 @@ theorem asymGeomSpacing_sq_mul_sq (N : ℕ) [NeZero N] :
   rw [Real.sq_sqrt h_nn]
   field_simp
 
-/-- **Asymmetric-torus Nelson exponential estimate** (axiomatised in
-Stage 1 — same Phase 2 issue as the symmetric `nelson_exponential_estimate_lattice`).
+/-- **Asymmetric-torus Nelson exponential estimate**, derived from
+`nelson_exponential_estimate_master` (in
+`Pphi2/NelsonEstimate/PolynomialChaosBridge.lean`).
 
-The L² norm of the Boltzmann weight is bounded by a constant K that
-depends on `P, mass, Lt, Ls` but NOT on N:
+The L² norm of the Boltzmann weight is bounded by a constant `K` that
+depends on `P, mass, Lt, Ls` but NOT on `N`:
 
     ∫ exp(-2V) dμ_GFF ≤ K   for all N ≥ 1
 
-The easy pointwise lower bound used wickConstant ≤ mass⁻², which is no
-longer uniform in `a` under Glimm-Jaffe-aligned `wickConstant`. Genuine
-proof requires Glimm-Jaffe Ch. 8 dynamical cutoff (Phase 2). -/
-axiom asymNelson_exponential_estimate
+This is a specialization of the master theorem to the asymmetric-torus
+geometry `a = asymGeomSpacing Lt Ls N`. The substantive content is in
+the bridge axiom; this specialization just chooses the spacing
+function and applies the existential. -/
+theorem asymNelson_exponential_estimate
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
     ∀ (N : ℕ) [NeZero N],
     ∫ ω : Configuration (FinLatticeField 2 N),
         (Real.exp (-interactionFunctional 2 N P (asymGeomSpacing Lt Ls N) mass ω)) ^ 2
         ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
-          (asymGeomSpacing_pos Lt Ls N) hmass) ≤ K
+          (asymGeomSpacing_pos Lt Ls N) hmass) ≤ K := by
+  obtain ⟨K, hK_pos, hbound⟩ :=
+    Pphi2.nelson_exponential_estimate_master 2 P mass hmass
+  exact ⟨K, hK_pos, fun N _ =>
+    hbound (asymGeomSpacing Lt Ls N) (asymGeomSpacing_pos Lt Ls N) N⟩
 /-- The asymmetric torus interacting measure is a probability measure. -/
 instance asymTorusInteractingMeasure_isProbability (N : ℕ) [NeZero N]
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :

@@ -829,14 +829,26 @@ private theorem asymTorusInteractingMeasure_exponentialMomentBound_cutoff
               ← Real.sqrt_mul (by norm_num : (0:ℝ) ≤ 2)]
   exact ⟨hF_int_int, h_integral_bound⟩
 
-/-- **AsymTorus interacting exponential moment bound** (axiomatised in
-Stage 1 — uniform-in-N bound becomes non-uniform under GJ-aligned
-covariance; same Phase 2 pattern as the symmetric torus bound).
+/-- **AsymTorus interacting exponential moment bound on a BC-limit measure.**
 
-Transfers the cutoff-level bound to the weak limit via truncation + MCT.
-Unlike the symmetric version (which uses propagator convergence
-`G_N -> G`), this uses the uniform second moment bound from
-`asymGaussian_second_moment_uniform_bound` to get an N-independent bound. -/
+NOT in the polynomial-chaos family despite being grouped with Cluster A
+historically. This axiom is structurally different from the
+`exp(-2 V_a)` bound discharged by `nelson_exponential_estimate_master`
+(`Pphi2/NelsonEstimate/PolynomialChaosBridge.lean`):
+
+* The polynomial-chaos master controls `∫ exp(-2 V_a) dμ_GFF` for the
+  Gaussian (free) measure, with the interaction in the integrand.
+* This axiom controls `∫ exp(|ω f|) dμ` for an interacting limit
+  measure `μ`, with the field in the integrand and the interaction
+  baked into the measure via pushforward.
+
+The closer relative is `cylinderIR_uniform_exponential_moment`
+(`Pphi2/IRLimit/UniformExponentialMoment.lean`, discharged in PR #14
+via `MeasureHasGreenMomentBound`). The asym analogue would build on
+`asymGf_sub_norm_le_seminorm` (the Cluster B asymmetric Lipschitz
+bound, now a theorem) and lift through the BC-convergence hypothesis
+`hconv` here, mirroring the cylinder IR-limit pattern. Discharge route
+deferred to a follow-up Cluster B'-style refactor. -/
 private axiom asymTorusInteracting_exponentialMomentBound
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))

@@ -29,6 +29,7 @@ hypercontractivity on the rough error to prove Nelson's exponential estimate:
 
 import Pphi2.NelsonEstimate.SmoothLowerBound
 import Pphi2.NelsonEstimate.RoughErrorBound
+import Pphi2.NelsonEstimate.PolynomialChaosBridge
 import Pphi2.InteractingMeasure.LatticeMeasure
 import Pphi2.TorusContinuumLimit.TorusEmbedding
 
@@ -59,40 +60,36 @@ Then |E_R| ≥ M/2, so:
 This is DOUBLE EXPONENTIAL decay, so:
   ∫₀^∞ exp(2M) · P(V ≤ -M) dM < ∞ -/
 
-/-- **Nelson's exponential estimate on the lattice** (axiomatised in
-Stage 1 — to be proved via dynamical cutoff in Phase 2).
+/-- **Nelson's exponential estimate on the lattice** (Phase 2 master
+result, derived from `polynomial_chaos_exp_moment_bridge`).
 
 For the P(φ)₂ lattice theory on the 2D torus of size L with lattice
 spacing a = L/N and mass m > 0:
 
     ∃ K > 0, ∀ N, ∫ exp(-2V) dμ_GFF ≤ K
 
-where K depends on P (the interaction polynomial), L, and m, but NOT
-on N (the lattice size).
+where K depends on P, L, and m, but NOT on N. Specialization of
+`nelson_exponential_estimate_master` (in `PolynomialChaosBridge.lean`)
+to the symmetric-torus geometry `a = circleSpacing L N`. The
+substantive content (Glimm-Jaffe Ch. 8 / Simon Ch. I dynamical cutoff)
+is in the bridge axiom; this specialization just chooses the spacing.
 
-Under the Glimm-Jaffe-aligned normalisation, wickConstant grows like
-(a^d)⁻¹ · mass⁻² (logarithmically divergent in d=2), so the "easy
-pointwise lower bound" proof breaks: `wickPolynomial_uniform_bounded_below`
-applied to a divergent c-range gives a divergent A. The genuine proof
-is via dynamical cutoff (Glimm-Jaffe Ch. 8 / Simon Ch. I): split the
-integration domain into small-field and large-field events, use
-polynomial bounds on the small-field set and Gaussian tails on the
-large-field set.
-
-Reference: Glimm-Jaffe Ch. 8 (dynamical cutoff); Simon, *P(φ)₂
-Euclidean QFT*, Ch. I; Nelson 1966.
-
-The infrastructure for the dynamical-cutoff proof
-(`SmoothLowerBound.lean`, `RoughErrorBound.lean`) exists in pphi2 but
-is not yet wired up. Phase 2 deliverable. -/
-axiom nelson_exponential_estimate_lattice
+The `a ≤ 1` constraint of the master is satisfied for `N ≥ ⌈L⌉`
+(`circleSpacing L N = L/N ≤ 1`); the existential here doesn't need
+that, since for finite `N < ⌈L⌉` we can absorb the value into the
+witness `K`. -/
+theorem nelson_exponential_estimate_lattice
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
     ∀ (N : ℕ) [NeZero N],
     ∫ ω : Configuration (FinLatticeField 2 N),
         (exp (-interactionFunctional 2 N P (circleSpacing L N) mass ω)) ^ 2
         ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass
-          (circleSpacing_pos L N) hmass) ≤ K
+          (circleSpacing_pos L N) hmass) ≤ K := by
+  obtain ⟨K, hK_pos, hbound⟩ :=
+    nelson_exponential_estimate_master 2 P mass hmass
+  exact ⟨K, hK_pos, fun N _ => hbound (circleSpacing L N) (circleSpacing_pos L N) N⟩
+
 end Pphi2
 
 end
