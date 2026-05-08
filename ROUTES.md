@@ -5,7 +5,7 @@ framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
 **Current state** (`scripts/count_axioms.sh`, 2026-05-08, on
 `fix/lattice-action-normalization`):
-**pphi2 total: 19 axioms, 0 sorries. pinned Lake GaussianField: 5 axioms, 1 sorry.**
+**pphi2 total: 17 axioms, 0 sorries. pinned Lake GaussianField: 5 axioms, 1 sorry.**
 
 The 4-axiom delta over `main` (which is at 15) is the surviving
 Stage 1 GJ-aligned cohort introduced when the lattice action was renormalised

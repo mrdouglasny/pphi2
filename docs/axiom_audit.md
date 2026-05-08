@@ -1,7 +1,7 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-05-08 (branch `fix/lattice-action-normalization`)
-**pphi2**: 19 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 5 axioms, 1 sorry
+**pphi2**: 17 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 5 axioms, 1 sorry
 
 Note: pphi2 count includes 1 private axiom
 (`gaussian_rp_cov_perfect_square`).

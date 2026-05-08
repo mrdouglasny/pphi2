@@ -16,8 +16,8 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-08, Cluster B complete): 19 axioms, 0 sorries** (pphi2)
-**+ 5 axioms, 1 sorry** (gaussian-field) = **24 combined**.
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-08, Cluster A 3-of-4 collapsed): 17 axioms, 0 sorries** (pphi2)
+**+ 5 axioms, 1 sorry** (gaussian-field) = **22 combined**.
 
 Recent change (2026-05-08, post PR #14 merge): **5 Stage 1 GJ axioms
 discharged in Phase 2** plus three additional pphi2 axioms cleared by
