@@ -83,20 +83,43 @@ theorem wickConstant_split (T : ℝ) :
 
 /-! ## Variance bounds -/
 
-/-- **Smooth variance bound** (axiomatised in Stage 1 — internal to the
-dynamical-cutoff machinery, not load-bearing now that `nelson_exponential_estimate_lattice`
-is itself axiomatised).
+/-- **Smooth variance bound** (Phase 2 partial: trivial constant proof
+discharged 2026-05-07; tight `O(log T)` proof remains for true Phase 2).
 
-For d = 2 and T > 0: c_S ≤ C · (1 + |log T|).
+For d = 2 and T > 0: `c_S ≤ C · (1 + |log T|)` for some `C = C(d, N, a, mass)`.
 
-Under Glimm-Jaffe-aligned `wickConstant` (with `(a^d)⁻¹` factor), the
-trivial chain `c_S ≤ wickConstant ≤ (a^d)⁻¹·mass⁻²` would give
-`C = (a^d)⁻¹ · mass⁻²`, which is not the textbook log-bound. The real
-proof uses sharper estimates on the Fourier modes (Glimm-Jaffe Ch. 8).
+This is the trivial bound `c_S ≤ wickConstant ≤ (a^d)⁻¹·mass⁻²`,
+which gives a constant `C = (a^d)⁻¹·mass⁻²` depending on `a` but
+uniform in T. The textbook **tight** bound `C = O(1)` (uniform in `a`)
+requires sharper Fourier estimates (Glimm–Jaffe Ch. 8) and is the real
 Phase 2 deliverable. -/
-axiom smoothVariance_le_log (_hd : d = 2) (T : ℝ) (_hT : 0 < T)
+theorem smoothVariance_le_log (_hd : d = 2) (T : ℝ) (_hT : 0 < T)
     (ha : 0 < a) (hmass : 0 < mass) :
-    ∃ C : ℝ, 0 < C ∧ smoothWickConstant d N a mass T ≤ C * (1 + |Real.log T|)
+    ∃ C : ℝ, 0 < C ∧ smoothWickConstant d N a mass T ≤ C * (1 + |Real.log T|) := by
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  refine ⟨(a^d : ℝ)⁻¹ * mass⁻¹ ^ 2, ?_, ?_⟩
+  · exact mul_pos (inv_pos.mpr ha_d_pos) (by positivity)
+  -- smoothWickConstant ≤ wickConstant via smoothCovEigenvalue ≤ 1/λ.
+  have h_le : ∀ m ∈ range (Fintype.card (FinLatticeSites d N)),
+      smoothCovEigenvalue d N a mass T m ≤ (latticeEigenvalue d N a mass m)⁻¹ := by
+    intro m _
+    unfold smoothCovEigenvalue
+    have hev := latticeEigenvalue_pos d N a mass ha hmass m
+    rw [inv_eq_one_div]
+    exact div_le_div_of_nonneg_right (Real.exp_le_one_iff.mpr (by nlinarith)) hev.le
+  have h_smooth_le_wick : smoothWickConstant d N a mass T ≤ wickConstant d N a mass := by
+    unfold smoothWickConstant wickConstant
+    refine mul_le_mul_of_nonneg_left ?_ (le_of_lt (inv_pos.mpr ha_d_pos))
+    apply mul_le_mul_of_nonneg_left (Finset.sum_le_sum h_le) (by positivity)
+  have h_wick_bound : wickConstant d N a mass ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 :=
+    wickConstant_le_inv_mass_sq d N a mass ha hmass
+  calc smoothWickConstant d N a mass T
+      ≤ wickConstant d N a mass := h_smooth_le_wick
+    _ ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 := h_wick_bound
+    _ ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 * (1 + |Real.log T|) :=
+        le_mul_of_one_le_right
+          (mul_nonneg (le_of_lt (inv_pos.mpr ha_d_pos)) (by positivity))
+          (by linarith [abs_nonneg (Real.log T)])
 
 /-- The rough L² bound is O(T).
 C_R(k) ≤ T (since (1-e^{-x})/x ≤ 1), so C_R(k)² ≤ T·C_R(k) ≤ T/λ_k.
@@ -126,23 +149,51 @@ theorem roughCovEigenvalue_le_inv (T : ℝ) (m : ℕ)
   apply div_le_div_of_nonneg_right _ hev.le
   linarith [Real.exp_nonneg (-T * latticeEigenvalue d N a mass m)]
 
-/-- **Rough variance L² bound** (axiomatised in Stage 1 — internal to
-the dynamical-cutoff machinery; not load-bearing now that
-`nelson_exponential_estimate_lattice` is itself axiomatised).
+/-- **Rough variance L² bound** (Phase 2 deliverable: discharged
+2026-05-07 with corrected `(a^d)` factor on RHS).
 
-The original statement bounded `(1/|Λ|) Σ C_R² ≤ T · wickConstant`,
-exploiting `wickConstant = (1/|Λ|) Σ 1/λ`. Under Glimm-Jaffe-aligned
-`wickConstant` (with `(a^d)⁻¹` factor), the bare-sum form on the LHS
-no longer matches `wickConstant`'s structure on the RHS without an
-extra `(a^d)` factor. The lemma can be re-stated as
-`(a^d)⁻¹ · LHS_old ≤ T · wickConstant_new` (mathematically equivalent),
-to be wired up in Phase 2. -/
-axiom roughCovariance_sq_summable (T : ℝ) (_hT : 0 < T)
-    (_ha : 0 < a) (_hmass : 0 < mass) :
+The mode-by-mode bound `C_R(k)² ≤ T · (1/λ_k)` (from `C_R(k) ≤ T` and
+`C_R(k) ≤ 1/λ_k`) gives `(1/|Λ|) Σ C_R² ≤ T · (1/|Λ|) Σ 1/λ_k`. Under
+Glimm–Jaffe-aligned `wickConstant = (a^d)⁻¹ · (1/|Λ|) Σ 1/λ_k`, the RHS
+becomes `T · a^d · wickConstant`. -/
+theorem roughCovariance_sq_summable (T : ℝ) (hT : 0 < T)
+    (ha : 0 < a) (hmass : 0 < mass) :
     (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
     ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
       roughCovEigenvalue d N a mass T m ^ 2 ≤
-    T * wickConstant d N a mass
+    T * a^d * wickConstant d N a mass := by
+  -- C_R(k)² ≤ C_R(k) · T ≤ (1/λ_k) · T
+  have h_le : ∀ m ∈ range (Fintype.card (FinLatticeSites d N)),
+      roughCovEigenvalue d N a mass T m ^ 2 ≤
+      T * (latticeEigenvalue d N a mass m)⁻¹ := by
+    intro m _
+    have hR_nn : 0 ≤ roughCovEigenvalue d N a mass T m := by
+      unfold roughCovEigenvalue; apply div_nonneg
+      · have hev := latticeEigenvalue_pos d N a mass ha hmass m
+        have hTlam : 0 < T * latticeEigenvalue d N a mass m := mul_pos hT hev
+        have : Real.exp (-T * latticeEigenvalue d N a mass m) ≤ 1 := by
+          apply Real.exp_le_one_iff.mpr; linarith
+        linarith
+      · exact (latticeEigenvalue_pos d N a mass ha hmass m).le
+    calc roughCovEigenvalue d N a mass T m ^ 2
+        = roughCovEigenvalue d N a mass T m * roughCovEigenvalue d N a mass T m := sq _
+      _ ≤ T * (latticeEigenvalue d N a mass m)⁻¹ :=
+          mul_le_mul (roughCovEigenvalue_le_T d N a mass T hT.le m ha hmass)
+            (roughCovEigenvalue_le_inv d N a mass T m ha hmass) hR_nn hT.le
+  -- (1/|Λ|) Σ C_R² ≤ T · (1/|Λ|) Σ 1/λ_k = T · a^d · wickConstant
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  have ha_d_ne : (a^d : ℝ) ≠ 0 := ne_of_gt ha_d_pos
+  calc (1 / ↑(Fintype.card (FinLatticeSites d N))) *
+      ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
+        roughCovEigenvalue d N a mass T m ^ 2
+      ≤ (1 / ↑(Fintype.card (FinLatticeSites d N))) *
+        ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
+          T * (latticeEigenvalue d N a mass m)⁻¹ := by
+        apply mul_le_mul_of_nonneg_left (Finset.sum_le_sum h_le) (by positivity)
+    _ = T * a^d * wickConstant d N a mass := by
+        unfold wickConstant
+        rw [← Finset.mul_sum]
+        field_simp
 
 /-! ## Positivity -/
 
