@@ -560,19 +560,39 @@ theorem torus_interacting_second_moment_continuous
     _ = Real.sqrt K * (3 * G_Nff) := by rw [hK_sqrt]
     _ = 3 * Real.sqrt K * G_Nff := by ring
 
-/-- **torusEmbeddedTwoPoint seminorm bound** (axiomatised in Stage 1 —
-uniform-in-N bound becomes non-uniform under GJ-aligned covariance;
-same Phase 2 pattern as `torusEmbeddedTwoPoint_uniform_bound`).
+/-- **torusEmbeddedTwoPoint seminorm bound** (Glimm–Jaffe-aligned).
 
-Was the **uniform Green's function bound by a continuous seminorm**:
-for any v and the lattice approximations w_n (nearest lattice vectors
-in the φ(n)+1 lattice), the GF difference `Z_{φ(n)+1}[T_v f] -
-Z_{φ(n)+1}[T_{w_n} f] → 0`. -/
-axiom torusEmbeddedTwoPoint_le_seminorm
+Existence of a continuous, vanishing-at-zero `p : TorusTestFunction L → ℝ`
+such that the embedded two-point function is bounded by `p f ^ 2` uniformly
+in N. Discharged via `torusEmbeddedTwoPoint_le_seminorm_tight` (which gives
+the explicit witness `mass⁻¹ · L · C₀² · rapidDecaySeminorm 0 f`).
+
+Phase 2 partial discharge (2026-05-08): same cancellation pattern as
+`torusEmbeddedTwoPoint_uniform_bound`. -/
+theorem torusEmbeddedTwoPoint_le_seminorm
     (mass : ℝ) (hmass : 0 < mass) :
     ∃ (p : TorusTestFunction L → ℝ) (_ : Continuous p) (_ : p 0 = 0),
     ∀ (f : TorusTestFunction L) (N : ℕ) [NeZero N],
-      torusEmbeddedTwoPoint L N mass hmass f f ≤ p f ^ 2
+      torusEmbeddedTwoPoint L N mass hmass f f ≤ p f ^ 2 := by
+  obtain ⟨C₀, hC₀_pos, hbound⟩ := torusEmbeddedTwoPoint_le_seminorm_tight L mass hmass
+  refine ⟨fun f => mass⁻¹ * L * C₀ ^ 2 * RapidDecaySeq.rapidDecaySeminorm 0 f,
+    ?_, ?_, ?_⟩
+  · -- continuity: scalar mul of a continuous seminorm
+    have h_cont : Continuous (fun f : TorusTestFunction L =>
+        RapidDecaySeq.rapidDecaySeminorm 0 f) :=
+      RapidDecaySeq.rapidDecay_withSeminorms.continuous_seminorm 0
+    exact (continuous_const.mul h_cont)
+  · -- p 0 = 0
+    show mass⁻¹ * L * C₀ ^ 2 * RapidDecaySeq.rapidDecaySeminorm 0 0 = 0
+    rw [map_zero (RapidDecaySeq.rapidDecaySeminorm 0)]
+    ring
+  · -- bound: torusEmbeddedTwoPoint ≤ (p f)^2
+    intro f N _
+    have hbnd := hbound f N
+    have h_eq : (mass⁻¹ * L * C₀ ^ 2 * RapidDecaySeq.rapidDecaySeminorm 0 f) ^ 2 =
+        mass⁻¹ ^ 2 * L ^ 2 * C₀ ^ 4 * RapidDecaySeq.rapidDecaySeminorm 0 f ^ 2 := by ring
+    rw [h_eq]
+    exact hbnd
 /-- **Circle translation is continuous in the shift parameter.**
 
 The map `s ↦ T_s g` is continuous from `ℝ` to `SmoothMap_Circle L ℝ` for any
