@@ -1,10 +1,32 @@
-# Comprehensive Axiom Audit: pphi2 + gaussian-field
+# Comprehensive Axiom Audit: pphi2 + gaussian-field + markov-semigroups
 
 **Updated**: 2026-05-08 (branch `fix/lattice-action-normalization`)
-**pphi2**: 17 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 5 axioms, 1 sorry
+**pphi2**: 17 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 12 axioms, 1 sorry | **pinned Lake MarkovSemigroups**: 3 axioms, 0 sorries (Gaussian/PolynomialChaosConcentration + WienerChaos)
 
 Note: pphi2 count includes 1 private axiom
 (`gaussian_rp_cov_perfect_square`).
+
+## 2026-05-08 audit pass (Cluster A pre-discharge axiom corrections)
+
+Four axiom-statement bugs were caught and corrected before any proof
+work on the polynomial-chaos concentration / Nelson estimate /
+GFF orthogonal-bridge architecture. All four corrections were vetted
+by `deep_think_gemini` (DT, 2026-05-08).
+
+| Axiom | File:Line | Old issue | New status | Sources |
+|-------|-----------|-----------|------------|---------|
+| `GaussianField.gffOrthonormalCoord` (def) | StandardGaussianBridge.lean:82 | Wrong divisor `√λ_k` (gives variance `(a^d)⁻¹`, not 1) | Fixed: divisor now `√(a^d λ_k)` so `Var(ξ_k) = 1` | DT, GJ-aligned spectral identity |
+| `GaussianField.siteWickMonomial_eigenbasis_expansion` | WickMultivariate.lean:198 | Free `c : ℝ` parameter — false for `c ≠ c_a(x)` | Fixed: c specialised to `gffSiteVariance d N a mass ha hmass x = (a^d)⁻¹ Σ_k λ_k⁻¹ e_k(x)²` | DT (Hermite-projection chaos identity) |
+| `MarkovSemigroups.Gaussian.bonami_nelson_chaos` / `_chaosLE` | PolynomialChaosConcentration.lean:95,115 | Both norms identical (Lp.norm at L²) — vacuous | Fixed: LHS `eLpNorm f (ENNReal.ofReal p)`, RHS `eLpNorm f 2`. Sharp on `H_k`; `(d+1)` factor on `H^{≤d}` (slightly weaker than the sharp `√(d+1)`) | DT (Janson §5.1 hypercontractivity) |
+| `Pphi2.polynomial_chaos_exp_moment_bridge` | NelsonEstimate/PolynomialChaosBridge.lean:116 | Over-stated to `∀ a > 0` (textbook GJ Ch. 8 covers `a ≤ 1`) | Left as-is for downstream convenience; docstring "Note on strength" flags the over-statement | DT verdict: likely true (large-`a` regime trivial, integral → 1; combine with GJ small-`a` bound via `K = max(K_small, K_large)`) |
+
+**Sources legend** (per project convention): `DT` = Gemini
+deep-think vet, `LP` = literature proof with page number, `SA` =
+self-audit, `PR` = peer review.
+
+The first three corrections are required *before* attempting any
+discharge of the bridge axioms — the buggy versions would have led to
+unprovable downstream chains.
 
 The 4-axiom delta over `main` (which has 15 in pphi2) is the surviving
 Stage 1 GJ-aligned **Cluster A** (Nelson dynamical-cutoff family). Stage 1

@@ -124,7 +124,16 @@ axiom polynomial_chaos_exp_moment_bridge
 
 /-- **Master theorem: lattice Nelson exponential estimate**, derived
 from `polynomial_chaos_exp_moment_bridge` by trivial unfolding (the
-theorem is the bridge with witness extracted). -/
+theorem is the bridge with witness extracted).
+
+**Note on strength.** The textbook Glimm–Jaffe Ch. 8 result is uniform
+in `(a, N)` for `a` in any bounded interval (canonically `(0, 1]`).
+The bridge as stated here is over-stated to `∀ a > 0`; the
+discharge plan is to (a) tighten the bridge axiom to `a ≤ 1` once
+the upstream `polynomial_chaos_concentration` derivation is wired in,
+and (b) absorb finite-`N` small-`a` (`a > 1`) values into a downstream
+witness `K'`. Until then the over-statement is preserved here for
+downstream convenience — see the audit notes in `docs/axiom_audit.md`. -/
 theorem nelson_exponential_estimate_master
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
