@@ -57,6 +57,20 @@ theorem asymSpaceSpacing_pos (Ns : ℕ) [NeZero Ns] :
     0 < asymSpaceSpacing Ls Ns :=
   div_pos hLs.out (Nat.cast_pos.mpr (NeZero.pos Ns))
 
+/-! ## Geometric mean spacing -/
+
+/-- The geometric mean spacing: √(at · as) = √(Lt · Ls) / N.
+
+This is the effective spacing for the interaction on the asymmetric lattice.
+The cell area at·as = Lt·Ls/N² equals a_geom², preserving the relationship
+between physical volume and lattice sum that Nelson's estimate uses. -/
+def asymGeomSpacing (N : ℕ) [NeZero N] : ℝ :=
+  Real.sqrt (asymTimeSpacing Lt N * asymSpaceSpacing Ls N)
+
+theorem asymGeomSpacing_pos (N : ℕ) [NeZero N] :
+    0 < asymGeomSpacing Lt Ls N :=
+  Real.sqrt_pos_of_pos (mul_pos (asymTimeSpacing_pos Lt N) (asymSpaceSpacing_pos Ls N))
+
 /-! ## Embedding of asymmetric lattice fields
 
 The asymmetric lattice (ZMod Nt) × (ZMod Ns) embeds into the asymmetric
@@ -73,6 +87,21 @@ def evalAsymAtFinSite (N : ℕ) [NeZero N]
     (x : FinLatticeSites 2 N) : AsymTorusTestFunction Lt Ls →L[ℝ] ℝ :=
   evalAsymTorusAtSite Lt Ls N N (x 0, x 1)
 
+/-- Glimm-Jaffe-aligned asymmetric-torus evaluation: `evalAsymAtFinSiteGJ x`
+is `a_geom · evalAsymAtFinSite x`, giving per-site weight `a_geom²` and
+aligning the embedding with the GJ covariance kernel. -/
+noncomputable def evalAsymAtFinSiteGJ (N : ℕ) [NeZero N]
+    (x : FinLatticeSites 2 N) :
+    AsymTorusTestFunction Lt Ls →L[ℝ] ℝ :=
+  asymGeomSpacing Lt Ls N • evalAsymAtFinSite Lt Ls N x
+
+@[simp] theorem evalAsymAtFinSiteGJ_apply (N : ℕ) [NeZero N]
+    (x : FinLatticeSites 2 N) (f : AsymTorusTestFunction Lt Ls) :
+    evalAsymAtFinSiteGJ Lt Ls N x f =
+      asymGeomSpacing Lt Ls N * evalAsymAtFinSite Lt Ls N x f := by
+  unfold evalAsymAtFinSiteGJ
+  rw [ContinuousLinearMap.smul_apply, smul_eq_mul]
+
 /-- The asymmetric torus embedding: maps lattice configs on `FinLatticeField 2 N`
 to configs on `AsymTorusTestFunction Lt Ls`. Uses DIFFERENT circle restrictions
 per direction (Lt/N for time, Ls/N for space). -/
@@ -81,13 +110,13 @@ def asymTorusEmbedLift (N : ℕ) [NeZero N] :
     Configuration (AsymTorusTestFunction Lt Ls) :=
   fun ω =>
     { toFun := fun f => ∑ x : FinLatticeSites 2 N,
-        ω (Pi.single x 1) * evalAsymAtFinSite Lt Ls N x f
+        ω (Pi.single x 1) * evalAsymAtFinSiteGJ Lt Ls N x f
       map_add' := fun f g => by simp [mul_add, Finset.sum_add_distrib]
       map_smul' := fun r f => by
         simp [smul_eq_mul, mul_left_comm, Finset.mul_sum, RingHom.id_apply]
       cont := by
         apply continuous_finset_sum; intro x _
-        exact continuous_const.mul (evalAsymAtFinSite Lt Ls N x).cont }
+        exact continuous_const.mul (evalAsymAtFinSiteGJ Lt Ls N x).cont }
 
 /-- The asymmetric torus embedding lift is measurable. -/
 theorem asymTorusEmbedLift_measurable (N : ℕ) [NeZero N] :
@@ -104,7 +133,7 @@ theorem asymTorusEmbedLift_measurable (N : ℕ) [NeZero N] :
 at each lattice site. This is the asymmetric analog of `latticeTestFn`. -/
 def asymLatticeTestFn (N : ℕ) [NeZero N]
     (f : AsymTorusTestFunction Lt Ls) : FinLatticeField 2 N :=
-  fun x => evalAsymAtFinSite Lt Ls N x f
+  fun x => evalAsymAtFinSiteGJ Lt Ls N x f
 
 /-- Key identity: the asymmetric lattice test function equals the sum of its
 values times delta functions. -/
@@ -128,7 +157,7 @@ theorem asymTorusEmbedLift_eval_eq (N : ℕ) [NeZero N]
   -- LHS = Σ_x ω(δ_x) * eval_x(f)
   -- RHS = ω(Σ_x eval_x(f) • δ_x) = Σ_x eval_x(f) * ω(δ_x)
   change (∑ x : FinLatticeSites 2 N,
-      ω (Pi.single x 1) * evalAsymAtFinSite Lt Ls N x f) =
+      ω (Pi.single x 1) * evalAsymAtFinSiteGJ Lt Ls N x f) =
     ω (asymLatticeTestFn Lt Ls N f)
   rw [asymLatticeTestFn_expand Lt Ls N f, map_sum]
   simp_rw [map_smul, smul_eq_mul]
@@ -138,18 +167,6 @@ theorem asymTorusEmbedLift_eval_eq (N : ℕ) [NeZero N]
   ring
 
 /-! ## Interacting measure on asymmetric torus -/
-
-/-- The geometric mean spacing: √(at · as) = √(Lt · Ls) / N.
-
-This is the effective spacing for the interaction on the asymmetric lattice.
-The cell area at·as = Lt·Ls/N² equals a_geom², preserving the relationship
-between physical volume and lattice sum that Nelson's estimate uses. -/
-def asymGeomSpacing (N : ℕ) [NeZero N] : ℝ :=
-  Real.sqrt (asymTimeSpacing Lt N * asymSpaceSpacing Ls N)
-
-theorem asymGeomSpacing_pos (N : ℕ) [NeZero N] :
-    0 < asymGeomSpacing Lt Ls N :=
-  Real.sqrt_pos_of_pos (mul_pos (asymTimeSpacing_pos Lt N) (asymSpaceSpacing_pos Ls N))
 
 /-- The asymmetric torus-embedded interacting P(φ)₂ measure.
 
