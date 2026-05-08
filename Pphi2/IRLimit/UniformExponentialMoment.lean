@@ -5,7 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 # Uniform Exponential Moment Bound for Cylinder Pullback
 
 Provides the uniform-in-Lt exponential moment bound
-`E_{ν_Lt}[exp(ω(f))] ≤ exp(C · ‖f‖²)` needed for OS0 analyticity.
+`E_{ν_Lt}[exp(|ω(f)|)] ≤ K · exp(C · q(f)²)` needed for OS0 analyticity.
 
 This is pulled through from the AsymTorus Nelson/Fröhlich bound via
 the cylinder-to-torus embedding.
@@ -20,12 +20,11 @@ For `g = embed(f)` where `f` is a cylinder test function:
 
 Combined: `E_{ν_Lt}[exp(|ω(f)|)] ≤ K · exp(C · q(f)²)` uniformly in Lt.
 
-This is sufficient for Montel/Vitali to prove the limit generating
-functional is entire analytic (OS0).
+Together with bounded-continuous convergence of the extracted limit, this is
+sufficient for the dominated integral proof of OS0 analyticity.
 -/
 
-import Pphi2.IRLimit.GreenFunctionComparison
-import Pphi2.AsymTorus.AsymTorusOS
+import Pphi2.AsymTorus.MomentBoundOS1
 
 noncomputable section
 
@@ -45,41 +44,32 @@ pulled-back torus interacting measure is bounded uniformly in Lt:
 where `q` is a continuous seminorm on `CylinderTestFunction Ls` and
 `K, C > 0` are constants independent of `f` and `Lt`.
 
-**Proof strategy (requires infrastructure refactor):**
-
-The intended chain is: `AsymSatisfiesTorusOS.os1` (torus exponential moment)
-bounds `∫ exp(|ω g|) dμ ≤ exp(c · q_torus(g))` for `g = embed f`. Composing
-with `torusGreen_uniform_bound` (`G_torus_Lt(embed f, embed f) ≤ C·q_cyl(f)²`
-uniformly in `Lt ≥ 1`) gives the uniform cylinder bound — *provided*
-`q_torus(g) ≤ C' · G_torus_Lt(g, g)` for the OS1 bound.
-
-**Structural gap** (blocker): `AsymTorusOS1_Regularity` currently takes the
-form `‖Z_μ(f_re + i·f_im)‖ ≤ exp(c·(q_torus(f_re) + q_torus(f_im)))` for an
-**abstract continuous `q_torus`**. Nothing in the type guarantees
-`q_torus(g) ≤ C' · G_torus_Lt(g, g)`. The concrete `q_torus` produced by
-`asymTorusInteracting_exponentialMomentBound` is Sobolev-seminorm based
-(`mass⁻² · (Lt·Ls·C₀t²·C₀s²·p₀(f)² + 1) + |log K_cut|`), which has an
-**explicit `Lt` factor** that breaks uniformity in the cylinder limit.
-
-To prove this axiom, `AsymSatisfiesTorusOS` must be extended with a
-`G_torus`-compatible OS1 clause (or the axiom must be specialized to the
-concrete UV-limit measure). That refactor is scheduled separately.
-
-This is the key input for OS0 analyticity of the IR limit. -/
-axiom cylinderIR_uniform_exponential_moment
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+This theorem deliberately keeps the needed analytic input explicit. The
+abstract `AsymSatisfiesTorusOS.os1` clause has a bound by an unspecified
+continuous seminorm, which is too weak to imply uniformity as `Lt → ∞`.
+Assuming instead the Green-controlled bound `MeasureHasGreenMomentBound` with
+constants uniform in `Lt`, `cylinderPullback_expMoment_uniform_bound` composes
+that input with the method-of-images estimate. -/
+theorem cylinderIR_uniform_exponential_moment
+    (mass : ℝ) (hmass : 0 < mass)
+    (KG CG : ℝ) (hKG_pos : 0 < KG) (hCG_pos : 0 < CG) :
     ∃ (K C : ℝ) (q : Seminorm ℝ (CylinderTestFunction Ls)),
     0 < K ∧ 0 < C ∧ Continuous q ∧
     ∀ (Lt : ℝ) [Fact (0 < Lt)] (_ : 1 ≤ Lt)
       (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
-      [hμ : IsProbabilityMeasure μ]
-      (_ : @AsymSatisfiesTorusOS Lt Ls _ _ μ hμ)
+      [IsProbabilityMeasure μ]
+      (_ : MeasureHasGreenMomentBound Ls mass hmass KG CG μ)
       (f : CylinderTestFunction Ls),
     Integrable (fun ω : Configuration (CylinderTestFunction Ls) =>
       Real.exp (|ω f|)) (cylinderPullbackMeasure Lt Ls μ) ∧
     ∫ ω : Configuration (CylinderTestFunction Ls),
       Real.exp (|ω f|) ∂(cylinderPullbackMeasure Lt Ls μ) ≤
-    K * Real.exp (C * q f ^ 2)
+    K * Real.exp (C * q f ^ 2) := by
+  obtain ⟨K, C, q, hK, hC, hq_cont, hbound⟩ :=
+    cylinderPullback_expMoment_uniform_bound Ls mass hmass KG CG hKG_pos hCG_pos
+  refine ⟨K, C, q, hK, hC, hq_cont, ?_⟩
+  intro Lt _ hLt μ _ hμ_green f
+  exact hbound Lt hLt μ hμ_green f
 
 /-- Elementary inequality `x² ≤ 2 e^|x|`, used to extract a polynomial
     moment from the exponential moment. -/
@@ -128,13 +118,14 @@ the same helper) and `Integrable.mono'` against the AE-strong
 measurability of `(· f) ^ 2` (composition of `configuration_eval_measurable`
 with `pow_const 2`), `(ω f)²` is integrable. -/
 theorem cylinderIR_uniform_second_moment
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    (mass : ℝ) (hmass : 0 < mass)
+    (KG CG : ℝ) (hKG_pos : 0 < KG) (hCG_pos : 0 < CG) :
     ∃ (C₁ C₂ : ℝ) (q : Seminorm ℝ (CylinderTestFunction Ls)),
     0 < C₁ ∧ 0 < C₂ ∧ Continuous q ∧
     ∀ (Lt : ℝ) [Fact (0 < Lt)] (_ : 1 ≤ Lt)
       (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
-      [hμ : IsProbabilityMeasure μ]
-      (_ : @AsymSatisfiesTorusOS Lt Ls _ _ μ hμ)
+      [IsProbabilityMeasure μ]
+      (_ : MeasureHasGreenMomentBound Ls mass hmass KG CG μ)
       (f : CylinderTestFunction Ls),
     Integrable (fun ω : Configuration (CylinderTestFunction Ls) =>
       (ω f) ^ 2) (cylinderPullbackMeasure Lt Ls μ) ∧
@@ -142,10 +133,10 @@ theorem cylinderIR_uniform_second_moment
       (ω f) ^ 2 ∂(cylinderPullbackMeasure Lt Ls μ) ≤
     C₁ * q f ^ 2 + C₂ := by
   obtain ⟨K, C, q, hK, hC, hq_cont, hbound⟩ :=
-    cylinderIR_uniform_exponential_moment Ls P mass hmass
+    cylinderIR_uniform_exponential_moment Ls mass hmass KG CG hKG_pos hCG_pos
   refine ⟨2 * K * C * Real.exp 1, 2 * K * C * Real.exp 1, q,
     by positivity, by positivity, hq_cont, ?_⟩
-  intro Lt _ hLt μ _ hOS f
+  intro Lt _ hLt μ _ hμ_green f
   set ν := cylinderPullbackMeasure Lt Ls μ with hν_def
   set s : ℝ := q f with hs_def
   have hs_nn : 0 ≤ s := apply_nonneg q f
@@ -159,9 +150,9 @@ theorem cylinderIR_uniform_second_moment
     Real.sq_sqrt (one_div_pos.mpr hα_pos).le
   have hlam2_pos : (0:ℝ) < lam ^ 2 := by positivity
   -- Apply exp moment at λ = 1 (for integrability of (ωf)²)
-  obtain ⟨h_int_one, _⟩ := hbound Lt hLt μ hOS f
+  obtain ⟨h_int_one, _⟩ := hbound Lt hLt μ hμ_green f
   -- Apply exp moment to (lam • f) (for the moment bound)
-  obtain ⟨h_int_lam, h_bd_lam⟩ := hbound Lt hLt μ hOS (lam • f)
+  obtain ⟨h_int_lam, h_bd_lam⟩ := hbound Lt hLt μ hμ_green (lam • f)
   -- AE-strong measurability of (ω f)² via configuration_eval_measurable
   have h_meas_sq : AEStronglyMeasurable
       (fun ω : Configuration (CylinderTestFunction Ls) => (ω f) ^ 2) ν :=

@@ -12,8 +12,10 @@ Proves `⟨f, G⋆f⟩ > 0` for nonzero `f ∈ L²(ℝⁿ)` by:
 3. Deriving strict positivity from (1) + (2) + Plancherel injectivity
 
 The main theorem `inner_convCLM_pos_of_fourier_pos` is fully proved modulo
-`fourier_representation_convolution` (the Fourier representation identity,
-which requires the L² convolution theorem not yet in Mathlib).
+the private textbook bridge axiom `fourierTransform_lp_eq_fourierIntegral`.
+The downstream Fourier representation identity
+`fourier_representation_convolution` is now a private theorem built from that
+bridge plus the Schwartz/density infrastructure in this file.
 
 ## References
 
@@ -1364,9 +1366,12 @@ theorem gaussian_conv_strictlyPD :
   simp [ofReal_ofNat]
 
 /-!
-Status note for `fourier_representation_convolution` (2026-04-30):
+Status note for the Fourier representation bridge (2026-05-08):
 
-Proved helpers left in this file:
+The downstream Fourier representation identity
+`fourier_representation_convolution` is now a private theorem. It is built from
+the private textbook bridge axiom `fourierTransform_lp_eq_fourierIntegral` and
+the following helper infrastructure:
 - `gEuclidean_memLp`
 - `liftL2_ℝC`
 - `liftL2_ℝC_spec`
@@ -1382,18 +1387,11 @@ Proved helpers left in this file:
 - `T_mul_apply_schwartz`
 
 Remaining gap:
-The file still needs the Schwartz base-case equality
-`T_conv_eq_T_mul_schwartz`, then the dense-range extension
-`T_conv_eq_T_mul`, and finally the Plancherel scalar identity that replaces
-the axiom `fourier_representation_convolution`. The obstruction is the
-Lp-representative comparison step that combines
-`fourierTransform_lp_eq_fourierIntegral`,
-`Real.fourier_smul_convolution_eq`, and `SchwartzMap.toLp_fourier_eq`
-into a single equality in `Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2`.
-Concretely, the missing API-level bridge is an ergonomic way to turn the
-a.e. pointwise identity from `fourierTransform_lp_eq_fourierIntegral`
-together with `fourierWeightComplexCLM_spec` into equality of `Lp`
-elements without redoing the `MemLp.toLp_congr`/multiplier packaging by hand.
+eliminate `fourierTransform_lp_eq_fourierIntegral` by proving the standard
+`L¹ ∩ L²` representative theorem for Mathlib's Lp Fourier transform. Once that
+bridge is proved, the existing `fourier_representation_convolution`,
+`inner_convCLM_pos_of_fourier_pos`, and Gaussian strict-positive-definiteness
+chain become axiom-free without changing their statements.
 -/
 
 end Pphi2

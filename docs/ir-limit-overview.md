@@ -41,9 +41,10 @@ Take a sequence Lt_n → ∞. Each torus measure μ_{Lt_n, Ls} satisfies
 OS0–OS2. Pull back to the cylinder via periodization embedding, then
 extract a weak limit ν on S¹_{Ls} × ℝ.
 
-**Status**: 5 axioms remain. OS2 (time reflection invariance) is proved
-for the limit. OS0 (analyticity) and OS3 (reflection positivity) are
-axiomatized with documented proof routes.
+**Status**: 0 local IR-limit axioms and 0 sorries in pphi2. OS0, OS2, and the
+OS3 limit transfer are proved conditional on the explicit family-level inputs
+`AsymTorusSequenceHasUniformGreenMomentBound` and
+`CylinderMeasureSequenceEventuallyReflectionPositive`.
 
 ## 3. The Embedding: Cylinder → Torus
 
@@ -140,39 +141,39 @@ Similarly for time reflection. This is purely algebraic — no limiting argument
 
 ### For the limit (via characteristic functional convergence)
 
-The IR limit axiom `cylinderIRLimit_exists` provides characteristic functional
-convergence: Z_{Lt_n}(f) → Z(f) for all f. Since Z_{Lt_n}(f) = Z_{Lt_n}(Θf)
-at every n (exact reflection invariance), taking the limit:
+The theorem `cylinderIRLimit_exists`, conditional on the eventual
+Green-controlled moment input, provides characteristic-functional convergence:
+Z_{Lt_n}(f) → Z(f) for all f along the extracted subsequence. Since
+Z_{Lt_n}(f) = Z_{Lt_n}(Θf) at every n (exact reflection invariance), taking
+the limit:
 
   Z(f) = lim Z_{Lt_n}(f) = lim Z_{Lt_n}(Θf) = Z(Θf)
 
 This uses `tendsto_nhds_unique`: if a_n → L₁ and a_n = b_n → L₂, then L₁ = L₂.
 
-## 5. Remaining Axioms and Proof Routes
+## 5. Conditional Theorems and Remaining Inputs
 
 ### 5.1 Uniform second moment bound (`cylinderIR_uniform_second_moment`)
 
-**Statement**: There exist C > 0 and continuous seminorm q on CylinderTestFunction Ls
-such that for all Lt ≥ 1 and all OS-satisfying torus measures μ:
+**Statement**: Given uniform Green-controlled constants `KG, CG`, there exist
+`C₁, C₂ > 0` and a continuous seminorm q on `CylinderTestFunction Ls` such
+that for all `Lt ≥ 1` and all torus measures μ satisfying
+`MeasureHasGreenMomentBound Ls mass hmass KG CG μ`:
 
-  ∫ (ω f)² dν_{Lt} ≤ C · q(f)²
+  ∫ (ω f)² dν_{Lt} ≤ C₁ · q(f)² + C₂
 
 **Mathematical content**: The second moment of the cylinder field is bounded
 uniformly in the time period. This is the core tightness input.
 
 **Proof chain**:
 
-1. **Pullback identity**: ∫ (ωf)² dν_{Lt} = ∫ (ω(embed f))² dμ_{Lt}
-
-2. **OS1 regularity**: The torus measure satisfies OS1, giving
-   ∫ (ωg)² dμ ≤ C₁ · q₁(g)² for a continuous seminorm q₁ on AsymTorusTF.
-   This follows from the Nelson exponential bound + Cauchy-Schwarz.
-
-3. **Method of images**: The torus Green's function decomposes as
-   G_{Lt,Ls}(embed f, embed f) = G_{Ls}(f, f) + Σ_{k≠0} wrap-around terms.
-   Each wrap-around term decays as e^{-m|k|Lt} (exponential suppression by
-   the mass gap). For Lt ≥ 1, the geometric series sums to at most
-   2e^{-m}/(1-e^{-m}). Combined: q₁(embed f) ≤ C₂ · q₂(f) uniformly.
+1. `MeasureHasGreenMomentBound` gives `∫ exp(|ω g|) dμ ≤ KG · exp(CG · G(g,g))`.
+2. The method-of-images estimate `torusGreen_uniform_bound` controls
+   `G(embed f, embed f)` by a cylinder seminorm uniformly for `Lt ≥ 1`.
+3. `cylinderIR_uniform_exponential_moment` gives the uniform cylinder
+   exponential moment.
+4. The elementary inequality `x² ≤ 2 e^|x|`, with a scaling optimization,
+   gives the additive second-moment bound.
 
 **Why it matters**: This bound feeds into the Mitoma-Chebyshev tightness
 criterion, which is the gateway to Prokhorov extraction.
@@ -189,19 +190,23 @@ uniformly in Lt ≥ 1.
 are uniformly bounded. This is stronger than second moments and is needed
 for OS0 analyticity.
 
-**Proof chain**: The torus measure satisfies the Nelson/Fröhlich exponential
-bound (from the hypercontractive estimate). Apply this to g = embed(f) and
-use the method of images bound on ‖embed f‖.
+**Proof chain**: The theorem assumes `MeasureHasGreenMomentBound` for the
+torus measure with constants uniform in `Lt`. Apply this to `g = embed(f)` and
+compose with the method-of-images bound on the torus Green form. The abstract
+`AsymSatisfiesTorusOS.os1` seminorm is deliberately not used, because it does
+not encode the uniform Green control needed as `Lt → ∞`.
 
 **Why it matters**: Without exponential moment bounds, we can only prove
 pointwise convergence of the characteristic function on the real axis —
-insufficient for analyticity. The exponential bound gives Vitali/Montel.
+insufficient for the proved integral analyticity argument. The exponential
+bound supplies compact-set domination for `analyticOnNhd_integral`.
 
 ### 5.3 IR limit existence (`cylinderIRLimit_exists`)
 
-**Statement**: Given Lt_n → ∞ and OS-satisfying measures μ_n on T_{Lt_n, Ls},
-there exist a subsequence φ and a probability measure ν on S¹_{Ls} × ℝ
-such that the characteristic functionals converge:
+**Statement**: Given `Lt_n → ∞`, probability measures `μ_n` on `T_{Lt_n,Ls}`,
+and the eventual sequence-level input `AsymTorusSequenceHasUniformGreenMomentBound`,
+there exist a subsequence φ and a probability measure ν on S¹_{Ls} × ℝ such
+that bounded-continuous observables and characteristic functionals converge:
 
   ∫ exp(iωf) dν_{φ(n)} → ∫ exp(iωf) dν  for all f
 
@@ -210,20 +215,24 @@ tight (compact in the weak topology), so Prokhorov's theorem gives a
 convergent subsequence.
 
 **Proof chain**:
-1. Uniform second moments (§5.1) → for each f, the 1D marginals {(ev_f)_* ν_{Lt}}
-   have uniformly bounded variance
-2. Mitoma-Chebyshev criterion: 1D tightness ⟹ tightness on S'(S¹ × ℝ)
+1. Combine `AsymTorusSequenceHasUniformGreenMomentBound` with `Lt → ∞` to pass
+   to a tail where both the Green bound and `Lt ≥ 1` hold.
+2. Uniform second moments (§5.1) → for each f, the 1D marginals {(ev_f)_* ν_{Lt}}
+   have uniformly bounded variance.
+3. Mitoma-Chebyshev criterion: 1D tightness ⟹ tightness on S'(S¹ × ℝ)
    (this is `configuration_tight_of_uniform_second_moments` in gaussian-field)
-3. Prokhorov's theorem: tightness on a Polish space ⟹ sequential compactness
-4. Lévy continuity: weak convergence ⟺ characteristic functional convergence
-   (on nuclear spaces)
+4. Prokhorov's theorem: tightness on the configuration space gives a
+   bounded-continuous convergent subsequence
+5. Characteristic-functional convergence is then derived directly from
+   bounded-continuous convergence by the cos/sin decomposition, avoiding any
+   unformalized Lévy-continuity step in the Route B′ Lean proof
 
 **Why characteristic functionals**: Convergence ∫ exp(iωf) dν_n → ∫ exp(iωf) dν
 is needed (not just first moments ∫ ωf dν_n → ∫ ωf dν) because OS2
 transfers through characteristic functionals, and OS0 requires analytic
 continuation of the characteristic functional.
 
-### 5.4 OS0: Analyticity (`cylinderIR_os0`)
+### 5.4 OS0: Analyticity
 
 **Statement**: The multivariate generating functional
 
@@ -232,26 +241,33 @@ continuation of the characteristic functional.
 is entire analytic on ℂⁿ for any test functions J₁,...,Jₙ.
 
 **Proof route**:
-1. At each finite Lt, Z_{Lt} is entire (from torus OS0)
-2. The uniform exponential moment bound (§5.2) gives
-   |Z_{Lt}(z)| ≤ K · exp(C · Σ |Re(zᵢ)|² · q(Jᵢ)²)
-   which is locally uniform on compact subsets of ℂⁿ
-3. By Vitali's convergence theorem: a sequence of analytic functions
-   that converges pointwise on a set with a limit point (here: the
-   imaginary axis, from characteristic functional convergence) and
-   is locally uniformly bounded converges to an analytic function
+1. `cylinderIRLimit_exists` gives bounded-continuous convergence of a pulled-back
+   subsequence to the limit measure.
+2. `limit_exponential_moment` transfers the uniform exponential moment bound to
+   the limit by truncation and monotone convergence.
+3. `analyticOnNhd_integral` proves analyticity directly from pointwise
+   analyticity, measurability, and compact-set domination by the transferred
+   exponential moments.
 
 **Why it matters**: OS0 ensures the Schwinger functions (coefficients of
 the Taylor expansion of Z) are well-defined and determine the measure.
 
-### 5.5 OS3: Reflection Positivity (`cylinderIR_os3`)
+### 5.5 OS3: Reflection Positivity (`CylinderMeasureSequenceEventuallyReflectionPositive`)
 
 **Statement**: For positive-time test functions f₁,...,fₙ ∈ C∞(S¹_{Ls}) ⊗̂ 𝓢((0,∞))
 and complex coefficients c₁,...,cₙ:
 
   Re(Σᵢⱼ cᵢ c̄ⱼ ∫ exp(iω(fᵢ - Θfⱼ)) dν) ≥ 0
 
-**Proof route** (compact support → density):
+**Current implementation**: `CylinderOS.lean` assumes the pullback sequence
+satisfies the exact eventual RP predicate
+`CylinderMeasureSequenceEventuallyReflectionPositive` and proves the weak-limit
+transfer inside `routeBPrime_cylinder_OS` by applying characteristic-functional
+convergence entrywise to the finite RP matrix. This avoids asserting full
+cylinder RP for every finite `Lt`, which would be too strong because arbitrary
+positive-time cylinder tests can wrap around the finite time circle.
+
+**Remaining proof route for the eventual input** (compact support → density):
 
 1. **Restrict to compact support**: Take f ∈ C_c^∞((0,R) × S¹_{Ls})
    (smooth, compactly supported in time interval (0,R)).
@@ -264,10 +280,10 @@ and complex coefficients c₁,...,cₙ:
    the torus, torus OS3 gives ∫ F·(ΘF) dμ_{Lt} ≥ 0. By the intertwining
    theorems, this equals ∫ F_cyl·(Θ F_cyl) dν_{Lt} ≥ 0.
 
-4. **Pass through weak limit**: The function ω ↦ F(ω)·F(Θω) is continuous
-   and bounded (for the exponential generating functional with bounded
-   test functions). By weak convergence: ∫ F·(ΘF) dν ≥ 0.
-   (This uses `rp_closed_under_weak_limit`, already proved.)
+4. **Use the implemented weak-limit transfer**: The RP matrix entries are
+   characteristic functionals of fixed real test functions, so convergence
+   passes through finite sums and real parts. This step is proved in
+   `routeBPrime_cylinder_OS`.
 
 5. **Extend by density**: C_c^∞((0,∞) × S¹) is dense in the positive-time
    submodule (in the nuclear Fréchet topology). Since both sides of the
@@ -295,22 +311,23 @@ positive-definite inner product.
                   └─────────────────┬────────────────────────┘
                                     │
                   ┌─────────────────▼────────────────────────┐
-                  │ Axiom 1: Uniform second moment             │
-                  │ ∫ (ωf)² dν_{Lt} ≤ C·q(f)²                │
-                  │ [method of images + OS1 regularity]        │
+                  │ Input 1: Eventual Green moment             │
+                  │ MeasureHasGreenMomentBound eventually;     │
+                  │ combine with Lt → ∞ for Lt ≥ 1 tail        │
+                  │ [not abstract OS1 regularity]              │
                   └──────┬──────────┬────────────────────────┘
                          │          │
           ┌──────────────▼──┐   ┌──▼─────────────────────────┐
-          │ Axiom 2: Exp     │   │ Axiom 3: IR limit exists    │
+          │ Theorem: Exp     │   │ Theorem: IR limit exists    │
           │ moments          │   │ {ν_{Lt}} → ν weakly         │
-          │ [Nelson +        │   │ [Mitoma + Prokhorov]         │
+          │ [Green input +   │   │ [Mitoma + Prokhorov]         │
           │  images]         │   └──────┬──────────┬──────────┘
           └────────┬─────────┘          │          │
                    │          ┌─────────▼──┐   ┌──▼──────────┐
-                   │          │ Axiom 4:    │   │ Axiom 5:    │
-                   └──────────▶ OS0 analyt  │   │ OS3 RP      │
-                              │ [Vitali/    │   │ [wrap-around│
-                              │  Montel]    │   │  + density] │
+                   │          │ Theorem:    │   │ Input 2 +   │
+                   └──────────▶ OS0 analyt  │   │ theorem:    │
+                              │ [MCT +      │   │ OS3 RP      │
+                              │  integral]  │   │ [eventual RP]│
                               └─────────────┘   └─────────────┘
 ```
 
@@ -325,25 +342,15 @@ positive-definite inner product.
   negative-time submodule proved. Spatial translation preserves positive time.
 - `Cylinder/FreeHeatSemigroup.lean`: Heat semigroup on the cylinder.
 
-### Cylinder analysis (10 axioms)
-- `Cylinder/FourierMultiplier.lean` (3): Fourier multiplier CLM properties —
-  preserves real-valuedness (even symbol), commutes with translation, commutes
-  with reflection.
-- `Cylinder/GreenFunction.lean` (3): Mass operator T: CylinderTF → ℓ² (construction),
-  Green's function G(f,f) > 0 for f ≠ 0 (injectivity), heat kernel equivariance
-  principle (Bochner integral commutation).
-- `Cylinder/ReflectionPositivity.lean` (3): Laplace embedding Λ (construction),
-  Laplace factorization G(f,Θf) = ‖Λf‖² (resolvent kernel factorization),
-  strict RP G(f,Θf) > 0 for f ≠ 0 (Laplace injectivity).
-- `Cylinder/MethodOfImages.lean` (1): Uniform torus-cylinder Green function bound
-  `torusGreen_uniform_bound` (method of images with exponential suppression).
-
-### Periodization and NTP (4 axioms)
-- `SchwartzNuclear/Periodization.lean` (2): Periodization CLM existence +
-  pointwise formula. The 3 properties (translation, reflection, large period)
-  are proved from the pointwise formula.
-- `Nuclear/GeneralMapCLM.lean` (2): NTP functor for general CLMs (not just
-  endomorphisms). Used for the embedding construction.
+### Cylinder analysis (pinned dependency: 4 axioms)
+- `Cylinder/GreenFunction.lean` (1): cylinder Green-function analytic input.
+- `Cylinder/MethodOfImages.lean` (1): uniform torus-cylinder Green function
+  bound `torusGreen_uniform_bound` (method of images with exponential
+  suppression).
+- `Cylinder/ReflectionPositivity.lean` (1): cylinder reflection-positivity
+  support.
+- `SchwartzFourier/ResolventUniformBound.lean` (1): uniform Fourier/resolvent
+  bound.
 
 ## 8. Comparison with Route C
 
@@ -355,7 +362,8 @@ measure directly by:
 
 Route B' advantages:
 - Reuses the entire torus UV limit (0 axioms, fully proved)
-- Only adds the IR limit step (5 axioms)
+- Adds an IR-limit layer with 0 local axioms, conditional on explicit
+  Green-moment and eventual pullback-RP inputs
 - The embedding construction is clean (NTP functor + periodization)
 - OS2 is exact (not a limiting statement)
 
@@ -366,30 +374,26 @@ Route C advantages:
 
 ## 9. What Would Close the Construction
 
-To eliminate all 5 IR limit axioms, the main mathematical ingredients needed are:
+To close the Route B′ IR-limit construction, the remaining mathematical
+ingredients are the explicit family-level inputs now exposed by the Lean API:
 
-1. **Spectral decomposition bridge** (~200 lines): Connect the method of images
-   bound `torusGreen_uniform_bound` (axiom in gaussian-field) to the second
-   moment bound. This requires working with the covariance operator's spectral
-   decomposition on the tensor product space.
+1. **Uniform Green-moment family bound**: prove
+   `AsymTorusSequenceHasUniformGreenMomentBound` for the concrete
+   asymmetric-torus UV-limit family. This is the real Nelson/Fröhlich +
+   Green-control obligation.
 
-2. **Nelson exponential transfer** (~100 lines): Pull the torus Nelson/Fröhlich
-   exponential bound through the embedding. Straightforward once §1 is done.
+2. **Eventual pullback reflection positivity**: prove
+   `CylinderMeasureSequenceEventuallyReflectionPositive` for the concrete
+   pullback sequence via no-wrap compact support, torus RP, and density.
 
-3. **Prokhorov on cylinder configurations** (~150 lines): Either prove Polish
-   space for CylinderTestFunction configurations (deep topology), or use the
-   Lévy continuity theorem on nuclear spaces (equivalent to weak convergence).
-   Template exists in `AsymTorusInteractingLimit.lean`.
+3. **Prokhorov on cylinder configurations**: implemented through
+   `prokhorov_configuration`, producing bounded-continuous convergence.
 
-4. **Vitali/Montel for OS0** (~200 lines): Apply the Vitali convergence theorem
-   to the sequence of entire generating functionals. Requires complex analysis
-   infrastructure (locally uniform bounds → analytic limit).
+4. **OS0 analyticity**: implemented via `limit_exponential_moment` and
+   `analyticOnNhd_integral`; no Route B′ Vitali/Montel axiom remains.
 
-5. **Compact support density for OS3** (~200 lines): The most novel argument.
-   Show C_c^∞((0,∞) × S¹) is dense in the positive-time submodule, use
-   `periodizeCLM_eq_on_large_period` for no-wrap-around, and
-   `rp_closed_under_weak_limit` (already proved) for the limit transfer.
+5. **Limit transfer for OS3**: implemented in `CylinderOS.lean` from
+   characteristic-functional convergence and eventual matrixwise RP.
 
-Total estimated effort: ~850 lines of Lean proofs + ~14 gaussian-field axioms
-that provide the cylinder analysis infrastructure (Green's function, Fourier
-multipliers, reflection positivity, method of images).
+The pinned Lake `GaussianField` dependency currently contributes 4 axioms and
+0 sorries; see `status.md` and `docs/axiom_audit.md` for the live inventory.

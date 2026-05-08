@@ -3,7 +3,16 @@
 # Usage: ./scripts/count_axioms.sh
 
 PPHI2_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-GF_DIR="$PPHI2_DIR/../gaussian-field"
+GF_DIR="${GAUSSIAN_FIELD_DIR:-}"
+if [ -z "$GF_DIR" ]; then
+    if [ -d "$PPHI2_DIR/.lake/packages/GaussianField" ]; then
+        GF_DIR="$PPHI2_DIR/.lake/packages/GaussianField"
+    elif [ -d "$PPHI2_DIR/../gaussian-field" ]; then
+        GF_DIR="$PPHI2_DIR/../gaussian-field"
+    else
+        GF_DIR="$PPHI2_DIR/.lake/packages/GaussianField"
+    fi
+fi
 
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -72,7 +81,7 @@ count_in_dir() {
 count_in_dir "$PPHI2_DIR" "pphi2" "Pphi2"
 
 if [ -d "$GF_DIR" ]; then
-    count_in_dir "$GF_DIR" "gaussian-field" "GaussianField" "HeatKernel" "Lattice" "SchwartzNuclear" "Torus" "SmoothCircle" "Nuclear" "Cylinder"
+    count_in_dir "$GF_DIR" "gaussian-field" "GeneralResults" "Nuclear" "SchwartzNuclear" "SmoothCircle" "HeatKernel" "Test" "GaussianField" "GaussianFieldAPI" "Lattice" "Torus" "Cylinder" "SchwartzFourier" "All"
 else
     echo ""
     echo -e "${RED}gaussian-field not found at $GF_DIR${NC}"

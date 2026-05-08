@@ -7,9 +7,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 States OS0–OS3 for the P(φ)₂ cylinder measure obtained as the IR limit
 (Lt → ∞) of asymmetric torus measures from Route B'.
 
-OS2 (invariance) is EXACT at every finite Lt — proved, not axiomatized.
-OS0 (analyticity) and OS3 (reflection positivity) remain axiomatized
-with documented proof routes.
+OS2 (invariance) is exact at every finite Lt. OS0 is proved from uniform
+exponential moments and bounded-continuous convergence. OS3 is transferred
+from an explicit eventual reflection-positivity hypothesis on the cylinder
+pullback sequence.
 
 ## References
 
@@ -80,10 +81,6 @@ theorem cylinderPullback_timeTranslation_invariant
   simp only [cylinderPullback_eval]
   simp_rw [cylinderToTorusEmbed_comp_timeTranslation]
   exact hμ_os2 (τ, 0) (cylinderToTorusEmbed Lt Ls f)
-
--- NOTE: This is "axiom" only because formalizing "periodization intertwines
--- shifts" requires periodizeCLM_comp_schwartzTranslation in gaussian-field.
--- The mathematical content is trivial: reindexing a sum over ℤ.
 
 /-- **OS2 time reflection**: The pulled-back cylinder measure is exactly
 time-reflection invariant at every finite Lt, provided the torus measure
@@ -285,50 +282,190 @@ private lemma cylinderExp_mul_sum_le {n : ℕ} (hn : 0 < n) (c : ℝ) (hc : 0 �
     (Finset.single_le_sum (f := fun i => Real.exp (↑n * c * a i))
       (fun i _ => (Real.exp_pos _).le) (Finset.mem_univ j)))
 
-/-! ## OS3: Reflection Positivity (axiomatized)
+/-! ## OS3: Reflection Positivity Transfer
 
 Via compact support density: for `f ∈ C_c^∞((0,R) × S¹)` and `Lt > 2R`,
 `embed f` has no wrap-around, so torus RP applies. Pass through IR limit.
 Extend by density of `C_c^∞` in the positive Schwartz space.
 
-**Prerequisites before this axiom can be discharged:**
+The RP input is kept explicit here in the exact sequence-level form needed by
+the limit argument. We do **not** require each finite-`Lt` pullback measure to
+satisfy full cylinder RP for all positive-time Schwartz tests; that would be too
+strong because arbitrary positive-time cylinder tests can wrap around a finite
+time circle. What is needed is eventual nonnegativity of each fixed RP matrix,
+after the no-wrap compact-support argument and density have been supplied.
+-/
 
-1. `AsymSatisfiesTorusOS` must be extended with a compactly-supported OS3
-   clause: for `f : Fin n → CylinderTestFunction Ls` with
-   `tsupport(f i) ⊆ (0, Lt/2) × S¹_Ls` (no wrap-around through the torus
-   time boundary), the RP matrix is positive semidefinite on the asymmetric
-   torus measure. This is provable from lattice RP (`torusLattice_rp`-style
-   result on the asymmetric torus) + UV limit transfer.
-
-2. Pullback through `cylinderPullbackMeasure` (direct, at finite Lt).
-
-3. Density of `C_c^∞((0, R) × S¹_Ls)` in `cylinderPositiveTimeSubmodule` in
-   the relevant Schwartz topology (for the final extension step).
-
-The IR-limit transfer (step 4 of the proof: RP matrix entries are bounded
-continuous in `ω`, so Prokhorov extraction preserves RP) is mechanical once
-the above prerequisites are in place. -/
-
-axiom cylinderIR_os3
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+/-- The cylinder OS3 reflection-positivity matrix inequality for one finite
+family of positive-time test functions and complex coefficients. -/
+def CylinderRPMatrixNonnegative
     (ν : Measure (Configuration (CylinderTestFunction Ls)))
-    [IsProbabilityMeasure ν]
     (n : ℕ) (f : Fin n → ↥(cylinderPositiveTimeSubmodule Ls)) (c : Fin n → ℂ) :
+    Prop :=
     0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
       ∫ ω, Complex.exp (Complex.I *
         ↑(ω ((f i : CylinderTestFunction Ls) -
           cylinderTimeReflection Ls (f j : CylinderTestFunction Ls)))) ∂ν).re
 
+/-- Full cylinder reflection positivity for all finite OS3 matrices. -/
+def CylinderMeasureReflectionPositive
+    (ν : Measure (Configuration (CylinderTestFunction Ls)))
+    : Prop :=
+  ∀ (n : ℕ) (f : Fin n → ↥(cylinderPositiveTimeSubmodule Ls)) (c : Fin n → ℂ),
+    CylinderRPMatrixNonnegative Ls ν n f c
+
+/-- Eventual sequence-level reflection positivity for cylinder measures.
+
+For every fixed finite RP matrix, the corresponding RP quadratic-form
+inequality for the cylinder pullback sequence is eventually nonnegative. This
+is the exact hypothesis consumed by the IR-limit transfer:
+characteristic-functional convergence then carries the eventual inequality to
+the limit. -/
+def CylinderMeasureSequenceEventuallyReflectionPositive
+    (νseq : ℕ → Measure (Configuration (CylinderTestFunction Ls))) : Prop :=
+  ∀ (n : ℕ) (f : Fin n → ↥(cylinderPositiveTimeSubmodule Ls)) (c : Fin n → ℂ),
+    ∀ᶠ k in atTop, CylinderRPMatrixNonnegative Ls (νseq k) n f c
+
+/-- Full cylinder RP at every index implies the eventual matrixwise RP input
+consumed by the IR-limit transfer theorem. -/
+theorem CylinderMeasureSequenceEventuallyReflectionPositive.of_forall
+    (νseq : ℕ → Measure (Configuration (CylinderTestFunction Ls)))
+    (h : ∀ k, CylinderMeasureReflectionPositive Ls (νseq k)) :
+    CylinderMeasureSequenceEventuallyReflectionPositive Ls νseq := by
+  intro n f c
+  exact Filter.Eventually.of_forall fun k => h k n f c
+
+/-- Eventual full cylinder RP implies the exact eventual matrixwise RP input.
+
+This theorem is intentionally one-way: Route B′ only consumes eventual
+nonnegativity of each fixed finite matrix, while a future concrete proof may
+produce the stronger statement that all sufficiently late pullback measures are
+fully RP. -/
+theorem CylinderMeasureSequenceEventuallyReflectionPositive.of_eventually_full
+    (νseq : ℕ → Measure (Configuration (CylinderTestFunction Ls)))
+    (h : ∀ᶠ k in atTop, CylinderMeasureReflectionPositive Ls (νseq k)) :
+    CylinderMeasureSequenceEventuallyReflectionPositive Ls νseq := by
+  intro n f c
+  exact h.mono fun k hk => hk n f c
+
+/-- The exact asymmetric-torus OS2 inputs consumed by the cylinder transfer.
+
+This deliberately excludes OS0 and OS1: tightness/OS0 use the separate
+Green-moment input, and the cylinder symmetry proof uses only translation and
+time-reflection invariance of characteristic functionals. -/
+def AsymTorusSequenceHasCylinderOS2Symmetry
+    (Lt : ℕ → ℝ)
+    (hLt : ∀ n, Fact (0 < Lt n))
+    (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls))) : Prop :=
+  (∀ n,
+    letI : Fact (0 < Lt n) := hLt n
+    ∀ (v : ℝ × ℝ) (f : AsymTorusTestFunction (Lt n) Ls),
+      ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂(μ n) =
+      ∫ ω, Complex.exp (Complex.I * ↑(ω (asymTorusTranslation (Lt n) Ls v f))) ∂(μ n)) ∧
+  (∀ n,
+    letI : Fact (0 < Lt n) := hLt n
+    ∀ (f : AsymTorusTestFunction (Lt n) Ls),
+      ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂(μ n) =
+      ∫ ω, Complex.exp (Complex.I * ↑(ω (asymTorusTimeReflection (Lt n) Ls f))) ∂(μ n))
+
+/-- The exact sequence-level OS2 input follows from the bundled asymmetric-torus
+OS package by projecting precisely the translation and time-reflection clauses.
+
+This is only a convenience bridge: `routeBPrime_cylinder_OS` keeps the narrower
+`AsymTorusSequenceHasCylinderOS2Symmetry` hypothesis so that OS0/OS1 content is
+not silently consumed by the cylinder symmetry transfer. -/
+theorem AsymTorusSequenceHasCylinderOS2Symmetry.of_torusOS
+    (Lt : ℕ → ℝ)
+    (hLt : ∀ n, Fact (0 < Lt n))
+    (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls)))
+    (hμ_prob : ∀ n, IsProbabilityMeasure (μ n))
+    (hμ_os : ∀ n,
+      @AsymSatisfiesTorusOS (Lt n) Ls (hLt n) hLs (μ n) (hμ_prob n)) :
+    AsymTorusSequenceHasCylinderOS2Symmetry Ls Lt hLt μ := by
+  constructor
+  · intro n
+    letI : Fact (0 < Lt n) := hLt n
+    haveI : IsProbabilityMeasure (μ n) := hμ_prob n
+    intro v f
+    simpa [AsymTorusOS2_TranslationInvariance, asymTorusGeneratingFunctional]
+      using (hμ_os n).os2_translation v f
+  · intro n
+    letI : Fact (0 < Lt n) := hLt n
+    haveI : IsProbabilityMeasure (μ n) := hμ_prob n
+    intro f
+    simpa [AsymTorusOS2_TimeReflectionInvariance, asymTorusGeneratingFunctional]
+      using (hμ_os n).os2_timeReflection f
+
+/-- Reflection positivity is closed under characteristic-functional convergence
+when every fixed RP matrix is eventually nonnegative along the sequence. -/
+theorem cylinderMeasureReflectionPositive_of_tendsto_cf
+    (νseq : ℕ → Measure (Configuration (CylinderTestFunction Ls)))
+    (ν : Measure (Configuration (CylinderTestFunction Ls)))
+    (hcf : ∀ (f : CylinderTestFunction Ls),
+      Tendsto (fun k =>
+        ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂(νseq k))
+        atTop (nhds (∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν)))
+    (hrp : CylinderMeasureSequenceEventuallyReflectionPositive Ls νseq) :
+    CylinderMeasureReflectionPositive Ls ν := by
+  intro n f c
+  have hentry :
+      ∀ i j : Fin n,
+        Tendsto
+          (fun k =>
+            ∫ ω, Complex.exp (Complex.I *
+              ↑(ω ((f i : CylinderTestFunction Ls) -
+                cylinderTimeReflection Ls (f j : CylinderTestFunction Ls))))
+              ∂(νseq k))
+          atTop
+          (nhds (∫ ω, Complex.exp (Complex.I *
+            ↑(ω ((f i : CylinderTestFunction Ls) -
+              cylinderTimeReflection Ls (f j : CylinderTestFunction Ls)))) ∂ν)) := by
+    intro i j
+    exact hcf ((f i : CylinderTestFunction Ls) -
+      cylinderTimeReflection Ls (f j : CylinderTestFunction Ls))
+  have hsum_tend :
+      Tendsto
+        (fun k =>
+          (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+            ∫ ω, Complex.exp (Complex.I *
+              ↑(ω ((f i : CylinderTestFunction Ls) -
+                cylinderTimeReflection Ls (f j : CylinderTestFunction Ls))))
+              ∂(νseq k)).re)
+        atTop
+        (nhds ((∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+          ∫ ω, Complex.exp (Complex.I *
+            ↑(ω ((f i : CylinderTestFunction Ls) -
+              cylinderTimeReflection Ls (f j : CylinderTestFunction Ls)))) ∂ν).re)) := by
+    apply Complex.continuous_re.continuousAt.tendsto.comp
+    apply tendsto_finset_sum
+    intro i _
+    apply tendsto_finset_sum
+    intro j _
+    simpa [mul_assoc, mul_left_comm, mul_comm] using
+      Filter.Tendsto.const_mul (c i * starRingEnd ℂ (c j)) (hentry i j)
+  exact ge_of_tendsto hsum_tend (hrp n f c)
+
 /-! ## Main theorem -/
 
-/-- **Route B' main theorem**: the IR limit satisfies OS0+OS2+OS3. -/
+/-- **Route B' main theorem**: the IR limit satisfies OS0+OS2+OS3.
+
+The theorem assumes exactly the inputs it consumes: OS2 translation/reflection
+invariance for the asymmetric-torus measures, the eventual Green-controlled
+exponential moment bound recorded by `AsymTorusSequenceHasUniformGreenMomentBound`,
+and the exact eventual RP input for the pullback sequence. It then transfers
+these properties to the extracted IR limit. -/
 theorem routeBPrime_cylinder_OS
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (mass : ℝ) (hmass : 0 < mass)
+    (KG CG : ℝ) (hKG_pos : 0 < KG) (hCG_pos : 0 < CG)
     (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
     (hLt_tend : Tendsto Lt atTop atTop)
     (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls)))
     (hμ_prob : ∀ n, IsProbabilityMeasure (μ n))
-    (hμ_os : ∀ n, @AsymSatisfiesTorusOS (Lt n) Ls _ _ (μ n) (hμ_prob n)) :
+    (hμ_green : AsymTorusSequenceHasUniformGreenMomentBound Ls mass hmass KG CG Lt hLt μ)
+    (hμ_rp : CylinderMeasureSequenceEventuallyReflectionPositive Ls (fun n =>
+      letI : Fact (0 < Lt n) := hLt n
+      cylinderPullbackMeasure (Lt n) Ls (μ n)))
+    (hμ_os2 : AsymTorusSequenceHasCylinderOS2Symmetry Ls Lt hLt μ) :
     ∃ (ν : Measure (Configuration (CylinderTestFunction Ls))),
     IsProbabilityMeasure ν ∧
     -- OS0
@@ -354,26 +491,52 @@ theorem routeBPrime_cylinder_OS
           ↑(ω ((f i : CylinderTestFunction Ls) -
             cylinderTimeReflection Ls (f j : CylinderTestFunction Ls)))) ∂ν).re) := by
   have ⟨φ, ν, hφ, rest⟩ :=
-    cylinderIRLimit_exists Ls P mass hmass Lt hLt hLt_tend μ hμ_prob hμ_os
+    cylinderIRLimit_exists Ls mass hmass KG CG hKG_pos hCG_pos Lt hLt hLt_tend μ
+      hμ_prob hμ_green
   haveI : IsProbabilityMeasure ν := rest.1
   have hν_bc_and_cf := rest.2
   have hν_bc := hν_bc_and_cf.1
   have hν_conv := hν_bc_and_cf.2
+  let νseqφ : ℕ → Measure (Configuration (CylinderTestFunction Ls)) := fun k =>
+    cylinderPullbackMeasure (Lt (φ k)) Ls (μ (φ k))
+  have hνseqφ_conv : ∀ f : CylinderTestFunction Ls,
+      Tendsto (fun k => ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂(νseqφ k))
+        atTop (nhds (∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν)) := by
+    intro f
+    simpa [νseqφ] using hν_conv f
+  have hνseqφ_rp : CylinderMeasureSequenceEventuallyReflectionPositive Ls νseqφ := by
+    intro n f c
+    simpa [νseqφ] using Filter.Tendsto.eventually hφ.tendsto_atTop (hμ_rp n f c)
+  have h_os3_limit : CylinderMeasureReflectionPositive Ls ν :=
+    cylinderMeasureReflectionPositive_of_tendsto_cf Ls νseqφ ν hνseqφ_conv hνseqφ_rp
   -- Exponential moments of the limit measure: from uniform exp moment bound
   -- on the pullback measures + BC weak convergence + truncation/MCT.
   have h_exp_limit : ∀ f : CylinderTestFunction Ls,
       Integrable (fun ω : Configuration (CylinderTestFunction Ls) =>
         Real.exp (|ω f|)) ν := by
     intro f
-    -- Step 1: Get uniform exp moment constants K, C, q from the axiom.
+    -- Step 1: Get uniform exp moment constants K, C, q from the conditional theorem.
     obtain ⟨K, C, q, hK, hC, hq_cont, h_exp⟩ :=
-      cylinderIR_uniform_exponential_moment Ls P mass hmass
+      cylinderIR_uniform_exponential_moment Ls mass hmass KG CG hKG_pos hCG_pos
     -- Step 2: Get N0 such that ∀ n ≥ N0, 1 ≤ Lt n (from hLt_tend).
-    obtain ⟨N0, hN0⟩ := eventually_atTop.1 (tendsto_atTop.1 hLt_tend 1)
-    -- Step 3: Use shifted sequence n ↦ φ (n + N0) so Lt (φ (n + N0)) ≥ 1 for all n.
-    -- φ strictly mono implies φ m ≥ m for all m, so φ (n + N0) ≥ n + N0 ≥ N0.
-    have hLt_shift : ∀ n, 1 ≤ Lt (φ (n + N0)) :=
+    have hLt_ge_one : ∀ᶠ n in atTop, 1 ≤ Lt n := tendsto_atTop.1 hLt_tend 1
+    have h_green_tail : ∀ᶠ n in atTop,
+        @MeasureHasGreenMomentBound Ls _ (Lt n) (hLt n) mass hmass KG CG (μ n) := by
+      simpa [AsymTorusSequenceHasUniformGreenMomentBound] using hμ_green
+    have h_tail : ∀ᶠ n in atTop,
+        1 ≤ Lt n ∧
+          @MeasureHasGreenMomentBound Ls _ (Lt n) (hLt n) mass hmass KG CG (μ n) :=
+      hLt_ge_one.and h_green_tail
+    obtain ⟨N0, hN0⟩ := eventually_atTop.1 h_tail
+    -- Step 3: Use shifted sequence n ↦ φ (n + N0) so the tail Green bound
+    -- and Lt ≥ 1 hold for all n.
+    -- φ strictly mono implies φ m ≥ m, so φ (n + N0) ≥ n + N0 ≥ N0.
+    have h_tail_shift : ∀ n,
+        1 ≤ Lt (φ (n + N0)) ∧
+          @MeasureHasGreenMomentBound Ls _ (Lt (φ (n + N0))) (hLt (φ (n + N0)))
+            mass hmass KG CG (μ (φ (n + N0))) :=
       fun n => hN0 (φ (n + N0)) ((Nat.le_add_left N0 n).trans (hφ.id_le (n + N0)))
+    have hLt_shift : ∀ n, 1 ≤ Lt (φ (n + N0)) := fun n => (h_tail_shift n).1
     -- Step 4: Define the shifted measure sequence.
     let νseq' : ℕ → Measure (Configuration (CylinderTestFunction Ls)) :=
       fun n => cylinderPullbackMeasure (Lt (φ (n + N0))) Ls (μ (φ (n + N0)))
@@ -403,7 +566,7 @@ theorem routeBPrime_cylinder_OS
       haveI : Fact (0 < Lt (φ (n + N0))) := hLt (φ (n + N0))
       haveI : IsProbabilityMeasure (μ (φ (n + N0))) := hμ_prob (φ (n + N0))
       exact h_exp (Lt (φ (n + N0))) (hLt_shift n) (μ (φ (n + N0)))
-        (hμ_os (φ (n + N0))) f
+        (h_tail_shift n).2 f
     -- Step 8: Apply limit_exponential_moment and extract integrability.
     exact (limit_exponential_moment Ls νseq' hνseq'_prob ν hbc' f
       (K * Real.exp (C * q f ^ 2)) h_unif).1
@@ -490,7 +653,7 @@ theorem routeBPrime_cylinder_OS
       intro n
       exact @cylinderPullback_timeReflection_invariant Ls _ (Lt (φ n)) (hLt (φ n))
         (μ (φ n)) (hμ_prob (φ n))
-        (fun g => (hμ_os (φ n)).os2_timeReflection g)
+        (hμ_os2.2 (φ n))
         f
     -- Since Z_{Lt_n}(f) = Z_{Lt_n}(Θf) and both converge, their limits agree
     exact tendsto_nhds_unique hL (hR.congr (fun n => (h_eq n).symm))
@@ -506,7 +669,7 @@ theorem routeBPrime_cylinder_OS
       intro n
       exact @cylinderPullback_timeTranslation_invariant Ls _ (Lt (φ n)) (hLt (φ n))
         (μ (φ n)) (hμ_prob (φ n))
-        (fun v g => (hμ_os (φ n)).os2_translation v g)
+        (hμ_os2.1 (φ n))
         τ f
     exact tendsto_nhds_unique hL (hR.congr (fun n => (h_eq n).symm))
   · -- OS2: spatial translation (exact at finite Lt via torus spatial invariance)
@@ -533,9 +696,9 @@ theorem routeBPrime_cylinder_OS
           integral_map hmeas.aemeasurable (hasm _)]
       simp only [cylinderPullback_eval]
       simp_rw [cylinderToTorusEmbed_comp_spatialTranslation]
-      exact (hμ_os (φ n)).os2_translation (0, v) (cylinderToTorusEmbed (Lt (φ n)) Ls f)
+      exact hμ_os2.1 (φ n) (0, v) (cylinderToTorusEmbed (Lt (φ n)) Ls f)
     exact tendsto_nhds_unique hL (hR.congr (fun n => (h_eq n).symm))
-  · -- OS3: reflection positivity
-    intro n f c; exact cylinderIR_os3 Ls P mass hmass ν n f c
+  · -- OS3: reflection positivity transfers from the pullback sequence.
+    exact h_os3_limit
 
 end Pphi2
