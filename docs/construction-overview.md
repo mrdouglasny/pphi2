@@ -497,9 +497,9 @@ The proof architecture uses **axioms** for unproved analytic and
 probabilistic results, with the logical structure connecting them fully
 formalized.
 
-As of the latest count: **pphi2 has 16 axioms and 0 sorries**;
+As of the latest count: **pphi2 has 15 axioms and 0 sorries**;
 the pinned Lake `GaussianField` dependency has **4 axioms and 0 sorries**,
-for a combined total of **20 axioms** across both projects.
+for a combined total of **19 axioms** across both projects.
 
 The axioms cluster into several thematic groups:
 
@@ -512,10 +512,10 @@ The axioms cluster into several thematic groups:
 
 - **Fourier analysis** (convolution representation, Bochner-type
   identities): Standard results connecting Fourier transforms,
-  convolutions, and positive-definiteness. The current private axiom
-  `fourierTransform_lp_eq_fourierIntegral` identifies the Lp Fourier-transform
-  representative with the Fourier integral for `L¹ ∩ L²` functions. The
-  convolution representation
+  convolutions, and positive-definiteness. The former private bridge
+  `fourierTransform_lp_eq_fourierIntegral`, identifying the Lp Fourier-transform
+  representative with the Fourier integral for `L¹ ∩ L²` functions, is now a
+  theorem. The convolution representation
   $\langle f, g * f \rangle = \int \operatorname{Re}(\hat{g})
   \cdot |\hat{f}|^2$ is now a theorem built from that bridge plus
   Schwartz/density infrastructure.

@@ -3,8 +3,8 @@
 Three live routes + one preserved route. All share the interacting-measure
 framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
-**Current state** (`scripts/count_axioms.sh`, 2026-05-07):
-**pphi2 total: 16 axioms, 0 sorries. pinned Lake GaussianField: 4 axioms, 0 sorries.**
+**Current state** (`scripts/count_axioms.sh`, 2026-05-08):
+**pphi2 total: 15 axioms, 0 sorries. pinned Lake GaussianField: 4 axioms, 0 sorries.**
 
 Recent reductions:
 
@@ -13,18 +13,19 @@ Recent reductions:
   fully-proved theorem in `Pphi2/GeneralResults/HilbertSchmidt.lean`.
   Downstream `transferOperator_isCompact` axiom footprint reduced to just
   `[propext, Classical.choice, Quot.sound]`.
-* 2026-04-30 (this branch): `fourier_representation_convolution` (Fourier
-  identity for the convolution quadratic form) discharged as theorem in
-  `Pphi2/TransferMatrix/GaussianFourier.lean`, replaced by one cited
-  textbook axiom `fourierTransform_lp_eq_fourierIntegral` (Folland §8.3 /
-  Reed-Simon I §IX.4 — the L¹∩L² Plancherel agreement that Mathlib doesn't
-  yet package).
+* 2026-05-08: `fourierTransform_lp_eq_fourierIntegral` discharged as theorem
+  in `Pphi2/TransferMatrix/GaussianFourier.lean` via Mathlib's
+  tempered-distribution Fourier compatibility, the classical Fourier Fubini
+  identity, and equality of locally integrable functions from compactly
+  supported smooth tests. The convolution quadratic-form identity
+  `fourier_representation_convolution` is therefore axiom-free inside
+  `GaussianFourier.lean`.
 * 2026-04-30 (PR #11, merged main): `cylinderIR_uniform_second_moment`
   converted from axiom to theorem.
 
-Net: Transfer-matrix cluster 4 → 3 axioms after the Hilbert-Schmidt/Fourier
+Net: Transfer-matrix cluster 4 → 2 axioms after the Hilbert-Schmidt/Fourier
 work, and Route B′ cylinder IR limit 3 → 0 local axioms. Total pphi2 axioms
-22 → 16.
+22 → 15.
 
 ---
 
@@ -249,6 +250,6 @@ and Schwartz-nuclear-extension infrastructure remain upstream concerns.
 Route B is the "done" route. Route B′ now has no local IR-limit axioms, but
 remains conditional on explicit family-level Green-moment and eventual RP
 inputs. Route A's transfer-matrix cluster lost `integral_operator_l2_kernel_compact`
-and reduced the Fourier/convolution footprint to the cited textbook bridge
-axiom `fourierTransform_lp_eq_fourierIntegral`, waiting for upstream Mathlib's
-L¹∩L² Plancherel-agreement lemma.
+and the Fourier/convolution footprint in `GaussianFourier.lean`; the
+`L¹∩L²` Plancherel representative bridge is now proved from pinned Mathlib's
+tempered-distribution Fourier API.

@@ -1,10 +1,10 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-05-07
-**pphi2**: 16 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 4 axioms, 0 sorries
+**Updated**: 2026-05-08
+**pphi2**: 15 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 4 axioms, 0 sorries
 
-Note: pphi2 count includes 2 private axioms (`fourierTransform_lp_eq_fourierIntegral`,
-`gaussian_rp_cov_perfect_square`).
+Note: pphi2 count includes 1 private axiom
+(`gaussian_rp_cov_perfect_square`).
 
 **2026-04-25**: `cylinderIR_uniform_second_moment` converted from axiom to
 **theorem** by deriving it from `cylinderIR_uniform_exponential_moment` via the
@@ -32,9 +32,9 @@ historical reduction; the current live counts are recorded above.
 **2026-05-07**: `cylinderIR_os3` removed as an axiom. Route B′ now assumes the
 eventual pullback RP predicate `CylinderMeasureSequenceEventuallyReflectionPositive`
 and proves the IR-limit OS3 transfer by characteristic-functional convergence.
-This is part of the current live count: **16 pphi2 axioms, 0 sorries**.
+This is part of the current live count: **15 pphi2 axioms, 0 sorries**.
 
-## Current pphi2 Axiom Inventory (16 active, 0 sorries)
+## Current pphi2 Axiom Inventory (15 active, 0 sorries)
 
 This table is generated from the current `./scripts/count_axioms.sh` result and
 is the source of truth for active pphi2 axioms in this audit.
@@ -49,9 +49,8 @@ is the source of truth for active pphi2 axioms in this audit.
 | `Pphi2/OSProofs/OS2_WardIdentity.lean` | 1 | `rotation_cf_defect_polylog_bound` |
 | `Pphi2/OSProofs/OS3_RP_Lattice.lean` | 1 | `gaussian_rp_cov_perfect_square` (private) |
 | `Pphi2/OSProofs/OS4_MassGap.lean` | 2 | `two_point_clustering_from_spectral_gap`, `general_clustering_from_spectral_gap` |
-| `Pphi2/TransferMatrix/GaussianFourier.lean` | 1 | `fourierTransform_lp_eq_fourierIntegral` (private) |
 | `Pphi2/TransferMatrix/SpectralGap.lean` | 2 | `spectral_gap_uniform`, `spectral_gap_lower_bound` |
-| **Total** | **16** | |
+| **Total** | **15** | |
 
 ## Historical pphi2 Audit Notes
 
@@ -79,7 +78,7 @@ inventory above for the current active axiom list.
 | 8 | ~~`transferEigenvalue_antitone`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | Eigenvalues decreasing. Derived from spectral ordering. |
 | 9 | ~~`transferEigenvalue_ground_simple`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | λ₀ > λ₁. Derived from Jentzsch/Perron-Frobenius. |
 | 9a | ~~`gaussian_conv_strictlyPD`~~ | GaussianFourier | ✅ **PROVED** | SA 2026-02-27 | ⟨f, G⋆f⟩ > 0 for f ≠ 0. Proved from `inner_convCLM_pos_of_fourier_pos` (also proved) via the private theorem `fourier_representation_convolution` + `fourier_gaussian_pos` + Plancherel injectivity. |
-| 9b | `fourierTransform_lp_eq_fourierIntegral` | GaussianFourier | ✅ Standard | SA 2026-03-08 | Textbook bridge identifying the Lp Fourier transform representative with the Fourier integral for `L¹ ∩ L²` functions. This is the only remaining private axiom in `GaussianFourier`; `fourier_representation_convolution` is now a private theorem built from it plus Schwartz/density infrastructure. Folland §8.3, Reed-Simon I §IX.4. |
+| 9b | ~~`fourierTransform_lp_eq_fourierIntegral`~~ | GaussianFourier | ✅ **PROVED** | SA 2026-05-08 | Textbook bridge identifying the Lp Fourier transform representative with the Fourier integral for `L¹ ∩ L²` functions. Proved via Mathlib's tempered-distribution Fourier compatibility, classical Fourier Fubini, and `ae_eq_of_integral_contDiff_smul_eq`. `fourier_representation_convolution` is now axiom-free inside `GaussianFourier`. |
 | 10 | ~~`action_decomposition`~~ | OS3_RP_Lattice | ✅ **PROVED** | GR Group 5 | S = S⁺ + S⁻ via `Fintype.sum_equiv` + `Involutive.toPerm`. |
 | 11 | `lattice_rp_matrix` | OS3_RP_Lattice | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ ∫ cos(⟨φ, fᵢ-Θfⱼ⟩) dμ_a ≥ 0. Partial formalization: helper lemmas + `lattice_rp_matrix_reduction`; remaining gap is explicit trig/sum expansion identity. |
 

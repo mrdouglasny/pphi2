@@ -16,7 +16,17 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-08): pphi2 16 axioms, 0 sorries; pinned Lake GaussianField 4 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-08): pphi2 15 axioms, 0 sorries; pinned Lake GaussianField 4 axioms, 0 sorries.**
+
+Recent reduction (2026-05-08): `fourierTransform_lp_eq_fourierIntegral` in
+`TransferMatrix/GaussianFourier.lean` converted from private axiom to theorem.
+The proof uses Mathlib's tempered-distribution compatibility for the `L²`
+Fourier transform (`Lp.fourier_toTemperedDistribution_eq`), the classical
+Fubini identity for `VectorFourier.fourierIntegral`, and
+`ae_eq_of_integral_contDiff_smul_eq` to recover a.e. representative equality
+from equality against compactly supported smooth test functions. The
+convolution representation and Gaussian strict-positive-definiteness chain are
+now axiom-free inside `GaussianFourier.lean`.
 
 Recent reduction (2026-05-07): `cylinderIR_os3` in
 `IRLimit/CylinderOS.lean` removed as an axiom. The file now exposes the exact
@@ -133,8 +143,8 @@ The live project-wide count is the counter total above. Older route-specific
 estimates in historical sections below are retained only as provenance and are
 not a live axiom count.
 
-Note: Two axioms are `private`: `fourierTransform_lp_eq_fourierIntegral`
-(GaussianFourier) and `gaussian_rp_cov_perfect_square` (OS3_RP_Lattice).
+Note: One axiom is `private`: `gaussian_rp_cov_perfect_square`
+(OS3_RP_Lattice).
 `schwartz_riemann_sum_bound` (PropagatorConvergence) was proved via Schwartz decay +
 telescoping sum bound. The remaining Gaussian propagator debt is now isolated in the
 spectral axiom `latticeGreenBilinear_basis_tendsto_continuum`; `propagator_convergence`
@@ -159,7 +169,7 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
 | 2 | `TransferMatrix/L2Convolution.lean` | 0 axioms (Fubini identity proved) |
 | 2 | `TransferMatrix/L2Operator.lean` | 0 axioms; `integral_operator_l2_kernel_compact`, `hilbert_schmidt_isCompact`, and `transferOperator_isCompact` proved |
-| 2 | `TransferMatrix/GaussianFourier.lean` | 1 private axiom (`fourierTransform_lp_eq_fourierIntegral`); `fourier_representation_convolution` and `inner_convCLM_pos_of_fourier_pos` proved from that bridge; `fourier_gaussian_pos` proved |
+| 2 | `TransferMatrix/GaussianFourier.lean` | 0 axioms; `fourierTransform_lp_eq_fourierIntegral`, `fourier_representation_convolution`, `inner_convCLM_pos_of_fourier_pos`, and `fourier_gaussian_pos` proved |
 | 2 | `TransferMatrix/Jentzsch.lean` | 0 axioms; Jentzsch + nontriviality + positivity-improving + strict PD all proved |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 1 axiom (`gaussian_rp_cov_perfect_square`), 0 sorries |
@@ -394,7 +404,7 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`transferOperator_positivityImproving`~~ | Jentzsch | ✅ **Proved** | Transfer kernel K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ') > 0 everywhere, so T maps nonneg nonzero f to a.e. strictly positive Tf. Proved via T = M_w ∘ Conv_G ∘ M_w factorization, Cauchy-Schwarz for L² integrability, measure-preserving translation, and `integral_pos_iff_support_of_nonneg_ae`. |
 | ~~`transferOperator_strictly_positive_definite`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ > 0 for f ≠ 0. Proved via self-adjointness of M_w (⟨f, M_w(Conv_G(M_w f))⟩ = ⟨M_w f, Conv_G(M_w f)⟩), injectivity of M_w (w > 0), and Gaussian convolution strict PD axiom. |
 | ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** | Convolution with Gaussian exp(-½‖·‖²) is strictly PD on L²: ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk > 0. Proved via the private theorem `fourier_representation_convolution` + `fourier_gaussian_pos` + Plancherel injectivity. |
-| `fourierTransform_lp_eq_fourierIntegral` | GaussianFourier | Medium | Remaining private Fourier bridge: the Lp Fourier transform representative equals the Fourier integral for `L¹ ∩ L²` functions. `fourier_representation_convolution` is now a theorem built from this bridge plus Schwartz/density infrastructure. |
+| ~~`fourierTransform_lp_eq_fourierIntegral`~~ | GaussianFourier | ✅ **Proved** | Lp/Fourier-integral representative bridge for `L¹ ∩ L²` functions, proved via Mathlib's tempered-distribution Fourier compatibility plus Fubini and `ae_eq_of_integral_contDiff_smul_eq`. |
 | ~~`l2SpatialField_hilbertBasis_nontrivial`~~ | Jentzsch | ✅ **Proved** | Any Hilbert basis of L²(ℝ^Ns) has ≥ 2 elements. Proved via indicator functions on disjoint balls + orthogonality. |
 | ~~`transferOperator_inner_nonneg`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ ≥ 0. Derived from strict PD (> 0 for f ≠ 0, = 0 for f = 0). |
 | ~~`transferOperator_eigenvalues_pos`~~ | Jentzsch | ✅ **Proved** | λᵢ > 0. From ⟨bᵢ, Tbᵢ⟩ = λᵢ‖bᵢ‖² > 0 by strict PD. |
@@ -798,7 +808,7 @@ infrastructure. Assessment date: 2026-03-04.
 | Axiom | File | Strategy |
 |-------|------|----------|
 | ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** from the private theorem `fourier_representation_convolution`. |
-| `fourierTransform_lp_eq_fourierIntegral` | GaussianFourier | Private textbook bridge identifying the Lp Fourier transform with the Fourier integral for `L¹ ∩ L²` functions; `fourier_representation_convolution` is now a theorem built from this bridge plus Schwartz/density infrastructure. |
+| ~~`fourierTransform_lp_eq_fourierIntegral`~~ | GaussianFourier | ✅ **Proved** via the tempered-distribution bridge for `Lp.fourierTransformₗᵢ`, classical Fourier Fubini, and a.e. equality from compactly supported smooth tests. |
 | `latticeGreenBilinear_basis_tendsto_continuum` | PropagatorConvergence | Spectral lattice Green bilinear on Dynin-Mityagin basis pairs → continuum Fourier Green bilinear on ℝ^d. Extend to all test functions by bilinear continuity. |
 | `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | `rotation_cf_defect_polylog_bound` | OS2_WardIdentity | Minimal remaining OS2 axiom: polynomial-log `a²` bound for the canonical CF defect `rotationCFDefect`, uniform in the lattice size `N`. |
@@ -837,7 +847,7 @@ infrastructure. Assessment date: 2026-03-04.
 
 1. **Easy wins**: `weakLimit_centered_gaussianReal`, `torus_propagator_convergence`, `latticeMeasure_translation_invariant`
 2. **Torus infrastructure**: `torusLimit_covariance_eq`, `gaussian_measure_unique_of_covariance`, `torusContinuumMeasures_tight`, `torusLattice_rp`
-3. **Transfer matrix**: remaining private Fourier bridge `fourierTransform_lp_eq_fourierIntegral`; `integral_operator_l2_kernel_compact` and `hilbert_schmidt_isCompact` are proved
+3. **Transfer matrix**: `fourierTransform_lp_eq_fourierIntegral`, `integral_operator_l2_kernel_compact`, and `hilbert_schmidt_isCompact` are proved
 4. **OS inheritance**: `gaussian_rp_with_boundary_weight`, `os3_inheritance`, `os0_inheritance` — fills the RP chain
 5. **Hard analysis**: spectral gap, clustering, exponential moments — the deep results
 

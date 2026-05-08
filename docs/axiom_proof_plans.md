@@ -12,16 +12,15 @@ suitable for Mathlib contribution.
 ## Recommended Attack Order
 
 1. `transferOperator_isCompact` — Hilbert-Schmidt, unlocks spectral theory
-2. `fourierTransform_lp_eq_fourierIntegral` / Fourier representation bridge — removes 1 private axiom
-3. `gaussian_density_rp` — Gaussian Markov property, fills RP chain
-4. Torus tier: `torusContinuumMeasures_tight`, `torusLimit_covariance_eq`,
+2. `gaussian_density_rp` — Gaussian Markov property, fills RP chain
+3. Torus tier: `torusContinuumMeasures_tight`, `torusLimit_covariance_eq`,
    `gaussian_measure_unique_of_covariance`, `torusLattice_rp`
-5. OS inheritance: `os3_inheritance`, `os0_inheritance`
-6. Hard analysis: `exponential_moment_bound` → `interacting_moment_bound` →
+4. OS inheritance: `os3_inheritance`, `os0_inheritance`
+5. Hard analysis: `exponential_moment_bound` → `interacting_moment_bound` →
    `second_moment_uniform` → `continuumMeasures_tight`
-7. Spectral gap: `spectral_gap_uniform` → clustering chain
-8. Ward identity: `anomaly_bound` → `rotation_invariance_continuum`
-9. Bridge: last priority, requires both approaches complete
+6. Spectral gap: `spectral_gap_uniform` → clustering chain
+7. Ward identity: `anomaly_bound` → `rotation_invariance_continuum`
+8. Bridge: last priority, requires both approaches complete
 
 ## Dependency Graph (Critical Paths)
 
@@ -41,7 +40,7 @@ gaussian_density_rp ──→ os3_inheritance (via lattice_rp chain)
 anomaly_bound ──→ rotation_invariance_continuum ──→ os2
 
 fourierTransform_lp_eq_fourierIntegral ──→ fourier_representation_convolution
-                                     ──→ (already used; proving removes 1 private axiom)
+                                     ──→ (proved; Fourier chain axiom-free)
 ```
 
 ---
@@ -61,20 +60,20 @@ G = exp(-½‖·‖²) is Gaussian. Show ∫∫ K² < ∞ via product factorizat
 
 ---
 
-### 2. Fourier representation bridge (GaussianFourier.lean) — private
+### 2. Fourier representation bridge (GaussianFourier.lean) — proved
 
 **Difficulty**: Medium
-**Current axiom**: `fourierTransform_lp_eq_fourierIntegral`, the textbook
+**Former axiom**: `fourierTransform_lp_eq_fourierIntegral`, the textbook
 bridge identifying the Lp Fourier-transform representative with the Fourier
 integral for functions in `L¹ ∩ L²`.
 **Downstream theorem**: `fourier_representation_convolution`,
 `⟨f, g⋆f⟩ = ∫ Re(ĝ)·|f̂|²`, is now a private theorem built from that bridge
 plus the Schwartz/density infrastructure.
-**Plan**: Replace the textbook bridge by a direct Mathlib proof, then the
-existing `fourier_representation_convolution` theorem remains axiom-free.
-**Prereqs**: `denseRange_toLpCLM` (Mathlib), `SchwartzMap.fourier_convolution`
-(Mathlib), `Lp.inner_fourier_eq` (Mathlib).
-**Blocker**: L^2 convolution theorem not yet in Mathlib (only Schwartz level).
+**Proof**: The bridge is proved via `Lp.fourier_toTemperedDistribution_eq`,
+`Lp.toTemperedDistribution_apply`,
+`VectorFourier.integral_bilin_fourierIntegral_eq_flip`, real inner-product
+symmetry for the flipped kernel, and `ae_eq_of_integral_contDiff_smul_eq`.
+**Status**: Closed in `Pphi2/TransferMatrix/GaussianFourier.lean`.
 
 ---
 

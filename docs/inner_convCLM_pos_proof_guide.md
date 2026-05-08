@@ -6,15 +6,15 @@
 private theorem `fourier_representation_convolution` +
 `fourier_gaussian_pos` + Plancherel injectivity.
 
-The remaining axiom in this chain is `fourierTransform_lp_eq_fourierIntegral`
-(private, in `GaussianFourier.lean`).
+There is no remaining axiom in this chain: `fourierTransform_lp_eq_fourierIntegral`
+is now a private theorem in `GaussianFourier.lean`.
 
-## The axiom to prove
+## The bridge theorem
 
 In `Pphi2/TransferMatrix/GaussianFourier.lean`:
 
 ```lean
-private axiom fourierTransform_lp_eq_fourierIntegral
+private theorem fourierTransform_lp_eq_fourierIntegral
     {h : EuclideanSpace ℝ (Fin Ns) → ℂ}
     (hL1 : MemLp h 1 (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
     (hL2 : MemLp h 2 (volume : Measure (EuclideanSpace ℝ (Fin Ns)))) :
@@ -78,36 +78,32 @@ Given the identity:
 
 The original `inner_convCLM_pos_of_fourier_pos` axiom was decomposed:
 
-1. **`fourierTransform_lp_eq_fourierIntegral`** — Lp/Fourier-integral representative bridge (private axiom)
+1. **`fourierTransform_lp_eq_fourierIntegral`** — Lp/Fourier-integral representative bridge (private theorem)
 2. **`fourier_representation_convolution`** — Fourier representation identity (proved from the bridge)
 3. **`fourier_ae_nonzero_of_nonzero`** — Plancherel injectivity (proved)
 4. **`toEuclideanComplexL2_ne_zero`** — R→C embedding injectivity (proved)
 5. **`inner_convCLM_pos_of_fourier_pos`** — Strict positivity (proved from above)
 
-The only remaining axiom in this chain is `fourierTransform_lp_eq_fourierIntegral`.
+The chain is axiom-free inside `GaussianFourier.lean`.
 
-## Strategy to remove the remaining axiom
+## Proof of the bridge theorem
 
-### Schwartz density via `DenseRange.equalizer` (~300-500 lines)
+The bridge is proved by the tempered-distribution route:
 
-**Step 1:** Show LHS `f ↦ ⟨f, Conv_g f⟩` is continuous on L²
-(already proved as `convQuadForm_continuous`).
+**Step 1:** Use `Lp.fourier_toTemperedDistribution_eq` to identify the `L²`
+Fourier transform with the distributional Fourier transform.
 
-**Step 2:** Show RHS `f ↦ ∫ Re(ĝ_ℂ(k)) · ‖f̂_ℂ(k)‖² dk` is continuous on L².
-Argument: `|Re(ĝ)| ≤ ‖g‖₁` (bounded), Fourier is isometry, so
-`|Q(f₁) - Q(f₂)| ≤ ‖g‖₁ · (‖f₁‖ + ‖f₂‖) · ‖f₁ - f₂‖`.
+**Step 2:** Test the distributional equality against a Schwartz test function.
+`Lp.toTemperedDistribution_apply` turns this into an integral identity.
 
-**Step 3:** For Schwartz `s`, prove the representation theorem using:
-- `Real.fourier_smul_convolution_eq` (convolution theorem for integrable+continuous)
-- `SchwartzMap.integral_sesq_fourier_fourier` (Parseval for Schwartz)
+**Step 3:** Use `VectorFourier.integral_bilin_fourierIntegral_eq_flip` to move
+the Fourier transform from the compactly supported smooth test function to the
+`L¹` function `h`. The `L.flip` kernel is converted back to the usual Fourier
+kernel by `real_inner_comm`.
 
-**Step 4:** Apply `DenseRange.equalizer` with `SchwartzMap.denseRange_toLpCLM`.
-
-**Main blocker:** The formal obstruction has narrowed to the representative
-bridge `fourierTransform_lp_eq_fourierIntegral`, together with plumbing between
-SpatialField, EuclideanSpace, real L², and complex L². The downstream
-`fourier_representation_convolution` identity is already a theorem once that
-bridge is supplied.
+**Step 4:** Apply `ae_eq_of_integral_contDiff_smul_eq` to promote equality of
+all compactly supported smooth real test integrals to a.e. equality of the two
+locally integrable representatives.
 
 ## Available Mathlib API
 
