@@ -413,10 +413,7 @@ private theorem fourierIntegralQuadForm_continuous
     exact fourierQuadForm_eq_integral (Ns := Ns) g hg (fHat Ns f)
   exact hEq ▸ ((fourierQuadForm_continuous (Ns := Ns) g hg).comp (fHat_continuous (Ns := Ns)))
 
-omit [NeZero Ns] in
-set_option maxHeartbeats 800000 in
--- The proof elaborates several distribution/Lp Fourier coercions and Fubini identities.
-/-- **L¹∩L² Plancherel agreement** (textbook).
+/- **L¹∩L² Plancherel agreement** (textbook).
 
 For `h : ℝⁿ → ℂ` that is both in `L¹(volume)` and in `L²(volume)`, the L²
 Fourier transform of the `Lp ℂ 2` representative of `h` agrees a.e. with the
@@ -454,6 +451,9 @@ the substantive content of the theorem), (d) hypothesis sufficiency
 (`MemLp h 1` + `MemLp h 2` is exactly what the references use; works for
 `Ns = 0` as a trivial case via Dirac measure on a one-point space), (e)
 `=ᵐ[volume]` is the natural formulation. -/
+omit [NeZero Ns] in
+set_option maxHeartbeats 800000 in
+-- The proof elaborates several distribution/Lp Fourier coercions and Fubini identities.
 private theorem fourierTransform_lp_eq_fourierIntegral
     {h : EuclideanSpace ℝ (Fin Ns) → ℂ}
     (hL1 : MemLp h 1 (volume : Measure (EuclideanSpace ℝ (Fin Ns))))
