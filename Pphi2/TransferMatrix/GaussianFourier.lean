@@ -413,6 +413,7 @@ private theorem fourierIntegralQuadForm_continuous
     exact fourierQuadForm_eq_integral (Ns := Ns) g hg (fHat Ns f)
   exact hEq ▸ ((fourierQuadForm_continuous (Ns := Ns) g hg).comp (fHat_continuous (Ns := Ns)))
 
+set_option maxHeartbeats 800000 in
 /-- **L¹∩L² Plancherel agreement** (textbook).
 
 For `h : ℝⁿ → ℂ` that is both in `L¹(volume)` and in `L²(volume)`, the L²
