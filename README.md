@@ -3,33 +3,48 @@
 Formal construction of the P(Φ)₂ Euclidean quantum field theory in Lean 4,
 following the Glimm-Jaffe/Nelson lattice approach.
 
-> ### ⚠️ Notice (2026-05-07): lattice-action normalisation under review
+> ### ✓ Lattice-action normalisation: Stage 1 fix landed (2026-05-07)
 >
-> A scaling-analysis review of the lattice action and Wick-subtraction
-> conventions has identified a likely **normalisation bug**: pphi2's lattice
-> action drops the `a^d` Riemann-sum prefactor on the kinetic term that
-> Glimm–Jaffe and Guerra–Rosen–Simon use, with the consequence that the
-> Wick-subtracted interaction `V_a` is `a^{2k_{top}}`-times smaller than the
-> textbook one and **vanishes in the continuum limit**. Under this analysis,
-> the limit measure constructed by `torusInteractingLimit_exists` and
-> consumed by `torusInteracting_satisfies_OS` is the **free Gaussian field**,
-> not the interacting P(φ)₂ theory.
+> A scaling-analysis review (Gemini-vetted) had identified a normalisation
+> bug: pphi2's lattice action dropped the `a^d` Riemann-sum prefactor on
+> the kinetic term, making the Wick-subtracted interaction `V_a` vanish
+> in the continuum limit (free GFF instead of interacting P(φ)₂).
 >
-> The OS0–OS2 theorems remain true as Lean statements (the free GFF
-> satisfies them), but the axioms `continuumLimit_nonGaussian` and
-> `pphi2_nontriviality` would be **false** under the current normalisation
-> rather than open. Routes A, B, B′, and pphi2N all inherit the same lattice
-> action and are likely affected.
+> **Stage 1 fix is now live** on the
+> [`fix/lattice-action-normalization`](https://github.com/mrdouglasny/pphi2/tree/fix/lattice-action-normalization)
+> branch (gaussian-field `5ce8c2e`, pphi2 `3d80346`):
 >
-> **Diagnosis + proposed fix**:
+> * Architecture (Option C): the bare `latticeCovariance` and all its
+>   spectral identities are unchanged. A new
+>   `latticeCovarianceGJ := (a^d)^{-1/2} • spectralLatticeCovariance`
+>   carries the Glimm–Jaffe Riemann-sum factor.
+>   `latticeGaussianMeasure` now uses `latticeCovarianceGJ`, so its
+>   covariance kernel is the textbook `(1/a^d) M_a^{-1}`.
+> * `gaussianDensity = exp(-(a^d/2)⟨φ, Qφ⟩)` (matches the new measure
+>   via the density bridge).
+> * `wickConstant = (1/(a^d|Λ|)) Σ_k 1/λ_k` (matches the variance
+>   `E[ω(δ_x)²]` under the new measure).
+> * Stage 1 added 11 net new pphi2 axioms (18 → 29) and 2 in
+>   gaussian-field (4 → 6), all with corrected statements citing
+>   Glimm–Jaffe Ch. 8 / §7.1 and the Phase 2 plan. The Nelson-easy-bound
+>   proofs and uniform-second-moment bounds become non-uniform under
+>   GJ-aligned wickConstant; the genuine uniform proofs require the
+>   dynamical-cutoff machinery (`SmoothLowerBound.lean`,
+>   `RoughErrorBound.lean`) which is staged but not yet wired up.
+>
+> **Diagnosis + Stage 1 architecture**:
 > [`docs/lattice-action-normalization-fix.md`](docs/lattice-action-normalization-fix.md)
-> (Glimm–Jaffe-aligned action `S = (a^d/2)⟨φ, M_a φ⟩`, real dynamical-cutoff
-> Nelson estimate, ~6–10 weeks of focused work).
+> (Gemini deep-think vetted, see §0 verdict; Cauchy–Schwarz density
+> transfer audit in §3.5).
 >
-> **Status**: not yet vetted — the doc lists seven open questions for
-> Gemini deep-think / Codex review before any code changes. Treat the
-> existing `torusInteracting_satisfies_OS` and the OS0–OS4 chain in
-> `Pphi2/Main.lean` as **provisional** until the vetting concludes.
+> **Phase 2** (~6–10 weeks): real dynamical-cutoff proofs of the
+> axiomatised bounds; embedding-normalisation audit for propagator
+> convergence; discharge of `continuumLimit_nonGaussian` /
+> `pphi2_nontriviality`.
+>
+> The lattice action is now mathematically correct; the OS0–OS4 chain
+> in `Pphi2/Main.lean` proves theorems about the textbook GJ-aligned
+> measure (modulo the Phase 2 axioms).
 
 ## What this project proves
 
@@ -112,9 +127,9 @@ OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
 The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
-**15 axioms, 0 sorries** in the active pphi2 build, plus **4 axioms,
-0 sorries** in the pinned Lake `GaussianField` dependency, for **19 combined
-axioms**.
+**29 axioms, 0 sorries** (pphi2) + **6 axioms** (gaussian-field) = **35 combined** (axioms only).
+Increase from the prior 18+4 reflects the Stage 1 lattice-action fix —
+see the notice at the top of this README.
 
 ### Route B: T²_L (symmetric torus) — OS0–OS2
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
@@ -122,7 +137,10 @@ spacing a = L/N → 0. The interacting continuum limit `torusInteractingLimit_ex
 is proved via Mitoma-Chebyshev tightness + Nelson's exponential estimate
 (proved: physical volume a²N²=L² is constant). OS3 dropped (→ Routes B', C).
 
-**`TorusInteractingOS.lean`: 0 local axioms, 0 sorry.**
+**`TorusInteractingOS.lean`: 1 local axiom, 0 sorries.**
+(Stage 1, 2026-05-07: `torusEmbeddedTwoPoint_le_seminorm` axiomatised
+under the GJ-aligned lattice action. OS0–OS2 still proved from this
+plus the Phase 2 exponential-moment / propagator-convergence axioms.)
 All OS0–OS2 proofs are complete within this file. Upstream dependencies
 are now largely resolved (see `docs/torus-route-gap-audit.md`):
 - ~~OS0 uses `osgood_separately_analytic` (axiom)~~ **PROVED** — Osgood's lemma fully verified (1965 lines, 0 axioms)
@@ -140,7 +158,12 @@ The construction proceeds in two limits:
 1. **UV limit (DONE):** On the asymmetric torus T_{Lt,Ls} = (ℝ/Lt ℤ) × (ℝ/Ls ℤ)
    with lattice (ℤ/Nℤ)² and geometric-mean spacing √(Lt·Ls)/N, take N → ∞.
    Route B's OS0–OS2 proofs are fully adapted to the asymmetric case.
-   `AsymTorusOS.lean`: **0 axioms, 0 sorry.**
+   `AsymTorusOS.lean`: **2 axioms, 0 sorries.**
+   (Stage 1, 2026-05-07: `asymTorusInteracting_exponentialMomentBound`
+   and `asymGf_sub_norm_le_seminorm` axiomatised under the GJ-aligned
+   action. OS0–OS2 still proved from these plus
+   `asymGaussian_second_moment_uniform_bound` and
+   `asymNelson_exponential_estimate` in `AsymTorusInteractingLimit.lean`.)
 
 2. **IR limit (in progress):** Take Lt → ∞ with Ls fixed. The torus measures
    μ_{P,Lt,Ls} on T_{Lt,Ls} converge weakly to a measure μ_{P,Ls} on the
