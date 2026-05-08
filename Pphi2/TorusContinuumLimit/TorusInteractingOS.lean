@@ -363,7 +363,9 @@ theorem torusInteractingMeasure_gf_latticeTranslation_invariant
         (circleSpacing L N * j₁, circleSpacing L N * j₂) f) x =
       latticeTestFn L N f (translateSites N j₁ j₂ x) := by
     intro x
-    simp only [latticeTestFn, torusTranslation]
+    simp only [latticeTestFn, evalTorusAtSiteGJ_apply', torusTranslation]
+    -- Both sides have a (L/N)· prefactor; reduce to bare evaluation lemma.
+    congr 1
     exact evalTorusAtSite_latticeTranslation L N j₁ j₂ x f
   set μ_lat := interactingLatticeMeasure 2 N P (circleSpacing L N) mass
     (circleSpacing_pos L N) hmass
@@ -1761,7 +1763,8 @@ theorem torusInteractingMeasure_gf_swap_invariant
   have h_lattice_swap : ∀ x : FinLatticeSites 2 N,
       latticeTestFn L N (torusSwap L f) x = latticeTestFn L N f (swapSites N x) := by
     intro x
-    simp only [latticeTestFn, torusSwap]
+    simp only [latticeTestFn, evalTorusAtSiteGJ_apply', torusSwap]
+    congr 1
     exact evalTorusAtSite_swap L N x f
   -- Step 2: Convert both sides to lattice integrals via definition unfolding
   set μ_lat := interactingLatticeMeasure 2 N P (circleSpacing L N) mass
@@ -1927,7 +1930,8 @@ theorem torusInteractingMeasure_gf_timeReflection_invariant
       latticeTestFn L N (torusTimeReflection L f) x =
       latticeTestFn L N f (timeReflectSites N x) := by
     intro x
-    simp only [latticeTestFn, torusTimeReflection]
+    simp only [latticeTestFn, evalTorusAtSiteGJ_apply', torusTimeReflection]
+    congr 1
     exact evalTorusAtSite_timeReflection L N x f
   -- Follow exactly the same pattern as swap proof
   unfold torusGeneratingFunctional torusInteractingMeasure

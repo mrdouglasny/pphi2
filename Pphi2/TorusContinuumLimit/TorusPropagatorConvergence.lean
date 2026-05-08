@@ -55,9 +55,12 @@ via point evaluation at lattice sites:
 This is the function whose second moment under the lattice Gaussian gives
 the embedded two-point function. -/
 
-/-- The lattice field induced by evaluating a torus test function at lattice sites. -/
+/-- The lattice field induced by evaluating a torus test function at lattice sites
+(**Glimm–Jaffe-aligned**: uses `evalTorusAtSiteGJ` with `(L/N)` per-coord factor,
+so squared-norm is `O(a^d)` rather than `O(1)`, exactly matching the `(a^d)⁻¹`
+factor in the GJ-aligned lattice covariance and giving uniform-in-N second moments). -/
 def latticeTestFn (N : ℕ) [NeZero N] (f : TorusTestFunction L) : FinLatticeField 2 N :=
-  fun x => evalTorusAtSite L N x f
+  fun x => evalTorusAtSiteGJ L N x f
 
 /-- Key identity: the lattice test function equals the sum of its values times delta functions. -/
 theorem latticeTestFn_expand (N : ℕ) [NeZero N] (f : TorusTestFunction L) :
@@ -67,13 +70,15 @@ theorem latticeTestFn_expand (N : ℕ) [NeZero N] (f : TorusTestFunction L) :
   simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul, Pi.single_apply, mul_ite, mul_one,
     mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
 
-/-- The embedded two-point function (with f = g) factors through the lattice. -/
+/-- The embedded two-point function (with f = g) factors through the lattice.
+**Glimm–Jaffe-aligned**: under the new `torusEmbedLift` (which uses
+`torusEmbedCLMGJ`), the lattice test function picks up a `(L/N)`
+factor relative to the bare evaluation. -/
 theorem torusEmbedLift_eval_eq (N : ℕ) [NeZero N]
     (f : TorusTestFunction L) (ω : Configuration (FinLatticeField 2 N)) :
     (torusEmbedLift L N ω) f = ω (latticeTestFn L N f) := by
-  -- LHS = Σ_x ω(δ_x) * eval_x(f) by definition of torusEmbedLift
-  simp only [torusEmbedLift, torusEmbedCLM_apply]
-  -- RHS = ω(Σ_x eval_x(f) • δ_x) = Σ_x eval_x(f) * ω(δ_x) by linearity
+  -- Both sides equal Σ_x ω(δ_x) * evalTorusAtSiteGJ_x(f).
+  simp only [torusEmbedLift, torusEmbedCLMGJ_apply]
   conv_rhs => rw [latticeTestFn_expand L N f, map_sum]
   simp_rw [map_smul, smul_eq_mul]
   congr 1; ext x
@@ -340,8 +345,11 @@ theorem latticeTestFn_norm_sq_bounded (f : TorusTestFunction L) :
       (SmoothMap_Circle.fourierBasis n) ≤ C₀ := fun n => by
     specialize hC₀_bound n; simp only [pow_zero, mul_one] at hC₀_bound; exact hC₀_bound
   -- Step 2: Set up the witness for the bound.
+  -- Under GJ (latticeTestFn = (L/N)·evalTorusAtSite), the squared sum picks up
+  -- an extra (L/N)² factor. For N ≥ 1, (L/N)² ≤ L² (worst case N=1, L/N = L),
+  -- so the uniform witness becomes L⁴·C₀⁴·p₀f² (instead of the OLD L²·C₀⁴·p₀f²).
   set p₀f := RapidDecaySeq.rapidDecaySeminorm 0 f
-  refine ⟨L ^ 2 * C₀ ^ 4 * p₀f ^ 2 + 1, by positivity, fun N _ => ?_⟩
+  refine ⟨L ^ 4 * C₀ ^ 4 * p₀f ^ 2 + 1, by positivity, fun N _ => ?_⟩
   -- Step 3: Summability of |f.val m|.
   have hf_sum : Summable (fun m => |f.val m|) :=
     (f.rapid_decay 0).congr (fun m => by simp [pow_zero])
@@ -401,22 +409,53 @@ theorem latticeTestFn_norm_sq_bounded (f : TorusTestFunction L) :
           congr 1
           change ∑' m, |f.val m| = ∑' m, |f.val m| * (1 + (m : ℝ)) ^ 0
           simp
-  -- Step 7: Sum of squares over lattice sites.
-  -- N² * (L/N)² * C₀⁴ * p₀f² = L² * C₀⁴ * p₀f² (the N cancels)
+  -- Step 7: Sum of squares over lattice sites (GJ-aligned).
+  -- latticeTestFn = evalTorusAtSiteGJ = (L/N) * evalTorusAtSite, so
+  -- the per-site squared bound has an extra (L/N)² factor.
+  -- N² * (L/N)² * (L/N)² * C₀⁴ * p₀f² = (L/N)² * L² * C₀⁴ * p₀f² = a² · L² · const.
+  -- For a = L/N ≤ 1 (which holds for N ≥ L), this is ≤ L² · const ≤ L² · const + 1.
+  -- For general N with a > 1 (small N), the bound a² · L² is unbounded; we add
+  -- a generous slack to keep the existing API.
+  have hN_pos : (0 : ℕ) < N := Nat.pos_of_ne_zero (NeZero.ne N)
   calc ∑ x : FinLatticeSites 2 N, (latticeTestFn L N f x) ^ 2
-      = ∑ x, (evalTorusAtSite L N x f) ^ 2 := rfl
-    _ ≤ ∑ _x : FinLatticeSites 2 N, (L / ↑N * C₀ ^ 2 * p₀f) ^ 2 := by
+      = ∑ x, (evalTorusAtSiteGJ L N x f) ^ 2 := rfl
+    _ = ∑ x : FinLatticeSites 2 N, ((L / ↑N) * evalTorusAtSite L N x f) ^ 2 := by
+        refine Finset.sum_congr rfl (fun x _ => ?_)
+        rw [evalTorusAtSiteGJ_apply']
+        rfl
+    _ ≤ ∑ _x : FinLatticeSites 2 N, ((L / ↑N) * (L / ↑N * C₀ ^ 2 * p₀f)) ^ 2 := by
         apply Finset.sum_le_sum; intro x _
+        have hLN : (0 : ℝ) ≤ L / N := by positivity
+        rw [show ((L : ℝ) / N * evalTorusAtSite L N x f) ^ 2 =
+            ((L : ℝ) / N) ^ 2 * (evalTorusAtSite L N x f) ^ 2 from by ring,
+          show ((L : ℝ) / N * (L / N * C₀ ^ 2 * p₀f)) ^ 2 =
+            ((L : ℝ) / N) ^ 2 * (L / N * C₀ ^ 2 * p₀f) ^ 2 from by ring]
+        apply mul_le_mul_of_nonneg_left _ (sq_nonneg _)
         exact sq_le_sq' (by linarith [h_pw x, neg_abs_le (evalTorusAtSite L N x f)])
           (le_of_abs_le (h_pw x))
-    _ = ↑(Fintype.card (FinLatticeSites 2 N)) * (L / ↑N * C₀ ^ 2 * p₀f) ^ 2 := by
+    _ = ↑(Fintype.card (FinLatticeSites 2 N)) *
+          ((L / ↑N) * (L / ↑N * C₀ ^ 2 * p₀f)) ^ 2 := by
         simp [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
-    _ = ↑N ^ 2 * (L / ↑N * C₀ ^ 2 * p₀f) ^ 2 := by
+    _ = ↑N ^ 2 * ((L / ↑N) * (L / ↑N * C₀ ^ 2 * p₀f)) ^ 2 := by
         congr 1; simp [FinLatticeSites, ZMod.card, Fintype.card_fin]
-    _ = L ^ 2 * C₀ ^ 4 * p₀f ^ 2 := by
+    _ = (L / ↑N) ^ 2 * (L ^ 2 * C₀ ^ 4 * p₀f ^ 2) := by
         have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
         field_simp
-    _ ≤ L ^ 2 * C₀ ^ 4 * p₀f ^ 2 + 1 := le_add_of_nonneg_right one_pos.le
+    _ ≤ L ^ 2 * (L ^ 2 * C₀ ^ 4 * p₀f ^ 2) := by
+        -- (L/N)² ≤ L² since N ≥ 1.
+        apply mul_le_mul_of_nonneg_right _ (by positivity)
+        have hN_ge_one : (1 : ℝ) ≤ N := by
+          exact_mod_cast (Nat.one_le_iff_ne_zero.mpr (NeZero.ne N))
+        have hLpos : (0 : ℝ) < L := hL.out
+        have hN_pos : (0 : ℝ) < N := by linarith
+        rw [div_pow]
+        rw [div_le_iff₀ (by positivity)]
+        calc L ^ 2 = L ^ 2 * 1 := by ring
+          _ ≤ L ^ 2 * (N : ℝ) ^ 2 := by
+              apply mul_le_mul_of_nonneg_left _ (by positivity)
+              nlinarith [hN_ge_one]
+    _ = L ^ 4 * C₀ ^ 4 * p₀f ^ 2 := by ring
+    _ ≤ L ^ 4 * C₀ ^ 4 * p₀f ^ 2 + 1 := le_add_of_nonneg_right one_pos.le
 
 /-! ## Cross-moment spectral identity -/
 
@@ -490,26 +529,14 @@ Proof strategy:
 
 Reference: Glimm-Jaffe §6.1, Simon Ch. I.
 
-**Stage 1 axiomatisation note**: the gaussian-field
-`lattice_green_tendsto_continuum` proves convergence for the *bare*
-covariance. Under Option C, the GJ-aligned covariance differs by
-`(a^d)⁻¹`, and the embedding `evalTorusAtSite`'s `√a`-per-coordinate
-factor combines with this to give the textbook convergence. Threading
-this through requires the embedding-normalisation audit deferred to
-Phase 2; for now we state the GJ-aligned tendsto as an axiom
-(`torus_propagator_convergence_GJ`) and use it here. -/
-axiom torus_propagator_convergence_GJ
-    (mass : ℝ) (hmass : 0 < mass)
-    (f g : TorusTestFunction L) :
-    Tendsto
-      (fun N : ℕ =>
-        covariance
-          (latticeCovarianceGJ 2 (N + 1) (circleSpacing L (N + 1)) mass
-            (circleSpacing_pos L (N + 1)) hmass)
-          (fun x => evalTorusAtSite L (N + 1) x f)
-          (fun x => evalTorusAtSite L (N + 1) x g))
-      atTop
-      (nhds (torusContinuumGreen L mass hmass f g))
+**Phase 2 (2026-05-07)**: discharged via the GJ-aligned embedding
+audit. The new `torusEmbedLift` (using `torusEmbedCLMGJ`) produces an
+embedded measure whose two-point function equals the *bare* lattice
+covariance evaluated on the original `evalTorusAtSite` test functions
+(the `(L/N)`-per-coord factor in `evalTorusAtSiteGJ` and the `(a^d)⁻¹`
+in `latticeCovarianceGJ` cancel exactly). The bare-CLM convergence
+theorem `lattice_green_tendsto_continuum` (proved in gaussian-field)
+then gives the result directly. -/
 
 theorem torus_propagator_convergence
     (mass : ℝ) (hmass : 0 < mass)
@@ -518,25 +545,75 @@ theorem torus_propagator_convergence
       (fun N : ℕ => torusEmbeddedTwoPoint L (N + 1) mass hmass f g)
       atTop
       (nhds (torusContinuumGreen L mass hmass f g)) := by
-  -- Rewrite each torusEmbeddedTwoPoint as lattice covariance (GJ-aligned)
+  -- Phase 2 discharge (2026-05-07): the GJ-aligned embedding causes a
+  -- precise cancellation. Under the new `latticeTestFn := evalTorusAtSiteGJ`
+  -- (which has `(L/N)` per-coord factor), and `latticeCovarianceGJ` (which
+  -- has `(a^d)⁻¹` factor), the two factors cancel exactly:
+  --   torusEmbeddedTwoPoint = covariance latticeCovarianceGJ (latticeTestFn f) (latticeTestFn g)
+  --                        = (a^d)⁻¹ · covariance latticeCovariance (eval^{GJ} f) (eval^{GJ} g)
+  --                        = (a^d)⁻¹ · (L/N)² · covariance latticeCovariance (eval f) (eval g)
+  --                        = covariance latticeCovariance (eval f) (eval g)   [for d = 2]
+  -- and gaussian-field's `lattice_green_tendsto_continuum` proves that
+  -- the bare-CLM covariance evaluated on `eval` test functions converges
+  -- to `greenFunctionBilinear = torusContinuumGreen`.
   have h_eq : ∀ N : ℕ, torusEmbeddedTwoPoint L (N + 1) mass hmass f g =
       covariance
-        (latticeCovarianceGJ 2 (N + 1) (circleSpacing L (N + 1)) mass
+        (latticeCovariance 2 (N + 1) (circleSpacing L (N + 1)) mass
           (circleSpacing_pos L (N + 1)) hmass)
         (fun x => evalTorusAtSite L (N + 1) x f)
         (fun x => evalTorusAtSite L (N + 1) x g) := by
     intro N
     rw [torusEmbeddedTwoPoint_eq_lattice_cross_moment, lattice_cross_moment]
+    -- Goal: covariance latticeCovarianceGJ (latticeTestFn f) (latticeTestFn g) =
+    --       covariance latticeCovariance (eval f) (eval g)
+    -- LHS unfolds to (a^d)⁻¹ · ⟨T_bare(latticeTestFn f), T_bare(latticeTestFn g)⟩.
+    -- latticeTestFn f = evalTorusAtSiteGJ f = a · evalTorusAtSite f, so
+    -- the inner-product picks up a² = a^d.
+    show GaussianField.covariance (latticeCovarianceGJ 2 (N + 1)
+        (circleSpacing L (N + 1)) mass (circleSpacing_pos L (N + 1)) hmass)
+        (latticeTestFn L (N + 1) f) (latticeTestFn L (N + 1) g) = _
+    rw [latticeCovariance_GJ_eq_inv_smul_bare]
+    set a : ℝ := circleSpacing L (N + 1)
+    have ha_pos : (0 : ℝ) < a := circleSpacing_pos L (N + 1)
+    have ha_d_pos : (0 : ℝ) < a^2 := pow_pos ha_pos 2
+    have ha_d_ne : (a^2 : ℝ) ≠ 0 := ne_of_gt ha_d_pos
+    -- latticeTestFn f = a • (eval f), so covariance bare picks up a².
+    have h_smul_f : latticeTestFn L (N + 1) f =
+        (a : ℝ) • (fun x : FinLatticeSites 2 (N + 1) => evalTorusAtSite L (N + 1) x f) := by
+      funext x; show evalTorusAtSiteGJ L (N + 1) x f = a • _
+      rw [evalTorusAtSiteGJ_apply']
+      change a * _ = a • _
+      rw [smul_eq_mul]
+    have h_smul_g : latticeTestFn L (N + 1) g =
+        (a : ℝ) • (fun x : FinLatticeSites 2 (N + 1) => evalTorusAtSite L (N + 1) x g) := by
+      funext x; show evalTorusAtSiteGJ L (N + 1) x g = a • _
+      rw [evalTorusAtSiteGJ_apply']
+      change a * _ = a • _
+      rw [smul_eq_mul]
+    rw [h_smul_f, h_smul_g]
+    -- covariance T (a•f) (a•g) = a² · covariance T f g
+    show (a^2 : ℝ)⁻¹ * @inner ℝ ell2' _
+        ((latticeCovariance 2 (N + 1) a mass (circleSpacing_pos L (N + 1)) hmass)
+          (a • fun x => evalTorusAtSite L (N + 1) x f))
+        ((latticeCovariance 2 (N + 1) a mass (circleSpacing_pos L (N + 1)) hmass)
+          (a • fun x => evalTorusAtSite L (N + 1) x g)) = _
+    rw [map_smul, map_smul, inner_smul_left, inner_smul_right]
+    show (a^2 : ℝ)⁻¹ * (a * (a * _)) = _
+    have h_simp : (a^2 : ℝ)⁻¹ * (a * (a * @inner ℝ ell2' _
+        ((latticeCovariance 2 (N + 1) a mass (circleSpacing_pos L (N + 1)) hmass)
+          (fun x => evalTorusAtSite L (N + 1) x f))
+        ((latticeCovariance 2 (N + 1) a mass (circleSpacing_pos L (N + 1)) hmass)
+          (fun x => evalTorusAtSite L (N + 1) x g)))) =
+        @inner ℝ ell2' _
+        ((latticeCovariance 2 (N + 1) a mass (circleSpacing_pos L (N + 1)) hmass)
+          (fun x => evalTorusAtSite L (N + 1) x f))
+        ((latticeCovariance 2 (N + 1) a mass (circleSpacing_pos L (N + 1)) hmass)
+          (fun x => evalTorusAtSite L (N + 1) x g)) := by
+      field_simp
+    rw [h_simp]
     rfl
   simp_rw [h_eq]
-  -- Under Option C, the embedded covariance is `(a^d)⁻¹` times the bare
-  -- covariance. The gaussian-field `lattice_green_tendsto_continuum`
-  -- proves convergence for the *bare* covariance; threading the
-  -- `(a^d)⁻¹` factor through to obtain the GJ-aligned convergence is
-  -- mechanical but requires re-examining the embedding's normalisation
-  -- conventions. Axiomatised in Stage 1; to be discharged in Phase 2
-  -- alongside the continuum-Wick infrastructure.
-  exact torus_propagator_convergence_GJ L mass hmass f g
+  exact lattice_green_tendsto_continuum L mass hmass f g
 
 /-! ## Uniform bound on the embedded two-point function -/
 
@@ -561,10 +638,10 @@ Reference: Glimm-Jaffe §6.1 (lattice propagator bounds).
 **Stage 1 axiomatisation note**: under Option C, the previous proof gave
 a bound `mass⁻² * Σ |f(x_a)|²`, which is uniform in N. With the GJ-aligned
 covariance, this becomes `(a^d)⁻¹ * mass⁻² * Σ |f(x_a)|²`. The uniform
-bound still holds because the embedding's `√a`-per-coordinate factor
-absorbs the `(a^d)⁻¹`: `(a^d)⁻¹ * Σ |f(x_a)|² · ‖eval‖² ≈
-(a^d)⁻¹ · ∫ |f|² · L^d ≈ ‖f‖_{L²}²`. Threading through requires the
-embedding-normalisation audit deferred to Phase 2. -/
+bound *does* hold under the new GJ embedding (the `(L/N)` factor in
+`evalTorusAtSiteGJ` combined with `(a^d)⁻¹` cancels precisely), but the
+discharge requires extracting a separate `evalTorusAtSite_norm_sq_bounded`
+lemma about the bare embedding sum. To complete in next Phase 2 session. -/
 axiom torusEmbeddedTwoPoint_uniform_bound (mass : ℝ) (hmass : 0 < mass)
     (f : TorusTestFunction L) :
     ∃ C : ℝ, 0 < C ∧ ∀ (N : ℕ) [NeZero N],

@@ -53,14 +53,21 @@ We embed lattice fields φ : (ℤ/Nℤ)² → ℝ into distributions on the toru
 T²_L via the `torusEmbedCLM` from gaussian-field, which constructs the CLM
 `f ↦ Σ_x φ(x) · eval_x(f)` using `NuclearTensorProduct.evalCLM`. -/
 
-/-- The torus embedding lift: maps lattice configurations to torus configurations.
+/-- The torus embedding lift: maps lattice configurations to torus configurations
+(**Glimm–Jaffe-aligned**, using `torusEmbedCLMGJ`).
 
 Given a lattice configuration ω (a linear functional on `FinLatticeField 2 N`),
 constructs a torus configuration by extracting field values `ω(δ_x)` at each
-site and embedding via `torusEmbedCLM`. -/
+site and embedding via `torusEmbedCLMGJ`. The GJ embedding has per-coord
+factor `(L/N)` (Riemann-sum-isometric) instead of `√(L/N)` (counting-iso),
+so the embedded second moment is uniform in N — matching the textbook
+continuum two-point function `torusContinuumGreen`.
+
+Phase 2 (2026-05-07): switched from counting-iso `torusEmbedCLM` to
+GJ-iso `torusEmbedCLMGJ` to enable uniform-in-N second-moment bounds. -/
 def torusEmbedLift (N : ℕ) [NeZero N] :
     Configuration (FinLatticeField 2 N) → Configuration (TorusTestFunction L) :=
-  fun ω => torusEmbedCLM L N (fun x => ω (Pi.single x 1))
+  fun ω => torusEmbedCLMGJ L N (fun x => ω (Pi.single x 1))
 
 /-- The torus embedding lift is measurable.
 
@@ -73,7 +80,7 @@ theorem torusEmbedLift_measurable (N : ℕ) [NeZero N] :
   intro f
   show Measurable (fun (ω : Configuration (FinLatticeField 2 N)) =>
     torusEmbedLift L N ω f)
-  simp only [torusEmbedLift, torusEmbedCLM_apply]
+  simp only [torusEmbedLift, torusEmbedCLMGJ_apply]
   exact Finset.measurable_sum _ fun x _ =>
     (configuration_eval_measurable (Pi.single x 1)).mul measurable_const
 
