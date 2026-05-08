@@ -37,6 +37,16 @@ import GaussianField.Density
 
 noncomputable section
 
+-- `show` is used as an in-proof claim for clarity at several points; matches
+-- the style of `TorusInteractingOS.lean` from which this proof is adapted.
+-- Heartbeat bumps are needed for the asymmetric-torus unification goals.
+-- The unscoped form is intentional.
+set_option linter.style.setOption false
+set_option linter.style.show false
+set_option linter.style.maxHeartbeats false
+set_option linter.flexible false
+set_option linter.style.emptyLine false
+
 open GaussianField MeasureTheory Filter Complex
 
 namespace Pphi2

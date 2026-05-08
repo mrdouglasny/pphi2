@@ -46,6 +46,7 @@ variable (d N : ℕ) [NeZero N] [Fact (0 < d)]
 
 /-! ## Uniform second moment bound for the interacting continuum measure -/
 
+omit [Fact (0 < d)] in
 /-- **Uniform bound on interacting continuum second moments.**
 
 `∫ (ω f)² dν_a ≤ C(f, m, P)` uniformly in `a ∈ (0, 1]`.
@@ -99,6 +100,7 @@ theorem continuum_second_moment_uniform (P : InteractionPolynomial)
 
 /-! ## Integrability of `(ω f)²` under the interacting continuum measure -/
 
+omit [Fact (0 < d)] in
 /-- Integrability of the squared evaluation functional under the interacting
 continuum measure.
 

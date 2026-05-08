@@ -63,6 +63,10 @@ import SchwartzNuclear.HermiteNuclear
 
 noncomputable section
 
+-- A handful of `simpa`s here thread a closing hypothesis through the simp
+-- cascade; switching to `simp; exact term` is a stylistic non-improvement.
+set_option linter.unnecessarySimpa false
+
 open GaussianField MeasureTheory Filter
 
 namespace Pphi2
@@ -321,6 +325,7 @@ private lemma signedVal_natAbs_eq_min (x : ZMod N) :
     (signedVal N x).natAbs = min (ZMod.val x) (N - ZMod.val x) := by
   rw [signedVal_eq_valMinAbs N x, ZMod.valMinAbs_natAbs_eq_min]
 
+omit [NeZero N] in
 private lemma physPos_norm_component (a : ℝ) (ha : 0 < a)
     (x : FinLatticeSites d N) (i : Fin d) :
     ‖(physicalPosition d N a x) i‖ =
@@ -488,7 +493,7 @@ private theorem schwartz_riemann_sum_bound_of_majorant
     (f : ContinuumTestFunction d) (S : ℝ)
     (hS :
       schwartzDecayMajorant d f ≤ S) :
-    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∀ (a : ℝ) (_ha : 0 < a), a ≤ 1 →
     ∀ (N : ℕ) [NeZero N],
     a ^ d * ∑ x : FinLatticeSites d N,
       (evalAtSite d N a f x) ^ 2 ≤ S ^ 2 * 3 ^ d := by
@@ -576,7 +581,7 @@ The proof uses:
 This gives `a^d Σ_x f(ax)² ≤ S_f² · 3^d`. -/
 private theorem schwartz_riemann_sum_bound
     (f : ContinuumTestFunction d) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∃ C : ℝ, 0 < C ∧ ∀ (a : ℝ) (_ha : 0 < a), a ≤ 1 →
     ∀ (N : ℕ) [NeZero N],
     a ^ d * ∑ x : FinLatticeSites d N,
       (evalAtSite d N a f x) ^ 2 ≤ C := by
@@ -588,7 +593,7 @@ private theorem schwartz_riemann_sum_bound
 
 /-- Polynomial Riemann-sum bound on DM basis vectors of the Schwartz space. -/
 private theorem schwartz_riemann_sum_basis_bound [Fact (0 < d)] :
-    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (_ha : 0 < a), a ≤ 1 →
     ∀ (N : ℕ) [NeZero N],
     a ^ d * ∑ x : FinLatticeSites d N,
       (evalAtSite d N a (DyninMityaginSpace.basis i) x) ^ 2 ≤
@@ -639,10 +644,10 @@ Riemann-sum bound for the corresponding test function. -/
 private theorem latticeGreenBilinear_diag_bound_of_riemann_bound
     (mass : ℝ) (hmass : 0 < mass)
     (f : ContinuumTestFunction d) (C_f : ℝ)
-    (hC : ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    (hC : ∀ (a : ℝ) (_ha : 0 < a), a ≤ 1 →
       ∀ (N : ℕ) [NeZero N],
       a ^ d * ∑ x : FinLatticeSites d N, (evalAtSite d N a f x) ^ 2 ≤ C_f) :
-    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∀ (a : ℝ) (_ha : 0 < a), a ≤ 1 →
       latticeGreenBilinear d N a mass f f ≤ mass⁻¹ ^ 2 * C_f := by
   intro a ha ha_le
   rw [← embeddedTwoPoint_eq_latticeGreenBilinear (d := d) (N := N) (a := a)
@@ -706,7 +711,7 @@ private theorem latticeGreenBilinear_diag_bound_of_riemann_bound
 /-- Polynomial diagonal bound for the lattice Green form on DM basis vectors. -/
 private theorem latticeGreenBilinear_basis_diag_bound [Fact (0 < d)]
     (mass : ℝ) (hmass : 0 < mass) :
-    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (_ha : 0 < a), a ≤ 1 →
       ∀ (N : ℕ) [NeZero N],
       latticeGreenBilinear d N a mass
         (DyninMityaginSpace.basis i)
@@ -815,7 +820,8 @@ private theorem latticeGreenBilinear_abs_le_half_diag_add_diag
                   (∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k)) := by
                     rw [Finset.sum_add_distrib]
           _ = ((∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Af k * Af k) +
-                (∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k)) / 2 := by
+                (∑ k : FinLatticeSites d N,
+                    (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k)) / 2 := by
                     ring
 /-- Eventual polynomial basis-pair bound for the lattice Green form along any
 continuum-limit sequence `a_n → 0`. -/

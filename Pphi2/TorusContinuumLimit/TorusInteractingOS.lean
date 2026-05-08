@@ -65,6 +65,16 @@ import Torus.Evaluation
 
 noncomputable section
 
+-- `show` is used as an in-proof claim for clarity at several points in this
+-- long proof; the readability cost of switching to `change` outweighs the
+-- linter's preference here.
+-- Heartbeat bumps are needed for the larger OS3 RP unification goals.
+-- The unscoped form is intentional.
+set_option linter.style.setOption false
+set_option linter.style.show false
+set_option linter.style.maxHeartbeats false
+set_option linter.flexible false
+
 open GaussianField MeasureTheory Filter Complex
 
 namespace Pphi2

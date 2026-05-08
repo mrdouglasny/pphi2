@@ -30,6 +30,15 @@ import Mathlib.Analysis.Distribution.SchwartzSpace.Fourier
 
 noncomputable section
 
+-- `simpa` calls in this file thread a closing hypothesis through the simp
+-- cascade; the `simp; exact term` form would split into more lines.
+-- Heartbeat bumps are needed for several Schwartz/L² unification goals that
+-- expand large coercion chains. Each occurrence is `set_option ... in` scoped
+-- to a single declaration. The unscoped form is intentional.
+set_option linter.style.setOption false
+set_option linter.unnecessarySimpa false
+set_option linter.style.maxHeartbeats false
+
 open MeasureTheory Complex FourierTransform SchwartzMap
 
 namespace Pphi2
@@ -278,7 +287,7 @@ private abbrev gHatReC
 
 omit [NeZero Ns] in
 private theorem gHatRe_bound
-    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume) :
+    (g : SpatialField Ns → ℝ) (_hg : MemLp g 1 volume) :
     ∀ w, ‖gHatReC Ns g w‖ ≤
       max 1 (∫ v : EuclideanSpace ℝ (Fin Ns),
         ‖(g ((WithLp.equiv 2 _) v) : ℂ)‖) := by
@@ -617,8 +626,8 @@ private noncomputable def fourierRealCLM :
           (Lp.fourierTransformₗᵢ (EuclideanSpace ℝ (Fin Ns)) ℂ).map_smul (c : ℂ) f }
     1
     (by
-      intro f
-      simp [MeasureTheory.Lp.norm_fourier_eq (E := EuclideanSpace ℝ (Fin Ns)) (F := ℂ) f])
+      intro _f
+      simp)
 
 omit [NeZero Ns] in
 private theorem gHat_memLp_top
@@ -810,6 +819,7 @@ private theorem liftL2_ℝC_schwartz_eq
        ((schwartzComplexLift Ns s).toLp 2 : EuclideanSpace ℝ (Fin Ns) → ℂ) w
   rw [hw, hsCw, schwartzComplexLift_apply, hsw]
 
+omit [NeZero Ns] in
 /-- Convolution-side coercion: the Lp ℂ 2 element
 `liftL2_ℝC (convCLM g_E hg_E (s.toLp 2))` agrees a.e. with the explicit
 function `w ↦ ((realConv volume g_E s w : ℝ) : ℂ)`. This is the convolution
@@ -839,6 +849,7 @@ private theorem liftL2_ℝC_convCLM_schwartz_coeFn
   rw [hw, hcw]
   exact congrArg (Complex.ofReal) (congrFun h_realConv_eq w)
 
+omit [NeZero Ns] in
 /-- The complex-lifted real convolution `w ↦ ((realConv volume g_E s w : ℝ) : ℂ)`
 is in `L²` (deduced from the L² membership of the underlying real Lp element
 `liftL2_ℝC (convCLM g_E hg_E (s.toLp 2))` plus the a.e. identity above). -/
@@ -855,6 +866,7 @@ private theorem realConvComplexLift_memLp_two
   have h_ae := liftL2_ℝC_convCLM_schwartz_coeFn (Ns := Ns) g hg s
   exact MemLp.ae_eq h_ae hf_memLp
 
+omit [NeZero Ns] in
 /-- The Lp ℂ 2 element on the convolution side equals the explicit `MemLp.toLp`. -/
 private theorem liftL2_ℝC_convCLM_schwartz_eq_toLp
     (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
@@ -926,7 +938,7 @@ omit [NeZero Ns] in
 /-- Pointwise: the lifted real convolution equals the complex convolution of the
 real-to-complex lifts. -/
 private theorem realConvComplexLift_eq_complex_convolution
-    (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
+    (g : SpatialField Ns → ℝ) (_hg : MemLp g 1 volume)
     (s : 𝓢(EuclideanSpace ℝ (Fin Ns), ℝ)) (w : EuclideanSpace ℝ (Fin Ns)) :
     ((realConv volume (gEuclidean Ns g) s w : ℝ) : ℂ) =
       MeasureTheory.convolution (gEuclideanComplex Ns g)
@@ -971,6 +983,7 @@ private theorem realConvComplexLift_memLp_one
   rw [h_eq]
   exact memLp_one_iff_integrable.mpr h_int
 
+omit [NeZero Ns] in
 set_option maxHeartbeats 800000 in
 -- LHS coercion identification (heavy elaboration: chains 5 a.e. equalities).
 /-- LHS coercion: `(T_conv s.toLp 2 : ℝⁿ → ℂ) =ᵐ fun ξ => 𝓕 g_C ξ * 𝓕 s_C ξ`. -/
@@ -1003,6 +1016,7 @@ private theorem T_conv_apply_schwartz_coeFn_ae
     (F₁ := ℂ) hg_C_int hs_C_int hg_C_cont hs_C_cont ξ
   simpa [smul_eq_mul] using this
 
+omit [NeZero Ns] in
 set_option maxHeartbeats 800000 in
 -- RHS coercion identification.
 /-- RHS coercion: `(T_mul s.toLp 2 : ℝⁿ → ℂ) =ᵐ fun ξ => 𝓕 g_C ξ * 𝓕 s_C ξ`. -/
@@ -1030,6 +1044,7 @@ private theorem T_mul_apply_schwartz_coeFn_ae
   -- gHat Ns g w = 𝓕 (gEuclideanComplex Ns g) w  (rfl, since the casts agree).
   rfl
 
+omit [NeZero Ns] in
 /-- **Step 6**: the Schwartz base case `T_conv s = T_mul s` for the
 CLM-firewall density argument. -/
 private theorem T_conv_eq_T_mul_schwartz
@@ -1043,6 +1058,7 @@ private theorem T_conv_eq_T_mul_schwartz
     with w hL hR
   rw [hL]; exact hR.symm
 
+omit [NeZero Ns] in
 /-- **Step 7**: extend from Schwartz to all of `Lp ℝ 2` via Schwartz density.
 The CLMs `T_conv g hg` and `T_mul g hg` agree on the dense Schwartz subset
 (by step 6) and are both continuous, so `DenseRange.equalizer` gives the
@@ -1179,9 +1195,10 @@ private theorem fourierQuadFormComplex_eq_integral
     simpa [Complex.sq_norm, Complex.normSq_apply, sq, add_comm, add_left_comm, add_assoc] using
       (Complex.sq_norm ((h : Lp (α := EuclideanSpace ℝ (Fin Ns)) ℂ 2) w))
   rw [hnorm]
-  simp [RCLike.inner_apply, Complex.mul_re, Complex.conj_re, Complex.conj_im]
+  simp [RCLike.inner_apply]
   ring
 
+omit [NeZero Ns] in
 set_option maxHeartbeats 800000 in
 -- Gaussian Fourier integral convergence
 /-- The Fourier representation of the convolution quadratic form:
@@ -1346,6 +1363,7 @@ private theorem support_pos_of_ae_nonzero
   rw [ae_iff]
   exact h_zero
 
+omit [NeZero Ns] in
 theorem inner_convCLM_pos_of_fourier_pos
     (g : SpatialField Ns → ℝ) (hg : MemLp g 1 volume)
     (hg_cont : Continuous g)

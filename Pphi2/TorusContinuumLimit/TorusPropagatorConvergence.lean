@@ -40,6 +40,10 @@ import Lattice.Convergence
 
 noncomputable section
 
+-- `show` is used as an in-proof claim for clarity in the embedding-cancellation
+-- chain; switching to `change` would obscure the algebraic shape.
+set_option linter.style.show false
+
 open GaussianField MeasureTheory Filter NuclearTensorProduct
 
 namespace Pphi2
@@ -537,7 +541,6 @@ covariance evaluated on the original `evalTorusAtSite` test functions
 in `latticeCovarianceGJ` cancel exactly). The bare-CLM convergence
 theorem `lattice_green_tendsto_continuum` (proved in gaussian-field)
 then gives the result directly. -/
-
 theorem torus_propagator_convergence
     (mass : ℝ) (hmass : 0 < mass)
     (f g : TorusTestFunction L) :
