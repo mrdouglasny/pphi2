@@ -1,17 +1,17 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
-**Updated**: 2026-04-25
-**pphi2**: 19 axioms, 0 sorries (active build) | **gaussian-field**: 14 axioms, 0 sorries
+**Updated**: 2026-05-08
+**pphi2**: 15 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 4 axioms, 0 sorries
 
-Note: pphi2 count includes 2 private axioms (`fourier_representation_convolution`,
-`gaussian_rp_cov_perfect_square`).
+Note: pphi2 count includes 1 private axiom
+(`gaussian_rp_cov_perfect_square`).
 
 **2026-04-25**: `cylinderIR_uniform_second_moment` converted from axiom to
 **theorem** by deriving it from `cylinderIR_uniform_exponential_moment` via the
 elementary inequality `x² ≤ 2 e^|x|` and a scaling optimization. Statement now
 in additive form `C₁ q(f)² + C₂` (the form actually consumed by IR-tightness;
-the strict multiplicative form would require an extra a.s. argument). Net axiom
-count: 20 → 19.
+the strict multiplicative form would require an extra a.s. argument). This is a
+historical reduction; the current live counts are recorded above.
 
 ## Verification Sources
 
@@ -29,16 +29,43 @@ count: 20 → 19.
 
 ---
 
-## pphi2 Axioms (19 active)
+**2026-05-07**: `cylinderIR_os3` removed as an axiom. Route B′ now assumes the
+eventual pullback RP predicate `CylinderMeasureSequenceEventuallyReflectionPositive`
+and proves the IR-limit OS3 transfer by characteristic-functional convergence.
+This is part of the current live count: **15 pphi2 axioms, 0 sorries**.
 
-### Phase 1: Wick Ordering (1 active axiom, 1 proved)
+## Current pphi2 Axiom Inventory (15 active, 0 sorries)
+
+This table is generated from the current `./scripts/count_axioms.sh` result and
+is the source of truth for active pphi2 axioms in this audit.
+
+| File | Active axioms | Names |
+|------|---------------|-------|
+| `Pphi2/Bridge.lean` | 3 | `measure_determined_by_schwinger`, `schwinger_agreement`, `os2_from_phi4` |
+| `Pphi2/ContinuumLimit/AxiomInheritance.lean` | 3 | `continuum_exponential_moment_bound`, `canonical_continuumMeasure_cf_tendsto`, `continuum_exponential_clustering` |
+| `Pphi2/ContinuumLimit/Convergence.lean` | 1 | `continuumLimit_nonGaussian` |
+| `Pphi2/GaussianContinuumLimit/PropagatorConvergence.lean` | 1 | `latticeGreenBilinear_basis_tendsto_continuum` |
+| `Pphi2/Main.lean` | 1 | `pphi2_nontriviality` |
+| `Pphi2/OSProofs/OS2_WardIdentity.lean` | 1 | `rotation_cf_defect_polylog_bound` |
+| `Pphi2/OSProofs/OS3_RP_Lattice.lean` | 1 | `gaussian_rp_cov_perfect_square` (private) |
+| `Pphi2/OSProofs/OS4_MassGap.lean` | 2 | `two_point_clustering_from_spectral_gap`, `general_clustering_from_spectral_gap` |
+| `Pphi2/TransferMatrix/SpectralGap.lean` | 2 | `spectral_gap_uniform`, `spectral_gap_lower_bound` |
+| **Total** | **15** | |
+
+## Historical pphi2 Audit Notes
+
+The following thematic tables preserve prior review provenance. They include
+proved/deprecated rows and old numbering, so they are not a live count; use the
+inventory above for the current active axiom list.
+
+### Phase 1: Wick Ordering
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
 | 1 | ~~`wickMonomial_eq_hermite`~~ | WickPolynomial:113 | ✅ **PROVED** | SA 2026-02-24 | Via `wick_eq_hermiteR_rpow` from gaussian-field HermiteWick. |
 | 2 | `wickConstant_log_divergence` | Counterterm:146 | ✅ Standard | GR Group 5 | c_a ~ (2π)⁻¹ log(1/a). Standard lattice Green's function asymptotics. |
 
-### Phase 2: Transfer Matrix and RP (3 active axioms, 7 proved)
+### Phase 2: Transfer Matrix and RP
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
@@ -50,19 +77,19 @@ count: 20 → 19.
 | 7 | ~~`transferEigenvalue_pos`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | All eigenvalues > 0. Derived from Jentzsch theorem. |
 | 8 | ~~`transferEigenvalue_antitone`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | Eigenvalues decreasing. Derived from spectral ordering. |
 | 9 | ~~`transferEigenvalue_ground_simple`~~ | L2Operator | ✅ **PROVED** | GR Group 3 | λ₀ > λ₁. Derived from Jentzsch/Perron-Frobenius. |
-| 9a | ~~`gaussian_conv_strictlyPD`~~ | GaussianFourier | ✅ **PROVED** | SA 2026-02-27 | ⟨f, G⋆f⟩ > 0 for f ≠ 0. Proved from `inner_convCLM_pos_of_fourier_pos` (also proved) via `fourier_representation_convolution` axiom + `fourier_gaussian_pos` + Plancherel injectivity. |
-| 9b | `fourier_representation_convolution` | GaussianFourier | ✅ Standard | SA 2026-03-08 | ⟨f, g⋆f⟩ = ∫ Re(ĝ)·‖f̂‖². L² Fourier representation identity. Proof via Schwartz density (convolution theorem for integrable+continuous + Parseval). Blocked by L² convolution theorem not yet in Mathlib. Private axiom. Folland §8.3, Reed-Simon I §IX.4. |
+| 9a | ~~`gaussian_conv_strictlyPD`~~ | GaussianFourier | ✅ **PROVED** | SA 2026-02-27 | ⟨f, G⋆f⟩ > 0 for f ≠ 0. Proved from `inner_convCLM_pos_of_fourier_pos` (also proved) via the private theorem `fourier_representation_convolution` + `fourier_gaussian_pos` + Plancherel injectivity. |
+| 9b | ~~`fourierTransform_lp_eq_fourierIntegral`~~ | GaussianFourier | ✅ **PROVED** | SA 2026-05-08 | Textbook bridge identifying the Lp Fourier transform representative with the Fourier integral for `L¹ ∩ L²` functions. Proved via Mathlib's tempered-distribution Fourier compatibility, classical Fourier Fubini, and `ae_eq_of_integral_contDiff_smul_eq`. `fourier_representation_convolution` is now axiom-free inside `GaussianFourier`. |
 | 10 | ~~`action_decomposition`~~ | OS3_RP_Lattice | ✅ **PROVED** | GR Group 5 | S = S⁺ + S⁻ via `Fintype.sum_equiv` + `Involutive.toPerm`. |
 | 11 | `lattice_rp_matrix` | OS3_RP_Lattice | ⚠️ Likely correct | DT 2026-02-24 | RP matrix Σ cᵢc̄ⱼ ∫ cos(⟨φ, fᵢ-Θfⱼ⟩) dμ_a ≥ 0. Partial formalization: helper lemmas + `lattice_rp_matrix_reduction`; remaining gap is explicit trig/sum expansion identity. |
 
-### Phase 3: Spectral Gap (2 axioms)
+### Phase 3: Spectral Gap
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
 | 12 | `spectral_gap_uniform` | SpectralGap:134 | ⚠️ Correct for P(Φ)₂ | Gemini 2026-03-07 | ∃ m₀ > 0, gap(a) ≥ m₀ ∀a ≤ a₀. Glimm-Jaffe-Spencer. No phase transition in d=2 with m>0. |
 | 13 | `spectral_gap_lower_bound` | SpectralGap:145 | ⚠️ Correct for P(Φ)₂ | Gemini 2026-03-07 | gap ≥ c·mass. Correct in single-well regime (our InteractionPolynomial class). |
 
-### Phase 4: Continuum Limit (8 active axioms, 5 proved)
+### Phase 4: Continuum Limit
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
@@ -80,7 +107,7 @@ count: 20 → 19.
 | 22b | ~~`IsPphi2Limit`~~ | Embedding:271 | ✅ **DEFINED** | SA 2026-02-25 | Converted from axiom to `def`: ∃ (a, ν) with Schwinger function convergence. Mirrors `IsPphi2ContinuumLimit` in Bridge.lean. |
 | 22c | `pphi2_limit_exists` | Convergence | ⚠️ Likely correct | SA 2026-02-25 | ∃ μ `IsPphi2Limit`. Prokhorov + tightness + diagonal argument. Moved from OS2_WardIdentity to Convergence. |
 
-### Phase 4G: Gaussian Continuum Limit (1 axiom, 0 sorries)
+### Phase 4G: Gaussian Continuum Limit
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
@@ -90,14 +117,14 @@ count: 20 → 19.
 
 **Sorries (provable, not axioms):** none currently in the Gaussian continuum slice.
 
-### Phase 4T: Torus Continuum Limit (7 axioms)
+### Phase 4T: Torus Continuum Limit
 
 | # | Name | File | Rating | Verified | Notes |
 |---|------|------|--------|----------|-------|
 | T1 | `configuration_tight_of_uniform_second_moments` | TorusTightness | ✅ Standard | ✅ DT 2026-03-11: Mitoma (1983) + Chebyshev. Nuclearity essential (ℓ² counterexample). | Mitoma-Chebyshev criterion for nuclear Fréchet duals (`DyninMityaginSpace`). Uniform 2nd moments ⟹ tightness. |
 | ~~T2~~ | ~~`torusContinuumMeasures_tight`~~ | TorusTightness | ✅ **PROVED** | 2026-03-11 | From `configuration_tight_of_uniform_second_moments` + `torus_second_moment_uniform`. |
 
-### Phase 5: OS2 Ward Identity and downstream proof chain (4 active axioms)
+### Phase 5: OS2 Ward Identity and downstream proof chain
 
 The current branch splits the old OS2 / analytic-continuum chain across
 `OS2_WardIdentity`, `AxiomInheritance`, and `CharacteristicFunctional`.
@@ -130,7 +157,7 @@ inputs.
 - `os2_for_continuum_limit` (`OS2_WardIdentity`): translation + rotation → OS2_EuclideanInvariance
 - `os4_for_continuum_limit` (`AxiomInheritance`): exponential clustering → OS4_Clustering (**fully proved**)
 
-### Phase 6: Bridge (5 axioms)
+### Phase 6: Bridge
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|---------|
@@ -157,10 +184,10 @@ All four infrastructure axioms have been replaced with theorems.
 
 | Status | Count |
 |--------|-------|
-| Active axioms | 38 |
-| Proved/Defined (no longer axioms) | 19+ |
-| Verified (GR or DT) among active | 32+ |
-| Self-audit only / pending targeted re-review | 3+ |
+| Active axioms | 16 |
+| Sorries | 0 |
+| Private axioms among active | 2 |
+| Proved/Defined rows retained below for provenance | historical |
 
 Most active axioms verified by GR or DT.
 Current self-audit / pending targeted re-review items in the refactored Ward /
@@ -180,45 +207,18 @@ inheritance surface:
 
 ---
 
-## gaussian-field Axioms (25 active, 0 sorries — table below is partially stale)
+## gaussian-field Axioms (pinned Lake dependency: 4 active, 0 sorries)
 
-*Updated 2026-03-07. Current count per `count_axioms.sh`: 25 axioms, 0 sorries.*
+*Updated 2026-05-07. Current count per `./scripts/count_axioms.sh`, scanning
+`.lake/packages/GaussianField`: 4 axioms, 0 sorries.*
 
-| File | Axioms | Sorries | Verified | Notes |
-|------|--------|---------|----------|-------|
-| GaussianField/Density.lean | 2 | 0 | DT 2026-02-25 | Density bridge: `latticeGaussianMeasure_density_integral`, `integrable_mul_gaussianDensity`. NEW. |
-| GaussianField/Hypercontractive.lean | 1 | 0 | DT 2026-02-25 | `gaussian_moment_ratio_bound` — Gamma function inequality for 1D hypercontractivity. NEW. |
-| HeatKernel/PositionKernel.lean | 3 | 2 | GR Group 1 | Mehler formula, circle positivity, cylinder summability. (was 4; `cylinderHeatKernel_reproduces` restored as proved code) |
-| Lattice/FKG.lean | 9 | 0 | DT 2026-02-25 | 9 axioms: `ad_marginal_preservation_ae` (LIKELY CORRECT), 4 Fubini/integration axioms (CORRECT), 4 truncation axioms (CORRECT). All support FKG proof. |
-| Lattice/RapidDecayLattice.lean | 3 | 0 | GR Group 2 | Shell enumeration bounds, rapid decay equiv. |
-| **Total** | **18** | **2** | | |
-
-### New axiom details (DT 2026-02-25 review: 9 CORRECT, 1 LIKELY CORRECT)
-
-| # | Name | File | Rating | Notes |
-|---|------|------|--------|-------|
-| 1 | `gaussian_moment_ratio_bound` | Hypercontractive:152 | ✅ CORRECT | `E[Z^{pn}]^{1/p} ≤ (p-1)^{n/2} E[Z^{2n}]^{1/2}` for standard Normal. Sharp Bonami inequality. |
-| 2 | `latticeGaussianMeasure_density_integral` | Density:98 | ✅ CORRECT | Density bridge: abstract Gaussian measure ↔ Lebesgue integral with `gaussianDensity`. |
-| 3 | `integrable_mul_gaussianDensity` | Density:112 | ✅ CORRECT | Direct corollary of density bridge. |
-| 4 | `fubini_pi_decomp` | FKG:507 | ✅ CORRECT | Fubini for ℝ^ι = ℝ × ℝ^{ι\{i}}. |
-| 5 | `integrable_marginal` | FKG:514 | ✅ CORRECT | Fubini-Tonelli for nonneg integrable. |
-| 6 | `integrable_fiber_ae` | FKG:522 | ✅ CORRECT | Fiber integrable a.e. (Fubini). |
-| 7 | `integral_empty_pi` | FKG:529 | ✅ CORRECT | Base case: ∫ over ℝ^∅ = f(unique point). |
-| 8 | `ad_marginal_preservation_ae` | FKG:567 | ⚠️ LIKELY CORRECT | AD condition preserved by marginalization. Core induction step for FKG. |
-| 9 | `fkg_truncation_dct` | FKG:732 | ✅ CORRECT | DCT for truncation max(F,-n)→F. Domination: \|max(F,-n)\| ≤ \|F\|. |
-| 10 | `fkg_truncation_dct_prod` | FKG:739 | ✅ CORRECT | DCT for product truncation. |
-| 11 | `integrable_truncation_mul` | FKG:747 | ✅ CORRECT | Integrability of truncated F·ρ. |
-| 12 | `integrable_truncation_prod_mul` | FKG:752 | ✅ CORRECT | Integrability of truncated F·G·ρ. |
-
-### Lattice Convergence (added 2026-03-07)
-
-| # | Name | File | Rating | Notes |
-|---|------|------|--------|-------|
-| 13 | `lattice_covariance_pure_eq_2d_spectral` | Convergence:65 | ✅ Standard | BCCB circulant diagonalization: lattice covariance for pure tensors = explicit 2D DFT spectral sum. Davis, *Circulant Matrices*, Ch. 5. **(NOT VERIFIED)** |
-| 14 | `latticeDFTCoeff1d_quadratic_bound` | Convergence:85 | ✅ Standard | Uniform quadratic DFT coefficient decay via discrete summation by parts. Katznelson, *Harmonic Analysis*, §I.2. **(NOT VERIFIED)** |
-| 15 | `lattice_green_tendsto_continuum` | Convergence:363 | ⚠️ Likely correct | Bilinear extension from pure tensors to general elements. Follows from `lattice_green_tendsto_continuum_pure` (proved) + density + continuity. **(NOT VERIFIED)** |
-
-**Proved theorem**: `lattice_green_tendsto_continuum_pure` — convergence for pure tensors via Tannery's theorem (`tendsto_tsum_of_dominated_convergence`) on ℕ×ℕ. Uses `latticeEigenvalue1d_tendsto_continuum`, `latticeDFTCoeff1d_tendsto` (mode convergence), and `latticeDFTCoeff1d_quadratic_bound` (domination via `C/((1+m₁)⁴(1+m₂)⁴)`). Summability via shifted p-series (`Real.summable_one_div_nat_pow` + `Summable.comp_injective`) and product (`Summable.mul_of_nonneg`).
+| File | Axioms | Sorries | Notes |
+|------|--------|---------|-------|
+| `Cylinder/GreenFunction.lean` | 1 | 0 | Cylinder Green-function analytic input. |
+| `Cylinder/MethodOfImages.lean` | 1 | 0 | Method-of-images comparison used by Route B′ Green-moment transfer. |
+| `Cylinder/ReflectionPositivity.lean` | 1 | 0 | Cylinder reflection-positivity support. |
+| `SchwartzFourier/ResolventUniformBound.lean` | 1 | 0 | Uniform Fourier/resolvent bound. |
+| **Total** | **4** | **0** | |
 
 ---
 
@@ -368,9 +368,10 @@ The following were previously axioms and are now theorems:
 
 2. **`SatisfiesOS0134` unused**: The secondary OS bundle with Schwinger function formulation is dead code — not imported by `Main.lean`. The main theorem uses `SatisfiesFullOS` via `continuumLimit_satisfies_fullOS`.
 
-### Verification Summary (updated 2026-03-07)
+### Historical Verification Summary (updated 2026-03-07)
 
-All 42 active pphi2 axioms have been reviewed by Gemini.
+This table records the 2026-03-07 Gemini review snapshot. It is retained for
+provenance only and is not the current active axiom count.
 
 | Status | Count |
 |--------|-------|
@@ -378,7 +379,7 @@ All 42 active pphi2 axioms have been reviewed by Gemini.
 | ⚠️ Correct in intended regime | 5 (`spectral_gap_uniform`, `spectral_gap_lower_bound`, `continuum_exponential_clustering`, `os4_inheritance`, `torusPositiveTimeSubmodule`) |
 | ⚠️ Design note (not bug) | 2 (`torusLattice_rp` trivially true for odd N; `torusPositiveTimeSubmodule` should be def) |
 | ❌ Wrong | 0 |
-| **Total active** | **42** |
+| **Total in that historical snapshot** | **42** |
 
 Notes on ⚠️ axioms:
 - `spectral_gap_*` and downstream clustering axioms: Gemini flags potential issues
@@ -416,20 +417,21 @@ Notes on ⚠️ axioms:
 
 ---
 
-### Route B' IR Limit (7 axioms, added 2026-03-19)
+### Route B' IR Limit (former local axioms; now 0 local axioms)
 
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|-------|
-| 1 | `cylinderToTorusEmbed_comp_timeTranslation` | CylinderEmbedding:99 | ✅ Standard | ✅ Gemini (2026-03-19) | Periodization intertwines time translation. Reindexing sum over ℤ. |
-| 2 | `cylinderToTorusEmbed_comp_timeReflection` | CylinderEmbedding:106 | ✅ Standard | ✅ Gemini (2026-03-19) | Periodization intertwines time reflection. Reindex k → -k. |
-| 3 | ~~`cylinderIR_uniform_second_moment`~~ | UniformExponentialMoment.lean | ✅ **THEOREM** (2026-04-25) | — | Derived from axiom #4 via `x² ≤ 2 e^|x|` + scaling optimization. Statement now in additive form `C₁ q(f)² + C₂` (the form actually consumed by IR-tightness). |
-| 4 | `cylinderIR_uniform_exponential_moment` | UniformExponentialMoment:69 | ✅ Standard | ✅ Gemini (2026-03-19) | Nelson/Fröhlich + method of images. Sufficient for Vitali/Montel. |
-| 5 | `cylinderIRLimit_exists` | IRTightness:60 | ✅ Standard | ✅ Gemini (2026-03-19) | Mitoma tightness → Prokhorov → Lévy continuity. Char. functional convergence correct. |
-| 6 | `cylinderIR_os0` | CylinderOS:130 | ✅ Standard | ✅ Gemini (2026-03-19) | Uniform exp moments → Vitali/Montel → analyticity. |
-| 7 | `cylinderIR_os3` | CylinderOS:144 | ✅ Standard | ✅ Gemini (2026-03-19) | No wrap-around for Lt > 2R confirmed valid. Density of C_c^∞ confirmed. |
+| 1 | ~~`cylinderToTorusEmbed_comp_timeTranslation`~~ | CylinderEmbedding.lean | ✅ **THEOREM** | — | Periodization/embedding intertwines time translation; consumed by `cylinderPullback_timeTranslation_invariant`. |
+| 2 | ~~`cylinderToTorusEmbed_comp_timeReflection`~~ | CylinderEmbedding.lean | ✅ **THEOREM** | — | Periodization/embedding intertwines time reflection; consumed by `cylinderPullback_timeReflection_invariant`. |
+| 3 | ~~`cylinderIR_uniform_second_moment`~~ | UniformExponentialMoment.lean | ✅ **THEOREM** (2026-04-25) | — | Derived from exponential moments via `x² ≤ 2 e^|x|` + scaling optimization. Statement now in additive form `C₁ q(f)² + C₂` (the form actually consumed by IR-tightness). |
+| 4 | ~~`cylinderIR_uniform_exponential_moment`~~ | UniformExponentialMoment.lean | ✅ **THEOREM** (2026-05-04) | — | Derived from uniform `MeasureHasGreenMomentBound` via `cylinderPullback_expMoment_uniform_bound` and the method-of-images Green estimate. |
+| 5 | ~~`cylinderIRLimit_exists`~~ | IRTightness.lean | ✅ **THEOREM** (2026-05-07) | — | Mitoma-Chebyshev tightness → `prokhorov_configuration` bounded-continuous convergence; characteristic-functional convergence derived by cos/sin decomposition, not by an unformalized Lévy step. |
+| 6 | ~~`cylinderIR_os0`~~ | CylinderOS.lean | ✅ **THEOREM** (2026-05-07) | — | Limit exponential moments + `analyticOnNhd_integral`; no Route B′ Vitali/Montel axiom remains. |
+| 7 | ~~`cylinderIR_os3`~~ | CylinderOS.lean | ✅ **REMOVED** (2026-05-07) | — | Replaced by explicit `CylinderMeasureSequenceEventuallyReflectionPositive` input plus proved IR-limit transfer in `routeBPrime_cylinder_OS`. No-wrap/density work remains for proving that input for the concrete family. |
 
 **Gemini review notes (2026-03-19):**
-- All 7 axioms verified correct with no modifications needed.
+- Original Route B′ axiom statements verified correct; several entries above
+  have since been converted to theorems or conditional theorems.
 - The Re() in OS3 is redundant (M_{ij} is Hermitian so c†Mc is real) but harmless.
 - Characteristic functional convergence is the standard notion for nuclear spaces.
 - **UPDATE**: `cylinderToTorusEmbed_comp_timeTranslation` and `_comp_timeReflection`
@@ -517,14 +519,21 @@ Green-moment bound on the torus family to a uniform-in-Lt cylinder bound.
 ### Implication for Route B′ plan
 
 The `MomentBoundOS1.lean` infrastructure is correct and reusable. The
-hard work is still in front of us: proving (or axiomatizing at a cleaner
-level) the Lt-uniform `MeasureHasGreenMomentBound` for the concrete
-UV-limit family. This is comparable in difficulty to Route A's
-`spectral_gap_uniform`. Not a quick-session target.
+hard work remains proving (or axiomatizing at a cleaner level) the
+Lt-uniform `MeasureHasGreenMomentBound` for the concrete UV-limit family.
+This is comparable in difficulty to Route A's `spectral_gap_uniform`.
 
-The three existing IRLimit axioms
-(`cylinderIR_uniform_second_moment`,
-`cylinderIR_uniform_exponential_moment`, `cylinderIR_os3`) remain as
-the live axioms pending this deeper work.
+**2026-05-04 update:** `cylinderIR_uniform_exponential_moment` is now a
+theorem conditional on `MeasureHasGreenMomentBound`, and
+`cylinderIR_uniform_second_moment` remains derived from it. At sequence level
+the input is named `AsymTorusSequenceHasUniformGreenMomentBound` and is now an
+eventual `atTop` condition; the consumers combine it with `Lt → ∞` to obtain a
+tail where both the Green bound and `Lt ≥ 1` hold.
+
+**2026-05-07 update:** Route B′ has no local IRLimit axioms left. OS3 is
+transferred from the explicit eventual sequence-level input
+`CylinderMeasureSequenceEventuallyReflectionPositive`; the nonlocal obligations are
+proving that RP predicate and the Green-moment predicate for the concrete
+UV-limit family.
 
 **Audit Date**: 2026-03-19

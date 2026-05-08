@@ -16,7 +16,48 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-03): 18 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-08): pphi2 15 axioms, 0 sorries; pinned Lake GaussianField 4 axioms, 0 sorries.**
+
+Recent reduction (2026-05-08): `fourierTransform_lp_eq_fourierIntegral` in
+`TransferMatrix/GaussianFourier.lean` converted from private axiom to theorem.
+The proof uses Mathlib's tempered-distribution compatibility for the `L²`
+Fourier transform (`Lp.fourier_toTemperedDistribution_eq`), the classical
+Fubini identity for `VectorFourier.fourierIntegral`, and
+`ae_eq_of_integral_contDiff_smul_eq` to recover a.e. representative equality
+from equality against compactly supported smooth test functions. The
+convolution representation and Gaussian strict-positive-definiteness chain are
+now axiom-free inside `GaussianFourier.lean`.
+
+Recent reduction (2026-05-07): `cylinderIR_os3` in
+`IRLimit/CylinderOS.lean` removed as an axiom. The file now exposes the exact
+eventual sequence-level input `CylinderMeasureSequenceEventuallyReflectionPositive`
+and proves the OS3 matrix inequality for the IR limit from that input plus
+characteristic-functional convergence of the extracted subsequence. This keeps
+the real remaining obligation at the asymmetric-torus/pullback level instead
+of asserting RP for an arbitrary limit measure or full RP at each finite `Lt`.
+The bridge theorems `CylinderMeasureSequenceEventuallyReflectionPositive.of_forall`
+and `CylinderMeasureSequenceEventuallyReflectionPositive.of_eventually_full`
+convert stronger full-RP statements into the exact matrixwise eventual input.
+The same file now also proves
+`AsymTorusSequenceHasCylinderOS2Symmetry.of_torusOS`, so the narrowed OS2 input
+can be discharged from the existing `AsymSatisfiesTorusOS` bundle without
+silently consuming OS0/OS1 in the Route B′ transfer.
+
+Recent reduction (2026-05-04): `cylinderIR_uniform_exponential_moment`
+in `IRLimit/UniformExponentialMoment.lean` converted from axiom to theorem.
+It now derives the uniform cylinder exponential moment from the explicit
+uniform Green-controlled torus moment hypothesis
+`MeasureHasGreenMomentBound`, using the already-proved
+`cylinderPullback_expMoment_uniform_bound` method-of-images bridge. The IR
+limit and Route B′ assembly now carry this Green-moment hypothesis honestly
+instead of deriving it from the abstract `AsymSatisfiesTorusOS.os1` clause.
+The hypothesis is named
+`AsymTorusSequenceHasUniformGreenMomentBound` and is now genuinely eventual
+at `atTop`; consumers combine it with `Lt → ∞` to get a tail where `Lt ≥ 1`
+and the Green bound both hold. The bridge theorems
+`AsymTorusSequenceHasUniformGreenMomentBound.of_forall` and
+`AsymTorusSequenceHasUniformGreenMomentBound.of_forall_ge_one` convert stronger
+pointwise estimates into this exact eventual input.
 
 Recent reduction (2026-04-30, this PR): `cylinderIR_uniform_second_moment`
 in `IRLimit/UniformExponentialMoment.lean` converted from axiom to theorem,
@@ -98,10 +139,12 @@ translation continuity, lattice approximation error vanishing) were formerly
 axiomatized and are now fully proved theorems (2026-03-18).
 Extends Route B to T_{Lt,Ls} with different circle sizes per direction.
 
-**Other routes: ~50 axioms** (Routes A, C — not yet updated).
+The live project-wide count is the counter total above. Older route-specific
+estimates in historical sections below are retained only as provenance and are
+not a live axiom count.
 
-Note: Two axioms are `private`: `fourier_representation_convolution` (GaussianFourier)
-and `gaussian_rp_cov_perfect_square` (OS3_RP_Lattice).
+Note: One axiom is `private`: `gaussian_rp_cov_perfect_square`
+(OS3_RP_Lattice).
 `schwartz_riemann_sum_bound` (PropagatorConvergence) was proved via Schwartz decay +
 telescoping sum bound. The remaining Gaussian propagator debt is now isolated in the
 spectral axiom `latticeGreenBilinear_basis_tendsto_continuum`; `propagator_convergence`
@@ -125,8 +168,8 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 2 | `TransferMatrix/TransferMatrix.lean` | 0 axioms |
 | 2 | `TransferMatrix/L2Multiplication.lean` | 0 axioms (multiplication operator M_w) |
 | 2 | `TransferMatrix/L2Convolution.lean` | 0 axioms (Fubini identity proved) |
-| 2 | `TransferMatrix/L2Operator.lean` | 1 axiom (`integral_operator_l2_kernel_compact`); `hilbert_schmidt_isCompact` + `transferOperator_isCompact` proved |
-| 2 | `TransferMatrix/GaussianFourier.lean` | 1 private axiom (`fourier_representation_convolution`); `inner_convCLM_pos_of_fourier_pos` proved from axiom; `fourier_gaussian_pos` proved |
+| 2 | `TransferMatrix/L2Operator.lean` | 0 axioms; `integral_operator_l2_kernel_compact`, `hilbert_schmidt_isCompact`, and `transferOperator_isCompact` proved |
+| 2 | `TransferMatrix/GaussianFourier.lean` | 0 axioms; `fourierTransform_lp_eq_fourierIntegral`, `fourier_representation_convolution`, `inner_convCLM_pos_of_fourier_pos`, and `fourier_gaussian_pos` proved |
 | 2 | `TransferMatrix/Jentzsch.lean` | 0 axioms; Jentzsch + nontriviality + positivity-improving + strict PD all proved |
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 1 axiom (`gaussian_rp_cov_perfect_square`), 0 sorries |
@@ -181,10 +224,10 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | B'IR | `IRLimit/CylinderEmbedding.lean` | **0 axioms, 0 sorries** (intertwining proved via NTP pure tensor density) |
 | B'IR | `IRLimit/CovarianceConvergence.lean` | 0 axioms, 0 sorries (spectral decompositions, pullback measures, basis machinery) |
 | B'IR | `IRLimit/CovarianceConvergenceProof.lean` | 0 axioms, 0 sorries (exponential convergence rates, `asymTorusGreen_tendsto_physicalCylinderGreen`, `cylinderIRLimit_covariance_eq`) |
-| B'IR | `IRLimit/GreenFunctionComparison.lean` | 1 axiom, 0 sorries (uniform 2nd moment) |
-| B'IR | `IRLimit/UniformExponentialMoment.lean` | 1 axiom, 0 sorries (uniform exp moment) |
-| B'IR | `IRLimit/IRTightness.lean` | 0 axioms, 0 sorries (Prokhorov extraction proved) |
-| B'IR | `IRLimit/CylinderOS.lean` | 1 axiom, 0 sorries (OS3 axiomatized; OS0+OS2 proved) |
+| B'IR | `IRLimit/GreenFunctionComparison.lean` | 0 axioms, 0 sorries (pullback second-moment identities) |
+| B'IR | `IRLimit/UniformExponentialMoment.lean` | 0 axioms, 0 sorries (uniform exp moment conditional on Green-moment input; uniform second moment derived) |
+| B'IR | `IRLimit/IRTightness.lean` | 0 axioms, 0 sorries (Prokhorov extraction proved conditional on `AsymTorusSequenceHasUniformGreenMomentBound`) |
+| B'IR | `IRLimit/CylinderOS.lean` | 0 axioms, 0 sorries (OS3 transferred from `CylinderMeasureSequenceEventuallyReflectionPositive`; OS0+OS2 proved conditional on uniform Green-moment input) |
 
 ### Inactive files (old DDJ/stochastic quantization approach)
 
@@ -323,7 +366,12 @@ None — all sorries have been resolved.
 
 ---
 
-## Axiom inventory (all active files)
+## Axiom Work Log
+
+The live active axiom count is the `./scripts/count_axioms.sh` total at the top
+of this file. The tables below preserve proof-status provenance and may include
+proved, removed, or transitive dependency items; they are not a replacement for
+the live counter.
 
 ### Difficulty rating
 
@@ -349,14 +397,14 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 | ~~`integral_mul_conv_eq`~~ | L2Convolution | ✅ **Proved** | Fubini identity: `∫ h·(g⋆f) = ∫ (g⋆h)·f` for even g. Proved via product integrability (AM-GM + Tonelli + translation invariance), `integral_integral_swap`, `convolution_eq_swap`. |
 | ~~`transferOperator_isSelfAdjoint`~~ | L2Operator | ✅ **Proved** | Self-adjointness of `A ∘ B ∘ A` from `mulCLM_isSelfAdjoint` and `convCLM_isSelfAdjoint_of_even` for the Gaussian kernel. |
 | ~~`transferOperator_isCompact`~~ | L2Operator | ✅ **Proved** | Compactness from `hilbert_schmidt_isCompact` (proved) + `transferWeight_memLp_two` (w ∈ L²) + `transferGaussian_norm_le_one` (‖G‖ ≤ 1). |
-| `integral_operator_l2_kernel_compact` | L2Operator | Medium | Convolution-form integral operators with L² kernels are compact (Hilbert-Schmidt theorem). Reed-Simon I, Thm VI.23. |
+| ~~`integral_operator_l2_kernel_compact`~~ | L2Operator | ✅ **Proved** | Convolution-form integral operators with L² kernels are compact (Hilbert-Schmidt theorem). Proved in `Pphi2.GeneralResults.HilbertSchmidt` and re-exported here. Reed-Simon I, Thm VI.23. |
 | ~~`hilbert_schmidt_isCompact`~~ | L2Operator | ✅ **Proved** | Proved from `integral_operator_l2_kernel_compact` via `tensor_kernel_memLp` (Tonelli + ‖g‖²≤‖g‖ bound) + `mul_conv_integral_rep` (integral representation). |
 | `transferOperator_spectral` | L2Operator | **Proved** | Spectral decomposition from `compact_selfAdjoint_spectral` (gaussian-field). |
 | ~~`jentzsch_theorem`~~ | Jentzsch | ✅ **Proved** | Jentzsch's theorem for compact self-adjoint positivity-improving operators: ground eigenvalue simple with strict spectral gap. Reed-Simon IV, XIII.43–44. Full proof in `JentzschProof.lean`, bridge via `IsPositivityImproving.toPI'`. |
 | ~~`transferOperator_positivityImproving`~~ | Jentzsch | ✅ **Proved** | Transfer kernel K(ψ,ψ') = w(ψ)G(ψ-ψ')w(ψ') > 0 everywhere, so T maps nonneg nonzero f to a.e. strictly positive Tf. Proved via T = M_w ∘ Conv_G ∘ M_w factorization, Cauchy-Schwarz for L² integrability, measure-preserving translation, and `integral_pos_iff_support_of_nonneg_ae`. |
 | ~~`transferOperator_strictly_positive_definite`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ > 0 for f ≠ 0. Proved via self-adjointness of M_w (⟨f, M_w(Conv_G(M_w f))⟩ = ⟨M_w f, Conv_G(M_w f)⟩), injectivity of M_w (w > 0), and Gaussian convolution strict PD axiom. |
-| ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** | Convolution with Gaussian exp(-½‖·‖²) is strictly PD on L²: ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk > 0. Proved via Fourier representation axiom + `fourier_gaussian_pos` + Plancherel injectivity. |
-| `fourier_representation_convolution` | GaussianFourier | Medium | L² Fourier representation: ⟨f, g⋆f⟩ = ∫ Re(ĝ)·‖f̂‖². Proof via Schwartz density (`DenseRange.equalizer`): both sides continuous, agree on Schwartz by `Real.fourier_smul_convolution_eq` + Parseval. Blocked by L² convolution theorem not yet in Mathlib. |
+| ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** | Convolution with Gaussian exp(-½‖·‖²) is strictly PD on L²: ⟨f, Conv_G f⟩ = ∫ |f̂(k)|² Ĝ(k) dk > 0. Proved via the private theorem `fourier_representation_convolution` + `fourier_gaussian_pos` + Plancherel injectivity. |
+| ~~`fourierTransform_lp_eq_fourierIntegral`~~ | GaussianFourier | ✅ **Proved** | Lp/Fourier-integral representative bridge for `L¹ ∩ L²` functions, proved via Mathlib's tempered-distribution Fourier compatibility plus Fubini and `ae_eq_of_integral_contDiff_smul_eq`. |
 | ~~`l2SpatialField_hilbertBasis_nontrivial`~~ | Jentzsch | ✅ **Proved** | Any Hilbert basis of L²(ℝ^Ns) has ≥ 2 elements. Proved via indicator functions on disjoint balls + orthogonality. |
 | ~~`transferOperator_inner_nonneg`~~ | Jentzsch | ✅ **Proved** | ⟨f, Tf⟩ ≥ 0. Derived from strict PD (> 0 for f ≠ 0, = 0 for f = 0). |
 | ~~`transferOperator_eigenvalues_pos`~~ | Jentzsch | ✅ **Proved** | λᵢ > 0. From ⟨bᵢ, Tbᵢ⟩ = λᵢ‖bᵢ‖² > 0 by strict PD. |
@@ -747,7 +795,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `gaussian_rp_with_boundary_weight` | OS3_RP_Lattice | Core Gaussian RP: ∫ G·G∘Θ·w dμ_GFF ≥ 0. Gaussian Markov property. Glimm-Jaffe Ch. 6.1. |
 | ~~`transferOperator_isCompact`~~ | L2Operator | **PROVED** from `hilbert_schmidt_isCompact` (proved) + `transferWeight_memLp_two` + `transferGaussian_norm_le_one`. |
 | ~~`hilbert_schmidt_isCompact`~~ | L2Operator | **PROVED** from `integral_operator_l2_kernel_compact` + `tensor_kernel_memLp` + `mul_conv_integral_rep`. |
-| `integral_operator_l2_kernel_compact` | L2Operator | General HS theorem: convolution-form L² kernel integral operators are compact. Reed-Simon I, Thm VI.23. |
+| ~~`integral_operator_l2_kernel_compact`~~ | L2Operator | **PROVED** — general HS theorem for convolution-form L² kernel integral operators. Reed-Simon I, Thm VI.23. |
 | ~~`translation_invariance_continuum`~~ | OS2_WardIdentity | **Proved** — `tendsto_nhds_unique_of_eventuallyEq` from `cf_tendsto` + `lattice_inv`. |
 | `analyticOn_generatingFunctionalC` | CharacteristicFunctional | Analyticity of complex generating functional from exponential moments via Morera. |
 | `continuum_exponential_moment_bound` | AxiomInheritance | Mixed `L¹`/Green exponential-moment input `∫ exp(|ω f|) ≤ exp(c₁∫|f| + c₂ G(f,f))` for OS0 + OS1. |
@@ -759,8 +807,8 @@ infrastructure. Assessment date: 2026-03-04.
 
 | Axiom | File | Strategy |
 |-------|------|----------|
-| ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** from `fourier_representation_convolution` axiom. |
-| `fourier_representation_convolution` | GaussianFourier | L² Fourier representation identity. Schwartz density + L² convolution theorem (not yet in Mathlib). |
+| ~~`inner_convCLM_pos_of_fourier_pos`~~ | GaussianFourier | ✅ **Proved** from the private theorem `fourier_representation_convolution`. |
+| ~~`fourierTransform_lp_eq_fourierIntegral`~~ | GaussianFourier | ✅ **Proved** via the tempered-distribution bridge for `Lp.fourierTransformₗᵢ`, classical Fourier Fubini, and a.e. equality from compactly supported smooth tests. |
 | `latticeGreenBilinear_basis_tendsto_continuum` | PropagatorConvergence | Spectral lattice Green bilinear on Dynin-Mityagin basis pairs → continuum Fourier Green bilinear on ℝ^d. Extend to all test functions by bilinear continuity. |
 | `os4_inheritance` | AxiomInheritance | Exponential clustering survives weak limits. Uniform spectral gap + weak convergence. |
 | `rotation_cf_defect_polylog_bound` | OS2_WardIdentity | Minimal remaining OS2 axiom: polynomial-log `a²` bound for the canonical CF defect `rotationCFDefect`, uniform in the lattice size `N`. |
@@ -799,7 +847,7 @@ infrastructure. Assessment date: 2026-03-04.
 
 1. **Easy wins**: `weakLimit_centered_gaussianReal`, `torus_propagator_convergence`, `latticeMeasure_translation_invariant`
 2. **Torus infrastructure**: `torusLimit_covariance_eq`, `gaussian_measure_unique_of_covariance`, `torusContinuumMeasures_tight`, `torusLattice_rp`
-3. **Transfer matrix**: `integral_operator_l2_kernel_compact` — general HS theorem (Reed-Simon I, Thm VI.23); `hilbert_schmidt_isCompact` **proved** from it
+3. **Transfer matrix**: `fourierTransform_lp_eq_fourierIntegral`, `integral_operator_l2_kernel_compact`, and `hilbert_schmidt_isCompact` are proved
 4. **OS inheritance**: `gaussian_rp_with_boundary_weight`, `os3_inheritance`, `os0_inheritance` — fills the RP chain
 5. **Hard analysis**: spectral gap, clustering, exponential moments — the deep results
 
@@ -807,14 +855,8 @@ infrastructure. Assessment date: 2026-03-04.
 
 ## Upstream: gaussian-field
 
-The gaussian-field library (dependency) has **14 axioms, 0 sorries**.
-- `GaussianField/Properties.lean`: 1 axiom (`measure_unique_of_charFun`)
-- `GaussianField/Support.lean`: 2 axioms (`not_supported_of_not_hilbertSchmidt`, `supportHilbertSpace_exists`)
-- `HeatKernel/PositionKernel.lean`: 1 axiom (`mehlerKernel_eq_series`)
-- `HeatKernel/GreenInvariance.lean`: 0 axioms (all 3 proved via pure tensor extension)
-- `Torus/Restriction.lean`: 0 axioms (PolishSpace axioms removed as incorrect)
-- `SmoothCircle/FourierTranslation.lean`: 0 axioms (all 6 proved)
-- `Nuclear/TensorProductFunctorAxioms.lean`: 6 axioms (tensor product functor)
-- `Lattice/Convergence.lean`: 2 axioms (`lattice_covariance_pure_eq_2d_spectral`, `lattice_green_tendsto_continuum`)
-- `Lattice/HeatKernelConvergence1d.lean`: 0 axioms (spectral expansion proved via matrix exponential)
-See [gaussian-field status](../gaussian-field/status.md) for the full inventory.
+The pinned Lake `GaussianField` dependency has **4 axioms, 0 sorries**:
+- `Cylinder/GreenFunction.lean`: 1 axiom
+- `Cylinder/MethodOfImages.lean`: 1 axiom
+- `Cylinder/ReflectionPositivity.lean`: 1 axiom
+- `SchwartzFourier/ResolventUniformBound.lean`: 1 axiom

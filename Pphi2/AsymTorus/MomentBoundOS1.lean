@@ -11,9 +11,8 @@ with a bound controlled by the torus Green's function `asymTorusContinuumGreen`:
   `∫ exp(|ω f|) dμ ≤ K · exp(C · G_Lt(f, f))`.
 
 The abstract OS1 form is too weak to yield the uniform-in-`Lt` cylinder
-bounds required by the Route B′ IR-limit axioms
-(`cylinderIR_uniform_second_moment`, `cylinderIR_uniform_exponential_moment`,
-`cylinderIR_os3`): it allows `q_torus` to be any continuous function, including
+bounds required by Route B′ tightness and OS0:
+it allows `q_torus` to be any continuous function, including
 ones with explicit `Lt` growth. The Green-bounded form combines cleanly with
 `torusGreen_uniform_bound` (from gaussian-field) to give the uniform cylinder
 bound after pullback.

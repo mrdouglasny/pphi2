@@ -3,11 +3,8 @@
 Three live routes + one preserved route. All share the interacting-measure
 framework `dμ_V = (1/Z) exp(-V) dμ_free` (`InteractingMeasure/General.lean`).
 
-**Current state** (`scripts/count_axioms.sh`, 2026-05-03):
-**pphi2 total: 18 axioms, 0 sorries. gaussian-field: 2 axioms, 1 sorry**
-(per pphi2's currently-pinned gaussian-field SHA; the upstream
-gaussian-field origin/main has since moved further — see
-`gaussian-field/status.md` for its current standalone counts).
+**Current state** (`scripts/count_axioms.sh`, 2026-05-08):
+**pphi2 total: 15 axioms, 0 sorries. pinned Lake GaussianField: 4 axioms, 0 sorries.**
 
 Recent reductions:
 
@@ -16,17 +13,19 @@ Recent reductions:
   fully-proved theorem in `Pphi2/GeneralResults/HilbertSchmidt.lean`.
   Downstream `transferOperator_isCompact` axiom footprint reduced to just
   `[propext, Classical.choice, Quot.sound]`.
-* 2026-04-30 (this branch): `fourier_representation_convolution` (Fourier
-  identity for the convolution quadratic form) discharged as theorem in
-  `Pphi2/TransferMatrix/GaussianFourier.lean`, replaced by one cited
-  textbook axiom `fourierTransform_lp_eq_fourierIntegral` (Folland §8.3 /
-  Reed-Simon I §IX.4 — the L¹∩L² Plancherel agreement that Mathlib doesn't
-  yet package).
+* 2026-05-08: `fourierTransform_lp_eq_fourierIntegral` discharged as theorem
+  in `Pphi2/TransferMatrix/GaussianFourier.lean` via Mathlib's
+  tempered-distribution Fourier compatibility, the classical Fourier Fubini
+  identity, and equality of locally integrable functions from compactly
+  supported smooth tests. The convolution quadratic-form identity
+  `fourier_representation_convolution` is therefore axiom-free inside
+  `GaussianFourier.lean`.
 * 2026-04-30 (PR #11, merged main): `cylinderIR_uniform_second_moment`
   converted from axiom to theorem.
 
-Net: Transfer-matrix cluster 4 → 2 axioms (this branch). Route B′
-cylinder IR limit 3 → 2 axioms (PR #11). Total pphi2 axioms 22 → 18.
+Net: Transfer-matrix cluster 4 → 2 axioms after the Hilbert-Schmidt/Fourier
+work, and Route B′ cylinder IR limit 3 → 0 local axioms. Total pphi2 axioms
+22 → 15.
 
 ---
 
@@ -126,7 +125,10 @@ the template for porting tightness to Route A (`continuumMeasures_tight`).
 **Spacetime:** S¹_Ls × ℝ (spatial circle × Euclidean time line).
 
 **Main theorem (target):** `routeBPrime_cylinder_OS` (`IRLimit/CylinderOS.lean`) —
-structurally assembled, conditional on 3 IR-limit axioms.
+structurally assembled with 0 local IR-limit axioms, conditional on explicit
+family-level inputs: the eventual Green-moment bound
+`AsymTorusSequenceHasUniformGreenMomentBound` and eventual pullback RP
+`CylinderMeasureSequenceEventuallyReflectionPositive`.
 
 ### Pipeline
 
@@ -149,9 +151,9 @@ structurally assembled, conditional on 3 IR-limit axioms.
 | `IRLimit/CovarianceConvergence*.lean` | 0 | 0 |
 | `IRLimit/IRTightness.lean` | 0 | 0 |
 | `IRLimit/GreenFunctionComparison.lean` | 0 | 0 |
-| `IRLimit/UniformExponentialMoment.lean` | **1** (`cylinderIR_uniform_exponential_moment`; `cylinderIR_uniform_second_moment` derived as theorem 2026-04-25) | 0 |
-| `IRLimit/CylinderOS.lean` | **1** (`cylinderIR_os3`) | 0 |
-| **Route B′ total** | **2** | **0** |
+| `IRLimit/UniformExponentialMoment.lean` | **0** (`cylinderIR_uniform_exponential_moment` derived from uniform Green-moment input; `cylinderIR_uniform_second_moment` derived as theorem 2026-04-25) | 0 |
+| `IRLimit/CylinderOS.lean` | **0** (OS3 transfer from `CylinderMeasureSequenceEventuallyReflectionPositive`) | 0 |
+| **Route B′ total** | **0** | **0** |
 
 ### OS axioms
 
@@ -161,42 +163,48 @@ structurally assembled, conditional on 3 IR-limit axioms.
 | OS2 time translation | **proved** | periodization intertwines shifts exactly |
 | OS2 time reflection | **proved** | periodization + torus time-reflection invariance |
 | OS2 spatial translation | **proved** | inherited from torus spatial invariance |
-| OS3 reflection positivity | **1 axiom** (`cylinderIR_os3`) | compactly-supported positive-time test functions + torus RP at finite Lt + density |
+| OS3 reflection positivity | **proved conditional** | eventual pullback RP + characteristic-functional convergence |
 
-### Remaining axioms — proof routes
+### Remaining external inputs — proof routes
 
 - ~~**`cylinderIR_uniform_second_moment`**~~ — **converted to theorem 2026-04-25**
   in `UniformExponentialMoment.lean`, deriving from
   `cylinderIR_uniform_exponential_moment` via the elementary inequality
   `x² ≤ 2 e^|x|` and a scaling optimization. Statement now in additive form
   `C₁ q(f)² + C₂` (the form actually consumed by IR-tightness).
-- **`cylinderIR_uniform_exponential_moment`** (`UniformExponentialMoment.lean:69`):
-  `∫ exp(|ωf|) dν_Lt ≤ K·exp(C·q(f)²)` uniformly in Lt ≥ 1. Needed for OS0 and OS1.
-  Proof chain:
-  - `AsymSatisfiesTorusOS.os1` provides the torus exponential-moment bound.
-  - Method-of-images bound `‖embed f‖ ≤ C·q(f)` uniformly in Lt.
-  - Compose: pullback + density transfer + method-of-images.
-  - Difficulty: parallel to the second-moment case.
-- **`cylinderIR_os3`** (`CylinderOS.lean:294`):
-  RP of the IR-limit cylinder measure. Proof strategy (see docstring):
+- ~~**`cylinderIR_uniform_exponential_moment`**~~ — **converted to theorem 2026-05-04**
+  in `UniformExponentialMoment.lean`, conditional on
+  `MeasureHasGreenMomentBound` for each measure. At sequence level this is
+  tracked by `AsymTorusSequenceHasUniformGreenMomentBound`, an eventual
+  `atTop` condition. Consumers combine it with `Lt → ∞` to get the
+  `Lt ≥ 1` tail needed by the method-of-images theorem. The proof composes
+  `cylinderPullback_expMoment_uniform_bound` with the method-of-images Green
+  estimate, keeping the remaining volume-uniform analytic input explicit.
+- ~~**`cylinderIR_os3`**~~ — **removed 2026-05-07**. `CylinderOS.lean`
+  now defines `CylinderMeasureSequenceEventuallyReflectionPositive` and proves
+  the IR-limit OS3 matrix inequality from that eventual pullback RP input plus
+  characteristic-functional convergence. Full-RP statements imply this exact
+  input via `CylinderMeasureSequenceEventuallyReflectionPositive.of_forall` or
+  `CylinderMeasureSequenceEventuallyReflectionPositive.of_eventually_full`.
+  Remaining proof strategy for that input:
   1. At finite Lt and for `f ∈ C_c^∞((0, Lt/2) × S¹_Ls)`, `embed f` has no wrap-around;
      the torus measure satisfies RP across t = 0 (proved via the asymmetric-torus OS3
      construction, if/when that's completed for AsymTorus — see note below).
   2. Under the cylinder pullback `cylinderPullbackMeasure`, RP transfers exactly at
      each finite Lt (no loss).
-  3. RP is closed under weak limits (standard: matrix entries are bounded continuous
-     in ω, so RP passes through Prokhorov extraction).
-  4. Density of `C_c^∞((0, Lt/2) × S¹_Ls)` in `cylinderPositiveTimeSubmodule` in
+  3. Density of `C_c^∞((0, Lt/2) × S¹_Ls)` in `cylinderPositiveTimeSubmodule` in
      the relevant Schwartz topology extends RP to all positive-time Schwartz test
      functions.
-  - Difficulty: largest of the three; requires establishing RP on AsymTorus first.
+  - The weak-limit transfer step is now formalized in `routeBPrime_cylinder_OS`.
+  - Difficulty: requires establishing RP on AsymTorus/pullbacks first.
 
 ### Note: AsymTorus OS3 status
 `AsymSatisfiesTorusOS` currently bundles OS0, OS1, OS2-translation,
-OS2-time-reflection — but **not** OS3. To prove `cylinderIR_os3`, step 1 of the
-proof route above requires extending `AsymSatisfiesTorusOS` with a compactly-supported
-OS3 clause (or a separate theorem on compactly-supported test functions with no
-wrap-around). This extension is a prerequisite for Route B′ completion.
+OS2-time-reflection — but **not** OS3. To discharge
+`CylinderMeasureSequenceEventuallyReflectionPositive` for the concrete family,
+one still needs either a compactly-supported asymmetric-torus OS3 theorem with
+no wrap-around plus density, or a direct eventual theorem for the cylinder
+pullback sequence.
 
 ---
 
@@ -222,8 +230,9 @@ Connects Pphi2 and Phi4 constructions. Separate workstream from Route A's main t
 - `os2_from_phi4`
 
 ### Upstream gaussian-field
-**2 axioms, 3 sorries.** Cylinder Green-function, method-of-images, and
-Schwartz-nuclear-extension infrastructure. See `../gaussian-field/status.md`.
+Not counted in this checkout: the local counter reports that it cannot see a
+sibling `../gaussian-field` tree. Cylinder Green-function, method-of-images,
+and Schwartz-nuclear-extension infrastructure remain upstream concerns.
 
 ---
 
@@ -233,15 +242,14 @@ Schwartz-nuclear-extension infrastructure. See `../gaussian-field/status.md`.
 |-------|--------|---------|
 | Route A (main line, ex-Bridge) | 13 | 0 |
 | Route B (torus UV) | 0 | 0 |
-| Route B′ (cylinder IR limit) | 2 | 0 |
+| Route B′ (cylinder IR limit) | 0 | 0 |
 | Bridge (cross-formulation) | 3 | 0 |
-| **pphi2 total** | **18** | **0** |
-| gaussian-field (upstream, pphi2-pinned) | 2 | 3 |
+| **pphi2 total** | **16** | **0** |
+| pinned Lake `GaussianField` dependency | 4 | 0 |
 
-Route B is the "done" route. Route B′ is structurally clear (its 2
-axioms have documented proof routes). Route A's transfer-matrix
-cluster lost `fourier_representation_convolution` and
-`integral_operator_l2_kernel_compact` (this PR) — only the cited
-textbook bridge axiom `fourierTransform_lp_eq_fourierIntegral` remains
-on the L²-convolution side, waiting for upstream Mathlib's L¹∩L²
-Plancherel-agreement lemma.
+Route B is the "done" route. Route B′ now has no local IR-limit axioms, but
+remains conditional on explicit family-level Green-moment and eventual RP
+inputs. Route A's transfer-matrix cluster lost `integral_operator_l2_kernel_compact`
+and the Fourier/convolution footprint in `GaussianFourier.lean`; the
+`L¹∩L²` Plancherel representative bridge is now proved from pinned Mathlib's
+tempered-distribution Fourier API.

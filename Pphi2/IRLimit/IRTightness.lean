@@ -10,10 +10,11 @@ extracts a convergent subsequence via Prokhorov's theorem.
 The structure follows `AsymTorusInteractingLimit.lean` exactly:
 uniform second moments → Mitoma-Chebyshev → tightness → Prokhorov.
 
-## Main results
+## Main result
 
-- `cylinderIR_tight` — the family of pulled-back measures is tight
-- `cylinderIRLimit_exists` — existence of the IR limit measure
+- `cylinderIRLimit_exists` — existence of an IR-limit subsequence, conditional
+  on the explicit eventual Green-controlled moment input
+  `AsymTorusSequenceHasUniformGreenMomentBound`.
 
 ## References
 
@@ -23,7 +24,6 @@ uniform second moments → Mitoma-Chebyshev → tightness → Prokhorov.
 
 import Pphi2.IRLimit.GreenFunctionComparison
 import Pphi2.IRLimit.UniformExponentialMoment
-import Pphi2.AsymTorus.AsymTorusOS
 import GaussianField.Tightness
 import GaussianField.ConfigurationEmbedding
 
@@ -34,6 +34,46 @@ namespace Pphi2
 open GaussianField MeasureTheory Filter
 
 variable (Ls : ℝ) [hLs : Fact (0 < Ls)]
+
+/-! ## Uniform Green-moment input for the IR family -/
+
+/-- The remaining volume-uniform analytic input for Route B′.
+
+Eventually, every asymmetric-torus measure in the family has the
+Green-controlled exponential moment bound with the same constants `KG, CG`.
+This is the precise tail hypothesis needed for cylinder tightness and OS0; the
+finite initial segment is irrelevant to the IR limit and is therefore not
+included in the predicate. The separate assumption `Lt → ∞` supplies `Lt ≥ 1`
+on a tail when consumers need the method-of-images bound. -/
+def AsymTorusSequenceHasUniformGreenMomentBound
+    (mass : ℝ) (hmass : 0 < mass) (KG CG : ℝ)
+    (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
+    (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls))) : Prop :=
+  ∀ᶠ n in atTop,
+    @MeasureHasGreenMomentBound Ls _ (Lt n) (hLt n) mass hmass KG CG (μ n)
+
+/-- A pointwise Green-moment bound is, in particular, the eventual sequence
+input used by the IR-limit tightness theorem. -/
+theorem AsymTorusSequenceHasUniformGreenMomentBound.of_forall
+    (mass : ℝ) (hmass : 0 < mass) (KG CG : ℝ)
+    (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
+    (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls)))
+    (h : ∀ n,
+      @MeasureHasGreenMomentBound Ls _ (Lt n) (hLt n) mass hmass KG CG (μ n)) :
+    AsymTorusSequenceHasUniformGreenMomentBound Ls mass hmass KG CG Lt hLt μ :=
+  Filter.Eventually.of_forall h
+
+/-- The previous stronger `Lt ≥ 1`-indexed shape implies the honest eventual
+Green-moment input once the periods tend to infinity. -/
+theorem AsymTorusSequenceHasUniformGreenMomentBound.of_forall_ge_one
+    (mass : ℝ) (hmass : 0 < mass) (KG CG : ℝ)
+    (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
+    (hLt_tend : Tendsto Lt atTop atTop)
+    (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls)))
+    (h : ∀ n, 1 ≤ Lt n →
+      @MeasureHasGreenMomentBound Ls _ (Lt n) (hLt n) mass hmass KG CG (μ n)) :
+    AsymTorusSequenceHasUniformGreenMomentBound Ls mass hmass KG CG Lt hLt μ :=
+  (tendsto_atTop.1 hLt_tend 1).mono h
 
 private lemma cylinderExpEval_integrable
     (μ : Measure (Configuration (CylinderTestFunction Ls)))
@@ -66,36 +106,39 @@ private lemma cylinderExpIntegral_im_eq_integral_sin
 
 /-! ## IR Limit Existence
 
-Given a sequence of time periods `Lt_n → ∞` and for each one an interacting
-measure `μ_n` on `AsymTorusTestFunction Lt_n Ls` satisfying OS0–OS2 (from
-the UV limit), the pulled-back cylinder measures are tight and have a
-convergent subsequence. -/
+Given a sequence of time periods `Lt_n → ∞` and measures `μ_n` on
+`AsymTorusTestFunction Lt_n Ls` satisfying the explicit eventual Green-moment
+input, the pulled-back cylinder measures are tight and have a convergent
+subsequence. -/
 
 /-- The IR limit measure on the cylinder S¹_{Ls} × ℝ exists.
 
-Given a sequence of time periods `Lt : ℕ → ℝ` with `Lt n → ∞` and
-interacting measures `μ_n` on the corresponding asymmetric tori, the
-pulled-back cylinder measures `cylinderPullbackMeasure (Lt n) Ls (μ n)`
-have a weakly convergent subsequence.
+Given a sequence of time periods `Lt : ℕ → ℝ` with `Lt n → ∞`, measures `μ_n`
+on the corresponding asymmetric tori, and an eventual Green-controlled
+exponential moment bound, the pulled-back cylinder measures
+`cylinderPullbackMeasure (Lt n) Ls (μ n)` have a weakly convergent subsequence.
 
 **Proof sketch**:
 1. Uniform second moment bound (from `cylinderIR_uniform_second_moment`)
 2. Mitoma-Chebyshev tightness criterion (from gaussian-field)
-3. Prokhorov's theorem (Polish space + tight → subsequential limit)
+3. `prokhorov_configuration` (tightness → subsequential bounded-continuous
+   convergence on configuration space)
 
 The limit is a probability measure on `Configuration (CylinderTestFunction Ls)`.
 
-Convergence is stated for the **characteristic functional** (not just
-first moments), since this is what's needed for OS axiom transfer. By
-the Lévy continuity theorem on nuclear spaces, characteristic functional
-convergence is equivalent to weak convergence. -/
+Convergence is stated both as bounded-continuous convergence and as
+characteristic-functional convergence, since the latter is what the OS axiom
+transfer consumes. The characteristic-functional convergence is derived from
+bounded-continuous convergence by the proved cos/sin decomposition below, not
+by invoking an unformalized Lévy-continuity theorem. -/
 theorem cylinderIRLimit_exists
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (mass : ℝ) (hmass : 0 < mass)
+    (KG CG : ℝ) (hKG_pos : 0 < KG) (hCG_pos : 0 < CG)
     (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
     (hLt_tend : Tendsto Lt atTop atTop)
     (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls)))
     (hμ_prob : ∀ n, IsProbabilityMeasure (μ n))
-    (hμ_os : ∀ n, @AsymSatisfiesTorusOS (Lt n) Ls _ _ (μ n) (hμ_prob n)) :
+    (hμ_green : AsymTorusSequenceHasUniformGreenMomentBound Ls mass hmass KG CG Lt hLt μ) :
     ∃ (φ : ℕ → ℕ) (ν : Measure (Configuration (CylinderTestFunction Ls))),
     StrictMono φ ∧ IsProbabilityMeasure ν ∧
     -- Bounded-continuous convergence (full weak convergence)
@@ -111,13 +154,20 @@ theorem cylinderIRLimit_exists
         ∂(cylinderPullbackMeasure (Lt (φ n)) Ls (μ (φ n))))
       atTop (nhds (∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν))) := by
   -- Step 1: Uniform second moment bound from cylinderIR_uniform_second_moment
-  -- (additive form `C₁ q(f)² + C₂`, derived from the exp-moment axiom)
+  -- (additive form `C₁ q(f)² + C₂`, derived from the Green-moment input)
   obtain ⟨C₁, C₂, q, hC₁, hC₂, hq_cont, h_moment⟩ :=
-    cylinderIR_uniform_second_moment Ls P mass hmass
+    cylinderIR_uniform_second_moment Ls mass hmass KG CG hKG_pos hCG_pos
   obtain ⟨K, Cexp, qexp, hK_pos, hCexp_pos, hqexp_cont, h_exp⟩ :=
-    cylinderIR_uniform_exponential_moment Ls P mass hmass
+    cylinderIR_uniform_exponential_moment Ls mass hmass KG CG hKG_pos hCG_pos
   have hLt_ge_one : ∀ᶠ n in atTop, 1 ≤ Lt n := tendsto_atTop.1 hLt_tend 1
-  rcases (eventually_atTop.1 hLt_ge_one) with ⟨N0, hN0⟩
+  have h_green_tail : ∀ᶠ n in atTop,
+      @MeasureHasGreenMomentBound Ls _ (Lt n) (hLt n) mass hmass KG CG (μ n) := by
+    simpa [AsymTorusSequenceHasUniformGreenMomentBound] using hμ_green
+  have h_tail : ∀ᶠ n in atTop,
+      1 ≤ Lt n ∧
+        @MeasureHasGreenMomentBound Ls _ (Lt n) (hLt n) mass hmass KG CG (μ n) :=
+    hLt_ge_one.and h_green_tail
+  rcases (eventually_atTop.1 h_tail) with ⟨N0, hN0⟩
   let νseq : ℕ → Measure (Configuration (CylinderTestFunction Ls)) := fun n =>
     cylinderPullbackMeasure (Lt (n + N0)) Ls (μ (n + N0))
   have hν_prob : ∀ n, IsProbabilityMeasure (νseq n) := by
@@ -133,13 +183,14 @@ theorem cylinderIRLimit_exists
       ∀ (f : CylinderTestFunction Ls) (n : ℕ),
         Integrable (fun ω : Configuration (CylinderTestFunction Ls) => (ω f) ^ 2) (νseq n) := by
     intro f n
+    have htail_n := hN0 (n + N0) (Nat.le_add_left _ _)
     haveI : Fact (0 < Lt (n + N0)) := hLt (n + N0)
     haveI : IsProbabilityMeasure (μ (n + N0)) := hμ_prob (n + N0)
     have h_exp_int :
         Integrable (fun ω : Configuration (CylinderTestFunction Ls) =>
           Real.exp (|ω ((2 : ℝ) • f)|)) (νseq n) :=
-      (h_exp (Lt (n + N0)) (hN0 (n + N0) (Nat.le_add_left _ _))
-        (μ (n + N0)) (hμ_os (n + N0)) ((2 : ℝ) • f)).1
+      (h_exp (Lt (n + N0)) htail_n.1
+        (μ (n + N0)) htail_n.2 ((2 : ℝ) • f)).1
     refine h_exp_int.mono'
       (((configuration_eval_measurable f).pow_const 2).aestronglyMeasurable)
       (ae_of_all _ fun ω => ?_)
@@ -163,11 +214,12 @@ theorem cylinderIRLimit_exists
         ∫ ω : Configuration (CylinderTestFunction Ls), (ω f) ^ 2 ∂(νseq n) ≤ C' := by
     intro f
     refine ⟨C₁ * q f ^ 2 + C₂, fun n => ?_⟩
+    have htail_n := hN0 (n + N0) (Nat.le_add_left _ _)
     haveI : Fact (0 < Lt (n + N0)) := hLt (n + N0)
     haveI : IsProbabilityMeasure (μ (n + N0)) := hμ_prob (n + N0)
     simpa [νseq] using
-      (h_moment (Lt (n + N0)) (hN0 (n + N0) (Nat.le_add_left _ _))
-        (μ (n + N0)) (hμ_os (n + N0)) f).2
+      (h_moment (Lt (n + N0)) htail_n.1
+        (μ (n + N0)) htail_n.2 f).2
   have hν_tight : ∀ ε : ℝ, 0 < ε →
       ∃ K : Set (Configuration (CylinderTestFunction Ls)), IsCompact K ∧
         ∀ n, 1 - ε ≤ ((νseq n) K).toReal := by

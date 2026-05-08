@@ -8,8 +8,8 @@
 Formalizes the transfer matrix as a bounded linear operator on $L^2(\mathbb{R}^{N_s})$ via the kernel factorization $T = M_w \circ \mathrm{Conv}_G \circ M_w$, where $w(\psi) = e^{-(a/2)h(\psi)}$ and $G(x) = e^{-\frac{1}{2}\|x\|^2}$. Proves self-adjointness, compactness (Hilbert-Schmidt), and obtains the spectral decomposition from the compact self-adjoint spectral theorem.
 
 ## Status
-**Main result**: 1 axiom (`integral_operator_l2_kernel_compact`)
-**Length**: 684 lines, 5 definitions + 16 theorems/lemmas + 1 axiom
+**Main result**: 0 axioms, 0 sorries
+**Length**: summary generated 2026-03-20; manually refreshed for the Hilbert-Schmidt refactor.
 
 ---
 
@@ -48,14 +48,14 @@ The transfer matrix $T = M_w \circ \mathrm{Conv}_G \circ M_w$ as a CLM on $L^2$.
 ### `transferOperator_isSelfAdjoint`
 $T$ is self-adjoint, from self-adjointness of $M_w$ and $\mathrm{Conv}_G$. Fully proved.
 
-### `integral_operator_l2_kernel_compact` (axiom)
-Hilbert-Schmidt compactness: if $K \in L^2(\mu \otimes \mu)$ then the corresponding integral operator is compact. Reference: Reed-Simon I, Theorem VI.23.
+### `integral_operator_l2_kernel_compact` (theorem, re-exported)
+Hilbert-Schmidt compactness: if $K \in L^2(\mu \otimes \mu)$ then the corresponding integral operator is compact. Proved in `Pphi2.GeneralResults.HilbertSchmidt` and re-exported from `L2Operator.lean`. Reference: Reed-Simon I, Theorem VI.23.
 
 ### `transferOperator_isCompact`
-$T$ is compact on $L^2$. Proved from `integral_operator_l2_kernel_compact` via the tensor kernel $K(x,t) = w(x) G(t)$. Fully proved (modulo the axiom).
+$T$ is compact on $L^2$. Proved from `integral_operator_l2_kernel_compact` via the tensor kernel $K(x,t) = w(x) G(t)$. Fully proved.
 
 ### `transferOperator_spectral`
 Spectral decomposition: $\exists$ Hilbert basis $\{e_i\}$ and eigenvalues $\{\lambda_i\}$ with $Te_i = \lambda_i e_i$. From `compact_selfAdjoint_spectral`. Fully proved.
 
 ---
-*This file has **5** definitions and **16** theorems/lemmas (0 with sorry) + **1** axiom.*
+*This file has **0** axioms and **0** sorries.*
