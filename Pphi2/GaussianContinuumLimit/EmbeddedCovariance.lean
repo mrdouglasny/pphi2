@@ -92,10 +92,12 @@ def continuumGreenBilinear (mass : ℝ)
     f.toFun k * g.toFun k / (‖k‖ ^ 2 + mass ^ 2)
 
 /-- The lattice Green bilinear form evaluated on the discretizations of
-continuum test functions. This is the spectral representation of the embedded
-two-point function. -/
+continuum test functions, in the **Glimm–Jaffe-aligned** normalisation
+(with `(a^d)⁻¹` Riemann-sum prefactor). This is the spectral representation
+of the embedded two-point function. -/
 def latticeGreenBilinear (a mass : ℝ)
     (f g : ContinuumTestFunction d) : ℝ :=
+  (a^d : ℝ)⁻¹ *
   ∑ k : FinLatticeSites d N,
     (massEigenvalues d N a mass k)⁻¹ *
     (∑ x, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
@@ -142,7 +144,7 @@ theorem embeddedTwoPoint_eq_latticeSum (a mass : ℝ) (ha : 0 < a) (hmass : 0 < 
     (f g : ContinuumTestFunction d) :
     embeddedTwoPoint d N a mass ha hmass f g =
     a ^ (2 * d) * ∑ x : FinLatticeSites d N, ∑ y : FinLatticeSites d N,
-      GaussianField.covariance (latticeCovariance d N a mass ha hmass)
+      GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass)
         (Pi.single x 1) (Pi.single y 1) *
       evalAtSite d N a f x * evalAtSite d N a g y := by
   -- Step 1: Rewrite as integral over lattice configurations
@@ -151,7 +153,7 @@ theorem embeddedTwoPoint_eq_latticeSum (a mass : ℝ) (ha : 0 < a) (hmass : 0 < 
   simp only [latticeEmbed_eval, latticeEmbedEval]
   -- Step 3: Rewrite integrand to factor out a^{2d} and expand product of sums
   set μ := latticeGaussianMeasure d N a mass ha hmass
-  set T := latticeCovariance d N a mass ha hmass
+  set T := latticeCovarianceGJ d N a mass ha hmass
   -- Abbreviate: each factor is a^d * Σ_x ω(e_x) * f(ax)
   -- Their product = a^{2d} * (Σ_x ω(e_x) f(ax)) * (Σ_y ω(e_y) g(ay))
   --              = a^{2d} * Σ_x Σ_y ω(e_x) ω(e_y) f(ax) g(ay)
@@ -204,13 +206,14 @@ theorem embeddedTwoPoint_eq_latticeSum (a mass : ℝ) (ha : 0 < a) (hmass : 0 < 
     ext ω; ring
   rw [this, integral_mul_const, lattice_cross_moment d N a mass ha hmass]; ring
 
-/-- The embedded two-point function equals the lattice Green bilinear form. -/
+/-- The embedded two-point function equals the lattice Green bilinear form
+(GJ-aligned, with `(a^d)⁻¹` factor). -/
 theorem embeddedTwoPoint_eq_latticeGreenBilinear (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (f g : ContinuumTestFunction d) :
     embeddedTwoPoint d N a mass ha hmass f g =
     latticeGreenBilinear d N a mass f g := by
   rw [embeddedTwoPoint_eq_lattice_cross_moment, lattice_cross_moment]
-  rw [lattice_covariance_eq_spectral]
+  rw [lattice_covariance_GJ_eq_spectral]
   rfl
 
 /-- The embedded two-point function equals the lattice spectral sum. -/

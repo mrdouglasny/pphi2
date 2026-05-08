@@ -63,6 +63,10 @@ import SchwartzNuclear.HermiteNuclear
 
 noncomputable section
 
+-- A handful of `simpa`s here thread a closing hypothesis through the simp
+-- cascade; switching to `simp; exact term` is a stylistic non-improvement.
+set_option linter.unnecessarySimpa false
+
 open GaussianField MeasureTheory Filter
 
 namespace Pphi2
@@ -120,7 +124,7 @@ end ConvergenceAxiom
 
 /-! ## Uniform bound on the embedded two-point function -/
 
-/-- **Covariance upper bound via eigenvalue lower bound.**
+/-- **Covariance upper bound via eigenvalue lower bound** (bare CLM).
 
 The covariance `⟨T h, T h⟩ ≤ (1/m²) · ‖h‖²_ℓ²` because all eigenvalues of
 the mass operator satisfy `λ_k ≥ m²`, hence `λ_k⁻¹ ≤ m⁻²`. By the spectral
@@ -217,6 +221,20 @@ private theorem covariance_le_mass_inv_sq_norm (a mass : ℝ) (ha : 0 < a) (hmas
         simp only [sq]
         linarith
 
+/-- GJ-aligned variant: with the `(a^d)⁻¹` Riemann-sum prefactor on the
+GJ covariance kernel, the bound picks up a corresponding `(a^d)⁻¹` factor. -/
+private theorem covariance_GJ_le_mass_inv_sq_norm (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (h : FinLatticeField d N) :
+    GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) h h ≤
+    (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 * ∑ x : FinLatticeSites d N, h x ^ 2 := by
+  rw [latticeCovariance_GJ_eq_inv_smul_bare]
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  have h_bare := covariance_le_mass_inv_sq_norm (d := d) (N := N) a mass ha hmass h
+  calc (a^d : ℝ)⁻¹ * GaussianField.covariance (latticeCovariance d N a mass ha hmass) h h
+      ≤ (a^d : ℝ)⁻¹ * (mass⁻¹ ^ 2 * ∑ x, h x ^ 2) :=
+        mul_le_mul_of_nonneg_left h_bare (le_of_lt (inv_pos.mpr ha_d_pos))
+    _ = (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 * ∑ x, h x ^ 2 := by ring
+
 /-! ### Helper lemmas for the Schwartz Riemann sum bound -/
 
 /-- EuclideanSpace component norm ≤ full norm: `‖y_i‖ ≤ ‖y‖`. -/
@@ -307,6 +325,7 @@ private lemma signedVal_natAbs_eq_min (x : ZMod N) :
     (signedVal N x).natAbs = min (ZMod.val x) (N - ZMod.val x) := by
   rw [signedVal_eq_valMinAbs N x, ZMod.valMinAbs_natAbs_eq_min]
 
+omit [NeZero N] in
 private lemma physPos_norm_component (a : ℝ) (ha : 0 < a)
     (x : FinLatticeSites d N) (i : Fin d) :
     ‖(physicalPosition d N a x) i‖ =
@@ -474,7 +493,7 @@ private theorem schwartz_riemann_sum_bound_of_majorant
     (f : ContinuumTestFunction d) (S : ℝ)
     (hS :
       schwartzDecayMajorant d f ≤ S) :
-    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∀ (a : ℝ) (_ha : 0 < a), a ≤ 1 →
     ∀ (N : ℕ) [NeZero N],
     a ^ d * ∑ x : FinLatticeSites d N,
       (evalAtSite d N a f x) ^ 2 ≤ S ^ 2 * 3 ^ d := by
@@ -562,7 +581,7 @@ The proof uses:
 This gives `a^d Σ_x f(ax)² ≤ S_f² · 3^d`. -/
 private theorem schwartz_riemann_sum_bound
     (f : ContinuumTestFunction d) :
-    ∃ C : ℝ, 0 < C ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∃ C : ℝ, 0 < C ∧ ∀ (a : ℝ) (_ha : 0 < a), a ≤ 1 →
     ∀ (N : ℕ) [NeZero N],
     a ^ d * ∑ x : FinLatticeSites d N,
       (evalAtSite d N a f x) ^ 2 ≤ C := by
@@ -574,7 +593,7 @@ private theorem schwartz_riemann_sum_bound
 
 /-- Polynomial Riemann-sum bound on DM basis vectors of the Schwartz space. -/
 private theorem schwartz_riemann_sum_basis_bound [Fact (0 < d)] :
-    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (_ha : 0 < a), a ≤ 1 →
     ∀ (N : ℕ) [NeZero N],
     a ^ d * ∑ x : FinLatticeSites d N,
       (evalAtSite d N a (DyninMityaginSpace.basis i) x) ^ 2 ≤
@@ -625,15 +644,15 @@ Riemann-sum bound for the corresponding test function. -/
 private theorem latticeGreenBilinear_diag_bound_of_riemann_bound
     (mass : ℝ) (hmass : 0 < mass)
     (f : ContinuumTestFunction d) (C_f : ℝ)
-    (hC : ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    (hC : ∀ (a : ℝ) (_ha : 0 < a), a ≤ 1 →
       ∀ (N : ℕ) [NeZero N],
       a ^ d * ∑ x : FinLatticeSites d N, (evalAtSite d N a f x) ^ 2 ≤ C_f) :
-    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∀ (a : ℝ) (_ha : 0 < a), a ≤ 1 →
       latticeGreenBilinear d N a mass f f ≤ mass⁻¹ ^ 2 * C_f := by
   intro a ha ha_le
   rw [← embeddedTwoPoint_eq_latticeGreenBilinear (d := d) (N := N) (a := a)
     (mass := mass) (ha := ha) (hmass := hmass) f f]
-  set T := latticeCovariance d N a mass ha hmass
+  set T := latticeCovarianceGJ d N a mass ha hmass
   set μ := latticeGaussianMeasure d N a mass ha hmass
   set h_f : FinLatticeField d N := fun x => a ^ d * evalAtSite d N a f x
   have hintegrand : ∀ ω : Configuration (FinLatticeField d N),
@@ -671,26 +690,28 @@ private theorem latticeGreenBilinear_diag_bound_of_riemann_bound
     simpa [T, latticeGaussianMeasure, GaussianField.covariance] using
       (GaussianField.second_moment_eq_covariance T h_f)
   rw [hsecond]
+  -- Under GJ: covariance T h h ≤ (a^d)⁻¹ * mass⁻² * ‖h‖². The (a^d)⁻¹ from
+  -- the GJ kernel cancels one a^d from h_f := a^d · f, leaving a^d · Σ |f|²
+  -- which is bounded by C_f via the Riemann-sum hypothesis hC.
   calc
     GaussianField.covariance T h_f h_f
-      ≤ mass⁻¹ ^ 2 * ∑ x, h_f x ^ 2 :=
-        covariance_le_mass_inv_sq_norm d N a mass ha hmass h_f
-    _ = mass⁻¹ ^ 2 * (a ^ d * a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2) := by
+      ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 * ∑ x, h_f x ^ 2 :=
+        covariance_GJ_le_mass_inv_sq_norm d N a mass ha hmass h_f
+    _ = (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 * (a ^ d * a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2) := by
         congr 1
         simp only [h_f, mul_pow, ← Finset.mul_sum]
         ring
-    _ = mass⁻¹ ^ 2 * (a ^ d * (a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2)) := by
-        ring_nf
-    _ ≤ mass⁻¹ ^ 2 * (1 * C_f) := by
-        apply mul_le_mul_of_nonneg_left _ (sq_nonneg _)
-        apply mul_le_mul _ (hC a ha ha_le N) (by positivity) (by positivity)
-        exact pow_le_one₀ (le_of_lt ha) ha_le
-    _ = mass⁻¹ ^ 2 * C_f := by ring
+    _ = mass⁻¹ ^ 2 * (a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2) := by
+        have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+        have ha_d_ne : (a^d : ℝ) ≠ 0 := ne_of_gt ha_d_pos
+        field_simp
+    _ ≤ mass⁻¹ ^ 2 * C_f := by
+        apply mul_le_mul_of_nonneg_left (hC a ha ha_le N) (by positivity)
 
 /-- Polynomial diagonal bound for the lattice Green form on DM basis vectors. -/
 private theorem latticeGreenBilinear_basis_diag_bound [Fact (0 < d)]
     (mass : ℝ) (hmass : 0 < mass) :
-    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∃ C : ℝ, 0 < C ∧ ∃ r : ℕ, ∀ i (a : ℝ) (_ha : 0 < a), a ≤ 1 →
       ∀ (N : ℕ) [NeZero N],
       latticeGreenBilinear d N a mass
         (DyninMityaginSpace.basis i)
@@ -722,6 +743,25 @@ private theorem latticeGreenBilinear_abs_le_half_diag_add_diag
     ∑ x, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
       latticeTestField d N a g x
   unfold latticeGreenBilinear
+  -- LHS now has `(a^d)⁻¹ * Σ_k λ_k⁻¹ Af k Ag k`. Factor out the positive
+  -- scalar `(a^d)⁻¹` and apply the AM-GM bound on the inner sum.
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  have ha_d_inv_nn : (0 : ℝ) ≤ (a^d : ℝ)⁻¹ := le_of_lt (inv_pos.mpr ha_d_pos)
+  rw [show ((a^d : ℝ)⁻¹ * ∑ k : FinLatticeSites d N,
+        (massEigenvalues d N a mass k)⁻¹ * Af k * Ag k) =
+      ((a^d : ℝ)⁻¹ * ∑ k : FinLatticeSites d N,
+        (massEigenvalues d N a mass k)⁻¹ * Af k * Ag k) from rfl]
+  rw [show ((a^d : ℝ)⁻¹ * ∑ k : FinLatticeSites d N,
+        (massEigenvalues d N a mass k)⁻¹ * Af k * Af k +
+      (a^d : ℝ)⁻¹ * ∑ k : FinLatticeSites d N,
+        (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k) / 2 =
+      (a^d : ℝ)⁻¹ * ((∑ k : FinLatticeSites d N,
+        (massEigenvalues d N a mass k)⁻¹ * Af k * Af k +
+      ∑ k : FinLatticeSites d N,
+        (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k) / 2) from by ring]
+  rw [abs_mul, abs_of_nonneg ha_d_inv_nn]
+  apply mul_le_mul_of_nonneg_left _ ha_d_inv_nn
+  -- Inner inequality: |Σ λ⁻¹ Af Ag| ≤ (Σ λ⁻¹ Af² + Σ λ⁻¹ Ag²) / 2
   have hterm :
       ∀ k : FinLatticeSites d N,
         |(massEigenvalues d N a mass k)⁻¹ * Af k * Ag k| ≤
@@ -780,7 +820,8 @@ private theorem latticeGreenBilinear_abs_le_half_diag_add_diag
                   (∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k)) := by
                     rw [Finset.sum_add_distrib]
           _ = ((∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Af k * Af k) +
-                (∑ k : FinLatticeSites d N, (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k)) / 2 := by
+                (∑ k : FinLatticeSites d N,
+                    (massEigenvalues d N a mass k)⁻¹ * Ag k * Ag k)) / 2 := by
                     ring
 /-- Eventual polynomial basis-pair bound for the lattice Green form along any
 continuum-limit sequence `a_n → 0`. -/
@@ -894,7 +935,7 @@ private noncomputable def latticeModeCoeffCLM (a mass : ℝ)
 private noncomputable def latticeGreenBilinearRightCLM
     (a mass : ℝ) (f : ContinuumTestFunction d) :
     ContinuumTestFunction d →L[ℝ] ℝ :=
-  ∑ k : FinLatticeSites d N,
+  (a^d : ℝ)⁻¹ • ∑ k : FinLatticeSites d N,
     ((massEigenvalues d N a mass k)⁻¹ *
       (∑ x, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x *
         latticeTestField d N a f x)) •
@@ -905,7 +946,8 @@ private noncomputable def latticeGreenBilinearRightCLM
     latticeGreenBilinearRightCLM (d := d) (N := N) a mass f g =
       latticeGreenBilinear d N a mass f g := by
   unfold latticeGreenBilinearRightCLM latticeGreenBilinear
-  rw [ContinuousLinearMap.sum_apply]
+  rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.sum_apply, smul_eq_mul]
+  congr 1
   apply Finset.sum_congr rfl
   intro x hx
   rw [ContinuousLinearMap.smul_apply, latticeModeCoeffCLM_apply]
@@ -917,7 +959,8 @@ private theorem latticeGreenBilinear_symm
       latticeGreenBilinear d N a mass g f := by
   unfold latticeGreenBilinear
   congr 1
-  ext k
+  apply Finset.sum_congr rfl
+  intro k _
   ring
 
 private def continuumKernel (mass : ℝ) :
@@ -1114,7 +1157,7 @@ theorem embeddedTwoPoint_uniform_bound (mass : ℝ) (hmass : 0 < mass)
   simp only [latticeEmbed_eval, latticeEmbedEval]
   -- The integrand is (a^d * Σ_x ω(e_x) f(ax))^2
   -- This is (ω(h_f))^2 where h_f(x) = a^d * f(ax), by linearity of ω
-  set T := latticeCovariance d N a mass ha hmass
+  set T := latticeCovarianceGJ d N a mass ha hmass
   set μ := latticeGaussianMeasure d N a mass ha hmass
   set h_f : FinLatticeField d N := fun x => a ^ d * evalAtSite d N a f x
   -- Show the integrand equals (ω h_f)^2
@@ -1143,19 +1186,19 @@ theorem embeddedTwoPoint_uniform_bound (mass : ℝ) (hmass : 0 < mass)
   -- Now goal: @inner ℝ _ _ (T h_f) (T h_f) ≤ mass⁻¹ ^ 2 * C_f
   -- Unfold inner to covariance
   rw [← GaussianField.covariance]
-  -- Step 4: Apply covariance upper bound
+  -- Step 4: Apply covariance upper bound (GJ-aligned: bound has (a^d)⁻¹ factor
+  -- which cancels with the a^d in h_f, giving a^d Σ |f|² ≤ C_f from hC_bound).
   calc GaussianField.covariance T h_f h_f
-      ≤ mass⁻¹ ^ 2 * ∑ x, h_f x ^ 2 :=
-        covariance_le_mass_inv_sq_norm d N a mass ha hmass h_f
-    _ = mass⁻¹ ^ 2 * (a ^ d * a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2) := by
+      ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 * ∑ x, h_f x ^ 2 :=
+        covariance_GJ_le_mass_inv_sq_norm d N a mass ha hmass h_f
+    _ = (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 * (a ^ d * a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2) := by
         congr 1; simp only [h_f, mul_pow, ← Finset.mul_sum]; ring
-    _ = mass⁻¹ ^ 2 * (a ^ d * (a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2)) := by
-        ring_nf
-    _ ≤ mass⁻¹ ^ 2 * (1 * C_f) := by
-        apply mul_le_mul_of_nonneg_left _ (sq_nonneg _)
-        apply mul_le_mul _ (hC_bound a ha ha_le N) (by positivity) (by positivity)
-        exact pow_le_one₀ (le_of_lt ha) ha_le
-    _ = mass⁻¹ ^ 2 * C_f := by ring
+    _ = mass⁻¹ ^ 2 * (a ^ d * ∑ x, (evalAtSite d N a f x) ^ 2) := by
+        have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+        have ha_d_ne : (a^d : ℝ) ≠ 0 := ne_of_gt ha_d_pos
+        field_simp
+    _ ≤ mass⁻¹ ^ 2 * C_f := by
+        apply mul_le_mul_of_nonneg_left (hC_bound a ha ha_le N) (by positivity)
 
 /-- **Positivity of the continuum Green's function.**
 

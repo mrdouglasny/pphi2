@@ -53,6 +53,7 @@ variable (d N : ℕ) [NeZero N] [Fact (0 < d)]
 
 /-! ## Uniform second moment bounds -/
 
+omit [Fact (0 < d)] in
 /-- **Uniform bound on Gaussian second moments.**
 
   `∫ (ω f)² dν_{GFF,a} ≤ C(f, m)` uniformly in a ∈ (0, 1] and N
@@ -82,6 +83,7 @@ theorem gaussian_second_moment_uniform (mass : ℝ) (hmass : 0 < mass)
 
 /-! ## Tightness of Gaussian continuum measures -/
 
+omit [Fact (0 < d)] in
 /-- Integrability of evaluation-squared through the lattice embedding.
 
 The key fact: `(latticeEmbedLift ω) f = ω(g_f)` where
@@ -97,7 +99,7 @@ private theorem gaussianContinuumMeasure_sq_integrable
   apply (integrable_map_measure
     ((configuration_eval_measurable f).aestronglyMeasurable.pow 2)
     (latticeEmbedLift_measurable d N a ha).aemeasurable).mpr
-  set T := latticeCovariance d N a mass ha hmass
+  set T := latticeCovarianceGJ d N a mass ha hmass
   set g_f : FinLatticeField d N :=
     a ^ d • ∑ x : FinLatticeSites d N,
       evalAtSite d N a f x • Pi.single x (1 : ℝ)

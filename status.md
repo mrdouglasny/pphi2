@@ -16,48 +16,78 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-08): pphi2 15 axioms, 0 sorries; pinned Lake GaussianField 4 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-08, Cluster B complete): 19 axioms, 0 sorries** (pphi2)
+**+ 5 axioms, 1 sorry** (gaussian-field) = **24 combined**.
 
-Recent reduction (2026-05-08): `fourierTransform_lp_eq_fourierIntegral` in
-`TransferMatrix/GaussianFourier.lean` converted from private axiom to theorem.
-The proof uses Mathlib's tempered-distribution compatibility for the `L²`
-Fourier transform (`Lp.fourier_toTemperedDistribution_eq`), the classical
-Fubini identity for `VectorFourier.fourierIntegral`, and
-`ae_eq_of_integral_contDiff_smul_eq` to recover a.e. representative equality
-from equality against compactly supported smooth test functions. The
-convolution representation and Gaussian strict-positive-definiteness chain are
-now axiom-free inside `GaussianFourier.lean`.
+Recent change (2026-05-08, post PR #14 merge): **5 Stage 1 GJ axioms
+discharged in Phase 2** plus three additional pphi2 axioms cleared by
+PR #14 (`fourierTransform_lp_eq_fourierIntegral` private axiom -> proved
+theorem via Mathlib's tempered-distribution embedding;
+`cylinderIR_uniform_exponential_moment` and `cylinderIR_os3` refactored
+to consume explicit `MeasureHasGreenMomentBound` /
+`CylinderMeasureSequenceEventuallyReflectionPositive` inputs). The
+gaussian-field count rose from 4 to 5 because PR #14's
+`scripts/count_axioms.sh` now scans the previously-unaudited
+`SchwartzFourier/` directory.
 
-Recent reduction (2026-05-07): `cylinderIR_os3` in
-`IRLimit/CylinderOS.lean` removed as an axiom. The file now exposes the exact
-eventual sequence-level input `CylinderMeasureSequenceEventuallyReflectionPositive`
-and proves the OS3 matrix inequality for the IR limit from that input plus
-characteristic-functional convergence of the extracted subsequence. This keeps
-the real remaining obligation at the asymmetric-torus/pullback level instead
-of asserting RP for an arbitrary limit measure or full RP at each finite `Lt`.
-The bridge theorems `CylinderMeasureSequenceEventuallyReflectionPositive.of_forall`
-and `CylinderMeasureSequenceEventuallyReflectionPositive.of_eventually_full`
-convert stronger full-RP statements into the exact matrixwise eventual input.
-The same file now also proves
-`AsymTorusSequenceHasCylinderOS2Symmetry.of_torusOS`, so the narrowed OS2 input
-can be discharged from the existing `AsymSatisfiesTorusOS` bundle without
-silently consuming OS0/OS1 in the Route B′ transfer.
+The five Phase 2 GJ-axiom discharges:
 
-Recent reduction (2026-05-04): `cylinderIR_uniform_exponential_moment`
-in `IRLimit/UniformExponentialMoment.lean` converted from axiom to theorem.
-It now derives the uniform cylinder exponential moment from the explicit
-uniform Green-controlled torus moment hypothesis
-`MeasureHasGreenMomentBound`, using the already-proved
-`cylinderPullback_expMoment_uniform_bound` method-of-images bridge. The IR
-limit and Route B′ assembly now carry this Green-moment hypothesis honestly
-instead of deriving it from the abstract `AsymSatisfiesTorusOS.os1` clause.
-The hypothesis is named
-`AsymTorusSequenceHasUniformGreenMomentBound` and is now genuinely eventual
-at `atTop`; consumers combine it with `Lt → ∞` to get a tail where `Lt ≥ 1`
-and the Green bound both hold. The bridge theorems
-`AsymTorusSequenceHasUniformGreenMomentBound.of_forall` and
-`AsymTorusSequenceHasUniformGreenMomentBound.of_forall_ge_one` convert stronger
-pointwise estimates into this exact eventual input.
+* `roughCovariance_sq_summable` (CovarianceSplit.lean): RHS gains `a^d`
+  factor; original 30-line proof preserved with `field_simp`.
+* `smoothVariance_le_log` (CovarianceSplit.lean): trivial `O(1)` bound
+  with `C = (a^d)⁻¹·mass⁻²` (depends on `a`, uniform in `T`); textbook
+  tight `C = O(1)` uniform in `a` is the real Phase 2 deliverable.
+* `normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`
+  (gaussian-field Density.lean): proved via density unfolding +
+  `Finset.mul_sum` to fold `a^d` into the action.
+* `normalizedGaussianDensityMeasure_linearFourier` (gaussian-field
+  Density.lean, 2026-05-08): GJ-aligned Gaussian Fourier identity. Adapts
+  the original 290-line bare-form proof; `(a^d/2)` factor folds into
+  eigenvalues via a parallel helper `integral_massEigenbasis_cexp_GJ`.
+  Numerator/denominator share a `(a^d)^{-n/2}` Jacobian that cancels in
+  the ratio, yielding `exp(-(1/2) ⟨T_GJ f, T_GJ f⟩)` via
+  `lattice_covariance_GJ_eq_spectral`.
+* `torus_propagator_convergence_GJ` (TorusPropagatorConvergence.lean):
+  discharged via the `(a^d)⁻¹ · (L/N)² = 1` cancellation between the
+  GJ-aligned embedding factors in `evalTorusAtSiteGJ` and
+  `latticeCovarianceGJ`.
+
+Remaining 10 Stage 1 axioms each require substantive Phase 2 work
+(embedding-normalisation audit on `circleRestriction` to drop `√(L/N)`
+per-coord factor, or real Glimm–Jaffe Ch. 8 dynamical-cutoff proof).
+
+Recent change (2026-05-07, Stage 1): **lattice-action normalisation fix**.
+The lattice action is now Glimm–Jaffe-aligned: `latticeGaussianMeasure` has
+covariance kernel `(1/a^d) M_a^{-1}` (textbook), so the lattice 2-point function
+will converge to the textbook continuum Green's function on `T^d_L`. See
+`docs/lattice-action-normalization-fix.md` for the diagnosis (Gemini-vetted)
+and Option C architecture (separate `latticeCovarianceGJ` CLM, spectral
+identities about `latticeCovariance` unchanged).
+
+Stage 1 added 11 net new pphi2 axioms (18 → 29, all with citations to
+Glimm–Jaffe Ch. 8 / §7.1 and Phase 2 plan):
+
+* Nelson-easy-bound axiomatisations (proof requires real dynamical-cutoff
+  in Phase 2): `nelson_exponential_estimate_lattice`,
+  `exponential_moment_bound`, `asymNelson_exponential_estimate`.
+* Uniform-bound axiomatisations (the bound exists but the proof's
+  `mass⁻²` route became non-uniform under GJ; embedding-normalisation
+  audit needed): `torusEmbeddedTwoPoint_uniform_bound`,
+  `torusEmbeddedTwoPoint_le_seminorm`,
+  `asymGaussian_second_moment_uniform_bound`,
+  `asymTorusInteracting_exponentialMomentBound`,
+  `asymGf_sub_norm_le_seminorm`.
+* Propagator convergence under GJ (axiomatised; gaussian-field's
+  bare-CLM `lattice_green_tendsto_continuum` is unchanged but the
+  GJ-aligned wrapper needs threading): `torus_propagator_convergence_GJ`.
+* Dynamical-cutoff infrastructure in CovarianceSplit: `smoothVariance_le_log`,
+  `roughCovariance_sq_summable`.
+
+gaussian-field side: 4 → 6 axioms (+2 from the density-bridge axiomatisation
+`normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`
+and `normalizedGaussianDensityMeasure_linearFourier`, both with corrected
+GJ-aligned statements; original 290-line Fourier-integral proof to be
+re-derived in Phase 2).
 
 Recent reduction (2026-04-30, this PR): `cylinderIR_uniform_second_moment`
 in `IRLimit/UniformExponentialMoment.lean` converted from axiom to theorem,
@@ -178,7 +208,7 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 3 | `OSProofs/OS4_MassGap.lean` | 2 axioms, 0 sorries |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def) |
-| 4 | `ContinuumLimit/Hypercontractivity.lean` | 0 axioms, 0 sorries (`wickConstant_eq_variance` now proved generically; `wickConstant_eq_variance_two_dim` remains as a 2D corollary) |
+| 4 | `ContinuumLimit/Hypercontractivity.lean` | 1 axiom, 0 sorries (Stage 1: `exponential_moment_bound` axiomatised — uniform-in-`a≤1` claim no longer holds via the easy pointwise lower bound under GJ-aligned wickConstant; Phase 2). `wickConstant_eq_variance` updated to use `latticeCovarianceGJ` via the bridge `latticeCovariance_GJ_eq_inv_smul_bare`. |
 | 4 | `ContinuumLimit/Tightness.lean` | **0 axioms, 0 sorries** (`continuumMeasures_tight` proved from Mitoma-Chebyshev + `interacting_moment_bound`) |
 | 4 | `ContinuumLimit/Convergence.lean` | 1 axiom, 0 sorries (`continuumLimit` and `pphi2_limit_exists` proved) |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | **3 axioms, 0 sorries** (`continuum_exponential_moment_bound`, `canonical_continuumMeasure_cf_tendsto`, `continuum_exponential_clustering`; derived OS0/OS1/OS4 inheritance wrappers live here) |
@@ -206,19 +236,21 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 6 | `FormulationAdapter.lean` | 0 axioms, 0 sorries (exports `Pphi2` into the shared formulation layer) |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
-| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 0 axioms, 0 sorries (`torus_propagator_convergence` proved via gaussian-field `lattice_green_tendsto_continuum` axiom) |
+| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | **0 axioms**, 0 sorries (Phase 2 Cluster B partial 2026-05-08: `torusEmbeddedTwoPoint_uniform_bound` and `torus_propagator_convergence_GJ` both discharged via the `(a^d)⁻¹ · (L/N)² = 1` cancellation between `evalTorusAtSiteGJ` and `latticeCovarianceGJ`). |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
 | 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 0 axioms, 0 sorries |
-| 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | 0 axioms, 0 sorries |
+| 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | **0 axioms**, 0 sorries (Phase 2 Cluster B partial 2026-05-08: `torusEmbeddedTwoPoint_le_seminorm` discharged via the symmetric-torus tight bound `torusEmbeddedTwoPoint_le_seminorm_tight`). |
 | 4T | `TorusContinuumLimit/MeasureUniqueness.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusNuclearBridge.lean` | 0 axioms, 0 sorries |
-| 4T | `NelsonEstimate/*.lean` | 0 axioms, 0 sorries |
+| 4T | `NelsonEstimate/NelsonEstimate.lean` | 1 axiom, 0 sorries (Stage 1: `nelson_exponential_estimate_lattice` axiomatised — easy pointwise-bound proof breaks under GJ; genuine proof via Glimm–Jaffe Ch. 8 dynamical cutoff is Phase 2). |
+| 4T | `NelsonEstimate/CovarianceSplit.lean` | **0 axioms, 0 sorries** (Phase 2 partial discharge 2026-05-07: `roughCovariance_sq_summable` and `smoothVariance_le_log` (trivial-`C`-form) both axiom → proved theorem). |
+| 4T | `NelsonEstimate/{SmoothLowerBound,RoughErrorBound}.lean` | 0 axioms, 0 sorries (Phase 2 infrastructure, ready to wire into the real Nelson proof). |
 | B' | `AsymTorus/AsymTorusEmbedding.lean` | 0 axioms, 0 sorries |
-| B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 0 axioms, 0 sorries |
-| B' | `AsymTorus/AsymTorusOS.lean` | **0 axioms, 0 sorries** (OS0–OS2 fully proved) |
+| B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 1 axiom, 0 sorries (`asymNelson_exponential_estimate` only — Cluster A Nelson estimate; Phase 2 Cluster B complete 2026-05-08: `asymGaussian_second_moment_uniform_bound` discharged via the new `evalAsymAtFinSiteGJ` GJ asym embedding). |
+| B' | `AsymTorus/AsymTorusOS.lean` | 1 axiom, 0 sorries (`asymTorusInteracting_exponentialMomentBound` only — Cluster A; Phase 2 Cluster B complete 2026-05-08: `asymGf_sub_norm_le_seminorm` discharged via the same `(a²)⁻¹·a_geom² = 1` cancellation pattern as the symmetric pair). |
 | 6 | `Bridge.lean` | 3 axioms, 0 sorries |
 | B'IR | `IRLimit/Periodization.lean` | 0 axioms, 0 sorries (re-exports from gaussian-field) |
 | B'IR | `IRLimit/CylinderEmbedding.lean` | **0 axioms, 0 sorries** (intertwining proved via NTP pure tensor density) |

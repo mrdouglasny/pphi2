@@ -190,7 +190,7 @@ theorem torus_interacting_second_moment_uniform
       ((ω g) ^ 2) ^ 2) μ_GFF := by
     have h4 : MemLp (fun ω : Configuration (FinLatticeField 2 N) => ω g)
         4 μ_GFF := by
-      exact_mod_cast pairing_memLp (latticeCovariance 2 N (circleSpacing L N) mass
+      exact_mod_cast pairing_memLp (latticeCovarianceGJ 2 N (circleSpacing L N) mass
         (circleSpacing_pos L N) hmass) g 4
     have hmem := h4.norm_rpow (p := (4 : ENNReal))
       (by norm_num : (4 : ENNReal) ≠ 0) (by norm_num : (4 : ENNReal) ≠ ⊤)
@@ -238,7 +238,7 @@ theorem torus_interacting_second_moment_uniform
     integral_nonneg fun ω => sq_nonneg _
   -- ∫ ((ω g)²)² ≤ 9 * Cg² via hypercontractivity
   -- Use gaussian_hypercontractive from GaussianField
-  set T := latticeCovariance 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass
+  set T := latticeCovarianceGJ 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass
   have hμ_eq : μ_GFF = GaussianField.measure T := rfl
   -- Apply hypercontractive_1d_p4 via pairing_is_gaussian
   have h_fourth_le : ∫ ω, ((ω g) ^ 2) ^ 2 ∂μ_GFF ≤ 9 * Cg ^ 2 := by
@@ -401,7 +401,7 @@ theorem torus_interacting_tightness
       -- Step 3: Gaussian integrability of (ω g)²
       have h_sq_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
           (ω g) ^ 2) μ_GFF :=
-        (pairing_memLp (latticeCovariance 2 N (circleSpacing L N) mass
+        (pairing_memLp (latticeCovarianceGJ 2 N (circleSpacing L N) mass
           (circleSpacing_pos L N) hmass) g 2).integrable_sq
       -- Step 4: Dominate (ω g)² * bw ω by (ω g)² * exp(B)
       apply (h_sq_int.mul_const (Real.exp B)).mono

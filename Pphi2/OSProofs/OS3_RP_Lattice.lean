@@ -680,8 +680,8 @@ private axiom gaussian_rp_cov_perfect_square
     0 ≤ ∫ u, G (fieldFromSites N (e.symm (u, (0 : {s // ¬isPT s} → ℝ)))) *
       ∫ v, G (fieldReflection2D N (fieldFromSites N (e.symm ((0 : {s // isPT s} → ℝ), v)))) *
         w (fieldFromSites N (e.symm ((0 : {s // isPT s} → ℝ), v))) *
-        Real.exp (-(1 / 2) * A_quad u v) *
-        Real.exp (-(1 / 2) * C_quad v)
+        Real.exp (-(a^2 / 2) * A_quad u v) *
+        Real.exp (-(a^2 / 2) * C_quad v)
 
 /-- **Perfect square for block-zero Gaussian integral (Fubini + COV step).**
 
@@ -731,7 +731,7 @@ private theorem gaussian_rp_perfect_square
       G (fieldFromSites N (e.symm (u, v))) *
       G (fieldReflection2D N (fieldFromSites N (e.symm (u, v)))) *
       w (fieldFromSites N (e.symm (u, v))) *
-      (Real.exp (-(1 / 2) * A_quad u v) * Real.exp (-(1 / 2) * C_quad v)) := by
+      (Real.exp (-(a^2 / 2) * A_quad u v) * Real.exp (-(a^2 / 2) * C_quad v)) := by
   -- === Step 1: Simplify using dependency hypotheses ===
   -- G(u,v) depends only on u, GΘ(u,v) depends only on v, w(u,v) depends only on v
   have hG_rw : ∀ u v, G (fieldFromSites N (e.symm (u, v))) =
@@ -748,12 +748,12 @@ private theorem gaussian_rp_perfect_square
       G (fieldFromSites N (e.symm (u, (0 : {s // ¬isPT s} → ℝ)))) *
       G (fieldReflection2D N (fieldFromSites N (e.symm ((0 : {s // isPT s} → ℝ), v)))) *
       w (fieldFromSites N (e.symm ((0 : {s // isPT s} → ℝ), v))) *
-      (Real.exp (-(1 / 2) * A_quad u v) * Real.exp (-(1 / 2) * C_quad v)) =
+      (Real.exp (-(a^2 / 2) * A_quad u v) * Real.exp (-(a^2 / 2) * C_quad v)) =
     G (fieldFromSites N (e.symm (u, (0 : {s // ¬isPT s} → ℝ)))) *
       (G (fieldReflection2D N (fieldFromSites N (e.symm ((0 : {s // isPT s} → ℝ), v)))) *
        w (fieldFromSites N (e.symm ((0 : {s // isPT s} → ℝ), v))) *
-       Real.exp (-(1 / 2) * A_quad u v) *
-       Real.exp (-(1 / 2) * C_quad v)) := fun u v => by ring
+       Real.exp (-(a^2 / 2) * A_quad u v) *
+       Real.exp (-(a^2 / 2) * C_quad v)) := fun u v => by ring
   simp_rw [hrw, integral_const_mul]
   -- === Step 3: Apply the COV + perfect square axiom ===
   -- Goal is: 0 ≤ ∫ u, G(u,0) * ∫ v, GΘ(0,v) * w(0,v) * exp(-½A(u,v)) * exp(-½C(v))
@@ -963,15 +963,18 @@ theorem gaussian_density_rp (a mass : ℝ)
     let A_quad : ({s // isPT s} → ℝ) → ({s // ¬isPT s} → ℝ) → ℝ := fun u v =>
       (∑ x, (e.symm (u, v)) x * (massOperator 2 N a mass (e.symm (u, v))) x) -
         C_quad v
-    -- Factor the Gaussian density: ρ = exp(-½A) * exp(-½C)
+    -- Factor the Gaussian density: ρ = exp(-(a²/2)·A) * exp(-(a²/2)·C).
+    -- Under GJ-aligned normalisation, gaussianDensity has the (a^d/2) prefactor
+    -- (here d = 2). The factoring `-(a²/2)·Σ = -(a²/2)·(Σ - C) + -(a²/2)·C`
+    -- is structurally the same as before, just with `a²/2` in place of `1/2`.
     have h_factor : ∀ u v, gaussianDensity 2 N a mass (e.symm (u, v)) =
-        Real.exp (-(1 / 2) * A_quad u v) * Real.exp (-(1 / 2) * C_quad v) := by
+        Real.exp (-(a^2 / 2) * A_quad u v) * Real.exp (-(a^2 / 2) * C_quad v) := by
       intro u v; simp only [gaussianDensity, A_quad]
-      rw [show -(1 / 2 : ℝ) *
+      rw [show -(a^2 / 2 : ℝ) *
         ∑ x, (e.symm (u, v)) x * (massOperator 2 N a mass (e.symm (u, v))) x =
-        -(1 / 2) * (∑ x, (e.symm (u, v)) x *
+        -(a^2 / 2) * (∑ x, (e.symm (u, v)) x *
           (massOperator 2 N a mass (e.symm (u, v))) x - C_quad v) +
-        -(1 / 2) * C_quad v from by ring]
+        -(a^2 / 2) * C_quad v from by ring]
       exact Real.exp_add _ _
     -- A = ⟨φ_S,Qφ_S⟩ + 2⟨φ_S,Qφ_R⟩ (the complement-complement term cancels)
     have hA_eq : ∀ u v, A_quad u v =

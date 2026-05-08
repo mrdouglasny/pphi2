@@ -150,7 +150,6 @@ theorem wickMonomial_add_binomial (n : ℕ) (c₁ c₂ x y : ℝ) :
       -- We'll prove: LHS = A + C, and A + C = RHS
       -- First split into A + B + C + D
       simp only [mul_add, add_mul, Finset.sum_add_distrib]
-
       -- Now prove B = (n+1)c₁ * S₂ by reindexing
       -- B = Σ_{i∈range(n+2)} C(n+1,i) * i*c₁ * W_{i-1}(x) * W_{n+1-i}(y)
       -- Define shorthand for the sums

@@ -53,79 +53,25 @@ theorem asymGeomSpacing_sq_mul_sq (N : ℕ) [NeZero N] :
   rw [Real.sq_sqrt h_nn]
   field_simp
 
-/-- **Nelson's exponential estimate** (asymmetric torus, uniform in N).
+/-- **Asymmetric-torus Nelson exponential estimate** (axiomatised in
+Stage 1 — same Phase 2 issue as the symmetric `nelson_exponential_estimate_lattice`).
 
 The L² norm of the Boltzmann weight is bounded by a constant K that
-depends on P, mass, Lt, Ls but NOT on N:
+depends on `P, mass, Lt, Ls` but NOT on N:
 
-  `∫ exp(-2V) dμ_GFF ≤ K`   for all N ≥ 1
+    ∫ exp(-2V) dμ_GFF ≤ K   for all N ≥ 1
 
-Proof: identical to the symmetric case. The interaction
-`V = a_geom² Σ_x :P(φ(x)):_c` satisfies `V ≥ -a_geom² N² A = -Lt·Ls·A`
-where A is the uniform lower bound on Wick polynomials.
-Hence `exp(-2V) ≤ exp(2·Lt·Ls·A)` uniformly in N. -/
-theorem asymNelson_exponential_estimate
+The easy pointwise lower bound used wickConstant ≤ mass⁻², which is no
+longer uniform in `a` under Glimm-Jaffe-aligned `wickConstant`. Genuine
+proof requires Glimm-Jaffe Ch. 8 dynamical cutoff (Phase 2). -/
+axiom asymNelson_exponential_estimate
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
     ∀ (N : ℕ) [NeZero N],
     ∫ ω : Configuration (FinLatticeField 2 N),
         (Real.exp (-interactionFunctional 2 N P (asymGeomSpacing Lt Ls N) mass ω)) ^ 2
         ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
-          (asymGeomSpacing_pos Lt Ls N) hmass) ≤ K := by
-  -- Same proof as nelson_exponential_estimate_lattice but with a_geom²N² = Lt·Ls
-  -- instead of a²N² = L². K = exp(2 · Lt · Ls · A).
-  -- Step 1: Get uniform lower bound on wickPolynomial for c ∈ [0, mass⁻²]
-  obtain ⟨A, hA_pos, hA_bound⟩ :=
-    Pphi2.wickPolynomial_uniform_bounded_below P (mass⁻¹ ^ 2) (by positivity)
-  -- Step 2: K = exp(2 · Lt · Ls · A) works uniformly in N
-  refine ⟨Real.exp (2 * (Lt * Ls) * A), Real.exp_pos _, fun N _ => ?_⟩
-  set a := asymGeomSpacing Lt Ls N
-  set ha := asymGeomSpacing_pos Lt Ls N
-  set μ := latticeGaussianMeasure 2 N a mass ha hmass
-  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability 2 N a mass ha hmass
-  -- Step 3: V(ω) ≥ -(a² · |Λ| · A) = -(Lt·Ls · A) for all ω
-  have hc_nn : 0 ≤ wickConstant 2 N a mass :=
-    le_of_lt (wickConstant_pos 2 N a mass ha hmass)
-  have hc_le : wickConstant 2 N a mass ≤ mass⁻¹ ^ 2 :=
-    wickConstant_le_inv_mass_sq 2 N a mass ha hmass
-  set Λ := Fintype.card (FinLatticeSites 2 N)
-  -- Key identity: a² · Λ = Lt · Ls (since a = √(Lt·Ls)/N and Λ = N²)
-  have hΛ_eq : (Λ : ℝ) = (N : ℝ) ^ 2 := by
-    change (Fintype.card (Fin 2 → ZMod N) : ℝ) = (N : ℝ) ^ 2
-    simp [ZMod.card]
-  have ha_sq_Λ : a ^ 2 * (Λ : ℝ) = Lt * Ls := by
-    rw [hΛ_eq]
-    exact asymGeomSpacing_sq_mul_sq Lt Ls N
-  have h_wp_bound : ∀ (ω : Configuration (FinLatticeField 2 N)),
-      interactionFunctional 2 N P a mass ω ≥ -(Lt * Ls * A) := by
-    intro ω
-    unfold interactionFunctional
-    have ha_pow : (0 : ℝ) ≤ a ^ 2 := sq_nonneg a
-    calc a ^ 2 * ∑ x : FinLatticeSites 2 N,
-          wickPolynomial P (wickConstant 2 N a mass) (ω (finLatticeDelta 2 N x))
-        ≥ a ^ 2 * ∑ _x : FinLatticeSites 2 N, (-A) := by
-          apply mul_le_mul_of_nonneg_left _ ha_pow
-          exact Finset.sum_le_sum fun x _ => hA_bound _ hc_nn hc_le _
-      _ = a ^ 2 * (-(↑Λ * A)) := by
-          congr 1; rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]; ring
-      _ = -(a ^ 2 * ↑Λ * A) := by ring
-      _ = -(Lt * Ls * A) := by rw [ha_sq_Λ]
-  -- Step 4: exp(-2V) ≤ exp(2 · Lt · Ls · A) pointwise
-  have h_exp_bound : ∀ ω, (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2 ≤
-      Real.exp (2 * (Lt * Ls) * A) := by
-    intro ω
-    rw [sq, ← Real.exp_add, show -interactionFunctional 2 N P a mass ω +
-        (-interactionFunctional 2 N P a mass ω) =
-        -2 * interactionFunctional 2 N P a mass ω from by ring]
-    exact Real.exp_le_exp_of_le (by linarith [h_wp_bound ω])
-  -- Step 5: Integrate the pointwise bound over the probability measure
-  calc ∫ ω, (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2 ∂μ
-      ≤ ∫ _ω, Real.exp (2 * (Lt * Ls) * A) ∂μ := by
-        apply integral_mono_of_nonneg (ae_of_all _ fun ω => sq_nonneg _)
-          (integrable_const _) (ae_of_all _ h_exp_bound)
-    _ = Real.exp (2 * (Lt * Ls) * A) := by
-        simp [integral_const]
-
+          (asymGeomSpacing_pos Lt Ls N) hmass) ≤ K
 /-- The asymmetric torus interacting measure is a probability measure. -/
 instance asymTorusInteractingMeasure_isProbability (N : ℕ) [NeZero N]
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
@@ -172,9 +118,8 @@ private theorem asym_pure_basis_eq_basisVec_pair (i j : ℕ) :
   · intro h; exact h1 (by have := congr_arg (fun p => (Nat.unpair p).1) h
                           simpa only [Nat.unpair_pair] using this)
 
--- Parameterized Riemann sum bound: given Sobolev constants C₀t, C₀s,
--- the squared sum Σ_x (asymLatticeTestFn f x)² ≤ Lt*Ls*C₀t²*C₀s²*(p₀f)² + 1.
-theorem asymLatticeTestFn_norm_sq_le
+-- Parameterized tight GJ-aligned Riemann sum bound.
+theorem asymLatticeTestFn_norm_sq_le_tight
     (C₀t : ℝ) (hC₀t_pos : 0 < C₀t)
     (hC₀t : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Lt) 0
       (SmoothMap_Circle.fourierBasis n) ≤ C₀t)
@@ -183,12 +128,11 @@ theorem asymLatticeTestFn_norm_sq_le
       (SmoothMap_Circle.fourierBasis n) ≤ C₀s)
     (f : AsymTorusTestFunction Lt Ls) (N : ℕ) [NeZero N] :
     ∑ x : FinLatticeSites 2 N, (asymLatticeTestFn Lt Ls N f x) ^ 2 ≤
-    Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * (RapidDecaySeq.rapidDecaySeminorm 0 f) ^ 2 + 1 := by
+    asymGeomSpacing Lt Ls N ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 *
+      (RapidDecaySeq.rapidDecaySeminorm 0 f) ^ 2 := by
   set p₀f := RapidDecaySeq.rapidDecaySeminorm 0 f
-  -- Summability of |f.val m|.
   have hf_sum : Summable (fun m => |f.val m|) :=
     (f.rapid_decay 0).congr (fun m => by simp [pow_zero])
-  -- Step 4: Bound |circleRestriction L_i N (basis n) k| ≤ √(L_i/N) * C₀i.
   have h_cr_t : ∀ n (k : ZMod N),
       |circleRestriction Lt N (DyninMityaginSpace.basis n :
         SmoothMap_Circle Lt ℝ) k| ≤ Real.sqrt (Lt / ↑N) * C₀t := by
@@ -215,7 +159,6 @@ theorem asymLatticeTestFn_norm_sq_le
       _ ≤ SmoothMap_Circle.sobolevSeminorm 0 (SmoothMap_Circle.fourierBasis n) :=
           SmoothMap_Circle.norm_iteratedDeriv_le_sobolevSeminorm' _ 0 _
       _ ≤ C₀s := hC₀s n
-  -- Step 5: Bound |eval_x(basisVec m)| ≤ √(Lt/N)·C₀t · √(Ls/N)·C₀s
   have hLtN : (0 : ℝ) ≤ Lt / ↑N :=
     (div_pos hLt.out (Nat.cast_pos.mpr (NeZero.pos N))).le
   have hLsN : (0 : ℝ) ≤ Ls / ↑N :=
@@ -236,39 +179,44 @@ theorem asymLatticeTestFn_norm_sq_le
     rw [abs_mul]
     exact mul_le_mul (h_cr_t _ _) (h_cr_s _ _) (abs_nonneg _)
       (mul_nonneg (Real.sqrt_nonneg _) hC₀t_pos.le)
-  -- Step 6: Bound |eval_x f| ≤ √(Lt/N)·C₀t · √(Ls/N)·C₀s · p₀f via DM expansion.
-  set B := Real.sqrt (Lt / ↑N) * C₀t * (Real.sqrt (Ls / ↑N) * C₀s)
+  set a := asymGeomSpacing Lt Ls N
+  have ha_nonneg : 0 ≤ a := (asymGeomSpacing_pos Lt Ls N).le
+  have h_basis_gj : ∀ (x : FinLatticeSites 2 N) (m : ℕ),
+      |evalAsymAtFinSiteGJ Lt Ls N x (RapidDecaySeq.basisVec m)| ≤
+      a * (Real.sqrt (Lt / ↑N) * C₀t * (Real.sqrt (Ls / ↑N) * C₀s)) := by
+    intro x m
+    rw [evalAsymAtFinSiteGJ_apply, abs_mul, abs_of_nonneg ha_nonneg]
+    exact mul_le_mul_of_nonneg_left (h_basis x m) ha_nonneg
+  set B := a * (Real.sqrt (Lt / ↑N) * C₀t * (Real.sqrt (Ls / ↑N) * C₀s))
   have hB_nn : 0 ≤ B :=
-    mul_nonneg (mul_nonneg (Real.sqrt_nonneg _) hC₀t_pos.le)
+    mul_nonneg ha_nonneg (mul_nonneg (mul_nonneg (Real.sqrt_nonneg _) hC₀t_pos.le)
       (mul_nonneg (Real.sqrt_nonneg _) hC₀s_pos.le)
+  )
   have h_pw : ∀ x : FinLatticeSites 2 N,
       |asymLatticeTestFn Lt Ls N f x| ≤ B * p₀f := by
     intro x
     unfold asymLatticeTestFn
-    rw [DyninMityaginSpace.expansion (evalAsymAtFinSite Lt Ls N x) f]
+    rw [DyninMityaginSpace.expansion (evalAsymAtFinSiteGJ Lt Ls N x) f]
     have hsf : Summable (fun m => f.val m *
-        evalAsymAtFinSite Lt Ls N x (RapidDecaySeq.basisVec m)) :=
+        evalAsymAtFinSiteGJ Lt Ls N x (RapidDecaySeq.basisVec m)) :=
       (hf_sum.mul_right B).of_norm_bounded
         (fun m => by rw [Real.norm_eq_abs, abs_mul]
-                     exact mul_le_mul_of_nonneg_left (h_basis x m) (abs_nonneg _))
-    calc |∑' m, f.val m * evalAsymAtFinSite Lt Ls N x (RapidDecaySeq.basisVec m)|
-        = ‖∑' m, f.val m * evalAsymAtFinSite Lt Ls N x (RapidDecaySeq.basisVec m)‖ :=
+                     exact mul_le_mul_of_nonneg_left (h_basis_gj x m) (abs_nonneg _))
+    calc |∑' m, f.val m * evalAsymAtFinSiteGJ Lt Ls N x (RapidDecaySeq.basisVec m)|
+        = ‖∑' m, f.val m * evalAsymAtFinSiteGJ Lt Ls N x (RapidDecaySeq.basisVec m)‖ :=
           (Real.norm_eq_abs _).symm
-      _ ≤ ∑' m, ‖f.val m * evalAsymAtFinSite Lt Ls N x (RapidDecaySeq.basisVec m)‖ :=
+      _ ≤ ∑' m, ‖f.val m * evalAsymAtFinSiteGJ Lt Ls N x (RapidDecaySeq.basisVec m)‖ :=
           norm_tsum_le_tsum_norm hsf.norm
       _ ≤ ∑' m, |f.val m| * B := by
           apply Summable.tsum_le_tsum _ hsf.norm (hf_sum.mul_right _)
           intro m
           rw [Real.norm_eq_abs, abs_mul]
-          exact mul_le_mul_of_nonneg_left (h_basis x m) (abs_nonneg _)
+          exact mul_le_mul_of_nonneg_left (h_basis_gj x m) (abs_nonneg _)
       _ = B * ∑' m, |f.val m| := by rw [tsum_mul_right]; ring
       _ = B * p₀f := by
           congr 1
           change ∑' m, |f.val m| = ∑' m, |f.val m| * (1 + (m : ℝ)) ^ 0
           simp
-  -- Step 7: Sum of squares over lattice sites.
-  -- N² · B² · p₀f² where B = √(Lt/N)·C₀t · √(Ls/N)·C₀s
-  -- B² = (Lt/N)·C₀t² · (Ls/N)·C₀s² so N²·B² = Lt·Ls·C₀t²·C₀s²
   calc ∑ x : FinLatticeSites 2 N, (asymLatticeTestFn Lt Ls N f x) ^ 2
       ≤ ∑ _x : FinLatticeSites 2 N, (B * p₀f) ^ 2 := by
         apply Finset.sum_le_sum; intro x _
@@ -278,21 +226,55 @@ theorem asymLatticeTestFn_norm_sq_le
         simp [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
     _ = ↑N ^ 2 * (B * p₀f) ^ 2 := by
         congr 1; simp [FinLatticeSites, ZMod.card, Fintype.card_fin]
-    _ = Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := by
+    _ = a ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := by
         have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
-        -- B = √(Lt/N) * C₀t * (√(Ls/N) * C₀s)
-        -- B² = (Lt/N) * C₀t² * (Ls/N) * C₀s²
-        -- N² * B² = Lt * Ls * C₀t² * C₀s²
-        change ↑N ^ 2 * (B * p₀f) ^ 2 = Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2
-        have hB_sq : B ^ 2 = (Lt / ↑N) * C₀t ^ 2 * ((Ls / ↑N) * C₀s ^ 2) := by
-          change (Real.sqrt (Lt / ↑N) * C₀t * (Real.sqrt (Ls / ↑N) * C₀s)) ^ 2 = _
-          rw [show (Real.sqrt (Lt / ↑N) * C₀t * (Real.sqrt (Ls / ↑N) * C₀s)) ^ 2 =
+        change ↑N ^ 2 * (B * p₀f) ^ 2 = a ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2
+        have hB_sq : B ^ 2 = a ^ 2 * ((Lt / ↑N) * C₀t ^ 2 * ((Ls / ↑N) * C₀s ^ 2)) := by
+          change (a * (Real.sqrt (Lt / ↑N) * C₀t * (Real.sqrt (Ls / ↑N) * C₀s))) ^ 2 = _
+          rw [show (a * (Real.sqrt (Lt / ↑N) * C₀t * (Real.sqrt (Ls / ↑N) * C₀s))) ^ 2 =
+              a ^ 2 *
               (Real.sqrt (Lt / ↑N)) ^ 2 * C₀t ^ 2 *
               ((Real.sqrt (Ls / ↑N)) ^ 2 * C₀s ^ 2) from by ring]
           rw [Real.sq_sqrt hLtN, Real.sq_sqrt hLsN]
+          ring
         rw [show (B * p₀f) ^ 2 = B ^ 2 * p₀f ^ 2 from by ring, hB_sq]
         field_simp
-    _ ≤ Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1 :=
+    _ = asymGeomSpacing Lt Ls N ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := by
+        simp [a]
+
+-- N-uniform wrapper for `asymLatticeTestFn_norm_sq_le_tight`.
+theorem asymLatticeTestFn_norm_sq_le
+    (C₀t : ℝ) (hC₀t_pos : 0 < C₀t)
+    (hC₀t : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Lt) 0
+      (SmoothMap_Circle.fourierBasis n) ≤ C₀t)
+    (C₀s : ℝ) (hC₀s_pos : 0 < C₀s)
+    (hC₀s : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Ls) 0
+      (SmoothMap_Circle.fourierBasis n) ≤ C₀s)
+    (f : AsymTorusTestFunction Lt Ls) (N : ℕ) [NeZero N] :
+    ∑ x : FinLatticeSites 2 N, (asymLatticeTestFn Lt Ls N f x) ^ 2 ≤
+    (Lt * Ls) ^ 2 * C₀t ^ 2 * C₀s ^ 2 * (RapidDecaySeq.rapidDecaySeminorm 0 f) ^ 2 + 1 := by
+  set p₀f := RapidDecaySeq.rapidDecaySeminorm 0 f
+  have h_tight := asymLatticeTestFn_norm_sq_le_tight Lt Ls
+    C₀t hC₀t_pos hC₀t C₀s hC₀s_pos hC₀s f N
+  have hgeom_sq_le : asymGeomSpacing Lt Ls N ^ 2 ≤ Lt * Ls := by
+    have hN_sq_ge_one : (1 : ℝ) ≤ (N : ℝ) ^ 2 := by
+      have hN_ge_one : (1 : ℝ) ≤ N := by exact_mod_cast Nat.succ_le_of_lt (NeZero.pos N)
+      nlinarith
+    have hN_sq_ne : (N : ℝ) ^ 2 ≠ 0 := by positivity
+    have hgeom_eq : asymGeomSpacing Lt Ls N ^ 2 = Lt * Ls / (N : ℝ) ^ 2 := by
+      apply (eq_div_iff hN_sq_ne).2
+      simpa [mul_assoc, mul_left_comm, mul_comm] using asymGeomSpacing_sq_mul_sq Lt Ls N
+    rw [hgeom_eq]
+    exact div_le_self (mul_nonneg hLt.out.le hLs.out.le) hN_sq_ge_one
+  calc ∑ x : FinLatticeSites 2 N, (asymLatticeTestFn Lt Ls N f x) ^ 2
+      ≤ asymGeomSpacing Lt Ls N ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := h_tight
+    _ ≤ (Lt * Ls) ^ 2 * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := by
+        have hrest_nonneg : 0 ≤ Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := by
+          exact mul_nonneg (mul_nonneg (mul_nonneg (mul_nonneg hLt.out.le hLs.out.le)
+            (sq_nonneg C₀t)) (sq_nonneg C₀s)) (sq_nonneg p₀f)
+        simpa [pow_two, mul_assoc, mul_left_comm, mul_comm] using
+          mul_le_mul_of_nonneg_right hgeom_sq_le hrest_nonneg
+    _ ≤ (Lt * Ls) ^ 2 * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1 :=
         le_add_of_nonneg_right (by positivity)
 
 -- Existential wrapper for `asymLatticeTestFn_norm_sq_le`.
@@ -311,13 +293,21 @@ theorem asymLatticeTestFn_norm_sq_bounded
       (SmoothMap_Circle.fourierBasis n) ≤ C₀s := fun n => by
     specialize hC₀s_bound n; simp only [pow_zero, mul_one] at hC₀s_bound; exact hC₀s_bound
   set p₀f := RapidDecaySeq.rapidDecaySeminorm 0 f
-  have hC_pos : 0 < Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1 := by
-    have := mul_nonneg (mul_nonneg (mul_nonneg (mul_nonneg hLt.out.le hLs.out.le)
-      (sq_nonneg C₀t)) (sq_nonneg C₀s)) (sq_nonneg p₀f)
+  have hC_pos : 0 < (Lt * Ls) ^ 2 * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1 := by
+    have : 0 ≤ (Lt * Ls) ^ 2 * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := by positivity
     linarith
   exact ⟨_, hC_pos, fun N _ =>
     asymLatticeTestFn_norm_sq_le Lt Ls C₀t hC₀t_pos hC₀t C₀s hC₀s_pos hC₀s f N⟩
 
+/-- **Asymmetric-torus Gaussian uniform second-moment bound** (axiomatised
+in Stage 1 — same Phase 2 issue as the symmetric `torusEmbeddedTwoPoint_uniform_bound`).
+
+The previous proof used `covariance_inner_le_mass_inv_sq_norm_sq` (bare)
+and concluded `≤ mass⁻²·C_f`. Under GJ-aligned `latticeCovarianceGJ`,
+the bound becomes `(a^d)⁻¹·mass⁻²·C_f`, which is not uniform in N.
+Threading the embedding's `√a`-per-coordinate factor to absorb `(a^d)⁻¹`
+recovers the uniform bound (same pattern as the symmetric torus case).
+Phase 2. -/
 theorem asymGaussian_second_moment_uniform_bound
     (mass : ℝ) (hmass : 0 < mass)
     (f : AsymTorusTestFunction Lt Ls) :
@@ -326,22 +316,74 @@ theorem asymGaussian_second_moment_uniform_bound
       (ω (asymLatticeTestFn Lt Ls N f)) ^ 2
       ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
         (asymGeomSpacing_pos Lt Ls N) hmass) ≤ Cg := by
-  obtain ⟨C_f, hC_f_pos, hC_f_bound⟩ := asymLatticeTestFn_norm_sq_bounded Lt Ls f
-  refine ⟨mass⁻¹ ^ 2 * C_f, mul_pos (pow_pos (inv_pos.mpr hmass) 2) hC_f_pos, fun N _ => ?_⟩
-  set g := asymLatticeTestFn Lt Ls N f
-  set a := asymGeomSpacing Lt Ls N
-  set ha := asymGeomSpacing_pos Lt Ls N
-  set T := latticeCovariance 2 N a mass ha hmass
-  change ∫ ω, (ω g) ^ 2 ∂(GaussianField.measure T) ≤ mass⁻¹ ^ 2 * C_f
-  rw [second_moment_eq_covariance T g]
-  -- Step 3: Apply covariance bound
-  calc @inner ℝ ell2' _
-        (T g) (T g)
-      ≤ mass⁻¹ ^ 2 *
-          ∑ x : FinLatticeSites 2 N, g x ^ 2 :=
-        covariance_inner_le_mass_inv_sq_norm_sq N a mass ha hmass g
-    _ ≤ mass⁻¹ ^ 2 * C_f :=
-        mul_le_mul_of_nonneg_left (hC_f_bound N) (le_of_lt (pow_pos (inv_pos.mpr hmass) 2))
+  obtain ⟨C₀t, hC₀t_pos, hC₀t_bound⟩ :=
+    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Lt) 0
+  have hC₀t : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Lt) 0
+      (SmoothMap_Circle.fourierBasis n) ≤ C₀t := fun n => by
+    specialize hC₀t_bound n
+    simpa only [pow_zero, mul_one] using hC₀t_bound
+  obtain ⟨C₀s, hC₀s_pos, hC₀s_bound⟩ :=
+    SmoothMap_Circle.sobolevSeminorm_fourierBasis_le (L := Ls) 0
+  have hC₀s : ∀ n, SmoothMap_Circle.sobolevSeminorm (L := Ls) 0
+      (SmoothMap_Circle.fourierBasis n) ≤ C₀s := fun n => by
+    specialize hC₀s_bound n
+    simpa only [pow_zero, mul_one] using hC₀s_bound
+  set p₀f := RapidDecaySeq.rapidDecaySeminorm 0 f
+  have hCg_nonneg : 0 ≤ mass⁻¹ ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := by
+    have h_nonneg : 0 ≤ (mass⁻¹ ^ 2) * (Lt * Ls) * (C₀t ^ 2 * C₀s ^ 2) * p₀f ^ 2 := by
+      have hm_nonneg : 0 ≤ mass⁻¹ ^ 2 := sq_nonneg (mass⁻¹)
+      have hLtLs_nonneg : 0 ≤ Lt * Ls := mul_nonneg hLt.out.le hLs.out.le
+      have hC_nonneg : 0 ≤ C₀t ^ 2 * C₀s ^ 2 := mul_nonneg (sq_nonneg C₀t) (sq_nonneg C₀s)
+      have hp_nonneg : 0 ≤ p₀f ^ 2 := sq_nonneg p₀f
+      have h_left : 0 ≤ (mass⁻¹ ^ 2) * (Lt * Ls) := mul_nonneg hm_nonneg hLtLs_nonneg
+      have h_mid : 0 ≤ (mass⁻¹ ^ 2) * (Lt * Ls) * (C₀t ^ 2 * C₀s ^ 2) :=
+        mul_nonneg h_left hC_nonneg
+      exact mul_nonneg h_mid hp_nonneg
+    simpa [mul_assoc, mul_left_comm, mul_comm] using h_nonneg
+  refine ⟨mass⁻¹ ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1,
+    by linarith, fun N _ => ?_⟩
+  set g : FinLatticeField 2 N := asymLatticeTestFn Lt Ls N f
+  set a : ℝ := asymGeomSpacing Lt Ls N
+  have ha_pos : 0 < a := by simpa [a] using asymGeomSpacing_pos Lt Ls N
+  have ha2_ne : (a ^ 2 : ℝ) ≠ 0 := by positivity
+  rw [show ∫ ω : Configuration (FinLatticeField 2 N), (ω g) ^ 2
+        ∂(latticeGaussianMeasure 2 N a mass ha_pos hmass) =
+      @inner ℝ ell2' _
+        (latticeCovarianceGJ 2 N a mass ha_pos hmass g)
+        (latticeCovarianceGJ 2 N a mass ha_pos hmass g) by
+        exact second_moment_eq_covariance _ g]
+  have h_GJ_bare : @inner ℝ ell2' _
+        (latticeCovarianceGJ 2 N a mass ha_pos hmass g)
+        (latticeCovarianceGJ 2 N a mass ha_pos hmass g) =
+      (a ^ 2)⁻¹ *
+        @inner ℝ ell2' _
+          (latticeCovariance 2 N a mass ha_pos hmass g)
+          (latticeCovariance 2 N a mass ha_pos hmass g) := by
+    simpa [GaussianField.covariance] using
+      latticeCovariance_GJ_eq_inv_smul_bare (d := 2) (N := N) a mass ha_pos hmass g g
+  rw [h_GJ_bare]
+  have h_bare : @inner ℝ ell2' _
+        (latticeCovariance 2 N a mass ha_pos hmass g)
+        (latticeCovariance 2 N a mass ha_pos hmass g) ≤
+      mass⁻¹ ^ 2 * ∑ x : FinLatticeSites 2 N, g x ^ 2 :=
+    covariance_inner_le_mass_inv_sq_norm_sq N a mass ha_pos hmass g
+  have h_norm_tight : ∑ x : FinLatticeSites 2 N, g x ^ 2 ≤
+      a ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := by
+    simpa [g, a, p₀f] using
+      asymLatticeTestFn_norm_sq_le_tight Lt Ls
+        C₀t hC₀t_pos hC₀t C₀s hC₀s_pos hC₀s f N
+  calc (a ^ 2)⁻¹ * @inner ℝ ell2' _
+        (latticeCovariance 2 N a mass ha_pos hmass g)
+        (latticeCovariance 2 N a mass ha_pos hmass g)
+      ≤ (a ^ 2)⁻¹ * (mass⁻¹ ^ 2 * ∑ x : FinLatticeSites 2 N, g x ^ 2) :=
+        mul_le_mul_of_nonneg_left h_bare (by positivity)
+    _ ≤ (a ^ 2)⁻¹ * (mass⁻¹ ^ 2 * (a ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2)) := by
+        exact mul_le_mul_of_nonneg_left
+          (mul_le_mul_of_nonneg_left h_norm_tight (by positivity)) (by positivity)
+    _ = mass⁻¹ ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 := by
+        field_simp [ha2_ne]
+    _ ≤ mass⁻¹ ^ 2 * Lt * Ls * C₀t ^ 2 * C₀s ^ 2 * p₀f ^ 2 + 1 :=
+        le_add_of_nonneg_right (by positivity)
 
 /-! ## Tightness and limit existence -/
 
@@ -388,7 +430,7 @@ theorem asymTorus_interacting_second_moment_density_transfer
   have hF_sq_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
       ((ω g) ^ 2) ^ 2) μ_GFF := by
     have h4 : MemLp (fun ω : Configuration (FinLatticeField 2 N) => ω g) 4 μ_GFF := by
-      exact_mod_cast pairing_memLp (latticeCovariance 2 N (asymGeomSpacing Lt Ls N) mass
+      exact_mod_cast pairing_memLp (latticeCovarianceGJ 2 N (asymGeomSpacing Lt Ls N) mass
         (asymGeomSpacing_pos Lt Ls N) hmass) g 4
     have hmem := h4.norm_rpow (p := (4 : ENNReal))
       (by norm_num : (4 : ENNReal) ≠ 0) (by norm_num : (4 : ENNReal) ≠ ⊤)
@@ -416,7 +458,7 @@ theorem asymTorus_interacting_second_moment_density_transfer
     exact h_rpow_to_npow ω
   have h_second_nn : 0 ≤ ∫ ω, (ω g) ^ 2 ∂μ_GFF :=
     integral_nonneg fun ω => sq_nonneg _
-  set T := latticeCovariance 2 N (asymGeomSpacing Lt Ls N) mass
+  set T := latticeCovarianceGJ 2 N (asymGeomSpacing Lt Ls N) mass
     (asymGeomSpacing_pos Lt Ls N) hmass
   have hμ_eq : μ_GFF = GaussianField.measure T := rfl
   have h_fourth_le : ∫ ω, ((ω g) ^ 2) ^ 2 ∂μ_GFF ≤
@@ -571,7 +613,7 @@ theorem asymTorus_interacting_tightness
       -- Goal: Integrable (fun ω => (ω g)^2 * bw ω) μ_GFF
       have h_sq_int : Integrable (fun ω : Configuration (FinLatticeField 2 N) =>
           (ω g) ^ 2) μ_GFF :=
-        (pairing_memLp (latticeCovariance 2 N (asymGeomSpacing Lt Ls N) mass
+        (pairing_memLp (latticeCovarianceGJ 2 N (asymGeomSpacing Lt Ls N) mass
           (asymGeomSpacing_pos Lt Ls N) hmass) g 2).integrable_sq
       apply (h_sq_int.mul_const (Real.exp B)).mono
       · exact ((configuration_eval_measurable g).pow_const 2).aestronglyMeasurable.mul

@@ -23,7 +23,10 @@ import Pphi2.IRLimit.UniformExponentialMoment
 import Pphi2.GeneralResults.ComplexAnalysis
 import Cylinder.Symmetry
 import Cylinder.PositiveTime
-import Cylinder.ReflectionPositivity
+-- Cylinder.ReflectionPositivity was moved to gaussian-field/future/
+-- in commit 95db440 (Gemini deep-vetting flagged false claims).
+-- Removed from the import list pending re-addition once the corrected
+-- statements land in gaussian-field.
 
 noncomputable section
 

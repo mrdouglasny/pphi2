@@ -55,44 +55,51 @@ theorem covariance_split (T : ℝ) (m : ℕ) :
   unfold smoothCovEigenvalue roughCovEigenvalue
   rw [inv_eq_one_div, ← add_div]; ring
 
-/-- The smooth Wick constant: average of smooth covariance eigenvalues. -/
+/-- The smooth Wick constant (Glimm–Jaffe-aligned): `(a^d)⁻¹` times the
+average of smooth covariance eigenvalues. -/
 def smoothWickConstant (T : ℝ) : ℝ :=
-  (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
-  ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
-    smoothCovEigenvalue d N a mass T m
+  (a^d : ℝ)⁻¹ *
+  ((1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+    ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
+      smoothCovEigenvalue d N a mass T m)
 
-/-- The rough Wick constant: average of rough covariance eigenvalues. -/
+/-- The rough Wick constant (Glimm–Jaffe-aligned): `(a^d)⁻¹` times the
+average of rough covariance eigenvalues. -/
 def roughWickConstant (T : ℝ) : ℝ :=
-  (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
-  ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
-    roughCovEigenvalue d N a mass T m
+  (a^d : ℝ)⁻¹ *
+  ((1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+    ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
+      roughCovEigenvalue d N a mass T m)
 
 /-- The Wick constant splits: c_a = c_S + c_R. -/
 theorem wickConstant_split (T : ℝ) :
     wickConstant d N a mass =
     smoothWickConstant d N a mass T + roughWickConstant d N a mass T := by
   unfold wickConstant smoothWickConstant roughWickConstant
-  rw [← mul_add, ← Finset.sum_add_distrib]
-  congr 1
+  rw [← mul_add, ← mul_add, ← Finset.sum_add_distrib]
+  congr 2
   apply Finset.sum_congr rfl; intro m _
   exact covariance_split d N a mass T m
 
 /-! ## Variance bounds -/
 
-/-- **Smooth variance bound**: The smooth Wick constant grows at most logarithmically in 1/T.
+/-- **Smooth variance bound** (Phase 2 partial: trivial constant proof
+discharged 2026-05-07; tight `O(log T)` proof remains for true Phase 2).
 
-For d = 2 and T > 0: c_S ≤ C · (1 + |log T|)
+For d = 2 and T > 0: `c_S ≤ C · (1 + |log T|)` for some `C = C(d, N, a, mass)`.
 
-The smooth covariance `exp(-T·λ_k)/λ_k` is exponentially suppressed for large λ_k,
-so the sum over Fourier modes converges to O(|log T|) uniformly in N. -/
+This is the trivial bound `c_S ≤ wickConstant ≤ (a^d)⁻¹·mass⁻²`,
+which gives a constant `C = (a^d)⁻¹·mass⁻²` depending on `a` but
+uniform in T. The textbook **tight** bound `C = O(1)` (uniform in `a`)
+requires sharper Fourier estimates (Glimm–Jaffe Ch. 8) and is the real
+Phase 2 deliverable. -/
 theorem smoothVariance_le_log (_hd : d = 2) (T : ℝ) (_hT : 0 < T)
     (ha : 0 < a) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧ smoothWickConstant d N a mass T ≤ C * (1 + |Real.log T|) := by
-  -- Direct bound: each smoothCovEigenvalue(k) = exp(-Tλ)/λ ≤ 1/λ ≤ 1/m²
-  -- So smoothWickConstant ≤ (1/|Λ|)·Σ 1/λ = wickConstant ≤ 1/m²
-  -- And 1/m² ≤ 1/m² · (1 + |log T|)
-  refine ⟨mass⁻¹ ^ 2, by positivity, ?_⟩
-  unfold smoothWickConstant
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  refine ⟨(a^d : ℝ)⁻¹ * mass⁻¹ ^ 2, ?_, ?_⟩
+  · exact mul_pos (inv_pos.mpr ha_d_pos) (by positivity)
+  -- smoothWickConstant ≤ wickConstant via smoothCovEigenvalue ≤ 1/λ.
   have h_le : ∀ m ∈ range (Fintype.card (FinLatticeSites d N)),
       smoothCovEigenvalue d N a mass T m ≤ (latticeEigenvalue d N a mass m)⁻¹ := by
     intro m _
@@ -100,14 +107,19 @@ theorem smoothVariance_le_log (_hd : d = 2) (T : ℝ) (_hT : 0 < T)
     have hev := latticeEigenvalue_pos d N a mass ha hmass m
     rw [inv_eq_one_div]
     exact div_le_div_of_nonneg_right (Real.exp_le_one_iff.mpr (by nlinarith)) hev.le
-  calc (1 / ↑(Fintype.card (FinLatticeSites d N))) *
-      ∑ m ∈ range (Fintype.card (FinLatticeSites d N)), smoothCovEigenvalue d N a mass T m
-      ≤ wickConstant d N a mass := by
-        unfold wickConstant
-        apply mul_le_mul_of_nonneg_left (Finset.sum_le_sum h_le) (by positivity)
-    _ ≤ mass⁻¹ ^ 2 := wickConstant_le_inv_mass_sq d N a mass ha hmass
-    _ ≤ mass⁻¹ ^ 2 * (1 + |Real.log T|) := le_mul_of_one_le_right (by positivity)
-        (by linarith [abs_nonneg (Real.log T)])
+  have h_smooth_le_wick : smoothWickConstant d N a mass T ≤ wickConstant d N a mass := by
+    unfold smoothWickConstant wickConstant
+    refine mul_le_mul_of_nonneg_left ?_ (le_of_lt (inv_pos.mpr ha_d_pos))
+    apply mul_le_mul_of_nonneg_left (Finset.sum_le_sum h_le) (by positivity)
+  have h_wick_bound : wickConstant d N a mass ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 :=
+    wickConstant_le_inv_mass_sq d N a mass ha hmass
+  calc smoothWickConstant d N a mass T
+      ≤ wickConstant d N a mass := h_smooth_le_wick
+    _ ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 := h_wick_bound
+    _ ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 * (1 + |Real.log T|) :=
+        le_mul_of_one_le_right
+          (mul_nonneg (le_of_lt (inv_pos.mpr ha_d_pos)) (by positivity))
+          (by linarith [abs_nonneg (Real.log T)])
 
 /-- The rough L² bound is O(T).
 C_R(k) ≤ T (since (1-e^{-x})/x ≤ 1), so C_R(k)² ≤ T·C_R(k) ≤ T/λ_k.
@@ -137,12 +149,19 @@ theorem roughCovEigenvalue_le_inv (T : ℝ) (m : ℕ)
   apply div_le_div_of_nonneg_right _ hev.le
   linarith [Real.exp_nonneg (-T * latticeEigenvalue d N a mass m)]
 
+/-- **Rough variance L² bound** (Phase 2 deliverable: discharged
+2026-05-07 with corrected `(a^d)` factor on RHS).
+
+The mode-by-mode bound `C_R(k)² ≤ T · (1/λ_k)` (from `C_R(k) ≤ T` and
+`C_R(k) ≤ 1/λ_k`) gives `(1/|Λ|) Σ C_R² ≤ T · (1/|Λ|) Σ 1/λ_k`. Under
+Glimm–Jaffe-aligned `wickConstant = (a^d)⁻¹ · (1/|Λ|) Σ 1/λ_k`, the RHS
+becomes `T · a^d · wickConstant`. -/
 theorem roughCovariance_sq_summable (T : ℝ) (hT : 0 < T)
     (ha : 0 < a) (hmass : 0 < mass) :
     (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
     ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
       roughCovEigenvalue d N a mass T m ^ 2 ≤
-    T * wickConstant d N a mass := by
+    T * a^d * wickConstant d N a mass := by
   -- C_R(k)² ≤ C_R(k) · T ≤ (1/λ_k) · T
   have h_le : ∀ m ∈ range (Fintype.card (FinLatticeSites d N)),
       roughCovEigenvalue d N a mass T m ^ 2 ≤
@@ -161,6 +180,9 @@ theorem roughCovariance_sq_summable (T : ℝ) (hT : 0 < T)
       _ ≤ T * (latticeEigenvalue d N a mass m)⁻¹ :=
           mul_le_mul (roughCovEigenvalue_le_T d N a mass T hT.le m ha hmass)
             (roughCovEigenvalue_le_inv d N a mass T m ha hmass) hR_nn hT.le
+  -- (1/|Λ|) Σ C_R² ≤ T · (1/|Λ|) Σ 1/λ_k = T · a^d · wickConstant
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  have ha_d_ne : (a^d : ℝ) ≠ 0 := ne_of_gt ha_d_pos
   calc (1 / ↑(Fintype.card (FinLatticeSites d N))) *
       ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
         roughCovEigenvalue d N a mass T m ^ 2
@@ -168,10 +190,10 @@ theorem roughCovariance_sq_summable (T : ℝ) (hT : 0 < T)
         ∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
           T * (latticeEigenvalue d N a mass m)⁻¹ := by
         apply mul_le_mul_of_nonneg_left (Finset.sum_le_sum h_le) (by positivity)
-    _ = T * wickConstant d N a mass := by
+    _ = T * a^d * wickConstant d N a mass := by
         unfold wickConstant
         rw [← Finset.mul_sum]
-        ring
+        field_simp
 
 /-! ## Positivity -/
 

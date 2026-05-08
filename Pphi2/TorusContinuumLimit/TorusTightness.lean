@@ -112,7 +112,7 @@ theorem torusContinuumMeasures_tight
         ext ω; simp [Function.comp, torusEmbedLift_eval_eq L N f ω]
       rw [h_eq]
       -- (ω g)² is integrable under the lattice Gaussian = GaussianField.measure T
-      exact (pairing_memLp (latticeCovariance 2 N (circleSpacing L N) mass
+      exact (pairing_memLp (latticeCovarianceGJ 2 N (circleSpacing L N) mass
         (circleSpacing_pos L N) hmass) (latticeTestFn L N f) 2).integrable_sq)
     (fun f => by
       obtain ⟨C, _, hC_bound⟩ := torus_second_moment_uniform L mass hmass f

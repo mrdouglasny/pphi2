@@ -153,8 +153,7 @@ def timeShiftConst (s : ℝ) : SpaceTime d :=
 def unitTimeDir : SpaceTime d := EuclideanSpace.single timeIndex (1 : ℝ)
 
 @[simp] lemma norm_unitTimeDir : ‖(unitTimeDir : SpaceTime d)‖ = 1 := by
-  simpa [unitTimeDir] using
-    (PiLp.norm_single (p := (2 : ENNReal)) timeIndex (1 : ℝ))
+  simp [unitTimeDir]
 
 /-- `timeShiftConst` is the scalar multiple `s • e₀`. -/
 lemma timeShiftConst_eq_smul_unitTimeDir (s : ℝ) :

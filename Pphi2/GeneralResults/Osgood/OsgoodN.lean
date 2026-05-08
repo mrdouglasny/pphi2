@@ -40,6 +40,17 @@ open scoped Real NNReal ENNReal
 
 noncomputable section
 
+-- Linter exceptions: stylistic `simp` flexibility and `show`-as-claim are
+-- from the inductive proof style adapted from `Osgood2.lean` (Irving).
+-- Heartbeat bumps are needed for the joint power series construction.
+-- Empty lines inside the long block-Osgood induction help readability.
+-- The unscoped form is intentional.
+set_option linter.style.setOption false
+set_option linter.flexible false
+set_option linter.style.show false
+set_option linter.style.maxHeartbeats false
+set_option linter.style.emptyLine false
+
 /-! ### Helper: update is analytic -/
 
 /-- `update z₀ j ·` is analytic as a function `ℂ → (Fin n → ℂ)`. -/

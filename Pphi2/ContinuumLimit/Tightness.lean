@@ -46,6 +46,7 @@ variable (d N : ℕ) [NeZero N] [Fact (0 < d)]
 
 /-! ## Uniform second moment bound for the interacting continuum measure -/
 
+omit [Fact (0 < d)] in
 /-- **Uniform bound on interacting continuum second moments.**
 
 `∫ (ω f)² dν_a ≤ C(f, m, P)` uniformly in `a ∈ (0, 1]`.
@@ -99,6 +100,7 @@ theorem continuum_second_moment_uniform (P : InteractionPolynomial)
 
 /-! ## Integrability of `(ω f)²` under the interacting continuum measure -/
 
+omit [Fact (0 < d)] in
 /-- Integrability of the squared evaluation functional under the interacting
 continuum measure.
 
@@ -156,10 +158,10 @@ private theorem continuumMeasure_sq_integrable
   -- Step 3: L² integrability of (ω g_f)*(ω g_f) under μ_GFF via pairing_product_integrable
   have h_sq_int : Integrable (fun ω : Configuration (FinLatticeField d N) =>
       (ω g_f) * (ω g_f)) μ_GFF := by
-    have : μ_GFF = GaussianField.measure (latticeCovariance d N a mass ha hmass) := rfl
+    have : μ_GFF = GaussianField.measure (latticeCovarianceGJ d N a mass ha hmass) := rfl
     rw [this]
     exact pairing_product_integrable
-      (latticeCovariance d N a mass ha hmass) g_f g_f
+      (latticeCovarianceGJ d N a mass ha hmass) g_f g_f
   -- Step 4: dominate (ω g_f)*(ω g_f) * bw ω by (ω g_f)*(ω g_f) * exp(B)
   apply (h_sq_int.mul_const (Real.exp B)).mono
   · exact

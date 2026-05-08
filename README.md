@@ -3,33 +3,20 @@
 Formal construction of the P(Φ)₂ Euclidean quantum field theory in Lean 4,
 following the Glimm-Jaffe/Nelson lattice approach.
 
-> ### ⚠️ Notice (2026-05-07): lattice-action normalisation under review
->
-> A scaling-analysis review of the lattice action and Wick-subtraction
-> conventions has identified a likely **normalisation bug**: pphi2's lattice
-> action drops the `a^d` Riemann-sum prefactor on the kinetic term that
-> Glimm–Jaffe and Guerra–Rosen–Simon use, with the consequence that the
-> Wick-subtracted interaction `V_a` is `a^{2k_{top}}`-times smaller than the
-> textbook one and **vanishes in the continuum limit**. Under this analysis,
-> the limit measure constructed by `torusInteractingLimit_exists` and
-> consumed by `torusInteracting_satisfies_OS` is the **free Gaussian field**,
-> not the interacting P(φ)₂ theory.
->
-> The OS0–OS2 theorems remain true as Lean statements (the free GFF
-> satisfies them), but the axioms `continuumLimit_nonGaussian` and
-> `pphi2_nontriviality` would be **false** under the current normalisation
-> rather than open. Routes A, B, B′, and pphi2N all inherit the same lattice
-> action and are likely affected.
->
-> **Diagnosis + proposed fix**:
-> [`docs/lattice-action-normalization-fix.md`](docs/lattice-action-normalization-fix.md)
-> (Glimm–Jaffe-aligned action `S = (a^d/2)⟨φ, M_a φ⟩`, real dynamical-cutoff
-> Nelson estimate, ~6–10 weeks of focused work).
->
-> **Status**: not yet vetted — the doc lists seven open questions for
-> Gemini deep-think / Codex review before any code changes. Treat the
-> existing `torusInteracting_satisfies_OS` and the OS0–OS4 chain in
-> `Pphi2/Main.lean` as **provisional** until the vetting concludes.
+The lattice-action normalisation diagnosed in early May 2026 (a missing
+`a^d` Riemann-sum prefactor on the kinetic term, identified by a
+Gemini-vetted scaling analysis) has been resolved on the
+[`fix/lattice-action-normalization`](https://github.com/mrdouglasny/pphi2/tree/fix/lattice-action-normalization)
+branch. The Glimm–Jaffe-aligned action `S = (a^d/2) ⟨φ, M_a φ⟩` is now
+the project default, with `latticeCovarianceGJ` and the matching
+`gaussianDensity = exp(-(a^d/2)⟨φ, Qφ⟩)`. The OS0–OS4 chain in
+`Pphi2/Main.lean` proves theorems about the textbook GJ-aligned measure.
+Of the 11 Stage 1 axioms introduced for the genuine uniform bounds,
+9 are now theorems (Cluster B — embedding-normalisation pairs — done; 4
+Cluster A axioms remain, all reducing to the same Glimm–Jaffe Ch. 8
+dynamical-cutoff Nelson estimate). See
+[`docs/lattice-action-normalization-fix.md`](docs/lattice-action-normalization-fix.md)
+for diagnosis, fix architecture, and Phase 2 progress.
 
 ## What this project proves
 
@@ -112,9 +99,32 @@ OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
 The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
-**15 axioms, 0 sorries** in the active pphi2 build, plus **4 axioms,
-0 sorries** in the pinned Lake `GaussianField` dependency, for **19 combined
-axioms**.
+**19 axioms, 0 sorries** (pphi2) + **5 axioms, 1 sorry** (gaussian-field) = **24 combined**.
+Stage 1 lattice-action fix raised the count from 22 to 35; Phase 2
+partial discharge plus PR #14 (Route B′ IR-limit refactor +
+`fourierTransform_lp_eq_fourierIntegral` proof) brought it back to 24.
+Cluster B is now complete: the symmetric-torus uniform-bound pair
+(`torusEmbeddedTwoPoint_uniform_bound` / `torusEmbeddedTwoPoint_le_seminorm`)
+and the asymmetric pair (`asymGaussian_second_moment_uniform_bound` /
+`asymGf_sub_norm_le_seminorm`) are all proved, the latter via a new
+GJ-aligned asym embedding `evalAsymAtFinSiteGJ := a_geom • evalAsymAtFinSite`
+mirroring the symmetric `evalTorusAtSiteGJ`. Other Phase 2 discharges:
+`roughCovariance_sq_summable`, `smoothVariance_le_log` (trivial-`C` form),
+the gaussian-field density bridge
+`normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`,
+the GJ-aligned Gaussian Fourier identity
+`normalizedGaussianDensityMeasure_linearFourier`, and
+`torus_propagator_convergence_GJ`. Three additional pphi2 axioms cleared
+by PR #14: `fourierTransform_lp_eq_fourierIntegral` (private),
+`cylinderIR_uniform_exponential_moment`, and `cylinderIR_os3` (refactored
+to consume explicit Green-moment / RP inputs).
+Remaining 4 Stage 1 axioms are all in **Cluster A** (Nelson dynamical-cutoff,
+Glimm–Jaffe Ch. 8) — multi-week deliverable.
+All four remaining Stage 1 axioms (Cluster A) reduce to the same
+Glimm–Jaffe Ch. 8 dynamical-cutoff Nelson estimate (~6-8 wk per the
+Gemini estimate in `docs/lattice-action-normalization-fix.md`). The
+embedding-normalisation audit on `circleRestriction` is complete
+(2026-05-08).
 
 ### Route B: T²_L (symmetric torus) — OS0–OS2
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
@@ -122,7 +132,10 @@ spacing a = L/N → 0. The interacting continuum limit `torusInteractingLimit_ex
 is proved via Mitoma-Chebyshev tightness + Nelson's exponential estimate
 (proved: physical volume a²N²=L² is constant). OS3 dropped (→ Routes B', C).
 
-**`TorusInteractingOS.lean`: 0 local axioms, 0 sorry.**
+**`TorusInteractingOS.lean`: 0 local axioms, 0 sorries.**
+(`torusEmbeddedTwoPoint_le_seminorm` was discharged 2026-05-08 via the
+`(a^d)⁻¹·(L/N)² = 1` cancellation between `evalTorusAtSiteGJ` and
+`latticeCovarianceGJ`.)
 All OS0–OS2 proofs are complete within this file. Upstream dependencies
 are now largely resolved (see `docs/torus-route-gap-audit.md`):
 - ~~OS0 uses `osgood_separately_analytic` (axiom)~~ **PROVED** — Osgood's lemma fully verified (1965 lines, 0 axioms)
@@ -140,7 +153,12 @@ The construction proceeds in two limits:
 1. **UV limit (DONE):** On the asymmetric torus T_{Lt,Ls} = (ℝ/Lt ℤ) × (ℝ/Ls ℤ)
    with lattice (ℤ/Nℤ)² and geometric-mean spacing √(Lt·Ls)/N, take N → ∞.
    Route B's OS0–OS2 proofs are fully adapted to the asymmetric case.
-   `AsymTorusOS.lean`: **0 axioms, 0 sorry.**
+   `AsymTorusOS.lean`: **1 axiom, 0 sorries** (`asymTorusInteracting_exponentialMomentBound`,
+   Cluster A; `asymGf_sub_norm_le_seminorm` was discharged 2026-05-08 via
+   the new `evalAsymAtFinSiteGJ` GJ asym embedding). The remaining input
+   in `AsymTorusInteractingLimit.lean` is `asymNelson_exponential_estimate`
+   (also Cluster A); `asymGaussian_second_moment_uniform_bound` was
+   discharged the same day via the same cancellation pattern.
 
 2. **IR limit (in progress):** Take Lt → ∞ with Ls fixed. The torus measures
    μ_{P,Lt,Ls} on T_{Lt,Ls} converge weakly to a measure μ_{P,Ls} on the
@@ -249,7 +267,7 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-- **pphi2:** 15 axioms, 0 sorries in the active build (rechecked 2026-05-08). `continuumMeasures_tight` (Route A tightness on S'(ℝ^d)) is proved (Mitoma-Chebyshev + `interacting_moment_bound` + `gaussian_second_moment_uniform`). `fourierTransform_lp_eq_fourierIntegral`, `cylinderIR_os0`, `cylinderIR_uniform_exponential_moment`, the Route B′ OS3 limit transfer, `analyticOn_generatingFunctionalC`, `continuum_exponential_moments`, `exponential_moment_schwartz_bound`, `complex_gf_invariant_of_real_gf_invariant`, and the final `os0_for_continuum_limit`/`os1_for_continuum_limit`/`os4_for_continuum_limit` wrappers are theorem-derived. The continuum-limit inheritance layer is split between `ContinuumLimit/AxiomInheritance.lean`, `ContinuumLimit/CharacteristicFunctional.lean`, and `ContinuumLimit/TimeReflection.lean`. The remaining analytic debt includes the mixed `L¹`/Green exponential-moment bridge `∫ exp(|ω f|) ≤ exp(c₁ ∫|f| + c₂ G(f,f))`, the coupled canonical characteristic-functional bridge `continuumMeasure 2 (N n) P (a n) mass → μ` with `a_n → 0` and `(N n : ℝ) * a n → ∞`, and the spectral-gap-to-clustering input. The remaining Ward-identity debt in `OS2_WardIdentity.lean` is the `N`-uniform polynomial-log `a²` bound for the canonical defect `rotationCFDefect`; the pointwise observable API `rotationCFPointwiseDefect` remains available as a proved support layer, and the log-decay prerequisite is handled by `tendsto_zero_pow_mul_one_add_abs_log_pow` for arbitrary natural powers `m ≥ 1`. Route C's 21 axioms remain preserved in `future/`
+- **pphi2:** 19 axioms, 0 sorries in the active build (rechecked 2026-05-08, Cluster B complete — only Cluster A Nelson axioms remain from Stage 1). `continuumMeasures_tight` (Route A tightness on S'(ℝ^d)) is proved (Mitoma-Chebyshev + `interacting_moment_bound` + `gaussian_second_moment_uniform`). `cylinderIR_os0`, `analyticOn_generatingFunctionalC`, `continuum_exponential_moments`, `exponential_moment_schwartz_bound`, `complex_gf_invariant_of_real_gf_invariant`, and the final `os0_for_continuum_limit`/`os1_for_continuum_limit`/`os4_for_continuum_limit` wrappers are theorem-derived. The continuum-limit inheritance layer is split between `ContinuumLimit/AxiomInheritance.lean`, `ContinuumLimit/CharacteristicFunctional.lean`, and `ContinuumLimit/TimeReflection.lean`. The remaining analytic debt includes the mixed `L¹`/Green exponential-moment bridge `∫ exp(|ω f|) ≤ exp(c₁ ∫|f| + c₂ G(f,f))`, the coupled canonical characteristic-functional bridge `continuumMeasure 2 (N n) P (a n) mass → μ` with `a_n → 0` and `(N n : ℝ) * a n → ∞`, and the spectral-gap-to-clustering input. The remaining Ward-identity debt in `OS2_WardIdentity.lean` is the `N`-uniform polynomial-log `a²` bound for the canonical defect `rotationCFDefect`; the pointwise observable API `rotationCFPointwiseDefect` remains available as a proved support layer, and the log-decay prerequisite is handled by `tendsto_zero_pow_mul_one_add_abs_log_pow` for arbitrary natural powers `m ≥ 1`. Route C's 21 axioms remain preserved in `future/`
 - **Route B (torus):** 0 axioms, 0 sorries — the most developed route
 - **Route B' IR limit:** 0 local axioms, 0 sorries — OS0 analyticity is proved from uniform exponential moments plus bounded-continuous weak convergence; OS2 uses the narrowed `AsymTorusSequenceHasCylinderOS2Symmetry` input, with a proved bridge from `AsymSatisfiesTorusOS`; OS3 is transferred from `CylinderMeasureSequenceEventuallyReflectionPositive`; the remaining nonlocal inputs are the eventual Green-moment bound `AsymTorusSequenceHasUniformGreenMomentBound` and eventual pullback RP for the concrete asymmetric-torus family
 - **Shared foundations layer:** `Common/QFT/Euclidean/Formulations.lean` and
