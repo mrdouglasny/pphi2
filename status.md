@@ -16,9 +16,26 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-07): 29 axioms, 0 sorries.**
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-07): 27 axioms, 0 sorries.**
 
-Recent change (2026-05-07): **Stage 1 of the lattice-action normalisation fix**.
+Recent change (2026-05-07, Phase 2 partial): **3 of 11 Stage 1 axioms
+discharged** (32 axioms combined; pphi2 27, gaussian-field 5, was 35
+combined post-Stage 1):
+
+* `roughCovariance_sq_summable` (CovarianceSplit.lean): RHS gains `a^d`
+  factor; original 30-line proof preserved with `field_simp`.
+* `smoothVariance_le_log` (CovarianceSplit.lean): trivial `O(1)` bound
+  with `C = (a^d)⁻¹·mass⁻²` (depends on `a`, uniform in `T`); textbook
+  tight `C = O(1)` uniform in `a` is the real Phase 2 deliverable.
+* `normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`
+  (gaussian-field Density.lean): proved via density unfolding +
+  `Finset.mul_sum` to fold `a^d` into the action.
+
+Remaining 10 Stage 1 axioms each require substantive Phase 2 work
+(embedding-normalisation audit on `circleRestriction` to drop `√(L/N)`
+per-coord factor, or real Glimm–Jaffe Ch. 8 dynamical-cutoff proof).
+
+Recent change (2026-05-07, Stage 1): **lattice-action normalisation fix**.
 The lattice action is now Glimm–Jaffe-aligned: `latticeGaussianMeasure` has
 covariance kernel `(1/a^d) M_a^{-1}` (textbook), so the lattice 2-point function
 will converge to the textbook continuum Green's function on `T^d_L`. See
@@ -208,7 +225,7 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 4T | `TorusContinuumLimit/MeasureUniqueness.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusNuclearBridge.lean` | 0 axioms, 0 sorries |
 | 4T | `NelsonEstimate/NelsonEstimate.lean` | 1 axiom, 0 sorries (Stage 1: `nelson_exponential_estimate_lattice` axiomatised — easy pointwise-bound proof breaks under GJ; genuine proof via Glimm–Jaffe Ch. 8 dynamical cutoff is Phase 2). |
-| 4T | `NelsonEstimate/CovarianceSplit.lean` | 2 axioms, 0 sorries (Stage 1: `smoothVariance_le_log`, `roughCovariance_sq_summable` axiomatised — internal to dynamical-cutoff infrastructure, Phase 2). |
+| 4T | `NelsonEstimate/CovarianceSplit.lean` | **0 axioms, 0 sorries** (Phase 2 partial discharge 2026-05-07: `roughCovariance_sq_summable` and `smoothVariance_le_log` (trivial-`C`-form) both axiom → proved theorem). |
 | 4T | `NelsonEstimate/{SmoothLowerBound,RoughErrorBound}.lean` | 0 axioms, 0 sorries (Phase 2 infrastructure, ready to wire into the real Nelson proof). |
 | B' | `AsymTorus/AsymTorusEmbedding.lean` | 0 axioms, 0 sorries |
 | B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 2 axioms, 0 sorries (Stage 1: `asymNelson_exponential_estimate`, `asymGaussian_second_moment_uniform_bound` axiomatised — same Phase 2 pattern as the symmetric torus). |

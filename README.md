@@ -127,9 +127,16 @@ OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
 The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
-**29 axioms, 0 sorries** (pphi2) + **6 axioms** (gaussian-field) = **35 combined** (axioms only).
-Increase from the prior 18+4 reflects the Stage 1 lattice-action fix —
-see the notice at the top of this README.
+**27 axioms, 0 sorries** (pphi2) + **5 axioms** (gaussian-field) = **32 combined** (axioms only).
+Stage 1 lattice-action fix raised the count from 22 to 35; Phase 2
+partial discharge has brought it back down to 32 (3 axioms proved:
+`roughCovariance_sq_summable`, `smoothVariance_le_log` (trivial-`C`
+form), and the gaussian-field density bridge
+`normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`).
+The 10 remaining Stage 1 axioms all require either the real Nelson
+dynamical-cutoff (Glimm–Jaffe Ch. 8, ~6-8 wk per Gemini estimate) or
+the embedding-normalisation audit on `circleRestriction` (drop the
+`√(L/N)` per-coord factor for GJ-aligned embeddings).
 
 ### Route B: T²_L (symmetric torus) — OS0–OS2
 Finite-volume warm-up isolating the UV limit. Lattice (ℤ/Nℤ)² with
