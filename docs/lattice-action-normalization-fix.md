@@ -425,44 +425,55 @@ estimate (§4) reflects this.
 
 **Phase 0 (vetting): done.** **Phase 1 (action change): done** — landed on
 `fix/lattice-action-normalization` and the corresponding gaussian-field
-branch. **Phase 2 (Nelson's estimate proper): partial** — 5 of 11 Stage 1
-axioms discharged, the heavy dynamical-cutoff piece still pending. Combined
-axiom count: 35 (post-Stage 1) → 28 (current).
+branch. **Phase 2 (Nelson's estimate proper): partial** — 7 of 11 Stage 1
+axioms discharged. Combined axiom count: 35 (post-Stage 1) → 26 (current).
+
+The remaining 4 Stage 1 axioms split into two clusters:
+
+- **Cluster A (Nelson dynamical-cutoff)**: 4 axioms reducing to the same
+  Glimm–Jaffe Ch. 8 estimate. Multi-week deliverable.
+- **Cluster B (embedding-normalisation, asymmetric branch)**: 2 axioms
+  awaiting an `evalAsymAtFinSiteGJ` refactor analogous to the symmetric
+  `evalTorusAtSiteGJ`. ~1 week.
 
 Discharged so far in Phase 2:
 
 * `roughCovariance_sq_summable` (CovarianceSplit.lean) — proved theorem
   with `field_simp` + `a^d` rescale of original 30-line proof.
 * `smoothVariance_le_log` (CovarianceSplit.lean) — proved with the trivial
-  `C = (a^d)⁻¹ · mass⁻²` bound. The textbook tight `C = O(1)` uniform in `a`
-  remains the real Phase 2 deliverable, but the trivial bound suffices for
-  the consumers.
+  `C = (a^d)⁻¹ · mass⁻²` bound.
 * `normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`
   (gaussian-field Density.lean) — density unfolding + `Finset.mul_sum`.
 * `normalizedGaussianDensityMeasure_linearFourier` (gaussian-field
   Density.lean) — adapts the original 290-line bare-form Fourier proof via
-  the new `integral_massEigenbasis_cexp_GJ` helper. The `(a^d)^{−n/2}`
-  Jacobian factors cancel in the numerator/denominator ratio, yielding
-  `exp(−(1/2) ⟨T_GJ f, T_GJ f⟩)` via `lattice_covariance_GJ_eq_spectral`.
+  the new `integral_massEigenbasis_cexp_GJ` helper.
 * `torus_propagator_convergence_GJ` (TorusPropagatorConvergence.lean) —
-  discharged via the `(a^d)⁻¹ · (L/N)² = 1` cancellation between the
-  GJ-aligned `evalTorusAtSiteGJ` and `latticeCovarianceGJ`.
-
-Still axiomatised (8 in pphi2):
-
-* `nelson_exponential_estimate_lattice` (NelsonEstimate.lean)
-* `exponential_moment_bound` (Hypercontractivity.lean)
-* `asymNelson_exponential_estimate`, `asymGaussian_second_moment_uniform_bound`
-  (AsymTorusInteractingLimit.lean)
-* `asymTorusInteracting_exponentialMomentBound`, `asymGf_sub_norm_le_seminorm`
-  (AsymTorusOS.lean)
-* `torusEmbeddedTwoPoint_le_seminorm` (TorusInteractingOS.lean)
+  discharged via the `(a^d)⁻¹ · (L/N)² = 1` cancellation between
+  `evalTorusAtSiteGJ` and `latticeCovarianceGJ`.
 * `torusEmbeddedTwoPoint_uniform_bound` (TorusPropagatorConvergence.lean)
+  — Cluster B 1/2, same cancellation pattern. Proved via the helper
+  `torusEmbeddedTwoPoint_le_seminorm_tight` which factors the explicit
+  `mass⁻² · L² · C₀⁴ · p₀(f)²` bound.
+* `torusEmbeddedTwoPoint_le_seminorm` (TorusInteractingOS.lean) — Cluster
+  B 2/2 (symmetric branch). Discharged via the same tight helper, witness
+  `mass⁻¹ · L · C₀² · rapidDecaySeminorm 0 f`.
 
-These all reduce, in different shapes, to the genuine dynamical-cutoff
-Nelson estimate (Glimm–Jaffe Ch. 8). The infrastructure files
-`SmoothLowerBound.lean` and `RoughErrorBound.lean` are in place but not
-yet wired up.
+Still axiomatised (6 in pphi2):
+
+* Cluster A — `nelson_exponential_estimate_lattice` (NelsonEstimate.lean),
+  `exponential_moment_bound` (Hypercontractivity.lean),
+  `asymNelson_exponential_estimate`, `asymTorusInteracting_exponentialMomentBound`
+  (AsymTorus/{AsymTorusInteractingLimit,AsymTorusOS}.lean).
+* Cluster B asymmetric — `asymGaussian_second_moment_uniform_bound`,
+  `asymGf_sub_norm_le_seminorm`. Discharge requires introducing
+  `evalAsymAtFinSiteGJ := asymGeomSpacing • evalAsymAtFinSite` in the
+  asym embedding (analog of the symmetric `evalTorusAtSiteGJ`), updating
+  `asymTorusEmbedLift` to use it, and chasing the cancellation through
+  the existing `asymLatticeTestFn_norm_sq_le` infrastructure.
+
+The Cluster A four reduce to the same dynamical-cutoff Nelson estimate
+(Glimm–Jaffe Ch. 8); `SmoothLowerBound.lean` and `RoughErrorBound.lean`
+hold the scaffolded infrastructure.
 
 ### Phase 0 — vetting
 

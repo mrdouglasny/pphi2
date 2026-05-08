@@ -1,16 +1,16 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field
 
 **Updated**: 2026-05-08 (branch `fix/lattice-action-normalization`)
-**pphi2**: 23 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 5 axioms, 1 sorry
+**pphi2**: 21 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 5 axioms, 1 sorry
 
 Note: pphi2 count includes 1 private axiom
 (`gaussian_rp_cov_perfect_square`).
 
-The 8-axiom delta over `main` (which has 15 in pphi2) is the surviving
+The 6-axiom delta over `main` (which has 15 in pphi2) is the surviving
 Stage 1 GJ-aligned cohort. Stage 1 raised pphi2 22 → 29 when the lattice
 action was renormalised to `S = (a^d/2)⟨φ, M_a φ⟩` with
 `gaussianDensity = exp(-(a^d/2)⟨φ, Qφ⟩)`. Phase 2 partial discharge
-brought the count back down by 5 in pphi2 (and 2 in gaussian-field).
+brought the count back down by 7 in pphi2 (and 2 in gaussian-field).
 
 **2026-05-08**: `normalizedGaussianDensityMeasure_linearFourier`,
 `torus_propagator_convergence_GJ`, `roughCovariance_sq_summable`,
@@ -45,7 +45,7 @@ elementary inequality `x² ≤ 2 e^|x|` and a scaling optimization.
 eventual pullback RP predicate `CylinderMeasureSequenceEventuallyReflectionPositive`
 and proves the IR-limit OS3 transfer by characteristic-functional convergence.
 
-## Current pphi2 Axiom Inventory (23 active, 0 sorries)
+## Current pphi2 Axiom Inventory (21 active, 0 sorries)
 
 This table is generated from the current `./scripts/count_axioms.sh` result and
 is the source of truth for active pphi2 axioms in this audit. The Stage 1
@@ -66,23 +66,21 @@ GJ-aligned cohort is in the lower block.
 | `Pphi2/TransferMatrix/SpectralGap.lean` | 2 | `spectral_gap_uniform`, `spectral_gap_lower_bound` |
 | **Subtotal** | **15** | |
 
-### Stage 1 GJ-aligned cohort (8 axioms — only on `fix/lattice-action-normalization`)
+### Stage 1 GJ-aligned cohort (6 axioms — only on `fix/lattice-action-normalization`)
 
 These were introduced when the lattice action was rebased to the Glimm–Jaffe
-convention. Each is the easy-bound analogue of a true uniform-in-`a` bound
-that requires the genuine dynamical-cutoff Nelson estimate (Glimm–Jaffe Ch. 8,
-Phase 2 deliverable).
+convention. The Cluster A four (Nelson dynamical-cutoff family) reduce to the
+same Glimm–Jaffe Ch. 8 estimate; the Cluster B asymmetric pair waits on the
+`evalAsymAtFinSiteGJ` refactor.
 
-| File | Active axioms | Names |
-|------|---------------|-------|
-| `Pphi2/AsymTorus/AsymTorusInteractingLimit.lean` | 2 | `asymNelson_exponential_estimate`, `asymGaussian_second_moment_uniform_bound` |
-| `Pphi2/AsymTorus/AsymTorusOS.lean` | 2 | `asymTorusInteracting_exponentialMomentBound`, `asymGf_sub_norm_le_seminorm` |
-| `Pphi2/ContinuumLimit/Hypercontractivity.lean` | 1 | `exponential_moment_bound` |
-| `Pphi2/NelsonEstimate/NelsonEstimate.lean` | 1 | `nelson_exponential_estimate_lattice` |
-| `Pphi2/TorusContinuumLimit/TorusInteractingOS.lean` | 1 | `torusEmbeddedTwoPoint_le_seminorm` |
-| `Pphi2/TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 | `torusEmbeddedTwoPoint_uniform_bound` |
-| **Subtotal** | **8** | |
-| **Total (this branch)** | **23** | |
+| File | Active axioms | Names | Cluster |
+|------|---------------|-------|---------|
+| `Pphi2/AsymTorus/AsymTorusInteractingLimit.lean` | 2 | `asymNelson_exponential_estimate`, `asymGaussian_second_moment_uniform_bound` | A, B |
+| `Pphi2/AsymTorus/AsymTorusOS.lean` | 2 | `asymTorusInteracting_exponentialMomentBound`, `asymGf_sub_norm_le_seminorm` | A, B |
+| `Pphi2/ContinuumLimit/Hypercontractivity.lean` | 1 | `exponential_moment_bound` | A |
+| `Pphi2/NelsonEstimate/NelsonEstimate.lean` | 1 | `nelson_exponential_estimate_lattice` | A |
+| **Subtotal** | **6** | | |
+| **Total (this branch)** | **21** | | |
 
 ### Discharged in Phase 2 (no longer axioms)
 
@@ -93,6 +91,8 @@ Phase 2 deliverable).
 | `gaussian-field/GaussianField/Density.lean` | `normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure` | proved theorem (density unfolding + `Finset.mul_sum`) |
 | `gaussian-field/GaussianField/Density.lean` | `normalizedGaussianDensityMeasure_linearFourier` | proved theorem (`integral_massEigenbasis_cexp_GJ` + Jacobian cancellation + `lattice_covariance_GJ_eq_spectral`) |
 | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | `torus_propagator_convergence_GJ` | discharged (cancellation `(a^d)⁻¹ · (L/N)² = 1` between `evalTorusAtSiteGJ` and `latticeCovarianceGJ`) |
+| `TorusContinuumLimit/TorusPropagatorConvergence.lean` | `torusEmbeddedTwoPoint_uniform_bound` | proved theorem (Cluster B — same cancellation pattern, via `torusEmbeddedTwoPoint_le_seminorm_tight`) |
+| `TorusContinuumLimit/TorusInteractingOS.lean` | `torusEmbeddedTwoPoint_le_seminorm` | proved theorem (Cluster B — same tight helper, witness `mass⁻¹·L·C₀²·rapidDecaySeminorm 0 f`) |
 
 ## Historical pphi2 Audit Notes
 

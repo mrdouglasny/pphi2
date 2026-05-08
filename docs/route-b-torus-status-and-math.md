@@ -18,7 +18,7 @@ physicist-level explanation of what is being proved and how.*
 | Bundled OS0–OS2 theorem `torusInteracting_satisfies_OS` | `TorusContinuumLimit/TorusInteractingOS.lean:2909` | **proved** |
 | `torusInteractingLimit_exists` (existence of the continuum measure) | `TorusContinuumLimit/TorusInteractingLimit.lean:441` | **proved** |
 | Nelson's exponential estimate `nelson_exponential_estimate_lattice` | `NelsonEstimate/NelsonEstimate.lean:73` | **axiomatised** (Stage 1 GJ form; genuine dynamical-cutoff proof is the Phase 2 deliverable) |
-| Local axioms in `TorusContinuumLimit/` | – | **2 axioms** (Stage 1 GJ: `torusEmbeddedTwoPoint_le_seminorm`, `torusEmbeddedTwoPoint_uniform_bound`) |
+| Local axioms in `TorusContinuumLimit/` | – | **0 axioms** — the symmetric pair `torusEmbeddedTwoPoint_le_seminorm` / `torusEmbeddedTwoPoint_uniform_bound` was discharged 2026-05-08 (Phase 2 Cluster B partial). |
 | Local axioms in `NelsonEstimate/` | – | **1 axiom** (Stage 1 GJ: `nelson_exponential_estimate_lattice`); CovarianceSplit is now 0 / 0 (Phase 2 partial discharge) |
 | OS3 on the torus | – | intentionally **out of scope** (see §6) |
 | OS4 on the torus | – | intentionally **out of scope** (see §6) |

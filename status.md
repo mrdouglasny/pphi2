@@ -16,8 +16,8 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-08, post PR #14): 23 axioms, 0 sorries** (pphi2)
-**+ 5 axioms, 1 sorry** (gaussian-field) = **28 combined**.
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-08, post PR #14 + Cluster B partial): 21 axioms, 0 sorries** (pphi2)
+**+ 5 axioms, 1 sorry** (gaussian-field) = **26 combined**.
 
 Recent change (2026-05-08, post PR #14 merge): **5 Stage 1 GJ axioms
 discharged in Phase 2** plus three additional pphi2 axioms cleared by
@@ -236,13 +236,13 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 6 | `FormulationAdapter.lean` | 0 axioms, 0 sorries (exports `Pphi2` into the shared formulation layer) |
 | 6 | `Main.lean` | 1 axiom, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusEmbedding.lean` | 0 axioms, 0 sorries (`torusContinuumGreen` now `greenFunctionBilinear`) |
-| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | 1 axiom, 0 sorries (`torusEmbeddedTwoPoint_uniform_bound`; Phase 2 discharge 2026-05-08 of `torus_propagator_convergence_GJ` via the `(a^d)⁻¹ · (L/N)² = 1` cancellation between `evalTorusAtSiteGJ` and `latticeCovarianceGJ`). `torus_propagator_convergence` is now a theorem. |
+| 4T | `TorusContinuumLimit/TorusPropagatorConvergence.lean` | **0 axioms**, 0 sorries (Phase 2 Cluster B partial 2026-05-08: `torusEmbeddedTwoPoint_uniform_bound` and `torus_propagator_convergence_GJ` both discharged via the `(a^d)⁻¹ · (L/N)² = 1` cancellation between `evalTorusAtSiteGJ` and `latticeCovarianceGJ`). |
 | 4T | `TorusContinuumLimit/TorusTightness.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusConvergence.lean` | 0 axioms, 0 sorries (Prokhorov proved!) |
 | 4T | `TorusContinuumLimit/TorusGaussianLimit.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusInteractingLimit.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusOSAxioms.lean` | 0 axioms, 0 sorries |
-| 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | 1 axiom, 0 sorries (Stage 1: `torusEmbeddedTwoPoint_le_seminorm` axiomatised — uniform-in-N seminorm bound, same Phase 2 pattern). |
+| 4T | `TorusContinuumLimit/TorusInteractingOS.lean` | **0 axioms**, 0 sorries (Phase 2 Cluster B partial 2026-05-08: `torusEmbeddedTwoPoint_le_seminorm` discharged via the symmetric-torus tight bound `torusEmbeddedTwoPoint_le_seminorm_tight`). |
 | 4T | `TorusContinuumLimit/MeasureUniqueness.lean` | 0 axioms, 0 sorries |
 | 4T | `TorusContinuumLimit/TorusNuclearBridge.lean` | 0 axioms, 0 sorries |
 | 4T | `NelsonEstimate/NelsonEstimate.lean` | 1 axiom, 0 sorries (Stage 1: `nelson_exponential_estimate_lattice` axiomatised — easy pointwise-bound proof breaks under GJ; genuine proof via Glimm–Jaffe Ch. 8 dynamical cutoff is Phase 2). |
