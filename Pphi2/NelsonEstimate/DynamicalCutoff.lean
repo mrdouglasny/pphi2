@@ -40,6 +40,7 @@ glue is in `PolynomialChaosBridge.lean`.
 
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Mathlib.MeasureTheory.Measure.MeasureSpace
 import Pphi2.NelsonEstimate.SmoothLowerBound
 import Pphi2.NelsonEstimate.CovarianceSplit
 import Pphi2.InteractingMeasure.LatticeMeasure
@@ -48,7 +49,7 @@ noncomputable section
 
 namespace Pphi2.DynamicalCutoff
 
-open Real Pphi2 GaussianField
+open Real Pphi2 GaussianField MeasureTheory
 
 /-- The dynamical cutoff scale `T(M)` for the Nelson estimate.
 
@@ -198,6 +199,43 @@ theorem smooth_lower_bound_at_cutoff
       hT_pos φ_S
   have h_cutoff :=
     dynamicalCutoffScale_log_sq_le (smoothBoundConstant d a mass L) M hC_pos hM
+  linarith
+
+/-! ## Tail-bound transfer from smooth/rough decomposition
+
+This is the abstract Glimm–Jaffe Ch. 8 step that converts a
+deterministic smooth lower bound + a rough-error tail bound into a
+tail bound on `V` itself. It's the algebraic core of the dynamical
+cutoff: combined with the layer-cake and a doubly-exponential tail
+on the rough error, it gives the uniform exp-moment bound. -/
+
+/-- **Tail-bound transfer.**
+
+Given an `M`-parameterised decomposition `V = V_S(M) + E_R(M)` with:
+* deterministic smooth lower bound `V_S(M) ω ≥ -M/2` (pointwise),
+* rough-error tail bound `μ {ω | E_R(M) ω ≤ -M/2} ≤ ψ M`,
+the inequality `V ω ≤ -M` forces `E_R(M) ω ≤ -M/2` (since
+`V_S(M) ω ≥ -M/2`), so the tail of `V` inherits the rough bound:
+`μ {ω | V ω ≤ -M} ≤ ψ M`.
+
+This is the Glimm-Jaffe Ch. 8 dynamical-cutoff transfer. The
+decomposition is allowed to be `M`-dependent (the smooth/rough split
+parameter `T = T(M)` changes with the depth `M`). -/
+theorem measure_le_neg_of_smooth_rough_split
+    {α : Type*} [MeasurableSpace α] (μ : Measure α)
+    (V : α → ℝ)
+    (V_S E_R : ℝ → α → ℝ)
+    (hdecomp : ∀ M ω, V ω = V_S M ω + E_R M ω)
+    (hsmooth : ∀ M ω, -(M / 2) ≤ V_S M ω)
+    (ψ : ℝ → ENNReal)
+    (htail : ∀ M, 0 < M → μ {ω | E_R M ω ≤ -(M / 2)} ≤ ψ M)
+    (M : ℝ) (hM : 0 < M) :
+    μ {ω | V ω ≤ -M} ≤ ψ M := by
+  refine le_trans (measure_mono ?_) (htail M hM)
+  intro ω hω
+  simp only [Set.mem_setOf_eq] at hω ⊢
+  have h_eq := hdecomp M ω
+  have h_smooth := hsmooth M ω
   linarith
 
 end Pphi2.DynamicalCutoff
