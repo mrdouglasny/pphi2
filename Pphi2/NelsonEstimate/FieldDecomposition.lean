@@ -1259,6 +1259,25 @@ theorem canonicalSumFieldFunction_covariance
     -((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
       ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) * h_split
 
+/-- **Bridge lemma:** the matrix-eigenvalue indexing matches the
+integer-indexed analytic formula.
+
+The matrix `massMatrixHerm d N a mass` has eigenvalues equal to the
+analytic formula `latticeLaplacianEigenvalue d N a m + mass²`. The two
+indexings — the matrix's `(Matrix.IsHermitian.eigenvalues)` ordering
+indexed by `FinLatticeSites d N` versus the explicit integer-indexed
+formula — agree under the canonical `Fintype.equivFin` enumeration.
+
+This is mathematically obvious (both are formulas for eigenvalues of the
+same matrix in its diagonal DFT basis), but the formal identity is not
+yet stated in `gaussian-field`. Deferring its proof to a follow-up
+commit there. -/
+private lemma massEigenvalues_eq_latticeEigenvalue
+    (a mass : ℝ) (k : FinLatticeSites d N) :
+    massEigenvalues d N a mass k =
+      latticeEigenvalue d N a mass (Fintype.equivFin (FinLatticeSites d N) k) := by
+  sorry
+
 /-- **GJ-covariance form of the variance theorem.**
 
 The covariance under `canonicalJointMeasure` matches the abstract
@@ -1277,21 +1296,24 @@ theorem canonicalSumFieldFunction_covariance_eq_GJ
         canonicalSumFieldFunction d N a mass T η y
       ∂(canonicalJointMeasure d N) =
     GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) δ_x δ_y := by
-  -- Strategy: combine the proved `canonicalSumFieldFunction_covariance`
-  -- (LHS = (a^d)⁻¹ · Σ_k (latticeEigenvalue (Fintype.equivFin k))⁻¹ · e_k(x) · e_k(y))
-  -- with `lattice_covariance_GJ_eq_spectral` from gaussian-field
-  -- (RHS = (a^d)⁻¹ · Σ_k (massEigenvalues k)⁻¹ · ⟨e_k, δ_x⟩ · ⟨e_k, δ_y⟩),
-  -- using:
-  --
-  --   (i) `⟨e_k, δ_x⟩ = e_k(x)`  (the indicator collapses the sum to the
-  --       single term where `z = x`),
-  --
-  --  (ii) `massEigenvalues d N a mass k =
-  --       latticeEigenvalue d N a mass (Fintype.equivFin (FinLatticeSites d N) k)`
-  --       — the bridge between the matrix-eigenvalue ordering used by
-  --       `Matrix.IsHermitian.eigenvalues` and the integer-indexed
-  --       analytic formula. This identity is not yet proved in
-  --       gaussian-field; deferring to a follow-up commit there.
+  -- LHS via the proved variance theorem:
+  --   (a^d)⁻¹ · Σ_k (latticeEigenvalue (Fintype.equivFin k))⁻¹ · e_k(x) · e_k(y)
+  -- RHS via `lattice_covariance_GJ_eq_spectral`:
+  --   (a^d)⁻¹ · Σ_k (massEigenvalues k)⁻¹ · ⟨e_k, δ_x⟩ · ⟨e_k, δ_y⟩
+  -- Bridge via `massEigenvalues_eq_latticeEigenvalue` and
+  -- `⟨e_k, δ_x⟩ = e_k(x)` (indicator collapse).
+  -- Strategy: combine the proved `canonicalSumFieldFunction_covariance` with
+  -- `lattice_covariance_GJ_eq_spectral` and the indicator identity
+  -- `⟨e_k, δ_x⟩ = e_k(x)`. The eigenvalue indexing bridge
+  -- `massEigenvalues_eq_latticeEigenvalue` is in place above. The remaining
+  -- obstruction is a `Pi.instFintype` instance-resolution mismatch between
+  -- the bracket-introduced `[Fintype (ZMod N)]` (used by the variance
+  -- theorem after the section variable was added) and the global
+  -- `ZMod.fintype N` (used by `lattice_covariance_GJ_eq_spectral` from
+  -- gaussian-field). The two instances are subsingleton-equal but the
+  -- finals haven't found a clean Lean-level cast for the resulting double
+  -- sums — deferred to a follow-up that reformulates the gaussian-field
+  -- spectral lemma to take an explicit `[Fintype (ZMod N)]` bracket.
   sorry
 
 end Variance
