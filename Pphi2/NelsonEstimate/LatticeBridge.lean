@@ -145,4 +145,87 @@ theorem bridgeAxiom_of_setup
     measure_univ
   rw [h_prob]
 
+/-- **Bridge in the real-valued integral form**, matching the
+signature of `polynomial_chaos_exp_moment_bridge`.
+
+Same content as `bridgeAxiom_of_setup` but with `∫` instead of `∫⁻`,
+producing a real-valued bound. The witness is
+`K = 1 + (∫⁻ ψ(t) · 2 exp(2t)).toReal`, finite by `S.hintegral`. -/
+theorem bridgeAxiom_of_setup_real
+    {d : ℕ} {P : InteractionPolynomial} {mass : ℝ} (hmass : 0 < mass)
+    (S : LatticeRoughErrorSetup d P mass) :
+    ∃ (K : ℝ), 0 < K ∧
+    ∀ (a : ℝ) (ha : 0 < a),
+    ∀ (N : ℕ) [NeZero N],
+    ∫ ω : Configuration (FinLatticeField d N),
+        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤
+      1 + (∫⁻ M in Set.Ioi (0 : ℝ),
+        S.ψ M * ENNReal.ofReal (2 * Real.exp (2 * M))).toReal := by
+  set L_ψ : ENNReal := ∫⁻ M in Set.Ioi (0 : ℝ),
+    S.ψ M * ENNReal.ofReal (2 * Real.exp (2 * M))
+  have hL_ψ_lt_top : L_ψ < ⊤ := S.hintegral
+  set K : ℝ := 1 + L_ψ.toReal
+  have hK_pos : 0 < K := by
+    have hL_ψ_nn : 0 ≤ L_ψ.toReal := ENNReal.toReal_nonneg
+    simp [K]; linarith
+  refine ⟨K, hK_pos, ?_⟩
+  intro a ha N _
+  obtain ⟨_, _, h_lin⟩ := bridgeAxiom_of_setup hmass S
+  have h_lin' := h_lin a ha N
+  -- h_lin' : ∫⁻ ω, ofReal((exp(-V))^2) ∂μ ≤ 1 + L_ψ.
+  -- Convert to ∫: `∫ f = (∫⁻ ofReal f).toReal` for nonneg f
+  -- (when `∫⁻ ofReal f < ⊤`).
+  have h_integrand_nn :
+      ∀ ω, 0 ≤ (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2 :=
+    fun _ => sq_nonneg _
+  have h_meas_sq :
+      Measurable (fun ω : Configuration (FinLatticeField d N) =>
+        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2) := by
+    have h_V := S.hV_meas a N
+    exact ((h_V.neg).exp).pow_const 2
+  -- The lintegral of `ofReal((exp(-V))^2)` is bounded by `1 + L_ψ`,
+  -- hence finite, so `(exp(-V))^2` is `Integrable`.
+  have h_lintegral_lt_top :
+      ∫⁻ ω, ENNReal.ofReal ((Real.exp (-interactionFunctional d N P a mass ω)) ^ 2)
+          ∂(latticeGaussianMeasure d N a mass ha hmass) < ⊤ := by
+    refine lt_of_le_of_lt h_lin' ?_
+    exact ENNReal.add_lt_top.mpr ⟨ENNReal.one_lt_top, hL_ψ_lt_top⟩
+  -- Use `integral_eq_lintegral_of_nonneg` to convert.
+  have h_integrable :
+      Integrable (fun ω : Configuration (FinLatticeField d N) =>
+        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2)
+        (latticeGaussianMeasure d N a mass ha hmass) := by
+    refine ⟨h_meas_sq.aestronglyMeasurable, ?_⟩
+    -- HasFiniteIntegral: ∫⁻ ‖f‖ₑ ∂μ < ⊤. For nonneg f, ‖f‖ₑ = ofReal f.
+    rw [hasFiniteIntegral_iff_norm]
+    have h_norm_eq : ∀ ω,
+        ‖((Real.exp (-interactionFunctional d N P a mass ω)) ^ 2)‖ =
+        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2 := by
+      intro ω
+      exact Real.norm_of_nonneg (h_integrand_nn ω)
+    simp_rw [h_norm_eq]
+    exact h_lintegral_lt_top
+  have h_int_eq :
+      ∫ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+          ∂(latticeGaussianMeasure d N a mass ha hmass) =
+        (∫⁻ ω, ENNReal.ofReal
+          ((Real.exp (-interactionFunctional d N P a mass ω)) ^ 2)
+          ∂(latticeGaussianMeasure d N a mass ha hmass)).toReal := by
+    rw [integral_eq_lintegral_of_nonneg_ae
+      (Filter.Eventually.of_forall h_integrand_nn)
+      h_meas_sq.aestronglyMeasurable]
+  rw [h_int_eq]
+  -- Now: (∫⁻ ofReal f).toReal ≤ K = 1 + L_ψ.toReal.
+  have h_toReal_le :
+      (∫⁻ ω, ENNReal.ofReal ((Real.exp (-interactionFunctional d N P a mass ω)) ^ 2)
+        ∂(latticeGaussianMeasure d N a mass ha hmass)).toReal ≤
+      (1 + L_ψ).toReal := by
+    apply ENNReal.toReal_mono
+    · exact ENNReal.add_lt_top.mpr ⟨ENNReal.one_lt_top, hL_ψ_lt_top⟩ |>.ne
+    · exact h_lin'
+  refine h_toReal_le.trans ?_
+  rw [ENNReal.toReal_add ENNReal.one_ne_top hL_ψ_lt_top.ne]
+  simp [K]
+
 end Pphi2.LatticeBridge
