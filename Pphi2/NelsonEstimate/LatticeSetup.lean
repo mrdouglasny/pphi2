@@ -87,4 +87,43 @@ theorem interactionFunctional_eq_smooth_plus_rough
   unfold latticeRoughError
   ring
 
+/-- **Measurability of the smooth-side interaction.**
+Same proof structure as `interactionFunctional_measurable`, with
+`smoothWickConstant T` in place of `wickConstant`. -/
+theorem latticeSmoothInteraction_measurable
+    (P : InteractionPolynomial) (T : ℝ) :
+    @Measurable (Configuration (FinLatticeField d N)) ℝ
+      instMeasurableSpaceConfiguration (borel ℝ)
+      (latticeSmoothInteraction d N a mass P T) := by
+  unfold latticeSmoothInteraction
+  apply Measurable.const_mul
+  apply Finset.measurable_sum _ (fun x _ => ?_)
+  -- wickPolynomial P (smoothWickConstant T) is continuous in its argument,
+  -- hence measurable; composed with the measurable `ω ↦ ω(δ_x)`, the whole
+  -- thing is measurable.
+  have h_cont :
+      Continuous (fun y : ℝ =>
+        wickPolynomial P (smoothWickConstant d N a mass T) y) := by
+    have h_pair := wickPolynomial_continuous₂ P
+    -- Restrict to the slice {smoothWickConstant T} × ℝ.
+    change Continuous (fun y : ℝ =>
+      (fun p : ℝ × ℝ => wickPolynomial P p.1 p.2)
+        (smoothWickConstant d N a mass T, y))
+    exact h_pair.comp (continuous_const.prodMk continuous_id)
+  have h_meas : Measurable
+      (fun y : ℝ => wickPolynomial P (smoothWickConstant d N a mass T) y) :=
+    h_cont.measurable
+  exact h_meas.comp (configuration_eval_measurable _)
+
+/-- **Measurability of the rough error.** Difference of measurable
+functions is measurable. -/
+theorem latticeRoughError_measurable
+    (P : InteractionPolynomial) (T : ℝ) :
+    @Measurable (Configuration (FinLatticeField d N)) ℝ
+      instMeasurableSpaceConfiguration (borel ℝ)
+      (latticeRoughError d N a mass P T) := by
+  unfold latticeRoughError
+  exact (interactionFunctional_measurable d N P a mass).sub
+    (latticeSmoothInteraction_measurable d N a mass P T)
+
 end Pphi2.LatticeSetup
