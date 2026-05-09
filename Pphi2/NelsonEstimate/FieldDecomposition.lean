@@ -352,6 +352,46 @@ noncomputable def canonicalRoughConfig (d N : ℕ) [NeZero N]
     Configuration (FinLatticeField d N) :=
   latticeFieldToConfig d N (canonicalRoughFieldFunction d N a mass T η)
 
+/-! ### Measurability of the canonical field functions -/
+
+/-- The smooth field function evaluated at a fixed site `x` is
+measurable in `η`. It's a finite sum of `c_k · η.1(k)` over the
+modes `k`, each of which is a continuous (hence measurable) linear
+combination of the joint variables. -/
+theorem canonicalSmoothFieldFunction_pointwise_measurable
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) (x : FinLatticeSites d N) :
+    haveI : Fintype (ZMod N) := ZMod.fintype N
+    haveI : Fintype (FinLatticeSites d N) := Pi.instFintype
+    Measurable (fun η : CanonicalJoint d N =>
+      canonicalSmoothFieldFunction d N a mass T η x) := by
+  haveI : Fintype (ZMod N) := ZMod.fintype N
+  unfold canonicalSmoothFieldFunction
+  apply Finset.measurable_sum
+  intro k _
+  -- Each term: c_k * η.1(k), where c_k is constant in η.
+  -- Measurability: η.1 is the first projection (measurable), then
+  -- evaluation at k is measurable (component projection of Pi).
+  have hπ₁ : Measurable (fun η : CanonicalJoint d N => η.1) := measurable_fst
+  have hcomp : Measurable (fun η : CanonicalJoint d N => η.1 k) :=
+    (measurable_pi_apply k).comp hπ₁
+  exact hcomp.const_mul _
+
+/-- The rough field function similarly. -/
+theorem canonicalRoughFieldFunction_pointwise_measurable
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) (x : FinLatticeSites d N) :
+    haveI : Fintype (ZMod N) := ZMod.fintype N
+    haveI : Fintype (FinLatticeSites d N) := Pi.instFintype
+    Measurable (fun η : CanonicalJoint d N =>
+      canonicalRoughFieldFunction d N a mass T η x) := by
+  haveI : Fintype (ZMod N) := ZMod.fintype N
+  unfold canonicalRoughFieldFunction
+  apply Finset.measurable_sum
+  intro k _
+  have hπ₂ : Measurable (fun η : CanonicalJoint d N => η.2) := measurable_snd
+  have hcomp : Measurable (fun η : CanonicalJoint d N => η.2 k) :=
+    (measurable_pi_apply k).comp hπ₂
+  exact hcomp.const_mul _
+
 /-- **Configuration-level decomposition identity.**
 The configuration sum `canonicalSmoothConfig + canonicalRoughConfig`
 equals the lift of the field-function sum, by linearity of
