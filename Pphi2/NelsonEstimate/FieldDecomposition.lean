@@ -267,7 +267,8 @@ abbrev CanonicalJoint (d N : ℕ) [NeZero N] : Type :=
 
 /-- The canonical joint measure: product of two i.i.d. standard
 Gaussian product-measures, one on each component. -/
-noncomputable def canonicalJointMeasure (d N : ℕ) [NeZero N] :
+noncomputable def canonicalJointMeasure (d N : ℕ) [NeZero N]
+    [Fintype (ZMod N)] :
     Measure (CanonicalJoint d N) :=
   Measure.prod
     (Measure.pi (fun _ : FinLatticeSites d N => ProbabilityTheory.gaussianReal 0 1))
@@ -290,7 +291,7 @@ is `WeakDual` (continuous linear functionals), and lifting this field
 to a Configuration uses the standard pairing
 `⟨g, f⟩ := Σ_x g(x) · f(x)` (see `latticeFieldToConfig` below). -/
 noncomputable def canonicalSmoothFieldFunction (d N : ℕ) [NeZero N]
-    (a mass T : ℝ) (η : CanonicalJoint d N) :
+    [Fintype (ZMod N)] (a mass T : ℝ) (η : CanonicalJoint d N) :
     FinLatticeSites d N → ℝ :=
   fun x =>
     (Real.sqrt (a^d))⁻¹ *
@@ -303,7 +304,7 @@ noncomputable def canonicalSmoothFieldFunction (d N : ℕ) [NeZero N]
 /-- The canonical rough-side field function at cutoff `T`. The same
 `(a^d)^{-1/2}` GJ-alignment factor is included as in the smooth case. -/
 noncomputable def canonicalRoughFieldFunction (d N : ℕ) [NeZero N]
-    (a mass T : ℝ) (η : CanonicalJoint d N) :
+    [Fintype (ZMod N)] (a mass T : ℝ) (η : CanonicalJoint d N) :
     FinLatticeSites d N → ℝ :=
   fun x =>
     (Real.sqrt (a^d))⁻¹ *
@@ -316,7 +317,7 @@ noncomputable def canonicalRoughFieldFunction (d N : ℕ) [NeZero N]
 /-- The canonical sum field: `φ(x) = φ_S(x) + φ_R(x)`. As a field
 function (`FinLatticeSites d N → ℝ`), the sum is pointwise. -/
 noncomputable def canonicalSumFieldFunction (d N : ℕ) [NeZero N]
-    (a mass T : ℝ) (η : CanonicalJoint d N) :
+    [Fintype (ZMod N)] (a mass T : ℝ) (η : CanonicalJoint d N) :
     FinLatticeSites d N → ℝ :=
   fun x =>
     canonicalSmoothFieldFunction d N a mass T η x +
@@ -869,20 +870,62 @@ theorem canonicalSmoothRough_cross_moment_zero
       canonicalSmoothFieldFunction d N a mass T η x *
         canonicalRoughFieldFunction d N a mass T η y
       ∂(canonicalJointMeasure d N) = 0 := by
-  -- The smooth field depends only on η.1, the rough only on η.2, and
-  -- `canonicalJointMeasure = μ.prod μ`. By `integral_prod_mul` the cross
-  -- integral factors as `(∫ φ_S dμ_S) · (∫ φ_R dμ_R) = 0 · 0 = 0` since
-  -- each marginal mean is zero (linear combinations of mean-zero N(0,1)).
-  --
-  -- The assembly is pending: a `Pi.instFintype` defeq mismatch between
-  -- the `Fintype (ZMod N)` instance synthesised inside the field-function
-  -- bodies (resolving via global `ZMod.fintype N`) and the bracket
-  -- `[Fintype (ZMod N)]` used by the marginal-zero lemmas blocks the
-  -- `integral_prod_mul` step. Aligning the instance source — adding
-  -- `[Fintype (ZMod N)]` brackets to `canonicalSmoothFieldFunction` /
-  -- `canonicalRoughFieldFunction` / `canonicalJointMeasure` and
-  -- re-elaborating dependents — is left for a follow-up refactor.
-  sorry
+  rw [canonicalJointMeasure]
+  simp only [canonicalSmoothFieldFunction, canonicalRoughFieldFunction]
+  have h_factor :
+      ∫ η : CanonicalJoint d N,
+        ((Real.sqrt (a^d))⁻¹ *
+            ∑ k : FinLatticeSites d N,
+              Real.sqrt (smoothCovEigenvalue d N a mass T
+                (Fintype.equivFin (FinLatticeSites d N) k)) *
+              ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+              η.1 k) *
+          ((Real.sqrt (a^d))⁻¹ *
+            ∑ k : FinLatticeSites d N,
+              Real.sqrt (roughCovEigenvalue d N a mass T
+                (Fintype.equivFin (FinLatticeSites d N) k)) *
+              ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) *
+              η.2 k)
+        ∂(Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)).prod
+          (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)) =
+      (∫ η_S : FinLatticeSites d N → ℝ,
+        (Real.sqrt (a^d))⁻¹ *
+          ∑ k : FinLatticeSites d N,
+            Real.sqrt (smoothCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) k)) *
+            ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+            η_S k
+        ∂(Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1))) *
+      (∫ η_R : FinLatticeSites d N → ℝ,
+        (Real.sqrt (a^d))⁻¹ *
+          ∑ k : FinLatticeSites d N,
+            Real.sqrt (roughCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) k)) *
+            ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) *
+            η_R k
+        ∂(Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1))) := by
+    simpa [CanonicalJoint] using
+      (integral_prod_mul
+        (μ := Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1))
+        (ν := Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1))
+        (f := fun η_S : FinLatticeSites d N → ℝ =>
+          (Real.sqrt (a^d))⁻¹ *
+            ∑ k : FinLatticeSites d N,
+              Real.sqrt (smoothCovEigenvalue d N a mass T
+                (Fintype.equivFin (FinLatticeSites d N) k)) *
+              ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+              η_S k)
+        (g := fun η_R : FinLatticeSites d N → ℝ =>
+          (Real.sqrt (a^d))⁻¹ *
+            ∑ k : FinLatticeSites d N,
+              Real.sqrt (roughCovEigenvalue d N a mass T
+                (Fintype.equivFin (FinLatticeSites d N) k)) *
+              ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) *
+              η_R k))
+  rw [h_factor, canonicalSmoothFieldFunction_marginal_integral_zero,
+    canonicalRoughFieldFunction_marginal_integral_zero]
+  ring
+
 
 /-- **The covariance of `canonicalSumFieldFunction` matches the GJ-aligned
 GFF spectral covariance.**
