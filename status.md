@@ -16,7 +16,7 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-08): 17 axioms, 0 sorries** (pphi2)
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-09): 19 axioms, 2 sorries** (pphi2)
 **+ 12 axioms, 1 sorry** (gaussian-field, including the new
 `StandardGaussianBridge` + `WickMultivariate` chaos-decomposition skeletons,
 4+3 axioms) = **29 combined**. pphi2 now also depends on markov-semigroups
@@ -251,6 +251,7 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 4T | `TorusContinuumLimit/TorusNuclearBridge.lean` | 0 axioms, 0 sorries |
 | 4T | `NelsonEstimate/NelsonEstimate.lean` | 1 axiom, 0 sorries (Stage 1: `nelson_exponential_estimate_lattice` axiomatised — easy pointwise-bound proof breaks under GJ; genuine proof via Glimm–Jaffe Ch. 8 dynamical cutoff is Phase 2). |
 | 4T | `NelsonEstimate/CovarianceSplit.lean` | **0 axioms, 0 sorries** (Phase 2 partial discharge 2026-05-07: `roughCovariance_sq_summable` and `smoothVariance_le_log` (trivial-`C`-form) both axiom → proved theorem). |
+| 4T | `NelsonEstimate/FieldDecomposition.lean` | 0 axioms, 2 sorries (the canonical smooth/rough self-moment helper lemmas are proved; the remaining `canonicalSumFieldFunction_covariance` and `canonicalSumFieldFunction_covariance_eq_GJ` assembly proofs still need the integral-splitting step and the `massEigenvalues`/`latticeEigenvalue` bridge). |
 | 4T | `NelsonEstimate/{SmoothLowerBound,RoughErrorBound}.lean` | 0 axioms, 0 sorries (Phase 2 infrastructure, ready to wire into the real Nelson proof). |
 | B' | `AsymTorus/AsymTorusEmbedding.lean` | 0 axioms, 0 sorries |
 | B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 1 axiom, 0 sorries (`asymNelson_exponential_estimate` only — Cluster A Nelson estimate; Phase 2 Cluster B complete 2026-05-08: `asymGaussian_second_moment_uniform_bound` discharged via the new `evalAsymAtFinSiteGJ` GJ asym embedding). |
@@ -891,7 +892,7 @@ infrastructure. Assessment date: 2026-03-04.
 
 ## Upstream: gaussian-field
 
-The pinned Lake `GaussianField` dependency has **4 axioms, 0 sorries**:
+The pinned Lake `GaussianField` dependency has **5 axioms, 1 sorry**:
 - `Cylinder/GreenFunction.lean`: 1 axiom
 - `Cylinder/MethodOfImages.lean`: 1 axiom
 - `Cylinder/ReflectionPositivity.lean`: 1 axiom

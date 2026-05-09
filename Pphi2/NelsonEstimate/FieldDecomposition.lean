@@ -927,33 +927,216 @@ theorem canonicalSmoothRough_cross_moment_zero
   ring
 
 
+/-- `smoothCovEigenvalue` is nonneg. -/
+private lemma smoothCovEigenvalue_nonneg
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (m : ℕ) :
+    0 ≤ smoothCovEigenvalue d N a mass T m := by
+  exact le_of_lt (smoothCovEigenvalue_pos d N a mass T hT m ha hmass)
+
+/-- `roughCovEigenvalue` is nonneg when `T ≥ 0`. -/
+private lemma roughCovEigenvalue_nonneg
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (m : ℕ) :
+    0 ≤ roughCovEigenvalue d N a mass T m := by
+  exact le_of_lt (roughCovEigenvalue_pos d N a mass T hT m ha hmass)
+
+/-- **Smooth-smooth self-moment.**
+`∫ φ_S(x) · φ_S(y) dμ_joint = (a^d)⁻¹ · Σ_k C_S(k') · e_k(x) · e_k(y)`. -/
+private lemma canonicalSmoothFieldFunction_self_moment
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    (a^d : ℝ)⁻¹ *
+      ∑ k : FinLatticeSites d N,
+        smoothCovEigenvalue d N a mass T
+          (Fintype.equivFin (FinLatticeSites d N) k) *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) := by
+  rw [canonicalJointMeasure]
+  simp only [canonicalSmoothFieldFunction]
+  have h_fst :=
+    integral_fun_fst (E := ℝ)
+      (μ := Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1))
+      (ν := Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1))
+      (f := fun η_S : FinLatticeSites d N → ℝ =>
+        ((Real.sqrt (a^d))⁻¹ *
+          ∑ k : FinLatticeSites d N,
+            Real.sqrt (smoothCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) k)) *
+            ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+            η_S k) *
+        ((Real.sqrt (a^d))⁻¹ *
+          ∑ k : FinLatticeSites d N,
+            Real.sqrt (smoothCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) k)) *
+            ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) *
+            η_S k))
+  simp at h_fst
+  rw [h_fst]
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  have hsqrt_sq : (Real.sqrt (a^d))⁻¹ * (Real.sqrt (a^d))⁻¹ = (a^d : ℝ)⁻¹ := by
+    rw [← mul_inv, ← Real.sqrt_mul (le_of_lt ha_d_pos),
+        Real.sqrt_mul_self (le_of_lt ha_d_pos)]
+  have h_rewrite : ∀ η_S : FinLatticeSites d N → ℝ,
+      ((Real.sqrt (a^d))⁻¹ *
+        ∑ k : FinLatticeSites d N,
+          Real.sqrt (smoothCovEigenvalue d N a mass T
+            (Fintype.equivFin (FinLatticeSites d N) k)) *
+          ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+          η_S k) *
+      ((Real.sqrt (a^d))⁻¹ *
+        ∑ k : FinLatticeSites d N,
+          Real.sqrt (smoothCovEigenvalue d N a mass T
+            (Fintype.equivFin (FinLatticeSites d N) k)) *
+          ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) *
+          η_S k) =
+      (a^d : ℝ)⁻¹ *
+        ((∑ k : FinLatticeSites d N,
+            (Real.sqrt (smoothCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) k)) *
+              ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x)) *
+              η_S k) *
+        (∑ l : FinLatticeSites d N,
+            (Real.sqrt (smoothCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) l)) *
+              ((massEigenvectorBasis d N a mass l : EuclideanSpace ℝ _) y)) *
+              η_S l)) := by
+    intro η_S
+    rw [show ∀ A B C D : ℝ, (A * B) * (C * D) = (A * C) * (B * D) by intros; ring,
+      hsqrt_sq]
+  simp_rw [h_rewrite, integral_const_mul]
+  rw [pi_gaussian_bilinear_moment
+    (p := fun k => Real.sqrt (smoothCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) k)) *
+      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x))
+    (q := fun l => Real.sqrt (smoothCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) l)) *
+      ((massEigenvectorBasis d N a mass l : EuclideanSpace ℝ _) y))]
+  congr 1
+  refine Finset.sum_congr rfl (fun k _ => ?_)
+  have hC : 0 ≤ smoothCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) k) :=
+    smoothCovEigenvalue_nonneg d N a mass ha hmass T hT _
+  have h_sq : Real.sqrt (smoothCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) k)) *
+      Real.sqrt (smoothCovEigenvalue d N a mass T
+        (Fintype.equivFin (FinLatticeSites d N) k)) =
+      smoothCovEigenvalue d N a mass T
+        (Fintype.equivFin (FinLatticeSites d N) k) :=
+    Real.mul_self_sqrt hC
+  linear_combination
+    ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) * h_sq
+
+/-- **Rough-rough self-moment.** Analogous to the smooth-smooth case. -/
+private lemma canonicalRoughFieldFunction_self_moment
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    (a^d : ℝ)⁻¹ *
+      ∑ k : FinLatticeSites d N,
+        roughCovEigenvalue d N a mass T
+          (Fintype.equivFin (FinLatticeSites d N) k) *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) := by
+  rw [canonicalJointMeasure]
+  simp only [canonicalRoughFieldFunction]
+  have h_snd :=
+    integral_fun_snd (E := ℝ)
+      (μ := Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1))
+      (ν := Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1))
+      (f := fun η_R : FinLatticeSites d N → ℝ =>
+        ((Real.sqrt (a^d))⁻¹ *
+          ∑ k : FinLatticeSites d N,
+            Real.sqrt (roughCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) k)) *
+            ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+            η_R k) *
+        ((Real.sqrt (a^d))⁻¹ *
+          ∑ k : FinLatticeSites d N,
+            Real.sqrt (roughCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) k)) *
+            ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) *
+            η_R k))
+  simp at h_snd
+  rw [h_snd]
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  have hsqrt_sq : (Real.sqrt (a^d))⁻¹ * (Real.sqrt (a^d))⁻¹ = (a^d : ℝ)⁻¹ := by
+    rw [← mul_inv, ← Real.sqrt_mul (le_of_lt ha_d_pos),
+        Real.sqrt_mul_self (le_of_lt ha_d_pos)]
+  have h_rewrite : ∀ η_R : FinLatticeSites d N → ℝ,
+      ((Real.sqrt (a^d))⁻¹ *
+        ∑ k : FinLatticeSites d N,
+          Real.sqrt (roughCovEigenvalue d N a mass T
+            (Fintype.equivFin (FinLatticeSites d N) k)) *
+          ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+          η_R k) *
+      ((Real.sqrt (a^d))⁻¹ *
+        ∑ k : FinLatticeSites d N,
+          Real.sqrt (roughCovEigenvalue d N a mass T
+            (Fintype.equivFin (FinLatticeSites d N) k)) *
+          ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) *
+          η_R k) =
+      (a^d : ℝ)⁻¹ *
+        ((∑ k : FinLatticeSites d N,
+            (Real.sqrt (roughCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) k)) *
+              ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x)) *
+              η_R k) *
+        (∑ l : FinLatticeSites d N,
+            (Real.sqrt (roughCovEigenvalue d N a mass T
+              (Fintype.equivFin (FinLatticeSites d N) l)) *
+              ((massEigenvectorBasis d N a mass l : EuclideanSpace ℝ _) y)) *
+              η_R l)) := by
+    intro η_R
+    rw [show ∀ A B C D : ℝ, (A * B) * (C * D) = (A * C) * (B * D) by intros; ring,
+      hsqrt_sq]
+  simp_rw [h_rewrite, integral_const_mul]
+  rw [pi_gaussian_bilinear_moment
+    (p := fun k => Real.sqrt (roughCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) k)) *
+      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x))
+    (q := fun l => Real.sqrt (roughCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) l)) *
+      ((massEigenvectorBasis d N a mass l : EuclideanSpace ℝ _) y))]
+  congr 1
+  refine Finset.sum_congr rfl (fun k _ => ?_)
+  have hC : 0 ≤ roughCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) k) :=
+    roughCovEigenvalue_nonneg (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT _
+  have h_sq : Real.sqrt (roughCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) k)) *
+      Real.sqrt (roughCovEigenvalue d N a mass T
+        (Fintype.equivFin (FinLatticeSites d N) k)) =
+      roughCovEigenvalue d N a mass T
+        (Fintype.equivFin (FinLatticeSites d N) k) :=
+    Real.mul_self_sqrt hC
+  linear_combination
+    ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) * h_sq
+
+/-- **Cross-moment swap (rough × smooth = 0).** -/
+private lemma canonicalRoughSmooth_cross_moment_zero
+    (T : ℝ) (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) = 0 := by
+  have h_swap : ∀ η : CanonicalJoint d N,
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y =
+      canonicalSmoothFieldFunction d N a mass T η y *
+        canonicalRoughFieldFunction d N a mass T η x := fun _ => mul_comm _ _
+  rw [integral_congr_ae (Filter.Eventually.of_forall h_swap)]
+  exact canonicalSmoothRough_cross_moment_zero d N a mass T y x
+
 /-- **The covariance of `canonicalSumFieldFunction` matches the GJ-aligned
-GFF spectral covariance.**
-
-Under `canonicalJointMeasure`, the two-point function is
-```
-  ∫ φ(η)(x) · φ(η)(y) dμ_joint
-    = (a^d)⁻¹ · Σ_k (latticeEigenvalue k)⁻¹ · e_k(x) · e_k(y)
-```
-which is precisely `GaussianField.covariance (latticeCovarianceGJ ...) δ_x δ_y`.
-
-This is the central input to the pushforward identity
-`canonicalJointMeasure ↦ latticeGaussianMeasure` (deferred).
-
-**Proof strategy:**
-1. Expand `(φ_S + φ_R)(x) · (φ_S + φ_R)(y)` into four terms.
-2. Cross terms (`φ_S(x) φ_R(y)`, `φ_R(x) φ_S(y)`) vanish by
-   `canonicalSmoothRough_cross_moment_zero`.
-3. Smooth-smooth term: integrate against the first marginal
-   `Measure.pi gaussianReal 0 1` using `pi_gaussian_bilinear_moment`
-   with `p_k = (a^d)^{-1/2} √(C_S(k')) e_k(x)` and `q_l =
-   (a^d)^{-1/2} √(C_S(l')) e_l(y)`. Since `√(C_S)² = C_S` (eigenvalues
-   are nonneg) and the inner products `e_k · e_l = δ_{kl}` collapse the
-   double sum to a single sum over `k`, the result is
-   `(a^d)⁻¹ · Σ_k C_S(k') · e_k(x) e_k(y)`.
-4. Rough-rough term similarly gives `(a^d)⁻¹ · Σ_k C_R(k') · e_k(x) e_k(y)`.
-5. Sum the two, use `covariance_split` (i.e. `C_S + C_R = λ⁻¹`) to
-   collapse to `(a^d)⁻¹ · Σ_k λ_k⁻¹ · e_k(x) e_k(y)`. -/
+GFF spectral covariance.** -/
 theorem canonicalSumFieldFunction_covariance
     (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
     (x y : FinLatticeSites d N) :
@@ -967,6 +1150,9 @@ theorem canonicalSumFieldFunction_covariance
           (Fintype.equivFin (FinLatticeSites d N) k))⁻¹ *
         ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
         ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) := by
+  -- Refined strategy: expand into smooth/rough terms, prove integrability of
+  -- the four moments, use the self-moment/cross-moment helper lemmas above,
+  -- then collapse the smooth+rough spectral sums with `covariance_split`.
   sorry
 
 /-- **GJ-covariance form of the variance theorem.**
