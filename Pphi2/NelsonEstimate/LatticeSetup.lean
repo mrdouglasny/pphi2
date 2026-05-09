@@ -265,4 +265,31 @@ theorem wickMonomial_four_diff (c c' x : ℝ) :
   rw [wickMonomial_four, wickMonomial_four, wickMonomial_two]
   ring
 
+/-- **Pointwise rough-error decomposition (pure quartic).**
+
+At each site `x`, the difference of Wick polynomials in
+`latticeRoughError` reduces to a chaos-2 piece (with prefactor
+`c_R(T) = c_a - c_S(T)`) plus a constant piece (with prefactor
+`c_R(T)²`). The chaos-2 piece is what gives the polynomial-chaos
+concentration after pushforward; the constant piece shrinks
+quadratically in `c_R(T)`. -/
+theorem wickPolynomial_pure_quartic_diff
+    (P : InteractionPolynomial) (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (T : ℝ) (x : FinLatticeSites d N)
+    (ω : Configuration (FinLatticeField d N)) :
+    wickPolynomial P (wickConstant d N a mass) (ω (finLatticeDelta d N x)) -
+      wickPolynomial P (smoothWickConstant d N a mass T)
+        (ω (finLatticeDelta d N x)) =
+    (1 / (P.n : ℝ)) *
+      (-6 * (wickConstant d N a mass - smoothWickConstant d N a mass T) *
+            wickMonomial 2 (smoothWickConstant d N a mass T)
+              (ω (finLatticeDelta d N x)) +
+        3 * (wickConstant d N a mass - smoothWickConstant d N a mass T) ^ 2) := by
+  rw [wickPolynomial_of_pure P h_pure, wickPolynomial_of_pure P h_pure, h_quartic]
+  have h_diff := wickMonomial_four_diff
+    (wickConstant d N a mass) (smoothWickConstant d N a mass T)
+    (ω (finLatticeDelta d N x))
+  linarith
+
 end Pphi2.LatticeSetup
