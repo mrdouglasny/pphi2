@@ -256,6 +256,8 @@ applications. -/
 
 section Canonical
 
+variable [Fintype (ZMod N)]
+
 /-- The canonical doubled-Gaussian phase space:
 `(FinLatticeSites d N → ℝ) × (FinLatticeSites d N → ℝ)`. The first
 component holds the smooth-side coordinates `η_S`, the second the
@@ -266,9 +268,7 @@ abbrev CanonicalJoint (d N : ℕ) [NeZero N] : Type :=
 /-- The canonical joint measure: product of two i.i.d. standard
 Gaussian product-measures, one on each component. -/
 noncomputable def canonicalJointMeasure (d N : ℕ) [NeZero N] :
-    haveI : Fintype (ZMod N) := ZMod.fintype N
     Measure (CanonicalJoint d N) :=
-  haveI : Fintype (ZMod N) := ZMod.fintype N
   Measure.prod
     (Measure.pi (fun _ : FinLatticeSites d N => ProbabilityTheory.gaussianReal 0 1))
     (Measure.pi (fun _ : FinLatticeSites d N => ProbabilityTheory.gaussianReal 0 1))
@@ -440,11 +440,9 @@ modes `k`, each of which is a continuous (hence measurable) linear
 combination of the joint variables. -/
 theorem canonicalSmoothFieldFunction_pointwise_measurable
     (d N : ℕ) [NeZero N] (a mass T : ℝ) (x : FinLatticeSites d N) :
-    haveI : Fintype (ZMod N) := ZMod.fintype N
     haveI : Fintype (FinLatticeSites d N) := Pi.instFintype
     Measurable (fun η : CanonicalJoint d N =>
       canonicalSmoothFieldFunction d N a mass T η x) := by
-  haveI : Fintype (ZMod N) := ZMod.fintype N
   unfold canonicalSmoothFieldFunction
   refine Measurable.const_mul ?_ _
   apply Finset.measurable_sum
@@ -460,11 +458,9 @@ theorem canonicalSmoothFieldFunction_pointwise_measurable
 /-- The rough field function similarly. -/
 theorem canonicalRoughFieldFunction_pointwise_measurable
     (d N : ℕ) [NeZero N] (a mass T : ℝ) (x : FinLatticeSites d N) :
-    haveI : Fintype (ZMod N) := ZMod.fintype N
     haveI : Fintype (FinLatticeSites d N) := Pi.instFintype
     Measurable (fun η : CanonicalJoint d N =>
       canonicalRoughFieldFunction d N a mass T η x) := by
-  haveI : Fintype (ZMod N) := ZMod.fintype N
   unfold canonicalRoughFieldFunction
   refine Measurable.const_mul ?_ _
   apply Finset.measurable_sum
@@ -546,7 +542,7 @@ section Variance
 
 open ProbabilityTheory MeasureTheory
 
-variable (d N : ℕ) [NeZero N] (a mass : ℝ)
+variable (d N : ℕ) [NeZero N] [Fintype (ZMod N)] (a mass : ℝ)
 
 /-- **Mean of a single coordinate** under `Measure.pi (gaussianReal 0 1)`.
 Pulls back through `measurePreserving_eval` to the marginal mean. -/
@@ -677,6 +673,88 @@ theorem pi_gaussian_bilinear_moment {I : Type*} [Fintype I]
   · intro h
     exact (h (Finset.mem_univ k)).elim
 
+/-- Integrability of the bilinear integrand in `pi_gaussian_bilinear_moment`. -/
+private lemma pi_gaussian_bilinear_integrable {I : Type*} [Fintype I]
+    (p q : I → ℝ) :
+    Integrable (fun η : I → ℝ => (∑ k, p k * η k) * (∑ l, q l * η l))
+      (Measure.pi (fun _ : I => gaussianReal 0 1)) := by
+  classical
+  have h_memLp : ∀ k : I, MemLp (fun η : I → ℝ => η k) 2
+      (Measure.pi (fun _ : I => gaussianReal 0 1)) := by
+    intro k
+    have h : MemLp (id ∘ (fun η : I → ℝ => η k)) 2
+        (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+      MemLp.comp_measurePreserving IsGaussian.memLp_two_id
+        (measurePreserving_eval (μ := fun _ : I => gaussianReal 0 1) k)
+    exact h
+  have h_distrib : ∀ η : I → ℝ,
+      (∑ k, p k * η k) * (∑ l, q l * η l) =
+      ∑ k, ∑ l, (p k * q l) * (η k * η l) := by
+    intro η
+    rw [Finset.sum_mul_sum]
+    refine Finset.sum_congr rfl (fun k _ => Finset.sum_congr rfl (fun l _ => ?_))
+    ring
+  rw [show (fun η : I → ℝ => (∑ k, p k * η k) * (∑ l, q l * η l)) =
+      fun η : I → ℝ => ∑ k, ∑ l, (p k * q l) * (η k * η l) from funext h_distrib]
+  refine integrable_finset_sum _ (fun k _ => ?_)
+  refine integrable_finset_sum _ (fun l _ => ?_)
+  refine Integrable.const_mul ?_ _
+  exact MemLp.integrable_mul (h_memLp k) (h_memLp l)
+
+/-- Integrability of the smooth marginal field at a fixed site. -/
+private lemma canonicalSmoothFieldFunction_marginal_integrable
+    [Fintype (ZMod N)] (T : ℝ) (x : FinLatticeSites d N) :
+    Integrable (fun η_S : FinLatticeSites d N → ℝ =>
+      (Real.sqrt (a^d))⁻¹ *
+      ∑ k : FinLatticeSites d N,
+        Real.sqrt (smoothCovEigenvalue d N a mass T
+          (Fintype.equivFin (FinLatticeSites d N) k)) *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+        η_S k)
+      (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)) := by
+  have h_sum : Integrable (fun η_S : FinLatticeSites d N → ℝ =>
+      ∑ k : FinLatticeSites d N,
+        Real.sqrt (smoothCovEigenvalue d N a mass T
+          (Fintype.equivFin (FinLatticeSites d N) k)) *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+        η_S k)
+      (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)) := by
+    refine integrable_finset_sum _ (fun k _ => ?_)
+    have h_int : Integrable (fun η_S : FinLatticeSites d N → ℝ => η_S k)
+        (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)) := by
+      exact integrable_eval IsGaussian.integrable_id
+    convert h_int.const_mul (Real.sqrt (smoothCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) k)) *
+      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x))
+  exact h_sum.const_mul _
+
+/-- Integrability of the rough marginal field at a fixed site. -/
+private lemma canonicalRoughFieldFunction_marginal_integrable
+    [Fintype (ZMod N)] (T : ℝ) (x : FinLatticeSites d N) :
+    Integrable (fun η_R : FinLatticeSites d N → ℝ =>
+      (Real.sqrt (a^d))⁻¹ *
+      ∑ k : FinLatticeSites d N,
+        Real.sqrt (roughCovEigenvalue d N a mass T
+          (Fintype.equivFin (FinLatticeSites d N) k)) *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+        η_R k)
+      (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)) := by
+  have h_sum : Integrable (fun η_R : FinLatticeSites d N → ℝ =>
+      ∑ k : FinLatticeSites d N,
+        Real.sqrt (roughCovEigenvalue d N a mass T
+          (Fintype.equivFin (FinLatticeSites d N) k)) *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+        η_R k)
+      (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)) := by
+    refine integrable_finset_sum _ (fun k _ => ?_)
+    have h_int : Integrable (fun η_R : FinLatticeSites d N → ℝ => η_R k)
+        (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)) := by
+      exact integrable_eval IsGaussian.integrable_id
+    convert h_int.const_mul (Real.sqrt (roughCovEigenvalue d N a mass T
+      (Fintype.equivFin (FinLatticeSites d N) k)) *
+      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x))
+  exact h_sum.const_mul _
+
 /-- **Marginal mean of `canonicalSmoothFieldFunction`** evaluated at a
 single site is zero (under the smooth-side `Measure.pi gaussianReal 0 1`).
 
@@ -787,19 +865,23 @@ independent (it is a `Measure.prod`). Each marginal is mean zero
 the product `0 · 0 = 0`. -/
 theorem canonicalSmoothRough_cross_moment_zero
     (T : ℝ) (x y : FinLatticeSites d N) :
-    haveI : Fintype (ZMod N) := ZMod.fintype N
     ∫ η : CanonicalJoint d N,
       canonicalSmoothFieldFunction d N a mass T η x *
         canonicalRoughFieldFunction d N a mass T η y
       ∂(canonicalJointMeasure d N) = 0 := by
-  -- The smooth field depends only on η.1 and the rough field only on η.2,
-  -- and `canonicalJointMeasure` is a `Measure.prod`. By `integral_prod_mul`
-  -- the cross integral factors; both marginal means are zero.
-  -- The full assembly is left as a sorry pending typeclass-resolution
-  -- alignment between the haveI'd `Fintype (ZMod N)` inside
-  -- `canonicalJointMeasure` and the bracket-introduced one used by
-  -- `canonicalSmoothFieldFunction_marginal_integral_zero` /
-  -- `canonicalRoughFieldFunction_marginal_integral_zero`.
+  -- The smooth field depends only on η.1, the rough only on η.2, and
+  -- `canonicalJointMeasure = μ.prod μ`. By `integral_prod_mul` the cross
+  -- integral factors as `(∫ φ_S dμ_S) · (∫ φ_R dμ_R) = 0 · 0 = 0` since
+  -- each marginal mean is zero (linear combinations of mean-zero N(0,1)).
+  --
+  -- The assembly is pending: a `Pi.instFintype` defeq mismatch between
+  -- the `Fintype (ZMod N)` instance synthesised inside the field-function
+  -- bodies (resolving via global `ZMod.fintype N`) and the bracket
+  -- `[Fintype (ZMod N)]` used by the marginal-zero lemmas blocks the
+  -- `integral_prod_mul` step. Aligning the instance source — adding
+  -- `[Fintype (ZMod N)]` brackets to `canonicalSmoothFieldFunction` /
+  -- `canonicalRoughFieldFunction` / `canonicalJointMeasure` and
+  -- re-elaborating dependents — is left for a follow-up refactor.
   sorry
 
 /-- **The covariance of `canonicalSumFieldFunction` matches the GJ-aligned
@@ -832,7 +914,6 @@ This is the central input to the pushforward identity
 theorem canonicalSumFieldFunction_covariance
     (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
     (x y : FinLatticeSites d N) :
-    haveI : Fintype (ZMod N) := ZMod.fintype N
     ∫ η : CanonicalJoint d N,
       canonicalSumFieldFunction d N a mass T η x *
         canonicalSumFieldFunction d N a mass T η y
@@ -856,7 +937,6 @@ identity. -/
 theorem canonicalSumFieldFunction_covariance_eq_GJ
     (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
     (x y : FinLatticeSites d N) :
-    haveI : Fintype (ZMod N) := ZMod.fintype N
     let δ_x : FinLatticeField d N := fun z => if z = x then 1 else 0
     let δ_y : FinLatticeField d N := fun z => if z = y then 1 else 0
     ∫ η : CanonicalJoint d N,
