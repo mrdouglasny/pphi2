@@ -237,7 +237,79 @@ which converges (the doubly-exponential decay dominates `exp(2M)`)
 This `K + 1` is the witness for the bridge axiom, with the additional
 `max(·, 1)` absorbing the degenerate small/large `a` corners.
 
-## Discharge work breakdown
+## ⚠️ 2026-05-09 plan revision: field decomposition is essential
+
+A first-pass implementation in `Pphi2/NelsonEstimate/LatticeSetup.lean`
+attempted the **Wick-constant-only** decomposition: `V_S(T)` re-evaluates
+`V` at the smooth Wick constant `c_S(T)` instead of `c_a`, and
+`E_R(T) := V - V_S(T)` is the deterministic difference. This works for
+the smooth side (`V_S(T) ≥ -M/2` deterministic, proved as
+`latticeSmoothInteraction_lower_bound_at_cutoff_quartic`), but the L²
+norm of the resulting chaos-2 piece scales as `‖K_GFF‖²_HS ∝ N^d` —
+**not uniform in N**. The bridge axiom asserts a uniform-in-N bound,
+so this decomposition cannot discharge the bridge directly.
+
+The correct path is the **genuine Glimm–Jaffe field decomposition**:
+`φ = φ_S + φ_R` with `(φ_S, φ_R)` jointly Gaussian, independent, with
+covariances `C_S(T), C_R(T)` (per-mode covariance split, not a partition
+of modes). Each ξ_k is split as `ξ_k = √(C_S(k)/C(k)) · η_S,k + √(C_R(k)/C(k)) · η_R,k`
+with `η_S, η_R` new i.i.d. N(0,1) variables. Then:
+
+* `V_S(φ_S) := V` evaluated at the smooth field φ_S.
+* `E_R := V(φ_S + φ_R) - V_S(φ_S)` — every term in the Wick binomial
+  expansion contains at least one φ_R factor.
+* `‖E_R‖² ≤ (rough covariance HS norm)^k · combinatorial factors`,
+  controlled uniformly by `roughCovariance_sq_summable`
+  (`Σ_k C_R(T,k)² ≤ |Λ| · T · a^d · c_a = L^d · T · c_a` — uniform in N).
+
+The abstract chain (`DynamicalCutoff`, `LayerCake`, `BridgeFromTail`,
+`IntegrabilityHelpers`, `ChaosTailBridge`, `LatticeBridge`) built today
+(2026-05-08/09) is **fully reusable** for the field decomposition: it
+operates on abstract `V_S, E_R : ℝ → α → ℝ` and is agnostic to which
+decomposition produces them. The smooth-side bound transfers directly
+since `smooth_interaction_lower_bound_log_uniform` is universally
+quantified over the field argument.
+
+The new infrastructure needed (Phase 1 substance):
+
+1. Define a joint Gaussian measure on `Configuration × Configuration`
+   with covariances `C_S(T), C_R(T)`. Cleanest realization: use the
+   gaussian-field pushforward `gffOrthonormalProj_pushforward_eq_stdGaussian`
+   (theorem) to identify the GFF with `Measure.pi (gaussianReal 0 1)`,
+   then introduce a SECOND copy of `Measure.pi (gaussianReal 0 1)` for
+   the new `η_R,k` variables. The joint structure is then
+   `(Measure.pi μ_ξ) × (Measure.pi μ_η)` on a doubled product space.
+
+2. Define φ_S, φ_R as functions of the joint variables with covariances
+   matching `C_S, C_R`.
+
+3. Prove the pushforward identity: `(η_S, η_R) ↦ φ_S + φ_R` pushes
+   the joint product Gaussian to the original GFF. By Gaussian
+   characterization (variance matches because `C_S + C_R = C`), this
+   is automatic via characteristic-function uniqueness.
+
+4. Apply the multivariate Wick binomial
+   (`gaussian-field/SchwartzNuclear.HermiteWick.wickMonomial_pow_sum_expansion`,
+   now a theorem) to expand `:(φ_S + φ_R)^n:_{c_S+c_R}`. Identify the
+   chaos-LE-(deg P) structure of E_R.
+
+5. Apply Janson 5.10 (`polynomial_chaos_concentration`, theorem) to
+   the rough field marginal, conditional on φ_S, then integrate over
+   φ_S via Fubini. This gives the rough tail bound.
+
+6. Plug into `chaos_neg_tail_bound` + `lintegral_layer_cake_lt_top_of_eventual_decay`,
+   construct `LatticeRoughErrorSetup`, apply `bridgeAxiom_of_setup_real`.
+
+Total estimated effort for the field-decomposition Phase 1: 800–1500
+lines, multi-week. This is reduced from the original plan estimate
+because the abstract chain (~600 lines today) is already in place.
+
+The simpler `LatticeSetup.lean` content remains useful as algebraic
+building blocks (the `wickMonomial_four_diff` identity, measurability
+lemmas, smooth-side bound) — see the file's docstring for which
+theorems transfer to the field-decomposition setting.
+
+## Discharge work breakdown (legacy, prior to 2026-05-09 revision)
 
 ### Phase 1: Promote `RoughErrorBound.lean` placeholders (≈ 200–400 lines)
 

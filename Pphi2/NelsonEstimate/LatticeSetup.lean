@@ -2,45 +2,82 @@
 Copyright (c) 2026 Michael R. Douglas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 
-# Lattice Setup Construction — Smooth/Rough Decomposition Scaffolding
+# Lattice Setup — Wick-constant-only Decomposition (foundation file)
 
-Concrete definitions for the smooth/rough decomposition of the
-lattice interaction `V` at a Wick-constant cutoff scale `T`:
+Defines the **deterministic** smooth/rough decomposition of `V` at
+the Wick-constant level:
 
-  V(ω) = V_S(T, ω) + E_R(T, ω),
+  `V(ω) = V_S(T, ω) + E_R(T, ω)`,
 
-where `V_S(T)` evaluates the same lattice interaction polynomial but
-with Wick subtraction at the *smooth* Wick constant `c_S(T)` instead
-of the full `c_a = c_S(T) + c_R(T)`, and `E_R(T)` is the
-deterministic difference.
+where `V_S(T)` re-evaluates the lattice interaction polynomial with
+Wick subtraction at `c_S(T)` instead of `c_a`, and `E_R(T)` is the
+deterministic difference. This file's contents are mostly definitions
+and basic algebraic identities used as building blocks.
 
-This is the **deterministic decomposition** at the Wick-constant
-level. The genuine Glimm-Jaffe split into smooth/rough fields would
-be `V(φ) = V_S(φ_S) + E_R(φ, φ_S)` — a different (joint-distributional)
-decomposition. The deterministic version here is simpler and uses
-only the Wick polynomial machinery already in pphi2; the resulting
-`E_R(T)` has *one* lower polynomial degree than `V` (the leading
-order cancels in the difference of Wick polynomials), giving a
-chaos-LE membership of degree `deg(P) - 2`.
+## ⚠️ Limitation: This decomposition cannot discharge the full bridge axiom
+
+The Wick-constant-only decomposition gives a chaos-2 piece (for pure
+quartic) of the form `c_R(T) · a^d · Σ_x :ω(δ_x)²:_{c_a}`. Its `L²`
+norm under the GFF involves the **full covariance** Hilbert-Schmidt
+norm `‖K‖²_HS = (a^d)^{-2} · Σ_k λ_k^{-2}`, which scales as `N^d`
+(not uniformly in `N`).
+
+The full Nelson exp-moment bound, by contrast, is uniform in `N`.
+Discharging it requires the **genuine Glimm-Jaffe field
+decomposition**: `φ = φ_S + φ_R` with `(φ_S, φ_R)` jointly Gaussian
+with covariances `C_S(T), C_R(T)` (both per-mode in covariance, not
+a partition of modes). The L² norm of the resulting rough error
+then involves `‖C_R‖²_HS`, which `roughCovariance_sq_summable`
+controls uniformly in N.
+
+The field-decomposition machinery requires defining a joint measure
+`μ_S × μ_R` on `Configuration × Configuration` and proving the
+pushforward `(φ_S, φ_R) ↦ φ_S + φ_R` equals the lattice GFF — a
+substantial measure-theoretic infrastructure that this file does
+*not* build. The contents below are still useful as algebraic
+building blocks, and many of the lemmas (especially the smooth-side
+bound `latticeSmoothInteraction_lower_bound_at_cutoff_quartic`)
+transfer directly to the field-decomposition setting since the
+existing smooth bound is universally quantified over the field
+argument.
+
+The abstract chain (`DynamicalCutoff`, `LayerCake`, `BridgeFromTail`,
+`IntegrabilityHelpers`, `ChaosTailBridge`, `LatticeBridge`) is
+**fully reusable** for the field decomposition: it operates on
+abstract `V_S, E_R : ℝ → α → ℝ` and is agnostic to which
+decomposition produces them.
 
 ## Main definitions
 
-* `latticeSmoothInteraction P a mass T`: the smooth-side interaction.
-* `latticeRoughError P a mass T`: the rough error
-  `V - latticeSmoothInteraction = wickPolynomial(P, c_a) -
-  wickPolynomial(P, c_S(T))`, summed over sites.
+* `latticeSmoothInteraction P a mass T`: smooth-side interaction
+  with `c_S(T)` Wick subtraction. **Not the genuine `V_S(φ_S)` from
+  the Glimm-Jaffe decomposition** — see limitation above.
+* `latticeRoughError P a mass T`: deterministic difference
+  `V - latticeSmoothInteraction`.
 
 ## Main theorems
 
 * `interactionFunctional_eq_smooth_plus_rough`: the decomposition
   identity (immediate by definition).
+* `latticeSmoothInteraction_measurable`,
+  `latticeRoughError_measurable`: measurability.
+* `latticeSmoothInteraction_lower_bound_at_cutoff_quartic`: smooth-side
+  classical bound at the dynamical cutoff scale (pure quartic).
+  **Transfers directly to the field-decomposition `V_S(φ_S)` since
+  the underlying lemma is universally quantified.**
+* `wickMonomial_four_diff`: algebraic identity
+  `:x⁴:_c - :x⁴:_{c'} = -6(c-c')·:x²:_{c'} + 3(c-c')²`.
+* `latticeRoughError_pure_quartic_*`: explicit chaos-2 + constant
+  decomposition for pure quartic. **Useful for understanding the
+  algebraic structure but does not give a uniform L² bound** —
+  superseded by the field-decomposition version.
 
 ## Status
 
-Definitions + decomposition lemma are landed. The chaos membership
-(`E_R(T) ∈ wienerChaosLE n (deg(P) - 2)` after pushforward) and the
-`L²`-norm bound `‖E_R(T)‖₂² ≤ K · T^δ` will populate
-`LatticeRoughErrorSetup` once they're proved.
+Foundation file. The genuine bridge discharge requires building the
+field-decomposition layer on top of this; that work is the next
+substantive Phase 1 push and is documented in
+`docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`.
 -/
 
 import Pphi2.NelsonEstimate.CovarianceSplit
