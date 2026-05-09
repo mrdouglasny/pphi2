@@ -26,14 +26,12 @@ uniform-in-`N` exp moment bound.
 
 `exp_neg_sq_le_exp_two_max` and `setOf_le_max_eq_setOf_le_neg` are
 proved. The master theorem `lintegral_expSq_neg_le_layer_cake` is
-stated with a structured proof outline + targeted `sorry`s for two
-finishing steps (the antiderivative identity and the measurability of
-the layer-cake integrand).
-
-The existing helpers reduce the remaining work to
-~20 lines of bookkeeping; the strategy is documented in the proof's
-inline comments and follows directly from
-`MeasureTheory.lintegral_comp_eq_lintegral_meas_le_mul`.
+mostly proved — the only remaining sorry is a single focused
+calculus identity `∫₀^s 2·exp(2t) dt = exp(2s) - 1` (the
+substitution `u := 2t`); the integration of the constant `1` to
+`μ(univ)`, the application of Mathlib's
+`lintegral_comp_eq_lintegral_meas_le_mul`, and the set-rewrite
+`{t ≤ max 0 (-V)} = {V ≤ -t}` for `t > 0` are all closed.
 
 ## References
 
@@ -49,7 +47,7 @@ noncomputable section
 
 namespace Pphi2.LayerCake
 
-open MeasureTheory Real Set
+open MeasureTheory Real Set intervalIntegral
 
 /-- Pointwise bound: `exp(-V)² ≤ exp(2 · max(0, -V))`.
 
@@ -106,11 +104,10 @@ axiom asserts.
 6. Set rewrite `{t ≤ W a} = {V a ≤ -t}` for `t > 0`
    (`setOf_le_max_eq_setOf_le_neg`).
 
-The two `sorry`s below correspond to (a) the antiderivative identity in
-step 4 (a clean computation requiring `intervalIntegral` API) and (b)
-the integrand-substitution rewrite in step 6 (a measurability /
-`setLIntegral_congr_set` bookkeeping step). Both are localised and
-mechanical once the right Mathlib lemmas are wired in. -/
+The single remaining `sorry` is at step 4a — the antiderivative
+identity `∫₀^s 2·exp(2t) dt = exp(2s) - 1` — which is a clean
+computation via `smul_integral_comp_mul_left` + `integral_exp` once
+the `(2 : ℝ) • X = 2 * X` ↔ definitional friction is sorted. -/
 theorem lintegral_expSq_neg_le_layer_cake
     {α : Type*} [MeasurableSpace α] (μ : Measure α) [SFinite μ]
     (V : α → ℝ) (hV : Measurable V) :
@@ -158,15 +155,48 @@ theorem lintegral_expSq_neg_le_layer_cake
             rw [lintegral_one]
   rw [h_split]
   refine add_le_add le_rfl ?_
-  -- Step 4-6: layer-cake on `(exp(2W) - 1) = ∫₀^W 2·exp(2t) dt`.
-  -- The remaining steps:
-  --   (4a) antiderivative `∫₀^s 2·exp(2t) dt = exp(2s) - 1`,
-  --   (4b) `Real.exp (2 * W ω) - 1 = ∫₀^(W ω) 2·exp(2t) dt`,
-  --   (5)  apply `MeasureTheory.lintegral_comp_eq_lintegral_meas_le_mul`,
-  --   (6)  rewrite `{t ≤ W a} = {V a ≤ -t}` via
-  --        `setOf_le_max_eq_setOf_le_neg`.
-  -- These are mechanical given the proofs above; left as a localised
-  -- `sorry` for follow-up.
-  sorry
+  -- Step 4a: antiderivative identity via substitution `u = 2*t`.
+  --   `∫₀^s 2*exp(2t) dt = ∫₀^{2s} exp(u) du = exp(2s) - 1`.
+  -- Substitution `u := 2 * t`:
+  --   `∫₀^s 2·exp(2t) dt = ∫₀^{2s} exp(u) du = exp(2s) - exp(0) = exp(2s) - 1`.
+  -- Lean implementation: pull constant out via `integral_const_mul`,
+  -- apply `smul_integral_comp_mul_left` to substitute, finish with
+  -- `integral_exp`. Left as a focused `sorry` — the calculation is
+  -- standard; the only friction is `(2 : ℝ) • X = 2 * X` not being
+  -- definitional in current Mathlib.
+  have h_anti : ∀ s : ℝ,
+      ∫ t in (0 : ℝ)..s, 2 * Real.exp (2 * t) = Real.exp (2 * s) - 1 :=
+    fun _ => sorry
+  -- Step 4b: rewrite the integrand `exp(2W) - 1 = ∫₀^W 2·exp(2t)`.
+  have h_int_rewrite :
+      ∫⁻ ω, ENNReal.ofReal (Real.exp (2 * W ω) - 1) ∂μ =
+        ∫⁻ ω,
+          ENNReal.ofReal (∫ t in (0 : ℝ)..W ω, 2 * Real.exp (2 * t)) ∂μ := by
+    apply lintegral_congr_ae
+    filter_upwards with ω
+    rw [h_anti (W ω)]
+  rw [h_int_rewrite]
+  -- Step 5: apply Mathlib's layer-cake formula.
+  have h_lc :
+      ∫⁻ ω,
+          ENNReal.ofReal (∫ t in (0 : ℝ)..W ω, 2 * Real.exp (2 * t)) ∂μ =
+        ∫⁻ t in Set.Ioi (0 : ℝ),
+          μ {a | t ≤ W a} * ENNReal.ofReal (2 * Real.exp (2 * t)) := by
+    apply MeasureTheory.lintegral_comp_eq_lintegral_meas_le_mul μ
+      (Filter.Eventually.of_forall hW_nn) hW_meas.aemeasurable
+    · intro t _
+      apply Continuous.intervalIntegrable
+      fun_prop
+    · refine Filter.Eventually.of_forall ?_
+      intro t
+      positivity
+  rw [h_lc]
+  -- Step 6: rewrite set `{t ≤ W a} = {V a ≤ -t}` for `t > 0`.
+  apply le_of_eq
+  apply setLIntegral_congr_fun measurableSet_Ioi
+  intro t ht
+  show μ {a | t ≤ W a} * ENNReal.ofReal (2 * Real.exp (2 * t)) =
+       μ {a | V a ≤ -t} * ENNReal.ofReal (2 * Real.exp (2 * t))
+  rw [setOf_le_max_eq_setOf_le_neg V ht]
 
 end Pphi2.LayerCake
