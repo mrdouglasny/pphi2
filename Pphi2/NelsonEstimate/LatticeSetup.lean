@@ -401,4 +401,32 @@ theorem latticeRoughError_pure_quartic_chaos2_form
     nsmul_eq_mul, ← Finset.mul_sum]
   ring
 
+/-! ## Chaos-2 sum: the variable-of-`ω` part of the pure-quartic rough error -/
+
+/-- The "chaos-2 sum" appearing in the pure-quartic rough error
+decomposition: `Σ_x :ω(δ_x)²:_{c_a}`. Under the lattice GFF,
+each term is a centered chaos-2 random variable; summed, this is
+itself in chaos-2. -/
+noncomputable def latticeWickSquareSum :
+    Configuration (FinLatticeField d N) → ℝ :=
+  fun ω => ∑ x : FinLatticeSites d N,
+    wickMonomial 2 (wickConstant d N a mass) (ω (finLatticeDelta d N x))
+
+/-- Measurability of the chaos-2 sum. Same proof structure as
+`latticeSmoothInteraction_measurable`. -/
+theorem latticeWickSquareSum_measurable :
+    @Measurable (Configuration (FinLatticeField d N)) ℝ
+      instMeasurableSpaceConfiguration (borel ℝ)
+      (latticeWickSquareSum d N a mass) := by
+  unfold latticeWickSquareSum
+  apply Finset.measurable_sum _ (fun x _ => ?_)
+  have h_cont : Continuous (fun y : ℝ =>
+      wickMonomial 2 (wickConstant d N a mass) y) := by
+    have h_pair := wickMonomial_continuous₂ 2
+    change Continuous (fun y : ℝ =>
+      (fun p : ℝ × ℝ => wickMonomial 2 p.1 p.2)
+        (wickConstant d N a mass, y))
+    exact h_pair.comp (continuous_const.prodMk continuous_id)
+  exact h_cont.measurable.comp (configuration_eval_measurable _)
+
 end Pphi2.LatticeSetup
