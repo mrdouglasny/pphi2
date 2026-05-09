@@ -247,4 +247,108 @@ the asymmetric-torus variants) typically work at fixed `L` with
 `a = L/N`, so the volume constraint is satisfied trivially in those
 applications. -/
 
+/-! ## Canonical realization (in progress) -/
+
+section Canonical
+
+/-- The canonical doubled-Gaussian phase space:
+`(FinLatticeSites d N → ℝ) × (FinLatticeSites d N → ℝ)`. The first
+component holds the smooth-side coordinates `η_S`, the second the
+rough-side `η_R`. -/
+abbrev CanonicalJoint (d N : ℕ) [NeZero N] : Type :=
+  (FinLatticeSites d N → ℝ) × (FinLatticeSites d N → ℝ)
+
+/-- The canonical joint measure: product of two i.i.d. standard
+Gaussian product-measures, one on each component. -/
+noncomputable def canonicalJointMeasure (d N : ℕ) [NeZero N] :
+    haveI : Fintype (ZMod N) := ZMod.fintype N
+    Measure (CanonicalJoint d N) :=
+  haveI : Fintype (ZMod N) := ZMod.fintype N
+  Measure.prod
+    (Measure.pi (fun _ : FinLatticeSites d N => ProbabilityTheory.gaussianReal 0 1))
+    (Measure.pi (fun _ : FinLatticeSites d N => ProbabilityTheory.gaussianReal 0 1))
+
+/-- The canonical smooth-side **field function** at cutoff `T`. Maps
+each `(η_S, η_R) ∈ CanonicalJoint d N` to a function on lattice sites:
+`x ↦ Σ_k √(C_S(T, k')) · e_k(x) · η_S(k)`,
+where `C_S(T, k')` is the smooth covariance eigenvalue at the integer
+mode index `k'` corresponding to the lattice site index `k` via
+`Fintype.equivFin (FinLatticeSites d N)`.
+
+This is a **field**, not a configuration: the `Configuration` type
+is `WeakDual` (continuous linear functionals), and lifting this field
+to a Configuration requires bundling it with the standard pairing
+`⟨g, f⟩ := Σ_x g(x) · f(x)` and showing continuity. The lift is
+deferred to a separate lemma. -/
+noncomputable def canonicalSmoothFieldFunction (d N : ℕ) [NeZero N]
+    (a mass T : ℝ) (η : CanonicalJoint d N) :
+    FinLatticeSites d N → ℝ :=
+  fun x =>
+    ∑ k : FinLatticeSites d N,
+      Real.sqrt (smoothCovEigenvalue d N a mass T
+        (Fintype.equivFin (FinLatticeSites d N) k)) *
+      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+      η.1 k
+
+/-- The canonical rough-side field function at cutoff `T`. -/
+noncomputable def canonicalRoughFieldFunction (d N : ℕ) [NeZero N]
+    (a mass T : ℝ) (η : CanonicalJoint d N) :
+    FinLatticeSites d N → ℝ :=
+  fun x =>
+    ∑ k : FinLatticeSites d N,
+      Real.sqrt (roughCovEigenvalue d N a mass T
+        (Fintype.equivFin (FinLatticeSites d N) k)) *
+      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+      η.2 k
+
+/-- The canonical sum field: `φ(x) = φ_S(x) + φ_R(x)`. As a field
+function (`FinLatticeSites d N → ℝ`), the sum is pointwise. -/
+noncomputable def canonicalSumFieldFunction (d N : ℕ) [NeZero N]
+    (a mass T : ℝ) (η : CanonicalJoint d N) :
+    FinLatticeSites d N → ℝ :=
+  fun x =>
+    canonicalSmoothFieldFunction d N a mass T η x +
+      canonicalRoughFieldFunction d N a mass T η x
+
+/-- **Decomposition identity** (deterministic, by definition). -/
+theorem canonicalSumFieldFunction_eq_smooth_plus_rough
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) (η : CanonicalJoint d N)
+    (x : FinLatticeSites d N) :
+    canonicalSumFieldFunction d N a mass T η x =
+      canonicalSmoothFieldFunction d N a mass T η x +
+        canonicalRoughFieldFunction d N a mass T η x :=
+  rfl
+
+/-! ### Pointwise spectral identity at the canonical decomposition
+
+By the covariance split `C_S(T,k) + C_R(T,k) = (latticeEigenvalue k)⁻¹`
+(per `covariance_split` in `CovarianceSplit.lean`), the sum
+`canonicalSumFieldFunction` realizes a Gaussian field whose covariance
+matches the lattice GFF — the basis for the pushforward identity.
+
+The pointwise spectral form:
+`canonicalSumFieldFunction(η)(x) = Σ_k [√(C_S(k')) · η_S(k) + √(C_R(k')) · η_R(k)] · e_k(x)`
+
+For each `k`, the per-mode coefficient `√(C_S) η_S + √(C_R) η_R` is a
+linear combination of two independent N(0,1) variables, hence
+Gaussian with variance `C_S + C_R = (λ_k)⁻¹`. The full field is
+Gaussian with covariance kernel
+`Σ_k λ_k⁻¹ · e_k(x) e_k(y) = M_a^{-1}(x, y)`, matching the
+GFF spectral covariance per `lattice_covariance_eq_spectral`.
+
+The pushforward identity (`canonicalJointMeasure ⤳ latticeGaussianMeasure`)
+then follows by characteristic-function uniqueness.
+
+The detailed proof requires:
+1. Linearity of `canonicalSumFieldFunction` in η (immediate by
+   distributing sums).
+2. Gaussian distribution of `Σ_k (√(C_S) η_S(k) + √(C_R) η_R(k)) · e_k(x)`
+   under `canonicalJointMeasure`, with explicit covariance.
+3. Comparison with `latticeGaussianFieldLaw_fourier` (in gaussian-field).
+
+These steps are the substantive Phase 1 work that the abstract
+chain consumes. -/
+
+end Canonical
+
 end Pphi2
