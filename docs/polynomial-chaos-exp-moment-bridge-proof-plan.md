@@ -237,6 +237,89 @@ which converges (the doubly-exponential decay dominates `exp(2M)`)
 This `K + 1` is the witness for the bridge axiom, with the additional
 `max(·, 1)` absorbing the degenerate small/large `a` corners.
 
+## ⚠️ 2026-05-09b: critical mathematical fixes per Gemini review
+
+After the field-decomposition revision below, a Gemini review caught
+two mathematical errors that would have made the formalization
+unachievable. Both are now incorporated above (in
+`Pphi2/NelsonEstimate/FieldDecomposition.lean` docstring) and below.
+
+### Fix #1: Use UNCONDITIONAL joint chaos, not conditional
+
+The original revised plan said "apply Janson 5.10 to the rough field
+marginal, conditional on `φ_S`, then integrate over `φ_S` via
+Fubini." This is mathematically false:
+- The conditional L² norm `‖E_R(φ_S, ·)‖_{L²(μ_R)}` is itself a
+  random variable depending on `φ_S` (cross-terms like
+  `4 :φ_S³:_{c_S} φ_R` contribute `16 c_R · φ_S^6` to the conditional
+  variance).
+- The conditional Janson bound has `φ_S` in the denominator of the
+  exponent — analytically intractable, formalization dead-end.
+
+**Correct approach**: `E_R = V(φ_S + φ_R) - V_S(φ_S)` is natively a
+polynomial of total degree `≤ deg P` in the **joint**
+`2|Λ|`-dimensional Gaussian variables `(η_S, η_R)`. Apply Janson 5.10
+**unconditionally** on the joint space:
+- `E_R ∈ wienerChaosLE (2|Λ|) (deg P)` of the joint standard
+  Gaussian.
+- `‖E_R‖²_{L²(μ_joint)} ≤ K · T^δ` is a **deterministic** constant
+  (the φ_S dependence is integrated out unconditionally, yielding
+  powers of `c_S ∼ log T`).
+- `μ_joint{|E_R| > λ} ≤ 2 exp(-c_d (λ/√(K T^δ))^{2/deg P})` —
+  deterministic bound, no Fubini gymnastics.
+
+The smooth-side bound `V_S(φ_S) ≥ -M/2` is deterministic (pointwise
+on `Joint`), so `{V ≤ -M} ⊆ {E_R ≤ -M/2}` is a pointwise
+set-theoretic subset — the unconditional tail bound flows directly
+into `expSqNeg_lintegral_le_of_dynamical_cutoff`.
+
+**Net effect**: no `condexp` API, no conditional Janson, no `Fubini`
+integration of conditional bounds. The Mathlib gap previously
+flagged as `Measure.pi_split` is also unnecessary — just double the
+space to `stdGaussianFin (2 |Λ|)` and apply the upstream theorems
+directly.
+
+### Fix #2: Volume constraint is mandatory (Phase 3 → required)
+
+The current `polynomial_chaos_exp_moment_bridge` axiom signature
+`∀ a > 0, ∀ N` is **mathematically false** without a volume
+constraint:
+
+- The Wick polynomial `:φ⁴:_{c_a} = φ⁴ - 6c_a φ² + 3c_a²` has
+  pointwise minimum `-6 c_a²`.
+- Hence `V_min = a^d · |Λ| · (-6 c_a²) = -L^d · 6 c_a²`. As
+  `c_a → ∞` (which happens at small `a` due to logarithmic
+  divergence in 2D, or at any `a` if `L → ∞`), `V_min → -∞`.
+- Then `∫ exp(-2V) dμ ≥ exp(-2 V_min) → ∞`. No uniform `K` exists.
+
+The Nelson exp-moment bound is an **extensive** quantity:
+`E[exp(-V_a)] ≤ exp(K · L^d)` where `L^d` is the physical volume.
+A bound uniform in volume cannot exist.
+
+**Required signature change**:
+```lean
+theorem polynomial_chaos_exp_moment_bridge
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (L : ℝ) (hL : 0 < L) :
+    ∃ (K : ℝ), 0 < K ∧
+    ∀ (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1),
+    ∀ (N : ℕ) [NeZero N] (haN : a * N ≤ L),
+    ∫ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K
+```
+
+Adds:
+- `(L : ℝ) (hL : 0 < L)` — fixed physical volume.
+- `(ha1 : a ≤ 1)` — UV regime.
+- `(haN : a * N ≤ L)` — bounded volume.
+
+Downstream consumers (`nelson_exponential_estimate_lattice`,
+asymmetric-torus variants) work at fixed `L` with `a = L/N`, so the
+constraints are trivially satisfied in those applications.
+
+This is **Phase 3 promoted from "recommended" to "required"** —
+without it, the bridge axiom is provably false.
+
 ## ⚠️ 2026-05-09 plan revision: field decomposition is essential
 
 A first-pass implementation in `Pphi2/NelsonEstimate/LatticeSetup.lean`

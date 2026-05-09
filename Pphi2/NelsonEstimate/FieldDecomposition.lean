@@ -139,7 +139,7 @@ structure FieldDecomposition (T : ℝ) where
         (fun ξ => φ_S ξ + φ_R ξ) μ_joint =
       latticeGaussianMeasure d N a mass ha hmass
 
-/-! ## Phase 1 work that remains
+/-! ## Phase 1 work that remains (revised 2026-05-09 per Gemini review)
 
 To complete the bridge discharge, the following remain:
 
@@ -148,7 +148,8 @@ To complete the bridge discharge, the following remain:
    - The gaussian-field theorems
      `gffOrthonormalProj_pushforward_eq_stdGaussian`,
      `gffOrthonormalCoord_independent` (now theorems).
-   - `Measure.pi` for the product structure.
+   - `Measure.pi` for the product structure on the **doubled
+     2|Λ|-dimensional Gaussian** (one copy for `η_S`, one for `η_R`).
    - Spectral decomposition: φ_S, φ_R as linear combinations of the
      η_S, η_R variables weighted by `√(smoothCovEigenvalue T k)`,
      `√(roughCovEigenvalue T k)`.
@@ -163,30 +164,87 @@ To complete the bridge discharge, the following remain:
    each lattice site to expand `:φ(x)^n:_{c_S+c_R}` into the
    bivariate Wick binomial terms.
 
-4. **Chaos membership of `E_R`**: each term in the Wick binomial
-   has at least one `:φ_R(x)^k:_{c_R}` factor. As a function on
-   `Joint = (η_S, η_R)`, the rough-side projection (integration
-   over η_S at fixed η_R, or vice versa) is a polynomial of total
-   degree `≤ deg P` in η_R alone, hence in `wienerChaosLE` of the
-   rough Gaussian.
+4. **Joint chaos membership of `E_R`** (⚠ critical correction):
+   `E_R = V(φ_S + φ_R) - V_S(φ_S)` is a polynomial of total degree
+   `≤ deg P` in the JOINT `2|Λ|`-dimensional Gaussian variables
+   `(η_S, η_R)` taken together — NOT in `η_R` conditional on `η_S`.
+   This means `E_R ∈ wienerChaosLE (2|Λ|) (deg P)` of the JOINT
+   standard Gaussian. The chaos analysis is **unconditional** on
+   the joint space; no `condexp`, no conditional Janson, no Fubini
+   integration of conditional bounds.
 
-5. **L² bound on `E_R`**: by Wick orthogonality on the rough
-   marginal, `‖E_R‖²_{L²(μ_joint)} ≤ Σ (combinatorial coefficients)
-   · ‖C_R‖²_HS^k`. Apply `roughCovariance_sq_summable` for the
-   uniform bound.
+   Why: a conditional approach would have the L² norm of E_R
+   conditional on φ_S be a *random variable* depending on `φ_S`
+   (since cross-terms like `4 :φ_S³:_{c_S} φ_R` contribute
+   `16 c_R · φ_S^6` to the conditional variance). Applying Janson
+   conditionally then yields a tail bound where `φ_S` appears in the
+   denominator of the exponent — analytically intractable.
 
-6. **Construct `LatticeRoughErrorSetup`** from the
-   `FieldDecomposition`: V_S, E_R lift from `Joint` to
-   `Configuration` via the pushforward; smooth-side bound transfers
-   from `smooth_interaction_lower_bound_log_uniform`; rough tail from
-   `chaos_neg_tail_bound` applied to E_R; integrability via
-   `lintegral_layer_cake_lt_top_of_eventual_decay`.
+5. **L² bound on `E_R`** (joint, deterministic):
+   `‖E_R‖²_{L²(μ_joint)} ≤ K · T^δ` for some `K` depending on
+   `(L, c_a)` but not on `N`. Computed via:
+   - Wick orthogonality on the joint Gaussian gives a sum over
+     multi-indices with rough Wick monomials;
+   - At least one `:φ_R^k:_{c_R}` factor per term contributes
+     `‖C_R‖²_HS^k`;
+   - `roughCovariance_sq_summable` bounds `‖C_R‖²_HS ≤ |Λ| · T · a^d · c_a
+     = L^d · T · c_a` uniformly in N.
 
-7. **Apply `bridgeAxiom_of_setup_real`** to get
-   `polynomial_chaos_exp_moment_bridge` as a theorem.
+6. **Apply Janson 5.10 unconditionally** on the joint `2|Λ|`-dim
+   Gaussian to `E_R - E_joint[E_R] = E_R` (already centered):
+   `μ_joint{|E_R| > λ ‖E_R‖_{L²(joint)}} ≤ 2 exp(-c_d λ^{2/deg P})`.
+   Combined with the L² bound: with `λ = M / (2 √(K T^δ))`,
+   `μ_joint{E_R ≤ -M/2} ≤ 2 exp(-c (M/(2√(K T^δ)))^{2/deg P})`.
 
-The structural skeleton above isolates the missing pieces. Once a
-`FieldDecomposition T` instance is constructed (steps 1-2), the
-remaining steps (3-7) feed into the existing abstract chain. -/
+7. **Pushforward to GFF, smooth-side bound, layer-cake assembly**:
+   - The pushforward identity `(η_S, η_R) ↦ φ_S + φ_R` translates
+     joint events to GFF events.
+   - Smooth-side bound `V_S(φ_S) ≥ -M/2` is **deterministic**
+     (pointwise on `Joint`), from `smooth_interaction_lower_bound_log_uniform`.
+   - The set inclusion `{V ≤ -M} ⊆ {E_R ≤ -M/2}` is therefore a
+     pointwise set-theoretic subset on the joint space. The
+     unconditional joint tail bound flows directly into
+     `expSqNeg_lintegral_le_of_dynamical_cutoff` via the pushforward.
+   - Apply `chaos_neg_tail_bound`,
+     `lintegral_layer_cake_lt_top_of_eventual_decay`, and
+     `bridgeAxiom_of_setup_real` to assemble.
+
+## ⚠ Volume constraint (Phase 3 fix per Gemini review)
+
+The current `polynomial_chaos_exp_moment_bridge` axiom signature
+`∀ a > 0, ∀ N` is **mathematically false** without a volume
+constraint: the Wick polynomial `:φ⁴:_{c_a} = φ⁴ - 6c_a φ² + 3c_a²`
+has minimum `-6 c_a²`, so `V_min = a^d · |Λ| · (-6 c_a²) =
+-L^d · 6 c_a² → -∞` as `c_a → ∞`. The integral
+`∫ exp(-2V) dμ` cannot be uniformly bounded over arbitrary `(a, N)`
+since the physical volume `L = aN` is unbounded.
+
+The Nelson exp-moment bound is an *extensive* quantity:
+`E[exp(-V_a)] ≤ exp(K · L^d)` where `K` depends on the regime but
+the volume factor `L^d` is essential. A uniform-in-volume `K` cannot
+exist.
+
+**Required Phase 3 fixes** (mandatory, not just recommended):
+- Add `haN : a * N ≤ L` (or equivalently `(a * N)^d ≤ L^d`) to the
+  hypotheses, fixing a finite physical volume `L`.
+- Restrict `0 < a ≤ 1` (the UV regime).
+- Allow `K` to depend on `L` (and `mass`, `P`).
+
+The corrected signature:
+```lean
+theorem polynomial_chaos_exp_moment_bridge
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (L : ℝ) (hL : 0 < L) :
+    ∃ (K : ℝ), 0 < K ∧
+    ∀ (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1),
+    ∀ (N : ℕ) [NeZero N] (haN : a * N ≤ L),
+    ∫ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K
+```
+
+The downstream consumers (`nelson_exponential_estimate_lattice`,
+the asymmetric-torus variants) typically work at fixed `L` with
+`a = L/N`, so the volume constraint is satisfied trivially in those
+applications. -/
 
 end Pphi2
