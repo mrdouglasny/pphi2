@@ -1302,19 +1302,50 @@ theorem canonicalSumFieldFunction_covariance_eq_GJ
   --   (a^d)⁻¹ · Σ_k (massEigenvalues k)⁻¹ · ⟨e_k, δ_x⟩ · ⟨e_k, δ_y⟩
   -- Bridge via `massEigenvalues_eq_latticeEigenvalue` and
   -- `⟨e_k, δ_x⟩ = e_k(x)` (indicator collapse).
-  -- Strategy: combine the proved `canonicalSumFieldFunction_covariance` with
-  -- `lattice_covariance_GJ_eq_spectral` and the indicator identity
-  -- `⟨e_k, δ_x⟩ = e_k(x)`. The eigenvalue indexing bridge
-  -- `massEigenvalues_eq_latticeEigenvalue` is in place above. The remaining
-  -- obstruction is a `Pi.instFintype` instance-resolution mismatch between
-  -- the bracket-introduced `[Fintype (ZMod N)]` (used by the variance
-  -- theorem after the section variable was added) and the global
-  -- `ZMod.fintype N` (used by `lattice_covariance_GJ_eq_spectral` from
-  -- gaussian-field). The two instances are subsingleton-equal but the
-  -- finals haven't found a clean Lean-level cast for the resulting double
-  -- sums — deferred to a follow-up that reformulates the gaussian-field
-  -- spectral lemma to take an explicit `[Fintype (ZMod N)]` bracket.
-  sorry
+  intro δ_x δ_y
+  -- Cast the gaussian-field spectral lemma to use the bracket Fintype instance.
+  have h_GJ_spec :
+      GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) δ_x δ_y =
+      (a^d : ℝ)⁻¹ *
+      ∑ k : FinLatticeSites d N,
+        (massEigenvalues d N a mass k)⁻¹ *
+        (∑ z, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z * δ_x z) *
+        (∑ z, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z * δ_y z) := by
+    have := GaussianField.lattice_covariance_GJ_eq_spectral d N a mass ha hmass δ_x δ_y
+    convert this using 8 <;>
+      first
+        | rfl
+        | (try exact Subsingleton.elim _ _)
+        | (try ring)
+        | skip
+  rw [canonicalSumFieldFunction_covariance d N a mass ha hmass T hT x y]
+  rw [h_GJ_spec]
+  -- Now both sums use the same Fintype. Bridge per-mode: indicator collapse
+  -- + eigenvalue indexing identity.
+  refine congrArg ((a^d : ℝ)⁻¹ * ·) ?_
+  refine Finset.sum_congr rfl (fun k _ => ?_)
+  -- ⟨e_k, δ_x⟩ = e_k(x)
+  have h_ip_x : (∑ z : FinLatticeSites d N,
+      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z * δ_x z) =
+      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x := by
+    show (∑ z : FinLatticeSites d N,
+      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z *
+        (if z = x then (1 : ℝ) else 0)) = _
+    rw [Finset.sum_eq_single x]
+    · simp
+    · intro z _ hzx; simp [if_neg hzx]
+    · intro h; exact (h (Finset.mem_univ _)).elim
+  have h_ip_y : (∑ z : FinLatticeSites d N,
+      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z * δ_y z) =
+      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y := by
+    show (∑ z : FinLatticeSites d N,
+      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z *
+        (if z = y then (1 : ℝ) else 0)) = _
+    rw [Finset.sum_eq_single y]
+    · simp
+    · intro z _ hzy; simp [if_neg hzy]
+    · intro h; exact (h (Finset.mem_univ _)).elim
+  rw [h_ip_x, h_ip_y, massEigenvalues_eq_latticeEigenvalue d N a mass k]
 
 end Variance
 
