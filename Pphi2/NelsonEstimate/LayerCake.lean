@@ -24,14 +24,7 @@ uniform-in-`N` exp moment bound.
 
 ## Status
 
-`exp_neg_sq_le_exp_two_max` and `setOf_le_max_eq_setOf_le_neg` are
-proved. The master theorem `lintegral_expSq_neg_le_layer_cake` is
-mostly proved — the only remaining sorry is a single focused
-calculus identity `∫₀^s 2·exp(2t) dt = exp(2s) - 1` (the
-substitution `u := 2t`); the integration of the constant `1` to
-`μ(univ)`, the application of Mathlib's
-`lintegral_comp_eq_lintegral_meas_le_mul`, and the set-rewrite
-`{t ≤ max 0 (-V)} = {V ≤ -t}` for `t > 0` are all closed.
+All theorems proved (zero axioms, zero sorries).
 
 ## References
 
@@ -42,6 +35,7 @@ substitution `u := 2t`); the integration of the constant `1` to
 
 import Mathlib.MeasureTheory.Integral.Layercake
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
+import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 
 noncomputable section
 
@@ -104,10 +98,9 @@ axiom asserts.
 6. Set rewrite `{t ≤ W a} = {V a ≤ -t}` for `t > 0`
    (`setOf_le_max_eq_setOf_le_neg`).
 
-The single remaining `sorry` is at step 4a — the antiderivative
-identity `∫₀^s 2·exp(2t) dt = exp(2s) - 1` — which is a clean
-computation via `smul_integral_comp_mul_left` + `integral_exp` once
-the `(2 : ℝ) • X = 2 * X` ↔ definitional friction is sorted. -/
+All steps closed; the antiderivative identity `∫₀^s 2·exp(2t) dt =
+exp(2s) - 1` is proved by substitution `u := 2t` via
+`integral_comp_mul_left` + `integral_exp`. -/
 theorem lintegral_expSq_neg_le_layer_cake
     {α : Type*} [MeasurableSpace α] (μ : Measure α) [SFinite μ]
     (V : α → ℝ) (hV : Measurable V) :
@@ -158,15 +151,21 @@ theorem lintegral_expSq_neg_le_layer_cake
   -- Step 4a: antiderivative identity via substitution `u = 2*t`.
   --   `∫₀^s 2*exp(2t) dt = ∫₀^{2s} exp(u) du = exp(2s) - 1`.
   -- Substitution `u := 2 * t`:
-  --   `∫₀^s 2·exp(2t) dt = ∫₀^{2s} exp(u) du = exp(2s) - exp(0) = exp(2s) - 1`.
-  -- Lean implementation: pull constant out via `integral_const_mul`,
-  -- apply `smul_integral_comp_mul_left` to substitute, finish with
-  -- `integral_exp`. Left as a focused `sorry` — the calculation is
-  -- standard; the only friction is `(2 : ℝ) • X = 2 * X` not being
-  -- definitional in current Mathlib.
+  --   `∫₀^s 2·exp(2t) dt = ∫₀^{2s} exp(u) du = exp(2s) - 1`.
   have h_anti : ∀ s : ℝ,
-      ∫ t in (0 : ℝ)..s, 2 * Real.exp (2 * t) = Real.exp (2 * s) - 1 :=
-    fun _ => sorry
+      ∫ t in (0 : ℝ)..s, 2 * Real.exp (2 * t) = Real.exp (2 * s) - 1 := by
+    intro s
+    have h2_ne : (2 : ℝ) ≠ 0 := by norm_num
+    calc ∫ t in (0 : ℝ)..s, 2 * Real.exp (2 * t)
+        = 2 * ∫ t in (0 : ℝ)..s, Real.exp (2 * t) :=
+          intervalIntegral.integral_const_mul ..
+      _ = 2 * ((2 : ℝ)⁻¹ • ∫ x in (2 * 0 : ℝ)..(2 * s), Real.exp x) := by
+            rw [integral_comp_mul_left _ h2_ne]
+      _ = ∫ x in (2 * 0 : ℝ)..(2 * s), Real.exp x := by
+            rw [smul_eq_mul, ← mul_assoc, mul_inv_cancel₀ h2_ne, one_mul]
+      _ = Real.exp (2 * s) - Real.exp (2 * 0) := integral_exp
+      _ = Real.exp (2 * s) - 1 := by
+            rw [mul_zero, Real.exp_zero]
   -- Step 4b: rewrite the integrand `exp(2W) - 1 = ∫₀^W 2·exp(2t)`.
   have h_int_rewrite :
       ∫⁻ ω, ENNReal.ofReal (Real.exp (2 * W ω) - 1) ∂μ =
