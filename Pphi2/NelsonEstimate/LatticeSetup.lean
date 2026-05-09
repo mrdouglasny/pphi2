@@ -332,4 +332,73 @@ theorem latticeRoughError_pure_quartic_summed
   simp_rw [wickPolynomial_pure_quartic_diff d N a mass P h_pure h_quartic T _ ω]
   rw [← Finset.mul_sum, ← mul_assoc, mul_comm (a ^ d) (1 / (P.n : ℝ)), mul_assoc]
 
+/-- **Wick monomial 2 shift identity:** `:x²:_c = :x²:_{c'} + (c' - c)`.
+
+Both sides equal `x² - c`. Useful for re-expressing the rough error
+in terms of the GFF-canonical Wick subtraction (full `c_a`) instead
+of the smooth Wick subtraction (`c_S(T)`). -/
+theorem wickMonomial_two_shift (c c' x : ℝ) :
+    wickMonomial 2 c x = wickMonomial 2 c' x + (c' - c) := by
+  rw [wickMonomial_two, wickMonomial_two]; ring
+
+/-- **Pure-quartic rough error in chaos-2 form (with full `c_a` Wick
+subtraction).**
+
+After re-expressing `:ω(δ_x)²:_{c_S(T)} = :ω(δ_x)²:_{c_a} + c_R(T)`
+(using `wickMonomial_two_shift`) and simplifying, the rough error
+admits the cleaner decomposition
+
+  `latticeRoughError P T ω = -(3/2) · c_R(T) · a^d · Σ_x :ω(δ_x)²:_{c_a}
+    - (3/4) · c_R(T)² · a^d · (Fintype.card (FinLatticeSites d N))`
+
+where:
+* The first term is a **chaos-2 element** of `L²(GFF)` (under the
+  full Wick subtraction `c_a` it is centered: `E[:ω(δ_x)²:_{c_a}] = 0`),
+  scaled by the small prefactor `c_R(T)`.
+* The second term is a **constant** (function-independent of `ω`),
+  scaled by `c_R(T)²` (which shrinks faster as `T → 0`).
+
+This form is what the Phase 1 chaos+L² analysis directly uses:
+Wick orthogonality on `Σ_x :ω(δ_x)²:_{c_a}` gives the L² bound
+proportional to the rough-covariance Hilbert-Schmidt norm
+(controlled by `roughCovariance_sq_summable`). -/
+theorem latticeRoughError_pure_quartic_chaos2_form
+    (P : InteractionPolynomial) (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (T : ℝ) (ω : Configuration (FinLatticeField d N)) :
+    latticeRoughError d N a mass P T ω =
+      -(3 / 2 : ℝ) * (wickConstant d N a mass - smoothWickConstant d N a mass T) *
+        a ^ d * ∑ x : FinLatticeSites d N,
+          wickMonomial 2 (wickConstant d N a mass) (ω (finLatticeDelta d N x)) -
+      (3 / 4 : ℝ) * (wickConstant d N a mass - smoothWickConstant d N a mass T) ^ 2 *
+        a ^ d * (Fintype.card (FinLatticeSites d N) : ℝ) := by
+  rw [latticeRoughError_pure_quartic_summed d N a mass P h_pure h_quartic T ω]
+  rw [h_quartic]
+  -- Rewrite each wickMonomial 2 c_S to wickMonomial 2 c_a + (c_a - c_S).
+  have h_shift : ∀ x : FinLatticeSites d N,
+      wickMonomial 2 (smoothWickConstant d N a mass T)
+        (ω (finLatticeDelta d N x)) =
+      wickMonomial 2 (wickConstant d N a mass)
+        (ω (finLatticeDelta d N x)) +
+      (wickConstant d N a mass - smoothWickConstant d N a mass T) :=
+    fun x => wickMonomial_two_shift _ _ _
+  simp_rw [h_shift]
+  -- Goal: 1/4 · a^d · Σ_x [-6 c_R · (wickMonomial 2 c_a (ω(δ_x)) + c_R) + 3 c_R²]
+  --       = -(3/2) c_R · a^d · Σ_x wickMonomial 2 c_a (...) - (3/4) c_R² · a^d · |Λ|.
+  set c_R : ℝ :=
+    wickConstant d N a mass - smoothWickConstant d N a mass T with hc_R_def
+  -- Pull `-6 c_R · _ + (-3 c_R²)` out of the sum.
+  simp_rw [show ∀ x : FinLatticeSites d N,
+      (-6 * c_R *
+        (wickMonomial 2 (wickConstant d N a mass)
+          (ω (finLatticeDelta d N x)) + c_R) +
+        3 * c_R ^ 2) =
+      -6 * c_R *
+        wickMonomial 2 (wickConstant d N a mass)
+          (ω (finLatticeDelta d N x)) + (-3 * c_R ^ 2)
+      from fun _ => by ring]
+  rw [Finset.sum_add_distrib, Finset.sum_const, Finset.card_univ,
+    nsmul_eq_mul, ← Finset.mul_sum]
+  ring
+
 end Pphi2.LatticeSetup
