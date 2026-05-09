@@ -73,6 +73,11 @@ import Pphi2.NelsonEstimate.LatticeBridge
 import Pphi2.NelsonEstimate.LatticeSetup
 import Pphi2.NelsonEstimate.CovarianceSplit
 import Mathlib.MeasureTheory.Constructions.Pi
+import Mathlib.MeasureTheory.Integral.Pi
+import Mathlib.Probability.Distributions.Gaussian.Fernique
+import Mathlib.Probability.Independence.Basic
+import Mathlib.Probability.Independence.Integration
+import GaussianField.Hypercontractive
 
 noncomputable section
 
@@ -270,31 +275,38 @@ noncomputable def canonicalJointMeasure (d N : ℕ) [NeZero N] :
 
 /-- The canonical smooth-side **field function** at cutoff `T`. Maps
 each `(η_S, η_R) ∈ CanonicalJoint d N` to a function on lattice sites:
-`x ↦ Σ_k √(C_S(T, k')) · e_k(x) · η_S(k)`,
+`x ↦ (a^d)^{-1/2} · Σ_k √(C_S(T, k')) · e_k(x) · η_S(k)`,
 where `C_S(T, k')` is the smooth covariance eigenvalue at the integer
 mode index `k'` corresponding to the lattice site index `k` via
 `Fintype.equivFin (FinLatticeSites d N)`.
 
+The `(a^d)^{-1/2}` prefactor implements the Glimm–Jaffe alignment: the
+per-mode variance becomes `(a^d)⁻¹ · C_S(T,k')`, so that
+`Var(φ_S(δ_x)) + Var(φ_R(δ_x)) = (a^d λ_k)⁻¹`, matching the GJ-aligned
+GFF covariance `(a^d)⁻¹ M_a⁻¹` per `lattice_covariance_GJ_eq_spectral`.
+
 This is a **field**, not a configuration: the `Configuration` type
 is `WeakDual` (continuous linear functionals), and lifting this field
-to a Configuration requires bundling it with the standard pairing
-`⟨g, f⟩ := Σ_x g(x) · f(x)` and showing continuity. The lift is
-deferred to a separate lemma. -/
+to a Configuration uses the standard pairing
+`⟨g, f⟩ := Σ_x g(x) · f(x)` (see `latticeFieldToConfig` below). -/
 noncomputable def canonicalSmoothFieldFunction (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (η : CanonicalJoint d N) :
     FinLatticeSites d N → ℝ :=
   fun x =>
+    (Real.sqrt (a^d))⁻¹ *
     ∑ k : FinLatticeSites d N,
       Real.sqrt (smoothCovEigenvalue d N a mass T
         (Fintype.equivFin (FinLatticeSites d N) k)) *
       ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
       η.1 k
 
-/-- The canonical rough-side field function at cutoff `T`. -/
+/-- The canonical rough-side field function at cutoff `T`. The same
+`(a^d)^{-1/2}` GJ-alignment factor is included as in the smooth case. -/
 noncomputable def canonicalRoughFieldFunction (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (η : CanonicalJoint d N) :
     FinLatticeSites d N → ℝ :=
   fun x =>
+    (Real.sqrt (a^d))⁻¹ *
     ∑ k : FinLatticeSites d N,
       Real.sqrt (roughCovEigenvalue d N a mass T
         (Fintype.equivFin (FinLatticeSites d N) k)) *
@@ -362,10 +374,11 @@ theorem canonicalSmoothFieldFunction_add
       canonicalSmoothFieldFunction d N a mass T η₁ x +
         canonicalSmoothFieldFunction d N a mass T η₂ x := by
   unfold canonicalSmoothFieldFunction
-  show ∑ k, _ * _ * (η₁ + η₂).1 k = _ + _
+  show (Real.sqrt (a^d))⁻¹ * ∑ k, _ * _ * (η₁ + η₂).1 k =
+    (Real.sqrt (a^d))⁻¹ * _ + (Real.sqrt (a^d))⁻¹ * _
   rw [show (η₁ + η₂).1 = η₁.1 + η₂.1 from rfl]
   simp_rw [Pi.add_apply, mul_add]
-  rw [Finset.sum_add_distrib]
+  rw [Finset.sum_add_distrib, mul_add]
 
 /-- The smooth field function is `ℝ`-homogeneous in η. -/
 theorem canonicalSmoothFieldFunction_smul
@@ -374,9 +387,13 @@ theorem canonicalSmoothFieldFunction_smul
     canonicalSmoothFieldFunction d N a mass T (c • η) x =
       c * canonicalSmoothFieldFunction d N a mass T η x := by
   unfold canonicalSmoothFieldFunction
-  show ∑ k, _ * _ * (c • η).1 k = c * ∑ k, _
+  show (Real.sqrt (a^d))⁻¹ * ∑ k, _ * _ * (c • η).1 k =
+    c * ((Real.sqrt (a^d))⁻¹ * ∑ k, _)
   rw [show (c • η).1 = c • η.1 from rfl]
   simp_rw [Pi.smul_apply, smul_eq_mul]
+  rw [show ∀ S : ℝ, c * ((Real.sqrt (a^d))⁻¹ * S) =
+    (Real.sqrt (a^d))⁻¹ * (c * S) by intro S; ring]
+  congr 1
   rw [Finset.mul_sum]
   refine Finset.sum_congr rfl ?_
   intro k _
@@ -390,10 +407,11 @@ theorem canonicalRoughFieldFunction_add
       canonicalRoughFieldFunction d N a mass T η₁ x +
         canonicalRoughFieldFunction d N a mass T η₂ x := by
   unfold canonicalRoughFieldFunction
-  show ∑ k, _ * _ * (η₁ + η₂).2 k = _ + _
+  show (Real.sqrt (a^d))⁻¹ * ∑ k, _ * _ * (η₁ + η₂).2 k =
+    (Real.sqrt (a^d))⁻¹ * _ + (Real.sqrt (a^d))⁻¹ * _
   rw [show (η₁ + η₂).2 = η₁.2 + η₂.2 from rfl]
   simp_rw [Pi.add_apply, mul_add]
-  rw [Finset.sum_add_distrib]
+  rw [Finset.sum_add_distrib, mul_add]
 
 /-- The rough field function is `ℝ`-homogeneous in η. -/
 theorem canonicalRoughFieldFunction_smul
@@ -402,9 +420,13 @@ theorem canonicalRoughFieldFunction_smul
     canonicalRoughFieldFunction d N a mass T (c • η) x =
       c * canonicalRoughFieldFunction d N a mass T η x := by
   unfold canonicalRoughFieldFunction
-  show ∑ k, _ * _ * (c • η).2 k = c * ∑ k, _
+  show (Real.sqrt (a^d))⁻¹ * ∑ k, _ * _ * (c • η).2 k =
+    c * ((Real.sqrt (a^d))⁻¹ * ∑ k, _)
   rw [show (c • η).2 = c • η.2 from rfl]
   simp_rw [Pi.smul_apply, smul_eq_mul]
+  rw [show ∀ S : ℝ, c * ((Real.sqrt (a^d))⁻¹ * S) =
+    (Real.sqrt (a^d))⁻¹ * (c * S) by intro S; ring]
+  congr 1
   rw [Finset.mul_sum]
   refine Finset.sum_congr rfl ?_
   intro k _
@@ -424,6 +446,7 @@ theorem canonicalSmoothFieldFunction_pointwise_measurable
       canonicalSmoothFieldFunction d N a mass T η x) := by
   haveI : Fintype (ZMod N) := ZMod.fintype N
   unfold canonicalSmoothFieldFunction
+  refine Measurable.const_mul ?_ _
   apply Finset.measurable_sum
   intro k _
   -- Each term: c_k * η.1(k), where c_k is constant in η.
@@ -443,6 +466,7 @@ theorem canonicalRoughFieldFunction_pointwise_measurable
       canonicalRoughFieldFunction d N a mass T η x) := by
   haveI : Fintype (ZMod N) := ZMod.fintype N
   unfold canonicalRoughFieldFunction
+  refine Measurable.const_mul ?_ _
   apply Finset.measurable_sum
   intro k _
   have hπ₂ : Measurable (fun η : CanonicalJoint d N => η.2) := measurable_snd
@@ -499,6 +523,249 @@ The detailed proof requires:
 
 These steps are the substantive Phase 1 work that the abstract
 chain consumes. -/
+
+/-! ### Variance computation: covariance of `canonicalSumFieldFunction`
+
+The key payoff of the canonical realization: the covariance of
+`canonicalSumFieldFunction` under `canonicalJointMeasure` matches
+the GJ-aligned GFF covariance pointwise, providing the input to the
+pushforward identity (deferred).
+
+Concretely, for sites `x, y : FinLatticeSites d N`:
+```
+  ∫ canonicalSumFieldFunction(η)(x) * canonicalSumFieldFunction(η)(y)
+      ∂(canonicalJointMeasure d N)
+  = (a^d)⁻¹ · Σ_k (latticeEigenvalue d N a mass k)⁻¹
+              · e_k(x) · e_k(y)
+```
+which by `lattice_covariance_GJ_eq_spectral` equals
+`GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) δ_x δ_y`,
+i.e. the GJ-aligned GFF two-point function. -/
+
+section Variance
+
+open ProbabilityTheory MeasureTheory
+
+variable (d N : ℕ) [NeZero N] (a mass : ℝ)
+
+/-- **Mean of a single coordinate** under `Measure.pi (gaussianReal 0 1)`.
+Pulls back through `measurePreserving_eval` to the marginal mean. -/
+private lemma pi_gaussian_eval_integral_zero {I : Type*} [Fintype I] (k : I) :
+    ∫ η : I → ℝ, η k
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) = 0 := by
+  rw [integral_eval]
+  exact integral_id_gaussianReal
+
+/-- **Second moment of a single coordinate** under `Measure.pi (gaussianReal 0 1)`.
+Pulls back through `integral_comp_eval` to `integral_sq_gaussianReal`. -/
+private lemma pi_gaussian_eval_integral_sq {I : Type*} [Fintype I] (k : I) :
+    ∫ η : I → ℝ, (η k) ^ 2
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) = 1 := by
+  have h_meas_sq : Measurable (fun x : ℝ => x ^ 2) := by fun_prop
+  have h_eq : ∫ η : I → ℝ, (η k) ^ 2
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) =
+      ∫ x : ℝ, x ^ 2 ∂(gaussianReal 0 1) := by
+    have := integral_comp_eval (μ := fun _ : I => gaussianReal 0 1)
+      (i := k) (f := fun x : ℝ => x ^ 2) h_meas_sq.aestronglyMeasurable
+    convert this using 1
+  rw [h_eq, integral_sq_gaussianReal 1]
+  norm_num
+
+/-- **Cross-moment of two distinct coordinates vanishes** under
+`Measure.pi (gaussianReal 0 1)`. The projections at distinct indices
+are independent (`iIndepFun_pi` on the identity maps), and each has
+mean zero. -/
+private lemma pi_gaussian_eval_cross_zero {I : Type*} [Fintype I]
+    {k l : I} (hkl : k ≠ l) :
+    ∫ η : I → ℝ, η k * η l
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) = 0 := by
+  -- The pi-marginals at k and l are independent, both with mean zero.
+  haveI : ∀ i : I, IsProbabilityMeasure
+      ((fun _ : I => gaussianReal 0 1) i) := by
+    intro i; infer_instance
+  have h_indep_id : iIndepFun (fun (i : I) η => (id : ℝ → ℝ) (η i))
+      (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+    iIndepFun_pi (fun _ => aemeasurable_id)
+  have h_indep_kl : IndepFun (fun η : I → ℝ => η k) (fun η : I → ℝ => η l)
+      (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+    h_indep_id.indepFun hkl
+  have h_meas_k : AEStronglyMeasurable (fun η : I → ℝ => η k)
+      (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+    (measurable_pi_apply k).aestronglyMeasurable
+  have h_meas_l : AEStronglyMeasurable (fun η : I → ℝ => η l)
+      (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+    (measurable_pi_apply l).aestronglyMeasurable
+  rw [h_indep_kl.integral_fun_mul_eq_mul_integral h_meas_k h_meas_l]
+  rw [pi_gaussian_eval_integral_zero, pi_gaussian_eval_integral_zero]
+  ring
+
+/-- **Cross-moment of two coordinates** under `Measure.pi (gaussianReal 0 1)`:
+the standard Kronecker delta from i.i.d. standard Gaussians. -/
+private lemma pi_gaussian_eval_cross {I : Type*} [Fintype I] [DecidableEq I] (k l : I) :
+    ∫ η : I → ℝ, η k * η l
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) =
+    (if k = l then (1 : ℝ) else 0) := by
+  by_cases h : k = l
+  · subst h
+    simp only [if_true]
+    have h_sq : (fun η : I → ℝ => η k * η k) = (fun η : I → ℝ => (η k) ^ 2) := by
+      funext η; ring
+    rw [h_sq, pi_gaussian_eval_integral_sq]
+  · simp only [if_neg h]
+    exact pi_gaussian_eval_cross_zero h
+
+/-- **Cross-moment identity for a finite product of i.i.d. standard
+Gaussians.** For any finite indexing type `I` and any two functions
+`p, q : I → ℝ`, the bilinear integral
+```
+  ∫ η : I → ℝ, (∑ k, p k * η k) * (∑ l, q l * η l)
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1))
+  = ∑ k, p k * q k
+```
+
+This is the standard Plancherel/Parseval identity for i.i.d. `N(0,1)`
+random variables: the covariance matrix of `(η_k)_{k ∈ I}` is the
+identity, so for linear combinations `X = Σ p_k η_k` and `Y = Σ q_l η_l`,
+the inner product of the coefficient vectors gives the cross-expectation. -/
+theorem pi_gaussian_bilinear_moment {I : Type*} [Fintype I]
+    (p q : I → ℝ) :
+    ∫ η : I → ℝ, (∑ k, p k * η k) * (∑ l, q l * η l)
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) =
+      ∑ k, p k * q k := by
+  classical
+  -- Per-coordinate L² membership, used to certify the double-sum integrand as L¹.
+  have h_memLp : ∀ k : I, MemLp (fun η : I → ℝ => η k) 2
+      (Measure.pi (fun _ : I => gaussianReal 0 1)) := by
+    intro k
+    have h : MemLp (id ∘ (fun η : I → ℝ => η k)) 2
+        (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+      MemLp.comp_measurePreserving IsGaussian.memLp_two_id
+        (measurePreserving_eval (μ := fun _ : I => gaussianReal 0 1) k)
+    exact h
+  -- Distribute the product of sums.
+  have h_distrib : ∀ η : I → ℝ,
+      (∑ k, p k * η k) * (∑ l, q l * η l) =
+      ∑ k, ∑ l, (p k * q l) * (η k * η l) := by
+    intro η
+    rw [Finset.sum_mul_sum]
+    refine Finset.sum_congr rfl (fun k _ => Finset.sum_congr rfl (fun l _ => ?_))
+    ring
+  simp_rw [h_distrib]
+  -- Move the outer sum out of the integral.
+  rw [integral_finset_sum]
+  swap
+  · intro k _
+    refine integrable_finset_sum _ (fun l _ => ?_)
+    refine Integrable.const_mul ?_ _
+    exact MemLp.integrable_mul (h_memLp k) (h_memLp l)
+  refine Finset.sum_congr rfl (fun k _ => ?_)
+  -- Move the inner sum out of the integral.
+  rw [integral_finset_sum]
+  swap
+  · intro l _
+    refine Integrable.const_mul ?_ _
+    exact MemLp.integrable_mul (h_memLp k) (h_memLp l)
+  -- Pull the constant `p k * q l` out, apply the cross-moment identity.
+  simp_rw [integral_const_mul]
+  simp_rw [pi_gaussian_eval_cross]
+  -- The double sum collapses on the diagonal.
+  rw [Finset.sum_eq_single k]
+  · simp
+  · intro l _ hlk
+    rw [if_neg (Ne.symm hlk)]
+    ring
+  · intro h
+    exact (h (Finset.mem_univ k)).elim
+
+/-- **Cross-moment of smooth and rough fields vanishes.**
+
+Under `canonicalJointMeasure`, the smooth field depends only on
+`η.1` and the rough field only on `η.2`, and the two components are
+independent (it is a `Measure.prod`). Each marginal is mean zero
+(linear in i.i.d. mean-zero Gaussians), so the cross-expectation is
+the product `0 · 0 = 0`.
+
+**Proof strategy** (deferred):
+- Use `MeasureTheory.integral_prod` to split `μ_joint = μ_S × μ_R`
+  into iterated integrals over `η.1` and `η.2`.
+- The smooth field, viewed as a function of `η.1` alone, integrates
+  to `0` by `pi_gaussian_bilinear_moment` applied to coefficient
+  vectors with `q = 0` (or directly via mean-zero of the marginals).
+- The rough field similarly integrates to `0`. -/
+theorem canonicalSmoothRough_cross_moment_zero
+    (T : ℝ) (x y : FinLatticeSites d N) :
+    haveI : Fintype (ZMod N) := ZMod.fintype N
+    ∫ η : CanonicalJoint d N,
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) = 0 := by
+  sorry
+
+/-- **The covariance of `canonicalSumFieldFunction` matches the GJ-aligned
+GFF spectral covariance.**
+
+Under `canonicalJointMeasure`, the two-point function is
+```
+  ∫ φ(η)(x) · φ(η)(y) dμ_joint
+    = (a^d)⁻¹ · Σ_k (latticeEigenvalue k)⁻¹ · e_k(x) · e_k(y)
+```
+which is precisely `GaussianField.covariance (latticeCovarianceGJ ...) δ_x δ_y`.
+
+This is the central input to the pushforward identity
+`canonicalJointMeasure ↦ latticeGaussianMeasure` (deferred).
+
+**Proof strategy:**
+1. Expand `(φ_S + φ_R)(x) · (φ_S + φ_R)(y)` into four terms.
+2. Cross terms (`φ_S(x) φ_R(y)`, `φ_R(x) φ_S(y)`) vanish by
+   `canonicalSmoothRough_cross_moment_zero`.
+3. Smooth-smooth term: integrate against the first marginal
+   `Measure.pi gaussianReal 0 1` using `pi_gaussian_bilinear_moment`
+   with `p_k = (a^d)^{-1/2} √(C_S(k')) e_k(x)` and `q_l =
+   (a^d)^{-1/2} √(C_S(l')) e_l(y)`. Since `√(C_S)² = C_S` (eigenvalues
+   are nonneg) and the inner products `e_k · e_l = δ_{kl}` collapse the
+   double sum to a single sum over `k`, the result is
+   `(a^d)⁻¹ · Σ_k C_S(k') · e_k(x) e_k(y)`.
+4. Rough-rough term similarly gives `(a^d)⁻¹ · Σ_k C_R(k') · e_k(x) e_k(y)`.
+5. Sum the two, use `covariance_split` (i.e. `C_S + C_R = λ⁻¹`) to
+   collapse to `(a^d)⁻¹ · Σ_k λ_k⁻¹ · e_k(x) e_k(y)`. -/
+theorem canonicalSumFieldFunction_covariance
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    haveI : Fintype (ZMod N) := ZMod.fintype N
+    ∫ η : CanonicalJoint d N,
+      canonicalSumFieldFunction d N a mass T η x *
+        canonicalSumFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    (a^d : ℝ)⁻¹ *
+      ∑ k : FinLatticeSites d N,
+        (latticeEigenvalue d N a mass
+          (Fintype.equivFin (FinLatticeSites d N) k))⁻¹ *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+        ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) := by
+  sorry
+
+/-- **GJ-covariance form of the variance theorem.**
+
+The covariance under `canonicalJointMeasure` matches the abstract
+`GaussianField.covariance (latticeCovarianceGJ ...)` evaluated at the
+indicators `δ_x, δ_y`. This is the form directly comparable with
+`lattice_cross_moment` (which gives the same expression for
+`latticeGaussianMeasure`), and is the input to the pushforward
+identity. -/
+theorem canonicalSumFieldFunction_covariance_eq_GJ
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    haveI : Fintype (ZMod N) := ZMod.fintype N
+    let δ_x : FinLatticeField d N := fun z => if z = x then 1 else 0
+    let δ_y : FinLatticeField d N := fun z => if z = y then 1 else 0
+    ∫ η : CanonicalJoint d N,
+      canonicalSumFieldFunction d N a mass T η x *
+        canonicalSumFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) δ_x δ_y := by
+  sorry
+
+end Variance
 
 end Canonical
 
