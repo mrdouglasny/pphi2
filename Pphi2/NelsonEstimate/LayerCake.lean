@@ -198,4 +198,32 @@ theorem lintegral_expSq_neg_le_layer_cake
        μ {a | V a ≤ -t} * ENNReal.ofReal (2 * Real.exp (2 * t))
   rw [setOf_le_max_eq_setOf_le_neg V ht]
 
+/-- **Exp-moment-from-tail-bound interface.**
+
+Given a tail bound `μ {ω | V ω ≤ -t} ≤ ψ t` for `t > 0`, the
+layer-cake bound for the Boltzmann L² norm becomes:
+$$
+\int_\alpha (e^{-V(\omega)})^2 \, d\mu \;\le\; \mu(\alpha) +
+  \int_0^\infty \psi(t) \cdot 2 e^{2t} \, dt.
+$$
+
+Direct corollary of `lintegral_expSq_neg_le_layer_cake` plus
+monotonicity of `set_lintegral` in the integrand. The hypothesis
+side requires only a ψ-bound for `t > 0` (the hypothesis on
+`Set.Ioi 0`). -/
+theorem lintegral_expSq_neg_le_of_tail
+    {α : Type*} [MeasurableSpace α] (μ : Measure α) [SFinite μ]
+    (V : α → ℝ) (hV : Measurable V)
+    (ψ : ℝ → ENNReal)
+    (h_tail : ∀ t, 0 < t → μ {ω | V ω ≤ -t} ≤ ψ t) :
+    ∫⁻ ω, ENNReal.ofReal (Real.exp (-V ω) ^ 2) ∂μ ≤
+      μ Set.univ +
+        ∫⁻ t in Set.Ioi (0 : ℝ),
+          ψ t * ENNReal.ofReal (2 * Real.exp (2 * t)) := by
+  refine (lintegral_expSq_neg_le_layer_cake μ V hV).trans ?_
+  refine add_le_add le_rfl ?_
+  refine setLIntegral_mono' measurableSet_Ioi ?_
+  intro t ht
+  exact mul_le_mul_left (h_tail t ht) _
+
 end Pphi2.LayerCake
