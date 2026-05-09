@@ -1277,6 +1277,21 @@ theorem canonicalSumFieldFunction_covariance_eq_GJ
         canonicalSumFieldFunction d N a mass T η y
       ∂(canonicalJointMeasure d N) =
     GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) δ_x δ_y := by
+  -- Strategy: combine the proved `canonicalSumFieldFunction_covariance`
+  -- (LHS = (a^d)⁻¹ · Σ_k (latticeEigenvalue (Fintype.equivFin k))⁻¹ · e_k(x) · e_k(y))
+  -- with `lattice_covariance_GJ_eq_spectral` from gaussian-field
+  -- (RHS = (a^d)⁻¹ · Σ_k (massEigenvalues k)⁻¹ · ⟨e_k, δ_x⟩ · ⟨e_k, δ_y⟩),
+  -- using:
+  --
+  --   (i) `⟨e_k, δ_x⟩ = e_k(x)`  (the indicator collapses the sum to the
+  --       single term where `z = x`),
+  --
+  --  (ii) `massEigenvalues d N a mass k =
+  --       latticeEigenvalue d N a mass (Fintype.equivFin (FinLatticeSites d N) k)`
+  --       — the bridge between the matrix-eigenvalue ordering used by
+  --       `Matrix.IsHermitian.eigenvalues` and the integer-indexed
+  --       analytic formula. This identity is not yet proved in
+  --       gaussian-field; deferring to a follow-up commit there.
   sorry
 
 end Variance
