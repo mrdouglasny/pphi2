@@ -152,4 +152,21 @@ theorem dynamicalCutoffScale_le_one (C M : ℝ) (hC_pos : 0 < C) :
         ≤ Real.exp 0 := Real.exp_le_exp.mpr hexpr
       _ = 1 := Real.exp_zero
 
+/-! ## Smooth-side bound at the dynamical cutoff scale
+
+The intended downstream usage combines `smooth_interaction_lower_bound_log`
+(smooth deterministic bound `V_S ≥ -C·(1+|log T|)²`) with
+`dynamicalCutoffScale_log_sq_le` (`C·(1+|log T(M)|)² ≤ M/2`) to
+conclude `V_S(φ_S) ≥ -M/2` at the dynamical cutoff scale.
+
+The clean glue lemma is **deferred** because of a structural
+chicken-and-egg: `smooth_interaction_lower_bound_log` returns an
+existential `∃ C, …` where the `C` is the smooth-bound constant,
+and feeding `dynamicalCutoffScale C M` back to fix the `T` requires
+extracting `C` first. The right refactor is to extract a uniform
+`smoothBoundConstant : (a mass L d : ℝ) → ℝ` from
+`smooth_interaction_lower_bound_log`'s witness — a non-trivial
+project-wide change that we will land alongside the master bridge
+discharge in `PolynomialChaosBridge.lean`. -/
+
 end Pphi2.DynamicalCutoff
