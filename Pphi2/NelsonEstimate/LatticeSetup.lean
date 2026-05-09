@@ -44,6 +44,8 @@ Definitions + decomposition lemma are landed. The chaos membership
 -/
 
 import Pphi2.NelsonEstimate.CovarianceSplit
+import Pphi2.NelsonEstimate.DynamicalCutoff
+import Pphi2.NelsonEstimate.SmoothLowerBound
 import Pphi2.WickOrdering.WickPolynomial
 
 noncomputable section
@@ -156,5 +158,96 @@ theorem latticeSmoothInteraction_of_pure
   unfold latticeSmoothInteraction
   simp_rw [wickPolynomial_of_pure P h_pure]
   rw [← Finset.mul_sum, ← mul_assoc, mul_comm (a ^ d) (1 / (P.n : ℝ)), mul_assoc]
+
+/-! ## Smooth-side deterministic bound at the dynamical cutoff scale -/
+
+open Pphi2.DynamicalCutoff
+
+/-- **Smooth-side classical lower bound for the lattice interaction at
+the dynamical cutoff scale (pure quartic case).**
+
+For pure quartic `P` (with `P.n = 4` and all coefficients zero) and
+`M ≥ 2 · smoothBoundConstant`, the smooth interaction at the
+dynamical cutoff scale `T(M) := dynamicalCutoffScale C M` satisfies
+`latticeSmoothInteraction P a mass T(M) ω ≥ -M/2` for all `ω`.
+
+This is the `hsmooth` field of `LatticeRoughErrorSetup` for the
+pure-quartic case.
+
+**Proof:** By `latticeSmoothInteraction_of_pure`, the smooth
+interaction equals `(1/P.n) · X` where
+`X = a^d · Σ_x wickMonomial P.n c_S(T) (ω(δ_x))`. By
+`smooth_interaction_lower_bound_log_uniform` (with `P.n = 4`),
+`X ≥ -smoothBoundConstant · (1+|log T|)²`. By
+`dynamicalCutoffScale_log_sq_le`, `smoothBoundConstant · (1+|log T(M)|)² ≤ M/2`
+for `M ≥ 2C`. Hence `(1/4) · X ≥ -M/8 ≥ -M/2` (since `M > 0`). -/
+theorem latticeSmoothInteraction_lower_bound_at_cutoff_quartic
+    (P : InteractionPolynomial) (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (ha : 0 < a) (hmass : 0 < mass)
+    (hd : d = 2) (L : ℝ) (hL : 0 < L) (ha_eq : a = L / N)
+    (M : ℝ) (hM : 2 * smoothBoundConstant d a mass L ≤ M)
+    (ω : Configuration (FinLatticeField d N)) :
+    -(M / 2) ≤
+      latticeSmoothInteraction d N a mass P
+        (dynamicalCutoffScale (smoothBoundConstant d a mass L) M) ω := by
+  set T : ℝ := dynamicalCutoffScale (smoothBoundConstant d a mass L) M
+  have hC_pos : 0 < smoothBoundConstant d a mass L :=
+    smoothBoundConstant_pos d a mass L ha hmass hL
+  have hT_pos : 0 < T := dynamicalCutoffScale_pos _ _
+  -- Step 1: pure-polynomial reduction.
+  rw [latticeSmoothInteraction_of_pure d N a mass P h_pure T ω]
+  -- Step 2: smooth bound on `a^d · Σ wickMonomial P.n c_S(T)`.
+  have h_lower :
+      -(smoothBoundConstant d a mass L * (1 + |Real.log T|) ^ 2) ≤
+        a ^ d * ∑ x : FinLatticeSites d N,
+          wickMonomial 4 (smoothWickConstant d N a mass T)
+            (ω (finLatticeDelta d N x)) :=
+    smooth_interaction_lower_bound_log_uniform d N a mass ha hmass hd L hL ha_eq
+      T hT_pos (fun x => ω (finLatticeDelta d N x))
+  -- Step 3: cutoff inequality.
+  have h_cutoff :
+      smoothBoundConstant d a mass L * (1 + |Real.log T|) ^ 2 ≤ M / 2 :=
+    dynamicalCutoffScale_log_sq_le (smoothBoundConstant d a mass L) M hC_pos hM
+  -- Step 4: assemble. Using `P.n = 4` to identify the wick monomials.
+  have h_n_eq_4 : (P.n : ℝ) = 4 := by exact_mod_cast h_quartic
+  have h_n_pos : (0 : ℝ) < P.n := by rw [h_n_eq_4]; norm_num
+  -- Substitute `P.n = 4` into the wick monomial sum.
+  have h_sum_eq :
+      a ^ d * ∑ x : FinLatticeSites d N,
+        wickMonomial P.n (smoothWickConstant d N a mass T)
+          (ω (finLatticeDelta d N x)) =
+        a ^ d * ∑ x : FinLatticeSites d N,
+          wickMonomial 4 (smoothWickConstant d N a mass T)
+            (ω (finLatticeDelta d N x)) := by
+    rw [h_quartic]
+  rw [h_sum_eq]
+  -- Sum bound: -M/2 ≤ a^d * Σ wickMonomial 4 ...
+  have h_sum :
+      -(M / 2) ≤ a ^ d * ∑ x : FinLatticeSites d N,
+        wickMonomial 4 (smoothWickConstant d N a mass T)
+          (ω (finLatticeDelta d N x)) := by
+    linarith
+  -- Now show: -(M/2) ≤ (1/P.n) * sum, with 1/P.n = 1/4.
+  -- Strategy: (1/P.n) * sum ≥ (1/P.n) * (-M/2) since (1/P.n) ≥ 0,
+  -- and (1/P.n) * (-M/2) ≥ -M/2 iff (1/P.n - 1) * (-M/2) ≥ 0 iff
+  -- (1 - 1/P.n) * (M/2) ≥ 0, which holds since M ≥ 0 and P.n ≥ 1.
+  have hM_nn : 0 ≤ M := by linarith
+  have h_n_ge_one : (1 : ℝ) ≤ P.n := by rw [h_n_eq_4]; norm_num
+  have h_inv_le_one : (1 : ℝ) / P.n ≤ 1 := by
+    rw [div_le_one h_n_pos]; exact h_n_ge_one
+  have h_inv_nn : 0 ≤ 1 / (P.n : ℝ) := by positivity
+  -- (1/P.n) * sum ≥ (1/P.n) * (-M/2)
+  have h_scaled := mul_le_mul_of_nonneg_left h_sum h_inv_nn
+  -- (1/P.n) * (-M/2) ≥ -M/2 iff 1 * (-M/2) ≤ (1/P.n) * (-M/2) [flipped]
+  -- equivalently: 1 * (M/2) ≥ (1/P.n) * (M/2), i.e., 1 ≥ 1/P.n. ✓
+  have h_neg_half_M_le : -(M / 2) ≤ (1 / (P.n : ℝ)) * (-(M / 2)) := by
+    have hMhalf_nn : 0 ≤ M / 2 := by linarith
+    have : (1 / (P.n : ℝ)) * (M / 2) ≤ M / 2 := by
+      calc (1 / (P.n : ℝ)) * (M / 2) ≤ 1 * (M / 2) :=
+            mul_le_mul_of_nonneg_right h_inv_le_one hMhalf_nn
+        _ = M / 2 := by ring
+    linarith
+  exact h_neg_half_M_le.trans h_scaled
 
 end Pphi2.LatticeSetup
