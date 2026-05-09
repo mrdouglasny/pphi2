@@ -1150,10 +1150,114 @@ theorem canonicalSumFieldFunction_covariance
           (Fintype.equivFin (FinLatticeSites d N) k))⁻¹ *
         ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
         ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) := by
-  -- Refined strategy: expand into smooth/rough terms, prove integrability of
-  -- the four moments, use the self-moment/cross-moment helper lemmas above,
-  -- then collapse the smooth+rough spectral sums with `covariance_split`.
-  sorry
+  -- Use the additive structure of `canonicalSumFieldFunction = φ_S + φ_R`
+  -- and split via the self-moment + cross-moment lemmas.
+  -- Combine using `covariance_split: λ_k⁻¹ = C_S + C_R`.
+  have h_ss := canonicalSmoothFieldFunction_self_moment
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y
+  have h_rr := canonicalRoughFieldFunction_self_moment
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y
+  have h_sr := canonicalSmoothRough_cross_moment_zero
+    (d := d) (N := N) (a := a) (mass := mass) T x y
+  have h_rs := canonicalRoughSmooth_cross_moment_zero
+    (d := d) (N := N) (a := a) (mass := mass) T x y
+  -- Step 1: Distribute (φ_S + φ_R)(x) · (φ_S + φ_R)(y) = ss + sr + rs + rr
+  -- via the integrand decomposition
+  have h_eq : ∀ η : CanonicalJoint d N,
+      canonicalSumFieldFunction d N a mass T η x *
+        canonicalSumFieldFunction d N a mass T η y =
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y +
+      (canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y +
+      (canonicalRoughFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y +
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y)) := by
+    intro η
+    show (canonicalSmoothFieldFunction d N a mass T η x +
+          canonicalRoughFieldFunction d N a mass T η x) *
+         (canonicalSmoothFieldFunction d N a mass T η y +
+          canonicalRoughFieldFunction d N a mass T η y) = _
+    ring
+  rw [integral_congr_ae (Filter.Eventually.of_forall h_eq)]
+  -- Step 2: Integrability of each term via L² (Cauchy-Schwarz).
+  -- L² integrability of each field function: it's a finite linear combination
+  -- of N(0,1) random variables, hence L² under the joint measure.
+  have h_smooth_memLp : ∀ z : FinLatticeSites d N,
+      MemLp (fun η : CanonicalJoint d N =>
+        canonicalSmoothFieldFunction d N a mass T η z) 2
+        (canonicalJointMeasure d N) := by
+    intro z
+    unfold canonicalSmoothFieldFunction
+    refine MemLp.const_mul ?_ _
+    refine memLp_finset_sum _ (fun k _ => ?_)
+    refine MemLp.const_mul ?_ _
+    -- η ↦ η.1 k is L² under canonicalJointMeasure (which is μ.prod μ where each μ_i is gaussianReal 0 1).
+    rw [canonicalJointMeasure]
+    have h : MemLp (fun η_S : FinLatticeSites d N → ℝ => η_S k) 2
+        (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)) :=
+      MemLp.comp_measurePreserving IsGaussian.memLp_two_id
+        (measurePreserving_eval (μ := fun _ : FinLatticeSites d N => gaussianReal 0 1) k)
+    exact h.comp_measurePreserving
+      (μ := (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)).prod
+        (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)))
+      (measurePreserving_fst)
+  have h_rough_memLp : ∀ z : FinLatticeSites d N,
+      MemLp (fun η : CanonicalJoint d N =>
+        canonicalRoughFieldFunction d N a mass T η z) 2
+        (canonicalJointMeasure d N) := by
+    intro z
+    unfold canonicalRoughFieldFunction
+    refine MemLp.const_mul ?_ _
+    refine memLp_finset_sum _ (fun k _ => ?_)
+    refine MemLp.const_mul ?_ _
+    rw [canonicalJointMeasure]
+    have h : MemLp (fun η_R : FinLatticeSites d N → ℝ => η_R k) 2
+        (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)) :=
+      MemLp.comp_measurePreserving IsGaussian.memLp_two_id
+        (measurePreserving_eval (μ := fun _ : FinLatticeSites d N => gaussianReal 0 1) k)
+    exact h.comp_measurePreserving
+      (μ := (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)).prod
+        (Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)))
+      (measurePreserving_snd)
+  have h_ssM := h_smooth_memLp x
+  have h_ssM' := h_smooth_memLp y
+  have h_rrM := h_rough_memLp x
+  have h_rrM' := h_rough_memLp y
+  have h_ss_int : Integrable (fun η : CanonicalJoint d N =>
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y)
+      (canonicalJointMeasure d N) := MemLp.integrable_mul h_ssM h_ssM'
+  have h_sr_int : Integrable (fun η : CanonicalJoint d N =>
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y)
+      (canonicalJointMeasure d N) := MemLp.integrable_mul h_ssM h_rrM'
+  have h_rs_int : Integrable (fun η : CanonicalJoint d N =>
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y)
+      (canonicalJointMeasure d N) := MemLp.integrable_mul h_rrM h_ssM'
+  have h_rr_int : Integrable (fun η : CanonicalJoint d N =>
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y)
+      (canonicalJointMeasure d N) := MemLp.integrable_mul h_rrM h_rrM'
+  -- Step 3: Apply integral_add to split.
+  have e1 := integral_add h_ss_int (h_sr_int.add (h_rs_int.add h_rr_int))
+  have e2 := integral_add h_sr_int (h_rs_int.add h_rr_int)
+  have e3 := integral_add h_rs_int h_rr_int
+  simp only [Pi.add_apply] at e1 e2 e3
+  rw [e1, e2, e3]
+  -- Step 4: substitute self-moment and cross-moment values.
+  rw [h_ss, h_sr, h_rs, h_rr]
+  -- Step 5: Combine via covariance_split.
+  rw [zero_add, zero_add, ← mul_add, ← Finset.sum_add_distrib]
+  congr 1
+  refine Finset.sum_congr rfl (fun k _ => ?_)
+  have h_split := covariance_split d N a mass T
+    (Fintype.equivFin (FinLatticeSites d N) k)
+  linear_combination
+    -((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
+      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) * h_split
 
 /-- **GJ-covariance form of the variance theorem.**
 
