@@ -106,14 +106,75 @@ theorem smooth_interaction_lower_bound_volume (ha : 0 < a)
 
 /-! ## Combined with smooth variance bound -/
 
-/-- **The classical lower bound for the smooth interaction** (Step 2 of Nelson's proof):
+/-! **The classical lower bound for the smooth interaction** (Step 2
+of Nelson's proof). For the smooth interaction with Schwinger
+parameter T: `V_S(φ_S) ≥ -C · (1 + |log T|)²`, where `C` depends on
+`L` and `mass` but NOT on `N`. The uniform-constant version
+`smooth_interaction_lower_bound_log_uniform` exposes the constant
+explicitly via `smoothBoundConstant`. -/
 
-For the smooth interaction with Schwinger parameter T:
-  V_S(φ_S) ≥ -C · (1 + |log T|)²
+/-- The uniform smooth-bound constant for the dynamical cutoff:
+`smoothBoundConstant d a mass L = 6 · L^d · smoothVarianceConstant d a mass^2`.
 
-where C depends on L and mass but NOT on N.
+Combined with `smooth_interaction_lower_bound_log_uniform`, this gives
+the deterministic lower bound
+`V_S ≥ -smoothBoundConstant · (1 + |log T|)²` (uniform in `T`). -/
+def smoothBoundConstant (d : ℕ) (a mass L : ℝ) : ℝ :=
+  6 * L^d * (smoothVarianceConstant d a mass)^2
 
-Proof: combine `smooth_interaction_lower_bound` with `smoothVariance_le_log`. -/
+theorem smoothBoundConstant_pos (d : ℕ) (a mass L : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) (hL : 0 < L) :
+    0 < smoothBoundConstant d a mass L := by
+  unfold smoothBoundConstant
+  have h := smoothVarianceConstant_pos d a mass ha hmass
+  positivity
+
+/-- **Uniform smooth-side classical lower bound at the dynamical cutoff scale.**
+
+Same as `smooth_interaction_lower_bound_log` but with the constant
+explicitly named via `smoothBoundConstant`, so downstream consumers
+can fix `T` as a function of the constant. -/
+theorem smooth_interaction_lower_bound_log_uniform (ha : 0 < a) (hmass : 0 < mass)
+    (hd : d = 2) (L : ℝ) (hL : 0 < L) (ha_eq : a = L / N)
+    (T : ℝ) (hT : 0 < T)
+    (φ_S : FinLatticeSites d N → ℝ) :
+    -(smoothBoundConstant d a mass L * (1 + |Real.log T|) ^ 2) ≤
+    a ^ d * ∑ x : FinLatticeSites d N,
+      wickMonomial 4 (smoothWickConstant d N a mass T) (φ_S x) := by
+  have h_cS_bound :
+      smoothWickConstant d N a mass T ≤
+        smoothVarianceConstant d a mass * (1 + |Real.log T|) :=
+    smoothVariance_le_log_uniform d N a mass hd T hT ha hmass
+  have hc_S_nn : 0 ≤ smoothWickConstant d N a mass T := by
+    unfold smoothWickConstant
+    have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+    apply mul_nonneg (le_of_lt (inv_pos.mpr ha_d_pos))
+    apply mul_nonneg (by positivity)
+    apply Finset.sum_nonneg; intro m _
+    exact le_of_lt (smoothCovEigenvalue_pos d N a mass T hT m ha hmass)
+  have h_lower :=
+    smooth_interaction_lower_bound_volume d N a ha L hL ha_eq
+      (smoothWickConstant d N a mass T) hc_S_nn φ_S
+  have hK_pos : 0 < smoothVarianceConstant d a mass :=
+    smoothVarianceConstant_pos d a mass ha hmass
+  have h_sq :
+      (smoothWickConstant d N a mass T) ^ 2 ≤
+        (smoothVarianceConstant d a mass * (1 + |Real.log T|)) ^ 2 :=
+    sq_le_sq' (by linarith [abs_nonneg (smoothWickConstant d N a mass T)]) h_cS_bound
+  have hL_pow : 0 ≤ L ^ d := pow_nonneg hL.le d
+  have h_chain :
+      -(smoothBoundConstant d a mass L * (1 + |Real.log T|) ^ 2) ≤
+        -(6 * L ^ d * smoothWickConstant d N a mass T ^ 2) := by
+    apply neg_le_neg
+    unfold smoothBoundConstant
+    calc 6 * L ^ d * smoothWickConstant d N a mass T ^ 2
+        ≤ 6 * L ^ d *
+            (smoothVarianceConstant d a mass * (1 + |Real.log T|)) ^ 2 :=
+          mul_le_mul_of_nonneg_left h_sq (by positivity)
+      _ = 6 * L ^ d * (smoothVarianceConstant d a mass) ^ 2 *
+            (1 + |Real.log T|) ^ 2 := by ring
+  linarith
+
 theorem smooth_interaction_lower_bound_log (ha : 0 < a) (hmass : 0 < mass)
     (hd : d = 2) (L : ℝ) (hL : 0 < L) (ha_eq : a = L / N)
     (T : ℝ) (hT : 0 < T)

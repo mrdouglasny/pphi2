@@ -40,12 +40,15 @@ glue is in `PolynomialChaosBridge.lean`.
 
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Pphi2.NelsonEstimate.SmoothLowerBound
+import Pphi2.NelsonEstimate.CovarianceSplit
+import Pphi2.InteractingMeasure.LatticeMeasure
 
 noncomputable section
 
 namespace Pphi2.DynamicalCutoff
 
-open Real
+open Real Pphi2 GaussianField
 
 /-- The dynamical cutoff scale `T(M)` for the Nelson estimate.
 
@@ -154,19 +157,47 @@ theorem dynamicalCutoffScale_le_one (C M : ℝ) (hC_pos : 0 < C) :
 
 /-! ## Smooth-side bound at the dynamical cutoff scale
 
-The intended downstream usage combines `smooth_interaction_lower_bound_log`
-(smooth deterministic bound `V_S ≥ -C·(1+|log T|)²`) with
-`dynamicalCutoffScale_log_sq_le` (`C·(1+|log T(M)|)² ≤ M/2`) to
-conclude `V_S(φ_S) ≥ -M/2` at the dynamical cutoff scale.
+Combining `smooth_interaction_lower_bound_log_uniform` (smooth
+deterministic bound `V_S ≥ -smoothBoundConstant · (1+|log T|)²` with
+the explicit constant) with `dynamicalCutoffScale_log_sq_le`
+(`smoothBoundConstant · (1+|log T(M)|)² ≤ M/2` for
+`M ≥ 2 · smoothBoundConstant`) gives the master smooth-side
+inequality `V_S(φ_S) ≥ -M/2` at the dynamical cutoff scale. -/
 
-The clean glue lemma is **deferred** because of a structural
-chicken-and-egg: `smooth_interaction_lower_bound_log` returns an
-existential `∃ C, …` where the `C` is the smooth-bound constant,
-and feeding `dynamicalCutoffScale C M` back to fix the `T` requires
-extracting `C` first. The right refactor is to extract a uniform
-`smoothBoundConstant : (a mass L d : ℝ) → ℝ` from
-`smooth_interaction_lower_bound_log`'s witness — a non-trivial
-project-wide change that we will land alongside the master bridge
-discharge in `PolynomialChaosBridge.lean`. -/
+variable (d N : ℕ) [NeZero N] (a mass : ℝ)
+
+/-- **Smooth-side classical bound at the dynamical cutoff scale.**
+
+For `2 · smoothBoundConstant ≤ M`, choosing `T = T(M) :=
+dynamicalCutoffScale (smoothBoundConstant d a mass L) M` gives the
+deterministic inequality `V_S(φ_S) ≥ -M/2`, where `V_S` is the
+smooth-side Wick-ordered interaction.
+
+This is the smooth-side estimate for the dynamical cutoff: combined
+with `V = V_S + E_R`, the inequality `V ≤ -M` forces `E_R ≤ -M/2`,
+opening up the rough-side polynomial-chaos concentration. -/
+theorem smooth_lower_bound_at_cutoff
+    (ha : 0 < a) (hmass : 0 < mass)
+    (hd : d = 2) (L : ℝ) (hL : 0 < L) (ha_eq : a = L / N)
+    (φ_S : FinLatticeSites d N → ℝ)
+    (M : ℝ) (hM : 2 * smoothBoundConstant d a mass L ≤ M) :
+    -(M / 2) ≤
+      a ^ d * ∑ x : FinLatticeSites d N,
+        wickMonomial 4
+          (smoothWickConstant d N a mass
+            (dynamicalCutoffScale (smoothBoundConstant d a mass L) M))
+          (φ_S x) := by
+  have hC_pos : 0 < smoothBoundConstant d a mass L :=
+    smoothBoundConstant_pos d a mass L ha hmass hL
+  have hT_pos :
+      0 < dynamicalCutoffScale (smoothBoundConstant d a mass L) M :=
+    dynamicalCutoffScale_pos _ _
+  have h_smooth :=
+    smooth_interaction_lower_bound_log_uniform d N a mass ha hmass hd L hL ha_eq
+      (dynamicalCutoffScale (smoothBoundConstant d a mass L) M)
+      hT_pos φ_S
+  have h_cutoff :=
+    dynamicalCutoffScale_log_sq_le (smoothBoundConstant d a mass L) M hC_pos hM
+  linarith
 
 end Pphi2.DynamicalCutoff

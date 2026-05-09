@@ -83,7 +83,7 @@ theorem wickConstant_split (T : ℝ) :
 
 /-! ## Variance bounds -/
 
-/-- **Smooth variance bound** (Phase 2 partial: trivial constant proof
+/-! **Smooth variance bound** (Phase 2 partial: trivial constant proof
 discharged 2026-05-07; tight `O(log T)` proof remains for true Phase 2).
 
 For d = 2 and T > 0: `c_S ≤ C · (1 + |log T|)` for some `C = C(d, N, a, mass)`.
@@ -93,6 +93,50 @@ which gives a constant `C = (a^d)⁻¹·mass⁻²` depending on `a` but
 uniform in T. The textbook **tight** bound `C = O(1)` (uniform in `a`)
 requires sharper Fourier estimates (Glimm–Jaffe Ch. 8) and is the real
 Phase 2 deliverable. -/
+
+/-- The uniform smooth-variance bound constant (uniform in `T`):
+`smoothVarianceConstant d a mass = (a^d)⁻¹ · mass⁻²`. -/
+def smoothVarianceConstant (d : ℕ) (a mass : ℝ) : ℝ :=
+  (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2
+
+theorem smoothVarianceConstant_pos (d : ℕ) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    0 < smoothVarianceConstant d a mass := by
+  unfold smoothVarianceConstant
+  exact mul_pos (inv_pos.mpr (pow_pos ha d)) (by positivity)
+
+/-- **Uniform smooth-variance bound.**
+For `d = 2` and `T > 0`,
+`smoothWickConstant T ≤ smoothVarianceConstant d a mass · (1 + |log T|)`,
+with the constant explicitly given (uniform in `T`). -/
+theorem smoothVariance_le_log_uniform (_hd : d = 2) (T : ℝ) (_hT : 0 < T)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    smoothWickConstant d N a mass T ≤
+      smoothVarianceConstant d a mass * (1 + |Real.log T|) := by
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  unfold smoothVarianceConstant
+  -- smoothWickConstant ≤ wickConstant via smoothCovEigenvalue ≤ 1/λ.
+  have h_le : ∀ m ∈ range (Fintype.card (FinLatticeSites d N)),
+      smoothCovEigenvalue d N a mass T m ≤ (latticeEigenvalue d N a mass m)⁻¹ := by
+    intro m _
+    unfold smoothCovEigenvalue
+    have hev := latticeEigenvalue_pos d N a mass ha hmass m
+    rw [inv_eq_one_div]
+    exact div_le_div_of_nonneg_right (Real.exp_le_one_iff.mpr (by nlinarith)) hev.le
+  have h_smooth_le_wick : smoothWickConstant d N a mass T ≤ wickConstant d N a mass := by
+    unfold smoothWickConstant wickConstant
+    refine mul_le_mul_of_nonneg_left ?_ (le_of_lt (inv_pos.mpr ha_d_pos))
+    apply mul_le_mul_of_nonneg_left (Finset.sum_le_sum h_le) (by positivity)
+  have h_wick_bound : wickConstant d N a mass ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 :=
+    wickConstant_le_inv_mass_sq d N a mass ha hmass
+  calc smoothWickConstant d N a mass T
+      ≤ wickConstant d N a mass := h_smooth_le_wick
+    _ ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 := h_wick_bound
+    _ ≤ (a^d : ℝ)⁻¹ * mass⁻¹ ^ 2 * (1 + |Real.log T|) :=
+        le_mul_of_one_le_right
+          (mul_nonneg (le_of_lt (inv_pos.mpr ha_d_pos)) (by positivity))
+          (by linarith [abs_nonneg (Real.log T)])
+
 theorem smoothVariance_le_log (_hd : d = 2) (T : ℝ) (_hT : 0 < T)
     (ha : 0 < a) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧ smoothWickConstant d N a mass T ≤ C * (1 + |Real.log T|) := by
