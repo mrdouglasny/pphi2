@@ -292,4 +292,44 @@ theorem wickPolynomial_pure_quartic_diff
     (ω (finLatticeDelta d N x))
   linarith
 
+/-- **`latticeRoughError` as a sum of per-site differences.**
+
+By definition, the rough error is
+`a^d Σ_x [wickPolynomial P c_a (ω(δ_x)) - wickPolynomial P c_S(T) (ω(δ_x))]`. -/
+theorem latticeRoughError_eq_sum_diff
+    (P : InteractionPolynomial) (T : ℝ)
+    (ω : Configuration (FinLatticeField d N)) :
+    latticeRoughError d N a mass P T ω =
+      a ^ d * ∑ x : FinLatticeSites d N,
+        (wickPolynomial P (wickConstant d N a mass) (ω (finLatticeDelta d N x)) -
+          wickPolynomial P (smoothWickConstant d N a mass T)
+            (ω (finLatticeDelta d N x))) := by
+  unfold latticeRoughError latticeSmoothInteraction interactionFunctional
+  rw [← mul_sub, Finset.sum_sub_distrib]
+
+/-- **Summed pure-quartic rough-error decomposition.**
+
+For pure quartic `P` and any cutoff `T`, the summed rough error
+admits the explicit decomposition into a chaos-2-related piece and
+a constant piece:
+
+  `latticeRoughError P T ω = (1/P.n) · a^d · Σ_x [-6 · c_R(T) ·
+    :ω(δ_x)²:_{c_S(T)} + 3 · c_R(T)²]`
+
+where `c_R(T) := c_a - c_S(T)` is the rough Wick constant. -/
+theorem latticeRoughError_pure_quartic_summed
+    (P : InteractionPolynomial) (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (T : ℝ) (ω : Configuration (FinLatticeField d N)) :
+    latticeRoughError d N a mass P T ω =
+      (1 / (P.n : ℝ)) * a ^ d *
+        ∑ x : FinLatticeSites d N,
+          (-6 * (wickConstant d N a mass - smoothWickConstant d N a mass T) *
+              wickMonomial 2 (smoothWickConstant d N a mass T)
+                (ω (finLatticeDelta d N x)) +
+            3 * (wickConstant d N a mass - smoothWickConstant d N a mass T) ^ 2) := by
+  rw [latticeRoughError_eq_sum_diff d N a mass P T ω]
+  simp_rw [wickPolynomial_pure_quartic_diff d N a mass P h_pure h_quartic T _ ω]
+  rw [← Finset.mul_sum, ← mul_assoc, mul_comm (a ^ d) (1 / (P.n : ℝ)), mul_assoc]
+
 end Pphi2.LatticeSetup
