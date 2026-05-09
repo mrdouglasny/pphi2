@@ -352,6 +352,64 @@ noncomputable def canonicalRoughConfig (d N : ℕ) [NeZero N]
     Configuration (FinLatticeField d N) :=
   latticeFieldToConfig d N (canonicalRoughFieldFunction d N a mass T η)
 
+/-! ### Linearity of the canonical field functions -/
+
+/-- The smooth field function is additive in η. -/
+theorem canonicalSmoothFieldFunction_add
+    (d N : ℕ) [NeZero N] (a mass T : ℝ)
+    (η₁ η₂ : CanonicalJoint d N) (x : FinLatticeSites d N) :
+    canonicalSmoothFieldFunction d N a mass T (η₁ + η₂) x =
+      canonicalSmoothFieldFunction d N a mass T η₁ x +
+        canonicalSmoothFieldFunction d N a mass T η₂ x := by
+  unfold canonicalSmoothFieldFunction
+  show ∑ k, _ * _ * (η₁ + η₂).1 k = _ + _
+  rw [show (η₁ + η₂).1 = η₁.1 + η₂.1 from rfl]
+  simp_rw [Pi.add_apply, mul_add]
+  rw [Finset.sum_add_distrib]
+
+/-- The smooth field function is `ℝ`-homogeneous in η. -/
+theorem canonicalSmoothFieldFunction_smul
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) (c : ℝ)
+    (η : CanonicalJoint d N) (x : FinLatticeSites d N) :
+    canonicalSmoothFieldFunction d N a mass T (c • η) x =
+      c * canonicalSmoothFieldFunction d N a mass T η x := by
+  unfold canonicalSmoothFieldFunction
+  show ∑ k, _ * _ * (c • η).1 k = c * ∑ k, _
+  rw [show (c • η).1 = c • η.1 from rfl]
+  simp_rw [Pi.smul_apply, smul_eq_mul]
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl ?_
+  intro k _
+  ring
+
+/-- The rough field function is additive in η. -/
+theorem canonicalRoughFieldFunction_add
+    (d N : ℕ) [NeZero N] (a mass T : ℝ)
+    (η₁ η₂ : CanonicalJoint d N) (x : FinLatticeSites d N) :
+    canonicalRoughFieldFunction d N a mass T (η₁ + η₂) x =
+      canonicalRoughFieldFunction d N a mass T η₁ x +
+        canonicalRoughFieldFunction d N a mass T η₂ x := by
+  unfold canonicalRoughFieldFunction
+  show ∑ k, _ * _ * (η₁ + η₂).2 k = _ + _
+  rw [show (η₁ + η₂).2 = η₁.2 + η₂.2 from rfl]
+  simp_rw [Pi.add_apply, mul_add]
+  rw [Finset.sum_add_distrib]
+
+/-- The rough field function is `ℝ`-homogeneous in η. -/
+theorem canonicalRoughFieldFunction_smul
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) (c : ℝ)
+    (η : CanonicalJoint d N) (x : FinLatticeSites d N) :
+    canonicalRoughFieldFunction d N a mass T (c • η) x =
+      c * canonicalRoughFieldFunction d N a mass T η x := by
+  unfold canonicalRoughFieldFunction
+  show ∑ k, _ * _ * (c • η).2 k = c * ∑ k, _
+  rw [show (c • η).2 = c • η.2 from rfl]
+  simp_rw [Pi.smul_apply, smul_eq_mul]
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl ?_
+  intro k _
+  ring
+
 /-! ### Measurability of the canonical field functions -/
 
 /-- The smooth field function evaluated at a fixed site `x` is
