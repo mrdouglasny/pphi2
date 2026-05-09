@@ -126,4 +126,35 @@ theorem latticeRoughError_measurable
   exact (interactionFunctional_measurable d N P a mass).sub
     (latticeSmoothInteraction_measurable d N a mass P T)
 
+/-! ## Pure-monomial case: P with all lower coefficients zero -/
+
+/-- For an `InteractionPolynomial` with all lower coefficients zero
+(`P.coeff = 0`), `wickPolynomial P c x` reduces to the leading
+monomial `(1/P.n) · wickMonomial P.n c x`. -/
+theorem wickPolynomial_of_pure (P : InteractionPolynomial)
+    (h_pure : ∀ m : Fin P.n, P.coeff m = 0) (c x : ℝ) :
+    wickPolynomial P c x = (1 / P.n : ℝ) * wickMonomial P.n c x := by
+  unfold wickPolynomial
+  rw [show ∑ m : Fin P.n, P.coeff m * wickMonomial (m : ℕ) c x = 0 from ?_]
+  · ring
+  · apply Finset.sum_eq_zero
+    intro m _
+    rw [h_pure m, zero_mul]
+
+/-- **Pure-polynomial smooth interaction = scaled leading Wick monomial sum.**
+
+For `P` with all lower coefficients zero, the lattice smooth
+interaction is `(1/P.n)` times the leading Wick monomial sum. -/
+theorem latticeSmoothInteraction_of_pure
+    (P : InteractionPolynomial) (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (T : ℝ) (ω : Configuration (FinLatticeField d N)) :
+    latticeSmoothInteraction d N a mass P T ω =
+      (1 / P.n : ℝ) *
+        (a ^ d * ∑ x : FinLatticeSites d N,
+          wickMonomial P.n (smoothWickConstant d N a mass T)
+            (ω (finLatticeDelta d N x))) := by
+  unfold latticeSmoothInteraction
+  simp_rw [wickPolynomial_of_pure P h_pure]
+  rw [← Finset.mul_sum, ← mul_assoc, mul_comm (a ^ d) (1 / (P.n : ℝ)), mul_assoc]
+
 end Pphi2.LatticeSetup
