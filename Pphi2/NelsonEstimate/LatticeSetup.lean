@@ -250,4 +250,19 @@ theorem latticeSmoothInteraction_lower_bound_at_cutoff_quartic
     linarith
   exact h_neg_half_M_le.trans h_scaled
 
+/-! ## Explicit algebraic structure of the rough error (pure quartic) -/
+
+/-- **Wick monomial difference identity** (degree 4):
+`:x⁴:_c - :x⁴:_{c'} = -6(c-c') · :x²:_{c'} + 3(c-c')²`.
+
+This is the key algebraic identity that makes the rough error a
+chaos-2 element after subtracting the smooth Wick monomial. The
+explicit `latticeRoughError` decomposition into chaos-2 + constant
+pieces follows from this identity summed over sites. -/
+theorem wickMonomial_four_diff (c c' x : ℝ) :
+    wickMonomial 4 c x - wickMonomial 4 c' x =
+      -6 * (c - c') * wickMonomial 2 c' x + 3 * (c - c') ^ 2 := by
+  rw [wickMonomial_four, wickMonomial_four, wickMonomial_two]
+  ring
+
 end Pphi2.LatticeSetup
