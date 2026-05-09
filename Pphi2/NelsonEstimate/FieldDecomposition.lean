@@ -319,6 +319,59 @@ theorem canonicalSumFieldFunction_eq_smooth_plus_rough
         canonicalRoughFieldFunction d N a mass T η x :=
   rfl
 
+/-- Lift a field `φ : FinLatticeField d N` to a `Configuration` via
+the standard pairing `f ↦ Σ_x f(x) · φ(x)`. Re-implementation of the
+`private def liftToConfig` in gaussian-field's `Lattice/FKG.lean`. -/
+def latticeFieldToConfig (d N : ℕ) [NeZero N] (φ : FinLatticeField d N) :
+    Configuration (FinLatticeField d N) :=
+  { toFun := fun f => ∑ x : FinLatticeSites d N, f x * φ x
+    map_add' := fun f g => by
+      simp only [Pi.add_apply, add_mul, Finset.sum_add_distrib]
+    map_smul' := fun r f => by
+      simp only [Pi.smul_apply, smul_eq_mul, RingHom.id_apply,
+        Finset.mul_sum, mul_assoc]
+    cont := continuous_finset_sum _ (fun i _ =>
+      (continuous_apply i).mul continuous_const) }
+
+@[simp] theorem latticeFieldToConfig_apply
+    (d N : ℕ) [NeZero N] (φ : FinLatticeField d N)
+    (f : FinLatticeField d N) :
+    (latticeFieldToConfig d N φ) f =
+      ∑ x : FinLatticeSites d N, f x * φ x := rfl
+
+/-- The canonical smooth-side configuration: lift of the smooth field
+function. -/
+noncomputable def canonicalSmoothConfig (d N : ℕ) [NeZero N]
+    (a mass T : ℝ) (η : CanonicalJoint d N) :
+    Configuration (FinLatticeField d N) :=
+  latticeFieldToConfig d N (canonicalSmoothFieldFunction d N a mass T η)
+
+/-- The canonical rough-side configuration. -/
+noncomputable def canonicalRoughConfig (d N : ℕ) [NeZero N]
+    (a mass T : ℝ) (η : CanonicalJoint d N) :
+    Configuration (FinLatticeField d N) :=
+  latticeFieldToConfig d N (canonicalRoughFieldFunction d N a mass T η)
+
+/-- **Configuration-level decomposition identity.**
+The configuration sum `canonicalSmoothConfig + canonicalRoughConfig`
+equals the lift of the field-function sum, by linearity of
+`latticeFieldToConfig`. -/
+theorem canonicalSmoothConfig_add_canonicalRoughConfig_eq_lift_sum
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) (η : CanonicalJoint d N) :
+    canonicalSmoothConfig d N a mass T η + canonicalRoughConfig d N a mass T η =
+      latticeFieldToConfig d N (canonicalSumFieldFunction d N a mass T η) := by
+  -- Both sides applied to f give Σ_x f(x) · (φ_S + φ_R)(x).
+  apply ContinuousLinearMap.ext
+  intro f
+  show (canonicalSmoothConfig d N a mass T η) f +
+      (canonicalRoughConfig d N a mass T η) f =
+    (latticeFieldToConfig d N (canonicalSumFieldFunction d N a mass T η)) f
+  simp only [canonicalSmoothConfig, canonicalRoughConfig,
+    latticeFieldToConfig_apply, canonicalSumFieldFunction,
+    canonicalSmoothFieldFunction, canonicalRoughFieldFunction]
+  simp_rw [mul_add]
+  rw [Finset.sum_add_distrib]
+
 /-! ### Pointwise spectral identity at the canonical decomposition
 
 By the covariance split `C_S(T,k) + C_R(T,k) = (latticeEigenvalue k)⁻¹`
