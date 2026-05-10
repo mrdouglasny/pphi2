@@ -272,18 +272,24 @@ inheritance surface:
 
 ---
 
-## gaussian-field Axioms (pinned Lake dependency: 4 active, 0 sorries)
+## gaussian-field Axioms (pinned Lake dependency: 9 active, 0 sorries)
 
-*Updated 2026-05-07. Current count per `./scripts/count_axioms.sh`, scanning
-`.lake/packages/GaussianField`: 4 axioms, 0 sorries.*
+*Updated 2026-05-09 after the false-axiom fix and `CylinderSpacetimeSymmetry`
+consolidation. Current count per `./scripts/count_axioms.sh`, scanning
+`.lake/packages/GaussianField`: 9 axioms, 0 sorries. All 9 are mathematically
+true; vetted by Gemini 2.5-pro and 3.1-pro-preview — see
+[gaussian-field-axiom-vet-2026-05-09.md](gaussian-field-axiom-vet-2026-05-09.md).*
 
 | File | Axioms | Sorries | Notes |
 |------|--------|---------|-------|
-| `Cylinder/GreenFunction.lean` | 1 | 0 | Cylinder Green-function analytic input. |
-| `Cylinder/MethodOfImages.lean` | 1 | 0 | Method-of-images comparison used by Route B′ Green-moment transfer. |
-| `Cylinder/ReflectionPositivity.lean` | 1 | 0 | Cylinder reflection-positivity support. |
-| `SchwartzFourier/ResolventUniformBound.lean` | 1 | 0 | Uniform Fourier/resolvent bound. |
-| **Total** | **4** | **0** | |
+| `Cylinder/GreenFunction.lean` | 4 | 0 | 1 master `cylinderMassOperator_equivariant` (Wigner-style: spacetime symmetry → ell² isometry) + 3 instance `_norm_eq` axioms (spatial translation, time translation, time reflection). Discharge plan: [gaussian-field-norm-eq-discharge-plan.md](gaussian-field-norm-eq-discharge-plan.md) — ~6–10 active days via tensor-product structure of `CylinderTestFunction`. |
+| `Cylinder/MethodOfImages.lean` | 1 | 0 | `embed_l2_uniform_bound` — periodization L²-bound uniform in `Lt ≥ 1`. **Standard** (Gemini DT-2.5; Stein-Weiss Ch. VII). |
+| `GeneralResults/PolynomialDensityGaussian.lean` | 1 | 0 | `polynomial_dense_L2_of_subGaussian` — multivariate polynomial density in L² for sub-Gaussian measures. **Standard** (Gemini DT-2.5; Janson, *Gaussian Hilbert Spaces*, Thm 2.6). |
+| `SchwartzFourier/ResolventUniformBound.lean` | 1 | 0 | `fourierMultiplier_schwartz_bound` — Hörmander multiplier theorem for `𝓢(ℝ)`, uniform across symbol families. **Likely correct** (Gemini DT-2.5; Stein, *Singular Integrals*, Ch. VI). |
+| `SchwartzNuclear/HermiteGalerkin.lean` | 2 | 0 | Hermite/Galerkin infrastructure axioms. *Pending vet.* |
+| **Total** | **9** | **0** | |
+
+**Recent change (2026-05-09):** the previous single axiom `cylinderMassOperator_equivariant_of_heat_comm` (Cylinder/GreenFunction.lean) was **mathematically false** — Gemini 3.1-pro-preview produced an explicit counterexample (`S = 2·id` satisfies heat-comm but `T(2f) = 2(Tf)` cannot be conjured to be an ell² isometry). Replaced with the `CylinderSpacetimeSymmetry` structure (carries `heat_comm` *and* `preserves_T_norm`) + 3 instance axioms supplying the norm-preservation hypothesis for spatial-translation / time-translation / time-reflection. Net axiom count went from 6 (with 1 false) to 9 (all true).
 
 ---
 
