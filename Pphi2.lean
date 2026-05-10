@@ -8,8 +8,6 @@ import Pphi2.Backgrounds.EuclideanPlane
 import Pphi2.EuclideanOS
 import Pphi2.EuclideanComplex
 import Pphi2.GeneralResults.GaussianHermiteMean
-import Pphi2.GeneralResults.LatticeFourierIndexing
-import Pphi2.GeneralResults.LatticeProductDFT
 
 -- Phase 1: Wick ordering
 import Pphi2.WickOrdering.WickPolynomial

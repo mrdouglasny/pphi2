@@ -58,7 +58,7 @@ infrastructure for extensions beyond Wick monomials.
 
 import Pphi2.ContinuumLimit.Embedding
 import Pphi2.GeneralResults.GaussianHermiteMean
-import Pphi2.GeneralResults.LatticeProductDFT
+import Lattice.LatticeFourierProduct
 import Pphi2.NelsonEstimate.PolynomialChaosBridge
 import GaussianField.Density
 import GaussianField.HypercontractiveNat
