@@ -26,6 +26,12 @@ scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/markov-semigroups.git"
 rev = "main"
 
+[[require]]
+name = "gaussian-hilbert"
+scope = "mrdouglasny"
+git = "https://github.com/mrdouglasny/gaussian-hilbert.git"
+rev = "main"
+
 [[lean_lib]]
 name = "Pphi2"
 needs = ["Common"]
