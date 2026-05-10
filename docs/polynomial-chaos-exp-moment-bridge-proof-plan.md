@@ -397,7 +397,7 @@ theorems transfer to the field-decomposition setting.
 ### Phase 1: Promote `RoughErrorBound.lean` placeholders (≈ 200–400 lines)
 
 Currently the file has three `True`-conclusion placeholders:
-- `rough_error_variance` → `‖E_R‖_{L²}² ≤ K · T^δ`. **Detailed sub-doc**: [`rough-error-variance-plan.md`](rough-error-variance-plan.md) (rev 2 after Gemini DT 2026-05-10; supersedes the original `rough-error-variance-design.md`) (~440 lines / ~13 days, 7 atomic sub-tasks; type-design + step-by-step proof structure + starter code).
+- `rough_error_variance` → `‖E_R‖_{L²}² ≤ K · T · (1 + |log T|)^{P.n − 1}` (uniform in `(a, N)` at fixed `(L, P, mass)`). **Detailed sub-doc**: [`rough-error-variance-plan.md`](rough-error-variance-plan.md) (rev 2 after Gemini DT 2026-05-10; supersedes the original `rough-error-variance-design.md`). Five-step structure (S1–S5: pointwise binomial, reindexing, cross-term orthogonality, per-term L² bound, final assembly). Three named upstream sorries quarantine the (a, N)-uniform Glimm-Jaffe Ch. 8 Fourier estimates. [Review record](rough-error-variance-deep-think-review.md).
 - `rough_error_Lp_bound` → `‖E_R‖_{L^p} ≤ K · p^{deg P / 2} · T^{δ/2}`.
 - `rough_error_tail_bound` → `P(|E_R| > λ) ≤ exp(-c λ^{2/deg P} T^{-δ/deg P})`.
 
