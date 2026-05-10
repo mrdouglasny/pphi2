@@ -72,6 +72,7 @@ The construction uses:
 import Pphi2.NelsonEstimate.LatticeBridge
 import Pphi2.NelsonEstimate.LatticeSetup
 import Pphi2.NelsonEstimate.CovarianceSplit
+import Pphi2.GeneralResults.LatticeProductDFT
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Probability.Distributions.Gaussian.Fernique
@@ -1259,93 +1260,39 @@ theorem canonicalSumFieldFunction_covariance
     -((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
       ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y) * h_split
 
-/-- **Bridge lemma:** the matrix-eigenvalue indexing matches the
-integer-indexed analytic formula.
+/-! ## Note on the GJ-covariance form (deferred)
 
-The matrix `massMatrixHerm d N a mass` has eigenvalues equal to the
-analytic formula `latticeLaplacianEigenvalue d N a m + mass²`. The two
-indexings — the matrix's `(Matrix.IsHermitian.eigenvalues)` ordering
-indexed by `FinLatticeSites d N` versus the explicit integer-indexed
-formula — agree under the canonical `Fintype.equivFin` enumeration.
+A `canonicalSumFieldFunction_covariance_eq_GJ` theorem would assert that
+the canonical sum-field's two-point function equals
+`GaussianField.covariance (latticeCovarianceGJ ...) δ_x δ_y`.
 
-This is mathematically obvious (both are formulas for eigenvalues of the
-same matrix in its diagonal DFT basis), but the formal identity is not
-yet stated in `gaussian-field`. Deferring its proof to a follow-up
-commit there. -/
-private lemma massEigenvalues_eq_latticeEigenvalue
-    (a mass : ℝ) (k : FinLatticeSites d N) :
-    massEigenvalues d N a mass k =
-      latticeEigenvalue d N a mass (Fintype.equivFin (FinLatticeSites d N) k) := by
-  sorry
+With the **current** canonical-field definitions, this claim is **false**
+in general. The reason: the canonical field weights mode `k`'s amplitude
+by `√C_S(latticeEigenvalue (Fintype.equivFin k))` (formula at the
+*lex-ordered integer index*) but uses `massEigenvectorBasis k` (Mathlib's
+*antitone-sorted* spectral basis) as the eigenvector at mode `k`. By
+`Mathlib.Analysis.Matrix.Spectrum`, `Matrix.IsHermitian.eigenvalues₀` is
+`Antitone` — so the per-mode bridge
+`massEigenvalues k = latticeEigenvalue d N a mass (Fintype.equivFin k)`
+fails by a permutation in general. Same multiset of eigenvalues, but
+the canonical field's covariance kernel is
+`Σ_k F(latticeEigenvalue(Fintype.equivFin k)) · e_k e_kᵀ`
+versus the GFF's
+`Σ_k massEigenvalues(k)⁻¹ · e_k e_kᵀ`,
+which are different operators when the two indexings disagree.
 
-/-- **GJ-covariance form of the variance theorem.**
+The variance theorem `canonicalSumFieldFunction_covariance` above is a
+true sum identity about the canonical sum-field. Connecting it to
+`latticeCovarianceGJ` requires reframing the canonical field functions
+to use a consistently-indexed basis. The cleanest path is to reindex by
+`m : Fin d → Fin N` and use `latticeFourierProductBasisFun N d m`
+together with the per-mode eigenvalue
+`Σ_i latticeEigenvalue1d N a (m i) + mass²`, then discharge the GJ form
+via `abstract_spectral_eq_dft_spectral_family` from
+`Pphi2/GeneralResults/LatticeProductDFT.lean`.
 
-The covariance under `canonicalJointMeasure` matches the abstract
-`GaussianField.covariance (latticeCovarianceGJ ...)` evaluated at the
-indicators `δ_x, δ_y`. This is the form directly comparable with
-`lattice_cross_moment` (which gives the same expression for
-`latticeGaussianMeasure`), and is the input to the pushforward
-identity. -/
-theorem canonicalSumFieldFunction_covariance_eq_GJ
-    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
-    (x y : FinLatticeSites d N) :
-    let δ_x : FinLatticeField d N := fun z => if z = x then 1 else 0
-    let δ_y : FinLatticeField d N := fun z => if z = y then 1 else 0
-    ∫ η : CanonicalJoint d N,
-      canonicalSumFieldFunction d N a mass T η x *
-        canonicalSumFieldFunction d N a mass T η y
-      ∂(canonicalJointMeasure d N) =
-    GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) δ_x δ_y := by
-  -- LHS via the proved variance theorem:
-  --   (a^d)⁻¹ · Σ_k (latticeEigenvalue (Fintype.equivFin k))⁻¹ · e_k(x) · e_k(y)
-  -- RHS via `lattice_covariance_GJ_eq_spectral`:
-  --   (a^d)⁻¹ · Σ_k (massEigenvalues k)⁻¹ · ⟨e_k, δ_x⟩ · ⟨e_k, δ_y⟩
-  -- Bridge via `massEigenvalues_eq_latticeEigenvalue` and
-  -- `⟨e_k, δ_x⟩ = e_k(x)` (indicator collapse).
-  intro δ_x δ_y
-  -- Cast the gaussian-field spectral lemma to use the bracket Fintype instance.
-  have h_GJ_spec :
-      GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) δ_x δ_y =
-      (a^d : ℝ)⁻¹ *
-      ∑ k : FinLatticeSites d N,
-        (massEigenvalues d N a mass k)⁻¹ *
-        (∑ z, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z * δ_x z) *
-        (∑ z, (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z * δ_y z) := by
-    have := GaussianField.lattice_covariance_GJ_eq_spectral d N a mass ha hmass δ_x δ_y
-    convert this using 8 <;>
-      first
-        | rfl
-        | (try exact Subsingleton.elim _ _)
-        | (try ring)
-        | skip
-  rw [canonicalSumFieldFunction_covariance d N a mass ha hmass T hT x y]
-  rw [h_GJ_spec]
-  -- Now both sums use the same Fintype. Bridge per-mode: indicator collapse
-  -- + eigenvalue indexing identity.
-  refine congrArg ((a^d : ℝ)⁻¹ * ·) ?_
-  refine Finset.sum_congr rfl (fun k _ => ?_)
-  -- ⟨e_k, δ_x⟩ = e_k(x)
-  have h_ip_x : (∑ z : FinLatticeSites d N,
-      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z * δ_x z) =
-      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x := by
-    show (∑ z : FinLatticeSites d N,
-      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z *
-        (if z = x then (1 : ℝ) else 0)) = _
-    rw [Finset.sum_eq_single x]
-    · simp
-    · intro z _ hzx; simp [if_neg hzx]
-    · intro h; exact (h (Finset.mem_univ _)).elim
-  have h_ip_y : (∑ z : FinLatticeSites d N,
-      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z * δ_y z) =
-      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) y := by
-    show (∑ z : FinLatticeSites d N,
-      (massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) z *
-        (if z = y then (1 : ℝ) else 0)) = _
-    rw [Finset.sum_eq_single y]
-    · simp
-    · intro z _ hzy; simp [if_neg hzy]
-    · intro h; exact (h (Finset.mem_univ _)).elim
-  rw [h_ip_x, h_ip_y, massEigenvalues_eq_latticeEigenvalue d N a mass k]
+See `docs/refactor-analytical-eigenvalues-plan.md` for the rewrite plan.
+-/
 
 end Variance
 
