@@ -1,10 +1,37 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field + markov-semigroups
 
-**Updated**: 2026-05-08 (branch `fix/lattice-action-normalization`)
-**pphi2**: 17 axioms, 0 sorries (active build) | **pinned Lake GaussianField**: 12 axioms, 1 sorry | **pinned Lake MarkovSemigroups**: 3 axioms, 0 sorries (Gaussian/PolynomialChaosConcentration + WienerChaos)
+**Updated**: 2026-05-09 (post markov-semigroups discharge session + pin bumps)
+**pphi2**: 19 axioms, 0 sorries (active build, per `scripts/count_axioms.sh`) | **pinned Lake GaussianField** (`24b26ef`): 9 axioms, 0 sorries | **pinned Lake MarkovSemigroups** (`1bfe386`): 14 axioms, 0 sorries
 
 Note: pphi2 count includes 1 private axiom
-(`gaussian_rp_cov_perfect_square`).
+(`gaussian_rp_cov_perfect_square`). The markov-semigroups count is 14
+total (2 core hypercontractivity + 2 concentration/Poincaré + 4
+Gaussian1D BGL + 3 Gaussian-OU placeholder + 2 DZ + 1 matrix); see
+`.lake/packages/MarkovSemigroups/docs/AXIOM_AUDIT.md` for the per-axiom
+vetting registry.
+
+## 2026-05-09 audit pass (markov-semigroups discharge + pin bump)
+
+This session discharged two markov-semigroups axioms in the Wiener-chaos
+cluster:
+
+| Axiom | What changed | Sources |
+|-------|--------------|---------|
+| `MarkovSemigroups.Gaussian.hermiteMulti_dense` | **axiom → theorem.** Proved via `MvPolynomial.induction_on` + Hermite three-term recurrence + `Submodule.span` change-of-basis between multivariate monomials and multivariate Hermite polynomials. The proof rests on a single new external axiom in gaussian-field, `GaussianField.GeneralResults.polynomial_dense_L2_of_subGaussian` (Janson Thm 2.6 — see gaussian-field section below). | DT (Janson Thm 2.6), this session |
+| `MarkovSemigroups.Gaussian.wienerChaos_isInternalDirectSum` | **broken statement → replaced and proved.** The legacy axiom (`DirectSum.IsInternal`) was strictly stronger than the true theorem (would have required every L² function to admit a finite chaos expansion, while generic L² functions need infinite L²-convergent expansions). Replaced with the correct Hilbert-sum statement `wienerChaos_isHilbertSum : IsHilbertSum ℝ (wienerChaos n) ...` and proved from `hermiteMulti_dense` via `IsHilbertSum.mkInternal`. | DT (correct statement is the Hilbert direct sum, not the algebraic direct sum), this session |
+
+Net effect on transitive axiom dependencies of pphi2's
+`polynomial_chaos_concentration` consumer (`#print axioms` verified):
+the 3 OU placeholder axioms in `MarkovSemigroups.Gaussian.OUEigenfunctions`
+(`ouSemigroupAct`, `ouSemigroupAct_eq_smul_of_mem_wienerChaos`,
+`ouSemigroupAct_eLpNorm_hypercontractive`) are unchanged. The
+`hermiteMulti_dense` discharge does *not* propagate up to
+`polynomial_chaos_concentration` because that theorem doesn't transitively
+use it.
+
+Pin bumps:
+- `MarkovSemigroups`: `cdb2538a` → `1bfe386` (this session's discharges + 2 doc additions: `docs/AXIOM_AUDIT.md`, `docs/ou-mehler-discharge-plan.md`)
+- `GaussianField`: `2dce94f` → `24b26ef` (added `GeneralResults/PolynomialDensityGaussian.lean`; an attempted move of the Wiener-chaos cluster from markov-semigroups to gaussian-field was reverted after architectural review — see commit history)
 
 ## 2026-05-08 audit pass (Cluster A pre-discharge axiom corrections)
 
@@ -290,6 +317,35 @@ true; vetted by Gemini 2.5-pro and 3.1-pro-preview — see
 | **Total** | **9** | **0** | |
 
 **Recent change (2026-05-09):** the previous single axiom `cylinderMassOperator_equivariant_of_heat_comm` (Cylinder/GreenFunction.lean) was **mathematically false** — Gemini 3.1-pro-preview produced an explicit counterexample (`S = 2·id` satisfies heat-comm but `T(2f) = 2(Tf)` cannot be conjured to be an ell² isometry). Replaced with the `CylinderSpacetimeSymmetry` structure (carries `heat_comm` *and* `preserves_T_norm`) + 3 instance axioms supplying the norm-preservation hypothesis for spatial-translation / time-translation / time-reflection. Net axiom count went from 6 (with 1 false) to 9 (all true).
+
+---
+
+## markov-semigroups Axioms (pinned Lake dependency `1bfe386`: 14 active, 0 sorries)
+
+*Updated 2026-05-09 after this session's discharges of `hermiteMulti_dense`
+and `wienerChaos_isInternalDirectSum` (now `wienerChaos_isHilbertSum`,
+proved). Per `grep ^axiom .lake/packages/MarkovSemigroups/MarkovSemigroups/`:
+14 axioms, 0 sorries. The full vetting registry lives at
+[`.lake/packages/MarkovSemigroups/docs/AXIOM_AUDIT.md`](../../../pphi2/.lake/packages/MarkovSemigroups/docs/AXIOM_AUDIT.md);
+discharge plans at `.lake/packages/MarkovSemigroups/docs/{ou-mehler-discharge-plan,polynomial-chaos-roadmap}.md`.*
+
+| File | Axioms | Sorries | Notes |
+|------|--------|---------|-------|
+| `Abstract/Hypercontractivity.lean` | 2 | 0 | `gross_lsi_implies_hypercontractive`, `gross_hypercontractive_implies_lsi` — Gross 1975 LSI ↔ HC duality. **Standard** (LP, SA). |
+| `Abstract/Concentration.lean` | 2 | 0 | `herbst_mgf_bound` (BGL §5.4.1), `poincare_of_lsi` (BGL Prop 5.1.3). **Standard** (LP, SA). |
+| `DobrushinZegarlinski/GlobalLSI.lean` | 1 | 0 | `zegarlinski_lsi_inequality` — Otto-Reznikoff/Zegarlinski global LSI from uniform local LSI + weak coupling. **Standard** (LP). |
+| `DobrushinZegarlinski/EntrywiseCovariance.lean` | 1 | 0 | `cov_entrywise_bound_of_zegarlinski` — Helffer-Sjöstrand covariance bound. **Standard** (LP). |
+| `Matrix/Diamagnetic.lean` | 1 | 0 | `diamagnetic_resolvent` — `\|(M+iV)⁻¹\| ≤ M⁻¹` entrywise (Simon Ch. 22). **Standard** (LP, SA). |
+| `Instances/WorkInProgress/Euclidean.lean` | 4 | 0 | `ouSemigroup_preserves_IsCore`, `ouSemigroup_gradient_decay`, `ouSemigroup_l2_sq_hasDerivWithinAt`, `ouSemigroup_entropy_sq_decay_bound` — atomic Mehler-kernel-level facts feeding the 1D Bakry-Émery instance. **Standard** (GR-vetted via Gemini chat). |
+| `Gaussian/OUEigenfunctions.lean` | 3 | 0 | `ouSemigroupAct` (placeholder OU operator), `ouSemigroupAct_eq_smul_of_mem_wienerChaos` (eigenvalue action), `ouSemigroupAct_eLpNorm_hypercontractive` (Nelson HC). **Placeholder** (LP) — discharge plan: [ou-mehler-discharge-plan.md](../../../pphi2/.lake/packages/MarkovSemigroups/docs/ou-mehler-discharge-plan.md), ~3-4 weeks via Mehler kernel + Bakry-Émery + Gross. These are the load-bearing axioms behind pphi2's `polynomial_chaos_concentration` consumer. |
+| **Total** | **14** | **0** | |
+
+**External dep introduced this session:** the proved markov-semigroups
+theorem `hermiteMulti_dense` rests on `GaussianField.GeneralResults.polynomial_dense_L2_of_subGaussian`
+(see gaussian-field section above). This dep does *not* propagate to
+pphi2's `polynomial_chaos_concentration` consumer (verified by
+`#print axioms`), only to `hermiteMulti_dense` and `wienerChaos_isHilbertSum`
+themselves.
 
 ---
 
