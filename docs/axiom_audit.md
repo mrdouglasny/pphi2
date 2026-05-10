@@ -15,6 +15,53 @@ polynomial-density + 3 OU placeholder), all relevant to Janson's chaos
 dropped from 9 to 8 (lost `polynomial_dense_L2_of_subGaussian` to
 gaussian-hilbert).
 
+## 2026-05-10 plan revision: `rough_error_variance` Step 1 rev 2 (Gemini DT)
+
+The Step 1 sub-plan for discharging
+`polynomial_chaos_exp_moment_bridge` was revised in `rough-error-variance-plan.md`
+(renamed from `rough-error-variance-codex-plan.md`; the older
+`rough-error-variance-design.md` from 2026-05-09 is now superseded but
+preserved). Changes vs rev 1:
+
+- **Quantifier hygiene** (was bug). `K` is now bound *outside*
+  `(N, a)` with constraint `(N : ℝ) * a = L` so it can't depend on
+  the lattice parameters and break continuum-limit uniformity.
+- **m=1 cross-term proof** (was bug). Cauchy–Schwarz gave
+  `O(T^{1/2})` for variance — wrong direction, would break Trotter
+  convergence. Replaced by L¹ heat-kernel bound on `C_R` × L^∞ bound
+  on `C_S^j`.
+- **m≥2 cross-term proof** (was bug). `‖C_R‖_∞` factor blows up as
+  `a → 0` because `C_R(x,x) ∼ log(1/a)` carries the 2D UV divergence.
+  Replaced by `(a, N)`-uniform L^m sum bound on `C_R`. m=1 and m≥2
+  are now treated uniformly.
+- **RHS form** (was bug). `≤ K · T` is provably false because
+  `‖C_S‖_∞ ∼ 1 + |log T|` injects a polylog. RHS is now
+  `K · T · (1 + |log T|)^{P.n − 1}`, where the exponent `P.n − 1` is
+  the maximum power of the smooth factor (since `m ≥ 1` forces
+  `j ≤ P.n − 1` in the binomial expansion).
+- **Three upstream sorries named**:
+  `canonicalSmoothCovariance_le_log` (Glimm-Jaffe Thm 8.5.2,
+  `(a, N)`-uniform smooth covariance bound),
+  `canonicalRoughCovariance_pow_sum_le` (Glimm-Jaffe Thm 8.5.2,
+  `(a, N)`-uniform L^m sum on rough covariance, all `m ≥ 1`),
+  `joint_wick_factorization` (Mathlib measure-theory product
+  factorization for the joint Gaussian). These quarantine the hard
+  harmonic analysis behind named API; the algebraic Wick reduction
+  S1–S5 can be implemented now.
+
+Source of revision: codex flagged the original 2026-05-09 design doc
+as needing scope corrections; Gemini chat (gemini-3-pro-preview)
+caught four issues in the codex correction; Gemini deep-think (via
+manual paste — automated MCP run was stuck) confirmed all four and
+added the measure-theory factorization concern. Verbatim review at
+`rough-error-variance-deep-think-review.md`.
+
+The rev-2 plan also confirms `rough_error_variance` as a real Step 1
+deliverable for the bridge axiom (not just scaffolding): Janson 5.10
+(`polynomial_chaos_concentration` in gaussian-hilbert) takes the L²
+bound as input and produces the L^p / stretched-exponential tail
+needed by `LatticeRoughErrorSetup` (`LatticeBridge.lean:63`).
+
 ## 2026-05-10 audit pass (gaussian-hilbert split)
 
 Architectural refactoring: the four chaos files
@@ -89,7 +136,7 @@ by `deep_think_gemini` (DT, 2026-05-08).
 | `GaussianField.gffOrthonormalCoord` (def) | StandardGaussianBridge.lean:82 | Wrong divisor `√λ_k` (gives variance `(a^d)⁻¹`, not 1) | Fixed: divisor now `√(a^d λ_k)` so `Var(ξ_k) = 1` | DT, GJ-aligned spectral identity |
 | `GaussianField.siteWickMonomial_eigenbasis_expansion` | WickMultivariate.lean:198 | Free `c : ℝ` parameter — false for `c ≠ c_a(x)` | Fixed: c specialised to `gffSiteVariance d N a mass ha hmass x = (a^d)⁻¹ Σ_k λ_k⁻¹ e_k(x)²` | DT (Hermite-projection chaos identity) |
 | `MarkovSemigroups.Gaussian.bonami_nelson_chaos` / `_chaosLE` | PolynomialChaosConcentration.lean:95,115 | Both norms identical (Lp.norm at L²) — vacuous | Fixed: LHS `eLpNorm f (ENNReal.ofReal p)`, RHS `eLpNorm f 2`. Sharp on `H_k`; `(d+1)` factor on `H^{≤d}` (slightly weaker than the sharp `√(d+1)`) | DT (Janson §5.1 hypercontractivity) |
-| `Pphi2.polynomial_chaos_exp_moment_bridge` | NelsonEstimate/PolynomialChaosBridge.lean:116 | Over-stated to `∀ a > 0` (textbook GJ Ch. 8 covers `a ≤ 1`) | Left as-is for downstream convenience; docstring "Note on strength" flags the over-statement. **Discharge plan**: [`polynomial-chaos-exp-moment-bridge-proof-plan.md`](polynomial-chaos-exp-moment-bridge-proof-plan.md) (~2-3 weeks total, 5 phases). **Sub-doc for Step 1 (`rough_error_variance`)**: [`rough-error-variance-design.md`](rough-error-variance-design.md) (~440 lines / ~13 days, 7 atomic sub-tasks). | DT verdict: likely true (large-`a` regime trivial, integral → 1; combine with GJ small-`a` bound via `K = max(K_small, K_large)`) |
+| `Pphi2.polynomial_chaos_exp_moment_bridge` | NelsonEstimate/PolynomialChaosBridge.lean:116 | Over-stated to `∀ a > 0` (textbook GJ Ch. 8 covers `a ≤ 1`) | Left as-is for downstream convenience; docstring "Note on strength" flags the over-statement. **Discharge plan**: [`polynomial-chaos-exp-moment-bridge-proof-plan.md`](polynomial-chaos-exp-moment-bridge-proof-plan.md) (~2-3 weeks total, 5 phases). **Sub-doc for Step 1 (`rough_error_variance`)**: [`rough-error-variance-plan.md`](rough-error-variance-plan.md) (rev 2 after Gemini DT review 2026-05-10; the original `rough-error-variance-design.md` is now superseded). [Review record](rough-error-variance-deep-think-review.md). | DT verdict: likely true (large-`a` regime trivial, integral → 1; combine with GJ small-`a` bound via `K = max(K_small, K_large)`) |
 
 **Sources legend** (per project convention): `DT` = Gemini
 deep-think vet, `LP` = literature proof with page number, `SA` =

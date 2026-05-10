@@ -1,7 +1,7 @@
-# `rough_error_variance` — Codex implementation plan
+# `rough_error_variance` — implementation plan
 
 *Revised 2026-05-10 (rev 2) after Gemini deep-think review (see
-[`rough-error-variance-deep-think-prompt.md`](rough-error-variance-deep-think-prompt.md)
+[`rough-error-variance-deep-think-review.md`](rough-error-variance-deep-think-review.md)
 for the prompt and verbatim Gemini reply).*
 
 *This rev fixes four issues in the previous plan: (i) a quantifier
@@ -77,7 +77,7 @@ Codex should flag the **exact** signatures it needs against the actual
 names in this codebase, then we file them as named upstream sorries.
 Sketches below for orientation only.
 
-1. **`canonicalSmoothCovariance_uniform_bound`** — `(a, N)`-uniform
+1. **`canonicalSmoothCovariance_le_log`** — `(a, N)`-uniform
    pointwise bound on the smooth covariance. Replaces the existing
    `smoothVariance_le_log_uniform`
    (`CovarianceSplit.lean:112`), whose proven constant
@@ -92,7 +92,7 @@ Sketches below for orientation only.
      canonicalSmoothCovariance d N a mass T x y ≤ C * (1 + |Real.log T|)
    ```
 
-2. **`canonicalRoughCovariance_Lm_bound`** — `(a, N)`-uniform L^m
+2. **`canonicalRoughCovariance_pow_sum_le`** — `(a, N)`-uniform L^m
    summability of the rough covariance, for **all** m ≥ 1 (this unifies
    what the previous plan rev mishandled as separate m=1 and m≥2 cases).
    Standard textbook (Glimm–Jaffe Thm 8.5.2). Approximate signature:
@@ -220,7 +220,7 @@ M_{j,m}(η) = a^d · Σ_x :φ_S(x)^j:_{c_S} · :φ_R(x)^m:_{c_R}
 ```
 
 Sum is finite: `j + m ≤ P.n`. Lemma:
-`canonicalRoughError_eq_sum_M`.
+`canonicalRoughError_eq_sum_term`.
 
 ### S3. Cross-term orthogonality on the joint measure
 
@@ -242,7 +242,7 @@ Conclude:
   = Σ_{j ≥ 0, m ≥ 1} A(j,m)² · ‖M_{j,m}‖²_{L²}
 ```
 
-Lemma: `canonicalRoughError_L2_sq_eq_sum`.
+Lemma: `canonicalRoughError_l2_sq_eq_sum`.
 
 ### S4. Bound `‖M_{j,m}‖²_{L²}` per `(j, m)` — uniform-m treatment
 
@@ -256,9 +256,9 @@ By two applications of `gff_wickPower_two_site_inner` and
 ```
 
 **Do not case-split on m.** For all `m ≥ 1`, factor out
-`canonicalSmoothCovariance_uniform_bound` (giving
+`canonicalSmoothCovariance_le_log` (giving
 `‖C_S‖_∞^j ≤ Const · (1+|log T|)^j`), then sum the rough-side L^m using
-`canonicalRoughCovariance_Lm_bound` (giving `≤ C_m · T`). Combined with
+`canonicalRoughCovariance_pow_sum_le` (giving `≤ C_m · T`). Combined with
 the volume sum (`a^d · Σ_x 1 = L^d`):
 
 ```
@@ -266,7 +266,7 @@ the volume sum (`a^d · Σ_x 1 = L^d`):
 ```
 
 Each `‖M_{j,m}‖²_{L²}` is `O(T · (1+|log T|)^j)` with constant uniform
-in `(a, N)`. Lemma: `M_jm_L2_sq_bound`.
+in `(a, N)`. Lemma: `canonicalRoughError_term_l2_sq_le`.
 
 ### S5. Sum over `(j, m)`, absorb into K
 
@@ -302,8 +302,8 @@ Do not implement in this PR:
   the maximum chaos degree (= `P.n`), not the projection.
 - The bridge axiom discharge itself — that's a downstream consumer.
 - Discharging the three upstream sorries
-  (`canonicalSmoothCovariance_uniform_bound`,
-  `canonicalRoughCovariance_Lm_bound`, `joint_wick_factorization`).
+  (`canonicalSmoothCovariance_le_log`,
+  `canonicalRoughCovariance_pow_sum_le`, `joint_wick_factorization`).
   These are parallel-tracked work; each sorry's discharge is a
   textbook exercise (Glimm–Jaffe Thm 8.5.2 and Mathlib measure-theory
   product factorization respectively).

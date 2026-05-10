@@ -397,14 +397,14 @@ theorems transfer to the field-decomposition setting.
 ### Phase 1: Promote `RoughErrorBound.lean` placeholders (≈ 200–400 lines)
 
 Currently the file has three `True`-conclusion placeholders:
-- `rough_error_variance` → `‖E_R‖_{L²}² ≤ K · T^δ`. **Detailed sub-doc**: [`rough-error-variance-design.md`](rough-error-variance-design.md) (~440 lines / ~13 days, 7 atomic sub-tasks; type-design + step-by-step proof structure + starter code).
+- `rough_error_variance` → `‖E_R‖_{L²}² ≤ K · T^δ`. **Detailed sub-doc**: [`rough-error-variance-plan.md`](rough-error-variance-plan.md) (rev 2 after Gemini DT 2026-05-10; supersedes the original `rough-error-variance-design.md`) (~440 lines / ~13 days, 7 atomic sub-tasks; type-design + step-by-step proof structure + starter code).
 - `rough_error_Lp_bound` → `‖E_R‖_{L^p} ≤ K · p^{deg P / 2} · T^{δ/2}`.
 - `rough_error_tail_bound` → `P(|E_R| > λ) ≤ exp(-c λ^{2/deg P} T^{-δ/deg P})`.
 
 **Sub-strategy**:
 1. Prove `rough_error_variance` directly via Wick orthogonality +
    `roughCovariance_sq_summable`. Pure Gaussian-integration calculation.
-   See [`rough-error-variance-design.md`](rough-error-variance-design.md) for the concrete plan.
+   See [`rough-error-variance-plan.md`](rough-error-variance-plan.md) (rev 2 after Gemini DT 2026-05-10; supersedes the original `rough-error-variance-design.md`) for the concrete plan.
 2. Replace `rough_error_Lp_bound` with the `polynomial_chaos_concentration`-based
    derivation: identify E_R as element of chaos via the gaussian-field
    bridge axioms, apply Janson 5.10. The `p^{deg P / 2}` factor follows.
