@@ -16,10 +16,8 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-09): 19 axioms, 2 sorries** (pphi2)
-**+ 12 axioms, 1 sorry** (gaussian-field, including the new
-`StandardGaussianBridge` + `WickMultivariate` chaos-decomposition skeletons,
-4+3 axioms) = **29 combined**. pphi2 now also depends on markov-semigroups
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-09): 19 axioms, 0 sorries** (pphi2)
+**+ 6 axioms, 1 sorry** (gaussian-field) = **26 combined**. pphi2 now also depends on markov-semigroups
 (at the v4.29.0-aligned `7d55117` pin) for the upstream
 `polynomial_chaos_concentration` API used by Cluster A.
 
@@ -30,9 +28,9 @@ theorem via Mathlib's tempered-distribution embedding;
 `cylinderIR_uniform_exponential_moment` and `cylinderIR_os3` refactored
 to consume explicit `MeasureHasGreenMomentBound` /
 `CylinderMeasureSequenceEventuallyReflectionPositive` inputs). The
-gaussian-field count rose from 4 to 5 because PR #14's
-`scripts/count_axioms.sh` now scans the previously-unaudited
-`SchwartzFourier/` directory.
+gaussian-field count rose from 4 to 6 because the audit now includes the
+previously unaudited `SchwartzFourier/` and `SchwartzNuclear/`
+directories.
 
 The five Phase 2 GJ-axiom discharges:
 
@@ -892,8 +890,9 @@ infrastructure. Assessment date: 2026-03-04.
 
 ## Upstream: gaussian-field
 
-The pinned Lake `GaussianField` dependency has **5 axioms, 1 sorry**:
+The pinned Lake `GaussianField` dependency has **6 axioms, 1 sorry**:
+- `GeneralResults/PolynomialDensityGaussian.lean`: 1 axiom
+- `SchwartzNuclear/HermiteGalerkin.lean`: 2 axioms, 1 sorry
 - `Cylinder/GreenFunction.lean`: 1 axiom
 - `Cylinder/MethodOfImages.lean`: 1 axiom
-- `Cylinder/ReflectionPositivity.lean`: 1 axiom
 - `SchwartzFourier/ResolventUniformBound.lean`: 1 axiom

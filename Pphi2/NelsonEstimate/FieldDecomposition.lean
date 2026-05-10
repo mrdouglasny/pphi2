@@ -681,19 +681,24 @@ theorem canonicalSumFieldFunction_covariance
     (d := d) (N := N) (a := a) (mass := mass) T x y
   have h_rs := canonicalRoughSmooth_cross_moment_zero
     (d := d) (N := N) (a := a) (mass := mass) T x y
+  let fss : CanonicalJoint d N → ℝ := fun η =>
+    canonicalSmoothFieldFunction d N a mass T η x *
+      canonicalSmoothFieldFunction d N a mass T η y
+  let fsr : CanonicalJoint d N → ℝ := fun η =>
+    canonicalSmoothFieldFunction d N a mass T η x *
+      canonicalRoughFieldFunction d N a mass T η y
+  let frs : CanonicalJoint d N → ℝ := fun η =>
+    canonicalRoughFieldFunction d N a mass T η x *
+      canonicalSmoothFieldFunction d N a mass T η y
+  let frr : CanonicalJoint d N → ℝ := fun η =>
+    canonicalRoughFieldFunction d N a mass T η x *
+      canonicalRoughFieldFunction d N a mass T η y
   have h_eq : ∀ η : CanonicalJoint d N,
       canonicalSumFieldFunction d N a mass T η x *
         canonicalSumFieldFunction d N a mass T η y =
-      canonicalSmoothFieldFunction d N a mass T η x *
-          canonicalSmoothFieldFunction d N a mass T η y +
-        (canonicalSmoothFieldFunction d N a mass T η x *
-            canonicalRoughFieldFunction d N a mass T η y +
-          (canonicalRoughFieldFunction d N a mass T η x *
-              canonicalSmoothFieldFunction d N a mass T η y +
-            canonicalRoughFieldFunction d N a mass T η x *
-              canonicalRoughFieldFunction d N a mass T η y)) := by
+      fss η + (fsr η + (frs η + frr η)) := by
     intro η
-    simp [canonicalSumFieldFunction]
+    simp [canonicalSumFieldFunction, fss, fsr, frs, frr]
     ring
   rw [integral_congr_ae (Filter.Eventually.of_forall h_eq)]
   have h_smooth_memLp : ∀ z : FinLatticeSites d N,
@@ -746,9 +751,31 @@ theorem canonicalSumFieldFunction_covariance
       canonicalRoughFieldFunction d N a mass T η x *
         canonicalRoughFieldFunction d N a mass T η y) (canonicalJointMeasure d N) :=
     MemLp.integrable_mul (h_rough_memLp x) (h_rough_memLp y)
-  rw [integral_add h_ss_int (h_sr_int.add (h_rs_int.add h_rr_int))]
-  rw [integral_add h_sr_int (h_rs_int.add h_rr_int)]
-  rw [integral_add h_rs_int h_rr_int]
+  have h_ss_int' : Integrable fss (canonicalJointMeasure d N) := by
+    simpa [fss] using h_ss_int
+  have h_sr_int' : Integrable fsr (canonicalJointMeasure d N) := by
+    simpa [fsr] using h_sr_int
+  have h_rs_int' : Integrable frs (canonicalJointMeasure d N) := by
+    simpa [frs] using h_rs_int
+  have h_rr_int' : Integrable frr (canonicalJointMeasure d N) := by
+    simpa [frr] using h_rr_int
+  change ∫ η, (fss + (fsr + (frs + frr))) η ∂(canonicalJointMeasure d N) = _
+  have hsplit1 :
+      ∫ η, (fss + (fsr + (frs + frr))) η ∂(canonicalJointMeasure d N) =
+        ∫ η, fss η ∂(canonicalJointMeasure d N) +
+          ∫ η, (fsr + (frs + frr)) η ∂(canonicalJointMeasure d N) := by
+    simpa using integral_add h_ss_int' (h_sr_int'.add (h_rs_int'.add h_rr_int'))
+  have hsplit2 :
+      ∫ η, (fsr + (frs + frr)) η ∂(canonicalJointMeasure d N) =
+        ∫ η, fsr η ∂(canonicalJointMeasure d N) +
+          ∫ η, (frs + frr) η ∂(canonicalJointMeasure d N) := by
+    simpa using integral_add h_sr_int' (h_rs_int'.add h_rr_int')
+  have hsplit3 :
+      ∫ η, (frs + frr) η ∂(canonicalJointMeasure d N) =
+        ∫ η, frs η ∂(canonicalJointMeasure d N) +
+          ∫ η, frr η ∂(canonicalJointMeasure d N) := by
+    simpa using integral_add h_rs_int' h_rr_int'
+  rw [hsplit1, hsplit2, hsplit3]
   rw [h_ss, h_sr, h_rs, h_rr]
   rw [zero_add, zero_add, ← mul_add, ← Finset.sum_add_distrib]
   congr 1
@@ -783,7 +810,6 @@ theorem canonicalSumFieldFunction_covariance
           (canonicalEigenvalue d N a mass m *
             latticeFourierProductNormSq N d m) := by
               field_simp [ne_of_gt hLamPos, ne_of_gt hnormPos]
-              ring
 
 private lemma latticeFourierProductCoeff_delta
     (x : FinLatticeSites d N) (m : Fin d → Fin N) :
