@@ -102,3 +102,18 @@ matches the strengthened conclusion type.
   has been updated to default to `gemini-3.1-pro-preview` for both `chat_gemini`
   and `deep_think_gemini`. (The `tools/` directory is gitignored, so this is
   a local-only change.)
+
+## 2026-05-10 follow-up: HermiteGalerkin axioms
+
+The two HermiteGalerkin axioms were already vetted on 2026-05-02 (per
+their docstrings) but the audit table in `axiom_audit.md` listed them as
+"Pending vet". A re-vet with `gemini-3.1-pro-preview` (today) confirmed
+both are correctly stated.
+
+| Axiom | File:Line | Rating | Sources | Notes |
+|-------|-----------|--------|---------|-------|
+| `hermiteGalerkinTrunc_tendsto_schwartz` | SchwartzNuclear/HermiteGalerkin.lean:217 | **Standard** | DT-2.5 (2026-05-02), DT-3.1 (2026-05-10) | Schwartz-topology convergence of multi-D Hermite-Galerkin partial sums. Statement "logically sound, mathematically rigorous, strongly typed, and captures exactly the textbook theorem without requiring modifications" (Gemini 3.1). `d = 0` edge case is well-handled (constant sequence → trivially convergent). Reed-Simon Vol I §V.3; Bogachev *Gaussian Measures* Thm 1.3.4. |
+| `hermiteFunctionNd_HO_eigenvalue` | SchwartzNuclear/HermiteGalerkin.lean:323 | **Standard** | DT-2.5 (2026-05-02), DT-3.1 (2026-05-10) | Multi-D HO eigenvalue equation `(−Δ + ‖x‖²) h_α = (2|α| + d) h_α`, expanded as a coordinate-wise sum of 1D second derivatives. Mathematically sound; `d = 0` reduces to `0 = 0` cleanly; `d = 1` matches Mathlib's `hermiteFunction_harmonic_oscillator_eigenvalue` exactly. Gemini 3.1 noted that Mathlib has a coordinate-free `laplacian` form which would be conceptually cleaner, but the unrolled form here is the right shape for the planned separation-of-variables proof. |
+
+Both vets confirm the existing 2026-05-02 verdict. The audit table has
+been updated to reflect "Standard" with both source ratings.
