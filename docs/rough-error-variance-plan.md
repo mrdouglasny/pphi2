@@ -104,21 +104,17 @@ Sketches below for orientation only.
        a^d * ∑ y, canonicalRoughCovariance d N a mass T x y ^ m ≤ C * T
    ```
 
-3. **`joint_wick_factorization`** — measure-theoretic factorization of
-   independent smooth × rough Wick monomial products under the canonical
-   joint measure. Mathlib does **not** automatically split the integral
-   of a product into a product of integrals; without this helper, S3
-   drowns in `Integrable` typeclass goals. Approximate signature:
-   ```lean
-   ∫ η, f_smooth(canonicalSmoothFieldFunction … η) *
-        f_rough(canonicalRoughFieldFunction … η)
-        ∂(canonicalJointMeasure d N a mass) =
-   (∫ η_S, f_smooth η_S ∂(canonicalSmoothMeasure d N a mass)) *
-   (∫ η_R, f_rough η_R ∂(canonicalRoughMeasure d N a mass))
-   ```
-   (Adjust to match the exact `FieldDecomposition` API. May follow
-   trivially from the product structure of `canonicalJointMeasure` if
-   that is already a `Measure.prod`; check this before sorry-ing.)
+**Note**: an earlier version of this plan listed a third upstream
+sorry, `joint_wick_factorization`. That is **NOT** needed:
+`canonicalJointMeasure` is literally `Measure.prod (Measure.pi
+gaussianReal) (Measure.pi gaussianReal)`
+(`FieldDecomposition.lean:47–51`), and Mathlib provides
+`MeasureTheory.integral_prod_mul` (in
+`Mathlib.MeasureTheory.Integral.Prod`) with **no integrability
+hypothesis** — only `[SFinite μ] [SFinite ν]`, automatic for
+probability measures. The codebase already uses this pattern via
+`integral_fun_fst` in `canonicalSmoothFieldFunction_self_moment`
+(`FieldDecomposition.lean:487`); copy that approach in S3.
 
 ## Theorem statement
 
@@ -227,9 +223,11 @@ Sum is finite: `j + m ≤ P.n`. Lemma:
 Square `canonicalRoughError`, integrate. Distinct `(j, m) ≠ (j', m')`
 give zero cross-expectation:
 
-1. Expand `M_{j,m} · M_{j',m'}` and apply
-   `joint_wick_factorization` to split each per-site contribution into
-   `(smooth integral) · (rough integral)`.
+1. Expand `M_{j,m} · M_{j',m'}` and apply `MeasureTheory.integral_prod_mul`
+   (or `integral_fun_fst` as in `canonicalSmoothFieldFunction_self_moment`,
+   `FieldDecomposition.lean:487`) to split each per-site contribution
+   into `(smooth integral) · (rough integral)`. Note: no integrability
+   hypothesis needed — Mathlib's lemma is unconditional.
 2. Apply `gff_wickPower_two_site_inner` to the smooth side: zero unless
    `j = j'`.
 3. Apply `gff_wickPower_two_site_inner` to the rough side: zero unless
@@ -247,8 +245,7 @@ Lemma: `canonicalRoughError_l2_sq_eq_sum`.
 ### S4. Bound `‖M_{j,m}‖²_{L²}` per `(j, m)` — uniform-m treatment
 
 By two applications of `gff_wickPower_two_site_inner` and
-`joint_wick_factorization` (or the explicit factorization of
-`canonicalJointMeasure` as a product):
+`MeasureTheory.integral_prod_mul` for the joint-measure factorization:
 
 ```
 ‖M_{j,m}‖²_{L²} = a^{2d} · Σ_{x,y}
@@ -301,32 +298,31 @@ Do not implement in this PR:
   `E_R ∈ ⊕_{k=1}^{P.n} 𝓗_k` — Janson 5.10 needs only the L² bound and
   the maximum chaos degree (= `P.n`), not the projection.
 - The bridge axiom discharge itself — that's a downstream consumer.
-- Discharging the three upstream sorries
+- Discharging the two upstream sorries
   (`canonicalSmoothCovariance_le_log`,
-  `canonicalRoughCovariance_pow_sum_le`, `joint_wick_factorization`).
-  These are parallel-tracked work; each sorry's discharge is a
-  textbook exercise (Glimm–Jaffe Thm 8.5.2 and Mathlib measure-theory
-  product factorization respectively).
+  `canonicalRoughCovariance_pow_sum_le`).
+  Both are parallel-tracked Glimm–Jaffe Ch. 8 (Thm 8.5.2) Fourier
+  estimates.
 
 ## Acceptance criteria
 
 - `lake build` clean from scratch on the
   `session/2026-05-09-pin-and-discharge-update` branch.
 - `#print axioms rough_error_variance` shows only `propext`,
-  `Classical.choice`, `Quot.sound` plus the three named upstream
+  `Classical.choice`, `Quot.sound` plus the two named upstream
   sorries (or whatever they become after upstream discharge) plus
   whatever `gff_wickPower_two_site_inner` introduces.
-- No new pphi2 axioms beyond the three named upstream sorries.
+- No new pphi2 axioms beyond the two named upstream sorries.
 - Theorem signature matches the statement in this doc (general `P`,
   `K` bound outside `(a, N)`, RHS = `K · T · (1+|log T|)^{P.n − 1}`).
 - The `True` stub at `RoughErrorBound.lean:62` is replaced.
 
 ## Codex hand-off note
 
-When you hit each of the three upstream prerequisites in S3/S4, **flag
+When you hit each of the two upstream prerequisites in S4, **flag
 the exact signature you need** against the actual
-`canonicalSmoothCovariance` / `canonicalRoughCovariance` /
-`canonicalJointMeasure` API in this codebase. Do not invent the
+`canonicalSmoothCovariance` / `canonicalRoughCovariance` API in this
+codebase. Do not invent the
 prerequisite signatures from the sketches above — they are
 illustrative only. We will then file the upstream sorries with the
 right names and types.

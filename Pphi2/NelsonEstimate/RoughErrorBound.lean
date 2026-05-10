@@ -2,106 +2,166 @@
 Copyright (c) 2026 Michael R. Douglas. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 
-# Hypercontractivity Bound on the Rough Error
+# L² bound on the rough-field error
 
-Applies hypercontractivity to the rough (high-frequency) part of the
-interaction after covariance splitting, obtaining a stretched-exponential
-tail bound.
+Step 1 of the discharge of `polynomial_chaos_exp_moment_bridge`. Bounds
+the L² norm (variance) of the rough-field error of a Wick-polynomial
+interaction on the canonical joint Gaussian measure.
 
-## Main results
+## Main result
 
-- `rough_error_variance` — `E[E_R²] ≤ C · T^δ` (small when T small)
-- `rough_error_Lp_bound` — `‖E_R‖_p ≤ C · p² · T^{δ/2}`
-- `rough_error_tail_bound` — `P(|E_R| > λ) ≤ exp(-c · λ^{1/2} / T^{δ/4})`
+`rough_error_variance` — for any `InteractionPolynomial P`,
+`∫ E_R² ∂μ_joint ≤ K · T · (1 + |log T|)^{P.n − 1}`
+with `K` uniform in `(a, N)` at fixed `(L, mass, P)`.
 
-## Mathematical content
+Phase 2 (separate file) will feed this into `polynomial_chaos_concentration`
+(Janson's Theorem 5.10, available in `gaussian-hilbert`) to obtain the L^p
+and stretched-exponential tail bounds needed by `LatticeRoughErrorSetup`.
 
-After splitting φ = φ_S + φ_R:
-- The rough error E_R contains all cross-terms from the Wick binomial
-- E_R is a degree-4 polynomial in the rough field φ_R
-- By hypercontractivity: ‖E_R‖_p ≤ (p-1)² · ‖E_R‖_2
-- The L² norm ‖E_R‖_2 is controlled by C_R(x,y)⁴ (from roughCovariance_sq_summable)
-- Optimizing p in Chebyshev gives the stretched-exponential tail
+## Plan
+
+See `docs/rough-error-variance-plan.md` for the full step-by-step plan and
+review history. Five-step structure (S1–S5: pointwise binomial decomposition,
+reindexing by smooth/rough degree pair, cross-term orthogonality on the
+joint measure, per-term L² bound, final assembly).
+
+## Upstream prerequisites (sorry'd, Phase 2 textbook discharge)
+
+Two `(a, N)`-uniform Glimm–Jaffe Ch. 8 (Thm 8.5.2) Fourier estimates:
+- `canonicalSmoothCovariance_le_log` — smooth covariance L^∞ uniform
+- `canonicalRoughCovariance_pow_sum_le` — rough covariance L^m sum uniform
+
+Quarantined to `CovarianceSplit.lean` once Codex hits the exact API needed.
 
 ## References
 
-- Simon, *P(φ)₂ Euclidean QFT*, Chapter V, Lemma V.11
+- Glimm–Jaffe, *Quantum Physics*, Ch. 8 (dynamical cutoff, Theorem 8.5.2)
+- Simon, *The P(φ)₂ Euclidean Quantum Field Theory*, Ch. V (Nelson estimate)
+- Janson, *Gaussian Hilbert Spaces*, Theorem 5.10 (polynomial-chaos
+  concentration)
 -/
 
-import Pphi2.NelsonEstimate.CovarianceSplit
-import Pphi2.NelsonEstimate.WickBinomial
+import Pphi2.NelsonEstimate.FieldDecomposition
+import Pphi2.WickOrdering.WickPolynomial
 
 noncomputable section
 
-open GaussianField MeasureTheory
+open MeasureTheory GaussianField
 open scoped BigOperators
 
 namespace Pphi2
 
 variable (d N : ℕ) [NeZero N] (a mass : ℝ)
 
-/-! ## L² bound on the rough error
+/-! ## Definitions
 
-The rough error E_R = V - V_S contains all terms from the Wick binomial
-expansion that involve at least one power of φ_R. For φ⁴ theory:
+Three random variables on the canonical joint Gaussian measure
+`canonicalJointMeasure d N = Measure.prod (Π gaussianReal) (Π gaussianReal)`:
 
-E_R = a² Σ_x [4:φ_S³:·φ_R + 6:φ_S²:·:φ_R²: + 4φ_S·:φ_R³: + :φ_R⁴:]
+* `canonicalSmoothInteraction P T η` — Wick polynomial of `P` evaluated at
+  the smooth field, with smooth Wick subtraction `c_S = smoothWickConstant`,
+  weighted by lattice volume `a^d` and summed over sites.
+* `canonicalFullInteractionJoint P T η` — Wick polynomial of `P` evaluated
+  at the full field `φ_S + φ_R`, with full Wick subtraction `c = wickConstant`.
+* `canonicalRoughError P T η` — the difference. By the Wick binomial
+  identity (`wickMonomial_add_binomial`), this is a sum of cross-terms
+  each containing at least one rough-field factor `:φ_R^m:` with `m ≥ 1`.
 
-The L² norm of E_R under the GFF measure involves sums of products of
-covariance matrix entries. The key bound: because every term has at least
-one C_R factor, the variance is controlled by ‖C_R‖² which is O(T^δ). -/
+Names are deliberately distinct from `latticeSmoothInteraction` /
+`latticeRoughError` in `LatticeSetup.lean`, which are deterministic
+versions on `Configuration` for the dynamical-cutoff layer-cake.
+-/
 
-/-- **Variance of the rough error**: the L² norm of the rough error
-(the cross-terms from the Wick binomial expansion) is controlled by
-the L² norm of the rough covariance.
+/-- Wick-polynomial interaction evaluated at the smooth field, weighted
+by lattice volume and summed over sites. Lives on the canonical joint
+Gaussian measure. -/
+def canonicalSmoothInteraction (T : ℝ) (P : InteractionPolynomial)
+    (η : CanonicalJoint d N) : ℝ :=
+  a ^ d * ∑ x : FinLatticeSites d N,
+    wickPolynomial P (smoothWickConstant d N a mass T)
+      (canonicalSmoothFieldFunction d N a mass T η x)
 
-For d = 2: E[E_R²] ≤ C · T^{1/2}
+/-- Wick-polynomial interaction evaluated at the full field `φ_S + φ_R`,
+weighted by lattice volume and summed over sites. Lives on the canonical
+joint Gaussian measure. -/
+def canonicalFullInteractionJoint (T : ℝ) (P : InteractionPolynomial)
+    (η : CanonicalJoint d N) : ℝ :=
+  a ^ d * ∑ x : FinLatticeSites d N,
+    wickPolynomial P (wickConstant d N a mass)
+      (canonicalSumFieldFunction d N a mass T η x)
 
-This is the key estimate that makes the rough error "small" when T is small. -/
--- Placeholder theorems — conclusions are True pending proper measure-theoretic types
-theorem rough_error_variance :
-    ∃ (C : ℝ), 0 < C ∧ True := ⟨1, one_pos, trivial⟩
+/-- The rough-field error: full Wick interaction minus smooth Wick
+interaction. By `wickMonomial_add_binomial` + cancellation of the all-smooth
+term, this expands to a sum of cross-terms each containing at least one
+factor `:φ_R^m:` with `m ≥ 1`. -/
+def canonicalRoughError (T : ℝ) (P : InteractionPolynomial)
+    (η : CanonicalJoint d N) : ℝ :=
+  canonicalFullInteractionJoint d N a mass T P η -
+    canonicalSmoothInteraction d N a mass T P η
 
-/-! ## Hypercontractivity on the rough error
+/-! ## S1–S2 (skeleton): pointwise binomial decomposition + reindex
 
-The rough error E_R is a polynomial of degree ≤ 4 in the Gaussian field.
-By hypercontractivity (Nelson's inequality):
+The pointwise decomposition expresses the rough error as a sum over
+`(j, m)` pairs with `j + m ≤ P.n` and `m ≥ 1`, of
+`A(j,m) · :φ_S^j(x):_{c_S} · :φ_R^m(x):_{c_R}` weighted by `a^d` and
+summed over sites. The proof uses `wickMonomial_add_binomial` per
+monomial of `P`, then cancels the `m = 0` (all-smooth) term.
 
-  ‖E_R‖_p ≤ (p-1)^{4/2} · ‖E_R‖_2 = (p-1)² · ‖E_R‖_2
+Stub for now; concrete content to follow in subsequent commits.
+-/
 
-Since ‖E_R‖_2 ≤ C · T^{1/4} (from rough_error_variance), we get:
+/-- The rough error equals the per-site difference of full minus smooth
+Wick polynomials. Trivial unfolding; useful as the starting point for
+the binomial decomposition (S1). -/
+lemma canonicalRoughError_eq_sum_diff (T : ℝ) (P : InteractionPolynomial)
+    (η : CanonicalJoint d N) :
+    canonicalRoughError d N a mass T P η =
+      a ^ d * ∑ x : FinLatticeSites d N,
+        (wickPolynomial P (wickConstant d N a mass)
+            (canonicalSumFieldFunction d N a mass T η x) -
+          wickPolynomial P (smoothWickConstant d N a mass T)
+            (canonicalSmoothFieldFunction d N a mass T η x)) := by
+  unfold canonicalRoughError canonicalFullInteractionJoint canonicalSmoothInteraction
+  rw [← mul_sub, ← Finset.sum_sub_distrib]
 
-  ‖E_R‖_p ≤ C · p² · T^{1/4}  -/
+/-! ## Main theorem (statement, proof TBD)
 
-/-- **L^p bound on the rough error** via hypercontractivity.
+`rough_error_variance` quantifies `K` outside the lattice binders so it
+cannot depend on `(a, N)` and break continuum-limit uniformity. The
+constraint `(N : ℝ) * a = L` pins the macroscopic period. The polylog
+exponent `P.n − 1` is the maximum power of `‖C_S‖_∞ ≤ 1 + |log T|` that
+appears in any cross-term (since `m ≥ 1` forces `j ≤ P.n − 1`).
+-/
 
-For the rough error E_R (degree 4 polynomial of Gaussian field):
-  ‖E_R‖_p ≤ C · p² · T^{δ/2}
+/-- **L² bound on the rough-field error** of a Wick-polynomial interaction.
 
-where δ > 0 comes from roughCovariance_sq_summable. -/
-theorem rough_error_Lp_bound :
-    ∃ (C : ℝ), 0 < C ∧ True := ⟨1, one_pos, trivial⟩
+For any `InteractionPolynomial P` and macroscopic period `L > 0`, there
+exists a constant `K(P, mass, L) > 0` such that for every lattice
+discretization `(N, a)` with `(N : ℝ) * a = L`,
 
-/-! ## Tail bound via Chebyshev optimization
+  `∫ η, (canonicalRoughError d N a mass T P η)² ∂(canonicalJointMeasure d N)
+    ≤ K · T · (1 + |log T|)^{P.n − 1}`.
 
-From the L^p bound ‖E_R‖_p ≤ C · p² · T^{1/4}, Chebyshev gives:
+The bound is uniform in `(a, N)` at fixed `(L, mass, P)`. The polylog
+factor comes from the smooth covariance `‖C_S‖_∞ ≤ A + B · |log T|`;
+the linear `T` factor comes from the rough covariance L^m summability.
 
-  P(|E_R| > λ) ≤ (‖E_R‖_p / λ)^p ≤ (C · p² · T^{1/4} / λ)^p
+This is **Step 1** of the discharge of `polynomial_chaos_exp_moment_bridge`
+(`PolynomialChaosBridge.lean:116`). Phase 2 feeds this into
+`polynomial_chaos_concentration` (Janson 5.10) for L^p and tail bounds.
 
-Optimize over p: set p = (λ / (eC · T^{1/4}))^{1/2}, getting:
-
-  P(|E_R| > λ) ≤ exp(-c · λ^{1/2} / T^{1/8})
-
-This is the stretched-exponential tail bound needed for Nelson's trick. -/
-
-/-- **Stretched-exponential tail bound for the rough error.**
-
-  P(|E_R| > λ) ≤ exp(-c · λ^{1/2} · T^{-1/8})
-
-The exponent 1/2 comes from degree 4 (general: 2/degree).
-The T^{-1/8} factor makes the tail sharper as T → 0. -/
-theorem rough_error_tail_bound :
-    ∃ (c : ℝ), 0 < c ∧ True := ⟨1, one_pos, trivial⟩
+See `docs/rough-error-variance-plan.md` for the full proof plan. -/
+theorem rough_error_variance
+    {d : ℕ} (P : InteractionPolynomial)
+    (L mass : ℝ) (_hL : 0 < L) (_hmass : 0 < mass)
+    (T : ℝ) (_hT : 0 < T) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_h_vol : (N : ℝ) * a = L),
+        ∫ η, (canonicalRoughError d N a mass T P η) ^ 2
+          ∂(canonicalJointMeasure d N) ≤
+        K * T * (1 + |Real.log T|) ^ (P.n - 1) := by
+  sorry
 
 end Pphi2
 

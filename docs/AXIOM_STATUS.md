@@ -9,8 +9,8 @@ passes and discharges. Last refreshed: 2026-05-10.*
 | Count | Value |
 |---|---|
 | pphi2 axioms (active) | **17** (15 public + 2 `private`) |
-| pphi2 sorries | **0** |
-| `lake build` | clean (3793 jobs) |
+| pphi2 sorries | **1** (`rough_error_variance` in `RoughErrorBound.lean`; signature landed, proof in progress per `rough-error-variance-plan.md`) |
+| `lake build` | clean (3803 jobs) |
 | Direct upstream deps | gaussian-field (`9c66a40`, 8 axioms / 0 sorries), markov-semigroups (`3cb482d`, 11 axioms / 0 sorries), gaussian-hilbert (`e6cfc80`, 4 axioms / 0 sorries), bochner (`main`) |
 
 The `scripts/count_axioms.sh` script reports 19 because of two

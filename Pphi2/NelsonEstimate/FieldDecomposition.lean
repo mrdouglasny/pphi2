@@ -1,7 +1,7 @@
 import Pphi2.NelsonEstimate.LatticeBridge
 import Pphi2.NelsonEstimate.LatticeSetup
 import Pphi2.NelsonEstimate.CovarianceSplit
-import Pphi2.GeneralResults.LatticeProductDFT
+import Lattice.LatticeFourierProduct
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Probability.Distributions.Gaussian.Fernique
