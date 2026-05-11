@@ -335,20 +335,63 @@ lemma canonicalCrossTerm_inner_eq_zero
          ∂(canonicalJointMeasure d N) = 0 := by
   sorry
 
-/-! ## S3 application — leading-piece L²-sq decomposition
+/-! ## S3 application — `(c · binomial sum)`-style L²-sq decomposition
 
-Apply `integral_sq_real_sum_of_pairwise_orthogonal` to the leading
-`(1 / P.n)` piece of `canonicalRoughError` (i.e. the `k = P.n`
-contributions). Conditional on integrability of pairwise products of
-`canonicalCrossTerm η P.n j` for `j ∈ range P.n`. Uses the orthogonality
-stub at `k = k' = P.n`.
+A shared helper that handles BOTH the leading `(1 / P.n)` piece and
+each per-coefficient `P.coeff m` piece of `canonicalRoughError`: for any
+fixed `(k, c)`, the L² norm of `c · Σ_j C(k, j) · cross(k, j)` decomposes
+into the sum-of-squares form via the generic orthogonality reduction.
 
-The per-coefficient piece (sum over `m : Fin P.n`) is the analogous
-mechanical application; left for follow-up. -/
+The leading-piece application is `k = P.n, c = 1 / P.n`; each
+per-coefficient application is `k = m, c = P.coeff m` for `m : Fin P.n`.
+The full per-coefficient sum (over `m`) is a further outer application
+of the orthogonality reduction (left for follow-up). -/
+
+/-- Generic helper: the L²-sq of `c · Σ_j C(k, j) · cross(k, j)`
+decomposes into a sum of squared inner coefficients times squared L²
+norms of the cross-terms. Both the leading piece and each per-coefficient
+inner sum are special cases of this lemma. -/
+lemma canonicalCrossTerm_scaled_inner_sum_l2_sq
+    (T : ℝ) (k : ℕ) (c : ℝ)
+    (h_int : ∀ j ∈ Finset.range k, ∀ j' ∈ Finset.range k,
+        Integrable (fun η =>
+            canonicalCrossTerm d N a mass T η k j *
+            canonicalCrossTerm d N a mass T η k j')
+            (canonicalJointMeasure d N)) :
+    ∫ η, (c * ∑ j ∈ Finset.range k,
+              (k.choose j : ℝ) * canonicalCrossTerm d N a mass T η k j) ^ 2
+        ∂(canonicalJointMeasure d N) =
+    ∑ j ∈ Finset.range k,
+      (c * (k.choose j : ℝ)) ^ 2 *
+        ∫ η, (canonicalCrossTerm d N a mass T η k j) ^ 2
+            ∂(canonicalJointMeasure d N) := by
+  -- Rewrite c · Σ_j ... as Σ_j (c · C(k, j)) · cross_j
+  have h_pull : ∀ η, c * ∑ j ∈ Finset.range k,
+        (k.choose j : ℝ) * canonicalCrossTerm d N a mass T η k j =
+      ∑ j ∈ Finset.range k,
+        (c * (k.choose j : ℝ)) *
+          canonicalCrossTerm d N a mass T η k j := by
+    intro η
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    ring
+  simp_rw [h_pull]
+  -- Apply the generic L²-orthogonality reduction
+  apply integral_sq_real_sum_of_pairwise_orthogonal
+    (Finset.range k)
+    (fun j η => canonicalCrossTerm d N a mass T η k j)
+    (fun j => c * (k.choose j : ℝ))
+  · -- orthogonality: distinct j give zero cross-expectation (apply stub at k = k')
+    intros j _ j' _ hne
+    refine canonicalCrossTerm_inner_eq_zero d N a mass T k j k j' ?_
+    intro h
+    exact hne (congrArg Prod.snd h)
+  · -- integrability hypothesis (pass through)
+    exact h_int
 
 /-- L²-sq decomposition of the leading `(1 / P.n)` piece of the rough
-error: equals the sum of squared inner-coefficient times squared L²
-norms of the cross-terms `canonicalCrossTerm η P.n j`. -/
+error. Direct application of `canonicalCrossTerm_scaled_inner_sum_l2_sq`
+with `k = P.n` and `c = 1 / P.n`. -/
 lemma canonicalRoughError_leading_l2_sq
     (T : ℝ) (P : InteractionPolynomial)
     (h_int : ∀ j ∈ Finset.range P.n, ∀ j' ∈ Finset.range P.n,
@@ -362,30 +405,30 @@ lemma canonicalRoughError_leading_l2_sq
     ∑ j ∈ Finset.range P.n,
       ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
         ∫ η, (canonicalCrossTerm d N a mass T η P.n j) ^ 2
-            ∂(canonicalJointMeasure d N) := by
-  -- Rewrite (1/P.n) · Σ_j ... as Σ_j ((1/P.n) · C(P.n, j)) · cross_j
-  have h_pull : ∀ η, (1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
-        (P.n.choose j : ℝ) * canonicalCrossTerm d N a mass T η P.n j =
-      ∑ j ∈ Finset.range P.n,
-        ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) *
-          canonicalCrossTerm d N a mass T η P.n j := by
-    intro η
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl fun j _ => ?_
-    ring
-  simp_rw [h_pull]
-  -- Apply the generic L²-orthogonality reduction
-  apply integral_sq_real_sum_of_pairwise_orthogonal
-    (Finset.range P.n)
-    (fun j η => canonicalCrossTerm d N a mass T η P.n j)
-    (fun j => (1 / P.n : ℝ) * (P.n.choose j : ℝ))
-  · -- orthogonality: distinct j give zero cross-expectation (apply stub at k = k' = P.n)
-    intros j _ j' _ hne
-    refine canonicalCrossTerm_inner_eq_zero d N a mass T P.n j P.n j' ?_
-    intro h
-    exact hne (congrArg Prod.snd h)
-  · -- integrability hypothesis (pass through)
-    exact h_int
+            ∂(canonicalJointMeasure d N) :=
+  canonicalCrossTerm_scaled_inner_sum_l2_sq d N a mass T P.n (1 / P.n : ℝ) h_int
+
+/-- L²-sq decomposition of a single per-coefficient `P.coeff m` piece
+of the rough error (one fixed `m : Fin P.n`). Direct application of
+`canonicalCrossTerm_scaled_inner_sum_l2_sq` with `k = m` and
+`c = P.coeff m`. The full per-coefficient sum further sums these over
+`m` (left for follow-up). -/
+lemma canonicalRoughError_perCoeff_l2_sq
+    (T : ℝ) (P : InteractionPolynomial) (m : Fin P.n)
+    (h_int : ∀ j ∈ Finset.range (m : ℕ), ∀ j' ∈ Finset.range (m : ℕ),
+        Integrable (fun η =>
+            canonicalCrossTerm d N a mass T η (m : ℕ) j *
+            canonicalCrossTerm d N a mass T η (m : ℕ) j')
+            (canonicalJointMeasure d N)) :
+    ∫ η, (P.coeff m * ∑ j ∈ Finset.range (m : ℕ),
+              ((m : ℕ).choose j : ℝ) *
+                canonicalCrossTerm d N a mass T η (m : ℕ) j) ^ 2
+        ∂(canonicalJointMeasure d N) =
+    ∑ j ∈ Finset.range (m : ℕ),
+      (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
+        ∫ η, (canonicalCrossTerm d N a mass T η (m : ℕ) j) ^ 2
+            ∂(canonicalJointMeasure d N) :=
+  canonicalCrossTerm_scaled_inner_sum_l2_sq d N a mass T (m : ℕ) (P.coeff m) h_int
 
 /-! ## Main theorem (statement, proof TBD)
 
