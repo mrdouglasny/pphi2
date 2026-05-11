@@ -569,6 +569,73 @@ lemma canonicalLeading_perCoeff_inner_eq_zero
     h_orth_pairs
     h_int
 
+/-! ## S3 final assembly (level 1): split E_R² into Lead² + PerCoef²
+
+Composing S2 (Lead + PerCoef form), the cross-vanish lemma
+`canonicalLeading_perCoeff_inner_eq_zero`, and the Pythagoras helper
+`integral_sq_add_of_inner_eq_zero`. -/
+
+/-- The L²-sq of `canonicalRoughError` splits into L²-sq of the leading
+piece plus L²-sq of the per-coefficient piece, given:
+* pairwise orthogonality between leading and per-coefficient cross-terms
+  (provable from `canonicalCrossTerm_inner_eq_zero` since `m < P.n`);
+* integrability of `Lead²`, `PerCoef²`, `Lead · PerCoef`;
+* integrability of all leading × per-coefficient cross-term pairs.
+
+The further decomposition of `∫ Lead²` and `∫ PerCoef²` into
+sums-of-squares uses `canonicalRoughError_leading_l2_sq` and a yet-to-be-
+done outer-orthogonality reduction over `m : Fin P.n` of
+`canonicalRoughError_perCoeff_l2_sq`. -/
+theorem canonicalRoughError_l2_sq_eq_lead_plus_perCoef_sq
+    (T : ℝ) (P : InteractionPolynomial)
+    (h_orth_lead_perCoef : ∀ j ∈ Finset.range P.n,
+        ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        ∫ η, canonicalCrossTerm d N a mass T η P.n j *
+              ∑ j' ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j' : ℝ) *
+                  canonicalCrossTerm d N a mass T η (m : ℕ) j'
+              ∂(canonicalJointMeasure d N) = 0)
+    (h_int_lead_sq : Integrable (fun η =>
+        ((1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+          (P.n.choose j : ℝ) * canonicalCrossTerm d N a mass T η P.n j) ^ 2)
+        (canonicalJointMeasure d N))
+    (h_int_perCoef_sq : Integrable (fun η =>
+        (∑ m : Fin P.n, P.coeff m * ∑ j' ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose j' : ℝ) *
+            canonicalCrossTerm d N a mass T η (m : ℕ) j') ^ 2)
+        (canonicalJointMeasure d N))
+    (h_int_cross : Integrable (fun η =>
+        ((1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+          (P.n.choose j : ℝ) * canonicalCrossTerm d N a mass T η P.n j) *
+        (∑ m : Fin P.n, P.coeff m * ∑ j' ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose j' : ℝ) *
+            canonicalCrossTerm d N a mass T η (m : ℕ) j'))
+        (canonicalJointMeasure d N))
+    (h_int_pairs : ∀ j ∈ Finset.range P.n,
+        ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        Integrable (fun η =>
+            canonicalCrossTerm d N a mass T η P.n j *
+            ∑ j' ∈ Finset.range (m : ℕ),
+              ((m : ℕ).choose j' : ℝ) *
+                canonicalCrossTerm d N a mass T η (m : ℕ) j')
+            (canonicalJointMeasure d N)) :
+    ∫ η, (canonicalRoughError d N a mass T P η) ^ 2
+        ∂(canonicalJointMeasure d N) =
+    (∫ η, ((1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+          (P.n.choose j : ℝ) * canonicalCrossTerm d N a mass T η P.n j) ^ 2
+        ∂(canonicalJointMeasure d N)) +
+    (∫ η, (∑ m : Fin P.n, P.coeff m * ∑ j' ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose j' : ℝ) *
+            canonicalCrossTerm d N a mass T η (m : ℕ) j') ^ 2
+        ∂(canonicalJointMeasure d N)) := by
+  -- Rewrite canonicalRoughError to its (Lead + PerCoef) form via S2
+  simp_rw [canonicalRoughError_eq_sum_over_cross_terms d N a mass T P]
+  -- Apply Pythagoras
+  exact integral_sq_add_of_inner_eq_zero _ _
+    (canonicalLeading_perCoeff_inner_eq_zero d N a mass T P
+      h_orth_lead_perCoef h_int_pairs)
+    h_int_lead_sq h_int_perCoef_sq h_int_cross
+
 /-! ## Main theorem (statement, proof TBD)
 
 `rough_error_variance` quantifies `K` outside the lattice binders so it
