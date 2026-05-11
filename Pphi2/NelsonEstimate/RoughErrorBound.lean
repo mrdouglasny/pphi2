@@ -335,6 +335,58 @@ lemma canonicalCrossTerm_inner_eq_zero
          ∂(canonicalJointMeasure d N) = 0 := by
   sorry
 
+/-! ## S3 application — leading-piece L²-sq decomposition
+
+Apply `integral_sq_real_sum_of_pairwise_orthogonal` to the leading
+`(1 / P.n)` piece of `canonicalRoughError` (i.e. the `k = P.n`
+contributions). Conditional on integrability of pairwise products of
+`canonicalCrossTerm η P.n j` for `j ∈ range P.n`. Uses the orthogonality
+stub at `k = k' = P.n`.
+
+The per-coefficient piece (sum over `m : Fin P.n`) is the analogous
+mechanical application; left for follow-up. -/
+
+/-- L²-sq decomposition of the leading `(1 / P.n)` piece of the rough
+error: equals the sum of squared inner-coefficient times squared L²
+norms of the cross-terms `canonicalCrossTerm η P.n j`. -/
+lemma canonicalRoughError_leading_l2_sq
+    (T : ℝ) (P : InteractionPolynomial)
+    (h_int : ∀ j ∈ Finset.range P.n, ∀ j' ∈ Finset.range P.n,
+        Integrable (fun η =>
+            canonicalCrossTerm d N a mass T η P.n j *
+            canonicalCrossTerm d N a mass T η P.n j')
+            (canonicalJointMeasure d N)) :
+    ∫ η, ((1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+              (P.n.choose j : ℝ) * canonicalCrossTerm d N a mass T η P.n j) ^ 2
+        ∂(canonicalJointMeasure d N) =
+    ∑ j ∈ Finset.range P.n,
+      ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
+        ∫ η, (canonicalCrossTerm d N a mass T η P.n j) ^ 2
+            ∂(canonicalJointMeasure d N) := by
+  -- Rewrite (1/P.n) · Σ_j ... as Σ_j ((1/P.n) · C(P.n, j)) · cross_j
+  have h_pull : ∀ η, (1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+        (P.n.choose j : ℝ) * canonicalCrossTerm d N a mass T η P.n j =
+      ∑ j ∈ Finset.range P.n,
+        ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) *
+          canonicalCrossTerm d N a mass T η P.n j := by
+    intro η
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    ring
+  simp_rw [h_pull]
+  -- Apply the generic L²-orthogonality reduction
+  apply integral_sq_real_sum_of_pairwise_orthogonal
+    (Finset.range P.n)
+    (fun j η => canonicalCrossTerm d N a mass T η P.n j)
+    (fun j => (1 / P.n : ℝ) * (P.n.choose j : ℝ))
+  · -- orthogonality: distinct j give zero cross-expectation (apply stub at k = k' = P.n)
+    intros j _ j' _ hne
+    refine canonicalCrossTerm_inner_eq_zero d N a mass T P.n j P.n j' ?_
+    intro h
+    exact hne (congrArg Prod.snd h)
+  · -- integrability hypothesis (pass through)
+    exact h_int
+
 /-! ## Main theorem (statement, proof TBD)
 
 `rough_error_variance` quantifies `K` outside the lattice binders so it
