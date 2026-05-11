@@ -9,7 +9,7 @@ passes and discharges. Last refreshed: 2026-05-10.*
 | Count | Value |
 |---|---|
 | pphi2 axioms (active) | **17** (15 public + 2 `private`) |
-| pphi2 sorries | **2** (both in `RoughErrorBound.lean`, both en route to `rough_error_variance`): `canonicalCrossTerm_inner_eq_zero` (S3 cross-term orthogonality, needs the canonical-side 2-site Wick power formula); `rough_error_variance` (main theorem, depends on S3–S5) |
+| pphi2 sorries | **3** (all in `RoughErrorBound.lean`, all en route to `rough_error_variance`): `canonicalCrossTerm_inner_eq_zero` (S3 cross-term orthogonality, needs the canonical-side 2-site Wick power formula); `canonicalCrossTerm_l2_sq_le` (S4 per-cross-term L² bound, needs upstream Glimm-Jaffe + diagonal 2-site Wick); `rough_error_variance` (main theorem, S5 assembly given S3 + S4). S1, S2, full S3 composition (`canonicalRoughError_l2_sq_eq`) all proved structurally. |
 | `lake build` | clean (3803 jobs) |
 | Direct upstream deps | gaussian-field (`9c66a40`, 8 axioms / 0 sorries), markov-semigroups (`3cb482d`, 11 axioms / 0 sorries), gaussian-hilbert (`e6cfc80`, 4 axioms / 0 sorries), bochner (`main`) |
 
