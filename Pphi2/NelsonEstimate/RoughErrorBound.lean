@@ -821,6 +821,46 @@ theorem canonicalRoughError_l2_sq_eq
   refine Finset.sum_congr rfl fun m _ => ?_
   exact canonicalRoughError_perCoeff_l2_sq d N a mass T P m (h_int_perCoeff_pairs m)
 
+/-! ## S4: per-cross-term L² bound
+
+For each `(k, j)` with rough-degree `k - j ≥ 1` (so the cross-term has
+at least one rough-field factor) and `k ≤ P.n`, the L² norm squared
+of `canonicalCrossTerm η k j` is bounded by `K · T · (1 + |log T|)^j`
+uniformly in `(a, N)` at fixed `(L, mass)`.
+
+**Proof path** (deferred): apply the diagonal 2-site Wick formulas
+(smooth and rough) inside `MeasureTheory.integral_prod_mul` to get
+  `‖cross(k, j)‖²_L² = (a^d)² · Σ_{x,y} (j! · C_S(x,y)^j) · ((k-j)! · C_R(x,y)^{k-j})`
+then apply the upstream `(a, N)`-uniform Glimm-Jaffe bounds:
+* `canonicalSmoothCovariance_le_log` on `‖C_S‖_∞ ≤ A + B|log T|`
+* `canonicalRoughCovariance_pow_sum_le` on `a^d Σ_y C_R(x,y)^m ≤ C_m · T`
+and finite (size-`L^d`) volume sums on x.
+
+Net bound `O(T · (1+|log T|)^j)` uniformly in `(a, N)`. -/
+
+/-- **S4 (sorry'd): per-cross-term L² bound.** For `(k, j)` with
+`1 ≤ k - j` (rough degree at least one) and `k ≤ P.n`, there exists
+a constant `K` (uniform in `(a, N)` at fixed `(L, mass)`) bounding
+`∫ canonicalCrossTerm² dμ_joint ≤ K · T · (1 + |log T|)^j`.
+
+Depends on:
+* the canonical-side diagonal 2-site Wick power formula, and
+* the upstream `(a, N)`-uniform Glimm-Jaffe Fourier estimates
+  (`canonicalSmoothCovariance_le_log`, `canonicalRoughCovariance_pow_sum_le`).
+
+See module docstring above for the full proof sketch. -/
+theorem canonicalCrossTerm_l2_sq_le
+    {d : ℕ} (mass L : ℝ) (_hL : 0 < L) (_hmass : 0 < mass)
+    (T : ℝ) (_hT : 0 < T)
+    (k j : ℕ) (_hkj : 1 ≤ k - j) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_h_vol : (N : ℝ) * a = L),
+        ∫ η, (canonicalCrossTerm d N a mass T η k j) ^ 2
+            ∂(canonicalJointMeasure d N) ≤
+        K * T * (1 + |Real.log T|) ^ j := by
+  sorry
+
 /-! ## Main theorem (statement, proof TBD)
 
 `rough_error_variance` quantifies `K` outside the lattice binders so it
