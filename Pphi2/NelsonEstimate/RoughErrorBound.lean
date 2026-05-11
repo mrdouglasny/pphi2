@@ -506,6 +506,69 @@ lemma canonicalRoughError_perCoeff_l2_sq
             ∂(canonicalJointMeasure d N) :=
   canonicalCrossTerm_scaled_inner_sum_l2_sq d N a mass T (m : ℕ) (P.coeff m) h_int
 
+/-! ## S3 outer cross: ∫ Lead · PerCoef = 0
+
+Apply `integral_sum_mul_sum_eq_zero_of_orth` to vanish the cross
+integral between the leading `(1/P.n)` piece and the per-coefficient
+piece of `canonicalRoughError`. Each (P.n, j) vs (m, j') pair has
+P.n ≠ m (since m : Fin P.n implies m < P.n), so the cross integral
+vanishes by `canonicalCrossTerm_inner_eq_zero`. -/
+
+/-- The cross integral between the leading and per-coefficient pieces
+of `canonicalRoughError` vanishes.
+
+Specifically: with `Lead = (1/P.n) · Σ_j C(P.n,j) · cross(P.n, j)`
+and `PerCoef = Σ_m P.coeff m · (Σ_{j'} C(m, j') · cross(m, j'))`,
+`∫ Lead · PerCoef ∂μ = 0`. The pairwise orthogonality between
+`(P.n, j)` and `(m, j')` indices gives the result via
+`integral_sum_mul_sum_eq_zero_of_orth`. -/
+lemma canonicalLeading_perCoeff_inner_eq_zero
+    (T : ℝ) (P : InteractionPolynomial)
+    (h_orth_pairs : ∀ j ∈ Finset.range P.n,
+        ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        ∫ η, canonicalCrossTerm d N a mass T η P.n j *
+              ∑ j' ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j' : ℝ) *
+                  canonicalCrossTerm d N a mass T η (m : ℕ) j'
+              ∂(canonicalJointMeasure d N) = 0)
+    (h_int : ∀ j ∈ Finset.range P.n,
+        ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        Integrable (fun η =>
+            canonicalCrossTerm d N a mass T η P.n j *
+            ∑ j' ∈ Finset.range (m : ℕ),
+              ((m : ℕ).choose j' : ℝ) *
+                canonicalCrossTerm d N a mass T η (m : ℕ) j')
+            (canonicalJointMeasure d N)) :
+    ∫ η, ((1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+              (P.n.choose j : ℝ) * canonicalCrossTerm d N a mass T η P.n j) *
+         (∑ m : Fin P.n, P.coeff m *
+              ∑ j' ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j' : ℝ) *
+                  canonicalCrossTerm d N a mass T η (m : ℕ) j')
+        ∂(canonicalJointMeasure d N) = 0 := by
+  -- Pull (1/P.n) into the sum: (1/P.n) · Σ_j ... = Σ_j ((1/P.n) · ...) ...
+  have h_pull : ∀ η, (1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+        (P.n.choose j : ℝ) * canonicalCrossTerm d N a mass T η P.n j =
+      ∑ j ∈ Finset.range P.n,
+        ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) *
+          canonicalCrossTerm d N a mass T η P.n j := by
+    intro η
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    ring
+  simp_rw [h_pull]
+  -- Apply the cross-sum vanish helper
+  exact integral_sum_mul_sum_eq_zero_of_orth
+    (Finset.range P.n) (Finset.univ : Finset (Fin P.n))
+    (fun j => (1 / P.n : ℝ) * (P.n.choose j : ℝ))
+    (fun m => P.coeff m)
+    (fun j η => canonicalCrossTerm d N a mass T η P.n j)
+    (fun m η => ∑ j' ∈ Finset.range (m : ℕ),
+        ((m : ℕ).choose j' : ℝ) *
+          canonicalCrossTerm d N a mass T η (m : ℕ) j')
+    h_orth_pairs
+    h_int
+
 /-! ## Main theorem (statement, proof TBD)
 
 `rough_error_variance` quantifies `K` outside the lattice binders so it
