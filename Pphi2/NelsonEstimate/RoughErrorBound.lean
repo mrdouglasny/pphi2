@@ -230,6 +230,44 @@ lemma canonicalRoughError_eq_sum_over_cross_terms
     simp only [mul_assoc, ← Finset.mul_sum]
     ring
 
+/-! ## S3: cross-term orthogonality
+
+Distinct `(k, j) ≠ (k', j')` give zero cross-expectation:
+`∫ canonicalCrossTerm k j · canonicalCrossTerm k' j' ∂canonicalJointMeasure = 0`.
+
+**Proof path** (deferred): the joint measure is `Measure.prod μ_S μ_R`
+(see `FieldDecomposition.lean:47`), and the cross-term factorises as
+`(smooth Wick monomial in η.1) · (rough Wick monomial in η.2)`. Apply
+`MeasureTheory.integral_prod_mul` to split into a smooth integral
+times a rough integral. Then the **2-site Wick power formula** (the
+canonical analog of `gff_wickPower_two_site_inner`) gives a Kronecker
+delta on each factor: smooth integral vanishes unless `j = j'`, rough
+integral vanishes unless `k - j = k' - j'`. Combined: vanishes unless
+`(k, j) = (k', j')`.
+
+The 2-site Wick formula itself is the standard Janson-Hilbert
+identity `∫ :φ(x)^n: :φ(y)^m: dμ = δ_{n,m} · n! · C(x,y)^n` for a
+centered Gaussian field with covariance `C`. On the canonical side
+this reduces (via `wickMonomial_pow_sum_expansion_of_totalDegree`
+from gaussian-field) to multivariate Hermite orthogonality on the
+standard product Gaussian (`hermiteMulti_orthogonality` from
+gaussian-hilbert). Either provable in-repo or addable upstream.
+
+S3 is the gating sorry for the L²-sq decomposition that S4 needs. -/
+
+/-- **S3 (sorry'd): cross-term orthogonality.** Distinct `(k, j)` and
+`(k', j')` give zero cross-expectation under the canonical joint
+measure. Together with `MeasureTheory.integral_prod_mul`, this is the
+one analytical input S4 needs from the Wick-orthogonality side.
+
+See module docstring above for the proof sketch. -/
+lemma canonicalCrossTerm_inner_eq_zero
+    (T : ℝ) (k j k' j' : ℕ) (_h : (k, j) ≠ (k', j')) :
+    ∫ η, canonicalCrossTerm d N a mass T η k j *
+         canonicalCrossTerm d N a mass T η k' j'
+         ∂(canonicalJointMeasure d N) = 0 := by
+  sorry
+
 /-! ## Main theorem (statement, proof TBD)
 
 `rough_error_variance` quantifies `K` outside the lattice binders so it
