@@ -230,6 +230,73 @@ lemma canonicalRoughError_eq_sum_over_cross_terms
     simp only [mul_assoc, ← Finset.mul_sum]
     ring
 
+/-! ## Generic L²-orthogonality reduction
+
+Reusable lemma not specific to the rough-error setting: for a finite-indexed
+family `f i` of real-valued functions that are pairwise L²-orthogonal under
+a measure `μ`, the integral of the squared real-coefficient sum reduces to
+a single sum of squared coefficients times squared L² norms (no off-diagonal
+contribution).
+
+Given:
+- `s : Finset ι` and `f : ι → α → ℝ` with `a : ι → ℝ` coefficients,
+- pairwise orthogonality `∫ f i · f j ∂μ = 0` for `i ≠ j` in `s`,
+- pairwise integrability of products `f i · f j`,
+
+then `∫ (∑ i, a i · f i)² ∂μ = ∑ i, (a i)² · ∫ (f i)² ∂μ`. -/
+lemma integral_sq_real_sum_of_pairwise_orthogonal
+    {α ι : Type*} [MeasurableSpace α] {μ : Measure α}
+    (s : Finset ι) (f : ι → α → ℝ) (a : ι → ℝ)
+    (h_orth : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → ∫ x, f i x * f j x ∂μ = 0)
+    (h_int : ∀ i ∈ s, ∀ j ∈ s, Integrable (fun x => f i x * f j x) μ) :
+    ∫ x, (∑ i ∈ s, a i * f i x) ^ 2 ∂μ =
+    ∑ i ∈ s, (a i) ^ 2 * ∫ x, (f i x) ^ 2 ∂μ := by
+  classical
+  -- Step 1: expand the square pointwise as a double sum
+  have h_expand : (fun x => (∑ i ∈ s, a i * f i x) ^ 2) =
+      (fun x => ∑ i ∈ s, ∑ j ∈ s, (a i * a j) * (f i x * f j x)) := by
+    funext x
+    rw [sq, Finset.sum_mul_sum]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    refine Finset.sum_congr rfl fun j _ => ?_
+    ring
+  rw [h_expand]
+  -- Step 2: integration linearity (outer sum)
+  have h_int_inner : ∀ i ∈ s, Integrable
+      (fun x => ∑ j ∈ s, (a i * a j) * (f i x * f j x)) μ := by
+    intros i hi
+    apply MeasureTheory.integrable_finset_sum
+    intros j hj
+    exact (h_int i hi j hj).const_mul (a i * a j)
+  rw [MeasureTheory.integral_finset_sum s h_int_inner]
+  refine Finset.sum_congr rfl fun i hi => ?_
+  -- Step 3: integration linearity (inner sum) + pull constants out
+  rw [MeasureTheory.integral_finset_sum s
+        (fun j hj => (h_int i hi j hj).const_mul (a i * a j))]
+  have h_const : ∀ j ∈ s,
+      ∫ x, (a i * a j) * (f i x * f j x) ∂μ =
+      (a i * a j) * ∫ x, f i x * f j x ∂μ := by
+    intros j _
+    exact MeasureTheory.integral_const_mul _ _
+  rw [Finset.sum_congr rfl h_const]
+  -- Step 4: split diagonal vs off-diagonal; off-diagonal vanishes by orthogonality
+  rw [show ∑ j ∈ s, (a i * a j) * ∫ x, f i x * f j x ∂μ =
+        ∑ j ∈ s.erase i, (a i * a j) * ∫ x, f i x * f j x ∂μ +
+        (a i * a i) * ∫ x, f i x * f i x ∂μ from
+      (Finset.sum_erase_add s _ hi).symm]
+  rw [show ∑ j ∈ s.erase i, (a i * a j) * ∫ x, f i x * f j x ∂μ = 0 from ?_]
+  · -- Diagonal piece: (a i * a i) * ∫ f i * f i = (a i)^2 * ∫ (f i)^2
+    rw [zero_add]
+    have h_eq : ∀ x, f i x * f i x = (f i x) ^ 2 := fun x => by ring
+    simp_rw [h_eq]
+    congr 1
+    ring
+  · -- Off-diagonal vanishes
+    apply Finset.sum_eq_zero
+    intros j hj
+    rw [Finset.mem_erase] at hj
+    rw [h_orth i hi j hj.2 (Ne.symm hj.1), mul_zero]
+
 /-! ## S3: cross-term orthogonality
 
 Distinct `(k, j) ≠ (k', j')` give zero cross-expectation:
