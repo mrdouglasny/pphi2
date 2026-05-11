@@ -262,6 +262,50 @@ lemma integral_sq_add_of_inner_eq_zero
     _ = ∫ x, L x ^ 2 ∂μ + 2 * 0 + ∫ x, R x ^ 2 ∂μ := by rw [h_orth]
     _ = ∫ x, L x ^ 2 ∂μ + ∫ x, R x ^ 2 ∂μ := by ring
 
+/-! ## Generic cross-sum vanish
+
+For two finite-indexed coefficient sums whose pairwise cross-integrals
+all vanish, the integral of their product vanishes. Used to combine
+the leading and per-coefficient pieces of `canonicalRoughError` via
+`integral_sq_add_of_inner_eq_zero`. -/
+
+/-- Cross-integral of two finite sums vanishes when each pairwise
+cross-integral does. Pure sum + integration linearity given the
+pairwise orthogonality input. -/
+lemma integral_sum_mul_sum_eq_zero_of_orth
+    {α ιA ιB : Type*} [MeasurableSpace α] {μ : Measure α}
+    (sA : Finset ιA) (sB : Finset ιB)
+    (cA : ιA → ℝ) (cB : ιB → ℝ)
+    (fA : ιA → α → ℝ) (fB : ιB → α → ℝ)
+    (h_orth : ∀ iA ∈ sA, ∀ iB ∈ sB, ∫ x, fA iA x * fB iB x ∂μ = 0)
+    (h_int : ∀ iA ∈ sA, ∀ iB ∈ sB, Integrable (fun x => fA iA x * fB iB x) μ) :
+    ∫ x, (∑ iA ∈ sA, cA iA * fA iA x) *
+         (∑ iB ∈ sB, cB iB * fB iB x) ∂μ = 0 := by
+  -- Pointwise expand (Σ a f) * (Σ b g) = Σ Σ (a b) (f g)
+  have h_expand : (fun x => (∑ iA ∈ sA, cA iA * fA iA x) *
+        (∑ iB ∈ sB, cB iB * fB iB x)) =
+      (fun x => ∑ iA ∈ sA, ∑ iB ∈ sB,
+        (cA iA * cB iB) * (fA iA x * fB iB x)) := by
+    funext x
+    rw [Finset.sum_mul_sum]
+    refine Finset.sum_congr rfl fun iA _ => ?_
+    refine Finset.sum_congr rfl fun iB _ => ?_
+    ring
+  rw [h_expand]
+  -- Outer integration linearity
+  rw [MeasureTheory.integral_finset_sum sA (fun iA hiA =>
+    MeasureTheory.integrable_finset_sum sB (fun iB hiB =>
+      (h_int iA hiA iB hiB).const_mul (cA iA * cB iB)))]
+  apply Finset.sum_eq_zero
+  intros iA hiA
+  -- Inner integration linearity
+  rw [MeasureTheory.integral_finset_sum sB (fun iB hiB =>
+    (h_int iA hiA iB hiB).const_mul (cA iA * cB iB))]
+  apply Finset.sum_eq_zero
+  intros iB hiB
+  -- Pull constants out, apply orthogonality
+  rw [MeasureTheory.integral_const_mul, h_orth iA hiA iB hiB, mul_zero]
+
 /-! ## Generic L²-orthogonality reduction
 
 Reusable lemma not specific to the rough-error setting: for a finite-indexed
