@@ -99,16 +99,19 @@ def canonicalRoughError (T : ℝ) (P : InteractionPolynomial)
   canonicalFullInteractionJoint d N a mass T P η -
     canonicalSmoothInteraction d N a mass T P η
 
-/-! ## S1–S2 (skeleton): pointwise binomial decomposition + reindex
+/-! ## S1: pointwise binomial decomposition
 
-The pointwise decomposition expresses the rough error as a sum over
-`(j, m)` pairs with `j + m ≤ P.n` and `m ≥ 1`, of
-`A(j,m) · :φ_S^j(x):_{c_S} · :φ_R^m(x):_{c_R}` weighted by `a^d` and
-summed over sites. The proof uses `wickMonomial_add_binomial` per
-monomial of `P`, then cancels the `m = 0` (all-smooth) term.
+Expand each per-site difference of Wick polynomials via the binomial
+identity `wickPolynomial_add_sub_self` (which itself comes from
+`wickMonomial_add_binomial` plus cancellation of the all-smooth term).
+After substituting the covariance split `c = c_S + c_R` (via
+`wickConstant_split`) and the field split `φ = φ_S + φ_R` (via
+`canonicalSumFieldFunction_eq_smooth_plus_rough`), the rough error
+becomes a finite sum of cross-terms each containing at least one
+factor `:φ_R^{k - j}:_{c_R}` with `k - j ≥ 1`.
 
-Stub for now; concrete content to follow in subsequent commits.
--/
+S2 (reindexing the (k, j) sum by (j, m := k − j) with `m ≥ 1`) is
+done in subsequent lemmas as needed for S3/S4. -/
 
 /-- The rough error equals the per-site difference of full minus smooth
 Wick polynomials. Trivial unfolding; useful as the starting point for
@@ -123,6 +126,45 @@ lemma canonicalRoughError_eq_sum_diff (T : ℝ) (P : InteractionPolynomial)
             (canonicalSmoothFieldFunction d N a mass T η x)) := by
   unfold canonicalRoughError canonicalFullInteractionJoint canonicalSmoothInteraction
   rw [← mul_sub, ← Finset.sum_sub_distrib]
+
+/-- **S1: pointwise binomial decomposition.** The rough error expands
+into cross-terms `:φ_S^k:_{c_S} · :φ_R^{n − k}:_{c_R}` (one per leading
+binomial index `k < P.n`) plus per-coefficient cross-terms
+`:φ_S^k:_{c_S} · :φ_R^{m − k}:_{c_R}` (one per `(m, k)` with `m < P.n`,
+`k < m`), each weighted by `a^d` and summed over sites. The constraint
+`k < · ` (strict) comes from cancellation of the all-smooth `k = ·` term
+against `canonicalSmoothInteraction`.
+
+This is the algebraic content of S1 in
+`docs/rough-error-variance-plan.md`. The proof uses
+`wickPolynomial_add_sub_self` after substituting the covariance and
+field splits. -/
+lemma canonicalRoughError_pointwise_decomposition
+    (T : ℝ) (P : InteractionPolynomial) (η : CanonicalJoint d N) :
+    canonicalRoughError d N a mass T P η =
+    a ^ d * ∑ x : FinLatticeSites d N,
+      ((1 / P.n : ℝ) * ∑ k ∈ Finset.range P.n,
+          (P.n.choose k : ℝ) *
+            wickMonomial k (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (P.n - k) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)
+      + ∑ m : Fin P.n, P.coeff m * ∑ k ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose k : ℝ) *
+            wickMonomial k (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial ((m : ℕ) - k) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) := by
+  rw [canonicalRoughError_eq_sum_diff]
+  congr 1
+  refine Finset.sum_congr rfl fun x _ => ?_
+  rw [wickConstant_split d N a mass T,
+      canonicalSumFieldFunction_eq_smooth_plus_rough d N a mass T η x]
+  exact wickPolynomial_add_sub_self P
+    (smoothWickConstant d N a mass T)
+    (roughWickConstant d N a mass T)
+    (canonicalSmoothFieldFunction d N a mass T η x)
+    (canonicalRoughFieldFunction d N a mass T η x)
 
 /-! ## Main theorem (statement, proof TBD)
 
