@@ -230,6 +230,38 @@ lemma canonicalRoughError_eq_sum_over_cross_terms
     simp only [mul_assoc, ← Finset.mul_sum]
     ring
 
+/-! ## Generic L² Pythagoras (two functions)
+
+Reusable: when `∫ L · R = 0`, `∫ (L + R)² = ∫ L² + ∫ R²`. Pure
+integration linearity + the orthogonality input. Used to combine the
+leading and per-coefficient pieces of `canonicalRoughError`. -/
+
+/-- L² Pythagoras for two real-valued functions whose cross integral
+vanishes. Pure integration linearity. -/
+lemma integral_sq_add_of_inner_eq_zero
+    {α : Type*} [MeasurableSpace α] {μ : Measure α}
+    (L R : α → ℝ)
+    (h_orth : ∫ x, L x * R x ∂μ = 0)
+    (h_int_LL : Integrable (fun x => L x ^ 2) μ)
+    (h_int_RR : Integrable (fun x => R x ^ 2) μ)
+    (h_int_LR : Integrable (fun x => L x * R x) μ) :
+    ∫ x, (L x + R x) ^ 2 ∂μ = ∫ x, L x ^ 2 ∂μ + ∫ x, R x ^ 2 ∂μ := by
+  -- (L + R)² = L² + 2(LR) + R² pointwise
+  have h_expand : ∀ x, (L x + R x) ^ 2 =
+      L x ^ 2 + 2 * (L x * R x) + R x ^ 2 := by intros; ring
+  have h_int_2LR : Integrable (fun x => 2 * (L x * R x)) μ := h_int_LR.const_mul 2
+  calc ∫ x, (L x + R x) ^ 2 ∂μ
+      = ∫ x, L x ^ 2 + 2 * (L x * R x) + R x ^ 2 ∂μ := by
+        simp_rw [h_expand]
+    _ = (∫ x, L x ^ 2 + 2 * (L x * R x) ∂μ) + ∫ x, R x ^ 2 ∂μ :=
+        MeasureTheory.integral_add (h_int_LL.add h_int_2LR) h_int_RR
+    _ = ∫ x, L x ^ 2 ∂μ + ∫ x, 2 * (L x * R x) ∂μ + ∫ x, R x ^ 2 ∂μ := by
+        rw [MeasureTheory.integral_add h_int_LL h_int_2LR]
+    _ = ∫ x, L x ^ 2 ∂μ + 2 * ∫ x, L x * R x ∂μ + ∫ x, R x ^ 2 ∂μ := by
+        rw [MeasureTheory.integral_const_mul]
+    _ = ∫ x, L x ^ 2 ∂μ + 2 * 0 + ∫ x, R x ^ 2 ∂μ := by rw [h_orth]
+    _ = ∫ x, L x ^ 2 ∂μ + ∫ x, R x ^ 2 ∂μ := by ring
+
 /-! ## Generic L²-orthogonality reduction
 
 Reusable lemma not specific to the rough-error setting: for a finite-indexed
