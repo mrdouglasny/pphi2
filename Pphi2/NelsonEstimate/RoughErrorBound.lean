@@ -636,6 +636,80 @@ theorem canonicalRoughError_l2_sq_eq_lead_plus_perCoef_sq
       h_orth_lead_perCoef h_int_pairs)
     h_int_lead_sq h_int_perCoef_sq h_int_cross
 
+/-! ## S3 outer-orth on `Σ_m`: ∫ PerCoef² = Σ_m ∫ R_m²
+
+Apply `integral_sq_real_sum_of_pairwise_orthogonal` (with all
+coefficients = 1) to the per-coefficient sum, treating each
+`R_m η = P.coeff m · Σ_j' C(m, j') · cross(m, j') η` as a single
+function of `η`. Conditional on:
+* pairwise orthogonality of the `R_m` (provable from
+  `canonicalCrossTerm_inner_eq_zero` between `(m, j)` and `(m', j')`
+  for `m ≠ m'`);
+* pairwise integrability of `R_m · R_m'`.
+-/
+
+/-- The L²-sq of the per-coefficient piece decomposes into a sum of
+L²-sq of the per-`m` `R_m` pieces, given pairwise orthogonality of
+the `R_m`'s. -/
+lemma canonicalRoughError_perCoef_outer_l2_sq
+    (T : ℝ) (P : InteractionPolynomial)
+    (h_orth_m : ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        ∀ m' ∈ (Finset.univ : Finset (Fin P.n)),
+        m ≠ m' →
+        ∫ η, (P.coeff m * ∑ j ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j : ℝ) *
+                  canonicalCrossTerm d N a mass T η (m : ℕ) j) *
+              (P.coeff m' * ∑ j' ∈ Finset.range (m' : ℕ),
+                ((m' : ℕ).choose j' : ℝ) *
+                  canonicalCrossTerm d N a mass T η (m' : ℕ) j')
+              ∂(canonicalJointMeasure d N) = 0)
+    (h_int_m : ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        ∀ m' ∈ (Finset.univ : Finset (Fin P.n)),
+        Integrable (fun η =>
+            (P.coeff m * ∑ j ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j : ℝ) *
+                  canonicalCrossTerm d N a mass T η (m : ℕ) j) *
+            (P.coeff m' * ∑ j' ∈ Finset.range (m' : ℕ),
+                ((m' : ℕ).choose j' : ℝ) *
+                  canonicalCrossTerm d N a mass T η (m' : ℕ) j'))
+            (canonicalJointMeasure d N)) :
+    ∫ η, (∑ m : Fin P.n, P.coeff m *
+              ∑ j ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j : ℝ) *
+                  canonicalCrossTerm d N a mass T η (m : ℕ) j) ^ 2
+        ∂(canonicalJointMeasure d N) =
+    ∑ m : Fin P.n,
+      ∫ η, (P.coeff m * ∑ j ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j : ℝ) *
+                  canonicalCrossTerm d N a mass T η (m : ℕ) j) ^ 2
+          ∂(canonicalJointMeasure d N) := by
+  -- Rewrite Σ_m R_m as Σ_m 1 · R_m so the generic lemma's `a` slot is unit
+  have h_one_smul : ∀ η, ∑ m : Fin P.n, P.coeff m *
+        ∑ j ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose j : ℝ) *
+            canonicalCrossTerm d N a mass T η (m : ℕ) j =
+      ∑ m : Fin P.n, (1 : ℝ) *
+        (P.coeff m * ∑ j ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose j : ℝ) *
+            canonicalCrossTerm d N a mass T η (m : ℕ) j) := by
+    intro η
+    refine Finset.sum_congr rfl fun m _ => ?_
+    ring
+  simp_rw [h_one_smul]
+  -- Apply the generic L²-orthogonality reduction
+  have h := integral_sq_real_sum_of_pairwise_orthogonal
+    (Finset.univ : Finset (Fin P.n))
+    (fun m η => P.coeff m * ∑ j ∈ Finset.range (m : ℕ),
+        ((m : ℕ).choose j : ℝ) *
+          canonicalCrossTerm d N a mass T η (m : ℕ) j)
+    (fun _ => (1 : ℝ))
+    h_orth_m
+    h_int_m
+  -- The result has `1^2 *` factors that we collapse
+  rw [h]
+  refine Finset.sum_congr rfl fun m _ => ?_
+  ring
+
 /-! ## Main theorem (statement, proof TBD)
 
 `rough_error_variance` quantifies `K` outside the lattice binders so it
