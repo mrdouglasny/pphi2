@@ -9,7 +9,7 @@ passes and discharges. Last refreshed: 2026-05-10.*
 | Count | Value |
 |---|---|
 | pphi2 axioms (active) | **17** (15 public + 2 `private`) |
-| pphi2 sorries | **3** (all in `RoughErrorBound.lean`, all en route to `rough_error_variance`): `canonicalCrossTerm_inner_eq_zero` (S3 cross-term orthogonality; gaussian-field's `gff_wickPower_two_site_inner` (now axiom-free at 8705a13) handles the lattice GFF case — for the canonical-setup adaptation see [`canonical-2site-wick-formula-plan.md`](canonical-2site-wick-formula-plan.md)); `canonicalCrossTerm_l2_sq_le` (S4 per-cross-term L² bound, needs upstream Glimm-Jaffe Phase B + diagonal canonical 2-site Wick); `rough_error_variance` (main theorem, S5 assembly given S3 + S4). S1, S2, full S3 composition (`canonicalRoughError_l2_sq_eq`) all proved structurally. |
+| pphi2 sorries | **2** (both in `RoughErrorBound.lean`, en route to `rough_error_variance`): `canonicalCrossTerm_l2_sq_le` (S4 per-cross-term L² bound, needs Glimm-Jaffe Phase B `(a, N)`-uniform smooth-covariance log-bound + rough-covariance L^m summability for all m ≥ 1); `rough_error_variance` (S5 assembly). S1, S2, full S3 composition (`canonicalRoughError_l2_sq_eq`) and the S3 cross-term orthogonality `canonicalCrossTerm_inner_eq_zero` (axiom-free, 2026-05-12) are all proved. |
 | `lake build` | clean (3803 jobs) |
 | Direct upstream deps | gaussian-field (`269fbc2`, 3 axioms / 0 sorries), markov-semigroups (`3cb482d`, 11 axioms / 0 sorries), gaussian-hilbert (`05ee231`, 4 axioms / 0 sorries), bochner (`main`) |
 

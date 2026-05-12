@@ -405,11 +405,144 @@ one analytical input S4 needs from the Wick-orthogonality side.
 
 See module docstring above for the proof sketch. -/
 lemma canonicalCrossTerm_inner_eq_zero
-    (T : ℝ) (k j k' j' : ℕ) (_h : (k, j) ≠ (k', j')) :
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (k j k' j' : ℕ)
+    (hj : j ∈ Finset.range k) (hj' : j' ∈ Finset.range k')
+    (h : (k, j) ≠ (k', j')) :
     ∫ η, canonicalCrossTerm d N a mass T η k j *
          canonicalCrossTerm d N a mass T η k' j'
          ∂(canonicalJointMeasure d N) = 0 := by
-  sorry
+  let cS := smoothWickConstant d N a mass T
+  let cR := roughWickConstant d N a mass T
+  let μS : Measure ((Fin d → Fin N) → ℝ) :=
+    Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1)
+  let μR : Measure ((Fin d → Fin N) → ℝ) :=
+    Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1)
+  let term : FinLatticeSites d N → FinLatticeSites d N → CanonicalJoint d N → ℝ :=
+    fun x y η =>
+      (wickMonomial j cS (canonicalSmoothFieldFunction d N a mass T η x) *
+          wickMonomial j' cS (canonicalSmoothFieldFunction d N a mass T η y)) *
+        (wickMonomial (k - j) cR (canonicalRoughFieldFunction d N a mass T η x) *
+          wickMonomial (k' - j') cR (canonicalRoughFieldFunction d N a mass T η y))
+  have h_term_int :
+      ∀ x y, Integrable (term x y) (canonicalJointMeasure d N) := by
+    intro x y
+    rw [canonicalJointMeasure]
+    let f : ((Fin d → Fin N) → ℝ) → ℝ := fun η_S =>
+      wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+        wickMonomial j' cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y)
+    let g : ((Fin d → Fin N) → ℝ) → ℝ := fun η_R =>
+      wickMonomial (k - j) cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+        wickMonomial (k' - j') cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y)
+    have hf : Integrable f μS := by
+      simpa [f, μS, cS] using
+        (canonicalSmoothWickPower_two_site_marginal_integrable
+          (d := d) (N := N) (a := a) (mass := mass)
+          ha hmass T hT j j' x y)
+    have hg : Integrable g μR := by
+      simpa [g, μR, cR] using
+        (canonicalRoughWickPower_two_site_marginal_integrable
+          (d := d) (N := N) (a := a) (mass := mass)
+          ha hmass T hT (k - j) (k' - j') x y)
+    simpa
+        [term, CanonicalJoint, f, g, μS, μR, cS, cR,
+          mul_assoc, mul_left_comm, mul_comm] using
+      (Integrable.mul_prod (μ := μS) (ν := μR) hf hg)
+  have h_expand :
+      ∀ η : CanonicalJoint d N,
+        canonicalCrossTerm d N a mass T η k j *
+            canonicalCrossTerm d N a mass T η k' j' =
+          ((a ^ d) * (a ^ d)) * ∑ x : FinLatticeSites d N,
+            ∑ y : FinLatticeSites d N, term x y η := by
+    intro η
+    unfold canonicalCrossTerm term
+    rw [show
+      (a ^ d * ∑ x,
+          wickMonomial j (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k - j) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) *
+        (a ^ d * ∑ x,
+          wickMonomial j' (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k' - j') (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) =
+      ((a ^ d) * (a ^ d)) *
+      ((∑ x,
+          wickMonomial j (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k - j) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) *
+        (∑ x,
+          wickMonomial j' (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k' - j') (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x))) by
+      ring]
+    rw [Finset.sum_mul_sum]
+    simp [cS, cR, mul_assoc, mul_left_comm]
+  simp_rw [h_expand]
+  rw [MeasureTheory.integral_const_mul]
+  rw [MeasureTheory.integral_finset_sum _ (fun x _ =>
+    MeasureTheory.integrable_finset_sum _ (fun y _ => h_term_int x y))]
+  suffices hsum :
+      ∑ x : FinLatticeSites d N,
+        ∫ η, ∑ y : FinLatticeSites d N, term x y η ∂(canonicalJointMeasure d N) = 0 by
+    rw [hsum]
+    ring
+  apply Finset.sum_eq_zero
+  intro x hx
+  rw [MeasureTheory.integral_finset_sum _ (fun y _ => h_term_int x y)]
+  apply Finset.sum_eq_zero
+  intro y hy
+  have h_factor :
+      ∫ η, term x y η ∂(canonicalJointMeasure d N) =
+        (∫ η_S, wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+            wickMonomial j' cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y) ∂μS) *
+        (∫ η_R,
+            wickMonomial (k - j) cR
+              (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+            wickMonomial (k' - j') cR
+              (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y) ∂μR) := by
+    rw [canonicalJointMeasure]
+    simpa
+        [term, CanonicalJoint, μS, μR, cS, cR,
+          mul_assoc, mul_left_comm, mul_comm] using
+      (integral_prod_mul
+        (μ := μS) (ν := μR)
+        (f := fun η_S =>
+          wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+            wickMonomial j' cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y))
+        (g := fun η_R =>
+          wickMonomial (k - j) cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+            wickMonomial (k' - j') cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y)))
+  have hj_lt : j < k := Finset.mem_range.mp hj
+  have hj'_lt : j' < k' := Finset.mem_range.mp hj'
+  by_cases hjj : j = j'
+  · have hrough : k - j ≠ k' - j' := by
+      intro hsub
+      apply h
+      have hk : k = k' := by
+        calc
+          k = (k - j) + j := by
+            symm
+            exact Nat.sub_add_cancel (Nat.le_of_lt hj_lt)
+          _ = (k' - j') + j' := by
+            simpa [hjj] using congrArg (fun t => t + j) hsub
+          _ = k' := Nat.sub_add_cancel (Nat.le_of_lt hj'_lt)
+      simp [hk, hjj]
+    rw [h_factor]
+    rw [canonicalRoughWickPower_two_site_marginal_eq_zero_of_ne
+      (d := d) (N := N) (a := a) (mass := mass)
+      ha hmass T hT
+      (k - j) (k' - j') hrough x y]
+    ring
+  · rw [h_factor]
+    rw [canonicalSmoothWickPower_two_site_marginal_eq_zero_of_ne
+      (d := d) (N := N) (a := a) (mass := mass)
+      ha hmass T hT
+      j j' hjj x y]
+    ring
 
 /-! ## S3 application — `(c · binomial sum)`-style L²-sq decomposition
 
@@ -428,7 +561,7 @@ decomposes into a sum of squared inner coefficients times squared L²
 norms of the cross-terms. Both the leading piece and each per-coefficient
 inner sum are special cases of this lemma. -/
 lemma canonicalCrossTerm_scaled_inner_sum_l2_sq
-    (T : ℝ) (k : ℕ) (c : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (k : ℕ) (c : ℝ)
     (h_int : ∀ j ∈ Finset.range k, ∀ j' ∈ Finset.range k,
         Integrable (fun η =>
             canonicalCrossTerm d N a mass T η k j *
@@ -458,8 +591,8 @@ lemma canonicalCrossTerm_scaled_inner_sum_l2_sq
     (fun j η => canonicalCrossTerm d N a mass T η k j)
     (fun j => c * (k.choose j : ℝ))
   · -- orthogonality: distinct j give zero cross-expectation (apply stub at k = k')
-    intros j _ j' _ hne
-    refine canonicalCrossTerm_inner_eq_zero d N a mass T k j k j' ?_
+    intros j hj j' hj' hne
+    refine canonicalCrossTerm_inner_eq_zero d N a mass ha hmass T hT k j k j' hj hj' ?_
     intro h
     exact hne (congrArg Prod.snd h)
   · -- integrability hypothesis (pass through)
@@ -469,7 +602,7 @@ lemma canonicalCrossTerm_scaled_inner_sum_l2_sq
 error. Direct application of `canonicalCrossTerm_scaled_inner_sum_l2_sq`
 with `k = P.n` and `c = 1 / P.n`. -/
 lemma canonicalRoughError_leading_l2_sq
-    (T : ℝ) (P : InteractionPolynomial)
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (P : InteractionPolynomial)
     (h_int : ∀ j ∈ Finset.range P.n, ∀ j' ∈ Finset.range P.n,
         Integrable (fun η =>
             canonicalCrossTerm d N a mass T η P.n j *
@@ -482,7 +615,7 @@ lemma canonicalRoughError_leading_l2_sq
       ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
         ∫ η, (canonicalCrossTerm d N a mass T η P.n j) ^ 2
             ∂(canonicalJointMeasure d N) :=
-  canonicalCrossTerm_scaled_inner_sum_l2_sq d N a mass T P.n (1 / P.n : ℝ) h_int
+  canonicalCrossTerm_scaled_inner_sum_l2_sq d N a mass ha hmass T hT P.n (1 / P.n : ℝ) h_int
 
 /-- L²-sq decomposition of a single per-coefficient `P.coeff m` piece
 of the rough error (one fixed `m : Fin P.n`). Direct application of
@@ -490,7 +623,7 @@ of the rough error (one fixed `m : Fin P.n`). Direct application of
 `c = P.coeff m`. The full per-coefficient sum further sums these over
 `m` (left for follow-up). -/
 lemma canonicalRoughError_perCoeff_l2_sq
-    (T : ℝ) (P : InteractionPolynomial) (m : Fin P.n)
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (P : InteractionPolynomial) (m : Fin P.n)
     (h_int : ∀ j ∈ Finset.range (m : ℕ), ∀ j' ∈ Finset.range (m : ℕ),
         Integrable (fun η =>
             canonicalCrossTerm d N a mass T η (m : ℕ) j *
@@ -504,7 +637,7 @@ lemma canonicalRoughError_perCoeff_l2_sq
       (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
         ∫ η, (canonicalCrossTerm d N a mass T η (m : ℕ) j) ^ 2
             ∂(canonicalJointMeasure d N) :=
-  canonicalCrossTerm_scaled_inner_sum_l2_sq d N a mass T (m : ℕ) (P.coeff m) h_int
+  canonicalCrossTerm_scaled_inner_sum_l2_sq d N a mass ha hmass T hT (m : ℕ) (P.coeff m) h_int
 
 /-! ## S3 outer cross: ∫ Lead · PerCoef = 0
 
@@ -729,7 +862,7 @@ values, ranging over all `(k, j)` indices appearing in
 `canonicalRoughError` (i.e. `k = P.n` for the leading piece and
 `k = m, m : Fin P.n` for the per-coefficient pieces). -/
 theorem canonicalRoughError_l2_sq_eq
-    (T : ℝ) (P : InteractionPolynomial)
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (P : InteractionPolynomial)
     -- Cross-vanish (orthogonality) hypotheses
     (h_orth_lead_perCoef : ∀ j ∈ Finset.range P.n,
         ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
@@ -812,14 +945,14 @@ theorem canonicalRoughError_l2_sq_eq
       h_orth_lead_perCoef h_int_lead_sq h_int_perCoef_sq
       h_int_cross_lead_perCoef h_int_pairs_lead_perCoef]
   -- Step 2: ∫ Lead² → leading sum-of-squares
-  rw [canonicalRoughError_leading_l2_sq d N a mass T P h_int_leading_pairs]
+  rw [canonicalRoughError_leading_l2_sq d N a mass ha hmass T hT P h_int_leading_pairs]
   -- Step 3: ∫ PerCoef² → Σ_m ∫ R_m²
   rw [canonicalRoughError_perCoef_outer_l2_sq d N a mass T P
       h_orth_m_outer h_int_R_m_pairs]
   -- Step 4: For each m, ∫ R_m² → per-m sum-of-squares
   congr 1
   refine Finset.sum_congr rfl fun m _ => ?_
-  exact canonicalRoughError_perCoeff_l2_sq d N a mass T P m (h_int_perCoeff_pairs m)
+  exact canonicalRoughError_perCoeff_l2_sq d N a mass ha hmass T hT P m (h_int_perCoeff_pairs m)
 
 /-! ## S4: per-cross-term L² bound
 
