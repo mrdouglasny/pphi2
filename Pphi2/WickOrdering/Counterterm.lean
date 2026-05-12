@@ -33,7 +33,7 @@ This logarithmic divergence is the UV divergence that Wick ordering removes.
 -/
 
 import Lattice.Covariance
-import Pphi2.GeneralResults.LatticeFourierIndexing
+import Lattice.LatticeFourierIndexing
 import Pphi2.WickOrdering.WickPolynomial
 
 noncomputable section

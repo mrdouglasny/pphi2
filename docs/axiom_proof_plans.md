@@ -207,6 +207,7 @@ from `embeddedTwoPoint_eq_latticeGreenBilinear`, so the remaining debt is
 exactly this basis-level spectral convergence statement. Model:
 `riemann_sum_periodic_tendsto` (proved in gf).
 **Prereqs**: Schwartz decay, lattice eigenvalue convergence (proved in gf).
+**Detailed discharge plan**: [`lattice-green-flat-Rd-discharge-plan.md`](lattice-green-flat-Rd-discharge-plan.md) — Strategy A (factor through torus + IR limit, ~3 weeks). **Caveat**: NOT on the T² continuum-limit critical path; only needed if the project pushes to flat-ℝ² S'(ℝ²) Wightman directly.
 
 ---
 

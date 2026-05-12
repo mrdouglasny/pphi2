@@ -12,7 +12,7 @@ weak.linter.mathlibStandardSet = true
 name = "GaussianField"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gaussian-field.git"
-rev = "3719fca"
+rev = "24b26ef"
 
 [[require]]
 name = "bochner"
@@ -24,6 +24,12 @@ rev = "main"
 name = "MarkovSemigroups"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/markov-semigroups.git"
+rev = "main"
+
+[[require]]
+name = "gaussian-hilbert"
+scope = "mrdouglasny"
+git = "https://github.com/mrdouglasny/gaussian-hilbert.git"
 rev = "main"
 
 [[lean_lib]]

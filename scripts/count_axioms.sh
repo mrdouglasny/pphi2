@@ -28,9 +28,21 @@ count_file() {
     local file="$1"
     local pattern="$2"
     local n
-    # Skip comment lines and lines marked with count_axioms:skip
-    # For 'sorry' pattern: exclude lines that are clearly inside doc comments
-    n=$(grep "$pattern" "$file" 2>/dev/null | grep -v 'count_axioms:skip' | grep -cv '^\s*--\|^\s*/[-*]\|^\s*\*\|sorry.s\b\|sorry.\b\|sorry:\|the sorry\|a sorry\|sorry.d\b\|sorry-free') || true
+    if [ "$pattern" = "sorry" ]; then
+        # Real sorry tactic uses: lines where `sorry` appears at end-of-line
+        # (or followed only by whitespace/closing punctuation), preceded by
+        # tactic context (start-of-line whitespace, `by`, `:=`, `·`, `;`, `(`).
+        # This avoids false positives from prose like "no sorry", "the sorry",
+        # "this sorry" in docstrings.
+        n=$(grep -nE '(^[ ]*|· *|by *|:= *|; *|\( *)sorry([ ]*$|[ ]*\)|[ ]*;|[ ]*,)' "$file" 2>/dev/null \
+            | grep -v 'count_axioms:skip' \
+            | grep -cv '^[0-9]*:[[:space:]]*--\|^[0-9]*:[[:space:]]*/[-*]\|^[0-9]*:[[:space:]]*\*') || true
+    else
+        # Default: a top-level `axiom ` declaration line.
+        n=$(grep "$pattern" "$file" 2>/dev/null \
+            | grep -v 'count_axioms:skip' \
+            | grep -cv '^\s*--\|^\s*/[-*]\|^\s*\*') || true
+    fi
     n=$(echo "$n" | tr -cd '0-9')
     echo "${n:-0}"
 }

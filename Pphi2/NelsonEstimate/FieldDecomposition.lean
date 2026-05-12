@@ -1,308 +1,97 @@
-/-
-Copyright (c) 2026 Michael R. Douglas. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
-
-# Field Decomposition Sketch — `(φ_S, φ_R)` Joint Gaussian Setup
-
-Sketch of the genuine Glimm–Jaffe field decomposition for the bridge
-discharge. Defines the structure that captures `(φ_S, φ_R)` as
-independent Gaussian fields with covariances `C_S(T), C_R(T)`, and
-shows how the lattice `LatticeRoughErrorSetup` can be built from
-such a structure.
-
-## Status
-
-**Sketch / structural file.** Defines the API surface that the
-field-decomposition Phase 1 work needs to populate. The actual
-construction (joint measure, pushforward identity, chaos analysis
-of E_R) is not built here — only the interface. See
-`docs/polynomial-chaos-exp-moment-bridge-proof-plan.md` for the
-mathematical plan.
-
-## Why this structural file?
-
-The plan-revision recognized that the simpler Wick-constant
-decomposition cannot achieve uniform-in-N L² bounds. The genuine
-bridge discharge needs:
-
-* A joint measure `μ_S × μ_R` on a doubled space, with two
-  independent Gaussian fields of covariances `C_S(T), C_R(T)`.
-* The pushforward identity: under the addition map
-  `(φ_S, φ_R) ↦ φ_S + φ_R`, the joint measure pushes to the lattice
-  GFF `latticeGaussianMeasure`.
-* Chaos analysis of the Wick-binomial-expanded
-  `E_R = V(φ_S + φ_R) - V_S(φ_S)`, leveraging the fact that every
-  term contains at least one φ_R factor.
-* L² bounds via `roughCovariance_sq_summable`, controlling
-  `‖C_R‖²_HS ≤ L^d · T · c_a` uniformly in N.
-
-This file isolates the structural interface so the missing pieces
-are explicit.
-
-## Main definitions (sketch)
-
-* `FieldDecomposition d N a mass`: bundle of the joint Gaussian
-  structure (two independent Gaussian fields with covariances
-  `C_S(T), C_R(T)`) plus the pushforward identity.
-
-## Main theorems (planned)
-
-* `latticeRoughErrorSetup_of_fieldDecomp`: from a
-  `FieldDecomposition`, construct the
-  `LatticeRoughErrorSetup` that the existing abstract bridge
-  derivation (`bridgeAxiom_of_setup_real`) consumes.
-
-The construction uses:
-- The smooth-side bound `smooth_interaction_lower_bound_log_uniform`
-  (already a theorem) applied to V_S(φ_S).
-- The chaos analysis on the Wick-binomial expansion of E_R.
-- The L² bound via `roughCovariance_sq_summable`.
-- `chaos_neg_tail_bound` (already a theorem) for the rough tail.
-- `lintegral_layer_cake_lt_top_of_eventual_decay` (already a
-  theorem) for the integrability hypothesis.
-
-## References
-
-- pphi2/docs/polynomial-chaos-exp-moment-bridge-proof-plan.md
-  (revised 2026-05-09).
-- Glimm-Jaffe, *Quantum Physics*, Ch. 8.
-- Simon, *P(φ)₂ Euclidean QFT*, Ch. V.
--/
-
 import Pphi2.NelsonEstimate.LatticeBridge
 import Pphi2.NelsonEstimate.LatticeSetup
 import Pphi2.NelsonEstimate.CovarianceSplit
+import Lattice.LatticeFourierProduct
 import Mathlib.MeasureTheory.Constructions.Pi
+import Mathlib.MeasureTheory.Integral.Pi
+import Mathlib.Probability.Distributions.Gaussian.Fernique
+import Mathlib.Probability.Independence.Basic
+import Mathlib.Probability.Independence.Integration
+import GaussianField.Hypercontractive
 
 noncomputable section
 
 namespace Pphi2
 
 open MeasureTheory GaussianField
+open scoped BigOperators
 
 variable (d N : ℕ) [NeZero N] (a mass : ℝ)
 
-/-- **Bundle of the field-decomposition setup at cutoff scale `T`.**
-
-A `FieldDecomposition T` packages:
-- A joint measure on a "doubled" Gaussian space (the smooth and
-  rough fields' Gaussian phase-space).
-- The smooth and rough field maps from the joint variables to
-  `Configuration (FinLatticeField d N)`.
-- The pushforward identity: under addition `(φ_S, φ_R) ↦ φ_S + φ_R`,
-  the joint measure pushes to the lattice GFF.
-
-In the canonical realization (per the plan):
-- The doubled space is `(FinLatticeSites d N → ℝ) × (FinLatticeSites d N → ℝ)`,
-  with the product measure `Measure.pi (gaussianReal 0 1) ×
-  Measure.pi (gaussianReal 0 1)`.
-- `φ_S(η_S)(x) := Σ_k √(C_S(T,k)) · e_k(x) · η_S(k)`.
-- `φ_R(η_R)(x) := Σ_k √(C_R(T,k)) · e_k(x) · η_R(k)`.
-- The pushforward equals the GFF by characteristic-function
-  uniqueness (the variances `C_S + C_R = C` match).
-
-This file leaves the `FieldDecomposition` structure abstract — its
-concrete construction is the substantive Phase 1 work. The fields
-required match those needed by `LatticeRoughErrorSetup` once the
-addition pushforward is in hand. -/
+/-- Abstract field-decomposition data at cutoff scale `T`. -/
 structure FieldDecomposition (T : ℝ) where
-  /-- The "doubled" Gaussian space type carrying the joint
-  variables `(η_S, η_R)`. In the canonical realization, this is
-  `(FinLatticeSites d N → ℝ) × (FinLatticeSites d N → ℝ)`. -/
   Joint : Type
-  /-- Measurable space structure on the joint type. -/
   jointMeasurable : MeasurableSpace Joint
-  /-- The joint Gaussian measure (product of two `stdGaussianFin n`'s
-  in the canonical realization). -/
   μ_joint : @Measure Joint jointMeasurable
-  /-- The joint measure is a probability measure. -/
   jointProbability : @IsProbabilityMeasure Joint jointMeasurable μ_joint
-  /-- The smooth field: from joint variables to a configuration. -/
   φ_S : Joint → Configuration (FinLatticeField d N)
-  /-- The rough field similarly. -/
   φ_R : Joint → Configuration (FinLatticeField d N)
-  /-- Both field maps are measurable. -/
   φ_S_measurable :
     @Measurable Joint (Configuration (FinLatticeField d N)) jointMeasurable
       instMeasurableSpaceConfiguration φ_S
   φ_R_measurable :
     @Measurable Joint (Configuration (FinLatticeField d N)) jointMeasurable
       instMeasurableSpaceConfiguration φ_R
-  /-- **Pushforward identity:** `(η_S, η_R) ↦ φ_S(η_S) + φ_R(η_R)`
-  pushes the joint measure to the lattice GFF.
-  Requires `0 < a, 0 < mass` for the GFF to be defined; these are
-  implicit hypotheses on `(a, mass)` in the consumers. -/
   pushforward_eq_GFF :
     ∀ (ha : 0 < a) (hmass : 0 < mass),
-    @Measure.map Joint (Configuration (FinLatticeField d N))
-        jointMeasurable instMeasurableSpaceConfiguration
-        (fun ξ => φ_S ξ + φ_R ξ) μ_joint =
-      latticeGaussianMeasure d N a mass ha hmass
-
-/-! ## Phase 1 work that remains (revised 2026-05-09 per Gemini review)
-
-To complete the bridge discharge, the following remain:
-
-1. **Construct a canonical `FieldDecomposition T`** for each `T > 0`,
-   using:
-   - The gaussian-field theorems
-     `gffOrthonormalProj_pushforward_eq_stdGaussian`,
-     `gffOrthonormalCoord_independent` (now theorems).
-   - `Measure.pi` for the product structure on the **doubled
-     2|Λ|-dimensional Gaussian** (one copy for `η_S`, one for `η_R`).
-   - Spectral decomposition: φ_S, φ_R as linear combinations of the
-     η_S, η_R variables weighted by `√(smoothCovEigenvalue T k)`,
-     `√(roughCovEigenvalue T k)`.
-
-2. **Pushforward identity proof**: by characteristic-function
-   uniqueness, since `C_S(T, k) + C_R(T, k) = (a^d λ_k)^{-1}` (per
-   `covariance_split` in CovarianceSplit.lean) and `gaussianReal` is
-   characterized by its variance.
-
-3. **Wick binomial expansion of `V(φ_S + φ_R)`**: apply
-   `wickMonomial_pow_sum_expansion` (theorem in gaussian-field) at
-   each lattice site to expand `:φ(x)^n:_{c_S+c_R}` into the
-   bivariate Wick binomial terms.
-
-4. **Joint chaos membership of `E_R`** (⚠ critical correction):
-   `E_R = V(φ_S + φ_R) - V_S(φ_S)` is a polynomial of total degree
-   `≤ deg P` in the JOINT `2|Λ|`-dimensional Gaussian variables
-   `(η_S, η_R)` taken together — NOT in `η_R` conditional on `η_S`.
-   This means `E_R ∈ wienerChaosLE (2|Λ|) (deg P)` of the JOINT
-   standard Gaussian. The chaos analysis is **unconditional** on
-   the joint space; no `condexp`, no conditional Janson, no Fubini
-   integration of conditional bounds.
-
-   Why: a conditional approach would have the L² norm of E_R
-   conditional on φ_S be a *random variable* depending on `φ_S`
-   (since cross-terms like `4 :φ_S³:_{c_S} φ_R` contribute
-   `16 c_R · φ_S^6` to the conditional variance). Applying Janson
-   conditionally then yields a tail bound where `φ_S` appears in the
-   denominator of the exponent — analytically intractable.
-
-5. **L² bound on `E_R`** (joint, deterministic):
-   `‖E_R‖²_{L²(μ_joint)} ≤ K · T^δ` for some `K` depending on
-   `(L, c_a)` but not on `N`. Computed via:
-   - Wick orthogonality on the joint Gaussian gives a sum over
-     multi-indices with rough Wick monomials;
-   - At least one `:φ_R^k:_{c_R}` factor per term contributes
-     `‖C_R‖²_HS^k`;
-   - `roughCovariance_sq_summable` bounds `‖C_R‖²_HS ≤ |Λ| · T · a^d · c_a
-     = L^d · T · c_a` uniformly in N.
-
-6. **Apply Janson 5.10 unconditionally** on the joint `2|Λ|`-dim
-   Gaussian to `E_R - E_joint[E_R] = E_R` (already centered):
-   `μ_joint{|E_R| > λ ‖E_R‖_{L²(joint)}} ≤ 2 exp(-c_d λ^{2/deg P})`.
-   Combined with the L² bound: with `λ = M / (2 √(K T^δ))`,
-   `μ_joint{E_R ≤ -M/2} ≤ 2 exp(-c (M/(2√(K T^δ)))^{2/deg P})`.
-
-7. **Pushforward to GFF, smooth-side bound, layer-cake assembly**:
-   - The pushforward identity `(η_S, η_R) ↦ φ_S + φ_R` translates
-     joint events to GFF events.
-   - Smooth-side bound `V_S(φ_S) ≥ -M/2` is **deterministic**
-     (pointwise on `Joint`), from `smooth_interaction_lower_bound_log_uniform`.
-   - The set inclusion `{V ≤ -M} ⊆ {E_R ≤ -M/2}` is therefore a
-     pointwise set-theoretic subset on the joint space. The
-     unconditional joint tail bound flows directly into
-     `expSqNeg_lintegral_le_of_dynamical_cutoff` via the pushforward.
-   - Apply `chaos_neg_tail_bound`,
-     `lintegral_layer_cake_lt_top_of_eventual_decay`, and
-     `bridgeAxiom_of_setup_real` to assemble.
-
-## ⚠ Volume constraint (Phase 3 fix per Gemini review)
-
-The current `polynomial_chaos_exp_moment_bridge` axiom signature
-`∀ a > 0, ∀ N` is **mathematically false** without a volume
-constraint: the Wick polynomial `:φ⁴:_{c_a} = φ⁴ - 6c_a φ² + 3c_a²`
-has minimum `-6 c_a²`, so `V_min = a^d · |Λ| · (-6 c_a²) =
--L^d · 6 c_a² → -∞` as `c_a → ∞`. The integral
-`∫ exp(-2V) dμ` cannot be uniformly bounded over arbitrary `(a, N)`
-since the physical volume `L = aN` is unbounded.
-
-The Nelson exp-moment bound is an *extensive* quantity:
-`E[exp(-V_a)] ≤ exp(K · L^d)` where `K` depends on the regime but
-the volume factor `L^d` is essential. A uniform-in-volume `K` cannot
-exist.
-
-**Required Phase 3 fixes** (mandatory, not just recommended):
-- Add `haN : a * N ≤ L` (or equivalently `(a * N)^d ≤ L^d`) to the
-  hypotheses, fixing a finite physical volume `L`.
-- Restrict `0 < a ≤ 1` (the UV regime).
-- Allow `K` to depend on `L` (and `mass`, `P`).
-
-The corrected signature:
-```lean
-theorem polynomial_chaos_exp_moment_bridge
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
-    (L : ℝ) (hL : 0 < L) :
-    ∃ (K : ℝ), 0 < K ∧
-    ∀ (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1),
-    ∀ (N : ℕ) [NeZero N] (haN : a * N ≤ L),
-    ∫ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K
-```
-
-The downstream consumers (`nelson_exponential_estimate_lattice`,
-the asymmetric-torus variants) typically work at fixed `L` with
-`a = L/N`, so the volume constraint is satisfied trivially in those
-applications. -/
-
-/-! ## Canonical realization (in progress) -/
+      @Measure.map Joint (Configuration (FinLatticeField d N))
+          jointMeasurable instMeasurableSpaceConfiguration
+          (fun ξ => φ_S ξ + φ_R ξ) μ_joint =
+        latticeGaussianMeasure d N a mass ha hmass
 
 section Canonical
 
-/-- The canonical doubled-Gaussian phase space:
-`(FinLatticeSites d N → ℝ) × (FinLatticeSites d N → ℝ)`. The first
-component holds the smooth-side coordinates `η_S`, the second the
-rough-side `η_R`. -/
 abbrev CanonicalJoint (d N : ℕ) [NeZero N] : Type :=
-  (FinLatticeSites d N → ℝ) × (FinLatticeSites d N → ℝ)
+  ((Fin d → Fin N) → ℝ) × ((Fin d → Fin N) → ℝ)
 
-/-- The canonical joint measure: product of two i.i.d. standard
-Gaussian product-measures, one on each component. -/
 noncomputable def canonicalJointMeasure (d N : ℕ) [NeZero N] :
-    haveI : Fintype (ZMod N) := ZMod.fintype N
     Measure (CanonicalJoint d N) :=
-  haveI : Fintype (ZMod N) := ZMod.fintype N
   Measure.prod
-    (Measure.pi (fun _ : FinLatticeSites d N => ProbabilityTheory.gaussianReal 0 1))
-    (Measure.pi (fun _ : FinLatticeSites d N => ProbabilityTheory.gaussianReal 0 1))
+    (Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1))
+    (Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1))
 
-/-- The canonical smooth-side **field function** at cutoff `T`. Maps
-each `(η_S, η_R) ∈ CanonicalJoint d N` to a function on lattice sites:
-`x ↦ Σ_k √(C_S(T, k')) · e_k(x) · η_S(k)`,
-where `C_S(T, k')` is the smooth covariance eigenvalue at the integer
-mode index `k'` corresponding to the lattice site index `k` via
-`Fintype.equivFin (FinLatticeSites d N)`.
+def canonicalEigenvalue (d N : ℕ) [NeZero N]
+    (a mass : ℝ) (m : Fin d → Fin N) : ℝ :=
+  (∑ i : Fin d, latticeEigenvalue1d N a (m i)) + mass ^ 2
 
-This is a **field**, not a configuration: the `Configuration` type
-is `WeakDual` (continuous linear functionals), and lifting this field
-to a Configuration requires bundling it with the standard pairing
-`⟨g, f⟩ := Σ_x g(x) · f(x)` and showing continuity. The lift is
-deferred to a separate lemma. -/
+def canonicalSmoothWeight (d N : ℕ) [NeZero N]
+    (a mass T : ℝ) (m : Fin d → Fin N) : ℝ :=
+  Real.exp (-T * canonicalEigenvalue d N a mass m) /
+    canonicalEigenvalue d N a mass m
+
+def canonicalRoughWeight (d N : ℕ) [NeZero N]
+    (a mass T : ℝ) (m : Fin d → Fin N) : ℝ :=
+  (1 - Real.exp (-T * canonicalEigenvalue d N a mass m)) /
+    canonicalEigenvalue d N a mass m
+
+private def canonicalSmoothModeCoeff (d N : ℕ) [NeZero N]
+    (a mass T : ℝ) (x : FinLatticeSites d N) (m : Fin d → Fin N) : ℝ :=
+  Real.sqrt
+      (canonicalSmoothWeight d N a mass T m /
+        latticeFourierProductNormSq N d m) *
+    latticeFourierProductBasisFun N d m x
+
+private def canonicalRoughModeCoeff (d N : ℕ) [NeZero N]
+    (a mass T : ℝ) (x : FinLatticeSites d N) (m : Fin d → Fin N) : ℝ :=
+  Real.sqrt
+      (canonicalRoughWeight d N a mass T m /
+        latticeFourierProductNormSq N d m) *
+    latticeFourierProductBasisFun N d m x
+
 noncomputable def canonicalSmoothFieldFunction (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (η : CanonicalJoint d N) :
     FinLatticeSites d N → ℝ :=
   fun x =>
-    ∑ k : FinLatticeSites d N,
-      Real.sqrt (smoothCovEigenvalue d N a mass T
-        (Fintype.equivFin (FinLatticeSites d N) k)) *
-      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
-      η.1 k
+    (Real.sqrt (a^d))⁻¹ *
+      ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η.1 m
 
-/-- The canonical rough-side field function at cutoff `T`. -/
 noncomputable def canonicalRoughFieldFunction (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (η : CanonicalJoint d N) :
     FinLatticeSites d N → ℝ :=
   fun x =>
-    ∑ k : FinLatticeSites d N,
-      Real.sqrt (roughCovEigenvalue d N a mass T
-        (Fintype.equivFin (FinLatticeSites d N) k)) *
-      ((massEigenvectorBasis d N a mass k : EuclideanSpace ℝ _) x) *
-      η.2 k
+    (Real.sqrt (a^d))⁻¹ *
+      ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η.2 m
 
-/-- The canonical sum field: `φ(x) = φ_S(x) + φ_R(x)`. As a field
-function (`FinLatticeSites d N → ℝ`), the sum is pointwise. -/
 noncomputable def canonicalSumFieldFunction (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (η : CanonicalJoint d N) :
     FinLatticeSites d N → ℝ :=
@@ -310,7 +99,6 @@ noncomputable def canonicalSumFieldFunction (d N : ℕ) [NeZero N]
     canonicalSmoothFieldFunction d N a mass T η x +
       canonicalRoughFieldFunction d N a mass T η x
 
-/-- **Decomposition identity** (deterministic, by definition). -/
 theorem canonicalSumFieldFunction_eq_smooth_plus_rough
     (d N : ℕ) [NeZero N] (a mass T : ℝ) (η : CanonicalJoint d N)
     (x : FinLatticeSites d N) :
@@ -319,9 +107,6 @@ theorem canonicalSumFieldFunction_eq_smooth_plus_rough
         canonicalRoughFieldFunction d N a mass T η x :=
   rfl
 
-/-- Lift a field `φ : FinLatticeField d N` to a `Configuration` via
-the standard pairing `f ↦ Σ_x f(x) · φ(x)`. Re-implementation of the
-`private def liftToConfig` in gaussian-field's `Lattice/FKG.lean`. -/
 def latticeFieldToConfig (d N : ℕ) [NeZero N] (φ : FinLatticeField d N) :
     Configuration (FinLatticeField d N) :=
   { toFun := fun f => ∑ x : FinLatticeSites d N, f x * φ x
@@ -339,22 +124,16 @@ def latticeFieldToConfig (d N : ℕ) [NeZero N] (φ : FinLatticeField d N) :
     (latticeFieldToConfig d N φ) f =
       ∑ x : FinLatticeSites d N, f x * φ x := rfl
 
-/-- The canonical smooth-side configuration: lift of the smooth field
-function. -/
 noncomputable def canonicalSmoothConfig (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (η : CanonicalJoint d N) :
     Configuration (FinLatticeField d N) :=
   latticeFieldToConfig d N (canonicalSmoothFieldFunction d N a mass T η)
 
-/-- The canonical rough-side configuration. -/
 noncomputable def canonicalRoughConfig (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (η : CanonicalJoint d N) :
     Configuration (FinLatticeField d N) :=
   latticeFieldToConfig d N (canonicalRoughFieldFunction d N a mass T η)
 
-/-! ### Linearity of the canonical field functions -/
-
-/-- The smooth field function is additive in η. -/
 theorem canonicalSmoothFieldFunction_add
     (d N : ℕ) [NeZero N] (a mass T : ℝ)
     (η₁ η₂ : CanonicalJoint d N) (x : FinLatticeSites d N) :
@@ -362,27 +141,28 @@ theorem canonicalSmoothFieldFunction_add
       canonicalSmoothFieldFunction d N a mass T η₁ x +
         canonicalSmoothFieldFunction d N a mass T η₂ x := by
   unfold canonicalSmoothFieldFunction
-  show ∑ k, _ * _ * (η₁ + η₂).1 k = _ + _
-  rw [show (η₁ + η₂).1 = η₁.1 + η₂.1 from rfl]
+  rw [show (η₁ + η₂).1 = η₁.1 + η₂.1 by rfl]
   simp_rw [Pi.add_apply, mul_add]
-  rw [Finset.sum_add_distrib]
+  rw [Finset.sum_add_distrib, mul_add]
 
-/-- The smooth field function is `ℝ`-homogeneous in η. -/
 theorem canonicalSmoothFieldFunction_smul
-    (d N : ℕ) [NeZero N] (a mass T : ℝ) (c : ℝ)
+    (d N : ℕ) [NeZero N] (a mass T c : ℝ)
     (η : CanonicalJoint d N) (x : FinLatticeSites d N) :
     canonicalSmoothFieldFunction d N a mass T (c • η) x =
       c * canonicalSmoothFieldFunction d N a mass T η x := by
   unfold canonicalSmoothFieldFunction
-  show ∑ k, _ * _ * (c • η).1 k = c * ∑ k, _
-  rw [show (c • η).1 = c • η.1 from rfl]
+  rw [show (c • η).1 = c • η.1 by rfl]
   simp_rw [Pi.smul_apply, smul_eq_mul]
+  rw [show c * ((Real.sqrt (a^d))⁻¹ *
+      ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η.1 m) =
+      (Real.sqrt (a^d))⁻¹ *
+        (c * ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η.1 m) by ring]
+  congr 1
   rw [Finset.mul_sum]
   refine Finset.sum_congr rfl ?_
-  intro k _
+  intro m _
   ring
 
-/-- The rough field function is additive in η. -/
 theorem canonicalRoughFieldFunction_add
     (d N : ℕ) [NeZero N] (a mass T : ℝ)
     (η₁ η₂ : CanonicalJoint d N) (x : FinLatticeSites d N) :
@@ -390,115 +170,694 @@ theorem canonicalRoughFieldFunction_add
       canonicalRoughFieldFunction d N a mass T η₁ x +
         canonicalRoughFieldFunction d N a mass T η₂ x := by
   unfold canonicalRoughFieldFunction
-  show ∑ k, _ * _ * (η₁ + η₂).2 k = _ + _
-  rw [show (η₁ + η₂).2 = η₁.2 + η₂.2 from rfl]
+  rw [show (η₁ + η₂).2 = η₁.2 + η₂.2 by rfl]
   simp_rw [Pi.add_apply, mul_add]
-  rw [Finset.sum_add_distrib]
+  rw [Finset.sum_add_distrib, mul_add]
 
-/-- The rough field function is `ℝ`-homogeneous in η. -/
 theorem canonicalRoughFieldFunction_smul
-    (d N : ℕ) [NeZero N] (a mass T : ℝ) (c : ℝ)
+    (d N : ℕ) [NeZero N] (a mass T c : ℝ)
     (η : CanonicalJoint d N) (x : FinLatticeSites d N) :
     canonicalRoughFieldFunction d N a mass T (c • η) x =
       c * canonicalRoughFieldFunction d N a mass T η x := by
   unfold canonicalRoughFieldFunction
-  show ∑ k, _ * _ * (c • η).2 k = c * ∑ k, _
-  rw [show (c • η).2 = c • η.2 from rfl]
+  rw [show (c • η).2 = c • η.2 by rfl]
   simp_rw [Pi.smul_apply, smul_eq_mul]
+  rw [show c * ((Real.sqrt (a^d))⁻¹ *
+      ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η.2 m) =
+      (Real.sqrt (a^d))⁻¹ *
+        (c * ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η.2 m) by ring]
+  congr 1
   rw [Finset.mul_sum]
   refine Finset.sum_congr rfl ?_
-  intro k _
+  intro m _
   ring
 
-/-! ### Measurability of the canonical field functions -/
-
-/-- The smooth field function evaluated at a fixed site `x` is
-measurable in `η`. It's a finite sum of `c_k · η.1(k)` over the
-modes `k`, each of which is a continuous (hence measurable) linear
-combination of the joint variables. -/
 theorem canonicalSmoothFieldFunction_pointwise_measurable
     (d N : ℕ) [NeZero N] (a mass T : ℝ) (x : FinLatticeSites d N) :
-    haveI : Fintype (ZMod N) := ZMod.fintype N
-    haveI : Fintype (FinLatticeSites d N) := Pi.instFintype
     Measurable (fun η : CanonicalJoint d N =>
       canonicalSmoothFieldFunction d N a mass T η x) := by
-  haveI : Fintype (ZMod N) := ZMod.fintype N
   unfold canonicalSmoothFieldFunction
-  apply Finset.measurable_sum
-  intro k _
-  -- Each term: c_k * η.1(k), where c_k is constant in η.
-  -- Measurability: η.1 is the first projection (measurable), then
-  -- evaluation at k is measurable (component projection of Pi).
-  have hπ₁ : Measurable (fun η : CanonicalJoint d N => η.1) := measurable_fst
-  have hcomp : Measurable (fun η : CanonicalJoint d N => η.1 k) :=
-    (measurable_pi_apply k).comp hπ₁
-  exact hcomp.const_mul _
+  fun_prop
 
-/-- The rough field function similarly. -/
 theorem canonicalRoughFieldFunction_pointwise_measurable
     (d N : ℕ) [NeZero N] (a mass T : ℝ) (x : FinLatticeSites d N) :
-    haveI : Fintype (ZMod N) := ZMod.fintype N
-    haveI : Fintype (FinLatticeSites d N) := Pi.instFintype
     Measurable (fun η : CanonicalJoint d N =>
       canonicalRoughFieldFunction d N a mass T η x) := by
-  haveI : Fintype (ZMod N) := ZMod.fintype N
   unfold canonicalRoughFieldFunction
-  apply Finset.measurable_sum
-  intro k _
-  have hπ₂ : Measurable (fun η : CanonicalJoint d N => η.2) := measurable_snd
-  have hcomp : Measurable (fun η : CanonicalJoint d N => η.2 k) :=
-    (measurable_pi_apply k).comp hπ₂
-  exact hcomp.const_mul _
+  fun_prop
 
-/-- **Configuration-level decomposition identity.**
-The configuration sum `canonicalSmoothConfig + canonicalRoughConfig`
-equals the lift of the field-function sum, by linearity of
-`latticeFieldToConfig`. -/
 theorem canonicalSmoothConfig_add_canonicalRoughConfig_eq_lift_sum
     (d N : ℕ) [NeZero N] (a mass T : ℝ) (η : CanonicalJoint d N) :
     canonicalSmoothConfig d N a mass T η + canonicalRoughConfig d N a mass T η =
       latticeFieldToConfig d N (canonicalSumFieldFunction d N a mass T η) := by
-  -- Both sides applied to f give Σ_x f(x) · (φ_S + φ_R)(x).
   apply ContinuousLinearMap.ext
   intro f
-  show (canonicalSmoothConfig d N a mass T η) f +
-      (canonicalRoughConfig d N a mass T η) f =
-    (latticeFieldToConfig d N (canonicalSumFieldFunction d N a mass T η)) f
-  simp only [canonicalSmoothConfig, canonicalRoughConfig,
-    latticeFieldToConfig_apply, canonicalSumFieldFunction,
-    canonicalSmoothFieldFunction, canonicalRoughFieldFunction]
-  simp_rw [mul_add]
-  rw [Finset.sum_add_distrib]
+  show ∑ x : FinLatticeSites d N, f x * canonicalSmoothFieldFunction d N a mass T η x +
+      ∑ x : FinLatticeSites d N, f x * canonicalRoughFieldFunction d N a mass T η x =
+    ∑ x : FinLatticeSites d N, f x * canonicalSumFieldFunction d N a mass T η x
+  simp [canonicalSmoothConfig, canonicalRoughConfig, latticeFieldToConfig,
+    canonicalSumFieldFunction, mul_add, Finset.sum_add_distrib]
 
-/-! ### Pointwise spectral identity at the canonical decomposition
+section Variance
 
-By the covariance split `C_S(T,k) + C_R(T,k) = (latticeEigenvalue k)⁻¹`
-(per `covariance_split` in `CovarianceSplit.lean`), the sum
-`canonicalSumFieldFunction` realizes a Gaussian field whose covariance
-matches the lattice GFF — the basis for the pushforward identity.
+open ProbabilityTheory MeasureTheory
 
-The pointwise spectral form:
-`canonicalSumFieldFunction(η)(x) = Σ_k [√(C_S(k')) · η_S(k) + √(C_R(k')) · η_R(k)] · e_k(x)`
+variable (d N : ℕ) [NeZero N] (a mass : ℝ)
 
-For each `k`, the per-mode coefficient `√(C_S) η_S + √(C_R) η_R` is a
-linear combination of two independent N(0,1) variables, hence
-Gaussian with variance `C_S + C_R = (λ_k)⁻¹`. The full field is
-Gaussian with covariance kernel
-`Σ_k λ_k⁻¹ · e_k(x) e_k(y) = M_a^{-1}(x, y)`, matching the
-GFF spectral covariance per `lattice_covariance_eq_spectral`.
+private lemma pi_gaussian_eval_integral_zero {I : Type*} [Fintype I] (k : I) :
+    ∫ η : I → ℝ, η k
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) = 0 := by
+  rw [integral_eval]
+  exact integral_id_gaussianReal
 
-The pushforward identity (`canonicalJointMeasure ⤳ latticeGaussianMeasure`)
-then follows by characteristic-function uniqueness.
+private lemma pi_gaussian_eval_integral_sq {I : Type*} [Fintype I] (k : I) :
+    ∫ η : I → ℝ, (η k) ^ 2
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) = 1 := by
+  have h_meas_sq : Measurable (fun x : ℝ => x ^ 2) := by fun_prop
+  have h_eq :
+      ∫ η : I → ℝ, (η k) ^ 2
+        ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) =
+      ∫ x : ℝ, x ^ 2 ∂(gaussianReal 0 1) := by
+    have := integral_comp_eval (μ := fun _ : I => gaussianReal 0 1)
+      (i := k) (f := fun x : ℝ => x ^ 2) h_meas_sq.aestronglyMeasurable
+    convert this using 1
+  rw [h_eq, integral_sq_gaussianReal 1]
+  norm_num
 
-The detailed proof requires:
-1. Linearity of `canonicalSumFieldFunction` in η (immediate by
-   distributing sums).
-2. Gaussian distribution of `Σ_k (√(C_S) η_S(k) + √(C_R) η_R(k)) · e_k(x)`
-   under `canonicalJointMeasure`, with explicit covariance.
-3. Comparison with `latticeGaussianFieldLaw_fourier` (in gaussian-field).
+private lemma pi_gaussian_eval_cross_zero {I : Type*} [Fintype I]
+    {k l : I} (hkl : k ≠ l) :
+    ∫ η : I → ℝ, η k * η l
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) = 0 := by
+  haveI : ∀ i : I, IsProbabilityMeasure ((fun _ : I => gaussianReal 0 1) i) := by
+    intro i
+    infer_instance
+  have h_indep_id :
+      iIndepFun (fun (i : I) η => (id : ℝ → ℝ) (η i))
+        (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+    iIndepFun_pi (fun _ => aemeasurable_id)
+  have h_indep_kl :
+      IndepFun (fun η : I → ℝ => η k) (fun η : I → ℝ => η l)
+        (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+    h_indep_id.indepFun hkl
+  have h_meas_k :
+      AEStronglyMeasurable (fun η : I → ℝ => η k)
+        (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+    (measurable_pi_apply k).aestronglyMeasurable
+  have h_meas_l :
+      AEStronglyMeasurable (fun η : I → ℝ => η l)
+        (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+    (measurable_pi_apply l).aestronglyMeasurable
+  rw [h_indep_kl.integral_fun_mul_eq_mul_integral h_meas_k h_meas_l]
+  rw [pi_gaussian_eval_integral_zero, pi_gaussian_eval_integral_zero]
+  ring
 
-These steps are the substantive Phase 1 work that the abstract
-chain consumes. -/
+private lemma pi_gaussian_eval_cross {I : Type*} [Fintype I] [DecidableEq I] (k l : I) :
+    ∫ η : I → ℝ, η k * η l
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) =
+    (if k = l then (1 : ℝ) else 0) := by
+  by_cases h : k = l
+  · subst h
+    simp only [if_true]
+    have h_sq : (fun η : I → ℝ => η k * η k) = (fun η : I → ℝ => (η k) ^ 2) := by
+      funext η
+      ring
+    rw [h_sq, pi_gaussian_eval_integral_sq]
+  · simp only [if_neg h]
+    exact pi_gaussian_eval_cross_zero h
+
+theorem pi_gaussian_bilinear_moment {I : Type*} [Fintype I]
+    (p q : I → ℝ) :
+    ∫ η : I → ℝ, (∑ k, p k * η k) * (∑ l, q l * η l)
+      ∂(Measure.pi (fun _ : I => gaussianReal 0 1)) =
+      ∑ k, p k * q k := by
+  classical
+  have h_memLp : ∀ k : I, MemLp (fun η : I → ℝ => η k) 2
+      (Measure.pi (fun _ : I => gaussianReal 0 1)) := by
+    intro k
+    have h : MemLp (id ∘ fun η : I → ℝ => η k) 2
+        (Measure.pi (fun _ : I => gaussianReal 0 1)) :=
+      MemLp.comp_measurePreserving IsGaussian.memLp_two_id
+        (measurePreserving_eval (μ := fun _ : I => gaussianReal 0 1) k)
+    exact h
+  have h_distrib : ∀ η : I → ℝ,
+      (∑ k, p k * η k) * (∑ l, q l * η l) =
+        ∑ k, ∑ l, (p k * q l) * (η k * η l) := by
+    intro η
+    rw [Finset.sum_mul_sum]
+    refine Finset.sum_congr rfl ?_
+    intro k _
+    refine Finset.sum_congr rfl ?_
+    intro l _
+    ring
+  simp_rw [h_distrib]
+  rw [integral_finset_sum]
+  swap
+  · intro k _
+    refine integrable_finset_sum _ (fun l _ => ?_)
+    refine Integrable.const_mul ?_ _
+    exact MemLp.integrable_mul (h_memLp k) (h_memLp l)
+  refine Finset.sum_congr rfl ?_
+  intro k _
+  rw [integral_finset_sum]
+  swap
+  · intro l _
+    refine Integrable.const_mul ?_ _
+    exact MemLp.integrable_mul (h_memLp k) (h_memLp l)
+  simp_rw [integral_const_mul, pi_gaussian_eval_cross]
+  rw [Finset.sum_eq_single k]
+  · simp
+  · intro l _ hkl
+    rw [if_neg (Ne.symm hkl)]
+    ring
+  · intro hk
+    exact (hk (Finset.mem_univ k)).elim
+
+private lemma canonicalSmoothFieldFunction_marginal_integrable
+    (T : ℝ) (x : FinLatticeSites d N) :
+    Integrable (fun η_S : (Fin d → Fin N) → ℝ =>
+      (Real.sqrt (a^d))⁻¹ *
+        ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m)
+      (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+  have h_sum : Integrable (fun η_S : (Fin d → Fin N) → ℝ =>
+      ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m)
+      (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+    refine integrable_finset_sum _ (fun m _ => ?_)
+    have h_eval : Integrable (fun η_S : (Fin d → Fin N) → ℝ => η_S m)
+        (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+      exact integrable_eval IsGaussian.integrable_id
+    convert h_eval.const_mul (canonicalSmoothModeCoeff d N a mass T x m)
+  exact h_sum.const_mul _
+
+private lemma canonicalRoughFieldFunction_marginal_integrable
+    (T : ℝ) (x : FinLatticeSites d N) :
+    Integrable (fun η_R : (Fin d → Fin N) → ℝ =>
+      (Real.sqrt (a^d))⁻¹ *
+        ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η_R m)
+      (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+  have h_sum : Integrable (fun η_R : (Fin d → Fin N) → ℝ =>
+      ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η_R m)
+      (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+    refine integrable_finset_sum _ (fun m _ => ?_)
+    have h_eval : Integrable (fun η_R : (Fin d → Fin N) → ℝ => η_R m)
+        (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+      exact integrable_eval IsGaussian.integrable_id
+    convert h_eval.const_mul (canonicalRoughModeCoeff d N a mass T x m)
+  exact h_sum.const_mul _
+
+private lemma canonicalSmoothFieldFunction_marginal_integral_zero
+    (T : ℝ) (x : FinLatticeSites d N) :
+    ∫ η_S : (Fin d → Fin N) → ℝ,
+      (Real.sqrt (a^d))⁻¹ *
+        ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m
+      ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) = 0 := by
+  have hsum :
+      ∫ η_S : (Fin d → Fin N) → ℝ,
+        ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m
+        ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) = 0 := by
+    rw [integral_finset_sum]
+    · refine Finset.sum_eq_zero ?_
+      intro m _
+      rw [integral_const_mul, pi_gaussian_eval_integral_zero (k := m)]
+      ring
+    · intro m _
+      have h_eval : Integrable (fun η_S : (Fin d → Fin N) → ℝ => η_S m)
+          (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+        exact integrable_eval IsGaussian.integrable_id
+      convert h_eval.const_mul (canonicalSmoothModeCoeff d N a mass T x m)
+  rw [integral_const_mul, hsum]
+  ring
+
+private lemma canonicalRoughFieldFunction_marginal_integral_zero
+    (T : ℝ) (x : FinLatticeSites d N) :
+    ∫ η_R : (Fin d → Fin N) → ℝ,
+      (Real.sqrt (a^d))⁻¹ *
+        ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η_R m
+      ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) = 0 := by
+  have hsum :
+      ∫ η_R : (Fin d → Fin N) → ℝ,
+        ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η_R m
+        ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) = 0 := by
+    rw [integral_finset_sum]
+    · refine Finset.sum_eq_zero ?_
+      intro m _
+      rw [integral_const_mul, pi_gaussian_eval_integral_zero (k := m)]
+      ring
+    · intro m _
+      have h_eval : Integrable (fun η_R : (Fin d → Fin N) → ℝ => η_R m)
+          (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+        exact integrable_eval IsGaussian.integrable_id
+      convert h_eval.const_mul (canonicalRoughModeCoeff d N a mass T x m)
+  rw [integral_const_mul, hsum]
+  ring
+
+theorem canonicalSmoothRough_cross_moment_zero
+    (T : ℝ) (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) = 0 := by
+  rw [canonicalJointMeasure]
+  simp only [canonicalSmoothFieldFunction, canonicalRoughFieldFunction]
+  have h_factor :
+      ∫ η : CanonicalJoint d N,
+        ((Real.sqrt (a^d))⁻¹ *
+            ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η.1 m) *
+          ((Real.sqrt (a^d))⁻¹ *
+            ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T y m * η.2 m)
+        ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)).prod
+          (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) =
+      (∫ η_S : (Fin d → Fin N) → ℝ,
+        (Real.sqrt (a^d))⁻¹ *
+          ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m
+        ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))) *
+      (∫ η_R : (Fin d → Fin N) → ℝ,
+        (Real.sqrt (a^d))⁻¹ *
+          ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T y m * η_R m
+        ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))) := by
+    simpa [CanonicalJoint] using
+      (integral_prod_mul
+        (μ := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+        (ν := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+        (f := fun η_S : (Fin d → Fin N) → ℝ =>
+          (Real.sqrt (a^d))⁻¹ *
+            ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m)
+        (g := fun η_R : (Fin d → Fin N) → ℝ =>
+          (Real.sqrt (a^d))⁻¹ *
+            ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T y m * η_R m))
+  rw [h_factor, canonicalSmoothFieldFunction_marginal_integral_zero,
+    canonicalRoughFieldFunction_marginal_integral_zero]
+  ring
+
+private lemma canonicalEigenvalue_pos
+    (ha : 0 < a) (hmass : 0 < mass) (m : Fin d → Fin N) :
+    0 < canonicalEigenvalue d N a mass m := by
+  unfold canonicalEigenvalue
+  have hsum_nonneg : 0 ≤ ∑ i : Fin d, latticeEigenvalue1d N a (m i) :=
+    Finset.sum_nonneg (fun i _ => latticeEigenvalue1d_nonneg N a (m i))
+  nlinarith [sq_pos_of_pos hmass]
+
+private lemma canonicalSmoothWeight_nonneg
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (m : Fin d → Fin N) :
+    0 ≤ canonicalSmoothWeight d N a mass T m := by
+  unfold canonicalSmoothWeight
+  exact div_nonneg (le_of_lt (Real.exp_pos _))
+    (canonicalEigenvalue_pos (d := d) (N := N) (a := a) (mass := mass) ha hmass m).le
+
+private lemma canonicalRoughWeight_nonneg
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (m : Fin d → Fin N) :
+    0 ≤ canonicalRoughWeight d N a mass T m := by
+  unfold canonicalRoughWeight
+  have hLam := canonicalEigenvalue_pos (d := d) (N := N) (a := a) (mass := mass) ha hmass m
+  have h_exp_le : Real.exp (-T * canonicalEigenvalue d N a mass m) ≤ 1 := by
+    apply Real.exp_le_one_iff.mpr
+    nlinarith
+  have h_num : 0 ≤ 1 - Real.exp (-T * canonicalEigenvalue d N a mass m) := by
+    linarith
+  exact div_nonneg h_num hLam.le
+
+private lemma canonicalEigenvalue_split
+    (T : ℝ) (m : Fin d → Fin N) :
+    (canonicalEigenvalue d N a mass m)⁻¹ =
+      canonicalSmoothWeight d N a mass T m +
+        canonicalRoughWeight d N a mass T m := by
+  unfold canonicalSmoothWeight canonicalRoughWeight
+  rw [inv_eq_one_div, ← add_div]
+  ring
+
+private lemma canonicalSmoothFieldFunction_self_moment
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    (a^d : ℝ)⁻¹ *
+      ∑ m : Fin d → Fin N,
+        canonicalSmoothWeight d N a mass T m *
+          latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y /
+          latticeFourierProductNormSq N d m := by
+  rw [canonicalJointMeasure]
+  simp only [canonicalSmoothFieldFunction]
+  have h_fst :=
+    integral_fun_fst (E := ℝ)
+      (μ := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+      (ν := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+      (f := fun η_S : (Fin d → Fin N) → ℝ =>
+        ((Real.sqrt (a^d))⁻¹ *
+            ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m) *
+          ((Real.sqrt (a^d))⁻¹ *
+            ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T y m * η_S m))
+  simp at h_fst
+  rw [h_fst]
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  have hsqrt_sq : (Real.sqrt (a^d))⁻¹ * (Real.sqrt (a^d))⁻¹ = (a^d : ℝ)⁻¹ := by
+    rw [← mul_inv, ← Real.sqrt_mul (le_of_lt ha_d_pos),
+      Real.sqrt_mul_self (le_of_lt ha_d_pos)]
+  have h_rewrite : ∀ η_S : (Fin d → Fin N) → ℝ,
+      ((Real.sqrt (a^d))⁻¹ *
+          ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m) *
+        ((Real.sqrt (a^d))⁻¹ *
+          ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T y m * η_S m) =
+      (a^d : ℝ)⁻¹ *
+        ((∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m) *
+          (∑ l : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T y l * η_S l)) := by
+    intro η_S
+    rw [show ∀ A B C D : ℝ, (A * B) * (C * D) = (A * C) * (B * D) by intros; ring,
+      hsqrt_sq]
+  simp_rw [h_rewrite, integral_const_mul]
+  rw [pi_gaussian_bilinear_moment
+    (p := fun m => canonicalSmoothModeCoeff d N a mass T x m)
+    (q := fun l => canonicalSmoothModeCoeff d N a mass T y l)]
+  congr 1
+  refine Finset.sum_congr rfl ?_
+  intro m _
+  have hC :
+      0 ≤ canonicalSmoothWeight d N a mass T m /
+        latticeFourierProductNormSq N d m := by
+    apply div_nonneg
+    · exact canonicalSmoothWeight_nonneg
+        (d := d) (N := N) (a := a) (mass := mass) ha hmass T m
+    · exact (latticeFourierProductNormSq_pos (N := N) d m).le
+  have h_sq :
+      Real.sqrt (canonicalSmoothWeight d N a mass T m /
+          latticeFourierProductNormSq N d m) *
+        Real.sqrt (canonicalSmoothWeight d N a mass T m /
+          latticeFourierProductNormSq N d m) =
+      canonicalSmoothWeight d N a mass T m /
+        latticeFourierProductNormSq N d m :=
+    Real.mul_self_sqrt hC
+  unfold canonicalSmoothModeCoeff
+  calc
+    Real.sqrt (canonicalSmoothWeight d N a mass T m / latticeFourierProductNormSq N d m) *
+        latticeFourierProductBasisFun N d m x *
+        (Real.sqrt (canonicalSmoothWeight d N a mass T m / latticeFourierProductNormSq N d m) *
+          latticeFourierProductBasisFun N d m y)
+      = (Real.sqrt (canonicalSmoothWeight d N a mass T m / latticeFourierProductNormSq N d m) *
+          Real.sqrt (canonicalSmoothWeight d N a mass T m / latticeFourierProductNormSq N d m)) *
+          latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y := by ring
+    _ = canonicalSmoothWeight d N a mass T m *
+          latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y /
+          latticeFourierProductNormSq N d m := by
+          rw [h_sq]
+          ring
+
+private lemma canonicalRoughFieldFunction_self_moment
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    (a^d : ℝ)⁻¹ *
+      ∑ m : Fin d → Fin N,
+        canonicalRoughWeight d N a mass T m *
+          latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y /
+          latticeFourierProductNormSq N d m := by
+  rw [canonicalJointMeasure]
+  simp only [canonicalRoughFieldFunction]
+  have h_snd :=
+    integral_fun_snd (E := ℝ)
+      (μ := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+      (ν := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+      (f := fun η_R : (Fin d → Fin N) → ℝ =>
+        ((Real.sqrt (a^d))⁻¹ *
+            ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η_R m) *
+          ((Real.sqrt (a^d))⁻¹ *
+            ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T y m * η_R m))
+  simp at h_snd
+  rw [h_snd]
+  have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
+  have hsqrt_sq : (Real.sqrt (a^d))⁻¹ * (Real.sqrt (a^d))⁻¹ = (a^d : ℝ)⁻¹ := by
+    rw [← mul_inv, ← Real.sqrt_mul (le_of_lt ha_d_pos),
+      Real.sqrt_mul_self (le_of_lt ha_d_pos)]
+  have h_rewrite : ∀ η_R : (Fin d → Fin N) → ℝ,
+      ((Real.sqrt (a^d))⁻¹ *
+          ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η_R m) *
+        ((Real.sqrt (a^d))⁻¹ *
+          ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T y m * η_R m) =
+      (a^d : ℝ)⁻¹ *
+        ((∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η_R m) *
+          (∑ l : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T y l * η_R l)) := by
+    intro η_R
+    rw [show ∀ A B C D : ℝ, (A * B) * (C * D) = (A * C) * (B * D) by intros; ring,
+      hsqrt_sq]
+  simp_rw [h_rewrite, integral_const_mul]
+  rw [pi_gaussian_bilinear_moment
+    (p := fun m => canonicalRoughModeCoeff d N a mass T x m)
+    (q := fun l => canonicalRoughModeCoeff d N a mass T y l)]
+  congr 1
+  refine Finset.sum_congr rfl ?_
+  intro m _
+  have hC :
+      0 ≤ canonicalRoughWeight d N a mass T m /
+        latticeFourierProductNormSq N d m := by
+    apply div_nonneg
+    · exact canonicalRoughWeight_nonneg
+        (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT m
+    · exact (latticeFourierProductNormSq_pos (N := N) d m).le
+  have h_sq :
+      Real.sqrt (canonicalRoughWeight d N a mass T m /
+          latticeFourierProductNormSq N d m) *
+        Real.sqrt (canonicalRoughWeight d N a mass T m /
+          latticeFourierProductNormSq N d m) =
+      canonicalRoughWeight d N a mass T m /
+        latticeFourierProductNormSq N d m :=
+    Real.mul_self_sqrt hC
+  unfold canonicalRoughModeCoeff
+  calc
+    Real.sqrt (canonicalRoughWeight d N a mass T m / latticeFourierProductNormSq N d m) *
+        latticeFourierProductBasisFun N d m x *
+        (Real.sqrt (canonicalRoughWeight d N a mass T m / latticeFourierProductNormSq N d m) *
+          latticeFourierProductBasisFun N d m y)
+      = (Real.sqrt (canonicalRoughWeight d N a mass T m / latticeFourierProductNormSq N d m) *
+          Real.sqrt (canonicalRoughWeight d N a mass T m / latticeFourierProductNormSq N d m)) *
+          latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y := by ring
+    _ = canonicalRoughWeight d N a mass T m *
+          latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y /
+          latticeFourierProductNormSq N d m := by
+          rw [h_sq]
+          ring
+
+private lemma canonicalRoughSmooth_cross_moment_zero
+    (T : ℝ) (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) = 0 := by
+  have h_swap : ∀ η : CanonicalJoint d N,
+      canonicalRoughFieldFunction d N a mass T η x *
+          canonicalSmoothFieldFunction d N a mass T η y =
+        canonicalSmoothFieldFunction d N a mass T η y *
+          canonicalRoughFieldFunction d N a mass T η x := by
+    intro η
+    ring
+  rw [integral_congr_ae (Filter.Eventually.of_forall h_swap)]
+  exact canonicalSmoothRough_cross_moment_zero d N a mass T y x
+
+theorem canonicalSumFieldFunction_covariance
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalSumFieldFunction d N a mass T η x *
+        canonicalSumFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    (a^d : ℝ)⁻¹ *
+      ∑ m : Fin d → Fin N,
+        latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y /
+          (canonicalEigenvalue d N a mass m *
+            latticeFourierProductNormSq N d m) := by
+  have h_ss := canonicalSmoothFieldFunction_self_moment
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y
+  have h_rr := canonicalRoughFieldFunction_self_moment
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y
+  have h_sr := canonicalSmoothRough_cross_moment_zero
+    (d := d) (N := N) (a := a) (mass := mass) T x y
+  have h_rs := canonicalRoughSmooth_cross_moment_zero
+    (d := d) (N := N) (a := a) (mass := mass) T x y
+  let fss : CanonicalJoint d N → ℝ := fun η =>
+    canonicalSmoothFieldFunction d N a mass T η x *
+      canonicalSmoothFieldFunction d N a mass T η y
+  let fsr : CanonicalJoint d N → ℝ := fun η =>
+    canonicalSmoothFieldFunction d N a mass T η x *
+      canonicalRoughFieldFunction d N a mass T η y
+  let frs : CanonicalJoint d N → ℝ := fun η =>
+    canonicalRoughFieldFunction d N a mass T η x *
+      canonicalSmoothFieldFunction d N a mass T η y
+  let frr : CanonicalJoint d N → ℝ := fun η =>
+    canonicalRoughFieldFunction d N a mass T η x *
+      canonicalRoughFieldFunction d N a mass T η y
+  have h_eq : ∀ η : CanonicalJoint d N,
+      canonicalSumFieldFunction d N a mass T η x *
+        canonicalSumFieldFunction d N a mass T η y =
+      fss η + (fsr η + (frs η + frr η)) := by
+    intro η
+    simp [canonicalSumFieldFunction, fss, fsr, frs, frr]
+    ring
+  rw [integral_congr_ae (Filter.Eventually.of_forall h_eq)]
+  have h_smooth_memLp : ∀ z : FinLatticeSites d N,
+      MemLp (fun η : CanonicalJoint d N =>
+        canonicalSmoothFieldFunction d N a mass T η z) 2 (canonicalJointMeasure d N) := by
+    intro z
+    unfold canonicalSmoothFieldFunction
+    refine MemLp.const_mul ?_ _
+    refine memLp_finset_sum _ (fun m _ => ?_)
+    refine MemLp.const_mul ?_ _
+    rw [canonicalJointMeasure]
+    have h : MemLp (fun η_S : (Fin d → Fin N) → ℝ => η_S m) 2
+        (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) :=
+      MemLp.comp_measurePreserving IsGaussian.memLp_two_id
+        (measurePreserving_eval (μ := fun _ : Fin d → Fin N => gaussianReal 0 1) m)
+    exact h.comp_measurePreserving
+      (μ := (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)).prod
+        (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)))
+      measurePreserving_fst
+  have h_rough_memLp : ∀ z : FinLatticeSites d N,
+      MemLp (fun η : CanonicalJoint d N =>
+        canonicalRoughFieldFunction d N a mass T η z) 2 (canonicalJointMeasure d N) := by
+    intro z
+    unfold canonicalRoughFieldFunction
+    refine MemLp.const_mul ?_ _
+    refine memLp_finset_sum _ (fun m _ => ?_)
+    refine MemLp.const_mul ?_ _
+    rw [canonicalJointMeasure]
+    have h : MemLp (fun η_R : (Fin d → Fin N) → ℝ => η_R m) 2
+        (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) :=
+      MemLp.comp_measurePreserving IsGaussian.memLp_two_id
+        (measurePreserving_eval (μ := fun _ : Fin d → Fin N => gaussianReal 0 1) m)
+    exact h.comp_measurePreserving
+      (μ := (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)).prod
+        (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)))
+      measurePreserving_snd
+  have h_ss_int : Integrable (fun η : CanonicalJoint d N =>
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y) (canonicalJointMeasure d N) :=
+    MemLp.integrable_mul (h_smooth_memLp x) (h_smooth_memLp y)
+  have h_sr_int : Integrable (fun η : CanonicalJoint d N =>
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y) (canonicalJointMeasure d N) :=
+    MemLp.integrable_mul (h_smooth_memLp x) (h_rough_memLp y)
+  have h_rs_int : Integrable (fun η : CanonicalJoint d N =>
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y) (canonicalJointMeasure d N) :=
+    MemLp.integrable_mul (h_rough_memLp x) (h_smooth_memLp y)
+  have h_rr_int : Integrable (fun η : CanonicalJoint d N =>
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y) (canonicalJointMeasure d N) :=
+    MemLp.integrable_mul (h_rough_memLp x) (h_rough_memLp y)
+  have h_ss_int' : Integrable fss (canonicalJointMeasure d N) := by
+    simpa [fss] using h_ss_int
+  have h_sr_int' : Integrable fsr (canonicalJointMeasure d N) := by
+    simpa [fsr] using h_sr_int
+  have h_rs_int' : Integrable frs (canonicalJointMeasure d N) := by
+    simpa [frs] using h_rs_int
+  have h_rr_int' : Integrable frr (canonicalJointMeasure d N) := by
+    simpa [frr] using h_rr_int
+  change ∫ η, (fss + (fsr + (frs + frr))) η ∂(canonicalJointMeasure d N) = _
+  have hsplit1 :
+      ∫ η, (fss + (fsr + (frs + frr))) η ∂(canonicalJointMeasure d N) =
+        ∫ η, fss η ∂(canonicalJointMeasure d N) +
+          ∫ η, (fsr + (frs + frr)) η ∂(canonicalJointMeasure d N) := by
+    simpa using integral_add h_ss_int' (h_sr_int'.add (h_rs_int'.add h_rr_int'))
+  have hsplit2 :
+      ∫ η, (fsr + (frs + frr)) η ∂(canonicalJointMeasure d N) =
+        ∫ η, fsr η ∂(canonicalJointMeasure d N) +
+          ∫ η, (frs + frr) η ∂(canonicalJointMeasure d N) := by
+    simpa using integral_add h_sr_int' (h_rs_int'.add h_rr_int')
+  have hsplit3 :
+      ∫ η, (frs + frr) η ∂(canonicalJointMeasure d N) =
+        ∫ η, frs η ∂(canonicalJointMeasure d N) +
+          ∫ η, frr η ∂(canonicalJointMeasure d N) := by
+    simpa using integral_add h_rs_int' h_rr_int'
+  rw [hsplit1, hsplit2, hsplit3]
+  rw [h_ss, h_sr, h_rs, h_rr]
+  rw [zero_add, zero_add, ← mul_add, ← Finset.sum_add_distrib]
+  congr 1
+  refine Finset.sum_congr rfl ?_
+  intro m _
+  have hnormPos : 0 < latticeFourierProductNormSq N d m :=
+    latticeFourierProductNormSq_pos (N := N) d m
+  have hLamPos : 0 < canonicalEigenvalue d N a mass m :=
+    canonicalEigenvalue_pos (d := d) (N := N) (a := a) (mass := mass) ha hmass m
+  calc
+    canonicalSmoothWeight d N a mass T m *
+        latticeFourierProductBasisFun N d m x *
+        latticeFourierProductBasisFun N d m y /
+        latticeFourierProductNormSq N d m +
+      canonicalRoughWeight d N a mass T m *
+        latticeFourierProductBasisFun N d m x *
+        latticeFourierProductBasisFun N d m y /
+        latticeFourierProductNormSq N d m
+      = (canonicalSmoothWeight d N a mass T m +
+          canonicalRoughWeight d N a mass T m) *
+          (latticeFourierProductBasisFun N d m x *
+            latticeFourierProductBasisFun N d m y /
+            latticeFourierProductNormSq N d m) := by
+              ring
+    _ = (canonicalEigenvalue d N a mass m)⁻¹ *
+          (latticeFourierProductBasisFun N d m x *
+            latticeFourierProductBasisFun N d m y /
+            latticeFourierProductNormSq N d m) := by
+              rw [← canonicalEigenvalue_split (d := d) (N := N) (a := a) (mass := mass) T m]
+    _ = latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y /
+          (canonicalEigenvalue d N a mass m *
+            latticeFourierProductNormSq N d m) := by
+              field_simp [ne_of_gt hLamPos, ne_of_gt hnormPos]
+
+private lemma latticeFourierProductCoeff_delta
+    (x : FinLatticeSites d N) (m : Fin d → Fin N) :
+    latticeFourierProductCoeff N d (fun z : FinLatticeSites d N => if z = x then 1 else 0) m =
+      latticeFourierProductBasisFun N d m x := by
+  unfold latticeFourierProductCoeff
+  rw [Finset.sum_eq_single x]
+  · simp
+  · intro z _ hzx
+    simp [if_neg hzx]
+  · intro hx
+    exact (hx (Finset.mem_univ x)).elim
+
+theorem canonicalSumFieldFunction_covariance_eq_GJ
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    let δ_x : FinLatticeField d N := fun z => if z = x then 1 else 0
+    let δ_y : FinLatticeField d N := fun z => if z = y then 1 else 0
+    ∫ η : CanonicalJoint d N,
+      canonicalSumFieldFunction d N a mass T η x *
+        canonicalSumFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) δ_x δ_y := by
+  intro δ_x δ_y
+  rw [canonicalSumFieldFunction_covariance d N a mass ha hmass T hT x y]
+  rw [GaussianField.latticeCovariance_GJ_eq_inv_smul_bare]
+  refine congrArg ((a^d : ℝ)⁻¹ * ·) ?_
+  symm
+  calc
+    GaussianField.covariance (latticeCovariance d N a mass ha hmass) δ_x δ_y
+      = ∑ m : Fin d → Fin N,
+          latticeFourierProductCoeff N d δ_x m *
+            latticeFourierProductCoeff N d δ_y m /
+            (canonicalEigenvalue d N a mass m *
+              latticeFourierProductNormSq N d m) := by
+                simpa [canonicalEigenvalue] using
+                  (abstract_spectral_eq_dft_spectral_family (N := N) d a mass ha hmass δ_x δ_y)
+    _ = ∑ m : Fin d → Fin N,
+          latticeFourierProductBasisFun N d m x *
+            latticeFourierProductBasisFun N d m y /
+            (canonicalEigenvalue d N a mass m *
+              latticeFourierProductNormSq N d m) := by
+                refine Finset.sum_congr rfl ?_
+                intro m hm
+                rw [latticeFourierProductCoeff_delta (d := d) (N := N) x m,
+                  latticeFourierProductCoeff_delta (d := d) (N := N) y m]
+
+end Variance
 
 end Canonical
 

@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 # Chaos → One-Sided Tail Bridge
 
-`polynomial_chaos_concentration` (Janson 5.10, in markov-semigroups)
+`polynomial_chaos_concentration` (Janson 5.10, in gaussian-hilbert)
 gives a two-sided tail bound:
 `μ{|F| > λ‖F‖_2} ≤ 2 exp(-c_d · λ^{2/d})`.
 
@@ -19,7 +19,7 @@ intrinsic `‖F‖_2`). This file provides that translation.
   `μ{ω | F ω ≤ -t} ≤ 2 · ENNReal.ofReal (exp (-c_d · (t/(2K))^{2/d}))`
   for a universal `c_d > 0` (depending only on `d`).
 
-This is the key lemma between markov-semigroups's
+This is the key lemma between gaussian-hilbert's
 `polynomial_chaos_concentration` and the abstract bridge in
 `BridgeFromTail.lean`.
 
@@ -29,13 +29,13 @@ This is the key lemma between markov-semigroups's
 -/
 
 import Mathlib.MeasureTheory.Measure.MeasureSpace
-import MarkovSemigroups.Gaussian.PolynomialChaosConcentration
+import GaussianHilbert.PolynomialChaosConcentration
 
 noncomputable section
 
 namespace Pphi2.ChaosTailBridge
 
-open MeasureTheory MarkovSemigroups.Gaussian
+open MeasureTheory GaussianHilbert
 
 /-- **One-sided tail bound from `polynomial_chaos_concentration` plus
 an `L²` upper bound.**

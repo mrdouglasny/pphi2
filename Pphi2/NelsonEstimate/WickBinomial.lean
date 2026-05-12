@@ -329,6 +329,49 @@ theorem wickMonomial_four_lower_bound (c : ℝ) (_hc : 0 ≤ c) (x : ℝ) :
   -- This equals (x² - 3c)² - 6c² ≥ -6c²
   linarith [sq_nonneg (x ^ 2 - 3 * c), h4]
 
+/-! ## Cancellation of the all-`x` term
+
+The binomial expansion `:( x + y )^n :_{c₁+c₂} = Σ_{k=0}^{n} C(n,k) :x^k:_{c₁} :y^{n-k}:_{c₂}`
+has a special term at `k = n`: `:x^n:_{c₁}` (using `n.choose n = 1` and
+`wickMonomial 0 c y = 1`). Subtracting `:x^n:_{c₁}` removes that term,
+leaving the sum over `k = 0, …, n-1` — the "cross terms" that contain
+at least one `y`-factor. -/
+
+/-- Subtracting the all-`x` Wick monomial from the binomial expansion
+leaves the cross-term sum over `k ∈ {0, …, n-1}`:
+  `:( x + y )^n :_{c₁+c₂} - :x^n:_{c₁} =
+     Σ_{k < n} C(n,k) · :x^k:_{c₁} · :y^{n-k}:_{c₂}`. -/
+theorem wickMonomial_add_sub_self (n : ℕ) (c₁ c₂ x y : ℝ) :
+    wickMonomial n (c₁ + c₂) (x + y) - wickMonomial n c₁ x =
+    ∑ k ∈ range n,
+      (n.choose k : ℝ) * wickMonomial k c₁ x * wickMonomial (n - k) c₂ y := by
+  rw [wickMonomial_add_binomial, Finset.sum_range_succ]
+  simp [Nat.choose_self, wickMonomial_zero]
+
+/-- Subtracting the all-`x` Wick polynomial from the Wick polynomial evaluated
+at `x + y` (with split variance `c₁ + c₂`) leaves the cross-term sum where
+each contribution contains at least one `y`-factor `:y^{n-k}:_{c₂}` with
+`k < n`. Applies `wickMonomial_add_sub_self` to the leading monomial and
+to each polynomial-coefficient monomial. -/
+theorem wickPolynomial_add_sub_self
+    (P : InteractionPolynomial) (c₁ c₂ x y : ℝ) :
+    wickPolynomial P (c₁ + c₂) (x + y) - wickPolynomial P c₁ x =
+    (1 / P.n : ℝ) * (∑ k ∈ range P.n,
+        (P.n.choose k : ℝ) * wickMonomial k c₁ x *
+          wickMonomial (P.n - k) c₂ y)
+    + ∑ m : Fin P.n, P.coeff m * (∑ k ∈ range (m : ℕ),
+        ((m : ℕ).choose k : ℝ) * wickMonomial k c₁ x *
+          wickMonomial ((m : ℕ) - k) c₂ y) := by
+  unfold wickPolynomial
+  have h_arith : ∀ {a b c d : ℝ}, (a + b) - (c + d) = (a - c) + (b - d) := by
+    intros; ring
+  rw [h_arith]
+  congr 1
+  · rw [← mul_sub, wickMonomial_add_sub_self]
+  · rw [← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl fun m _ => ?_
+    rw [← mul_sub, wickMonomial_add_sub_self]
+
 end Pphi2
 
 end

@@ -14,7 +14,7 @@ theorem upstream in `markov-semigroups`.
 
 `polynomial_chaos_exp_moment_bridge` is the lattice-Wick-polynomial
 specialization of Janson's Theorem 5.10
-(`MarkovSemigroups.Gaussian.PolynomialChaosConcentration`). It states
+(`GaussianHilbert.PolynomialChaosConcentration`). It states
 the dynamical-cutoff conclusion: for the lattice GFF on `(ℤ/Nℤ)^d`
 with spacing `a` and mass `m > 0`, and a fixed even interaction
 polynomial `P`,
@@ -58,7 +58,7 @@ similarly via a separate BC-limit lemma.
   (Jaffe-suggested LD framing; 2-pass Gemini-vetted).
 - markov-semigroups/docs/polynomial-chaos-roadmap.md — the upstream
   implementation plan.
-- markov-semigroups/MarkovSemigroups/Gaussian/PolynomialChaosConcentration.lean
+- gaussian-hilbert/GaussianHilbert/PolynomialChaosConcentration.lean
   — the upstream Janson Theorem 5.10 axiom.
 - Glimm and Jaffe, *Quantum Physics*, Ch. 8 — the dynamical cutoff proof.
 - Simon, *The P(φ)₂ Euclidean QFT*, Ch. I.
@@ -94,7 +94,7 @@ $$
    $E_R = V(\phi) - V_S(\phi_S)$, which is a degree-$\deg P$ Wick
    polynomial in $\phi_R$ (so lives in $\mathcal H^{\le \deg P}$),
    apply Janson Theorem 5.10
-   (`MarkovSemigroups.Gaussian.PolynomialChaosConcentration`,
+   (`GaussianHilbert.PolynomialChaosConcentration`,
    currently axiomatized in markov-semigroups awaiting upstream proof):
    $\mathbb P(|E_R| > \lambda) \le 2 \exp(- c \, \lambda^{2/\deg P} \,
    T^{-\delta/\deg P})$, with $\delta$ from the rough-covariance
