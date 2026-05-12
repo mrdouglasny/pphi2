@@ -53,6 +53,42 @@ Notes:
   2026-05-10 split, and 2 of those have since been discharged
   upstream).
 
+## 2026-05-12 (later) S4 + S5 discharged using Phase B axioms
+
+Following the Phase B textbook-axiom proposal + Gemini DT vetting (entry
+below), the two proposed axioms were introduced into
+`Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean` and used to prove S4
+and S5. **First time the rough_error_variance critical-path file has
+zero sorries.**
+
+What landed (Codex):
+- `Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean` (new file, 33 lines):
+  the two Phase B textbook axioms with the corrected `hd : d = 2` +
+  post-∃ T-quantifier signatures.
+- `canonicalCrossTerm_l2_sq_le` (S4, RoughErrorBound.lean:1275): proved
+  by diagonal 2-site Wick formula + Hölder-style covariance bounding +
+  the two new axioms.
+- `rough_error_variance` (S5, RoughErrorBound.lean:1517): proved by
+  S3 (canonicalRoughError_l2_sq_eq) + S4 + integrability discharges +
+  finite-sum arithmetic.
+- Generic integrability helpers: `integrable_sum_mul_sum_of_pairwise`
+  (line 274), `integrable_sq_real_sum_of_pairwise` (line 299).
+
+Verification: `#print axioms` confirms exactly
+`[propext, Classical.choice, Quot.sound,
+ smoothWickConstant_le_log_uniform_in_aN,
+ canonicalRoughCovariance_pow_sum_le_uniform_in_aN]` for both S4 and S5.
+
+Pphi2 sorry count: 2 → 0.
+Pphi2 axiom count: 17 → 19.
+
+**Status of the polynomial_chaos_exp_moment_bridge critical-path
+axiom:** Step 1 (`rough_error_variance`) is now complete. Remaining
+phases 2 + 3 (apply Janson 5.10 for L^p + tail bounds; layer-cake
+assembly into `LatticeRoughErrorSetup`) are described in
+`docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`. Neither adds
+new pphi2 axioms beyond the two Phase B textbook axioms here.
+
 ## 2026-05-12 Phase B textbook axiom proposal + Gemini DT vetting
 
 After yesterday's S3 discharge (`canonicalCrossTerm_inner_eq_zero`
