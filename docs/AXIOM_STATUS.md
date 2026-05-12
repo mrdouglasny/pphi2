@@ -9,9 +9,9 @@ passes and discharges. Last refreshed: 2026-05-10.*
 | Count | Value |
 |---|---|
 | pphi2 axioms (active) | **17** (15 public + 2 `private`) |
-| pphi2 sorries | **3** (all in `RoughErrorBound.lean`, all en route to `rough_error_variance`): `canonicalCrossTerm_inner_eq_zero` (S3 cross-term orthogonality, needs the canonical-side 2-site Wick power formula); `canonicalCrossTerm_l2_sq_le` (S4 per-cross-term L² bound, needs upstream Glimm-Jaffe + diagonal 2-site Wick); `rough_error_variance` (main theorem, S5 assembly given S3 + S4). S1, S2, full S3 composition (`canonicalRoughError_l2_sq_eq`) all proved structurally. |
+| pphi2 sorries | **3** (all in `RoughErrorBound.lean`, all en route to `rough_error_variance`): `canonicalCrossTerm_inner_eq_zero` (S3 cross-term orthogonality; gaussian-field's `gff_wickPower_two_site_inner` (now axiom-free at 8705a13) handles the lattice GFF case — for the canonical-setup adaptation see [`canonical-2site-wick-formula-plan.md`](canonical-2site-wick-formula-plan.md)); `canonicalCrossTerm_l2_sq_le` (S4 per-cross-term L² bound, needs upstream Glimm-Jaffe Phase B + diagonal canonical 2-site Wick); `rough_error_variance` (main theorem, S5 assembly given S3 + S4). S1, S2, full S3 composition (`canonicalRoughError_l2_sq_eq`) all proved structurally. |
 | `lake build` | clean (3803 jobs) |
-| Direct upstream deps | gaussian-field (`9c66a40`, 8 axioms / 0 sorries), markov-semigroups (`3cb482d`, 11 axioms / 0 sorries), gaussian-hilbert (`e6cfc80`, 4 axioms / 0 sorries), bochner (`main`) |
+| Direct upstream deps | gaussian-field (`8705a13`, 3 axioms / 0 sorries), markov-semigroups (`3cb482d`, 11 axioms / 0 sorries), gaussian-hilbert (`05ee231`, 4 axioms / 0 sorries), bochner (`main`) |
 
 The `scripts/count_axioms.sh` script reports 19 because of two
 `axiom`-prefixed words in docstrings at `LatticeBridge.lean:21` and
@@ -133,7 +133,7 @@ and [`.lake/packages/MarkovSemigroups/docs/AXIOM_AUDIT.md`](https://github.com/m
 | pphi2 | 17 | 3 critical-path axioms have detailed plans (`polynomial_chaos_exp_moment_bridge` + 1 sub-doc; `latticeGreenBilinear_basis_tendsto_continuum`); rest are textbook items with literature citations |
 | gaussian-hilbert | 4 | All 4 plan-covered: 1 (`polynomial_dense_L2_of_subGaussian`) is DT-vetted Standard; 3 (OU placeholders) covered by `ou-mehler-discharge-plan.md` |
 | markov-semigroups | 11 | All textbook with literature refs in `AXIOM_AUDIT.md`; no near-term discharge plans (long-term debt) |
-| gaussian-field | 8 | Vetted in 2026-05-09 Gemini pass; 4 cylinder norm-eq axioms have plan in `gaussian-field-norm-eq-discharge-plan.md` |
+| gaussian-field | 3 | Down from 8 after the 2026-05-10 cylinder/Hermite discharges + the 2026-05-11 `gff_wickPower_two_site_inner` proof (axiom-free, Janson 2-site Wick formula on lattice GFF). Remaining 3 axioms are Gemini-vetted Standard classical-analysis (embed-L²-uniform-bound, fourier-multiplier-Schwartz, Hermite-Galerkin tendsto). |
 
 ## How to update this file
 
