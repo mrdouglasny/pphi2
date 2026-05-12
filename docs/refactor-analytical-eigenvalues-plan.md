@@ -1,5 +1,23 @@
-# Refactor plan: discharge GJ-form sorry — final version (v3)
+# Refactor plan: discharge GJ-form sorry — final version (v3) [COMPLETED]
 
+> **STATUS: IMPLEMENTED** (Track 1 + Track 2 both done):
+> - `3e0e962` — *Rewrite FieldDecomposition via product DFT basis* (Track 1)
+> - `1a26483` — *Track 2: move generic d-dim DFT machinery to gaussian-field*
+> - `8ba92f7` — *NelsonEstimate/FieldDecomposition: remove false GJ-form theorem + bridge sorry*
+> - `de5edcb` — *cleanup: drop unused DFT duplicate from Pphi2/GeneralResults*
+>
+> The post-refactor `FieldDecomposition.lean` uses `latticeFourierProductBasisFun`
+> (now living in upstream `gaussian-field/Lattice/LatticeFourierProduct.lean` after
+> Track 2). The false `massEigenvalues_eq_latticeEigenvalue` bridge is removed;
+> the `canonicalSumFieldFunction_covariance_eq_GJ` theorem is gone, replaced by
+> the still-correct variance theorem `canonicalSumFieldFunction_covariance`.
+> All downstream work (e.g. `RoughErrorBound.lean`'s `canonicalCrossTerm` /
+> `canonicalRoughError` and the `canonical-2site-wick-formula-plan.md`)
+> is built on top of this post-refactor structure.
+>
+> Doc kept for historical reference; the plan body below describes the
+> design that has now been executed.
+>
 > **History:**
 > - v1: replace matrix-spectral defs with explicit DFT in gaussian-field.
 > - v2: refined with separation-of-variables design, direct pointwise basis,
