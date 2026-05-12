@@ -122,11 +122,21 @@ sorries are at the right granularity for either Path B or Path C
 to discharge them, and they have axiom-free *statements* (no new
 upstream axioms).
 
-### Path B: Generalise the gff lemma (cleanest architecturally)
+### Path B: Generalise the gff lemma (cleanest architecturally) — IN PROGRESS
 
-In `gaussian-field/GaussianField/WickMultivariate.lean`, add a generic
-Janson 2-site Wick power formula on an abstract orthogonal Gaussian
-system:
+**Status (2026-05-12):** primitives ready; the abstract Janson formula
+itself is the next concrete chunk for Codex.
+
+✅ `multiWickMonomial_pi_gaussianReal_inner` — landed in gaussian-field
+at commit `269fbc2`, axiom-free. Direct multivariate Wick orthogonality
+on `Π_j gaussianReal`:
+```
+∫ ∏_j :ξ_j^{α_j}:_1 · ∏_j :ξ_j^{β_j}:_1 ∂(Π_j gaussianReal 0 1)
+  = δ_{α, β} · ∏_j α_j!
+```
+
+⬜ `janson_two_site_wick_power_inner` — to be added in
+`gaussian-field/GaussianField/WickMultivariate.lean`. Statement:
 
 ```lean
 theorem janson_two_site_wick_power_inner
