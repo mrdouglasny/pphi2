@@ -16,6 +16,41 @@ lemma canonicalCrossTerm_inner_eq_zero
 This is the S3 cross-term orthogonality, the analytical input that
 `canonicalRoughError_l2_sq_eq` (the full L²-sq decomposition) consumes.
 
+## Missing prerequisite in `FieldDecomposition.lean`
+
+Before the canonical 2-site Wick formula can be stated with the correct
+variance constants, `FieldDecomposition.lean` still needs the canonical
+on-site variance identification lemmas that tie the product-DFT
+construction to the Glimm-Jaffe cutoff constants:
+
+1. Smooth on-site translation invariance:
+   `canonicalSmoothFieldFunction_self_moment x x` is independent of `x`.
+2. Smooth Wick-constant identification:
+   `canonicalSmoothFieldFunction_self_moment x x = smoothWickConstant d N a mass T`.
+3. Rough Wick-constant identification:
+   `canonicalRoughFieldFunction_self_moment x x = roughWickConstant d N a mass T`.
+
+The expected proof route is:
+
+- Start from the existing self-moment formulas in
+  `Pphi2/NelsonEstimate/FieldDecomposition.lean`, which already express
+  the smooth/rough variances as product-DFT diagonal sums.
+- Use product-basis completeness
+  (`latticeFourierProductBasis_sq_sum`) to identify the site-average of
+  those diagonal sums.
+- Reindex the integer-indexed Glimm-Jaffe eigenvalue averages to the
+  product-DFT indexing via
+  `sum_latticeEigenvalue_eq_sum_latticeEigenvalue1d_family` from
+  `Lattice.LatticeFourierIndexing`.
+- Conclude that the diagonal product-DFT sums match
+  `smoothWickConstant` / `roughWickConstant`, hence are site-independent.
+
+Without these lemmas, the canonical-side Wick monomials are still
+renormalized by constants that have not yet been identified with the
+actual variances of `canonicalSmoothFieldFunction` and
+`canonicalRoughFieldFunction`, so the 2-site formula is not yet in the
+correct form for S3.
+
 ## Why the gff lemma doesn't directly apply
 
 `gaussian-field`'s `gff_wickPower_two_site_inner` (just proved, axiom-free) gives
@@ -132,7 +167,8 @@ specialisations.
 
 This is the cleanest architectural fix: one generic lemma in
 gaussian-field, three specialisations downstream. **Recommended path
-for Codex.**
+for Codex, after the variance-identification prerequisite above is in
+place.**
 
 ### Path C: Smooth-/rough-only-GFF pushforward identification
 
