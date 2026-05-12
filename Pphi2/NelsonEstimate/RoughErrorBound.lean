@@ -41,7 +41,7 @@ Quarantined to `CovarianceSplit.lean` once Codex hits the exact API needed.
   concentration)
 -/
 
-import Pphi2.NelsonEstimate.FieldDecomposition
+import Pphi2.NelsonEstimate.CovarianceBoundsGJ
 import Pphi2.WickOrdering.WickPolynomial
 
 noncomputable section
@@ -268,6 +268,42 @@ For two finite-indexed coefficient sums whose pairwise cross-integrals
 all vanish, the integral of their product vanishes. Used to combine
 the leading and per-coefficient pieces of `canonicalRoughError` via
 `integral_sq_add_of_inner_eq_zero`. -/
+
+/-- Integrability of the product of two finite coefficient sums, assuming
+pairwise integrability of every cross-product term. -/
+lemma integrable_sum_mul_sum_of_pairwise
+    {α ιA ιB : Type*} [MeasurableSpace α] {μ : Measure α}
+    (sA : Finset ιA) (sB : Finset ιB)
+    (cA : ιA → ℝ) (cB : ιB → ℝ)
+    (fA : ιA → α → ℝ) (fB : ιB → α → ℝ)
+    (h_int : ∀ iA ∈ sA, ∀ iB ∈ sB, Integrable (fun x => fA iA x * fB iB x) μ) :
+    Integrable (fun x => (∑ iA ∈ sA, cA iA * fA iA x) *
+         (∑ iB ∈ sB, cB iB * fB iB x)) μ := by
+  have h_expand : (fun x => (∑ iA ∈ sA, cA iA * fA iA x) *
+        (∑ iB ∈ sB, cB iB * fB iB x)) =
+      (fun x => ∑ iA ∈ sA, ∑ iB ∈ sB,
+        (cA iA * cB iB) * (fA iA x * fB iB x)) := by
+    funext x
+    rw [Finset.sum_mul_sum]
+    refine Finset.sum_congr rfl fun iA _ => ?_
+    refine Finset.sum_congr rfl fun iB _ => ?_
+    ring
+  refine (MeasureTheory.integrable_finset_sum sA fun iA hiA =>
+    MeasureTheory.integrable_finset_sum sB fun iB hiB =>
+      (h_int iA hiA iB hiB).const_mul (cA iA * cB iB)).congr ?_
+  filter_upwards with x
+  exact (congrFun h_expand x).symm
+
+/-- Integrability of the square of a finite coefficient sum, assuming
+pairwise integrability of all products `f i * f j`. -/
+lemma integrable_sq_real_sum_of_pairwise
+    {α ι : Type*} [MeasurableSpace α] {μ : Measure α}
+    (s : Finset ι) (f : ι → α → ℝ) (a : ι → ℝ)
+    (h_int : ∀ i ∈ s, ∀ j ∈ s, Integrable (fun x => f i x * f j x) μ) :
+    Integrable (fun x => (∑ i ∈ s, a i * f i x) ^ 2) μ := by
+  simpa [sq] using
+    (integrable_sum_mul_sum_of_pairwise
+      (μ := μ) s s a a f f h_int)
 
 /-- Cross-integral of two finite sums vanishes when each pairwise
 cross-integral does. Pure sum + integration linearity given the
@@ -954,6 +990,260 @@ theorem canonicalRoughError_l2_sq_eq
   refine Finset.sum_congr rfl fun m _ => ?_
   exact canonicalRoughError_perCoeff_l2_sq d N a mass ha hmass T hT P m (h_int_perCoeff_pairs m)
 
+lemma canonicalCrossTerm_pair_integrable
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (k j k' j' : ℕ) :
+    Integrable (fun η =>
+        canonicalCrossTerm d N a mass T η k j *
+          canonicalCrossTerm d N a mass T η k' j')
+      (canonicalJointMeasure d N) := by
+  let cS := smoothWickConstant d N a mass T
+  let cR := roughWickConstant d N a mass T
+  let μS : Measure ((Fin d → Fin N) → ℝ) :=
+    Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1)
+  let μR : Measure ((Fin d → Fin N) → ℝ) :=
+    Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1)
+  let term : FinLatticeSites d N → FinLatticeSites d N → CanonicalJoint d N → ℝ :=
+    fun x y η =>
+      (wickMonomial j cS (canonicalSmoothFieldFunction d N a mass T η x) *
+          wickMonomial j' cS (canonicalSmoothFieldFunction d N a mass T η y)) *
+        (wickMonomial (k - j) cR (canonicalRoughFieldFunction d N a mass T η x) *
+          wickMonomial (k' - j') cR (canonicalRoughFieldFunction d N a mass T η y))
+  have h_term_int :
+      ∀ x y, Integrable (term x y) (canonicalJointMeasure d N) := by
+    intro x y
+    rw [canonicalJointMeasure]
+    let f : ((Fin d → Fin N) → ℝ) → ℝ := fun η_S =>
+      wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+        wickMonomial j' cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y)
+    let g : ((Fin d → Fin N) → ℝ) → ℝ := fun η_R =>
+      wickMonomial (k - j) cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+        wickMonomial (k' - j') cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y)
+    have hf : Integrable f μS := by
+      simpa [f, μS, cS] using
+        (canonicalSmoothWickPower_two_site_marginal_integrable
+          (d := d) (N := N) (a := a) (mass := mass)
+          ha hmass T hT j j' x y)
+    have hg : Integrable g μR := by
+      simpa [g, μR, cR] using
+        (canonicalRoughWickPower_two_site_marginal_integrable
+          (d := d) (N := N) (a := a) (mass := mass)
+          ha hmass T hT (k - j) (k' - j') x y)
+    simpa [term, CanonicalJoint, f, g, μS, μR, cS, cR,
+      mul_assoc, mul_left_comm, mul_comm] using
+      (Integrable.mul_prod (μ := μS) (ν := μR) hf hg)
+  have h_expand :
+      ∀ η : CanonicalJoint d N,
+        canonicalCrossTerm d N a mass T η k j *
+            canonicalCrossTerm d N a mass T η k' j' =
+          ((a ^ d) * (a ^ d)) * ∑ x : FinLatticeSites d N,
+            ∑ y : FinLatticeSites d N, term x y η := by
+    intro η
+    unfold canonicalCrossTerm term
+    rw [show
+      (a ^ d * ∑ x,
+          wickMonomial j (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k - j) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) *
+        (a ^ d * ∑ x,
+          wickMonomial j' (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k' - j') (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) =
+      ((a ^ d) * (a ^ d)) *
+      ((∑ x,
+          wickMonomial j (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k - j) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) *
+        (∑ x,
+          wickMonomial j' (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k' - j') (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x))) by
+      ring]
+    rw [Finset.sum_mul_sum]
+    simp [cS, cR, mul_assoc, mul_left_comm]
+  have h_sum_int :
+      Integrable
+        (fun η => ((a ^ d) * (a ^ d)) * ∑ x : FinLatticeSites d N,
+          ∑ y : FinLatticeSites d N, term x y η)
+        (canonicalJointMeasure d N) := by
+    refine (MeasureTheory.integrable_finset_sum _ fun x _ =>
+      MeasureTheory.integrable_finset_sum _ fun y _ =>
+        h_term_int x y).const_mul _
+  refine h_sum_int.congr ?_
+  filter_upwards with η
+  exact (h_expand η).symm
+
+lemma canonicalCrossTerm_l2_sq_eq_covSum
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (k j : ℕ) :
+    ∫ η, (canonicalCrossTerm d N a mass T η k j) ^ 2
+        ∂(canonicalJointMeasure d N) =
+      ((a ^ d) * (a ^ d)) * ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+        ∑ x : FinLatticeSites d N,
+          ∑ y : FinLatticeSites d N,
+            canonicalSmoothCovariance d N a mass T x y ^ j *
+              canonicalRoughCovariance d N a mass T x y ^ (k - j) := by
+  let cS := smoothWickConstant d N a mass T
+  let cR := roughWickConstant d N a mass T
+  let μS : Measure ((Fin d → Fin N) → ℝ) :=
+    Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1)
+  let μR : Measure ((Fin d → Fin N) → ℝ) :=
+    Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1)
+  let term : FinLatticeSites d N → FinLatticeSites d N → CanonicalJoint d N → ℝ :=
+    fun x y η =>
+      (wickMonomial j cS (canonicalSmoothFieldFunction d N a mass T η x) *
+          wickMonomial j cS (canonicalSmoothFieldFunction d N a mass T η y)) *
+        (wickMonomial (k - j) cR (canonicalRoughFieldFunction d N a mass T η x) *
+          wickMonomial (k - j) cR (canonicalRoughFieldFunction d N a mass T η y))
+  have h_term_int :
+      ∀ x y, Integrable (term x y) (canonicalJointMeasure d N) := by
+    intro x y
+    rw [canonicalJointMeasure]
+    let f : ((Fin d → Fin N) → ℝ) → ℝ := fun η_S =>
+      wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+        wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y)
+    let g : ((Fin d → Fin N) → ℝ) → ℝ := fun η_R =>
+      wickMonomial (k - j) cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+        wickMonomial (k - j) cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y)
+    have hf : Integrable f μS := by
+      simpa [f, μS, cS] using
+        (canonicalSmoothWickPower_two_site_marginal_integrable
+          (d := d) (N := N) (a := a) (mass := mass)
+          ha hmass T hT j j x y)
+    have hg : Integrable g μR := by
+      simpa [g, μR, cR] using
+        (canonicalRoughWickPower_two_site_marginal_integrable
+          (d := d) (N := N) (a := a) (mass := mass)
+          ha hmass T hT (k - j) (k - j) x y)
+    simpa [term, CanonicalJoint, f, g, μS, μR, cS, cR,
+      mul_assoc, mul_left_comm, mul_comm] using
+      (Integrable.mul_prod (μ := μS) (ν := μR) hf hg)
+  have h_expand :
+      ∀ η : CanonicalJoint d N,
+        (canonicalCrossTerm d N a mass T η k j) ^ 2 =
+          ((a ^ d) * (a ^ d)) * ∑ x : FinLatticeSites d N,
+            ∑ y : FinLatticeSites d N, term x y η := by
+    intro η
+    rw [sq]
+    unfold canonicalCrossTerm term
+    rw [show
+      (a ^ d * ∑ x,
+          wickMonomial j (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k - j) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) *
+        (a ^ d * ∑ x,
+          wickMonomial j (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k - j) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) =
+      ((a ^ d) * (a ^ d)) *
+      ((∑ x,
+          wickMonomial j (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k - j) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x)) *
+        (∑ x,
+          wickMonomial j (smoothWickConstant d N a mass T)
+              (canonicalSmoothFieldFunction d N a mass T η x) *
+            wickMonomial (k - j) (roughWickConstant d N a mass T)
+              (canonicalRoughFieldFunction d N a mass T η x))) by
+      ring]
+    rw [Finset.sum_mul_sum]
+    simp [cS, cR, mul_assoc, mul_left_comm]
+  simp_rw [h_expand]
+  rw [MeasureTheory.integral_const_mul]
+  rw [MeasureTheory.integral_finset_sum _ (fun x _ =>
+    MeasureTheory.integrable_finset_sum _ (fun y _ => h_term_int x y))]
+  have hxy :
+      ∀ x y,
+        ∫ η, term x y η ∂(canonicalJointMeasure d N) =
+          ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+            (canonicalSmoothCovariance d N a mass T x y ^ j *
+              canonicalRoughCovariance d N a mass T x y ^ (k - j)) := by
+    intro x y
+    have h_factor :
+        ∫ η, term x y η ∂(canonicalJointMeasure d N) =
+          (∫ η_S, wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+              wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y) ∂μS) *
+          (∫ η_R,
+              wickMonomial (k - j) cR
+                (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+              wickMonomial (k - j) cR
+                (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y) ∂μR) := by
+      rw [canonicalJointMeasure]
+      simpa [term, CanonicalJoint, μS, μR, cS, cR,
+        mul_assoc, mul_left_comm, mul_comm] using
+        (integral_prod_mul
+          (μ := μS) (ν := μR)
+          (f := fun η_S =>
+            wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+              wickMonomial j cS (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y))
+          (g := fun η_R =>
+            wickMonomial (k - j) cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+              wickMonomial (k - j) cR (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y)))
+    rw [h_factor]
+    rw [canonicalSmoothWickPower_two_site_marginal_eq_diag
+      (d := d) (N := N) (a := a) (mass := mass)
+      ha hmass T hT j x y]
+    rw [canonicalRoughWickPower_two_site_marginal_eq_diag
+      (d := d) (N := N) (a := a) (mass := mass)
+      ha hmass T hT (k - j) x y]
+    ring
+  calc
+    ((a ^ d) * (a ^ d)) *
+        ∑ x : FinLatticeSites d N,
+          ∫ η, ∑ y : FinLatticeSites d N, term x y η ∂(canonicalJointMeasure d N)
+      = ((a ^ d) * (a ^ d)) *
+          ∑ x : FinLatticeSites d N,
+            ∑ y : FinLatticeSites d N,
+              ∫ η, term x y η ∂(canonicalJointMeasure d N) := by
+                congr 1
+                refine Finset.sum_congr rfl ?_
+                intro x hx
+                rw [MeasureTheory.integral_finset_sum _ (fun y _ => h_term_int x y)]
+    _ = ((a ^ d) * (a ^ d)) *
+          ∑ x : FinLatticeSites d N,
+            ∑ y : FinLatticeSites d N,
+              (((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+                (canonicalSmoothCovariance d N a mass T x y ^ j *
+                  canonicalRoughCovariance d N a mass T x y ^ (k - j))) := by
+                    congr 1
+                    refine Finset.sum_congr rfl ?_
+                    intro x hx
+                    refine Finset.sum_congr rfl ?_
+                    intro y hy
+                    rw [hxy x y]
+    _ = ((a ^ d) * (a ^ d)) *
+          (((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+            ∑ x : FinLatticeSites d N,
+              ∑ y : FinLatticeSites d N,
+                (canonicalSmoothCovariance d N a mass T x y ^ j *
+                  canonicalRoughCovariance d N a mass T x y ^ (k - j))) := by
+                    have hfactor :
+                        ∑ x : FinLatticeSites d N,
+                          ∑ y : FinLatticeSites d N,
+                            ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+                              (canonicalSmoothCovariance d N a mass T x y ^ j *
+                                canonicalRoughCovariance d N a mass T x y ^ (k - j)) =
+                        ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+                          ∑ x : FinLatticeSites d N,
+                            ∑ y : FinLatticeSites d N,
+                              (canonicalSmoothCovariance d N a mass T x y ^ j *
+                                canonicalRoughCovariance d N a mass T x y ^ (k - j)) := by
+                          simp [Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm]
+                    rw [hfactor]
+    _ = ((a ^ d) * (a ^ d)) * ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+          ∑ x : FinLatticeSites d N,
+            ∑ y : FinLatticeSites d N,
+              (canonicalSmoothCovariance d N a mass T x y ^ j *
+                canonicalRoughCovariance d N a mass T x y ^ (k - j)) := by
+                  ring
+
 /-! ## S4: per-cross-term L² bound
 
 For each `(k, j)` with rough-degree `k - j ≥ 1` (so the cross-term has
@@ -992,7 +1282,210 @@ theorem canonicalCrossTerm_l2_sq_le
         ∫ η, (canonicalCrossTerm d N a mass T η k j) ^ 2
             ∂(canonicalJointMeasure d N) ≤
         K * T * (1 + |Real.log T|) ^ j := by
-  sorry
+  subst _hd
+  rcases smoothWickConstant_le_log_uniform_in_aN
+      (d := 2) rfl mass L _hL _hmass with
+    ⟨A, B, hA, hB, h_smooth_uniform⟩
+  rcases canonicalRoughCovariance_pow_sum_le_uniform_in_aN
+      (d := 2) rfl mass L _hL _hmass (k - j) _hkj with
+    ⟨C, hC_pos, h_rough_uniform⟩
+  let K : ℝ := ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+    (L ^ 2) * (A + B + 1) ^ j * C
+  refine ⟨K, ?_, ?_⟩
+  · have hfacj : 0 < (j.factorial : ℝ) := by positivity
+    have hfacr : 0 < (((k - j).factorial : ℝ)) := by positivity
+    have hL2 : 0 < L ^ 2 := by positivity
+    have hAB1 : 0 < A + B + 1 := by linarith
+    have hpow : 0 < (A + B + 1) ^ j := pow_pos hAB1 j
+    dsimp [K]
+    positivity
+  · intro N _ a ha h_vol T hT
+    have ha2_nonneg : 0 ≤ a ^ 2 := sq_nonneg a
+    have hfac_nonneg : 0 ≤ (j.factorial : ℝ) * ((k - j).factorial : ℝ) := by positivity
+    have h_card_nat : Fintype.card (FinLatticeSites 2 N) = N ^ 2 := by
+      simp only [FinLatticeSites, Fintype.card_fun, ZMod.card, Fintype.card_fin]
+    have h_card :
+        (Fintype.card (FinLatticeSites 2 N) : ℝ) = (N : ℝ) ^ 2 := by
+      rw [h_card_nat]
+      norm_num
+    have h_vol_sq :
+        a ^ 2 * (Fintype.card (FinLatticeSites 2 N) : ℝ) = L ^ 2 := by
+      rw [h_card]
+      calc
+        a ^ 2 * (N : ℝ) ^ 2 = ((N : ℝ) * a) ^ 2 := by ring
+        _ = L ^ 2 := by rw [h_vol]
+    have hsmooth_nonneg : 0 ≤ smoothWickConstant 2 N a mass T := by
+      unfold smoothWickConstant
+      have ha2_pos : 0 < a ^ 2 := pow_pos ha 2
+      have hsum_nonneg :
+          0 ≤ ∑ m ∈ Finset.range (Fintype.card (FinLatticeSites 2 N)),
+            smoothCovEigenvalue 2 N a mass T m := by
+        refine Finset.sum_nonneg fun m hm => ?_
+        unfold smoothCovEigenvalue
+        apply div_nonneg
+        · positivity
+        · exact le_of_lt (latticeEigenvalue_pos 2 N a mass ha _hmass m)
+      apply mul_nonneg (le_of_lt (inv_pos.mpr ha2_pos))
+      apply mul_nonneg
+      · positivity
+      · exact hsum_nonneg
+    have h_log_nonneg : 0 ≤ 1 + |Real.log T| := by
+      positivity
+    have h_log_one : 1 ≤ 1 + |Real.log T| := by
+      linarith [abs_nonneg (Real.log T)]
+    have h_smooth_linear :
+        smoothWickConstant 2 N a mass T ≤
+          (A + B + 1) * (1 + |Real.log T|) := by
+      have hbase := h_smooth_uniform N a ha h_vol T hT
+      calc
+        smoothWickConstant 2 N a mass T ≤ A + B * (1 + |Real.log T|) := hbase
+        _ ≤ (A + B) * (1 + |Real.log T|) := by
+          nlinarith [hA, hB, h_log_nonneg]
+        _ ≤ (A + B + 1) * (1 + |Real.log T|) := by
+          nlinarith [h_log_nonneg]
+    have h_smooth_pow :
+        smoothWickConstant 2 N a mass T ^ j ≤
+          (A + B + 1) ^ j * (1 + |Real.log T|) ^ j := by
+      calc
+        smoothWickConstant 2 N a mass T ^ j ≤
+            ((A + B + 1) * (1 + |Real.log T|)) ^ j :=
+          pow_le_pow_left₀ hsmooth_nonneg h_smooth_linear j
+        _ = (A + B + 1) ^ j * (1 + |Real.log T|) ^ j := by
+          rw [mul_pow]
+    have h_abs_sum :
+        ∑ x : FinLatticeSites 2 N,
+          ∑ y : FinLatticeSites 2 N,
+            canonicalSmoothCovariance 2 N a mass T x y ^ j *
+              canonicalRoughCovariance 2 N a mass T x y ^ (k - j)
+        ≤
+        ∑ x : FinLatticeSites 2 N,
+          ∑ y : FinLatticeSites 2 N,
+            |canonicalSmoothCovariance 2 N a mass T x y| ^ j *
+              |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j) := by
+      refine Finset.sum_le_sum ?_
+      intro x hx
+      refine Finset.sum_le_sum ?_
+      intro y hy
+      simpa [abs_mul, abs_pow] using
+        (le_abs_self
+          (canonicalSmoothCovariance 2 N a mass T x y ^ j *
+            canonicalRoughCovariance 2 N a mass T x y ^ (k - j)))
+    have h_summand_bound :
+        ∀ x y : FinLatticeSites 2 N,
+          |canonicalSmoothCovariance 2 N a mass T x y| ^ j *
+              |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j)
+            ≤
+          smoothWickConstant 2 N a mass T ^ j *
+            |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j) := by
+      intro x y
+      have hxy :=
+        abs_canonicalSmoothCovariance_le_smoothWickConstant
+          (d := 2) (N := N) (a := a) (mass := mass) ha _hmass T hT x y
+      exact mul_le_mul_of_nonneg_right
+        (pow_le_pow_left₀ (abs_nonneg _) hxy j)
+        (pow_nonneg (abs_nonneg _) _)
+    have h_sum_bound :
+        ∑ x : FinLatticeSites 2 N,
+          ∑ y : FinLatticeSites 2 N,
+            |canonicalSmoothCovariance 2 N a mass T x y| ^ j *
+              |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j)
+        ≤
+        smoothWickConstant 2 N a mass T ^ j *
+          ∑ x : FinLatticeSites 2 N,
+            ∑ y : FinLatticeSites 2 N,
+              |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j) := by
+      calc
+        ∑ x : FinLatticeSites 2 N,
+            ∑ y : FinLatticeSites 2 N,
+              |canonicalSmoothCovariance 2 N a mass T x y| ^ j *
+                |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j)
+          ≤
+            ∑ x : FinLatticeSites 2 N,
+              ∑ y : FinLatticeSites 2 N,
+                (smoothWickConstant 2 N a mass T ^ j *
+                  |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j)) := by
+              refine Finset.sum_le_sum ?_
+              intro x hx
+              refine Finset.sum_le_sum ?_
+              intro y hy
+              exact h_summand_bound x y
+        _ = smoothWickConstant 2 N a mass T ^ j *
+              ∑ x : FinLatticeSites 2 N,
+                ∑ y : FinLatticeSites 2 N,
+                  |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j) := by
+              simp [Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm]
+    have h_rough_sum :
+        a ^ 2 *
+          ∑ x : FinLatticeSites 2 N,
+            (a ^ 2 *
+              ∑ y : FinLatticeSites 2 N,
+                |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j))
+        ≤
+        L ^ 2 * (C * T) := by
+      have h_inner :
+          ∑ x : FinLatticeSites 2 N,
+            (a ^ 2 *
+              ∑ y : FinLatticeSites 2 N,
+                |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j))
+          ≤
+          ∑ x : FinLatticeSites 2 N, C * T := by
+        refine Finset.sum_le_sum ?_
+        intro x hx
+        exact h_rough_uniform N a ha h_vol T hT x
+      calc
+        a ^ 2 *
+            ∑ x : FinLatticeSites 2 N,
+              (a ^ 2 *
+                ∑ y : FinLatticeSites 2 N,
+                  |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j))
+          ≤
+            a ^ 2 * ∑ x : FinLatticeSites 2 N, C * T :=
+              mul_le_mul_of_nonneg_left h_inner ha2_nonneg
+        _ = (a ^ 2 * (Fintype.card (FinLatticeSites 2 N) : ℝ)) * (C * T) := by
+              simp [mul_assoc, mul_left_comm, mul_comm]
+        _ = L ^ 2 * (C * T) := by rw [h_vol_sq]
+    calc
+      ∫ η, (canonicalCrossTerm 2 N a mass T η k j) ^ 2
+          ∂(canonicalJointMeasure 2 N)
+        = ((a ^ 2) * (a ^ 2)) * ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+            ∑ x : FinLatticeSites 2 N,
+              ∑ y : FinLatticeSites 2 N,
+                canonicalSmoothCovariance 2 N a mass T x y ^ j *
+                  canonicalRoughCovariance 2 N a mass T x y ^ (k - j) := by
+            simpa using
+              canonicalCrossTerm_l2_sq_eq_covSum
+                (d := 2) (N := N) (a := a) (mass := mass) ha _hmass T hT k j
+      _ ≤ ((a ^ 2) * (a ^ 2)) * ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+            ∑ x : FinLatticeSites 2 N,
+              ∑ y : FinLatticeSites 2 N,
+                (|canonicalSmoothCovariance 2 N a mass T x y| ^ j *
+                  |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j)) := by
+            gcongr
+      _ ≤ ((a ^ 2) * (a ^ 2)) * ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+            (smoothWickConstant 2 N a mass T ^ j *
+              ∑ x : FinLatticeSites 2 N,
+                ∑ y : FinLatticeSites 2 N,
+                  |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j)) := by
+            gcongr
+      _ = ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+            (smoothWickConstant 2 N a mass T ^ j) *
+            (a ^ 2 *
+              ∑ x : FinLatticeSites 2 N,
+                (a ^ 2 *
+                  ∑ y : FinLatticeSites 2 N,
+                    |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j))) := by
+            simp [Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm]
+      _ ≤ ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+            (smoothWickConstant 2 N a mass T ^ j) *
+            (L ^ 2 * (C * T)) := by
+            gcongr
+      _ ≤ ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+            ((A + B + 1) ^ j * (1 + |Real.log T|) ^ j) *
+            (L ^ 2 * (C * T)) := by
+            gcongr
+      _ = K * T * (1 + |Real.log T|) ^ j := by
+            dsimp [K]
+            ring
 
 /-! ## Main theorem (statement, proof TBD)
 
@@ -1031,7 +1524,496 @@ theorem rough_error_variance
         ∫ η, (canonicalRoughError d N a mass T P η) ^ 2
           ∂(canonicalJointMeasure d N) ≤
         K * T * (1 + |Real.log T|) ^ (P.n - 1) := by
-  sorry
+  subst _hd
+  classical
+  let KLeadFun : ℕ → ℝ := fun j =>
+    if hj : j ∈ Finset.range P.n then
+      Classical.choose
+        (canonicalCrossTerm_l2_sq_le
+          (d := 2) rfl mass L _hL _hmass P.n j
+          (Nat.succ_le_of_lt (Nat.sub_pos_of_lt (Finset.mem_range.mp hj))))
+    else 1
+  let KPerFun : Fin P.n → ℕ → ℝ := fun m j =>
+    if hj : j ∈ Finset.range (m : ℕ) then
+      Classical.choose
+        (canonicalCrossTerm_l2_sq_le
+          (d := 2) rfl mass L _hL _hmass (m : ℕ) j
+          (Nat.succ_le_of_lt (Nat.sub_pos_of_lt (Finset.mem_range.mp hj))))
+    else 1
+  let KLeadSum : ℝ :=
+    ∑ j ∈ Finset.range P.n,
+      (((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2) * KLeadFun j
+  let KPerSum : ℝ :=
+    ∑ m : Fin P.n,
+      ∑ j ∈ Finset.range (m : ℕ),
+        ((P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2) * KPerFun m j
+  let K0 : ℝ := KLeadSum + KPerSum
+  let K : ℝ := K0 + 1
+  have hKLead_pos : ∀ j (hj : j ∈ Finset.range P.n), 0 < KLeadFun j := by
+    intro j hj
+    dsimp [KLeadFun]
+    simp [hj]
+    exact
+      (Classical.choose_spec
+        (canonicalCrossTerm_l2_sq_le
+          (d := 2) rfl mass L _hL _hmass P.n j
+          (Nat.succ_le_of_lt (Nat.sub_pos_of_lt (Finset.mem_range.mp hj))))).1
+  have hKLead_bound :
+      ∀ j (hj : j ∈ Finset.range P.n),
+        ∀ (N : ℕ) [NeZero N] (a : ℝ), 0 < a → (N : ℝ) * a = L →
+          ∀ (T : ℝ), 0 < T →
+            ∫ η, (canonicalCrossTerm 2 N a mass T η P.n j) ^ 2
+              ∂(canonicalJointMeasure 2 N) ≤
+            KLeadFun j * T * (1 + |Real.log T|) ^ j := by
+    intro j hj N _ a ha h_vol T hT
+    dsimp [KLeadFun]
+    simp [hj]
+    exact
+      (Classical.choose_spec
+        (canonicalCrossTerm_l2_sq_le
+          (d := 2) rfl mass L _hL _hmass P.n j
+          (Nat.succ_le_of_lt (Nat.sub_pos_of_lt (Finset.mem_range.mp hj))))).2 N a ha h_vol T hT
+  have hKPer_pos :
+      ∀ (m : Fin P.n) (j : ℕ) (hj : j ∈ Finset.range (m : ℕ)), 0 < KPerFun m j := by
+    intro m j hj
+    dsimp [KPerFun]
+    simp [hj]
+    exact
+      (Classical.choose_spec
+        (canonicalCrossTerm_l2_sq_le
+          (d := 2) rfl mass L _hL _hmass (m : ℕ) j
+          (Nat.succ_le_of_lt (Nat.sub_pos_of_lt (Finset.mem_range.mp hj))))).1
+  have hKPer_bound :
+      ∀ (m : Fin P.n) (j : ℕ) (hj : j ∈ Finset.range (m : ℕ)),
+        ∀ (N : ℕ) [NeZero N] (a : ℝ), 0 < a → (N : ℝ) * a = L →
+          ∀ (T : ℝ), 0 < T →
+            ∫ η, (canonicalCrossTerm 2 N a mass T η (m : ℕ) j) ^ 2
+              ∂(canonicalJointMeasure 2 N) ≤
+            KPerFun m j * T * (1 + |Real.log T|) ^ j := by
+    intro m j hj N _ a ha h_vol T hT
+    dsimp [KPerFun]
+    simp [hj]
+    exact
+      (Classical.choose_spec
+        (canonicalCrossTerm_l2_sq_le
+          (d := 2) rfl mass L _hL _hmass (m : ℕ) j
+          (Nat.succ_le_of_lt (Nat.sub_pos_of_lt (Finset.mem_range.mp hj))))).2 N a ha h_vol T hT
+  refine ⟨K, by
+    have hLead_nonneg : 0 ≤ KLeadSum := by
+      dsimp [KLeadSum]
+      refine Finset.sum_nonneg fun j hj => ?_
+      exact mul_nonneg (sq_nonneg _) (le_of_lt (hKLead_pos j hj))
+    have hPer_nonneg : 0 ≤ KPerSum := by
+      dsimp [KPerSum]
+      refine Finset.sum_nonneg fun m hm => ?_
+      refine Finset.sum_nonneg fun j hj => ?_
+      exact mul_nonneg (sq_nonneg _) (le_of_lt (hKPer_pos m j hj))
+    dsimp [K, K0]
+    linarith, ?_⟩
+  intro N _ a ha h_vol T hT
+  let u : ℝ := 1 + |Real.log T|
+  have hu_one : 1 ≤ u := by
+    dsimp [u]
+    linarith [abs_nonneg (Real.log T)]
+  have hu_nonneg : 0 ≤ u := by
+    linarith
+  have h_common_nonneg : 0 ≤ T * u ^ (P.n - 1) := by
+    positivity
+  have h_int_leading_pairs :
+      ∀ j ∈ Finset.range P.n,
+        ∀ j' ∈ Finset.range P.n,
+        Integrable (fun η =>
+            canonicalCrossTerm 2 N a mass T η P.n j *
+            canonicalCrossTerm 2 N a mass T η P.n j')
+          (canonicalJointMeasure 2 N) := by
+    intro j hj j' hj'
+    exact canonicalCrossTerm_pair_integrable 2 N a mass ha _hmass T hT P.n j P.n j'
+  have h_int_perCoeff_pairs :
+      ∀ m : Fin P.n,
+        ∀ j ∈ Finset.range (m : ℕ),
+        ∀ j' ∈ Finset.range (m : ℕ),
+        Integrable (fun η =>
+            canonicalCrossTerm 2 N a mass T η (m : ℕ) j *
+            canonicalCrossTerm 2 N a mass T η (m : ℕ) j')
+          (canonicalJointMeasure 2 N) := by
+    intro m j hj j' hj'
+    exact canonicalCrossTerm_pair_integrable 2 N a mass ha _hmass T hT (m : ℕ) j (m : ℕ) j'
+  have h_int_pairs_lead_perCoef :
+      ∀ j ∈ Finset.range P.n,
+        ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        Integrable (fun η =>
+            canonicalCrossTerm 2 N a mass T η P.n j *
+            ∑ j' ∈ Finset.range (m : ℕ),
+              ((m : ℕ).choose j' : ℝ) *
+                canonicalCrossTerm 2 N a mass T η (m : ℕ) j')
+          (canonicalJointMeasure 2 N) := by
+    intro j hj m hm
+    simpa using
+      (integrable_sum_mul_sum_of_pairwise
+        (μ := canonicalJointMeasure 2 N)
+        ({j} : Finset ℕ) (Finset.range (m : ℕ))
+        (fun _ => (1 : ℝ))
+        (fun j' => ((m : ℕ).choose j' : ℝ))
+        (fun _ η => canonicalCrossTerm 2 N a mass T η P.n j)
+        (fun j' η => canonicalCrossTerm 2 N a mass T η (m : ℕ) j')
+        (by
+          intro i hi i' hi'
+          exact canonicalCrossTerm_pair_integrable
+            2 N a mass ha _hmass T hT P.n j (m : ℕ) i'))
+  have h_orth_lead_perCoef :
+      ∀ j ∈ Finset.range P.n,
+        ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        ∫ η, canonicalCrossTerm 2 N a mass T η P.n j *
+              ∑ j' ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j' : ℝ) *
+                  canonicalCrossTerm 2 N a mass T η (m : ℕ) j'
+              ∂(canonicalJointMeasure 2 N) = 0 := by
+    intro j hj m hm
+    simpa using
+      (integral_sum_mul_sum_eq_zero_of_orth
+        (μ := canonicalJointMeasure 2 N)
+        ({j} : Finset ℕ) (Finset.range (m : ℕ))
+        (fun _ => (1 : ℝ))
+        (fun j' => ((m : ℕ).choose j' : ℝ))
+        (fun _ η => canonicalCrossTerm 2 N a mass T η P.n j)
+        (fun j' η => canonicalCrossTerm 2 N a mass T η (m : ℕ) j')
+        (by
+          intro i hi i' hi'
+          have hi_eq : i = j := by simpa using hi
+          subst i
+          refine canonicalCrossTerm_inner_eq_zero
+            2 N a mass ha _hmass T hT P.n j (m : ℕ) i' hj hi' ?_
+          intro hpair
+          exact (Nat.ne_of_lt m.2) ((congrArg Prod.fst hpair).symm))
+        (by
+          intro i hi i' hi'
+          exact canonicalCrossTerm_pair_integrable
+            2 N a mass ha _hmass T hT P.n j (m : ℕ) i'))
+  have h_int_R_m_pairs :
+      ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        ∀ m' ∈ (Finset.univ : Finset (Fin P.n)),
+        Integrable (fun η =>
+            (P.coeff m * ∑ j ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j : ℝ) *
+                  canonicalCrossTerm 2 N a mass T η (m : ℕ) j) *
+            (P.coeff m' * ∑ j' ∈ Finset.range (m' : ℕ),
+                ((m' : ℕ).choose j' : ℝ) *
+                  canonicalCrossTerm 2 N a mass T η (m' : ℕ) j'))
+          (canonicalJointMeasure 2 N) := by
+    intro m hm m' hm'
+    simpa [Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm] using
+      (integrable_sum_mul_sum_of_pairwise
+        (μ := canonicalJointMeasure 2 N)
+        (Finset.range (m : ℕ)) (Finset.range (m' : ℕ))
+        (fun j => P.coeff m * ((m : ℕ).choose j : ℝ))
+        (fun j' => P.coeff m' * ((m' : ℕ).choose j' : ℝ))
+        (fun j η => canonicalCrossTerm 2 N a mass T η (m : ℕ) j)
+        (fun j' η => canonicalCrossTerm 2 N a mass T η (m' : ℕ) j')
+        (by
+          intro j hj j' hj'
+          exact canonicalCrossTerm_pair_integrable
+            2 N a mass ha _hmass T hT (m : ℕ) j (m' : ℕ) j'))
+  have h_orth_m_outer :
+      ∀ m ∈ (Finset.univ : Finset (Fin P.n)),
+        ∀ m' ∈ (Finset.univ : Finset (Fin P.n)),
+        m ≠ m' →
+        ∫ η, (P.coeff m * ∑ j ∈ Finset.range (m : ℕ),
+                ((m : ℕ).choose j : ℝ) *
+                  canonicalCrossTerm 2 N a mass T η (m : ℕ) j) *
+              (P.coeff m' * ∑ j' ∈ Finset.range (m' : ℕ),
+                ((m' : ℕ).choose j' : ℝ) *
+                  canonicalCrossTerm 2 N a mass T η (m' : ℕ) j')
+              ∂(canonicalJointMeasure 2 N) = 0 := by
+    intro m hm m' hm' hmm'
+    simpa [Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm] using
+      (integral_sum_mul_sum_eq_zero_of_orth
+        (μ := canonicalJointMeasure 2 N)
+        (Finset.range (m : ℕ)) (Finset.range (m' : ℕ))
+        (fun j => P.coeff m * ((m : ℕ).choose j : ℝ))
+        (fun j' => P.coeff m' * ((m' : ℕ).choose j' : ℝ))
+        (fun j η => canonicalCrossTerm 2 N a mass T η (m : ℕ) j)
+        (fun j' η => canonicalCrossTerm 2 N a mass T η (m' : ℕ) j')
+        (by
+          intro j hj j' hj'
+          refine canonicalCrossTerm_inner_eq_zero
+            2 N a mass ha _hmass T hT (m : ℕ) j (m' : ℕ) j' hj hj' ?_
+          intro hpair
+          exact hmm' (Fin.ext (congrArg Prod.fst hpair)))
+        (by
+          intro j hj j' hj'
+          exact canonicalCrossTerm_pair_integrable
+            2 N a mass ha _hmass T hT (m : ℕ) j (m' : ℕ) j'))
+  have h_int_lead_sq :
+      Integrable (fun η =>
+        ((1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+          (P.n.choose j : ℝ) * canonicalCrossTerm 2 N a mass T η P.n j) ^ 2)
+        (canonicalJointMeasure 2 N) := by
+    simpa [Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm] using
+      (integrable_sq_real_sum_of_pairwise
+        (μ := canonicalJointMeasure 2 N)
+        (Finset.range P.n)
+        (fun j η => canonicalCrossTerm 2 N a mass T η P.n j)
+        (fun j => (1 / P.n : ℝ) * (P.n.choose j : ℝ))
+        h_int_leading_pairs)
+  have h_int_perCoef_sq :
+      Integrable (fun η =>
+        (∑ m : Fin P.n, P.coeff m * ∑ j' ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose j' : ℝ) *
+            canonicalCrossTerm 2 N a mass T η (m : ℕ) j') ^ 2)
+        (canonicalJointMeasure 2 N) := by
+    simpa using
+      (integrable_sq_real_sum_of_pairwise
+        (μ := canonicalJointMeasure 2 N)
+        (Finset.univ : Finset (Fin P.n))
+        (fun m η => P.coeff m * ∑ j' ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose j' : ℝ) *
+            canonicalCrossTerm 2 N a mass T η (m : ℕ) j')
+        (fun _ => (1 : ℝ))
+        h_int_R_m_pairs)
+  have h_int_cross_lead_perCoef :
+      Integrable (fun η =>
+        ((1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+          (P.n.choose j : ℝ) * canonicalCrossTerm 2 N a mass T η P.n j) *
+        (∑ m : Fin P.n, P.coeff m * ∑ j' ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose j' : ℝ) *
+            canonicalCrossTerm 2 N a mass T η (m : ℕ) j'))
+        (canonicalJointMeasure 2 N) := by
+    simpa [Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm] using
+      (integrable_sum_mul_sum_of_pairwise
+        (μ := canonicalJointMeasure 2 N)
+        (Finset.range P.n) (Finset.univ : Finset (Fin P.n))
+        (fun j => (1 / P.n : ℝ) * (P.n.choose j : ℝ))
+        (fun m => P.coeff m)
+        (fun j η => canonicalCrossTerm 2 N a mass T η P.n j)
+        (fun m η => ∑ j' ∈ Finset.range (m : ℕ),
+          ((m : ℕ).choose j' : ℝ) *
+            canonicalCrossTerm 2 N a mass T η (m : ℕ) j')
+        h_int_pairs_lead_perCoef)
+  have h_decomp :=
+    canonicalRoughError_l2_sq_eq 2 N a mass ha _hmass T hT P
+      h_orth_lead_perCoef h_orth_m_outer
+      h_int_lead_sq h_int_perCoef_sq h_int_cross_lead_perCoef
+      h_int_pairs_lead_perCoef h_int_R_m_pairs
+      h_int_leading_pairs h_int_perCoeff_pairs
+  have h_lead_sum_bound :
+      ∑ j ∈ Finset.range P.n,
+        ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
+          ∫ η, (canonicalCrossTerm 2 N a mass T η P.n j) ^ 2
+            ∂(canonicalJointMeasure 2 N)
+      ≤
+      KLeadSum * T * u ^ (P.n - 1) := by
+    calc
+      ∑ j ∈ Finset.range P.n,
+          ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
+            ∫ η, (canonicalCrossTerm 2 N a mass T η P.n j) ^ 2
+              ∂(canonicalJointMeasure 2 N)
+        ≤
+        ∑ j ∈ Finset.range P.n,
+          ((((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2) * KLeadFun j) *
+            T * u ^ (P.n - 1) := by
+              refine Finset.sum_le_sum ?_
+              intro j hj
+              have hj_le : j ≤ P.n - 1 := Nat.le_pred_of_lt (Finset.mem_range.mp hj)
+              have hpow : u ^ j ≤ u ^ (P.n - 1) := pow_le_pow_right₀ hu_one hj_le
+              have hcoeff_nonneg :
+                  0 ≤ ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 := sq_nonneg _
+              calc
+                ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
+                    ∫ η, (canonicalCrossTerm 2 N a mass T η P.n j) ^ 2
+                      ∂(canonicalJointMeasure 2 N)
+                  ≤
+                    ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
+                      (KLeadFun j * T * u ^ j) :=
+                    mul_le_mul_of_nonneg_left
+                      (by simpa [u] using hKLead_bound j hj N a ha h_vol T hT)
+                      hcoeff_nonneg
+                _ ≤
+                    ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
+                      (KLeadFun j * T * u ^ (P.n - 1)) := by
+                    apply mul_le_mul_of_nonneg_left ?_ hcoeff_nonneg
+                    have hKT_nonneg : 0 ≤ KLeadFun j * T :=
+                      mul_nonneg (le_of_lt (hKLead_pos j hj)) (le_of_lt hT)
+                    exact mul_le_mul_of_nonneg_left hpow hKT_nonneg
+                _ = ((((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2) * KLeadFun j) *
+                      T * u ^ (P.n - 1) := by ring
+      _ = KLeadSum * T * u ^ (P.n - 1) := by
+            have h_reassoc :
+                ∑ j ∈ Finset.range P.n,
+                  ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 * KLeadFun j * T * u ^ (P.n - 1) =
+                ∑ j ∈ Finset.range P.n,
+                  ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
+                    (KLeadFun j * (T * u ^ (P.n - 1))) := by
+                  refine Finset.sum_congr rfl ?_
+                  intro j hj
+                  ring
+            rw [h_reassoc]
+            calc
+              ∑ j ∈ Finset.range P.n,
+                  ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 * (KLeadFun j * (T * u ^ (P.n - 1)))
+                =
+                  ∑ j ∈ Finset.range P.n,
+                    (((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 * KLeadFun j) *
+                      (T * u ^ (P.n - 1)) := by
+                        refine Finset.sum_congr rfl ?_
+                        intro j hj
+                        ring
+              _ =
+                  (∑ x ∈ Finset.range P.n,
+                    ((1 / P.n : ℝ) * (P.n.choose x : ℝ)) ^ 2 * KLeadFun x) *
+                      (T * u ^ (P.n - 1)) := by
+                        exact (Finset.sum_mul
+                          (s := Finset.range P.n)
+                          (f := fun x =>
+                            ((1 / P.n : ℝ) * (P.n.choose x : ℝ)) ^ 2 * KLeadFun x)
+                          (a := T * u ^ (P.n - 1))).symm
+              _ = KLeadSum * T * u ^ (P.n - 1) := by
+                    simp [KLeadSum, mul_assoc]
+  have h_per_sum_bound :
+      ∑ m : Fin P.n,
+        ∑ j ∈ Finset.range (m : ℕ),
+          (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
+            ∫ η, (canonicalCrossTerm 2 N a mass T η (m : ℕ) j) ^ 2
+              ∂(canonicalJointMeasure 2 N)
+      ≤
+      KPerSum * T * u ^ (P.n - 1) := by
+    calc
+      ∑ m : Fin P.n,
+          ∑ j ∈ Finset.range (m : ℕ),
+            (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
+              ∫ η, (canonicalCrossTerm 2 N a mass T η (m : ℕ) j) ^ 2
+                ∂(canonicalJointMeasure 2 N)
+        ≤
+        ∑ m : Fin P.n,
+          ∑ j ∈ Finset.range (m : ℕ),
+            (((P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2) * KPerFun m j) *
+              T * u ^ (P.n - 1) := by
+                refine Finset.sum_le_sum ?_
+                intro m hm
+                refine Finset.sum_le_sum ?_
+                intro j hj
+                have hj_le : j ≤ P.n - 1 := by
+                  exact Nat.le_pred_of_lt (lt_trans (Finset.mem_range.mp hj) m.2)
+                have hpow : u ^ j ≤ u ^ (P.n - 1) := pow_le_pow_right₀ hu_one hj_le
+                have hcoeff_nonneg :
+                    0 ≤ (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 := sq_nonneg _
+                calc
+                  (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
+                      ∫ η, (canonicalCrossTerm 2 N a mass T η (m : ℕ) j) ^ 2
+                        ∂(canonicalJointMeasure 2 N)
+                    ≤
+                      (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
+                        (KPerFun m j * T * u ^ j) :=
+                      mul_le_mul_of_nonneg_left
+                        (by simpa [u] using hKPer_bound m j hj N a ha h_vol T hT)
+                        hcoeff_nonneg
+                  _ ≤
+                      (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
+                        (KPerFun m j * T * u ^ (P.n - 1)) := by
+                      apply mul_le_mul_of_nonneg_left ?_ hcoeff_nonneg
+                      have hKT_nonneg : 0 ≤ KPerFun m j * T :=
+                        mul_nonneg (le_of_lt (hKPer_pos m j hj)) (le_of_lt hT)
+                      exact mul_le_mul_of_nonneg_left hpow hKT_nonneg
+                  _ = (((P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2) * KPerFun m j) *
+                        T * u ^ (P.n - 1) := by ring
+      _ = KPerSum * T * u ^ (P.n - 1) := by
+            calc
+              ∑ m : Fin P.n,
+                  ∑ j ∈ Finset.range (m : ℕ),
+                    (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j *
+                      T * u ^ (P.n - 1)
+                =
+                  ∑ m : Fin P.n,
+                    ((∑ j ∈ Finset.range (m : ℕ),
+                        (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j) *
+                      T * u ^ (P.n - 1)) := by
+                        refine Finset.sum_congr rfl ?_
+                        intro m hm
+                        have h_reassoc :
+                            ∑ j ∈ Finset.range (m : ℕ),
+                              (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j * T *
+                                u ^ (P.n - 1) =
+                            ∑ j ∈ Finset.range (m : ℕ),
+                              (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
+                                (KPerFun m j * (T * u ^ (P.n - 1))) := by
+                                  refine Finset.sum_congr rfl ?_
+                                  intro j hj
+                                  ring
+                        rw [h_reassoc]
+                        calc
+                          ∑ j ∈ Finset.range (m : ℕ),
+                              (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
+                                (KPerFun m j * (T * u ^ (P.n - 1)))
+                            =
+                              ∑ j ∈ Finset.range (m : ℕ),
+                                (((P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2) * KPerFun m j) *
+                                  (T * u ^ (P.n - 1)) := by
+                                    refine Finset.sum_congr rfl ?_
+                                    intro j hj
+                                    ring
+                          _ =
+                              (∑ j ∈ Finset.range (m : ℕ),
+                                (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j) *
+                                  (T * u ^ (P.n - 1)) := by
+                                    exact (Finset.sum_mul
+                                      (s := Finset.range (m : ℕ))
+                                      (f := fun j =>
+                                        (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j)
+                                      (a := T * u ^ (P.n - 1))).symm
+                          _ = (∑ j ∈ Finset.range (m : ℕ),
+                                (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j) *
+                                  T * u ^ (P.n - 1) := by
+                                    ring
+              _ =
+                  (∑ m : Fin P.n,
+                      ∑ j ∈ Finset.range (m : ℕ),
+                        (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j) *
+                    T * u ^ (P.n - 1) := by
+                      have h_reassoc :
+                          ∑ m : Fin P.n,
+                            (∑ j ∈ Finset.range (m : ℕ),
+                                (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j) * T *
+                              u ^ (P.n - 1) =
+                          ∑ m : Fin P.n,
+                            (∑ j ∈ Finset.range (m : ℕ),
+                                (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j) *
+                              (T * u ^ (P.n - 1)) := by
+                                refine Finset.sum_congr rfl ?_
+                                intro m hm
+                                ring
+                      rw [h_reassoc]
+                      simpa [KPerSum, mul_assoc] using
+                        (Finset.sum_mul
+                          (s := Finset.univ)
+                          (f := fun m : Fin P.n =>
+                            ∑ j ∈ Finset.range (m : ℕ),
+                              (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 * KPerFun m j)
+                          (a := T * u ^ (P.n - 1))).symm
+  calc
+    ∫ η, (canonicalRoughError 2 N a mass T P η) ^ 2
+        ∂(canonicalJointMeasure 2 N)
+      =
+      (∑ j ∈ Finset.range P.n,
+        ((1 / P.n : ℝ) * (P.n.choose j : ℝ)) ^ 2 *
+          ∫ η, (canonicalCrossTerm 2 N a mass T η P.n j) ^ 2
+              ∂(canonicalJointMeasure 2 N))
+      + ∑ m : Fin P.n,
+          ∑ j ∈ Finset.range (m : ℕ),
+            (P.coeff m * ((m : ℕ).choose j : ℝ)) ^ 2 *
+              ∫ η, (canonicalCrossTerm 2 N a mass T η (m : ℕ) j) ^ 2
+                  ∂(canonicalJointMeasure 2 N) := h_decomp
+    _ ≤ KLeadSum * T * u ^ (P.n - 1) + KPerSum * T * u ^ (P.n - 1) := by
+          gcongr
+    _ = K0 * T * u ^ (P.n - 1) := by
+          dsimp [K0]
+          ring
+    _ ≤ K * T * u ^ (P.n - 1) := by
+          have hK0_le_K : K0 ≤ K := by
+            dsimp [K, K0]
+            linarith
+          simpa [mul_assoc] using
+            (mul_le_mul_of_nonneg_right hK0_le_K h_common_nonneg)
+    _ = K * T * (1 + |Real.log T|) ^ (P.n - 1) := by
+          rfl
 
 end Pphi2
 

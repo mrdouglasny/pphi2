@@ -6,6 +6,7 @@ import Lattice.HeatKernel
 import Lattice.LatticeFourierProduct
 import Lattice.LatticeFourierIndexing
 import Lattice.Symmetry
+import Mathlib.Algebra.Order.BigOperators.Ring.Finset
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Probability.Distributions.Gaussian.Fernique
@@ -1541,6 +1542,24 @@ private lemma roughWickConstant_eq_family_average
   exact sum_latticeEigenvalue_eq_sum_latticeEigenvalue1d_family
     (N := N) d a mass (fun t : ℝ => (1 - Real.exp (-T * t)) / t)
 
+noncomputable def canonicalSmoothCovariance
+    (T : ℝ) (x y : FinLatticeSites d N) : ℝ :=
+  (a^d : ℝ)⁻¹ *
+    ∑ m : Fin d → Fin N,
+      canonicalSmoothWeight d N a mass T m *
+        latticeFourierProductBasisFun N d m x *
+        latticeFourierProductBasisFun N d m y /
+        latticeFourierProductNormSq N d m
+
+noncomputable def canonicalRoughCovariance
+    (T : ℝ) (x y : FinLatticeSites d N) : ℝ :=
+  (a^d : ℝ)⁻¹ *
+    ∑ m : Fin d → Fin N,
+      canonicalRoughWeight d N a mass T m *
+        latticeFourierProductBasisFun N d m x *
+        latticeFourierProductBasisFun N d m y /
+        latticeFourierProductNormSq N d m
+
 noncomputable def canonicalSmoothFieldFunction_self_moment_diag
     (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
     (x : FinLatticeSites d N) : ℝ :=
@@ -1603,6 +1622,30 @@ theorem canonicalRoughFieldFunction_self_moment_const
     (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x]
   rw [canonicalRoughFieldFunction_self_moment_eq_roughWickConstant
     (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT 0]
+
+theorem canonicalSmoothFieldFunction_covariance_eq
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalSmoothFieldFunction d N a mass T η x *
+        canonicalSmoothFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    canonicalSmoothCovariance d N a mass T x y := by
+  unfold canonicalSmoothCovariance
+  exact canonicalSmoothFieldFunction_self_moment
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y
+
+theorem canonicalRoughFieldFunction_covariance_eq
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalRoughFieldFunction d N a mass T η x *
+        canonicalRoughFieldFunction d N a mass T η y
+      ∂(canonicalJointMeasure d N) =
+    canonicalRoughCovariance d N a mass T x y := by
+  unfold canonicalRoughCovariance
+  exact canonicalRoughFieldFunction_self_moment
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y
 
 private lemma integrable_pow_gaussianReal_one (k : ℕ) :
     MeasureTheory.Integrable (fun x : ℝ => x ^ k)
@@ -1865,6 +1908,161 @@ private lemma canonicalRoughGamma_sq_sum_eq_wickConstant
             latticeFourierProductNormSq N d m := by
               rw [← Finset.mul_sum]
 
+private lemma canonicalSmoothCovariance_eq_sum_gamma_mul_gamma
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (x y : FinLatticeSites d N) :
+    canonicalSmoothCovariance d N a mass T x y =
+      ∑ m : Fin d → Fin N,
+        canonicalSmoothGamma d N a mass T x m *
+          canonicalSmoothGamma d N a mass T y m := by
+  have ha_d_pos : (0 : ℝ) < a ^ d := pow_pos ha d
+  calc
+    canonicalSmoothCovariance d N a mass T x y
+      = ∑ m : Fin d → Fin N,
+          (a ^ d : ℝ)⁻¹ *
+            (canonicalSmoothWeight d N a mass T m *
+              latticeFourierProductBasisFun N d m x *
+              latticeFourierProductBasisFun N d m y /
+              latticeFourierProductNormSq N d m) := by
+              unfold canonicalSmoothCovariance
+              rw [← Finset.mul_sum]
+    _ = ∑ m : Fin d → Fin N,
+          canonicalSmoothGamma d N a mass T x m *
+            canonicalSmoothGamma d N a mass T y m := by
+              refine Finset.sum_congr rfl ?_
+              intro m hm
+              have hC :
+                  0 ≤ canonicalSmoothWeight d N a mass T m /
+                    latticeFourierProductNormSq N d m := by
+                apply div_nonneg
+                · exact canonicalSmoothWeight_nonneg
+                    (d := d) (N := N) (a := a) (mass := mass) ha hmass T m
+                · exact (latticeFourierProductNormSq_pos (N := N) d m).le
+              have h_sq :
+                  Real.sqrt
+                      (canonicalSmoothWeight d N a mass T m /
+                        latticeFourierProductNormSq N d m) *
+                    Real.sqrt
+                      (canonicalSmoothWeight d N a mass T m /
+                        latticeFourierProductNormSq N d m) =
+                  canonicalSmoothWeight d N a mass T m /
+                      latticeFourierProductNormSq N d m :=
+                Real.mul_self_sqrt hC
+              unfold canonicalSmoothGamma canonicalSmoothModeCoeff
+              symm
+              calc
+                ((Real.sqrt (a ^ d))⁻¹ *
+                    (Real.sqrt
+                        (canonicalSmoothWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m) *
+                      latticeFourierProductBasisFun N d m x)) *
+                    ((Real.sqrt (a ^ d))⁻¹ *
+                      (Real.sqrt
+                          (canonicalSmoothWeight d N a mass T m /
+                            latticeFourierProductNormSq N d m) *
+                        latticeFourierProductBasisFun N d m y))
+                    =
+                  ((Real.sqrt (a ^ d))⁻¹ * (Real.sqrt (a ^ d))⁻¹) *
+                    (Real.sqrt
+                        (canonicalSmoothWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m) *
+                      Real.sqrt
+                        (canonicalSmoothWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m)) *
+                    (latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m y) := by
+                        ring
+                _ = (a ^ d : ℝ)⁻¹ *
+                    (canonicalSmoothWeight d N a mass T m /
+                      latticeFourierProductNormSq N d m) *
+                    (latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m y) := by
+                        rw [← mul_inv, ← Real.sqrt_mul (le_of_lt ha_d_pos),
+                          Real.sqrt_mul_self (le_of_lt ha_d_pos), h_sq]
+                _ = (a ^ d : ℝ)⁻¹ *
+                    (canonicalSmoothWeight d N a mass T m *
+                      latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m y /
+                      latticeFourierProductNormSq N d m) := by
+                        ring
+
+private lemma canonicalRoughCovariance_eq_sum_gamma_mul_gamma
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    canonicalRoughCovariance d N a mass T x y =
+      ∑ m : Fin d → Fin N,
+        canonicalRoughGamma d N a mass T x m *
+          canonicalRoughGamma d N a mass T y m := by
+  have ha_d_pos : (0 : ℝ) < a ^ d := pow_pos ha d
+  calc
+    canonicalRoughCovariance d N a mass T x y
+      = ∑ m : Fin d → Fin N,
+          (a ^ d : ℝ)⁻¹ *
+            (canonicalRoughWeight d N a mass T m *
+              latticeFourierProductBasisFun N d m x *
+              latticeFourierProductBasisFun N d m y /
+              latticeFourierProductNormSq N d m) := by
+              unfold canonicalRoughCovariance
+              rw [← Finset.mul_sum]
+    _ = ∑ m : Fin d → Fin N,
+          canonicalRoughGamma d N a mass T x m *
+            canonicalRoughGamma d N a mass T y m := by
+              refine Finset.sum_congr rfl ?_
+              intro m hm
+              have hC :
+                  0 ≤ canonicalRoughWeight d N a mass T m /
+                    latticeFourierProductNormSq N d m := by
+                apply div_nonneg
+                · exact canonicalRoughWeight_nonneg
+                    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT m
+                · exact (latticeFourierProductNormSq_pos (N := N) d m).le
+              have h_sq :
+                  Real.sqrt
+                      (canonicalRoughWeight d N a mass T m /
+                        latticeFourierProductNormSq N d m) *
+                    Real.sqrt
+                      (canonicalRoughWeight d N a mass T m /
+                        latticeFourierProductNormSq N d m) =
+                  canonicalRoughWeight d N a mass T m /
+                      latticeFourierProductNormSq N d m :=
+                Real.mul_self_sqrt hC
+              unfold canonicalRoughGamma canonicalRoughModeCoeff
+              symm
+              calc
+                ((Real.sqrt (a ^ d))⁻¹ *
+                    (Real.sqrt
+                        (canonicalRoughWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m) *
+                      latticeFourierProductBasisFun N d m x)) *
+                    ((Real.sqrt (a ^ d))⁻¹ *
+                      (Real.sqrt
+                          (canonicalRoughWeight d N a mass T m /
+                            latticeFourierProductNormSq N d m) *
+                        latticeFourierProductBasisFun N d m y))
+                    =
+                  ((Real.sqrt (a ^ d))⁻¹ * (Real.sqrt (a ^ d))⁻¹) *
+                    (Real.sqrt
+                        (canonicalRoughWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m) *
+                      Real.sqrt
+                        (canonicalRoughWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m)) *
+                    (latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m y) := by
+                        ring
+                _ = (a ^ d : ℝ)⁻¹ *
+                    (canonicalRoughWeight d N a mass T m /
+                      latticeFourierProductNormSq N d m) *
+                    (latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m y) := by
+                        rw [← mul_inv, ← Real.sqrt_mul (le_of_lt ha_d_pos),
+                          Real.sqrt_mul_self (le_of_lt ha_d_pos), h_sq]
+                _ = (a ^ d : ℝ)⁻¹ *
+                    (canonicalRoughWeight d N a mass T m *
+                      latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m y /
+                      latticeFourierProductNormSq N d m) := by
+                        ring
+
 private theorem wickPower_two_site_pi_gaussianReal_eq_zero_of_ne
     {ι : Type*} [Fintype ι] [DecidableEq ι]
     (γ_x γ_y : ι → ℝ) {n m : ℕ} (hnm : n ≠ m) :
@@ -2049,6 +2247,224 @@ private theorem wickPower_two_site_pi_gaussianReal_integrable
   refine h_sum.congr ?_
   filter_upwards with ξ
   rw [h_expand ξ, h_distrib ξ]
+
+private lemma multiIndicesOfTotalDegree_eq_piAntidiag_generic
+    {ι : Type*} [Fintype ι] [DecidableEq ι] (n : ℕ) :
+    multiIndicesOfTotalDegree ι n =
+      Finset.piAntidiag Finset.univ n := by
+  ext α
+  constructor
+  · intro hα
+    unfold multiIndicesOfTotalDegree at hα
+    simp only [Finset.mem_filter] at hα
+    exact (Finset.mem_piAntidiag).2 ⟨hα.2, fun i hi => Finset.mem_univ i⟩
+  · intro hα
+    have hsum : ∑ j, α j = n := (Finset.mem_piAntidiag.mp hα).1
+    simp only [multiIndicesOfTotalDegree, Finset.mem_filter,
+      Fintype.mem_piFinset, Finset.mem_range]
+    refine ⟨?_, hsum⟩
+    intro i
+    have h_le : α i ≤ ∑ j, α j := by
+      simpa using
+        (Finset.single_le_sum (fun j _ => Nat.zero_le (α j)) (Finset.mem_univ i))
+    exact Nat.lt_succ_of_le (hsum ▸ h_le)
+
+private lemma sum_pow_eq_sum_multiIndices_generic
+    {ι : Type*} [Fintype ι] [DecidableEq ι] (f : ι → ℝ) (n : ℕ) :
+    (∑ j, f j) ^ n =
+      ∑ α ∈ multiIndicesOfTotalDegree ι n,
+        ((n.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) *
+          ∏ j, f j ^ α j := by
+  rw [multiIndicesOfTotalDegree_eq_piAntidiag_generic (ι := ι) n,
+    Finset.sum_pow_eq_sum_piAntidiag]
+  refine Finset.sum_congr rfl ?_
+  intro α hα
+  have hsum : ∑ j, α j = n := (Finset.mem_piAntidiag.mp hα).1
+  have hprod_pos : (0 : ℝ) < ∏ j, ((α j).factorial : ℝ) := by
+    apply Finset.prod_pos
+    intro j hj
+    exact_mod_cast Nat.factorial_pos (α j)
+  have hprod_ne : (∏ j, ((α j).factorial : ℝ)) ≠ 0 := ne_of_gt hprod_pos
+  have hmult :
+      (Nat.multinomial Finset.univ α : ℝ) =
+        ((n.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) := by
+    apply (eq_div_iff hprod_ne).2
+    calc
+      (Nat.multinomial Finset.univ α : ℝ) * ∏ j, ((α j).factorial : ℝ)
+          = (∏ j, ((α j).factorial : ℝ)) *
+              (Nat.multinomial Finset.univ α : ℝ) := by ring
+      _ = (n.factorial : ℝ) := by
+        have hspec :
+            (∏ j ∈ (Finset.univ : Finset ι), (α j).factorial) *
+              Nat.multinomial Finset.univ α =
+            (∑ j ∈ (Finset.univ : Finset ι), α j).factorial :=
+          Nat.multinomial_spec Finset.univ α
+        exact_mod_cast (hspec.trans (by simp [hsum]))
+  simp [hmult]
+
+private theorem wickPower_two_site_pi_gaussianReal_eq_diag
+    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    (γ_x γ_y : ι → ℝ) (n : ℕ) :
+    ∫ ξ : ι → ℝ,
+      wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * ξ j) *
+        wickMonomial n (∑ j, (γ_y j) ^ 2) (∑ j, γ_y j * ξ j)
+      ∂(Measure.pi (fun _ : ι => gaussianReal 0 1)) =
+    (n.factorial : ℝ) * (∑ j, γ_x j * γ_y j) ^ n := by
+  classical
+  let coeff :=
+    fun (γ : ι → ℝ) (α : ι → ℕ) =>
+      ((n.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) *
+        ∏ j, γ j ^ α j
+  let diagFac := fun (α : ι → ℕ) => ∏ j, ((α j).factorial : ℝ)
+  have h_summand_int :
+      ∀ α β, MeasureTheory.Integrable
+        (fun ξ =>
+          (coeff γ_x α * ∏ j, wickMonomial (α j) 1 (ξ j)) *
+            (coeff γ_y β * ∏ j, wickMonomial (β j) 1 (ξ j)))
+        (Measure.pi (fun _ : ι => gaussianReal 0 1)) := by
+    intro α β
+    have h_base : MeasureTheory.Integrable
+        (fun ξ : ι → ℝ =>
+          ∏ j, wickMonomial (α j) 1 (ξ j) * wickMonomial (β j) 1 (ξ j))
+        (Measure.pi (fun _ : ι => gaussianReal 0 1)) := by
+      simpa using
+        (MeasureTheory.Integrable.fintype_prod
+          (μ := fun _ : ι => gaussianReal 0 1)
+          (f := fun j x => wickMonomial (α j) 1 x * wickMonomial (β j) 1 x)
+          (fun j => integrable_wickMonomial_mul_gaussianReal_one (α j) (β j)))
+    refine h_base.const_mul (coeff γ_x α * coeff γ_y β) |>.congr ?_
+    filter_upwards with ξ
+    rw [Finset.prod_mul_distrib]
+    ring
+  have h_expand :
+      ∀ ξ : ι → ℝ,
+        wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * ξ j) *
+            wickMonomial n (∑ j, (γ_y j) ^ 2) (∑ j, γ_y j * ξ j) =
+          (∑ α ∈ multiIndicesOfTotalDegree ι n,
+            coeff γ_x α * ∏ j, wickMonomial (α j) 1 (ξ j)) *
+          (∑ β ∈ multiIndicesOfTotalDegree ι n,
+            coeff γ_y β * ∏ j, wickMonomial (β j) 1 (ξ j)) := by
+    intro ξ
+    rw [wickMonomial_eq_root, wickMonomial_eq_root]
+    simp_rw [wickMonomial_eq_root]
+    conv_lhs =>
+      rw [wickMonomial_pow_sum_expansion_of_totalDegree (γ := γ_x) (ξ := ξ) (k := n)]
+      rw [wickMonomial_pow_sum_expansion_of_totalDegree (γ := γ_y) (ξ := ξ) (k := n)]
+  simp_rw [h_expand]
+  have h_distrib :
+      ∀ ξ : ι → ℝ,
+        (∑ α ∈ multiIndicesOfTotalDegree ι n,
+            coeff γ_x α * ∏ j, wickMonomial (α j) 1 (ξ j)) *
+          (∑ β ∈ multiIndicesOfTotalDegree ι n,
+            coeff γ_y β * ∏ j, wickMonomial (β j) 1 (ξ j)) =
+        ∑ α ∈ multiIndicesOfTotalDegree ι n,
+          ∑ β ∈ multiIndicesOfTotalDegree ι n,
+            (coeff γ_x α * ∏ j, wickMonomial (α j) 1 (ξ j)) *
+              (coeff γ_y β * ∏ j, wickMonomial (β j) 1 (ξ j)) := by
+    intro ξ
+    rw [Finset.sum_mul_sum]
+  simp_rw [h_distrib]
+  rw [MeasureTheory.integral_finset_sum _ (fun α hα => by
+    apply MeasureTheory.integrable_finset_sum
+    intro β hβ
+    exact h_summand_int α β)]
+  have h_outer :
+      (∑ α ∈ multiIndicesOfTotalDegree ι n,
+          ∫ ξ, ∑ β ∈ multiIndicesOfTotalDegree ι n,
+            (coeff γ_x α * ∏ j, wickMonomial (α j) 1 (ξ j)) *
+              (coeff γ_y β * ∏ j, wickMonomial (β j) 1 (ξ j))
+          ∂(Measure.pi (fun _ : ι => gaussianReal 0 1))) =
+        ∑ α ∈ multiIndicesOfTotalDegree ι n,
+          ∑ β ∈ multiIndicesOfTotalDegree ι n,
+            (coeff γ_x α * coeff γ_y β) *
+              (if α = β then diagFac α else 0) := by
+    refine Finset.sum_congr rfl ?_
+    intro α hα
+    rw [MeasureTheory.integral_finset_sum _ (fun β hβ => h_summand_int α β)]
+    refine Finset.sum_congr rfl ?_
+    intro β hβ
+    have h_rearr :
+        (fun ξ : ι → ℝ =>
+          (coeff γ_x α * ∏ j, wickMonomial (α j) 1 (ξ j)) *
+            (coeff γ_y β * ∏ j, wickMonomial (β j) 1 (ξ j))) =
+          (fun ξ : ι → ℝ =>
+            (coeff γ_x α * coeff γ_y β) *
+              ((∏ j, wickMonomial (α j) 1 (ξ j)) *
+                (∏ j, wickMonomial (β j) 1 (ξ j)))) := by
+      funext ξ
+      ring
+    rw [h_rearr, MeasureTheory.integral_const_mul]
+    congr 1
+    simpa [wickMonomial_eq_root, diagFac] using
+      (multiWickMonomial_pi_gaussianReal_inner α β)
+  rw [h_outer]
+  have h_collapse :
+      (∑ α ∈ multiIndicesOfTotalDegree ι n,
+          ∑ β ∈ multiIndicesOfTotalDegree ι n,
+            (coeff γ_x α * coeff γ_y β) * (if α = β then diagFac α else 0)) =
+      ∑ α ∈ multiIndicesOfTotalDegree ι n,
+        (coeff γ_x α * coeff γ_y α) * diagFac α := by
+    refine Finset.sum_congr rfl ?_
+    intro α hα
+    rw [Finset.sum_eq_single_of_mem α hα]
+    · simp [diagFac]
+    · intro β hβ hβα
+      have hneq : α ≠ β := by
+        intro h
+        exact hβα h.symm
+      simp [hneq, diagFac]
+  have h_diag_term :
+      ∀ α, α ∈ multiIndicesOfTotalDegree ι n →
+        (coeff γ_x α * coeff γ_y α) * diagFac α =
+          (n.factorial : ℝ) *
+            (((n.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) *
+              ∏ j, (γ_x j * γ_y j) ^ α j) := by
+    intro α hα
+    have hprod_mul :
+        (∏ j, γ_x j ^ α j) * (∏ j, γ_y j ^ α j) =
+          ∏ j, (γ_x j * γ_y j) ^ α j := by
+      rw [← Finset.prod_mul_distrib]
+      refine Finset.prod_congr rfl ?_
+      intro j hj
+      rw [mul_pow]
+    have hprod_pos : (0 : ℝ) < ∏ j, ((α j).factorial : ℝ) := by
+      apply Finset.prod_pos
+      intro j hj
+      exact_mod_cast Nat.factorial_pos (α j)
+    have hprod_ne : (∏ j, ((α j).factorial : ℝ)) ≠ 0 := ne_of_gt hprod_pos
+    calc
+      (coeff γ_x α * coeff γ_y α) * diagFac α
+          = (n.factorial : ℝ) *
+              (((n.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) *
+                ((∏ j, γ_x j ^ α j) * (∏ j, γ_y j ^ α j))) := by
+            unfold coeff diagFac
+            field_simp [hprod_ne]
+      _ = (n.factorial : ℝ) *
+            (((n.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) *
+              ∏ j, (γ_x j * γ_y j) ^ α j) := by
+            simp [hprod_mul]
+  calc
+    (∑ α ∈ multiIndicesOfTotalDegree ι n,
+        ∑ β ∈ multiIndicesOfTotalDegree ι n,
+          (coeff γ_x α * coeff γ_y β) * (if α = β then diagFac α else 0))
+      =
+      ∑ α ∈ multiIndicesOfTotalDegree ι n,
+        (coeff γ_x α * coeff γ_y α) * diagFac α := h_collapse
+    _ =
+      ∑ α ∈ multiIndicesOfTotalDegree ι n,
+        (n.factorial : ℝ) *
+          (((n.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) *
+            ∏ j, (γ_x j * γ_y j) ^ α j) := by
+          refine Finset.sum_congr rfl ?_
+          intro α hα
+          exact h_diag_term α hα
+    _ = (n.factorial : ℝ) *
+        (∑ α ∈ multiIndicesOfTotalDegree ι n,
+          ((n.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) *
+            ∏ j, (γ_x j * γ_y j) ^ α j) := by
+        rw [← Finset.mul_sum]
+    _ = (n.factorial : ℝ) * (∑ j, γ_x j * γ_y j) ^ n := by
+        rw [sum_pow_eq_sum_multiIndices_generic (f := fun j => γ_x j * γ_y j) n]
 
 theorem canonicalSmoothWickPower_two_site_marginal_integrable
     (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
@@ -2313,6 +2729,201 @@ theorem canonicalRoughWickPower_two_site_marginal_eq_zero_of_ne
     _ = 0 :=
       wickPower_two_site_pi_gaussianReal_eq_zero_of_ne
         (γ_x := γ_x) (γ_y := γ_y) hnm
+
+theorem canonicalSmoothWickPower_two_site_marginal_eq_diag
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (n : ℕ) (x y : FinLatticeSites d N) :
+    ∫ η_S : (Fin d → Fin N) → ℝ,
+      wickMonomial n (smoothWickConstant d N a mass T)
+        (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+      wickMonomial n (smoothWickConstant d N a mass T)
+        (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y)
+      ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) =
+    (n.factorial : ℝ) * (canonicalSmoothCovariance d N a mass T x y) ^ n := by
+  let γ_x : (Fin d → Fin N) → ℝ := canonicalSmoothGamma d N a mass T x
+  let γ_y : (Fin d → Fin N) → ℝ := canonicalSmoothGamma d N a mass T y
+  calc
+    ∫ η_S : (Fin d → Fin N) → ℝ,
+        wickMonomial n (smoothWickConstant d N a mass T)
+          (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+        wickMonomial n (smoothWickConstant d N a mass T)
+          (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y)
+      ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+      =
+        ∫ η_S : (Fin d → Fin N) → ℝ,
+          wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * η_S j) *
+            wickMonomial n (∑ j, (γ_y j) ^ 2) (∑ j, γ_y j * η_S j)
+          ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+            apply integral_congr_ae
+            filter_upwards with η_S
+            calc
+              wickMonomial n (smoothWickConstant d N a mass T)
+                  (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+                wickMonomial n (smoothWickConstant d N a mass T)
+                  (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y)
+                =
+                  wickMonomial n (∑ j, (γ_x j) ^ 2)
+                    (canonicalSmoothFieldFunctionOfFst d N a mass T η_S x) *
+                  wickMonomial n (smoothWickConstant d N a mass T)
+                    (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y) := by
+                      rw [show smoothWickConstant d N a mass T = ∑ j, (γ_x j) ^ 2 from by
+                        simpa [γ_x] using
+                          (canonicalSmoothGamma_sq_sum_eq_wickConstant
+                            (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x).symm]
+              _ =
+                  wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * η_S j) *
+                  wickMonomial n (smoothWickConstant d N a mass T)
+                    (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y) := by
+                      rw [show canonicalSmoothFieldFunctionOfFst d N a mass T η_S x =
+                        ∑ j, γ_x j * η_S j from by
+                        simpa [γ_x] using
+                          canonicalSmoothFieldFunctionOfFst_eq_sum_gamma
+                            (d := d) (N := N) (a := a) (mass := mass) T η_S x]
+              _ =
+                  wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * η_S j) *
+                  wickMonomial n (∑ j, (γ_y j) ^ 2)
+                    (canonicalSmoothFieldFunctionOfFst d N a mass T η_S y) := by
+                      rw [show smoothWickConstant d N a mass T = ∑ j, (γ_y j) ^ 2 from by
+                        simpa [γ_y] using
+                          (canonicalSmoothGamma_sq_sum_eq_wickConstant
+                            (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT y).symm]
+              _ =
+                  wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * η_S j) *
+                  wickMonomial n (∑ j, (γ_y j) ^ 2) (∑ j, γ_y j * η_S j) := by
+                      rw [show canonicalSmoothFieldFunctionOfFst d N a mass T η_S y =
+                        ∑ j, γ_y j * η_S j from by
+                        simpa [γ_y] using
+                          canonicalSmoothFieldFunctionOfFst_eq_sum_gamma
+                            (d := d) (N := N) (a := a) (mass := mass) T η_S y]
+    _ = (n.factorial : ℝ) * (∑ j, γ_x j * γ_y j) ^ n :=
+      wickPower_two_site_pi_gaussianReal_eq_diag (γ_x := γ_x) (γ_y := γ_y) n
+    _ = (n.factorial : ℝ) * (canonicalSmoothCovariance d N a mass T x y) ^ n := by
+      congr 2
+      symm
+      simpa [γ_x, γ_y] using
+        canonicalSmoothCovariance_eq_sum_gamma_mul_gamma
+          (d := d) (N := N) (a := a) (mass := mass) ha hmass T x y
+
+theorem canonicalRoughWickPower_two_site_marginal_eq_diag
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (n : ℕ) (x y : FinLatticeSites d N) :
+    ∫ η_R : (Fin d → Fin N) → ℝ,
+      wickMonomial n (roughWickConstant d N a mass T)
+        (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+      wickMonomial n (roughWickConstant d N a mass T)
+        (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y)
+      ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) =
+    (n.factorial : ℝ) * (canonicalRoughCovariance d N a mass T x y) ^ n := by
+  let γ_x : (Fin d → Fin N) → ℝ := canonicalRoughGamma d N a mass T x
+  let γ_y : (Fin d → Fin N) → ℝ := canonicalRoughGamma d N a mass T y
+  calc
+    ∫ η_R : (Fin d → Fin N) → ℝ,
+        wickMonomial n (roughWickConstant d N a mass T)
+          (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+        wickMonomial n (roughWickConstant d N a mass T)
+          (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y)
+      ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+      =
+        ∫ η_R : (Fin d → Fin N) → ℝ,
+          wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * η_R j) *
+            wickMonomial n (∑ j, (γ_y j) ^ 2) (∑ j, γ_y j * η_R j)
+          ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) := by
+            apply integral_congr_ae
+            filter_upwards with η_R
+            calc
+              wickMonomial n (roughWickConstant d N a mass T)
+                  (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+                wickMonomial n (roughWickConstant d N a mass T)
+                  (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y)
+                =
+                  wickMonomial n (∑ j, (γ_x j) ^ 2)
+                    (canonicalRoughFieldFunctionOfSnd d N a mass T η_R x) *
+                  wickMonomial n (roughWickConstant d N a mass T)
+                    (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y) := by
+                      rw [show roughWickConstant d N a mass T = ∑ j, (γ_x j) ^ 2 from by
+                        simpa [γ_x] using
+                          (canonicalRoughGamma_sq_sum_eq_wickConstant
+                            (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x).symm]
+              _ =
+                  wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * η_R j) *
+                  wickMonomial n (roughWickConstant d N a mass T)
+                    (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y) := by
+                      rw [show canonicalRoughFieldFunctionOfSnd d N a mass T η_R x =
+                        ∑ j, γ_x j * η_R j from by
+                        simpa [γ_x] using
+                          canonicalRoughFieldFunctionOfSnd_eq_sum_gamma
+                            (d := d) (N := N) (a := a) (mass := mass) T η_R x]
+              _ =
+                  wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * η_R j) *
+                  wickMonomial n (∑ j, (γ_y j) ^ 2)
+                    (canonicalRoughFieldFunctionOfSnd d N a mass T η_R y) := by
+                      rw [show roughWickConstant d N a mass T = ∑ j, (γ_y j) ^ 2 from by
+                        simpa [γ_y] using
+                          (canonicalRoughGamma_sq_sum_eq_wickConstant
+                            (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT y).symm]
+              _ =
+                  wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * η_R j) *
+                  wickMonomial n (∑ j, (γ_y j) ^ 2) (∑ j, γ_y j * η_R j) := by
+                      rw [show canonicalRoughFieldFunctionOfSnd d N a mass T η_R y =
+                        ∑ j, γ_y j * η_R j from by
+                        simpa [γ_y] using
+                          canonicalRoughFieldFunctionOfSnd_eq_sum_gamma
+                            (d := d) (N := N) (a := a) (mass := mass) T η_R y]
+    _ = (n.factorial : ℝ) * (∑ j, γ_x j * γ_y j) ^ n :=
+      wickPower_two_site_pi_gaussianReal_eq_diag (γ_x := γ_x) (γ_y := γ_y) n
+    _ = (n.factorial : ℝ) * (canonicalRoughCovariance d N a mass T x y) ^ n := by
+      congr 2
+      symm
+      simpa [γ_x, γ_y] using
+        canonicalRoughCovariance_eq_sum_gamma_mul_gamma
+          (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y
+
+theorem abs_canonicalSmoothCovariance_le_smoothWickConstant
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    |canonicalSmoothCovariance d N a mass T x y| ≤ smoothWickConstant d N a mass T := by
+  let γ_x : (Fin d → Fin N) → ℝ := canonicalSmoothGamma d N a mass T x
+  let γ_y : (Fin d → Fin N) → ℝ := canonicalSmoothGamma d N a mass T y
+  have h_cs :
+      (∑ m : Fin d → Fin N, γ_x m * γ_y m) ^ 2 ≤
+        (∑ m : Fin d → Fin N, (γ_x m) ^ 2) *
+          ∑ m : Fin d → Fin N, (γ_y m) ^ 2 := by
+    simpa [γ_x, γ_y] using
+      (Finset.sum_mul_sq_le_sq_mul_sq
+        (R := ℝ) (Finset.univ : Finset (Fin d → Fin N)) γ_x γ_y)
+  have hx :
+      ∑ m : Fin d → Fin N, (γ_x m) ^ 2 = smoothWickConstant d N a mass T := by
+    simpa [γ_x] using
+      canonicalSmoothGamma_sq_sum_eq_wickConstant
+        (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x
+  have hy :
+      ∑ m : Fin d → Fin N, (γ_y m) ^ 2 = smoothWickConstant d N a mass T := by
+    simpa [γ_y] using
+      canonicalSmoothGamma_sq_sum_eq_wickConstant
+        (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT y
+  have h_nonneg : 0 ≤ smoothWickConstant d N a mass T := by
+    rw [← hx]
+    exact Finset.sum_nonneg fun m hm => sq_nonneg (γ_x m)
+  have h_sq :
+      (∑ m : Fin d → Fin N, γ_x m * γ_y m) ^ 2 ≤
+        smoothWickConstant d N a mass T * smoothWickConstant d N a mass T := by
+    simpa [hx, hy]
+      using h_cs
+  have h_abs :
+      |∑ m : Fin d → Fin N, γ_x m * γ_y m| ≤
+        smoothWickConstant d N a mass T := by
+    have h_abs_sq :
+        |∑ m : Fin d → Fin N, γ_x m * γ_y m| ^ 2 ≤
+          |smoothWickConstant d N a mass T| ^ 2 := by
+      simpa [sq_abs, pow_two] using h_sq
+    have := (sq_le_sq).mp h_abs_sq
+    simpa [abs_of_nonneg h_nonneg] using this
+  rw [show canonicalSmoothCovariance d N a mass T x y =
+      ∑ m : Fin d → Fin N, γ_x m * γ_y m from by
+      simpa [γ_x, γ_y] using
+        canonicalSmoothCovariance_eq_sum_gamma_mul_gamma
+          (d := d) (N := N) (a := a) (mass := mass) ha hmass T x y]
+  exact h_abs
 
 theorem canonicalSumFieldFunction_covariance_eq_GJ
     (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
