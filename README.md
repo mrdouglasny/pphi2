@@ -419,8 +419,9 @@ then `lake build`. Workflow YAML is checked with [actionlint](.github/workflows/
 - [docs/foundational-roadmap.md](docs/foundational-roadmap.md) — Why the repo
   is being refactored around formulation layers (measure / Schwinger /
   reconstruction)
-- [docs/axiom_audit.md](docs/axiom_audit.md) — Self-audit of all axioms
-  (pphi2 + gaussian-field) with correctness ratings
+- [AXIOM_AUDIT.md](AXIOM_AUDIT.md) — Self-audit of all axioms
+  (pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert) with
+  correctness ratings; format per `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 - [docs/mathlib_candidates.md](docs/mathlib_candidates.md) — Standard results
   suitable for Mathlib contribution (~50 across pphi2 + gaussian-field)
 - [docs/gemini_review.md](docs/gemini_review.md) — External review of axioms
