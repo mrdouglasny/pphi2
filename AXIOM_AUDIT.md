@@ -53,6 +53,71 @@ Notes:
   2026-05-10 split, and 2 of those have since been discharged
   upstream).
 
+## 2026-05-12 Phase B textbook axiom proposal + Gemini DT vetting
+
+After yesterday's S3 discharge (`canonicalCrossTerm_inner_eq_zero`
+axiom-free) and the upstream variance identification, the only
+remaining analytical content on `rough_error_variance` is the
+Glimm-Jaffe Ch. 8 Fourier estimates needed for S4. Two textbook
+axioms suffice to close S4 + S5 (the two remaining pphi2 sorries):
+
+1. **`smoothWickConstant_le_log_uniform_in_aN`** — Glimm-Jaffe Thm 8.5.2
+   (smooth-side, d=2). `smoothWickConstant T ≤ A + B·(1 + |log T|)`
+   uniform in (N, a) at fixed L = N·a.
+
+2. **`canonicalRoughCovariance_pow_sum_le_uniform_in_aN`** —
+   Glimm-Jaffe Thm 8.5.2 (rough-side, d=2). `a^d · Σ_y |C_R(x,y)|^m
+   ≤ C_m · T` for all m ≥ 1, uniform in (N, a) at fixed L.
+
+Plan: [`docs/phase-B-textbook-axioms.md`](docs/phase-B-textbook-axioms.md).
+Discharge plan inline (per `AXIOM_MANAGEMENT.md` requirement):
+
+- **Axiom 1 discharge (~500–800 lines, ~2–3 weeks):** tighten the
+  existing `heat_kernel_1d_bound` (currently with the trivial `C = N`
+  constant) to the textbook (a, N)-uniform `C(L)` form via the
+  existing `gaussian_sum_bound` (`HeatKernelBound.lean:204` already
+  proves `Σ exp(-α k²) ≤ √(π/α) + 1` with uniform constant via the
+  `sin² ≥ (2/π)² · x²` bound on [0, π/2]). Propagate through
+  `heat_kernel_trace_bound`, `smoothVariance_from_heat_kernel`,
+  `smoothVariance_le_log_uniform`. Reference: Glimm-Jaffe Thm 8.5.2 +
+  Lemma 8.5.4 (lattice heat kernel trace); Reed-Simon vol. II Thm
+  XI.2 (heat kernel trace).
+
+- **Axiom 2 discharge (~300–500 lines, ~1–2 weeks):** m=1 case from
+  the Schwinger identity + heat-kernel probability normalisation
+  (`a^d · Σ_y p_t(x, y) = 1`, hence `a^d · Σ_y C_R(x, y) = ∫_0^T 1 dt
+  = T`); m=2 from a position-space rewrite of the existing
+  `roughCovariance_sq_summable` via Plancherel + translation
+  invariance; m ≥ 3 from Hölder interpolation between m=2 and the
+  off-diagonal L^∞ bound on C_R (which decays Gaussian-exponentially
+  in |x − y|, dominating the at-most-logarithmic coincident-points
+  divergence in d=2). Reference: Glimm-Jaffe Thm 8.5.2 + Lemma 8.5.5
+  (rough covariance position-space estimates); Janson, *Gaussian
+  Hilbert Spaces*, Ch. 6.
+
+**Gemini deep-think vetting (2026-05-12)** of both axioms — verdict
+Standard / DT — caught two bugs in the initial draft, fixes landed
+at commit `73eb939`:
+
+(i) **d = 2 trap.** Both axioms are mathematically false for d ≥ 3
+(smooth diverges as T^{-1/2}, rough L^m scales as `T^{m(1-d/2) + d/2}`
+which diverges for m ≥ 3 at d = 3). The linear-in-T scaling is a
+magical d=2 property: `m(1-1) + 1 = 1` exactly when d = 2. Corrected
+statements carry `hd : d = 2`.
+
+(ii) **S4/S5 quantifier trap.** Both existing sorry signatures had
+`T` bound *before* `∃ K`, allowing Skolemization `K = K(T)` that
+would nullify the O(T · polylog) scaling. Corrected by moving `T`
+inside the `∀ N a` block, after `∃ K`, so K is forced to be a
+function only of `(k, j, mass, L)` (S4) or `(P, mass, L)` (S5).
+
+**Status: NOT yet introduced into the codebase.** When introduced,
+pphi2 sorry count drops 2 → 0 (S4 + S5 close); axiom count goes
+17 → 19. Combined Phase B discharge effort ~3-5 weeks at recalibrated
+project norms. The axioms are at the right granularity to be lifted
+into upstream gaussian-field once discharged (they're about lattice
+Fourier estimates, not pphi2-specific).
+
 ## 2026-05-11 audit pass (gaussian-hilbert polynomial-density discharge)
 
 Upstream gaussian-hilbert discharged `polynomial_dense_L2_of_subGaussian`

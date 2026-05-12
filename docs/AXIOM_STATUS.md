@@ -93,6 +93,20 @@ S'(ℝ²) Wightman directly.
 |---|---|---|---|---|
 | `polynomial_chaos_exp_moment_bridge` | `NelsonEstimate/PolynomialChaosBridge.lean:116` | Standard | DT 2026-05-08, DT 2026-05-10 | **The T² interacting OS critical-path axiom.** Over-stated to `∀ a > 0` but textbook GJ Ch. 8 covers `a ≤ 1`; large-`a` regime trivial. Plans: [parent](polynomial-chaos-exp-moment-bridge-proof-plan.md), [Step 1](rough-error-variance-plan.md) (rev 2 incorporates Gemini DT 2026-05-10 critique: K-quantifier hygiene, m=1 L¹×L^∞ bound replacing C-S, m≥2 L^m sum bound replacing ‖C_R‖_∞, RHS = `K·T·(1+|log T|)^{P.n−1}`, three named upstream sorries for parallel-tracked Glimm-Jaffe Ch. 8 Fourier estimates). [Review record](rough-error-variance-deep-think-review.md). |
 
+### Cluster A Phase B — proposed textbook axioms (not yet in code)
+
+These two are the **minimum set** of Glimm-Jaffe Ch. 8 Fourier estimates
+needed to close the two remaining S4 + S5 sorries on
+`rough_error_variance` (per
+[`phase-B-textbook-axioms.md`](phase-B-textbook-axioms.md)). They are
+not yet introduced into the codebase. Once introduced they will close
+the S4 + S5 sorries (pphi2 sorry count 2 → 0; axiom count 17 → 19).
+
+| Axiom | Proposed File:Line | Rating | Sources | Notes |
+|---|---|---|---|---|
+| `smoothWickConstant_le_log_uniform_in_aN` | `NelsonEstimate/CovarianceSplit.lean` (TBD) or new `CovarianceBoundsGJ.lean` | Standard | DT 2026-05-12 | **Glimm-Jaffe Thm 8.5.2 (smooth side, d=2).** `smoothWickConstant T ≤ A + B·(1+|log T|)` uniform in (N, a) at fixed L = N·a. Gemini deep-think 2026-05-12 caught d=2 trap (false for d ≥ 3 where smooth diverges as T^{-1/2}); corrected statement carries `hd : d = 2`. Discharge plan: tighten existing `heat_kernel_1d_bound` to (a, N)-uniform `C(L)` via `gaussian_sum_bound`, propagate through trace/Schwinger. [Plan](phase-B-textbook-axioms.md) + estimate ~500-800 lines / 2-3 weeks. |
+| `canonicalRoughCovariance_pow_sum_le_uniform_in_aN` | `NelsonEstimate/CovarianceSplit.lean` (TBD) or new `CovarianceBoundsGJ.lean` | Standard | DT 2026-05-12 | **Glimm-Jaffe Thm 8.5.2 (rough side, d=2).** `a^d · Σ_y \|C_R(x,y)\|^m ≤ C_m·T` for all m ≥ 1, uniform in (N, a) at fixed L. Gemini deep-think 2026-05-12 caught the same d=2 trap (false for d ≥ 3 where scaling becomes `T^{m(1-d/2) + d/2}`, divergent for m ≥ 3); corrected statement carries `hd : d = 2`. Discharge plan: m=1 via Schwinger + heat-kernel probability normalisation; m=2 via position-space rewrite of existing `roughCovariance_sq_summable`; m≥3 via Hölder interpolation. [Plan](phase-B-textbook-axioms.md) + estimate ~300-500 lines / 1-2 weeks. |
+
 ### Spectral gap / mass gap (4 axioms)
 
 | Axiom | File:Line | Rating | Sources | Notes |
