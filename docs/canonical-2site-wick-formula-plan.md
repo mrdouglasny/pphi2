@@ -16,40 +16,30 @@ lemma canonicalCrossTerm_inner_eq_zero
 This is the S3 cross-term orthogonality, the analytical input that
 `canonicalRoughError_l2_sq_eq` (the full L²-sq decomposition) consumes.
 
-## Missing prerequisite in `FieldDecomposition.lean`
+## Variance identification prerequisite — DONE (2026-05-12, commit `028584d`)
 
-Before the canonical 2-site Wick formula can be stated with the correct
-variance constants, `FieldDecomposition.lean` still needs the canonical
-on-site variance identification lemmas that tie the product-DFT
-construction to the Glimm-Jaffe cutoff constants:
+`FieldDecomposition.lean` now proves the on-site variance
+identification lemmas axiom-free (Route B from
+`canonical-variance-identification-discharge-plan.md` —
+operator/Schwinger route via translation-invariant heat-kernel
+diagonal + spectral trace):
 
-1. Smooth on-site translation invariance:
-   `canonicalSmoothFieldFunction_self_moment x x` is independent of `x`.
-2. Smooth Wick-constant identification:
-   `canonicalSmoothFieldFunction_self_moment x x = smoothWickConstant d N a mass T`.
-3. Rough Wick-constant identification:
-   `canonicalRoughFieldFunction_self_moment x x = roughWickConstant d N a mass T`.
+1. ✅ `canonicalSmoothFieldFunction_self_moment_const` — smooth on-site
+   variance is x-independent.
+2. ✅ `canonicalSmoothFieldFunction_self_moment_eq_smoothWickConstant` —
+   matches `smoothWickConstant d N a mass T`.
+3. ✅ `canonicalRoughFieldFunction_self_moment_eq_roughWickConstant` —
+   rough analogue.
 
-The expected proof route is:
+(All four `#print axioms` to `[propext, Classical.choice, Quot.sound]`.)
 
-- Start from the existing self-moment formulas in
-  `Pphi2/NelsonEstimate/FieldDecomposition.lean`, which already express
-  the smooth/rough variances as product-DFT diagonal sums.
-- Use product-basis completeness
-  (`latticeFourierProductBasis_sq_sum`) to identify the site-average of
-  those diagonal sums.
-- Reindex the integer-indexed Glimm-Jaffe eigenvalue averages to the
-  product-DFT indexing via
-  `sum_latticeEigenvalue_eq_sum_latticeEigenvalue1d_family` from
-  `Lattice.LatticeFourierIndexing`.
-- Conclude that the diagonal product-DFT sums match
-  `smoothWickConstant` / `roughWickConstant`, hence are site-independent.
+So the canonical-side Wick monomials `wickMonomial j (smoothWickConstant T)
+(canonicalSmoothFieldFunction η x)` now have **matched** Wick subtractions:
+the value of `smoothWickConstant T` is the actual variance of
+`canonicalSmoothFieldFunction η x`. The Janson 2-site formula applies
+in its standard "diagonal Kronecker × n! × covariance^n" form.
 
-Without these lemmas, the canonical-side Wick monomials are still
-renormalized by constants that have not yet been identified with the
-actual variances of `canonicalSmoothFieldFunction` and
-`canonicalRoughFieldFunction`, so the 2-site formula is not yet in the
-correct form for S3.
+This unblocks the S3 plan paths below.
 
 ## Why the gff lemma doesn't directly apply
 
