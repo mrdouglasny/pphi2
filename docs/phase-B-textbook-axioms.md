@@ -12,6 +12,37 @@ These are **textbook axioms in the project sense** (per
 standard results from Glimm-Jaffe / Reed-Simon / Janson with explicit
 discharge plans, not "fundamental unprovable assumptions."
 
+## Vetting record (Gemini deep-think, 2026-05-12)
+
+Gemini deep-think vetting caught two bugs in the initial draft of this
+doc:
+
+1. **d = 2 trap (mathematical correctness).** Both axiom statements are
+   **mathematically false for d ≥ 3.** In 2D the smooth Wick constant
+   diverges logarithmically `~ log(1/T)` (matches Axiom 1), and the rough
+   covariance L^m site-sum scales as exactly `T` for all `m ≥ 1` (matches
+   Axiom 2). In 3D, the smooth Wick constant diverges as `T^{-1/2}`
+   (power-law, not log), and the rough L^m bound has scaling
+   `T^{m(1 - d/2) + d/2}` which diverges for `m ≥ 3` at `d = 3`. The
+   linear-in-T scaling is a magical d=2 property (`m(1-1) + 1 = 1`).
+   **Both axioms must carry `hd : d = 2`** to avoid an inconsistent
+   axiomatization. Updated forms below.
+
+2. **S4 quantifier trap.** In the previous S4 statement, `T` was bound
+   *before* `∃ K`, so Lean's elimination allows `K` to be a function of
+   `T` (Skolemization). A discharge could then pick `K(T) = 1/T`,
+   completely nullifying the `O(T · polylog T)` variance scaling needed
+   by S5. **`T` must be moved inside the `∀ N a` block** so `K` is forced
+   to be a function only of `(k, j, mass, L)`. Same trap was present in
+   S5; same fix.
+
+Verdict on the underlying math: "very well-thought-out formalization
+strategy. The split between the L^∞ bound on the smooth covariance and
+the L^m bound on the rough covariance perfectly mirrors the standard
+analytic strategy (Glimm-Jaffe / Simon)." All four (a)–(d) criteria are
+met for both axioms in their corrected forms below. The two axioms are
+correct, sufficient, and well-split (don't merge them).
+
 ## The two textbook axioms
 
 Both go in `Pphi2/NelsonEstimate/CovarianceSplit.lean` (or a new
@@ -50,7 +81,7 @@ analysis but standard.
 
 **Vetting:** Standard. -/
 axiom smoothWickConstant_le_log_uniform_in_aN
-    (d : ℕ) (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    {d : ℕ} (hd : d = 2) (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ A B : ℝ, 0 ≤ A ∧ 0 ≤ B ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
         (_h_vol : (N : ℝ) * a = L)
@@ -102,7 +133,8 @@ d ≥ 2).
 
 **Vetting:** Standard. -/
 axiom canonicalRoughCovariance_pow_sum_le_uniform_in_aN
-    (d : ℕ) (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) (m : ℕ) (hm : 1 ≤ m) :
+    {d : ℕ} (hd : d = 2) (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass)
+    (m : ℕ) (hm : 1 ≤ m) :
     ∃ C_m : ℝ, 0 < C_m ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
         (_h_vol : (N : ℝ) * a = L)

@@ -983,12 +983,12 @@ Depends on:
 
 See module docstring above for the full proof sketch. -/
 theorem canonicalCrossTerm_l2_sq_le
-    {d : ℕ} (mass L : ℝ) (_hL : 0 < L) (_hmass : 0 < mass)
-    (T : ℝ) (_hT : 0 < T)
+    {d : ℕ} (_hd : d = 2) (mass L : ℝ) (_hL : 0 < L) (_hmass : 0 < mass)
     (k j : ℕ) (_hkj : 1 ≤ k - j) :
     ∃ K : ℝ, 0 < K ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
-        (_h_vol : (N : ℝ) * a = L),
+        (_h_vol : (N : ℝ) * a = L)
+        (T : ℝ) (_hT : 0 < T),
         ∫ η, (canonicalCrossTerm d N a mass T η k j) ^ 2
             ∂(canonicalJointMeasure d N) ≤
         K * T * (1 + |Real.log T|) ^ j := by
@@ -1022,12 +1022,12 @@ This is **Step 1** of the discharge of `polynomial_chaos_exp_moment_bridge`
 
 See `docs/rough-error-variance-plan.md` for the full proof plan. -/
 theorem rough_error_variance
-    {d : ℕ} (P : InteractionPolynomial)
-    (L mass : ℝ) (_hL : 0 < L) (_hmass : 0 < mass)
-    (T : ℝ) (_hT : 0 < T) :
+    {d : ℕ} (_hd : d = 2) (P : InteractionPolynomial)
+    (L mass : ℝ) (_hL : 0 < L) (_hmass : 0 < mass) :
     ∃ K : ℝ, 0 < K ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
-        (_h_vol : (N : ℝ) * a = L),
+        (_h_vol : (N : ℝ) * a = L)
+        (T : ℝ) (_hT : 0 < T),
         ∫ η, (canonicalRoughError d N a mass T P η) ^ 2
           ∂(canonicalJointMeasure d N) ≤
         K * T * (1 + |Real.log T|) ^ (P.n - 1) := by
