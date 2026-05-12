@@ -1,4 +1,15 @@
-# S4 + S5 discharge — Codex hand-off
+# S4 + S5 discharge — Codex hand-off [COMPLETED 2026-05-12]
+
+> **STATUS: DISCHARGED.** S4 (`canonicalCrossTerm_l2_sq_le`,
+> `RoughErrorBound.lean:1275`) and S5 (`rough_error_variance`,
+> `RoughErrorBound.lean:1517`) both proved by Codex on 2026-05-12
+> (commit `6db65d9`), per this plan. Pphi2 sorry count 2 → 0;
+> axiom count 17 → 19 (the two named Phase B textbook axioms in
+> `Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean`). `#print axioms
+> rough_error_variance` confirms exactly the standard Mathlib trio +
+> the two named axioms.
+>
+> Plan body kept for historical reference.
 
 ## Goal
 

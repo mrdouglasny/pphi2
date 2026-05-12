@@ -1,4 +1,15 @@
-# Phase B textbook axioms: closing S4 + S5 (rough_error_variance) sorries
+# Phase B textbook axioms: closing S4 + S5 (rough_error_variance) sorries [INTRODUCED + USED 2026-05-12]
+
+> **STATUS: AXIOMS INTRODUCED + S4 + S5 DISCHARGED.** Both proposed
+> Phase B textbook axioms are now in
+> `Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean` (commit `6db65d9`)
+> with the Gemini-vetted statements. S4 + S5 are proved using them
+> (same commit). Pphi2 sorry count 2 → 0; axiom count 17 → 19.
+>
+> The plan body below describes the design that was executed; the
+> axioms themselves still need their *own* discharge into theorems
+> (estimated 3-5 weeks Phase B Glimm-Jaffe Fourier work — discharge
+> strategy in this doc and inline in the axiom docstrings).
 
 ## Goal
 
