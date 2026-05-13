@@ -390,6 +390,233 @@ theorem roughVariance_from_heat_kernel (d N : ℕ) [NeZero N]
     _ = ↑Λ * mass⁻¹ ^ 2 * T := by
         simp [Finset.sum_const, Finset.card_range]; ring
 
+/-! ## (a, N)-uniform heat kernel sum bounds at fixed L = N · a
+
+The trivial bounds above scale with `N` (or `card = N^d`), which diverge as
+`a → 0` at fixed `L = N · a`. The Glimm–Jaffe Ch. 8 estimates require the
+constant to depend only on `(mass, L)`, not `(N, a)` separately.
+
+The upgrade uses Jordan's inequality `sin(πk/N) ≥ 2 min(k, N-k)/N` (a
+reformulation of `sin x ≥ 2x/π` on `[0, π/2]` using the reflection
+`sin(πk/N) = sin(π(N-k)/N)`), reducing the lattice sum to a Gaussian sum
+controlled by `gaussian_sum_bound`. -/
+
+section UniformBound
+
+open Finset
+
+/-- Reflection: `sin(π · k / N) = sin(π · (N - k) / N)` for `k ≤ N`. -/
+private lemma sin_pi_div_N_reflect (N k : ℕ) (hk : k ≤ N) :
+    Real.sin (π * (k : ℝ) / N) = Real.sin (π * ((N - k : ℕ) : ℝ) / N) := by
+  rcases Nat.eq_zero_or_pos N with hN0 | hN
+  · subst hN0; interval_cases k; simp
+  have hN_ne : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hN.ne'
+  rw [Nat.cast_sub hk]
+  have heq : π * ((N : ℝ) - k) / N = π - π * (k : ℝ) / N := by
+    field_simp
+  rw [heq, Real.sin_pi_sub]
+
+/-- For `k ∈ range N` and `j := min k (N - k)`, the angle `π · j / N` lies
+in `[0, π/2]`. -/
+private lemma pi_j_div_N_le_half_pi (N k : ℕ) [NeZero N] (hk : k < N) :
+    π * ((min k (N - k) : ℕ) : ℝ) / N ≤ π / 2 := by
+  have hN_pos : 0 < (N : ℝ) := Nat.cast_pos.mpr (NeZero.pos N)
+  have hπ : 0 < π := Real.pi_pos
+  have hj_le : 2 * (min k (N - k) : ℕ) ≤ N := by omega
+  have hj_le_real : 2 * ((min k (N - k) : ℕ) : ℝ) ≤ (N : ℝ) := by exact_mod_cast hj_le
+  -- Goal: π · j / N ≤ π / 2.  Equivalent to 2 · π · j ≤ π · N.
+  rw [div_le_iff₀ hN_pos]
+  nlinarith
+
+/-- For `k ∈ range N` and `j := min k (N - k)`, the angle `π · j / N` is
+nonneg. -/
+private lemma pi_j_div_N_nonneg (N k : ℕ) [NeZero N] :
+    0 ≤ π * ((min k (N - k) : ℕ) : ℝ) / N := by
+  have hN_pos : 0 < (N : ℝ) := Nat.cast_pos.mpr (NeZero.pos N)
+  positivity
+
+/-- Pointwise lower bound: `(2·min(k, N-k)/N)² ≤ sin²(π·k/N)` for `k ∈ range N`. -/
+private lemma sin_sq_pi_k_div_N_ge_min_sq (N k : ℕ) [NeZero N] (hk : k < N) :
+    ((2 * (min k (N - k) : ℕ) : ℝ) / N) ^ 2 ≤
+      Real.sin (π * (k : ℝ) / N) ^ 2 := by
+  set j : ℕ := min k (N - k)
+  -- Reflect to the half where Jordan's inequality applies.
+  have hk_le : k ≤ N := hk.le
+  -- We use the angle πj/N. Either j = k or j = N - k.
+  have hj_eq : (j : ℝ) = (min k (N - k) : ℕ) := by rfl
+  have hsin_eq_jcase : Real.sin (π * (k : ℝ) / N) ^ 2 =
+      Real.sin (π * (j : ℝ) / N) ^ 2 := by
+    by_cases h : k ≤ N - k
+    · simp [j, h]
+    · push_neg at h
+      have hj : j = N - k := by simp [j, Nat.min_def, not_le.mpr h]
+      rw [hj]
+      have := sin_pi_div_N_reflect N k hk_le
+      push_cast at this
+      rw [this]
+  rw [hsin_eq_jcase]
+  -- Now apply Jordan's inequality on |πj/N| ≤ π/2.
+  have habs : |π * (j : ℝ) / N| ≤ π / 2 := by
+    rw [abs_of_nonneg (pi_j_div_N_nonneg N k)]
+    exact pi_j_div_N_le_half_pi N k hk
+  have hjordan := sin_sq_lower_bound (π * (j : ℝ) / N) habs
+  -- sin_sq_lower_bound: (2/π)² · x² ≤ sin² x.
+  -- (2/π)² · (πj/N)² = 4·j²/N²·(1/π²)·π² = 4·j²/N² = (2j/N)²
+  have hN_pos : 0 < (N : ℝ) := Nat.cast_pos.mpr (NeZero.pos N)
+  have hπ_ne : (π : ℝ) ≠ 0 := Real.pi_ne_zero
+  have hN_ne : (N : ℝ) ≠ 0 := hN_pos.ne'
+  have hcalc : (2 / π) ^ 2 * (π * (j : ℝ) / N) ^ 2 =
+      ((2 * (j : ℝ)) / N) ^ 2 := by
+    field_simp
+  rw [hcalc] at hjordan
+  exact hjordan
+
+/-- Per-term bound for the upgrade: each summand bounded by
+`exp(-16·t·j(k)²/L²)` with `j(k) := min(k, N-k)`. -/
+private lemma exp_neg_t_sin_sq_le (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+    (L : ℝ) (hL : 0 < L) (hvol : (N : ℝ) * a = L) (t : ℝ) (ht : 0 < t)
+    (k : ℕ) (hk : k < N) :
+    Real.exp (-t * (4 * Real.sin (π * (k : ℝ) / N) ^ 2 / a ^ 2)) ≤
+    Real.exp (-(16 * t) * ((min k (N - k) : ℕ) : ℝ) ^ 2 / L ^ 2) := by
+  -- We need: -t · 4 sin² / a² ≤ -16t · j² / L², i.e.,
+  -- 16t · j² / L² ≤ t · 4 sin² / a², i.e.,
+  -- 16 j² / L² ≤ 4 sin² / a² (multiplying by 1/t > 0), i.e.,
+  -- 4 j² / L² ≤ sin² / a², i.e.,
+  -- (2j / L)² ≤ sin² / a², i.e.,
+  -- a² · (2j/L)² ≤ sin² (multiplying by a² > 0), i.e.,
+  -- (2j·a/L)² ≤ sin².  And L = Na, so a/L = 1/N, so (2j/N)² ≤ sin².
+  apply Real.exp_le_exp.mpr
+  have hN_pos : 0 < (N : ℝ) := Nat.cast_pos.mpr (NeZero.pos N)
+  have hsin_sq := sin_sq_pi_k_div_N_ge_min_sq N k hk
+  -- hsin_sq : (2 · min(k, N-k) / N)² ≤ sin²(π·k/N)
+  set j : ℝ := ((min k (N - k) : ℕ) : ℝ)
+  have hj_nn : 0 ≤ j := by positivity
+  have ha_sq_pos : 0 < a ^ 2 := sq_pos_of_pos ha
+  have hL_sq_pos : 0 < L ^ 2 := sq_pos_of_pos hL
+  have hN_sq_pos : 0 < (N : ℝ) ^ 2 := sq_pos_of_pos hN_pos
+  -- L = Na
+  have hL_eq : L = (N : ℝ) * a := hvol.symm
+  -- Goal: -16t·j²/L² ≤ -t·4·sin²/a², i.e. t·4·sin²/a² ≤ 16t·j²/L² (false direction)
+  -- Wait, we want exp(left) ≤ exp(right), so left ≤ right.
+  -- left = -t·4·sin²/a², right = -16t·j²/L².
+  -- So we need: -t·4·sin²/a² ≤ -16t·j²/L², i.e., 16t·j²/L² ≤ t·4·sin²/a².
+  -- Multiply both sides by a²·L² > 0:
+  -- 16t·j²·a² ≤ 4t·sin²·L²
+  -- Divide by 4t > 0: 4·j²·a² ≤ sin²·L²
+  -- L = Na, so L² = N²·a², so sin²·L² = sin²·N²·a².
+  -- So we need: 4·j²·a² ≤ sin²·N²·a², i.e., 4·j²/N² ≤ sin² (cancel a²).
+  -- This is (2j/N)² ≤ sin², which is exactly hsin_sq.
+  have hkey : 16 * j ^ 2 / L ^ 2 ≤ 4 * Real.sin (π * (k : ℝ) / N) ^ 2 / a ^ 2 := by
+    rw [hL_eq, mul_pow]
+    -- 16·j²/(N²·a²) ≤ 4·sin²/a²
+    rw [div_le_div_iff₀ (by positivity) ha_sq_pos]
+    -- 16·j²·a² ≤ 4·sin²·(N²·a²)
+    have hNa_sq : 0 ≤ (N : ℝ) ^ 2 * a ^ 2 := by positivity
+    -- From hsin_sq: (2j/N)² ≤ sin², i.e., 4j²/N² ≤ sin².
+    -- Multiply both sides by 4·N²·a²:
+    -- 16·j²·a² ≤ 4·sin²·N²·a².
+    have hkey2 : 4 * j ^ 2 / (N : ℝ) ^ 2 ≤ Real.sin (π * (k : ℝ) / N) ^ 2 := by
+      have : ((2 * j) / N) ^ 2 = 4 * j ^ 2 / (N : ℝ) ^ 2 := by ring
+      rw [this] at hsin_sq
+      convert hsin_sq using 2
+    -- Need: 16·j²·a² ≤ 4·sin²·N²·a²
+    have h4Na2 : (0 : ℝ) ≤ 4 * (N : ℝ) ^ 2 * a ^ 2 := by positivity
+    have := mul_le_mul_of_nonneg_right hkey2 h4Na2
+    -- this : 4·j²/N² · (4·N²·a²) ≤ sin² · (4·N²·a²)
+    have hN2_ne : (N : ℝ) ^ 2 ≠ 0 := hN_sq_pos.ne'
+    have hsimp_lhs : 4 * j ^ 2 / (N : ℝ) ^ 2 * (4 * (N : ℝ) ^ 2 * a ^ 2) =
+        16 * j ^ 2 * a ^ 2 := by field_simp; ring
+    have hsimp_rhs : Real.sin (π * (k : ℝ) / N) ^ 2 * (4 * (N : ℝ) ^ 2 * a ^ 2) =
+        4 * Real.sin (π * (k : ℝ) / N) ^ 2 * ((N : ℝ) ^ 2 * a ^ 2) := by ring
+    rw [hsimp_lhs, hsimp_rhs] at this
+    exact this
+  -- Now multiply by t > 0:
+  have htm := mul_le_mul_of_nonneg_left hkey ht.le
+  -- htm : t * (16·j²/L²) ≤ t * (4·sin²/a²)
+  -- We want -t·4·sin²/a² ≤ -16t·j²/L², which is the negation:
+  have : -(t * (4 * Real.sin (π * (k : ℝ) / N) ^ 2 / a ^ 2)) ≤
+         -(t * (16 * j ^ 2 / L ^ 2)) := by linarith
+  -- Simplify both sides:
+  have hL_ne : L ≠ 0 := hL.ne'
+  have ha_ne : a ≠ 0 := ha.ne'
+  have hl : -t * (4 * Real.sin (π * (k : ℝ) / N) ^ 2 / a ^ 2) =
+      -(t * (4 * Real.sin (π * (k : ℝ) / N) ^ 2 / a ^ 2)) := by ring
+  have hr : -(16 * t) * j ^ 2 / L ^ 2 = -(t * (16 * j ^ 2 / L ^ 2)) := by
+    field_simp
+  rw [hl, hr]
+  exact this
+
+/-- Sum-doubling bound: for any nonneg `g : ℕ → ℝ`,
+`∑_{k ∈ range N} g(min k (N-k)) ≤ 2 · ∑_{j ∈ range N} g(j)`,
+because each `j ∈ range N` is the value of `min(k, N-k)` for at most two `k`. -/
+private lemma sum_min_le_two_sum (N : ℕ) (g : ℕ → ℝ) (hg : ∀ j, 0 ≤ g j) :
+    (∑ k ∈ range N, g (min k (N - k))) ≤ 2 * ∑ j ∈ range N, g j := by
+  -- The key inequality: g(min k (N-k)) ≤ g(k) + g(N-k) is FALSE in general
+  -- (since g could be increasing and N-k larger than k in ℕ-sense).
+  -- But after the substitution: split by cases.
+  have hpt : ∀ k ∈ range N, g (min k (N - k)) ≤ g k + g (N - k) := by
+    intro k _
+    by_cases h : k ≤ N - k
+    · -- min = k
+      rw [Nat.min_eq_left h]
+      linarith [hg (N - k)]
+    · -- min = N - k
+      rw [Nat.min_eq_right (Nat.le_of_lt (Nat.lt_of_not_le h))]
+      linarith [hg k]
+  calc (∑ k ∈ range N, g (min k (N - k)))
+      ≤ ∑ k ∈ range N, (g k + g (N - k)) := Finset.sum_le_sum hpt
+    _ = (∑ k ∈ range N, g k) + ∑ k ∈ range N, g (N - k) := by
+        rw [Finset.sum_add_distrib]
+    _ ≤ (∑ k ∈ range N, g k) + ∑ k ∈ range N, g k := by
+        gcongr
+        -- Σ_{k ∈ range N} g(N-k): re-index via N - k.
+        -- For k = 0,...,N-1: N - k = N, N-1, ..., 1. So we hit {1, ..., N}.
+        -- And we want to show Σ g(N-k) ≤ Σ g(k) where k ranges over {0, ..., N-1}.
+        -- Since g(N) is one of the summands on LHS and g(0) is one on RHS,
+        -- and the rest are common, we need g(N) ≤ g(0).
+        -- That's NOT true in general. We need a different argument.
+        --
+        -- Better: use sum_range_reflect after shifting. For k ∈ range N,
+        -- let j = N - 1 - k.  Then N - k = j + 1.  As k ranges over range N,
+        -- so does j, and j + 1 ∈ {1, ..., N}.
+        --
+        -- Actually the cleanest: bound each g(N-k) ≤ ... no that doesn't work.
+        --
+        -- Easier escape: just use sum over a UNION.  Let me set up differently.
+        sorry
+    _ = 2 * ∑ j ∈ range N, g j := by ring
+
+/-- Heat-kernel 1D sum: `(a, N)`-uniform bound at fixed `L = N · a`.
+
+The constant `C(L) := L · √π / 2 + 2` depends only on `L`, not on `(N, a)` separately.
+
+Discharge plan reference: `docs/phase-B-textbook-axioms.md` (Phase 0). -/
+theorem heat_kernel_1d_bound_uniform (L : ℝ) (hL : 0 < L) :
+    ∃ C : ℝ, 0 < C ∧
+    ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+      (t : ℝ) (_ht : 0 < t),
+      (∑ k ∈ range N,
+        exp (-t * (4 * Real.sin (π * (k : ℝ) / N) ^ 2 / a ^ 2)) : ℝ) ≤
+      C * (1 + 1 / Real.sqrt t) := by
+  refine ⟨L * Real.sqrt π / 2 + 2, by positivity, ?_⟩
+  intro N hN a ha hvol t ht
+  -- Step 1: dominate each term by exp(-16t·j(k)²/L²) where j(k) = min(k, N-k).
+  have step1 : ∑ k ∈ range N,
+        Real.exp (-t * (4 * Real.sin (π * (k : ℝ) / N) ^ 2 / a ^ 2)) ≤
+      ∑ k ∈ range N,
+        Real.exp (-(16 * t) * ((min k (N - k) : ℕ) : ℝ) ^ 2 / L ^ 2) :=
+    Finset.sum_le_sum fun k hk =>
+      exp_neg_t_sin_sq_le N a ha L hL hvol t ht k (Finset.mem_range.mp hk)
+  -- Step 2: Σ_k exp(...) ≤ 2 · Σ_j exp(-16t·j²/L²) by the sum-doubling lemma.
+  -- Step 3: Σ_{j ∈ range N} exp(-16t·j²/L²) ≤ Σ_{j ∈ Icc(-N+1)(N-1)} exp(-16t·j²/L²)
+  --         (subset embedding of nonneg integers into all integers).
+  -- Step 4: gaussian_sum_bound with α = 16t/L² gives ≤ 1 + √(πL²/(16t)) = 1 + L√π/(4√t).
+  -- Step 5: combine: total ≤ 2 · (1 + L√π/(4√t)) = 2 + L√π/(2√t)
+  --         ≤ (L√π/2 + 2) · (1 + 1/√t) = C(L) · (1 + 1/√t).
+  sorry
+
+end UniformBound
+
 end Pphi2
 
 end
