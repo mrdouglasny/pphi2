@@ -21,12 +21,6 @@ git = "https://github.com/mrdouglasny/bochner.git"
 rev = "main"
 
 [[require]]
-name = "MarkovSemigroups"
-scope = "mrdouglasny"
-git = "https://github.com/mrdouglasny/markov-semigroups.git"
-rev = "main"
-
-[[require]]
 name = "gaussian-hilbert"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gaussian-hilbert.git"
