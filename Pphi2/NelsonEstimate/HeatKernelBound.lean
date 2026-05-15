@@ -935,6 +935,66 @@ Integrate:
 Total: `L⁻¹ ^ 2 · 2C · (2/m² + |log T|) ≤ A + B · (1 + |log T|)`
        with `A = 2L⁻¹ ^ 2C·(2/m² + 1)`, `B = 2L⁻¹ ^ 2C`. -/
 
+private lemma one_add_inv_sqrt_sq_le_two_mul_one_add_inv
+    (s : ℝ) (hs : 0 < s) :
+    (1 + 1 / Real.sqrt s) ^ 2 ≤ 2 * (1 + 1 / s) := by
+  set u : ℝ := 1 / Real.sqrt s
+  have hu_sq : u ^ 2 = 1 / s := by
+    have hsqrt : Real.sqrt s ≠ 0 := by positivity
+    have hsqrt_sq : (Real.sqrt s) ^ 2 = s := by
+      rw [sq_sqrt (show 0 ≤ s by linarith)]
+    calc
+      u ^ 2 = (1 / Real.sqrt s) ^ 2 := by simp [u]
+      _ = 1 / ((Real.sqrt s) ^ 2) := by field_simp [hsqrt]
+      _ = 1 / s := by rw [hsqrt_sq]
+  have h2u : 2 * u ≤ u ^ 2 + 1 := by
+    have hnn : 0 ≤ (u - 1) ^ 2 := sq_nonneg _
+    nlinarith
+  calc
+    (1 + 1 / Real.sqrt s) ^ 2 = (1 + u) ^ 2 := by simp [u]
+    _ = 1 + 2 * u + u ^ 2 := by ring
+    _ ≤ 1 + (u ^ 2 + 1) + u ^ 2 := by gcongr
+    _ = 2 * (1 + u ^ 2) := by ring
+    _ = 2 * (1 + 1 / s) := by rw [hu_sq]
+
+private lemma integrableOn_inv_Ioc (T : ℝ) (hT : 0 < T) :
+    IntegrableOn (fun s : ℝ => 1 / s) (Set.Ioc T 1) := by
+  refine MeasureTheory.Measure.integrableOn_of_bounded measure_Ioc_lt_top.ne ?_ (M := 1 / T) ?_
+  · fun_prop
+  · filter_upwards [ae_restrict_mem measurableSet_Ioc] with s hs
+    have hspos : 0 < s := lt_trans hT hs.1
+    have hle : 1 / s ≤ 1 / T := by
+      gcongr
+      exact hs.1.le
+    have hnonneg : 0 ≤ (1 / s : ℝ) := by positivity
+    rw [Real.norm_eq_abs, abs_of_nonneg hnonneg]
+    exact hle
+
+private lemma integrableOn_inv_mul_exp_Ioi (μ T : ℝ) (hμ : 0 < μ) (hT : 0 < T) :
+    IntegrableOn (fun s : ℝ => (1 / s) * Real.exp (-s * μ)) (Set.Ioi T) := by
+  let g : ℝ → ℝ := fun s => (1 / T) * Real.exp (-s * μ)
+  have hg_int : IntegrableOn g (Set.Ioi T) := by
+    have hbase := integrableOn_exp_mul_Ioi (a := (-μ : ℝ)) (by linarith) T
+    simpa [g, mul_comm, mul_left_comm, mul_assoc] using hbase.const_mul (1 / T)
+  have hg_sm :
+      AEStronglyMeasurable
+        (fun s : ℝ => (1 / s) * Real.exp (-s * μ))
+        (volume.restrict (Set.Ioi T)) := by
+    fun_prop
+  refine MeasureTheory.Integrable.mono' hg_int hg_sm ?_
+  filter_upwards [ae_restrict_mem measurableSet_Ioi] with s hs
+  have hspos : 0 < s := lt_trans hT hs
+  have hle : s⁻¹ ≤ T⁻¹ := by
+    have : 1 / s ≤ 1 / T := by
+      gcongr
+      exact hs.le
+    simpa [one_div] using this
+  have hexp : 0 ≤ Real.exp (-(s * μ)) := (Real.exp_pos _).le
+  have hnonneg : 0 ≤ (1 / s : ℝ) := by positivity
+  rw [Real.norm_eq_abs, abs_of_nonneg (mul_nonneg hnonneg (by simpa [neg_mul] using hexp))]
+  simp only [g, one_div, neg_mul, ge_iff_le]
+  exact mul_le_mul_of_nonneg_right hle hexp
+
 /-- **Phase 1b target — first Phase B axiom as a theorem.**
 
 This is the discharge of `smoothWickConstant_le_log_uniform_in_aN`
@@ -954,15 +1014,275 @@ theorem smoothWickConstant_le_log_uniform_in_aN_proved
   --   A := 2 · L⁻¹ ^ 2 · C₁² · (2/mass² + 1)   (the constant part)
   --   B := 2 · L⁻¹ ^ 2 · C₁²                   (the log T coefficient)
   -- where C₁ comes from heat_kernel_trace_bound_uniform with d := 2.
+  subst hd
   obtain ⟨C, hC_pos, _hC⟩ :=
     heat_kernel_trace_bound_uniform 2 L hL mass hmass
   refine ⟨2 * L⁻¹ ^ 2 * C * (2 / mass ^ 2 + 1), 2 * L⁻¹ ^ 2 * C, ?_, ?_, ?_⟩
   · positivity
   · positivity
   intro N hN a ha hvol T hT
-  -- The Schwinger + Fubini + integral bookkeeping goes here.  See
-  -- the math sketch above.
-  sorry
+  let Λ := Fintype.card (FinLatticeSites 2 N)
+  have hmass_sq_pos : 0 < mass ^ 2 := sq_pos_of_pos hmass
+  have hcard_nat : Fintype.card (FinLatticeSites 2 N) = N ^ 2 := by
+    simp only [FinLatticeSites, Fintype.card_fun, ZMod.card, Fintype.card_fin]
+  have hcard : (Λ : ℝ) = (N : ℝ) ^ 2 := by
+    rw [show Λ = Fintype.card (FinLatticeSites 2 N) by rfl, hcard_nat]
+    norm_num
+  have hvol_sq : a ^ 2 * (Λ : ℝ) = L ^ 2 := by
+    rw [hcard]
+    calc
+      a ^ 2 * (N : ℝ) ^ 2 = ((N : ℝ) * a) ^ 2 := by ring
+      _ = L ^ 2 := by rw [hvol]
+  have hΛ_ne : (Λ : ℝ) ≠ 0 := by
+    rw [hcard]
+    exact pow_ne_zero 2 (Nat.cast_ne_zero.mpr (NeZero.ne N))
+  have hsummand_int :
+      ∀ m ∈ range Λ,
+        IntegrableOn
+          (fun s : ℝ => Real.exp (-s * latticeEigenvalue 2 N a mass m))
+          (Set.Ioi T) := by
+    intro m hm
+    have hlam : 0 < latticeEigenvalue 2 N a mass m :=
+      latticeEigenvalue_pos 2 N a mass ha hmass m
+    have hbase := integrableOn_exp_mul_Ioi
+      (a := (-(latticeEigenvalue 2 N a mass m) : ℝ)) (by linarith) T
+    simpa [mul_comm, mul_left_comm, mul_assoc] using hbase
+  have hsum_int :
+      IntegrableOn
+        (fun s : ℝ =>
+          ∑ m ∈ range Λ, Real.exp (-s * latticeEigenvalue 2 N a mass m))
+        (Set.Ioi T) := by
+    simpa [Λ] using
+      (MeasureTheory.integrable_finset_sum (range Λ) hsummand_int)
+  have hsmooth_sum :
+      ∑ m ∈ range Λ, smoothCovEigenvalue 2 N a mass T m
+        = ∫ s in Set.Ioi T,
+            ∑ m ∈ range Λ,
+              Real.exp (-s * latticeEigenvalue 2 N a mass m) := by
+    calc
+      ∑ m ∈ range Λ, smoothCovEigenvalue 2 N a mass T m
+        = ∑ m ∈ range Λ,
+            ∫ s in Set.Ioi T, Real.exp (-s * latticeEigenvalue 2 N a mass m) := by
+              refine Finset.sum_congr rfl ?_
+              intro m hm
+              unfold smoothCovEigenvalue
+              rw [schwinger_smooth_Ioi]
+              exact latticeEigenvalue_pos 2 N a mass ha hmass m
+      _ = ∫ s in Set.Ioi T,
+            ∑ m ∈ range Λ,
+              Real.exp (-s * latticeEigenvalue 2 N a mass m) := by
+            symm
+            rw [MeasureTheory.integral_finset_sum _ hsummand_int]
+  have hsmooth_repr :
+      smoothWickConstant 2 N a mass T
+        = L⁻¹ ^ 2 *
+            ∫ s in Set.Ioi T,
+              ∑ m ∈ range Λ,
+                Real.exp (-s * latticeEigenvalue 2 N a mass m) := by
+    unfold smoothWickConstant
+    rw [show Fintype.card (FinLatticeSites 2 N) = Λ by rfl, hsmooth_sum]
+    have hpref :
+        (a ^ 2 : ℝ)⁻¹ * (1 / Λ : ℝ) = L⁻¹ ^ 2 := by
+      calc
+        (a ^ 2 : ℝ)⁻¹ * (1 / Λ : ℝ)
+            = (a ^ 2 : ℝ)⁻¹ * ((Λ : ℝ)⁻¹) := by norm_num
+        _ = ((a ^ 2 : ℝ) * (Λ : ℝ))⁻¹ := by
+              field_simp [hΛ_ne, show (a ^ 2 : ℝ) ≠ 0 by positivity]
+        _ = L⁻¹ ^ 2 := by rw [hvol_sq]; ring
+    let I : ℝ :=
+      ∫ s in Set.Ioi T,
+        ∑ m ∈ range Λ,
+          Real.exp (-s * latticeEigenvalue 2 N a mass m)
+    change (a ^ 2 : ℝ)⁻¹ * ((1 / Λ : ℝ) * I) = L⁻¹ ^ 2 * I
+    rw [← mul_assoc, hpref]
+  have hexp_int :
+      IntegrableOn (fun s : ℝ => Real.exp (-s * mass ^ 2)) (Set.Ioi T) := by
+    have hbase := integrableOn_exp_mul_Ioi (a := (-mass ^ 2 : ℝ)) (by linarith) T
+    simpa [mul_comm, mul_left_comm, mul_assoc] using hbase
+  have hinvexp_int :
+      IntegrableOn
+        (fun s : ℝ => (1 / s) * Real.exp (-s * mass ^ 2))
+        (Set.Ioi T) :=
+    integrableOn_inv_mul_exp_Ioi (μ := mass ^ 2) (T := T) hmass_sq_pos hT
+  have hmajorant_int :
+      IntegrableOn
+        (fun s : ℝ => 2 * C * (1 + 1 / s) * Real.exp (-s * mass ^ 2))
+        (Set.Ioi T) := by
+    have hadd : IntegrableOn
+        (fun s : ℝ =>
+          Real.exp (-s * mass ^ 2) +
+            (1 / s) * Real.exp (-s * mass ^ 2))
+        (Set.Ioi T) := hexp_int.add hinvexp_int
+    have hscaled := hadd.const_mul (2 * C)
+    refine MeasureTheory.IntegrableOn.congr_fun hscaled ?_ measurableSet_Ioi
+    intro s hs
+    ring
+  have htrace_le :
+      ∫ s in Set.Ioi T,
+        ∑ m ∈ range Λ,
+          Real.exp (-s * latticeEigenvalue 2 N a mass m)
+        ≤
+      ∫ s in Set.Ioi T, 2 * C * (1 + 1 / s) * Real.exp (-s * mass ^ 2) := by
+    apply MeasureTheory.setIntegral_mono_on hsum_int hmajorant_int measurableSet_Ioi
+    intro s hs
+    have hspos : 0 < s := lt_trans hT hs
+    have hsqrt :
+        (1 + 1 / Real.sqrt s) ^ 2 ≤ 2 * (1 + 1 / s) :=
+      one_add_inv_sqrt_sq_le_two_mul_one_add_inv s hspos
+    calc
+      ∑ m ∈ range Λ, Real.exp (-s * latticeEigenvalue 2 N a mass m)
+        ≤ C * (1 + 1 / Real.sqrt s) ^ 2 * Real.exp (-s * mass ^ 2) :=
+          _hC N a ha hvol s hspos
+      _ ≤ C * (2 * (1 + 1 / s)) * Real.exp (-s * mass ^ 2) := by
+            gcongr
+      _ = 2 * C * (1 + 1 / s) * Real.exp (-s * mass ^ 2) := by ring
+  have hexp_eq :
+      ∫ s in Set.Ioi T, Real.exp (-s * mass ^ 2) =
+        Real.exp (-T * mass ^ 2) / mass ^ 2 := by
+    symm
+    exact schwinger_smooth_Ioi (mass ^ 2) hmass_sq_pos T
+  have hexp_le :
+      ∫ s in Set.Ioi T, Real.exp (-s * mass ^ 2) ≤ 1 / mass ^ 2 := by
+    rw [hexp_eq]
+    have hle_one : Real.exp (-T * mass ^ 2) ≤ 1 := by
+      apply Real.exp_le_one_iff.mpr
+      nlinarith
+    exact div_le_div_of_nonneg_right hle_one hmass_sq_pos.le
+  have hinvexp_le :
+      ∫ s in Set.Ioi T, (1 / s) * Real.exp (-s * mass ^ 2)
+        ≤ |Real.log T| + 1 / mass ^ 2 := by
+    by_cases hT1 : T ≤ 1
+    · have hsplit : Set.Ioi T = Set.Ioc T 1 ∪ Set.Ioi 1 := by
+        ext s
+        simp [hT1]
+      have hleft_int :
+          IntegrableOn
+            (fun s : ℝ => (1 / s) * Real.exp (-s * mass ^ 2))
+            (Set.Ioc T 1) := hinvexp_int.mono_set (by
+              intro s hs
+              exact hs.1)
+      have hright_int :
+          IntegrableOn
+            (fun s : ℝ => (1 / s) * Real.exp (-s * mass ^ 2))
+            (Set.Ioi 1) := hinvexp_int.mono_set (by
+              intro s hs
+              exact hT1.trans_lt hs)
+      rw [hsplit]
+      rw [MeasureTheory.setIntegral_union
+        (show Disjoint (Set.Ioc T 1) (Set.Ioi 1) by
+          refine Set.disjoint_left.mpr ?_
+          intro s hs1 hs2
+          exact not_lt_of_ge hs1.2 hs2)
+        measurableSet_Ioi hleft_int hright_int]
+      have hleft_le :
+          ∫ s in Set.Ioc T 1, (1 / s) * Real.exp (-s * mass ^ 2) ≤ |Real.log T| := by
+        calc
+          ∫ s in Set.Ioc T 1, (1 / s) * Real.exp (-s * mass ^ 2)
+            ≤ ∫ s in Set.Ioc T 1, (1 / s : ℝ) := by
+                apply MeasureTheory.setIntegral_mono_on hleft_int (integrableOn_inv_Ioc T hT)
+                  measurableSet_Ioc
+                intro s hs
+                have hspos : 0 < s := lt_trans hT hs.1
+                have hexp_le_one : Real.exp (-s * mass ^ 2) ≤ 1 := by
+                  apply Real.exp_le_one_iff.mpr
+                  have : -s * mass ^ 2 ≤ 0 := by nlinarith [sq_nonneg mass]
+                  exact this
+                have hnonneg : 0 ≤ (1 / s : ℝ) := by positivity
+                simpa using mul_le_mul_of_nonneg_left hexp_le_one hnonneg
+          _ = ∫ s in T..1, (1 / s : ℝ) := by
+                rw [intervalIntegral.integral_of_le hT1]
+          _ = Real.log (1 / T) := by
+                simpa using integral_one_div_of_pos hT (by norm_num : (0 : ℝ) < 1)
+          _ = |Real.log T| := by
+                have hlog : Real.log T ≤ 0 := Real.log_nonpos hT.le hT1
+                have hlog_inv : Real.log (1 / T) = -Real.log T := by
+                  simpa [one_div] using (Real.log_inv (show T ≠ 0 by linarith))
+                rw [hlog_inv, abs_of_nonpos hlog]
+      have hright_le :
+          ∫ s in Set.Ioi 1, (1 / s) * Real.exp (-s * mass ^ 2) ≤ 1 / mass ^ 2 := by
+        calc
+          ∫ s in Set.Ioi 1, (1 / s) * Real.exp (-s * mass ^ 2)
+            ≤ ∫ s in Set.Ioi 1, Real.exp (-s * mass ^ 2) := by
+                apply MeasureTheory.setIntegral_mono_on hright_int
+                  (hexp_int.mono_set (by
+                    intro s hs
+                    exact hT1.trans_lt hs))
+                  measurableSet_Ioi
+                intro s hs
+                have hsone : 1 < s := hs
+                have hle : 1 / s ≤ (1 : ℝ) := by
+                  have hspos : 0 < s := by linarith
+                  rw [div_le_iff₀ hspos]
+                  linarith
+                have hnonneg : 0 ≤ Real.exp (-s * mass ^ 2) := (Real.exp_pos _).le
+                simpa using mul_le_mul_of_nonneg_right hle hnonneg
+          _ = Real.exp (-(mass ^ 2)) / mass ^ 2 := by
+                simpa [one_mul] using (schwinger_smooth_Ioi (mass ^ 2) hmass_sq_pos 1).symm
+          _ ≤ 1 / mass ^ 2 := by
+                have hle_one : Real.exp (-(mass ^ 2)) ≤ 1 := by
+                  apply Real.exp_le_one_iff.mpr
+                  have : -(mass ^ 2) ≤ 0 := by nlinarith [sq_nonneg mass]
+                  exact this
+                exact div_le_div_of_nonneg_right hle_one hmass_sq_pos.le
+      exact add_le_add hleft_le hright_le
+    · have hT1 : 1 < T := lt_of_not_ge hT1
+      calc
+        ∫ s in Set.Ioi T, (1 / s) * Real.exp (-s * mass ^ 2)
+          ≤ ∫ s in Set.Ioi T, Real.exp (-s * mass ^ 2) := by
+              apply MeasureTheory.setIntegral_mono_on hinvexp_int hexp_int measurableSet_Ioi
+              intro s hs
+              have hsT : T < s := hs
+              have hsone : 1 < s := lt_trans hT1 hsT
+              have hle : 1 / s ≤ (1 : ℝ) := by
+                have hspos : 0 < s := by linarith
+                rw [div_le_iff₀ hspos]
+                linarith
+              have hnonneg : 0 ≤ Real.exp (-s * mass ^ 2) := (Real.exp_pos _).le
+              simpa using mul_le_mul_of_nonneg_right hle hnonneg
+        _ ≤ 1 / mass ^ 2 := hexp_le
+        _ ≤ |Real.log T| + 1 / mass ^ 2 := by
+              nlinarith [abs_nonneg (Real.log T)]
+  have hmajorant_eval :
+      ∫ s in Set.Ioi T, 2 * C * (1 + 1 / s) * Real.exp (-s * mass ^ 2)
+        ≤ 2 * C * (1 / mass ^ 2) + 2 * C * (|Real.log T| + 1 / mass ^ 2) := by
+    have hsplit :
+        ∫ s in Set.Ioi T, 2 * C * (Real.exp (-s * mass ^ 2) +
+            (1 / s) * Real.exp (-s * mass ^ 2))
+          =
+        (2 * C) * (∫ s in Set.Ioi T, Real.exp (-s * mass ^ 2)) +
+          (2 * C) * (∫ s in Set.Ioi T, (1 / s) * Real.exp (-s * mass ^ 2)) := by
+      rw [MeasureTheory.integral_const_mul]
+      rw [MeasureTheory.integral_add hexp_int hinvexp_int]
+      ring
+    calc
+      ∫ s in Set.Ioi T, 2 * C * (1 + 1 / s) * Real.exp (-s * mass ^ 2)
+        = ∫ s in Set.Ioi T, 2 * C * (Real.exp (-s * mass ^ 2) +
+            (1 / s) * Real.exp (-s * mass ^ 2)) := by
+              apply MeasureTheory.setIntegral_congr_fun measurableSet_Ioi
+              intro s hs
+              ring
+      _ = (2 * C) * (∫ s in Set.Ioi T, Real.exp (-s * mass ^ 2)) +
+            (2 * C) * (∫ s in Set.Ioi T, (1 / s) * Real.exp (-s * mass ^ 2)) := hsplit
+      _ ≤ (2 * C) * (1 / mass ^ 2) + (2 * C) * (|Real.log T| + 1 / mass ^ 2) := by
+            gcongr
+  calc
+    smoothWickConstant 2 N a mass T
+      = L⁻¹ ^ 2 *
+          ∫ s in Set.Ioi T,
+            ∑ m ∈ range Λ,
+              Real.exp (-s * latticeEigenvalue 2 N a mass m) := hsmooth_repr
+    _ ≤ L⁻¹ ^ 2 *
+          ∫ s in Set.Ioi T,
+            2 * C * (1 + 1 / s) * Real.exp (-s * mass ^ 2) := by
+              exact mul_le_mul_of_nonneg_left htrace_le (by positivity)
+    _ ≤ L⁻¹ ^ 2 *
+          (2 * C * (1 / mass ^ 2) + 2 * C * (|Real.log T| + 1 / mass ^ 2)) := by
+              gcongr
+    _ = 2 * L⁻¹ ^ 2 * C * (2 / mass ^ 2 + |Real.log T|) := by ring
+    _ ≤ 2 * L⁻¹ ^ 2 * C * (2 / mass ^ 2 + 1) +
+          (2 * L⁻¹ ^ 2 * C) * (1 + |Real.log T|) := by
+            have hB_nonneg : 0 ≤ 2 * L⁻¹ ^ 2 * C := by positivity
+            nlinarith [abs_nonneg (Real.log T), hB_nonneg]
 
 end Pphi2
 

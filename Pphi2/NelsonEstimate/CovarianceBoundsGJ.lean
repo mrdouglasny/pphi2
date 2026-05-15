@@ -1,4 +1,5 @@
 import Pphi2.NelsonEstimate.FieldDecomposition
+import Pphi2.NelsonEstimate.HeatKernelBound
 
 noncomputable section
 
@@ -36,13 +37,14 @@ sum estimate via `sin² ≥ (2/π)² · x²` on [0, π/2]). Propagate through
 `heat_kernel_trace_bound` and the Schwinger integral
 `c_S = ∫_T^∞ trace(e^{-t · M_a})/|Λ| dt`. Estimated ~500-800 lines /
 2-3 weeks. Full plan: `docs/phase-B-textbook-axioms.md`. -/
-axiom smoothWickConstant_le_log_uniform_in_aN
+theorem smoothWickConstant_le_log_uniform_in_aN
     {d : ℕ} (hd : d = 2) (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ A B : ℝ, 0 ≤ A ∧ 0 ≤ B ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
         (_h_vol : (N : ℝ) * a = L)
         (T : ℝ) (_hT : 0 < T),
-        smoothWickConstant d N a mass T ≤ A + B * (1 + |Real.log T|)
+        smoothWickConstant d N a mass T ≤ A + B * (1 + |Real.log T|) :=
+  smoothWickConstant_le_log_uniform_in_aN_proved hd mass L hL hmass
 
 /-- **Glimm-Jaffe Thm 8.5.2 (rough-side, d=2).** Position-space `L^m`
 site-sum bound for the canonical rough covariance, uniform in `(N, a)`
