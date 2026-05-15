@@ -1,6 +1,37 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert
 
-**Last updated**: 2026-05-11.
+**Last updated**: 2026-05-15.
+
+## 2026-05-15 — Lp-carrier Phase 2 + gaussian-hilbert Phase 3 wire-in
+
+The 2026-05-13 → 2026-05-15 sister-repo work substantially advanced the
+upstream layers without changing pphi2's own axiom count:
+
+* **markov-semigroups Lp-carrier Phase 2** (commit `6782dc7` on
+  `feat/lp-carrier-stdGaussianFin-dirichletmarkov`): concrete
+  `GaussianFin.stdGaussianFin_dirichletMarkovSemigroup n :
+  DirichletMarkovSemigroup (Fin n → ℝ)` bundle + 7 proved
+  operator-valued semigroup laws on `Lp ℝ 2 (γFin n)`. Active axiom
+  count unchanged at 11. The bundle's `energy_eq_deriv` field uses an
+  interim polarization proof that makes the existing
+  `ouSemigroupFin_l2_sq_hasDerivWithinAt` axiom load-bearing at the
+  public bundle boundary; Phase 2.5 fresh-Fubini cleanup is queued
+  (~1.5 days, would drop the count to 10).
+* **gaussian-hilbert Phase 3 smoke test** (commit `0f0c5eb` on
+  `phase-3-smoke-test`): bumps the markov-semigroups pin to the
+  Phase 2 branch and adds two compiling `example` checks confirming
+  the bundle reaches the public boundary and slots into
+  `gross_lsi_implies_hypercontractive`. gaussian-hilbert's local
+  axiom count unchanged at 1, but the closure of
+  `stdGaussianFin_dirichletMarkovSemigroup` from this repo now
+  visibly carries `ouSemigroupFin_l2_sq_hasDerivWithinAt` until
+  Phase 2.5 lands.
+
+**Impact on pphi2:** Workstream C (gaussian-hilbert OU/Mehler
+discharge) of the T² OS0–OS2 chain is now ~80% complete with ~1–2
+active days of E.1+E.2 adapters remaining. See
+[`docs/T2-continuum-limit-status-2026-05-13.md`](docs/T2-continuum-limit-status-2026-05-13.md)
+(refreshed 2026-05-15) for the full rollup.
 
 ## Purpose
 
