@@ -1,6 +1,6 @@
 # T² φ⁴₂ continuum limit — proof analysis and roadmap
 
-**Date:** 2026-05-13
+**Date:** 2026-05-13 (initial), refreshed 2026-05-15
 **Repo:** pphi2 + sister repos (gaussian-field, gaussian-hilbert, markov-semigroups, bochner)
 **Author:** Claude session log
 
@@ -21,13 +21,17 @@ What remains is **discharging the cross-cutting Glimm–Jaffe textbook
 estimates** that the upstream layers axiomatise. The single critical-path
 axiom on `torusInteracting_satisfies_OS` is currently
 `polynomial_chaos_exp_moment_bridge` (the lattice Nelson exponential
-estimate). After that discharges, three transitive OU/Mehler placeholders
+estimate). After that discharges, transitive OU/Mehler placeholders
 from gaussian-hilbert surface, plus the two Phase B Glimm–Jaffe Fourier
 estimates introduced 2026-05-12 to close `rough_error_variance`.
 
 **Recalibrated remaining effort to a 0-axiom T² OS0–OS2 construction
-(modulo the standard Mathlib trio):** roughly **8–12 weeks of focused work
-across 3 parallel tracks** (per-repo).
+(modulo the standard Mathlib trio + 2 inherited markov-semigroups Gross
+axioms):** roughly **3–5 weeks** of focused work across 2 parallel tracks
+— substantially less than the 2026-05-13 estimate of 8–12 weeks. The
+2026-05-13 → 2026-05-15 sister-repo work (markov-semigroups Lp-carrier
+Phase 1+2 + gaussian-hilbert Phase 3 wire-in smoke test) collapsed
+Workstream C from ~3–4 wk down to ~1–2 days of adapter code.
 
 OS3 and OS4 are out of scope for Route B (the symmetric torus). They are
 handled by Route B' (cylinder IR limit) and Route C (direct cylinder
@@ -219,6 +223,8 @@ real theorems instead of axioms.
 
 ### 3.3 Workstream C — discharge the OU/Mehler placeholder in gaussian-hilbert
 
+**Status as of 2026-05-15: ~80% complete; ~1–2 active days remaining.**
+
 **File:** `gaussian-hilbert/GaussianHilbert/OUEigenfunctions.lean` (axiom
 `ouSemigroupAct_eLpNorm_hypercontractive`).
 
@@ -226,8 +232,39 @@ This is **Bonami–Beckner–Nelson hypercontractivity**:
 `‖e^{-tL}f‖_{L^p} ≤ ‖f‖_{L²}` for `p ≤ 1 + e^{2t}` (Mehler's representation
 + Gaussian L²–L^p contractivity).
 
-**Plan:** `gaussian-hilbert/docs/hypercontractivity-discharge-plan.md`
-(~325 lines) — 4-stage plan:
+The discharge route is "Stage N" (multivariate BE → LSI → Gross), and the
+heavy lifting is done in upstream layers. Current state of the dependency
+chain (newest at top):
+
+| Component | Status |
+|---|---|
+| Phase 3 wire-in smoke test in gaussian-hilbert | ✅ done 2026-05-15 (`phase-3-smoke-test`, commit `0f0c5eb`) |
+| Lp-carrier Phase 2 in markov-semigroups (concrete `stdGaussianFin_dirichletMarkovSemigroup` bundle) | ✅ done 2026-05-15 (`feat/lp-carrier-stdGaussianFin-dirichletmarkov`, commit `6782dc7`) |
+| Lp-carrier Phase 1 in markov-semigroups (abstract `MarkovSemigroup` / `DirichletMarkovSemigroup`) | ✅ on markov-semigroups main (`e1e2011`) |
+| N1 multivariate Bakry-Émery instance in markov-semigroups | ✅ on markov-semigroups main (`e1e2011`) |
+| Stage Ag agreement theorem `mehlerOp_eq_ouSemigroupAct` | ✅ done 2026-05-11 |
+| **E.1** — `h_lsi` adapter (transfer `BakryEmerySpace.satisfiesLogSobolev` through the new bundle) | ❌ ~50–100 lines, ~0.5–1 day |
+| **E.2** — predicate adapter (abstract `IsHypercontractive` → concrete `eLpNorm` form) | ❌ ~50 lines, ~0.5–1 day |
+
+**Updated plan:** `gaussian-hilbert/docs/hypercontractivity-discharge-plan.md`
+(refreshed 2026-05-15) — total-effort table revised after the 2026-05-13
+→ 2026-05-15 work delivered most of Stage N's bridge. Stage W (LSI
+tensorization shortcut) was the previous recommendation but is now
+strictly worse: same time-to-completion, plus one new axiom in
+markov-semigroups.
+
+**Phase 2.5 follow-up (post-discharge cleanup):** Phase 2's
+`energy_eq_deriv` was proved by polarization from the existing
+markov-semigroups axiom `ouSemigroupFin_l2_sq_hasDerivWithinAt`, making
+that axiom transitively visible at gaussian-hilbert's public bundle
+boundary. Discharging it (1.5 active days, dual-vetted Fubini-lift
+plan) drops markov-semigroups GaussianFin axiom count 11 → 10 and
+removes the public-boundary exposure.
+
+(Original wording — kept for historical context until next major
+revision: ~325 lines, 4-stage plan with Stage A Mehler + Stage W
+LSI-tensorization shortcut. Both have been overtaken by events.
+
 - Stage A: Mehler operator semigroup laws (~200 lines, 3–5 days)
 - Stage B: Markov-semigroup laws via BakryEmery hypercontractivity input
 - Stage C/D: bridge to the spectral OU semigroup
@@ -298,17 +335,20 @@ the asymmetric-torus / cylinder docs.
 │ 1 axiom (OU)     │  │ 3 axioms (off    │  │ infrastructure   │
 │ Janson 5.10 ✓    │  │ T² critical path)│  │                  │
 │ chaos files ✓    │  │ propagator ✓     │  │                  │
+│ (Phase 3 wire-in │  │                  │  │                  │
+│  smoke-tested)   │  │                  │  │                  │
 └──────────┬───────┘  └──────────────────┘  └──────────────────┘
-           │
-           │ (required but UNUSED — vestigial after chaos migration)
-           │
+           │ (real import, post-2026-05-15 Phase 3 wire-in)
            ▼
 ┌──────────────────┐
-│ markov-semigroups│  ← reachable transitively via gaussian-hilbert
-│ 11 axioms        │     (none of them on T² critical path)
-│ (Cluster A: LSI, │
-│  hypercontract., │
-│  Bakry-Emery)    │
+│ markov-semigroups│
+│ 11 axioms        │   Lp-carrier Phase 1+2 + N1 BE instance →
+│ (3 GaussianFin   │   `stdGaussianFin_dirichletMarkovSemigroup`
+│  + 2 Gross + 6   │   bundle (commit 6782dc7).
+│  Cluster A)      │   On the T² critical path: 2 Gross axioms
+│                  │   (transitive after Workstream C lands) +
+│                  │   1 GaussianFin axiom load-bearing at the
+│                  │   public boundary until Phase 2.5 cleanup.
 └──────────────────┘
 ```
 
@@ -316,46 +356,68 @@ the asymmetric-torus / cylinder docs.
 
 | Repo | Axioms on T² OS0-OS2 critical path | Comments |
 |---|---|---|
-| pphi2 | **3** (`polynomial_chaos_exp_moment_bridge` + 2 Phase B) | the 3 entries listed above |
-| gaussian-hilbert | **1** (`ouSemigroupAct_eLpNorm_hypercontractive`) | surfaces after pphi2 bridge discharges |
+| pphi2 | **3** (`polynomial_chaos_exp_moment_bridge` + 2 Phase B Glimm-Jaffe) | Workstream A in flight (Phase 0 helpers landed) |
+| gaussian-hilbert | **1** (`ouSemigroupAct_eLpNorm_hypercontractive`) | surfaces after pphi2 bridge discharges; Workstream C ~80% complete (E.1+E.2 adapters remain) |
 | gaussian-field | **0** (3 axioms exist but for Schwartz/cylinder routes) | clean |
-| markov-semigroups | **0** (vestigial dep, no actual imports) | safe to remove from pphi2 lakefile (done in commit `d419bc0`); also from gaussian-hilbert (TBD) |
+| markov-semigroups | **2 Gross axioms** (`gross_lsi_implies_hypercontractive` + transitive deps) **+ 1 GaussianFin axiom** (`ouSemigroupFin_l2_sq_hasDerivWithinAt`, polarization-introduced at public boundary, Phase 2.5 cleanup planned) | inherited via gaussian-hilbert post-Phase-3-wire-in |
 | bochner | **0** (infrastructure only) | clean |
 
 **Note:** This is much cleaner than the full pphi2 axiom count (19) suggests
 — most pphi2 axioms are for the broader S'(ℝ²) bridge and OS3/OS4
 extensions (Route B', C), not for the Route B T² OS0–OS2 endpoint.
 
+**Note on the `require MarkovSemigroups` edges**: the 2026-05-13 prune
+(commit `d419bc0` in pphi2) removed the *direct* dep that was vestigial
+at that moment. Post-2026-05-15 the gaussian-hilbert side genuinely
+imports MarkovSemigroups again (via `HypercontractivityFromBE.lean`),
+but pphi2 still doesn't — the dep enters pphi2's transitive closure
+only via gaussian-hilbert.
+
 ---
 
 ## 5. Recommended sequencing
 
-**Phase 1 (parallel, ~3 weeks):**
-- **Track A:** Finish Workstream A (Phase B axioms in pphi2). Already
-  in progress on `phase-b-discharge` branch (commit `27660f0`). Plan in
-  `docs/phase-B-codex-handoff-2026-05-12.md`.
-- **Track C:** Start Workstream C (OU/Mehler in gaussian-hilbert). Plan
-  in `gaussian-hilbert/docs/hypercontractivity-discharge-plan.md`.
+(Refreshed 2026-05-15 after Workstream C collapsed to ~1–2 days.)
 
-**Phase 2 (after Phase 1, ~2 weeks):**
+**Phase 1 (parallel, ~2–3 weeks):**
+- **Track A:** Finish Workstream A (Phase B axioms in pphi2). In
+  progress on `phase-b-discharge` branch; Phase 0 helpers landed
+  (commit `27660f0`); ~9–10 days remaining per
+  `docs/phase-B-codex-handoff-2026-05-12.md`.
+- **Track C:** Finish Workstream C (OU/Mehler in gaussian-hilbert).
+  Stage N's bridge work delivered upstream 2026-05-15 (markov-semigroups
+  Lp-carrier Phase 2, gaussian-hilbert Phase 3 smoke test). Remaining:
+  E.1+E.2 adapters, ~1–2 days per
+  `gaussian-hilbert/docs/hypercontractivity-discharge-plan.md`.
+- **(Optional) Track P2.5:** Phase 2.5 cleanup in markov-semigroups
+  (fresh-Fubini lift to discharge `ouSemigroupFin_l2_sq_hasDerivWithinAt`,
+  ~1.5 days). Eliminates the polarization-introduced public-boundary
+  axiom and drops markov-semigroups GaussianFin axiom count 11 → 10.
+
+**Phase 2 (after Phase 1, ~1–2 weeks):**
 - **Workstream B:** Discharge `polynomial_chaos_exp_moment_bridge` using
   the now-real theorems from Tracks A and C. Plan in
   `docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`.
 
-**Phase 3 (verification, ~1 week):**
-- `#print axioms torusInteractingLimit_satisfies_OS` should now report
-  only `[propext, Classical.choice, Quot.sound]` — i.e., the standard
-  Mathlib trio.
+**Phase 3 (verification, ~3–5 days):**
+- `#print axioms torusInteractingLimit_satisfies_OS` should report only
+  `[propext, Classical.choice, Quot.sound]` plus 2 inherited
+  markov-semigroups Gross axioms (`gross_lsi_implies_hypercontractive`
+  + transitively whatever `gross` brings) — that's the closure target
+  for the milestone. The Gross axioms are textbook 1975 and have their
+  own discharge plan in markov-semigroups.
 - Update `AXIOM_AUDIT.md`, `docs/AXIOM_STATUS.md`, and `README.md`.
 - Open final PR documenting the T² OS0–OS2 milestone.
 
-**Total:** ~6 weeks wall-clock, parallelisable to ~4 weeks if both
-Tracks A and C run in tandem.
+**Total:** ~3–5 weeks wall-clock, parallelisable to ~3 weeks if Tracks
+A and C run in tandem (since C is now ~1–2 days, A dominates the
+critical path).
 
 **Note on calibration:** these estimates use the `~/.claude/CLAUDE.md`
 recalibrated formalization-time guidance (5–15× faster than community
-norms once relevant infrastructure is in place — which it is here).
-Earlier estimates of "3–4 months" should be read as 4–8 weeks now.
+norms once relevant infrastructure is in place — which it overwhelmingly
+is here). Original 2026-05-13 estimate of "8–12 weeks" has been
+roughly halved by the 2026-05-13 → 2026-05-15 sister-repo work.
 
 ---
 
@@ -391,7 +453,11 @@ Critical-path:
 * `docs/rough-error-variance-plan.md` — Step 1 of the bridge
   (`rough_error_variance`), now COMPLETED
 * `gaussian-hilbert/docs/hypercontractivity-discharge-plan.md` —
-  4-stage plan for the OU/Mehler placeholder axiom
+  Stage N plan for the OU/Mehler placeholder axiom (refreshed
+  2026-05-15: ~80% complete, ~1–2 days of E.1+E.2 adapters remain)
+* `markov-semigroups/AXIOM_AUDIT.md` (Phase 2 entry) and
+  `markov-semigroups/status.md` (2026-05-15 entry) — Lp-carrier
+  Phase 2 deliverable + Phase 2.5 follow-up plan
 
 Off-critical-path (Route B' / OS3+OS4 / S'(ℝ²)):
 * `docs/torus-route-gap-audit.md` — Route B' status
