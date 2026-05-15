@@ -733,6 +733,65 @@ theorem heat_kernel_1d_bound_uniform (L : ℝ) (hL : 0 < L) :
 
 end UniformBound
 
+/-! ## Phase 1a — `(a, N)`-uniform trace bound
+
+Upgrades `heat_kernel_trace_bound` from the trivial `card/(t·mass²)` to
+`C(L,d) · (1 + 1/√t)^d · exp(-t·mass²)`, factorizing the lattice sum
+through the tensor structure of the Laplacian eigenvalues. -/
+
+open Finset (range Icc Ico)
+
+/-- The lattice Laplacian eigenvalues factorize as a sum over `Fin d` of
+1D sin² eigenvalues, indexed by `k : FinLatticeSites d N = Fin d → ZMod N`. -/
+private lemma latticeLaplacianEigenvalue_eq_sum (d N : ℕ) [NeZero N] (a : ℝ) (m : ℕ)
+    (h : m < Fintype.card (FinLatticeSites d N)) :
+    latticeLaplacianEigenvalue d N a m =
+    (4 / a ^ 2) * ∑ i : Fin d,
+      Real.sin (π *
+        (ZMod.val ((Fintype.equivFin (FinLatticeSites d N)).symm ⟨m, h⟩ i) : ℝ) / N) ^ 2 := by
+  unfold latticeLaplacianEigenvalue
+  rw [dif_pos h]
+
+/-- Sum over `FinLatticeSites d N = Fin d → ZMod N` factorizes when the
+integrand is a product over the index `i : Fin d`. -/
+private lemma sum_finLatticeSites_prod (d N : ℕ) [NeZero N]
+    (g : Fin d → ZMod N → ℝ) :
+    (∑ k : FinLatticeSites d N, ∏ i : Fin d, g i (k i)) =
+    ∏ i : Fin d, ∑ kᵢ : ZMod N, g i kᵢ := by
+  rw [Finset.prod_univ_sum (κ := fun _ : Fin d => ZMod N)
+        (fun _ => Finset.univ) (fun i kᵢ => g i kᵢ)]
+  rw [Fintype.piFinset_univ]
+
+/-- **Phase 1a target — `(a, N)`-uniform trace bound.**
+
+The lattice heat-kernel trace `Σ_m exp(-t·λ_m)` is bounded uniformly in
+`(N, a)` at fixed `L = N · a`:
+  `Σ_m exp(-t·λ_m) ≤ C(L,d) · (1 + 1/√t)^d · exp(-t·mass²)`.
+
+The proof factorizes the eigenvalue exponential through the tensor
+structure `λ_m = mass² + Σ_i (4/a²) sin²(πk_i/N)` and applies
+`heat_kernel_1d_bound_uniform` to each of the `d` factors.
+
+The remaining work is the re-indexing chain
+`Σ_{m ∈ range Λ} ↦ Σ_{k : FinLatticeSites d N} ↦ ∏_i Σ_{kᵢ : ZMod N} ↦ ∏_i Σ_{j ∈ range N}`
+via `Finset.sum_range`, `Equiv.sum_comp` (for `Fintype.equivFin`),
+`sum_finLatticeSites_prod` (above), and `ZMod.val ↔ Fin.val` for the
+final step. The integrand factorization uses `Real.exp_add` and
+`Real.exp_sum`. -/
+theorem heat_kernel_trace_bound_uniform (d : ℕ) (L : ℝ) (hL : 0 < L)
+    (mass : ℝ) (hmass : 0 < mass) :
+    ∃ C : ℝ, 0 < C ∧
+    ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+      (t : ℝ) (_ht : 0 < t),
+      (∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
+        exp (-t * latticeEigenvalue d N a mass m) : ℝ) ≤
+      C * (1 + 1 / Real.sqrt t) ^ d * Real.exp (-t * mass ^ 2) := by
+  -- Use the witness from Phase 0, raised to the d-th power.
+  obtain ⟨C₁, hC₁_pos, hC₁⟩ := heat_kernel_1d_bound_uniform L hL
+  refine ⟨C₁ ^ d, by positivity, ?_⟩
+  intro N hN a ha hvol t ht
+  sorry
+
 end Pphi2
 
 end
