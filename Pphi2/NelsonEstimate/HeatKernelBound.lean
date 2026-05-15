@@ -546,45 +546,81 @@ private lemma exp_neg_t_sin_sq_le (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
   rw [hl, hr]
   exact this
 
-/-- Sum-doubling bound: for any nonneg `g : ℕ → ℝ`,
+/-- Sum-doubling bound: for `g : ℕ → ℝ` antitone and nonneg,
 `∑_{k ∈ range N} g(min k (N-k)) ≤ 2 · ∑_{j ∈ range N} g(j)`,
-because each `j ∈ range N` is the value of `min(k, N-k)` for at most two `k`. -/
-private lemma sum_min_le_two_sum (N : ℕ) (g : ℕ → ℝ) (hg : ∀ j, 0 ≤ g j) :
+because each `j ∈ range N` is the value of `min(k, N-k)` for at most two `k`,
+and antitonicity controls the off-by-one when re-indexing `k ↦ N-k`. -/
+private lemma sum_min_le_two_sum (N : ℕ) (g : ℕ → ℝ) (hg : ∀ j, 0 ≤ g j)
+    (h_anti : Antitone g) :
     (∑ k ∈ range N, g (min k (N - k))) ≤ 2 * ∑ j ∈ range N, g j := by
-  -- The key inequality: g(min k (N-k)) ≤ g(k) + g(N-k) is FALSE in general
-  -- (since g could be increasing and N-k larger than k in ℕ-sense).
-  -- But after the substitution: split by cases.
   have hpt : ∀ k ∈ range N, g (min k (N - k)) ≤ g k + g (N - k) := by
     intro k _
     by_cases h : k ≤ N - k
-    · -- min = k
-      rw [Nat.min_eq_left h]
+    · rw [Nat.min_eq_left h]
       linarith [hg (N - k)]
-    · -- min = N - k
-      rw [Nat.min_eq_right (Nat.le_of_lt (Nat.lt_of_not_le h))]
+    · rw [Nat.min_eq_right (Nat.le_of_lt (Nat.lt_of_not_le h))]
       linarith [hg k]
+  -- For the reflection step: for k ∈ range N, N - k = (N - 1 - k) + 1, and
+  -- antitonicity gives g(N-k) = g((N-1-k)+1) ≤ g(N-1-k); then
+  -- `sum_range_reflect` collapses ∑ g(N-1-k) = ∑ g(k).
+  have hreflect : ∑ k ∈ range N, g (N - k) ≤ ∑ k ∈ range N, g k := by
+    have hpt' : ∀ k ∈ range N, g (N - k) ≤ g (N - 1 - k) := by
+      intro k hk
+      have hk_lt : k < N := Finset.mem_range.mp hk
+      apply h_anti
+      omega
+    calc (∑ k ∈ range N, g (N - k))
+        ≤ ∑ k ∈ range N, g (N - 1 - k) := Finset.sum_le_sum hpt'
+      _ = ∑ k ∈ range N, g k := Finset.sum_range_reflect g N
   calc (∑ k ∈ range N, g (min k (N - k)))
       ≤ ∑ k ∈ range N, (g k + g (N - k)) := Finset.sum_le_sum hpt
     _ = (∑ k ∈ range N, g k) + ∑ k ∈ range N, g (N - k) := by
         rw [Finset.sum_add_distrib]
-    _ ≤ (∑ k ∈ range N, g k) + ∑ k ∈ range N, g k := by
-        gcongr
-        -- Σ_{k ∈ range N} g(N-k): re-index via N - k.
-        -- For k = 0,...,N-1: N - k = N, N-1, ..., 1. So we hit {1, ..., N}.
-        -- And we want to show Σ g(N-k) ≤ Σ g(k) where k ranges over {0, ..., N-1}.
-        -- Since g(N) is one of the summands on LHS and g(0) is one on RHS,
-        -- and the rest are common, we need g(N) ≤ g(0).
-        -- That's NOT true in general. We need a different argument.
-        --
-        -- Better: use sum_range_reflect after shifting. For k ∈ range N,
-        -- let j = N - 1 - k.  Then N - k = j + 1.  As k ranges over range N,
-        -- so does j, and j + 1 ∈ {1, ..., N}.
-        --
-        -- Actually the cleanest: bound each g(N-k) ≤ ... no that doesn't work.
-        --
-        -- Easier escape: just use sum over a UNION.  Let me set up differently.
-        sorry
+    _ ≤ (∑ k ∈ range N, g k) + ∑ k ∈ range N, g k := by linarith
     _ = 2 * ∑ j ∈ range N, g j := by ring
+
+/-- Helper: ℕ-range sum of `exp(-α j²)` is bounded by `1 + √(π/α)` (the
+ℕ-version of `gaussian_sum_bound`, derived by embedding
+`Finset.range N ↪ Finset.Icc (-(N-1)) (N-1) (ℤ)`). -/
+private lemma sum_range_exp_neg_sq_le (α : ℝ) (hα : 0 < α) (N : ℕ) :
+    (∑ j ∈ Finset.range N, Real.exp (-α * ((j : ℝ)) ^ 2)) ≤ 1 + Real.sqrt (π / α) := by
+  rcases Nat.eq_zero_or_pos N with hN | hN
+  · subst hN
+    simp
+    positivity
+  -- N ≥ 1: embed range N into Icc(-(N-1))(N-1) of ℤ via (j:ℕ) ↦ (j:ℤ).
+  have h_inj : ∀ a₁ ∈ (Finset.range N), ∀ a₂ ∈ (Finset.range N),
+      (a₁ : ℤ) = (a₂ : ℤ) → a₁ = a₂ := by
+    intro a₁ _ a₂ _ h; exact_mod_cast h
+  have h_image_sub :
+      (Finset.range N).image (fun j : ℕ => (j : ℤ))
+        ⊆ Finset.Icc (-((N - 1 : ℕ) : ℤ)) ((N - 1 : ℕ) : ℤ) := by
+    intro k hk
+    rw [Finset.mem_image] at hk
+    obtain ⟨j, hj, rfl⟩ := hk
+    rw [Finset.mem_range] at hj
+    rw [Finset.mem_Icc]
+    refine ⟨?_, ?_⟩
+    · have : (0 : ℤ) ≤ (j : ℤ) := by exact_mod_cast Nat.zero_le j
+      have h_neg : -((N - 1 : ℕ) : ℤ) ≤ 0 := by
+        have : (0 : ℤ) ≤ ((N - 1 : ℕ) : ℤ) := by exact_mod_cast Nat.zero_le _
+        linarith
+      linarith
+    · have hj' : j ≤ N - 1 := by omega
+      exact_mod_cast hj'
+  calc (∑ j ∈ Finset.range N, Real.exp (-α * ((j : ℝ)) ^ 2))
+      = ∑ k ∈ (Finset.range N).image (fun j : ℕ => (j : ℤ)),
+          Real.exp (-α * ((k : ℝ)) ^ 2) := by
+        rw [Finset.sum_image h_inj]
+        apply Finset.sum_congr rfl
+        intros j _
+        push_cast
+        rfl
+    _ ≤ ∑ k ∈ Finset.Icc (-((N - 1 : ℕ) : ℤ)) ((N - 1 : ℕ) : ℤ),
+          Real.exp (-α * ((k : ℝ)) ^ 2) := by
+        apply Finset.sum_le_sum_of_subset_of_nonneg h_image_sub
+        intros; positivity
+    _ ≤ 1 + Real.sqrt (π / α) := gaussian_sum_bound α hα (N - 1)
 
 /-- Heat-kernel 1D sum: `(a, N)`-uniform bound at fixed `L = N · a`.
 
@@ -607,13 +643,93 @@ theorem heat_kernel_1d_bound_uniform (L : ℝ) (hL : 0 < L) :
         Real.exp (-(16 * t) * ((min k (N - k) : ℕ) : ℝ) ^ 2 / L ^ 2) :=
     Finset.sum_le_sum fun k hk =>
       exp_neg_t_sin_sq_le N a ha L hL hvol t ht k (Finset.mem_range.mp hk)
-  -- Step 2: Σ_k exp(...) ≤ 2 · Σ_j exp(-16t·j²/L²) by the sum-doubling lemma.
-  -- Step 3: Σ_{j ∈ range N} exp(-16t·j²/L²) ≤ Σ_{j ∈ Icc(-N+1)(N-1)} exp(-16t·j²/L²)
-  --         (subset embedding of nonneg integers into all integers).
-  -- Step 4: gaussian_sum_bound with α = 16t/L² gives ≤ 1 + √(πL²/(16t)) = 1 + L√π/(4√t).
-  -- Step 5: combine: total ≤ 2 · (1 + L√π/(4√t)) = 2 + L√π/(2√t)
-  --         ≤ (L√π/2 + 2) · (1 + 1/√t) = C(L) · (1 + 1/√t).
-  sorry
+  -- Set α := 16t/L² > 0 for the Gaussian bound.
+  set α : ℝ := 16 * t / L ^ 2 with hα_def
+  have hα_pos : 0 < α := by
+    rw [hα_def]; positivity
+  -- Pointwise rewrite: -(16*t) · j² / L² = -α · j²
+  have h_form : ∀ (j : ℝ),
+      Real.exp (-(16 * t) * j ^ 2 / L ^ 2) = Real.exp (-α * j ^ 2) := by
+    intro j
+    congr 1
+    rw [hα_def]
+    field_simp
+  -- Step 2: apply sum_min_le_two_sum with g(j) := exp(-α · j²) (antitone in j ≥ 0).
+  have h_anti : Antitone (fun j : ℕ => Real.exp (-α * ((j : ℝ)) ^ 2)) := by
+    intro j₁ j₂ hj
+    apply Real.exp_le_exp.mpr
+    have hj_nn₁ : (0 : ℝ) ≤ (j₁ : ℝ) := Nat.cast_nonneg j₁
+    have hj_nn₂ : (0 : ℝ) ≤ (j₂ : ℝ) := Nat.cast_nonneg j₂
+    have hj_le : (j₁ : ℝ) ≤ (j₂ : ℝ) := by exact_mod_cast hj
+    have hj_sq : (j₁ : ℝ) ^ 2 ≤ (j₂ : ℝ) ^ 2 := by
+      apply sq_le_sq' <;> linarith
+    nlinarith [hα_pos.le]
+  have h_nn : ∀ j : ℕ, 0 ≤ Real.exp (-α * ((j : ℝ)) ^ 2) := fun j => (Real.exp_pos _).le
+  have step2 :
+      ∑ k ∈ range N,
+        Real.exp (-(16 * t) * ((min k (N - k) : ℕ) : ℝ) ^ 2 / L ^ 2) ≤
+      2 * ∑ j ∈ range N, Real.exp (-α * ((j : ℝ)) ^ 2) := by
+    have hsum := sum_min_le_two_sum N (fun j => Real.exp (-α * ((j : ℝ)) ^ 2)) h_nn h_anti
+    have hcong : ∀ k,
+        Real.exp (-(16 * t) * ((min k (N - k) : ℕ) : ℝ) ^ 2 / L ^ 2) =
+        Real.exp (-α * (((min k (N - k) : ℕ) : ℝ)) ^ 2) := fun k => h_form _
+    simp_rw [hcong]
+    exact hsum
+  -- Step 3+4: bound the Gaussian sum by `1 + sqrt(π/α)`.
+  have step34 := sum_range_exp_neg_sq_le α hα_pos N
+  -- sqrt(π/α) = sqrt(πL²/(16t)) = L · sqrt(π) / (4 · sqrt t).
+  have hsqrt : Real.sqrt (π / α) = L * Real.sqrt π / (4 * Real.sqrt t) := by
+    have h_t_pos : 0 < t := ht
+    have h_α_eq : π / α = π * L ^ 2 / (16 * t) := by
+      rw [hα_def]; field_simp
+    rw [h_α_eq]
+    rw [show (π * L ^ 2 / (16 * t) : ℝ) = (L * Real.sqrt π) ^ 2 / (4 * Real.sqrt t) ^ 2 by
+      rw [show (L * Real.sqrt π) ^ 2 = L ^ 2 * π by
+            rw [show (L * Real.sqrt π) ^ 2 = L ^ 2 * (Real.sqrt π) ^ 2 by ring,
+                Real.sq_sqrt Real.pi_pos.le]]
+      rw [show (4 * Real.sqrt t) ^ 2 = 16 * t by
+            rw [show (4 * Real.sqrt t) ^ 2 = 16 * (Real.sqrt t) ^ 2 by ring,
+                Real.sq_sqrt h_t_pos.le]]
+      ring]
+    rw [Real.sqrt_div (sq_nonneg _),
+        Real.sqrt_sq (by positivity : (0 : ℝ) ≤ L * Real.sqrt π),
+        Real.sqrt_sq (by positivity : (0 : ℝ) ≤ 4 * Real.sqrt t)]
+  -- Step 5: combine to get C(L) · (1 + 1/√t).
+  -- 2 · ∑ ≤ 2 · (1 + L · √π / (4 · √t)) = 2 + L · √π / (2 · √t).
+  -- Want: ≤ (L · √π / 2 + 2) · (1 + 1/√t) = (L·√π/2 + 2) + (L·√π/2 + 2)/√t.
+  --     = 2 + L·√π/2 + 2/√t + L·√π/(2·√t).
+  -- So RHS - LHS = 2 + L·√π/2 + 2/√t + L·√π/(2·√t) - 2 - L·√π/(2·√t)
+  --             = L·√π/2 + 2/√t ≥ 0. ✓
+  have h_sqrt_t_pos : 0 < Real.sqrt t := Real.sqrt_pos.mpr ht
+  have h_sqrt_pi_nn : 0 ≤ Real.sqrt π := Real.sqrt_nonneg _
+  calc (∑ k ∈ range N,
+        Real.exp (-t * (4 * Real.sin (π * (k : ℝ) / N) ^ 2 / a ^ 2)))
+      ≤ ∑ k ∈ range N,
+          Real.exp (-(16 * t) * ((min k (N - k) : ℕ) : ℝ) ^ 2 / L ^ 2) := step1
+    _ ≤ 2 * ∑ j ∈ range N, Real.exp (-α * ((j : ℝ)) ^ 2) := step2
+    _ ≤ 2 * (1 + Real.sqrt (π / α)) := by linarith
+    _ = 2 + 2 * Real.sqrt (π / α) := by ring
+    _ = 2 + 2 * (L * Real.sqrt π / (4 * Real.sqrt t)) := by rw [hsqrt]
+    _ = 2 + L * Real.sqrt π / (2 * Real.sqrt t) := by ring
+    _ ≤ (L * Real.sqrt π / 2 + 2) * (1 + 1 / Real.sqrt t) := by
+        have h_inv_eq : 1 / Real.sqrt t = (Real.sqrt t)⁻¹ := one_div _
+        have h_split : (L * Real.sqrt π / 2 + 2) * (1 + 1 / Real.sqrt t) =
+            (L * Real.sqrt π / 2 + 2) +
+              (L * Real.sqrt π / 2 + 2) / Real.sqrt t := by
+          field_simp
+        rw [h_split]
+        have h_drop : 2 + L * Real.sqrt π / (2 * Real.sqrt t) ≤
+            (L * Real.sqrt π / 2 + 2) +
+              (L * Real.sqrt π / 2 + 2) / Real.sqrt t := by
+          have hexp : (L * Real.sqrt π / 2 + 2) / Real.sqrt t =
+              L * Real.sqrt π / (2 * Real.sqrt t) + 2 / Real.sqrt t := by
+            field_simp
+          rw [hexp]
+          have h2_div : (0 : ℝ) ≤ 2 / Real.sqrt t :=
+            div_nonneg (by norm_num) h_sqrt_t_pos.le
+          have h_lhs_le : 0 ≤ L * Real.sqrt π / 2 := by positivity
+          linarith
+        exact h_drop
 
 end UniformBound
 
