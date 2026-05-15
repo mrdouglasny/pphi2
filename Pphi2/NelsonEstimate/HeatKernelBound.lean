@@ -905,6 +905,65 @@ theorem heat_kernel_trace_bound_uniform (d : ℕ) (L : ℝ) (hL : 0 < L)
         exact mul_le_mul_of_nonneg_left h_prod h_exp_mass_nn
     _ = C₁ ^ d * (1 + 1 / Real.sqrt t) ^ d * Real.exp (-t * mass ^ 2) := by ring
 
+/-! ## Phase 1b — `(a, N)`-uniform smooth Wick constant bound
+
+Integrates `heat_kernel_trace_bound_uniform` over `s ∈ [T, ∞)` via the
+Schwinger identity to discharge the first Phase B axiom
+`smoothWickConstant_le_log_uniform_in_aN`.
+
+**Math sketch (d = 2):**
+
+By Schwinger (`schwinger_smooth_Ioi`):
+  `smoothCovEigenvalue T m = ∫_T^∞ exp(-s · λ_m) ds`.
+
+So
+  `smoothWickConstant T = (a^d)⁻¹ · (1/Λ) · Σ_m smoothCovEigenvalue T m
+                       = (a^d · Λ)⁻¹ · Σ_m ∫_T^∞ exp(-s · λ_m) ds
+                       = L⁻ᵈ · ∫_T^∞ Σ_m exp(-s · λ_m) ds`     [Fubini, finite sum]
+                       = L⁻¹ ^ 2 · ∫_T^∞ trace(e^{-sM_a}) ds`        [d = 2, Λ = (L/a)²]
+
+By Phase 1a (`heat_kernel_trace_bound_uniform`):
+  `trace(e^{-sM_a}) ≤ C · (1 + 1/√s)² · exp(-s · mass²)`     [d = 2]
+
+Using `(1 + 1/√s)² ≤ 2 · (1 + 1/s)`:
+  `trace ≤ 2C · (1 + 1/s) · exp(-s · mass²)`.
+
+Integrate:
+  `∫_T^∞ exp(-s · m²) ds = exp(-T · m²) / m² ≤ 1/m²`     [uniform in T]
+  `∫_T^∞ (1/s) · exp(-s · m²) ds ≤ |log T| + 1/m²`        [|log T| from `s ∈ (0,1)` part]
+
+Total: `L⁻¹ ^ 2 · 2C · (2/m² + |log T|) ≤ A + B · (1 + |log T|)`
+       with `A = 2L⁻¹ ^ 2C·(2/m² + 1)`, `B = 2L⁻¹ ^ 2C`. -/
+
+/-- **Phase 1b target — first Phase B axiom as a theorem.**
+
+This is the discharge of `smoothWickConstant_le_log_uniform_in_aN`
+(currently axiomatised in `CovarianceBoundsGJ.lean`).
+
+Status: the structural skeleton is in place; the integral bookkeeping
+(Schwinger identity + Fubini on a finite sum + bounds on
+`∫_T^∞ exp(-s m²)/s ds`) is the remaining ~150 lines. -/
+theorem smoothWickConstant_le_log_uniform_in_aN_proved
+    {d : ℕ} (hd : d = 2) (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    ∃ A B : ℝ, 0 ≤ A ∧ 0 ≤ B ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_h_vol : (N : ℝ) * a = L)
+        (T : ℝ) (_hT : 0 < T),
+        smoothWickConstant d N a mass T ≤ A + B * (1 + |Real.log T|) := by
+  -- Witness shape:
+  --   A := 2 · L⁻¹ ^ 2 · C₁² · (2/mass² + 1)   (the constant part)
+  --   B := 2 · L⁻¹ ^ 2 · C₁²                   (the log T coefficient)
+  -- where C₁ comes from heat_kernel_trace_bound_uniform with d := 2.
+  obtain ⟨C, hC_pos, _hC⟩ :=
+    heat_kernel_trace_bound_uniform 2 L hL mass hmass
+  refine ⟨2 * L⁻¹ ^ 2 * C * (2 / mass ^ 2 + 1), 2 * L⁻¹ ^ 2 * C, ?_, ?_, ?_⟩
+  · positivity
+  · positivity
+  intro N hN a ha hvol T hT
+  -- The Schwinger + Fubini + integral bookkeeping goes here.  See
+  -- the math sketch above.
+  sorry
+
 end Pphi2
 
 end
