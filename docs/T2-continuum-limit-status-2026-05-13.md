@@ -27,11 +27,12 @@ estimates introduced 2026-05-12 to close `rough_error_variance`.
 
 **Recalibrated remaining effort to a 0-axiom T² OS0–OS2 construction
 (modulo the standard Mathlib trio + 2 inherited markov-semigroups Gross
-axioms):** roughly **3–5 weeks** of focused work across 2 parallel tracks
-— substantially less than the 2026-05-13 estimate of 8–12 weeks. The
-2026-05-13 → 2026-05-15 sister-repo work (markov-semigroups Lp-carrier
-Phase 1+2 + gaussian-hilbert Phase 3 wire-in smoke test) collapsed
-Workstream C from ~3–4 wk down to ~1–2 days of adapter code.
+axioms):** roughly **2–4 weeks** of focused work, all in pphi2. The
+2026-05-13 → 2026-05-15 (later) sister-repo work landed the entirety
+of Workstream C (Lp-carrier Phase 1+2 in markov-semigroups, then
+Phase 3 wire-in + Stage E.1 + E.2 + axiom retirement in gaussian-hilbert).
+gaussian-hilbert is now zero-local-axiom; only Workstreams A + B in
+pphi2 remain.
 
 OS3 and OS4 are out of scope for Route B (the symmetric torus). They are
 handled by Route B' (cylinder IR limit) and Route C (direct cylinder
@@ -223,7 +224,15 @@ real theorems instead of axioms.
 
 ### 3.3 Workstream C — discharge the OU/Mehler placeholder in gaussian-hilbert
 
-**Status as of 2026-05-15: ~80% complete; ~1–2 active days remaining.**
+**Status as of 2026-05-15 (later): ✅ COMPLETE.** gaussian-hilbert is
+zero-local-axiom; the only inherited axioms in the closure of
+`polynomial_chaos_concentration` are 1 Gross axiom (Gross 1975) + 3
+markov-semigroups GaussianFin BE axioms (multivariate BE instance's
+transitive closure), all in markov-semigroups. See
+`gaussian-hilbert/STATUS.md` and `gaussian-hilbert/AXIOM_AUDIT.md`
+2026-05-15 (later) entries for details. Workstream C done — the only
+remaining work for the T² OS0–OS2 endpoint is Workstreams A + B in
+pphi2.
 
 **File:** `gaussian-hilbert/GaussianHilbert/OUEigenfunctions.lean` (axiom
 `ouSemigroupAct_eLpNorm_hypercontractive`).
