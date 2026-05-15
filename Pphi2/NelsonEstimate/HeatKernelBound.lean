@@ -788,9 +788,122 @@ theorem heat_kernel_trace_bound_uniform (d : ℕ) (L : ℝ) (hL : 0 < L)
       C * (1 + 1 / Real.sqrt t) ^ d * Real.exp (-t * mass ^ 2) := by
   -- Use the witness from Phase 0, raised to the d-th power.
   obtain ⟨C₁, hC₁_pos, hC₁⟩ := heat_kernel_1d_bound_uniform L hL
-  refine ⟨C₁ ^ d, by positivity, ?_⟩
+  have hC₁_d_pos : 0 < C₁ ^ d := pow_pos hC₁_pos d
+  refine ⟨C₁ ^ d, hC₁_d_pos, ?_⟩
   intro N hN a ha hvol t ht
-  sorry
+  set Λ := Fintype.card (FinLatticeSites d N)
+  -- Step A: re-index ∑_{m ∈ range Λ} → ∑_{k : FinLatticeSites d N}.
+  have hΛ_card : Λ = Fintype.card (FinLatticeSites d N) := rfl
+  -- Use Finset.sum_range to convert to Σ over Fin Λ, then Equiv.sum_comp via equivFin.
+  -- Actually easier: build a function on FinLatticeSites and use Equiv.sum_comp directly.
+  set F : FinLatticeSites d N → ℝ :=
+    fun k => Real.exp (-t * latticeEigenvalue d N a mass
+      ((Fintype.equivFin (FinLatticeSites d N)) k).val)
+  have hreindex : (∑ m ∈ range Λ, Real.exp (-t * latticeEigenvalue d N a mass m)) =
+      ∑ k : FinLatticeSites d N, F k := by
+    rw [Finset.sum_range]
+    -- Σ_{i : Fin Λ} f i.val = Σ_{k : FinLatticeSites d N} f ((equivFin _) k).val
+    exact (Equiv.sum_comp (Fintype.equivFin (FinLatticeSites d N))
+      (fun i => Real.exp (-t * latticeEigenvalue d N a mass i.val))).symm
+  -- Step B: factor each F k via the eigenvalue formula.
+  have hF_eq : ∀ k : FinLatticeSites d N,
+      F k = Real.exp (-t * mass ^ 2) *
+        ∏ i : Fin d, Real.exp (-t * (4 * Real.sin (π * (ZMod.val (k i) : ℝ) / N) ^ 2 / a ^ 2)) := by
+    intro k
+    -- F k = exp(-t · latticeEigenvalue d N a mass m) where m = (equivFin k).val < Λ.
+    have hm_lt : ((Fintype.equivFin (FinLatticeSites d N)) k).val < Λ :=
+      ((Fintype.equivFin (FinLatticeSites d N)) k).isLt
+    have hev_eq := latticeEigenvalue_eq d N a mass ((Fintype.equivFin _) k).val
+    have hlap_eq := latticeLaplacianEigenvalue_eq_sum d N a _ hm_lt
+    have hk_back :
+        (Fintype.equivFin (FinLatticeSites d N)).symm
+            ⟨((Fintype.equivFin (FinLatticeSites d N)) k).val, hm_lt⟩ = k := by
+      simp [Equiv.symm_apply_eq, Fin.eta]
+    show Real.exp (-t * latticeEigenvalue d N a mass _) = _
+    rw [hev_eq, hlap_eq, hk_back]
+    -- Now exp(-t · ((4/a²) · Σ_i sin² + mass²))
+    -- = exp(-t · mass²) · exp(-t · (4/a²) · Σ_i sin²)
+    -- = exp(-t · mass²) · ∏_i exp(-t · (4/a²) · sin²)
+    have hexp_factor :
+        Real.exp (-t * ((4 / a ^ 2) *
+          ∑ i : Fin d, Real.sin (π * (ZMod.val (k i) : ℝ) / N) ^ 2 + mass ^ 2)) =
+        Real.exp (-t * mass ^ 2) * Real.exp (-t * ((4 / a ^ 2) *
+          ∑ i : Fin d, Real.sin (π * (ZMod.val (k i) : ℝ) / N) ^ 2)) := by
+      rw [show -t * ((4 / a ^ 2) * _ + mass ^ 2) =
+            -t * mass ^ 2 + -t * ((4 / a ^ 2) *
+              ∑ i : Fin d, Real.sin (π * (ZMod.val (k i) : ℝ) / N) ^ 2) by ring]
+      rw [Real.exp_add]
+    rw [hexp_factor]; congr 1
+    -- exp(-t · (4/a²) · Σ_i sin²) = ∏_i exp(-t · (4/a²) · sin²)
+    rw [show -t * ((4 / a ^ 2) *
+        ∑ i : Fin d, Real.sin (π * (ZMod.val (k i) : ℝ) / N) ^ 2) =
+        ∑ i : Fin d, -t * (4 * Real.sin (π * (ZMod.val (k i) : ℝ) / N) ^ 2 / a ^ 2) by
+      simp_rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl; intros; ring]
+    rw [Real.exp_sum]
+  -- Step C+D+E: sum F over FinLatticeSites and pull out + factorize.
+  rw [hreindex]
+  have hsum_eq :
+      (∑ k : FinLatticeSites d N, F k) =
+      Real.exp (-t * mass ^ 2) *
+        ∏ i : Fin d, ∑ kᵢ : ZMod N,
+          Real.exp (-t * (4 * Real.sin (π * (ZMod.val kᵢ : ℝ) / N) ^ 2 / a ^ 2)) := by
+    simp_rw [hF_eq]
+    rw [← Finset.mul_sum]
+    congr 1
+    exact sum_finLatticeSites_prod d N (fun i kᵢ =>
+      Real.exp (-t * (4 * Real.sin (π * (ZMod.val kᵢ : ℝ) / N) ^ 2 / a ^ 2)))
+  rw [hsum_eq]
+  -- Step F+G: bound each ZMod N sum by C₁ · (1 + 1/√t) via Phase 0.
+  have h_zmod_sum : ∀ i : Fin d,
+      (∑ kᵢ : ZMod N, Real.exp (-t * (4 * Real.sin (π * (ZMod.val kᵢ : ℝ) / N) ^ 2 / a ^ 2)))
+        ≤ C₁ * (1 + 1 / Real.sqrt t) := by
+    intro _
+    -- Σ over ZMod N = Σ over Fin N (via equivFin) = Σ over range N (via Finset.sum_range)
+    have h_zmod_to_fin :
+        (∑ kᵢ : ZMod N, Real.exp (-t * (4 * Real.sin (π * (ZMod.val kᵢ : ℝ) / N) ^ 2 / a ^ 2))) =
+        ∑ j ∈ range N, Real.exp (-t * (4 * Real.sin (π * (j : ℝ) / N) ^ 2 / a ^ 2)) := by
+      rw [Finset.sum_range]
+      -- Use equivFin (ZMod N) : ZMod N ≃ Fin (Card (ZMod N)) = Fin N
+      have hcard : Fintype.card (ZMod N) = N := ZMod.card N
+      -- Re-index Σ_{kᵢ : ZMod N} = Σ_{i : Fin N} f((equivFin (ZMod N)).symm ⟨...⟩.val)
+      -- via Equiv.sum_comp ... but simpler: Σ_{ZMod N} = Σ_{Fin N} via val bijection.
+      -- For [NeZero N], ZMod N ≃ Fin N via ZMod.val and the existing Fintype instance.
+      apply Finset.sum_bij (fun (kᵢ : ZMod N) _ => (⟨kᵢ.val, ZMod.val_lt kᵢ⟩ : Fin N))
+      · intros _ _; exact Finset.mem_univ _
+      · intros a _ b _ hab
+        apply ZMod.val_injective
+        exact Fin.mk.inj_iff.mp hab
+      · intros j _
+        refine ⟨((j : ℕ) : ZMod N), Finset.mem_univ _, ?_⟩
+        ext
+        simp [ZMod.val_natCast_of_lt j.isLt]
+      · intros kᵢ _
+        push_cast
+        rfl
+    rw [h_zmod_to_fin]
+    exact hC₁ N a ha hvol t ht
+  -- Multiply over i : Fin d.
+  have h_prod : ∏ i : Fin d,
+      (∑ kᵢ : ZMod N, Real.exp (-t * (4 * Real.sin (π * (ZMod.val kᵢ : ℝ) / N) ^ 2 / a ^ 2)))
+        ≤ ∏ _i : Fin d, C₁ * (1 + 1 / Real.sqrt t) := by
+    apply Finset.prod_le_prod
+    · intros i _
+      apply Finset.sum_nonneg
+      intros; exact (Real.exp_pos _).le
+    · intros i _; exact h_zmod_sum i
+  have h_prod_eq : ∏ _i : Fin d, C₁ * (1 + 1 / Real.sqrt t) =
+      C₁ ^ d * (1 + 1 / Real.sqrt t) ^ d := by
+    rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin, mul_pow]
+  rw [h_prod_eq] at h_prod
+  -- Combine: exp(-t·m²) * prod ≤ exp(-t·m²) * C^d · (1+1/√t)^d.
+  have h_exp_mass_nn : (0 : ℝ) ≤ Real.exp (-t * mass ^ 2) := (Real.exp_pos _).le
+  calc Real.exp (-t * mass ^ 2) *
+        ∏ i : Fin d, ∑ kᵢ : ZMod N,
+          Real.exp (-t * (4 * Real.sin (π * (ZMod.val kᵢ : ℝ) / N) ^ 2 / a ^ 2))
+      ≤ Real.exp (-t * mass ^ 2) * (C₁ ^ d * (1 + 1 / Real.sqrt t) ^ d) := by
+        exact mul_le_mul_of_nonneg_left h_prod h_exp_mass_nn
+    _ = C₁ ^ d * (1 + 1 / Real.sqrt t) ^ d * Real.exp (-t * mass ^ 2) := by ring
 
 end Pphi2
 
