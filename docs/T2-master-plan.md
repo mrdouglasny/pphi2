@@ -316,8 +316,14 @@ telescope over k and sum the 1D bounds. Per-step uses the proved
 
 Discharges the abstract Gross 1975 theorem at
 `MarkovSemigroups/Abstract/Hypercontractivity.lean:269`. The "headline"
-axiom — the one Mathlib doesn't have. Plan filed at
-`markov-semigroups/plans/gross-discharge.md` (Route A).
+axiom — the one Mathlib doesn't have.
+
+**Primary plan doc:** [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md)
+(lives on markov-semigroups `main` via commits `ef272f6` and `6dc2026`;
+not on the Phase 2 feature branch — see Branch chain section above).
+
+**Plans index:** [`markov-semigroups/plans/README.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/README.md)
+catalogues both Route A and the superseded Route B alternative.
 
 **Why Route A, not Route B (concrete Gaussian1D):** the live pphi2 chain
 consumes the abstract axiom (via gaussian-hilbert
@@ -348,7 +354,7 @@ with zero re-plumbing of gaussian-hilbert.
   on it, or (b) the others land first and Route A includes a
   bundle-field migration step.
 
-**Superseded plan:** `markov-semigroups/plans/gaussian-ou-hypercontractivity.md`
+**Superseded plan:** [`markov-semigroups/plans/gaussian-ou-hypercontractivity.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gaussian-ou-hypercontractivity.md)
 is now flagged SUPERSEDED — its strategic premise that abstract Gross axioms
 are not used was false in the as-built code. Retained for its reusable
 Stroock–Varopoulos / Mehler-kernel techniques.
@@ -421,15 +427,16 @@ final inherited textbook axiom.
 ## Reference docs
 
 **Per-workstream plans (in this repo unless noted):**
-- Workstream A: `docs/phase-B-textbook-axioms.md`, `docs/phase-B-codex-handoff-2026-05-12.md`,
-  `docs/phase-B-codex-handoff-2026-05-15.md`, `docs/phase-B-deep-think-record-2026-05-12.md`
-- Workstream B: `docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`,
-  `docs/rough-error-variance-plan.md` (Step 1 sub-plan, marked COMPLETED)
-- Workstream C: `gaussian-hilbert/docs/hypercontractivity-discharge-plan.md`
-- Workstream 2.5: discharge plan inline at `markov-semigroups/.../EuclideanFin.lean:2637-2641`
-- Workstream N1.b: per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`
-- Workstream N1.c: per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`
-- Route A: `markov-semigroups/plans/gross-discharge.md` (new, by another agent)
+
+| Workstream | Plan doc(s) |
+|---|---|
+| A | [`docs/phase-B-textbook-axioms.md`](phase-B-textbook-axioms.md), [`docs/phase-B-codex-handoff-2026-05-12.md`](phase-B-codex-handoff-2026-05-12.md), [`docs/phase-B-codex-handoff-2026-05-15.md`](phase-B-codex-handoff-2026-05-15.md), [`docs/phase-B-deep-think-record-2026-05-12.md`](phase-B-deep-think-record-2026-05-12.md) |
+| B | [`docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`](polynomial-chaos-exp-moment-bridge-proof-plan.md), [`docs/rough-error-variance-plan.md`](rough-error-variance-plan.md) (Step 1 sub-plan, marked COMPLETED) |
+| C | [`gaussian-hilbert/docs/hypercontractivity-discharge-plan.md`](https://github.com/mrdouglasny/gaussian-hilbert/blob/main/docs/hypercontractivity-discharge-plan.md) |
+| 2.5 | discharge plan inline at `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2637-2641` (dual-vetted, gemini-2.5-pro + gemini-3.1-pro 2026-05-13) |
+| N1.b | per-axiom row in [`markov-semigroups/AXIOM_AUDIT.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/AXIOM_AUDIT.md) (search `ouSemigroupFin_preserves_IsCore`) |
+| N1.c | per-axiom row in [`markov-semigroups/AXIOM_AUDIT.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/AXIOM_AUDIT.md) (search `ouSemigroupFin_entropy_sq_decay_bound`) |
+| Route A | [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md) (new, by another agent); index at [`markov-semigroups/plans/README.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/README.md) |
 
 **Status snapshots:**
 - `docs/T2-continuum-limit-status-2026-05-13.md` — earlier comprehensive snapshot
