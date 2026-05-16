@@ -3,6 +3,13 @@
 Formal construction of the P(Φ)₂ Euclidean quantum field theory in Lean 4,
 following the Glimm-Jaffe/Nelson lattice approach.
 
+> **📍 For the live status of the T²_L OS0–OS2 endpoint campaign and
+> the full multi-repo plan to reach a fully axiom-free construction,
+> see [`docs/T2-master-plan.md`](docs/T2-master-plan.md).**
+> That document is the single source of truth for the five-workstream
+> roadmap (Workstreams A, B, C + markov-semigroups Phase 2.5 / N1.b /
+> N1.c + Route A) with their branches, plans, and current state.
+
 The lattice-action normalisation diagnosed in early May 2026 (a missing
 `a^d` Riemann-sum prefactor on the kinetic term, identified by a
 Gemini-vetted scaling analysis) has been resolved on the
