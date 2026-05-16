@@ -2618,15 +2618,17 @@ private theorem wickMonomial_eq_root : ∀ (n : ℕ) (c x : ℝ),
       simp only [Pphi2.wickMonomial_succ_succ, _root_.wickMonomial_succ_succ]
       rw [wickMonomial_eq_root (n + 1), wickMonomial_eq_root n]
 
-private def canonicalSmoothGamma (d N : ℕ) [NeZero N]
+def canonicalSmoothGamma (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (x : FinLatticeSites d N) (m : Fin d → Fin N) : ℝ :=
   (Real.sqrt (a ^ d))⁻¹ * canonicalSmoothModeCoeff d N a mass T x m
 
-private def canonicalRoughGamma (d N : ℕ) [NeZero N]
+def canonicalRoughGamma (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (x : FinLatticeSites d N) (m : Fin d → Fin N) : ℝ :=
   (Real.sqrt (a ^ d))⁻¹ * canonicalRoughModeCoeff d N a mass T x m
 
-private lemma canonicalSmoothFieldFunctionOfFst_eq_sum_gamma
+/-- The smooth field slice is the linear combination of first-factor standard
+Gaussian coordinates with coefficients `canonicalSmoothGamma`. -/
+theorem canonicalSmoothFieldFunctionOfFst_eq_sum_gamma
     (T : ℝ) (η_S : (Fin d → Fin N) → ℝ) (x : FinLatticeSites d N) :
     canonicalSmoothFieldFunctionOfFst d N a mass T η_S x =
       ∑ m : Fin d → Fin N, canonicalSmoothGamma d N a mass T x m * η_S m := by
@@ -2636,7 +2638,9 @@ private lemma canonicalSmoothFieldFunctionOfFst_eq_sum_gamma
   intro m hm
   ring
 
-private lemma canonicalRoughFieldFunctionOfSnd_eq_sum_gamma
+/-- The rough field slice is the linear combination of second-factor standard
+Gaussian coordinates with coefficients `canonicalRoughGamma`. -/
+theorem canonicalRoughFieldFunctionOfSnd_eq_sum_gamma
     (T : ℝ) (η_R : (Fin d → Fin N) → ℝ) (x : FinLatticeSites d N) :
     canonicalRoughFieldFunctionOfSnd d N a mass T η_R x =
       ∑ m : Fin d → Fin N, canonicalRoughGamma d N a mass T x m * η_R m := by

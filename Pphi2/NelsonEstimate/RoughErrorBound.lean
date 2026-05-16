@@ -505,6 +505,294 @@ theorem canonicalRoughError_neg_tail_of_stdGaussian
         (Real.exp (-c_m * (t / (2 * K)) ^ ((2 : ℝ) / m))) :=
           htail F hF_chaos K hK_pos hF_norm t ht
 
+private lemma wickMonomial_one_eq_hermiteEval (n : ℕ) (x : ℝ) :
+    wickMonomial n 1 x =
+      ((Polynomial.hermite n).map (Int.castRingHom ℝ)).eval x := by
+  simpa using (wickMonomial_eq_hermite n 1 (by norm_num : (0 : ℝ) < 1) x)
+
+private lemma multiWickMonomial_eq_hermiteMultiEval
+    {n : ℕ} (α : Fin n → ℕ) (ξ : Fin n → ℝ) :
+    (∏ i, wickMonomial (α i) 1 (ξ i)) =
+      GaussianHilbert.hermiteMultiEval α ξ := by
+  unfold GaussianHilbert.hermiteMultiEval
+  refine Finset.prod_congr rfl ?_
+  intro i hi
+  exact wickMonomial_one_eq_hermiteEval (α i) (ξ i)
+
+private theorem finite_hermite_sum_mem_wienerChaosLE
+    {n d : ℕ} (s : Finset (Fin n → ℕ)) (c : (Fin n → ℕ) → ℝ)
+    (hdeg : ∀ α ∈ s, GaussianHilbert.MultiIndex.totalDegree α ≤ d)
+    (f : (Fin n → ℝ) → ℝ)
+    (hf_def : f = fun ξ => ∑ α ∈ s, c α * GaussianHilbert.hermiteMultiEval α ξ)
+    (hf : MeasureTheory.MemLp f 2 (GaussianHilbert.stdGaussianFin n)) :
+    (hf.toLp f) ∈ GaussianHilbert.wienerChaosLE n d := by
+  classical
+  have h_toLp :
+      hf.toLp f =
+        ∑ α ∈ s, c α • GaussianHilbert.hermiteMultiLp α := by
+    apply MeasureTheory.Lp.ext
+    refine (MemLp.coeFn_toLp hf).trans ?_
+    rw [hf_def]
+    have h_sum :
+        (((∑ α ∈ s, c α • GaussianHilbert.hermiteMultiLp α :
+            MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+          (Fin n → ℝ) → ℝ)) =ᵐ[GaussianHilbert.stdGaussianFin n]
+          ∑ α ∈ s,
+            (((c α • GaussianHilbert.hermiteMultiLp α :
+                MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+              (Fin n → ℝ) → ℝ)) :=
+      MeasureTheory.Lp.coeFn_finset_sum s
+        (fun α => c α • GaussianHilbert.hermiteMultiLp α)
+    have h_each :
+        ∀ α ∈ (s : Set (Fin n → ℕ)),
+          ∀ᵐ x ∂(GaussianHilbert.stdGaussianFin n),
+            ((c α • GaussianHilbert.hermiteMultiLp α :
+                MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+              (Fin n → ℝ) → ℝ) x =
+              c α * GaussianHilbert.hermiteMultiEval α x := by
+      intro α _
+      refine (MeasureTheory.Lp.coeFn_smul (c α)
+          (GaussianHilbert.hermiteMultiLp α)).trans ?_
+      filter_upwards [GaussianHilbert.hermiteMultiLp_coeFn α] with x hx
+      simp [hx, smul_eq_mul]
+    have h_ae_all :
+        ∀ᵐ x ∂(GaussianHilbert.stdGaussianFin n),
+          ∀ α ∈ (s : Set (Fin n → ℕ)),
+            ((c α • GaussianHilbert.hermiteMultiLp α :
+                MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+              (Fin n → ℝ) → ℝ) x =
+              c α * GaussianHilbert.hermiteMultiEval α x :=
+      (ae_ball_iff s.countable_toSet).mpr h_each
+    have h_func :
+        (fun ξ => ∑ α ∈ s, c α * GaussianHilbert.hermiteMultiEval α ξ)
+          =ᵐ[GaussianHilbert.stdGaussianFin n]
+            ∑ α ∈ s,
+              (((c α • GaussianHilbert.hermiteMultiLp α :
+                  MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+                (Fin n → ℝ) → ℝ)) := by
+      filter_upwards [h_ae_all] with x hx
+      rw [Finset.sum_apply]
+      exact (Finset.sum_congr rfl fun α hα => hx α (Finset.mem_coe.mpr hα)).symm
+    exact h_func.trans h_sum.symm
+  rw [h_toLp]
+  apply Submodule.sum_mem
+  intro α hα
+  apply Submodule.smul_mem
+  have h_mem :
+      GaussianHilbert.hermiteMultiLp α ∈
+        GaussianHilbert.wienerChaos n
+          (GaussianHilbert.MultiIndex.totalDegree α) :=
+    GaussianHilbert.hermiteMultiLp_mem_wienerChaos n α
+  have h_lt :
+      GaussianHilbert.MultiIndex.totalDegree α < d + 1 :=
+    Nat.lt_succ_of_le (hdeg α hα)
+  have h_le :
+      GaussianHilbert.wienerChaos n
+          (GaussianHilbert.MultiIndex.totalDegree α) ≤
+        GaussianHilbert.wienerChaosLE n d := by
+    rw [GaussianHilbert.wienerChaosLE]
+    refine le_iSup_of_le (GaussianHilbert.MultiIndex.totalDegree α) ?_
+    refine le_iSup_of_le (Finset.mem_range.mpr h_lt) ?_
+    exact le_rfl
+  exact h_le h_mem
+
+private theorem finite_wick_sum_mem_wienerChaosLE
+    {n d : ℕ} (s : Finset (Fin n → ℕ)) (c : (Fin n → ℕ) → ℝ)
+    (hdeg : ∀ α ∈ s, GaussianHilbert.MultiIndex.totalDegree α ≤ d)
+    (f : (Fin n → ℝ) → ℝ)
+    (hf_def : f = fun ξ => ∑ α ∈ s, c α * ∏ i, wickMonomial (α i) 1 (ξ i))
+    (hf : MeasureTheory.MemLp f 2 (GaussianHilbert.stdGaussianFin n)) :
+    (hf.toLp f) ∈ GaussianHilbert.wienerChaosLE n d := by
+  classical
+  have h_eq :
+      f = fun ξ => ∑ α ∈ s, c α * GaussianHilbert.hermiteMultiEval α ξ := by
+    rw [hf_def]
+    funext ξ
+    refine Finset.sum_congr rfl ?_
+    intro α hα
+    rw [multiWickMonomial_eq_hermiteMultiEval α ξ]
+  exact finite_hermite_sum_mem_wienerChaosLE s c hdeg f h_eq hf
+
+private theorem finite_indexed_wick_sum_mem_wienerChaosLE
+    {ι : Type*} [DecidableEq ι] {n d : ℕ}
+    (s : Finset ι) (β : ι → Fin n → ℕ) (c : ι → ℝ)
+    (hdeg : ∀ i ∈ s, GaussianHilbert.MultiIndex.totalDegree (β i) ≤ d)
+    (f : (Fin n → ℝ) → ℝ)
+    (hf_def : f = fun ξ => ∑ i ∈ s, c i * ∏ j, wickMonomial (β i j) 1 (ξ j))
+    (hf : MeasureTheory.MemLp f 2 (GaussianHilbert.stdGaussianFin n)) :
+    (hf.toLp f) ∈ GaussianHilbert.wienerChaosLE n d := by
+  classical
+  have h_eq :
+      f = fun ξ => ∑ i ∈ s, c i * GaussianHilbert.hermiteMultiEval (β i) ξ := by
+    rw [hf_def]
+    funext ξ
+    refine Finset.sum_congr rfl ?_
+    intro i hi
+    rw [multiWickMonomial_eq_hermiteMultiEval (β i) ξ]
+  have h_toLp :
+      hf.toLp f =
+        ∑ i ∈ s, c i • GaussianHilbert.hermiteMultiLp (β i) := by
+    apply MeasureTheory.Lp.ext
+    refine (MemLp.coeFn_toLp hf).trans ?_
+    rw [h_eq]
+    have h_sum :
+        (((∑ i ∈ s, c i • GaussianHilbert.hermiteMultiLp (β i) :
+            MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+          (Fin n → ℝ) → ℝ)) =ᵐ[GaussianHilbert.stdGaussianFin n]
+          ∑ i ∈ s,
+            (((c i • GaussianHilbert.hermiteMultiLp (β i) :
+                MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+              (Fin n → ℝ) → ℝ)) :=
+      MeasureTheory.Lp.coeFn_finset_sum s
+        (fun i => c i • GaussianHilbert.hermiteMultiLp (β i))
+    have h_each :
+        ∀ i ∈ (s : Set ι),
+          ∀ᵐ x ∂(GaussianHilbert.stdGaussianFin n),
+            ((c i • GaussianHilbert.hermiteMultiLp (β i) :
+                MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+              (Fin n → ℝ) → ℝ) x =
+              c i * GaussianHilbert.hermiteMultiEval (β i) x := by
+      intro i _
+      refine (MeasureTheory.Lp.coeFn_smul (c i)
+          (GaussianHilbert.hermiteMultiLp (β i))).trans ?_
+      filter_upwards [GaussianHilbert.hermiteMultiLp_coeFn (β i)] with x hx
+      simp [hx, smul_eq_mul]
+    have h_ae_all :
+        ∀ᵐ x ∂(GaussianHilbert.stdGaussianFin n),
+          ∀ i ∈ (s : Set ι),
+            ((c i • GaussianHilbert.hermiteMultiLp (β i) :
+                MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+              (Fin n → ℝ) → ℝ) x =
+              c i * GaussianHilbert.hermiteMultiEval (β i) x :=
+      (ae_ball_iff s.countable_toSet).mpr h_each
+    have h_func :
+        (fun ξ => ∑ i ∈ s, c i * GaussianHilbert.hermiteMultiEval (β i) ξ)
+          =ᵐ[GaussianHilbert.stdGaussianFin n]
+            ∑ i ∈ s,
+              (((c i • GaussianHilbert.hermiteMultiLp (β i) :
+                  MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin n)) :
+                (Fin n → ℝ) → ℝ)) := by
+      filter_upwards [h_ae_all] with x hx
+      rw [Finset.sum_apply]
+      exact (Finset.sum_congr rfl fun i hi => hx i (Finset.mem_coe.mpr hi)).symm
+    exact h_func.trans h_sum.symm
+  rw [h_toLp]
+  apply Submodule.sum_mem
+  intro i hi
+  apply Submodule.smul_mem
+  have h_mem :
+      GaussianHilbert.hermiteMultiLp (β i) ∈
+        GaussianHilbert.wienerChaos n
+          (GaussianHilbert.MultiIndex.totalDegree (β i)) :=
+    GaussianHilbert.hermiteMultiLp_mem_wienerChaos n (β i)
+  have h_lt :
+      GaussianHilbert.MultiIndex.totalDegree (β i) < d + 1 :=
+    Nat.lt_succ_of_le (hdeg i hi)
+  have h_le :
+      GaussianHilbert.wienerChaos n
+          (GaussianHilbert.MultiIndex.totalDegree (β i)) ≤
+        GaussianHilbert.wienerChaosLE n d := by
+    rw [GaussianHilbert.wienerChaosLE]
+    refine le_iSup_of_le (GaussianHilbert.MultiIndex.totalDegree (β i)) ?_
+    refine le_iSup_of_le (Finset.mem_range.mpr h_lt) ?_
+    exact le_rfl
+  exact h_le h_mem
+
+private abbrev canonicalStdIndex (d N : ℕ) [NeZero N] :=
+  Fin (Fintype.card (CanonicalJointSumIndex d N))
+
+private def canonicalStdInlIndex (d N : ℕ) [NeZero N]
+    (m : Fin d → Fin N) : canonicalStdIndex d N :=
+  Fintype.equivFin (CanonicalJointSumIndex d N) (Sum.inl m)
+
+private def canonicalStdInrIndex (d N : ℕ) [NeZero N]
+    (m : Fin d → Fin N) : canonicalStdIndex d N :=
+  Fintype.equivFin (CanonicalJointSumIndex d N) (Sum.inr m)
+
+private def canonicalJointMultiIndexOfPair (d N : ℕ) [NeZero N]
+    (αS αR : (Fin d → Fin N) → ℕ) :
+    canonicalStdIndex d N → ℕ :=
+  fun i => Sum.elim αS αR ((Fintype.equivFin (CanonicalJointSumIndex d N)).symm i)
+
+@[simp] private lemma canonicalJointMultiIndexOfPair_inl
+    (αS αR : (Fin d → Fin N) → ℕ) (m : Fin d → Fin N) :
+    canonicalJointMultiIndexOfPair d N αS αR
+        (canonicalStdInlIndex d N m) = αS m := by
+  unfold canonicalJointMultiIndexOfPair canonicalStdInlIndex
+  simp
+
+@[simp] private lemma canonicalJointMultiIndexOfPair_inr
+    (αS αR : (Fin d → Fin N) → ℕ) (m : Fin d → Fin N) :
+    canonicalJointMultiIndexOfPair d N αS αR
+        (canonicalStdInrIndex d N m) = αR m := by
+  unfold canonicalJointMultiIndexOfPair canonicalStdInrIndex
+  simp
+
+private lemma canonicalJointMultiIndexOfPair_totalDegree
+    (αS αR : (Fin d → Fin N) → ℕ) :
+    GaussianHilbert.MultiIndex.totalDegree
+        (canonicalJointMultiIndexOfPair d N αS αR) =
+      (∑ m : Fin d → Fin N, αS m) +
+        ∑ m : Fin d → Fin N, αR m := by
+  unfold GaussianHilbert.MultiIndex.totalDegree canonicalJointMultiIndexOfPair
+  simpa [Fintype.sum_sum_type] using
+    (Equiv.sum_comp
+      (Fintype.equivFin (CanonicalJointSumIndex d N)).symm
+      (fun s : CanonicalJointSumIndex d N => Sum.elim αS αR s))
+
+private lemma canonicalJointMultiIndexOfPair_wick_prod
+    (αS αR : (Fin d → Fin N) → ℕ) (ξ : canonicalStdIndex d N → ℝ) :
+    (∏ i : canonicalStdIndex d N,
+        wickMonomial
+          (Sum.elim αS αR
+            ((Fintype.equivFin (CanonicalJointSumIndex d N)).symm i))
+          1 (ξ i)) =
+      (∏ m : Fin d → Fin N,
+        wickMonomial (αS m) 1
+          (ξ (canonicalStdInlIndex d N m))) *
+      ∏ m : Fin d → Fin N,
+        wickMonomial (αR m) 1
+          (ξ (canonicalStdInrIndex d N m)) := by
+  let f : CanonicalJointSumIndex d N → ℝ :=
+    fun s =>
+      wickMonomial (Sum.elim αS αR s) 1
+        (ξ (Fintype.equivFin (CanonicalJointSumIndex d N) s))
+  calc
+    ∏ i : Fin (Fintype.card (CanonicalJointSumIndex d N)),
+        wickMonomial
+          (Sum.elim αS αR
+            ((Fintype.equivFin (CanonicalJointSumIndex d N)).symm i))
+          1 (ξ i)
+      = ∏ s : CanonicalJointSumIndex d N, f s := by
+          simpa [f] using
+            (Equiv.prod_comp
+              (Fintype.equivFin (CanonicalJointSumIndex d N)).symm
+              (fun s : CanonicalJointSumIndex d N =>
+                wickMonomial (Sum.elim αS αR s) 1
+                  (ξ (Fintype.equivFin (CanonicalJointSumIndex d N) s))))
+    _ = (∏ m : Fin d → Fin N, f (Sum.inl m)) *
+          ∏ m : Fin d → Fin N, f (Sum.inr m) := by
+            simpa [f] using (Fintype.prod_sum_type f)
+    _ = (∏ m : Fin d → Fin N,
+          wickMonomial (αS m) 1
+            (ξ (canonicalStdInlIndex d N m))) *
+        ∏ m : Fin d → Fin N,
+          wickMonomial (αR m) 1
+            (ξ (canonicalStdInrIndex d N m)) := by
+              simp [f, canonicalStdInlIndex, canonicalStdInrIndex]
+
+@[simp] private lemma canonicalJointStdGaussianMeasurableEquiv_symm_fst
+    (ξ : canonicalStdIndex d N → ℝ) (m : Fin d → Fin N) :
+    ((canonicalJointStdGaussianMeasurableEquiv d N).symm ξ).1 m =
+      ξ (canonicalStdInlIndex d N m) := by
+  rfl
+
+@[simp] private lemma canonicalJointStdGaussianMeasurableEquiv_symm_snd
+    (ξ : canonicalStdIndex d N → ℝ) (m : Fin d → Fin N) :
+    ((canonicalJointStdGaussianMeasurableEquiv d N).symm ξ).2 m =
+      ξ (canonicalStdInrIndex d N m) := by
+  rfl
+
 /-! ## S1: pointwise binomial decomposition
 
 Expand each per-site difference of Wick polynomials via the binomial
