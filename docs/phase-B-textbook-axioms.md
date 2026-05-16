@@ -1,15 +1,18 @@
-# Phase B textbook axioms: closing S4 + S5 (rough_error_variance) sorries [INTRODUCED + USED 2026-05-12]
+# Phase B textbook axioms: closing S4 + S5 (rough_error_variance) sorries [DISCHARGED 2026-05-16]
 
-> **STATUS: AXIOMS INTRODUCED + S4 + S5 DISCHARGED.** Both proposed
-> Phase B textbook axioms are now in
-> `Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean` (commit `6db65d9`)
-> with the Gemini-vetted statements. S4 + S5 are proved using them
-> (same commit). Pphi2 sorry count 2 → 0; axiom count 17 → 19.
+> **STATUS: PHASE B COMPLETE.** The two former Phase B textbook axioms
+> are now theorems in `Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean`:
+> `smoothWickConstant_le_log_uniform_in_aN` and
+> `canonicalRoughCovariance_pow_sum_le_uniform_in_aN`.
 >
-> The plan body below describes the design that was executed; the
-> axioms themselves still need their *own* discharge into theorems
-> (estimated 3-5 weeks Phase B Glimm-Jaffe Fourier work — discharge
-> strategy in this doc and inline in the axiom docstrings).
+> Verification on 2026-05-16:
+> - `lake build` succeeds for the full project.
+> - `#print axioms Pphi2.rough_error_variance` shows only
+>   `[propext, Classical.choice, Quot.sound]`.
+> - pphi2 axiom count dropped `19 → 17`.
+>
+> The plan body below is retained as the archival design record for the
+> discharge that has now been carried out.
 
 ## Goal
 
@@ -297,27 +300,28 @@ Before:
 * pphi2 sorries: 2 (S4 + S5 in `RoughErrorBound.lean`)
 * gaussian-field axioms: 3
 
-After introducing the two textbook axioms and proving S4 + S5:
+Historical intermediate state (2026-05-12, before the final discharge):
 * pphi2 axioms: 19 (17 prior + 2 new textbook = 19 actual, `count_axioms.sh`
   would report 21 due to docstring false positives)
 * pphi2 sorries: 0
 * gaussian-field axioms: 3
 
-The two new axioms displace the two sorries, with the trade favouring
-audit-trackable textbook axioms over open sorries: the axioms are
-named, cited, with discharge plans, and have verifiable mathematical
-content per the project's textbook-axiom protocol.
+Final post-discharge state (2026-05-16):
+* pphi2 axioms: 17 (15 public + 2 private; `count_axioms.sh` still
+  reports 19 due to the two docstring false positives)
+* pphi2 sorries: 0
+* gaussian-field axioms: 3
 
 ## Net effect on `polynomial_chaos_exp_moment_bridge`
 
-With S4 + S5 closed via the two new textbook axioms, `rough_error_variance`
-is proved (modulo `[propext, Classical.choice, Quot.sound]` + the two
-new textbook axioms). This is **Step 1** of the full bridge axiom
-discharge. The next steps (Janson 5.10 application for L^p and tail
-bounds, layer-cake / dynamical-cutoff assembly) are described in
+With the former textbook axioms themselves now discharged,
+`rough_error_variance` is proved modulo only
+`[propext, Classical.choice, Quot.sound]`. This completes **Step 1** of
+the full bridge-axiom discharge. The next steps (Janson 5.10
+application for L^p and tail bounds, layer-cake / dynamical-cutoff
+assembly) are described in
 `polynomial-chaos-exp-moment-bridge-proof-plan.md`. None of those add
-new axioms beyond `polynomial_chaos_concentration` (already a theorem
-in gaussian-hilbert, axiom-free).
+new pphi2 axioms beyond `polynomial_chaos_exp_moment_bridge` itself.
 
 So **the introduction of these two textbook axioms unlocks the entire
 `rough_error_variance` proof**, leaving only Phase 2/3 (Lp + tail +

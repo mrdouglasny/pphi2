@@ -1272,7 +1272,7 @@ private lemma rough_heatKernel_slice_weighted_pow_sum_le
       = a ^ 2 * ∑ y : FinLatticeSites 2 N, g y ^ (m : ℝ) := hsum_alpha
     _ ≤ ((B / t) ^ (m - 1 : ℕ) : ℝ) := hsum_g
 
-axiom canonicalRoughCovariance_pow_sum_le_uniform_in_aN_of_three_le
+theorem canonicalRoughCovariance_pow_sum_le_uniform_in_aN_of_three_le
     {d : ℕ} (hd : d = 2) (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass)
     (m : ℕ) (hm : 3 ≤ m) :
     ∃ C_m : ℝ, 0 < C_m ∧
@@ -1280,7 +1280,205 @@ axiom canonicalRoughCovariance_pow_sum_le_uniform_in_aN_of_three_le
         (_h_vol : (N : ℝ) * a = L)
         (T : ℝ) (_hT : 0 < T) (x : FinLatticeSites d N),
         a^d * ∑ y : FinLatticeSites d N,
-          |canonicalRoughCovariance d N a mass T x y| ^ m ≤ C_m * T
+          |canonicalRoughCovariance d N a mass T x y| ^ m ≤ C_m * T := by
+  subst d
+  have hm1 : 1 ≤ m := by omega
+  obtain ⟨B, hB_pos, hB_slice⟩ :=
+    rough_heatKernel_slice_weighted_pow_sum_le mass L hL hmass m hm1
+  let A : ℝ := B ^ (1 - (m : ℝ)⁻¹)
+  let C_m : ℝ := (A * (m : ℝ)) ^ (m : ℝ)
+  refine ⟨C_m, ?_, ?_⟩
+  · dsimp [C_m, A]
+    positivity
+  · intro N hN a ha hvol T hT x
+    haveI : Fact (1 ≤ (m : ENNReal)) := ⟨by exact_mod_cast hm1⟩
+    let α : ℝ := a ^ (2 / (m : ℝ))
+    let μ : Measure ℝ := volume.restrict (Set.Ioc 0 T)
+    let F : ℝ → PiLp (m : ENNReal) (fun _ : FinLatticeSites 2 N => ℝ) :=
+      fun s => WithLp.toLp (m : ENNReal) (fun y =>
+        α * ((a ^ 2 : ℝ)⁻¹ * Real.exp (-s * mass ^ 2) *
+          latticeHeatKernelMatrix 2 N a s x y))
+    have hm_pos : 0 < (m : ℝ) := by positivity
+    have hm_ne : (m : ℝ) ≠ 0 := by positivity
+    have hα_nonneg : 0 ≤ α := by
+      dsimp [α]
+      positivity
+    have hcoord_int :
+        ∀ y : FinLatticeSites 2 N, Integrable (fun s => F s y) μ := by
+      intro y
+      have hIcc :
+          IntegrableOn
+            (fun s : ℝ =>
+              Real.exp (-s * mass ^ 2) * latticeHeatKernelMatrix 2 N a s x y)
+            (Set.Icc 0 T) volume := by
+        exact heatKernel_entry_mass_weighted_integrableOn_Icc (d := 2) (N := N) a mass ha x y T
+      have hIoc :
+          IntegrableOn
+            (fun s : ℝ =>
+              Real.exp (-s * mass ^ 2) * latticeHeatKernelMatrix 2 N a s x y)
+            (Set.Ioc 0 T) volume := by
+        exact (integrableOn_Icc_iff_integrableOn_Ioc
+          (f := fun s : ℝ =>
+            Real.exp (-s * mass ^ 2) * latticeHeatKernelMatrix 2 N a s x y)).mp hIcc
+      have hBase :
+          Integrable
+            (fun s : ℝ =>
+              Real.exp (-s * mass ^ 2) * latticeHeatKernelMatrix 2 N a s x y) μ := by
+        simpa [μ] using hIoc
+      convert hBase.const_mul ((a ^ 2 : ℝ)⁻¹ * α) using 1
+      funext s
+      ring
+    have hF_int : Integrable (μ := μ) F := by
+      exact Integrable.of_eval_piLp (f := F) hcoord_int
+    let v : PiLp (m : ENNReal) (fun _ : FinLatticeSites 2 N => ℝ) := ∫ s, F s ∂μ
+    have hcov_coord :
+        ∀ y : FinLatticeSites 2 N,
+          α * canonicalRoughCovariance 2 N a mass T x y = ∫ s, F s y ∂μ := by
+      intro y
+      rw [canonicalRoughCovariance_eq_integral_Icc_heatKernel
+        (d := 2) (N := N) (a := a) (mass := mass) ha hmass T hT x y]
+      dsimp [μ, F]
+      rw [MeasureTheory.integral_Icc_eq_integral_Ioc]
+      calc
+        α * ((a ^ 2 : ℝ)⁻¹ *
+            ∫ s in Set.Ioc 0 T,
+              Real.exp (-s * mass ^ 2) * latticeHeatKernelMatrix 2 N a s x y)
+          = (α * (a ^ 2 : ℝ)⁻¹) *
+              ∫ s in Set.Ioc 0 T,
+                Real.exp (-s * mass ^ 2) * latticeHeatKernelMatrix 2 N a s x y := by
+                  ring
+        _ = ∫ s in Set.Ioc 0 T,
+              (α * (a ^ 2 : ℝ)⁻¹) *
+                (Real.exp (-s * mass ^ 2) * latticeHeatKernelMatrix 2 N a s x y) := by
+                  rw [integral_const_mul]
+        _ = ∫ s in Set.Ioc 0 T,
+              α * ((a ^ 2 : ℝ)⁻¹ * Real.exp (-s * mass ^ 2) *
+                latticeHeatKernelMatrix 2 N a s x y) := by
+                  apply integral_congr_ae
+                  filter_upwards [ae_restrict_mem measurableSet_Ioc] with s hs
+                  ring
+    have hv_coord :
+        ∀ y : FinLatticeSites 2 N, v y = α * canonicalRoughCovariance 2 N a mass T x y := by
+      intro y
+      dsimp [v]
+      rw [eval_integral_piLp (μ := μ) (f := F) hcoord_int y]
+      exact (hcov_coord y).symm
+    have hnorm_bound_ae :
+        ∀ᵐ s ∂μ, ‖F s‖ ≤ A * s ^ ((m : ℝ)⁻¹ - 1) := by
+      filter_upwards [ae_restrict_mem measurableSet_Ioc] with s hs
+      have hs_pos : 0 < s := hs.1
+      have hsum_slice := hB_slice N a ha hvol s hs_pos x
+      have hsum_F :
+          ∑ y : FinLatticeSites 2 N, ‖F s y‖ ^ (m : ℝ) ≤ (B / s) ^ (m - 1 : ℕ) := by
+        simpa [F] using hsum_slice
+      have hnorm_eq :
+          ‖F s‖ = (∑ y : FinLatticeSites 2 N, ‖F s y‖ ^ (m : ℝ)) ^ (1 / (m : ℝ)) := by
+        simpa using
+          (PiLp.norm_eq_sum (p := (m : ENNReal))
+            (β := fun _ : FinLatticeSites 2 N => ℝ) (by simpa using hm_pos) (F s))
+      have hsum_nonneg : 0 ≤ ∑ y : FinLatticeSites 2 N, ‖F s y‖ ^ (m : ℝ) := by
+        positivity
+      have hrpow_le :
+          (∑ y : FinLatticeSites 2 N, ‖F s y‖ ^ (m : ℝ)) ^ (1 / (m : ℝ))
+            ≤ (((B / s) ^ (m - 1 : ℕ) : ℝ)) ^ (1 / (m : ℝ)) := by
+        exact Real.rpow_le_rpow hsum_nonneg hsum_F (by positivity)
+      calc
+        ‖F s‖
+          = (∑ y : FinLatticeSites 2 N, ‖F s y‖ ^ (m : ℝ)) ^ (1 / (m : ℝ)) := hnorm_eq
+        _ ≤ (((B / s) ^ (m - 1 : ℕ) : ℝ)) ^ (1 / (m : ℝ)) := hrpow_le
+        _ = A * s ^ ((m : ℝ)⁻¹ - 1) := by
+              dsimp [A]
+              simpa [one_div] using
+                (div_pow_nat_sub_one_rpow_inv_eq m hm1 B s hB_pos.le hs_pos)
+    let g : ℝ → ℝ := fun s => A * s ^ ((m : ℝ)⁻¹ - 1)
+    have hg_int : Integrable g μ := by
+      have hIcc :
+          IntegrableOn (fun s : ℝ => s ^ ((m : ℝ)⁻¹ - 1)) (Set.Icc 0 T) volume := by
+        exact rpow_inv_nat_sub_one_integrableOn_Icc m hm1 T hT
+      have hIoc :
+          IntegrableOn (fun s : ℝ => s ^ ((m : ℝ)⁻¹ - 1)) (Set.Ioc 0 T) volume := by
+        exact (integrableOn_Icc_iff_integrableOn_Ioc
+          (f := fun s : ℝ => s ^ ((m : ℝ)⁻¹ - 1))).mp hIcc
+      simpa [g, μ] using hIoc.const_mul A
+    have hnorm_le : ‖v‖ ≤ ∫ s, g s ∂μ := by
+      dsimp [v]
+      exact norm_integral_le_of_norm_le hg_int hnorm_bound_ae
+    have hg_eval : ∫ s, g s ∂μ = A * ((m : ℝ) * T ^ ((m : ℝ)⁻¹)) := by
+      dsimp [g, μ]
+      rw [← MeasureTheory.integral_Icc_eq_integral_Ioc, integral_const_mul]
+      have hbase :
+          ∫ a : ℝ in Set.Icc 0 T, a ^ ((m : ℝ)⁻¹ - 1) ∂volume =
+            (m : ℝ) * T ^ ((m : ℝ)⁻¹) := by
+        calc
+          ∫ a : ℝ in Set.Icc 0 T, a ^ ((m : ℝ)⁻¹ - 1) ∂volume
+            = ∫ a : ℝ in Set.Ioc 0 T, a ^ ((m : ℝ)⁻¹ - 1) ∂volume := by
+                rw [MeasureTheory.integral_Icc_eq_integral_Ioc]
+          _ = ∫ a in (0 : ℝ)..T, a ^ ((m : ℝ)⁻¹ - 1) := by
+                rw [← intervalIntegral.integral_of_le hT.le]
+          _ = (m : ℝ) * T ^ ((m : ℝ)⁻¹) := integral_rpow_inv_nat_sub_one m hm1 T hT
+      exact congrArg (fun u : ℝ => A * u) hbase
+    have hnorm_le' : ‖v‖ ≤ A * ((m : ℝ) * T ^ ((m : ℝ)⁻¹)) := by
+      rwa [hg_eval] at hnorm_le
+    have hsum_v :
+        ∑ y : FinLatticeSites 2 N, ‖v y‖ ^ (m : ℝ) =
+          a ^ 2 * ∑ y : FinLatticeSites 2 N,
+            |canonicalRoughCovariance 2 N a mass T x y| ^ m := by
+      calc
+        ∑ y : FinLatticeSites 2 N, ‖v y‖ ^ (m : ℝ)
+          = ∑ y : FinLatticeSites 2 N,
+              ‖α * canonicalRoughCovariance 2 N a mass T x y‖ ^ (m : ℝ) := by
+                refine Finset.sum_congr rfl ?_
+                intro y hy
+                rw [hv_coord y]
+        _ = ∑ y : FinLatticeSites 2 N,
+              α ^ (m : ℝ) * |canonicalRoughCovariance 2 N a mass T x y| ^ m := by
+                refine Finset.sum_congr rfl ?_
+                intro y hy
+                rw [norm_mul, Real.norm_of_nonneg hα_nonneg, Real.norm_eq_abs,
+                  Real.mul_rpow hα_nonneg (abs_nonneg _), Real.rpow_natCast,
+                  Real.rpow_natCast]
+        _ = a ^ 2 * ∑ y : FinLatticeSites 2 N,
+              |canonicalRoughCovariance 2 N a mass T x y| ^ m := by
+                rw [rpow_two_div_nat_mul_nat m hm1 a ha, Finset.mul_sum]
+    have hnorm_eq :
+        ‖v‖ = (∑ y : FinLatticeSites 2 N, ‖v y‖ ^ (m : ℝ)) ^ (1 / (m : ℝ)) := by
+      simpa using
+        (PiLp.norm_eq_sum (p := (m : ENNReal))
+          (β := fun _ : FinLatticeSites 2 N => ℝ) (by simpa using hm_pos) v)
+    have hsum_eq_norm :
+        ∑ y : FinLatticeSites 2 N, ‖v y‖ ^ (m : ℝ) = ‖v‖ ^ (m : ℝ) := by
+      have hsum_nonneg : 0 ≤ ∑ y : FinLatticeSites 2 N, ‖v y‖ ^ (m : ℝ) := by
+        positivity
+      calc
+        ∑ y : FinLatticeSites 2 N, ‖v y‖ ^ (m : ℝ)
+          = ((∑ y : FinLatticeSites 2 N, ‖v y‖ ^ (m : ℝ)) ^ (1 / (m : ℝ))) ^ (m : ℝ) := by
+              symm
+              simpa [one_div] using Real.rpow_inv_rpow hsum_nonneg hm_ne
+        _ = ‖v‖ ^ (m : ℝ) := by rw [← hnorm_eq]
+    have hpow_bound :
+        ‖v‖ ^ (m : ℝ) ≤ (A * ((m : ℝ) * T ^ ((m : ℝ)⁻¹))) ^ (m : ℝ) := by
+      exact Real.rpow_le_rpow (by positivity) hnorm_le' (by positivity)
+    have hscalar :
+        (A * ((m : ℝ) * T ^ ((m : ℝ)⁻¹))) ^ (m : ℝ) = C_m * T := by
+      dsimp [C_m]
+      calc
+        (A * ((m : ℝ) * T ^ ((m : ℝ)⁻¹))) ^ (m : ℝ)
+          = ((A * (m : ℝ)) * T ^ ((m : ℝ)⁻¹)) ^ (m : ℝ) := by
+              congr 1
+              ring_nf
+        _ = (A * (m : ℝ)) ^ (m : ℝ) * (T ^ ((m : ℝ)⁻¹)) ^ (m : ℝ) := by
+              rw [Real.mul_rpow (by positivity) (by positivity)]
+        _ = (A * (m : ℝ)) ^ (m : ℝ) * T := by
+              rw [Real.rpow_inv_rpow hT.le hm_ne]
+        _ = C_m * T := by rfl
+    calc
+      a ^ 2 * ∑ y : FinLatticeSites 2 N, |canonicalRoughCovariance 2 N a mass T x y| ^ m
+        = ∑ y : FinLatticeSites 2 N, ‖v y‖ ^ (m : ℝ) := by
+            symm
+            exact hsum_v
+      _ = ‖v‖ ^ (m : ℝ) := hsum_eq_norm
+      _ ≤ (A * ((m : ℝ) * T ^ ((m : ℝ)⁻¹))) ^ (m : ℝ) := hpow_bound
+      _ = C_m * T := hscalar
 
 
 /-- **Glimm-Jaffe Thm 8.5.2 (smooth-side, d=2).** Polylog `T` bound on

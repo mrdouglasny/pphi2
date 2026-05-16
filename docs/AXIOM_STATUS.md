@@ -2,15 +2,15 @@
 
 *Current state of pphi2's axiom inventory. No history — see
 [`axiom_audit.md`](axiom_audit.md) for the historical log of audit
-passes and discharges. Last refreshed: 2026-05-10.*
+passes and discharges. Last refreshed: 2026-05-16.*
 
 ## At a glance
 
 | Count | Value |
 |---|---|
-| pphi2 axioms (active) | **19** (17 public + 2 `private`) — was 17 before the 2026-05-12 Phase B textbook-axiom introduction |
-| pphi2 sorries | **0** — `rough_error_variance` Step 1 of `polynomial_chaos_exp_moment_bridge` is fully proved (S1, S2, S3, S4, S5) modulo the standard Mathlib trio + the two new Phase B textbook axioms (smoothWickConstant_le_log_uniform_in_aN, canonicalRoughCovariance_pow_sum_le_uniform_in_aN). |
-| `lake build` | clean (3803 jobs) |
+| pphi2 axioms (active) | **17** (15 public + 2 `private`) — down from 19 after the 2026-05-16 Phase B discharge |
+| pphi2 sorries | **0** — `rough_error_variance` is now fully proved; `#print axioms Pphi2.rough_error_variance` shows only `[propext, Classical.choice, Quot.sound]`. |
+| `lake build` | clean (3857 jobs) |
 | Direct upstream deps | gaussian-field (`269fbc2`, 3 axioms / 0 sorries), markov-semigroups (`3cb482d`, 11 axioms / 0 sorries), gaussian-hilbert (`05ee231`, 4 axioms / 0 sorries), bochner (`main`) |
 
 The `scripts/count_axioms.sh` script reports 19 because of two
@@ -93,18 +93,17 @@ S'(ℝ²) Wightman directly.
 |---|---|---|---|---|
 | `polynomial_chaos_exp_moment_bridge` | `NelsonEstimate/PolynomialChaosBridge.lean:116` | Standard | DT 2026-05-08, DT 2026-05-10 | **The T² interacting OS critical-path axiom.** Over-stated to `∀ a > 0` but textbook GJ Ch. 8 covers `a ≤ 1`; large-`a` regime trivial. Plans: [parent](polynomial-chaos-exp-moment-bridge-proof-plan.md), [Step 1](rough-error-variance-plan.md) (rev 2 incorporates Gemini DT 2026-05-10 critique: K-quantifier hygiene, m=1 L¹×L^∞ bound replacing C-S, m≥2 L^m sum bound replacing ‖C_R‖_∞, RHS = `K·T·(1+|log T|)^{P.n−1}`, three named upstream sorries for parallel-tracked Glimm-Jaffe Ch. 8 Fourier estimates). [Review record](rough-error-variance-deep-think-review.md). |
 
-### Cluster A Phase B — textbook axioms (introduced 2026-05-12, in code)
+### Cluster A Phase B — discharged textbook theorems
 
-These two close the last two pphi2 sorries on `rough_error_variance`
-(both S4 = `canonicalCrossTerm_l2_sq_le` and S5 = `rough_error_variance`
-landed axiom-free modulo these). They are at the right granularity for
-Phase B Glimm-Jaffe Fourier work to discharge them into theorems
-(estimated 3-5 weeks combined per `phase-B-textbook-axioms.md`).
+The two former Phase B textbook axioms are now theorems in
+`NelsonEstimate/CovarianceBoundsGJ.lean`:
 
-| Axiom | File:Line | Rating | Sources | Notes |
-|---|---|---|---|---|
-| `smoothWickConstant_le_log_uniform_in_aN` | `NelsonEstimate/CovarianceBoundsGJ.lean` | Standard | DT 2026-05-12 | **Glimm-Jaffe Thm 8.5.2 (smooth side, d=2).** `smoothWickConstant T ≤ A + B·(1+|log T|)` uniform in (N, a) at fixed L = N·a. `hd : d = 2` mandatory (false for d ≥ 3 where smooth diverges as T^{-1/2} per Gemini DT 2026-05-12 vetting). Discharge plan: tighten `heat_kernel_1d_bound` to (a, N)-uniform `C(L)` via `gaussian_sum_bound`, propagate through trace/Schwinger. [Plan](phase-B-textbook-axioms.md), ~500-800 lines / 2-3 weeks. |
-| `canonicalRoughCovariance_pow_sum_le_uniform_in_aN` | `NelsonEstimate/CovarianceBoundsGJ.lean` | Standard | DT 2026-05-12 | **Glimm-Jaffe Thm 8.5.2 (rough side, d=2).** `a^d · Σ_y \|C_R(x,y)\|^m ≤ C_m·T` for all m ≥ 1, uniform in (N, a) at fixed L. `hd : d = 2` mandatory (false for d ≥ 3 where scaling is `T^{m(1-d/2) + d/2}`, divergent at m ≥ 3, per Gemini DT 2026-05-12 vetting). Discharge plan: m=1 via Schwinger + heat-kernel probability normalisation; m=2 via position-space rewrite of existing `roughCovariance_sq_summable`; m≥3 via Hölder interpolation. [Plan](phase-B-textbook-axioms.md), ~300-500 lines / 1-2 weeks. |
+- `smoothWickConstant_le_log_uniform_in_aN`
+- `canonicalRoughCovariance_pow_sum_le_uniform_in_aN`
+
+They no longer contribute to the pphi2 axiom inventory. Historical
+design and discharge notes remain in
+[`phase-B-textbook-axioms.md`](phase-B-textbook-axioms.md).
 
 ### Spectral gap / mass gap (4 axioms)
 
@@ -143,7 +142,7 @@ and [`.lake/packages/MarkovSemigroups/docs/AXIOM_AUDIT.md`](https://github.com/m
 
 | Repo | Axioms | Plan-coverage |
 |---|---|---|
-| pphi2 | 17 | 3 critical-path axioms have detailed plans (`polynomial_chaos_exp_moment_bridge` + 1 sub-doc; `latticeGreenBilinear_basis_tendsto_continuum`); rest are textbook items with literature citations |
+| pphi2 | 17 | 1 T² critical-path axiom remains (`polynomial_chaos_exp_moment_bridge`); the rest are broader bridge/continuum/OS3-OS4 items with literature-backed plans |
 | gaussian-hilbert | 4 | All 4 plan-covered: 1 (`polynomial_dense_L2_of_subGaussian`) is DT-vetted Standard; 3 (OU placeholders) covered by `ou-mehler-discharge-plan.md` |
 | markov-semigroups | 11 | All textbook with literature refs in `AXIOM_AUDIT.md`; no near-term discharge plans (long-term debt) |
 | gaussian-field | 3 | Down from 8 after the 2026-05-10 cylinder/Hermite discharges + the 2026-05-11 `gff_wickPower_two_site_inner` proof (axiom-free, Janson 2-site Wick formula on lattice GFF). Remaining 3 axioms are Gemini-vetted Standard classical-analysis (embed-L²-uniform-bound, fourier-multiplier-Schwartz, Hermite-Galerkin tendsto). |

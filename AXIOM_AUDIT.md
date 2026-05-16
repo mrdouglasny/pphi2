@@ -1,6 +1,6 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert
 
-**Last updated**: 2026-05-15.
+**Last updated**: 2026-05-16.
 
 ## 2026-05-15 — Lp-carrier Phase 2 + gaussian-hilbert Phase 3 wire-in
 
@@ -59,14 +59,16 @@ Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 
 | Package | Axioms | Sorries | Pin |
 |---|---|---|---|
-| **pphi2** (active build) | 19 | 0 | — |
+| **pphi2** (active build) | 17 | 0 | — |
 | **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
 | **gaussian-hilbert** (pinned, tracks `main`) | 1 *(was 4 in last audit; see 2026-05-{10,11} entries)* | 0 | `main` |
 
 Notes:
 
-* pphi2 count includes 1 private axiom (`gaussian_rp_cov_perfect_square`).
+* pphi2 count includes 2 private axioms
+  (`gaussian_rp_cov_perfect_square`,
+  `asymTorusInteracting_exponentialMomentBound`).
 * The pphi2 pin for **GaussianField is stale** relative to current
   upstream `main` (today's upstream is at ~3 axioms thanks to the
   2026-05-10 spatial-translation + master-equivariance discharges).
@@ -83,6 +85,36 @@ Notes:
   Gaussian-OU placeholder axioms moved to gaussian-hilbert in the
   2026-05-10 split, and 2 of those have since been discharged
   upstream).
+
+## 2026-05-16 Phase B textbook axioms discharged
+
+The two Phase B textbook axioms in
+`Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean` are now theorems:
+
+- `smoothWickConstant_le_log_uniform_in_aN`
+- `canonicalRoughCovariance_pow_sum_le_uniform_in_aN`
+
+What landed:
+- `HeatKernelBound.lean`: Phase 1b smooth-side discharge.
+- `FieldDecomposition.lean`: the heat-kernel/Fubini/semigroup bridge
+  lemmas for the rough side.
+- `CovarianceBoundsGJ.lean`: Phase 2 (`m = 1`), Phase 3 (`m = 2`), and
+  Phase 4 (`m ≥ 3`) completed, including the final Bochner/Minkowski
+  argument.
+
+Verification:
+- `lake build` succeeds for the full project.
+- `#print axioms Pphi2.rough_error_variance` now shows only
+  `[propext, Classical.choice, Quot.sound]`.
+
+Net effect:
+- pphi2 axiom count: `19 → 17`
+- pphi2 sorry count: unchanged at `0`
+- `rough_error_variance` is now fully theorem-derived from the standard
+  logical trio, with no local Phase B analytical axioms remaining.
+
+The remaining T² interacting critical-path axiom in pphi2 is now only
+`polynomial_chaos_exp_moment_bridge`.
 
 ## 2026-05-12 (later) S4 + S5 discharged using Phase B axioms
 

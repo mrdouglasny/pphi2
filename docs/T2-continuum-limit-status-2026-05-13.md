@@ -1,6 +1,6 @@
 # T² φ⁴₂ continuum limit — proof analysis and roadmap
 
-**Date:** 2026-05-13 (initial), refreshed 2026-05-15
+**Date:** 2026-05-13 (initial), refreshed 2026-05-16
 **Repo:** pphi2 + sister repos (gaussian-field, gaussian-hilbert, markov-semigroups, bochner)
 **Author:** Claude session log
 
@@ -17,13 +17,12 @@ theorem `torusInteractingLimit_exists` is proved (Mitoma–Chebyshev tightness
 OS1 (regularity) and OS2 (translation + D4 invariance) all hold for the
 limit measure.
 
-What remains is **discharging the cross-cutting Glimm–Jaffe textbook
-estimates** that the upstream layers axiomatise. The single critical-path
-axiom on `torusInteracting_satisfies_OS` is currently
-`polynomial_chaos_exp_moment_bridge` (the lattice Nelson exponential
-estimate). After that discharges, transitive OU/Mehler placeholders
-from gaussian-hilbert surface, plus the two Phase B Glimm–Jaffe Fourier
-estimates introduced 2026-05-12 to close `rough_error_variance`.
+What remains is **discharging the lattice Nelson exponential bridge**
+`polynomial_chaos_exp_moment_bridge`. The Phase B Glimm–Jaffe Fourier
+estimates that were temporarily introduced on 2026-05-12 are now proved
+theorems, so they no longer appear in the pphi2 axiom inventory or in
+`rough_error_variance`'s dependency set. After the bridge discharges,
+the transitive OU/Mehler placeholders from gaussian-hilbert surface.
 
 **Recalibrated remaining effort to a 0-axiom T² OS0–OS2 construction
 (modulo the standard Mathlib trio + 2 inherited markov-semigroups Gross
@@ -31,8 +30,8 @@ axioms):** roughly **2–4 weeks** of focused work, all in pphi2. The
 2026-05-13 → 2026-05-15 (later) sister-repo work landed the entirety
 of Workstream C (Lp-carrier Phase 1+2 in markov-semigroups, then
 Phase 3 wire-in + Stage E.1 + E.2 + axiom retirement in gaussian-hilbert).
-gaussian-hilbert is now zero-local-axiom; only Workstreams A + B in
-pphi2 remain.
+gaussian-hilbert is now zero-local-axiom; Workstream A in pphi2 is
+complete, and only Workstream B remains there.
 
 OS3 and OS4 are out of scope for Route B (the symmetric torus). They are
 handled by Route B' (cylinder IR limit) and Route C (direct cylinder
@@ -157,7 +156,7 @@ plus the standard Mathlib trio (`propext`, `Classical.choice`, `Quot.sound`).
 | `canonicalCrossTerm_inner_eq_zero` (S3) | 2026-05-11 | RoughErrorBound.lean:407 | rough_error_variance |
 | `canonicalRoughError_l2_sq_eq` (S3 composition) | 2026-05-11 | line 864 | rough_error_variance |
 | `canonicalCrossTerm_l2_sq_le` (S4) | 2026-05-12 | line 1275 | rough_error_variance |
-| **`rough_error_variance` (S5)** | 2026-05-12 | **line 1517, axiom-free modulo Phase B** | **the Step 1 of bridge** |
+| **`rough_error_variance` (S5)** | 2026-05-16 | **line 1517, depends only on `[propext, Classical.choice, Quot.sound]`** | **the Step 1 of bridge** |
 | Phase 0 helpers (heat-kernel 1D, partial) | 2026-05-12 | HeatKernelBound.lean:393–600 | Phase B Phase 0 |
 
 ### 2.4 Build status
@@ -176,24 +175,17 @@ Five distinct workstreams. They can be parallelised across repos.
 **Files affected:** `Pphi2/NelsonEstimate/{HeatKernelBound,CovarianceBoundsGJ}.lean`,
 + supporting helpers in `FieldDecomposition.lean`.
 
-| Axiom | What | Plan |
-|---|---|---|
-| `smoothWickConstant_le_log_uniform_in_aN` | `c_S ≤ A + B(1+\|log T\|)` uniform in (N,a) at fixed L | docs/phase-B-textbook-axioms.md (high-level), docs/phase-B-codex-handoff-2026-05-12.md (detailed Lean skeleton) |
-| `canonicalRoughCovariance_pow_sum_le_uniform_in_aN` | `a^d Σ_y \|C_R(x,y)\|^m ≤ C_m·T` for all m≥1 | same docs; strategy verified by Gemini deep-think 2026-05-12 (docs/phase-B-deep-think-record-2026-05-12.md) — Fubini+semigroup for m=2, Minkowski for m≥3 |
+The two target results
+`smoothWickConstant_le_log_uniform_in_aN` and
+`canonicalRoughCovariance_pow_sum_le_uniform_in_aN`
+are now theorems in `CovarianceBoundsGJ.lean`.
 
-**Status (2026-05-13):**
-- Phase 0 helpers landed and compiling on `phase-b-discharge` branch
-  (commit `27660f0`): `sin_pi_div_N_reflect`, `pi_j_div_N_le_half_pi`,
-  `sin_sq_pi_k_div_N_ge_min_sq`, `exp_neg_t_sin_sq_le`. The key
-  load-bearing per-term bound `exp(-t·4sin²(πk/N)/a²) ≤ exp(-16t·j²/L²)`
-  is fully proved.
-- Two documented sorries to fill (`sum_min_le_two_sum`,
-  `heat_kernel_1d_bound_uniform` Steps 2–5).
-- Comprehensive codex handoff plan in
-  `docs/phase-B-codex-handoff-2026-05-12.md` covers the full
-  Phases 0–5 with proof skeletons.
-
-**Estimated effort:** 1100 lines, ~11 active days (~3 weeks wall-clock).
+**Status (2026-05-16): COMPLETE.**
+- `lake build` succeeds for the full project.
+- `#print axioms Pphi2.rough_error_variance` shows only the standard
+  Mathlib trio.
+- Workstream A no longer contributes any pphi2 axioms to the T²
+  interacting route.
 
 ### 3.2 Workstream B — discharge `polynomial_chaos_exp_moment_bridge`
 
@@ -331,7 +323,7 @@ the asymmetric-torus / cylinder docs.
 ```
                     ┌───────────────────────┐
                     │ pphi2 (this repo)     │
-                    │ 19 axioms, 0 sorries  │
+                    │ 17 axioms, 0 sorries  │
                     │ T² OS0-OS2: 1 axiom   │
                     │ on critical path      │
                     └──────────┬────────────┘
@@ -365,13 +357,13 @@ the asymmetric-torus / cylinder docs.
 
 | Repo | Axioms on T² OS0-OS2 critical path | Comments |
 |---|---|---|
-| pphi2 | **3** (`polynomial_chaos_exp_moment_bridge` + 2 Phase B Glimm-Jaffe) | Workstream A in flight (Phase 0 helpers landed) |
+| pphi2 | **1** (`polynomial_chaos_exp_moment_bridge`) | Workstream A complete; only the bridge axiom remains on the T² OS0–OS2 critical path |
 | gaussian-hilbert | **1** (`ouSemigroupAct_eLpNorm_hypercontractive`) | surfaces after pphi2 bridge discharges; Workstream C ~80% complete (E.1+E.2 adapters remain) |
 | gaussian-field | **0** (3 axioms exist but for Schwartz/cylinder routes) | clean |
 | markov-semigroups | **2 Gross axioms** (`gross_lsi_implies_hypercontractive` + transitive deps) **+ 1 GaussianFin axiom** (`ouSemigroupFin_l2_sq_hasDerivWithinAt`, polarization-introduced at public boundary, Phase 2.5 cleanup planned) | inherited via gaussian-hilbert post-Phase-3-wire-in |
 | bochner | **0** (infrastructure only) | clean |
 
-**Note:** This is much cleaner than the full pphi2 axiom count (19) suggests
+**Note:** This is much cleaner than the full pphi2 axiom count (17) suggests
 — most pphi2 axioms are for the broader S'(ℝ²) bridge and OS3/OS4
 extensions (Route B', C), not for the Route B T² OS0–OS2 endpoint.
 
@@ -388,11 +380,10 @@ only via gaussian-hilbert.
 
 (Refreshed 2026-05-15 after Workstream C collapsed to ~1–2 days.)
 
-**Phase 1 (parallel, ~2–3 weeks):**
-- **Track A:** Finish Workstream A (Phase B axioms in pphi2). In
-  progress on `phase-b-discharge` branch; Phase 0 helpers landed
-  (commit `27660f0`); ~9–10 days remaining per
-  `docs/phase-B-codex-handoff-2026-05-12.md`.
+**Phase 1 (parallel, ~1–2 weeks):**
+- **Track A:** Complete. Phase B is discharged; the two former
+  Glimm-Jaffe textbook axioms are now theorems, and
+  `rough_error_variance` depends only on the standard trio.
 - **Track C:** Finish Workstream C (OU/Mehler in gaussian-hilbert).
   Stage N's bridge work delivered upstream 2026-05-15 (markov-semigroups
   Lp-carrier Phase 2, gaussian-hilbert Phase 3 smoke test). Remaining:
@@ -403,7 +394,7 @@ only via gaussian-hilbert.
   ~1.5 days). Eliminates the polarization-introduced public-boundary
   axiom and drops markov-semigroups GaussianFin axiom count 11 → 10.
 
-**Phase 2 (after Phase 1, ~1–2 weeks):**
+**Phase 2 (after Track C, ~1–2 weeks):**
 - **Workstream B:** Discharge `polynomial_chaos_exp_moment_bridge` using
   the now-real theorems from Tracks A and C. Plan in
   `docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`.
