@@ -42,6 +42,8 @@ Quarantined to `CovarianceSplit.lean` once Codex hits the exact API needed.
 -/
 
 import Pphi2.NelsonEstimate.CovarianceBoundsGJ
+import Pphi2.NelsonEstimate.ChaosTailBridge
+import Pphi2.NelsonEstimate.LatticeBridge
 import Pphi2.WickOrdering.WickPolynomial
 
 noncomputable section
@@ -98,6 +100,410 @@ def canonicalRoughError (T : ℝ) (P : InteractionPolynomial)
     (η : CanonicalJoint d N) : ℝ :=
   canonicalFullInteractionJoint d N a mass T P η -
     canonicalSmoothInteraction d N a mass T P η
+
+@[simp] theorem canonicalFullInteractionJoint_eq_interactionFunctional
+    (T : ℝ) (P : InteractionPolynomial) (η : CanonicalJoint d N) :
+    canonicalFullInteractionJoint d N a mass T P η =
+      interactionFunctional d N P a mass
+        (canonicalSumConfig d N a mass T η) := by
+  unfold canonicalFullInteractionJoint interactionFunctional
+  simp
+
+@[simp] theorem canonicalSmoothInteraction_eq_latticeSmoothInteraction
+    (T : ℝ) (P : InteractionPolynomial) (η : CanonicalJoint d N) :
+    canonicalSmoothInteraction d N a mass T P η =
+      Pphi2.LatticeSetup.latticeSmoothInteraction d N a mass P T
+        (canonicalSmoothConfig d N a mass T η) := by
+  unfold canonicalSmoothInteraction Pphi2.LatticeSetup.latticeSmoothInteraction
+  congr 1
+  refine Finset.sum_congr rfl ?_
+  intro x hx
+  simp [canonicalSmoothConfig, latticeFieldToConfig_apply, finLatticeDelta]
+
+theorem integral_exp_neg_interaction_sq_eq_canonicalJoint
+    (P : InteractionPolynomial) (ha : 0 < a) (hmass : 0 < mass)
+    (T : ℝ) (hT : 0 < T) :
+    ∫ ω : Configuration (FinLatticeField d N),
+        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+        ∂(latticeGaussianMeasure d N a mass ha hmass) =
+      ∫ η : CanonicalJoint d N,
+        (Real.exp (-canonicalFullInteractionJoint d N a mass T P η)) ^ 2
+        ∂(canonicalJointMeasure d N) := by
+  symm
+  simpa [canonicalFullInteractionJoint_eq_interactionFunctional
+    (d := d) (N := N) (a := a) (mass := mass) T P] using
+    (integral_comp_canonicalSumConfig
+      (d := d) (N := N) (a := a) (mass := mass)
+      ha hmass T hT
+      (F := fun ω : Configuration (FinLatticeField d N) =>
+        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2)
+      ((interactionFunctional_measurable d N P a mass).neg.exp.pow_const 2))
+
+theorem canonicalSmoothInteraction_lower_bound_at_cutoff_quartic
+    (P : InteractionPolynomial) (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (ha : 0 < a) (hmass : 0 < mass)
+    (hd : d = 2) (L : ℝ) (hL : 0 < L) (ha_eq : a = L / N)
+    (M : ℝ) (hM : 2 * smoothBoundConstant d a mass L ≤ M)
+    (η : CanonicalJoint d N) :
+    -(M / 2) ≤
+      canonicalSmoothInteraction d N a mass
+        (Pphi2.DynamicalCutoff.dynamicalCutoffScale
+          (smoothBoundConstant d a mass L) M) P η := by
+  rw [canonicalSmoothInteraction_eq_latticeSmoothInteraction
+    (d := d) (N := N) (a := a) (mass := mass)
+    (T := Pphi2.DynamicalCutoff.dynamicalCutoffScale
+      (smoothBoundConstant d a mass L) M) P η]
+  exact Pphi2.LatticeSetup.latticeSmoothInteraction_lower_bound_at_cutoff_quartic
+    (d := d) (N := N) (a := a) (mass := mass)
+    P h_pure h_quartic ha hmass hd L hL ha_eq M hM
+    (canonicalSmoothConfig d N a mass
+      (Pphi2.DynamicalCutoff.dynamicalCutoffScale
+        (smoothBoundConstant d a mass L) M) η)
+
+theorem canonicalSmoothInteraction_lower_bound_log_uniform_in_aN
+    {d : ℕ} (hd : d = 2) (P : InteractionPolynomial)
+    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    ∃ C : ℝ, 0 < C ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
+        (T : ℝ) (_hT : 0 < T)
+        (η : CanonicalJoint d N),
+        -(C * (1 + |Real.log T|) ^ 2) ≤
+          canonicalSmoothInteraction d N a mass T P η := by
+  obtain ⟨A, B, hA_nn, hB_nn, hABound⟩ :=
+    smoothWickConstant_le_log_uniform_in_aN hd mass L hL hmass
+  let K : ℝ := A + B
+  let C : ℝ := 6 * L ^ d * K ^ 2 + 1
+  refine ⟨C, by positivity, ?_⟩
+  intro N _ a ha hvol T hT η
+  have hN_ne : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
+  have ha_eq : a = L / N := by
+    apply (eq_div_iff hN_ne).2
+    simpa [mul_comm] using hvol
+  rw [canonicalSmoothInteraction_eq_latticeSmoothInteraction
+    (d := d) (N := N) (a := a) (mass := mass) T P η]
+  rw [Pphi2.LatticeSetup.latticeSmoothInteraction_of_pure
+    (d := d) (N := N) (a := a) (mass := mass) P h_pure T
+    (canonicalSmoothConfig d N a mass T η)]
+  have hc_S_nn : 0 ≤ smoothWickConstant d N a mass T := by
+    unfold smoothWickConstant
+    have ha_d_pos : (0 : ℝ) < a ^ d := pow_pos ha d
+    apply mul_nonneg (le_of_lt (inv_pos.mpr ha_d_pos))
+    apply mul_nonneg (by positivity)
+    apply Finset.sum_nonneg
+    intro m hm
+    exact le_of_lt (smoothCovEigenvalue_pos d N a mass T hT m ha hmass)
+  have hu_one : 1 ≤ 1 + |Real.log T| := by
+    linarith [abs_nonneg (Real.log T)]
+  have hA_le : A ≤ A * (1 + |Real.log T|) := by
+    simpa using mul_le_mul_of_nonneg_left hu_one hA_nn
+  have h_cS_bound :
+      smoothWickConstant d N a mass T ≤ K * (1 + |Real.log T|) := by
+    calc
+      smoothWickConstant d N a mass T
+          ≤ A + B * (1 + |Real.log T|) := hABound N a ha hvol T hT
+      _ ≤ A * (1 + |Real.log T|) + B * (1 + |Real.log T|) := by
+          linarith
+      _ = K * (1 + |Real.log T|) := by
+          simp [K]
+          ring
+  have h_lower :
+      -(6 * L ^ d * smoothWickConstant d N a mass T ^ 2) ≤
+        a ^ d * ∑ x : FinLatticeSites d N,
+          wickMonomial 4 (smoothWickConstant d N a mass T)
+            ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
+    simpa using
+      (smooth_interaction_lower_bound_volume
+        (d := d) (N := N) (a := a) ha L hL ha_eq
+        (smoothWickConstant d N a mass T) hc_S_nn
+        (fun x => (canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)))
+  have h_sq :
+      (smoothWickConstant d N a mass T) ^ 2 ≤
+        (K * (1 + |Real.log T|)) ^ 2 := by
+    exact sq_le_sq' (by linarith [hc_S_nn]) h_cS_bound
+  have h_sum :
+      -(6 * L ^ d * K ^ 2 * (1 + |Real.log T|) ^ 2) ≤
+        a ^ d * ∑ x : FinLatticeSites d N,
+          wickMonomial 4 (smoothWickConstant d N a mass T)
+            ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
+    have h_chain :
+        -(6 * L ^ d * K ^ 2 * (1 + |Real.log T|) ^ 2) ≤
+          -(6 * L ^ d * smoothWickConstant d N a mass T ^ 2) := by
+      apply neg_le_neg
+      calc
+        6 * L ^ d * smoothWickConstant d N a mass T ^ 2
+            ≤ 6 * L ^ d * (K * (1 + |Real.log T|)) ^ 2 :=
+              mul_le_mul_of_nonneg_left h_sq (by positivity)
+        _ = 6 * L ^ d * K ^ 2 * (1 + |Real.log T|) ^ 2 := by
+            ring
+    exact le_trans h_chain h_lower
+  have hC_ge :
+      6 * L ^ d * K ^ 2 ≤ C := by
+    simp [C]
+  have h_sum' :
+      -(C * (1 + |Real.log T|) ^ 2) ≤
+        a ^ d * ∑ x : FinLatticeSites d N,
+          wickMonomial 4 (smoothWickConstant d N a mass T)
+            ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
+    have h_chain :
+        -(C * (1 + |Real.log T|) ^ 2) ≤
+          -(6 * L ^ d * K ^ 2 * (1 + |Real.log T|) ^ 2) := by
+      apply neg_le_neg
+      simpa [mul_assoc, mul_left_comm, mul_comm] using
+        mul_le_mul_of_nonneg_right hC_ge
+          (show 0 ≤ (1 + |Real.log T|) ^ 2 by positivity)
+    exact le_trans h_chain h_sum
+  have h_n_eq_4 : (P.n : ℝ) = 4 := by
+    exact_mod_cast h_quartic
+  have h_inv_le_one : (1 : ℝ) / P.n ≤ 1 := by
+    have h_n_pos : (0 : ℝ) < P.n := by
+      rw [h_n_eq_4]
+      norm_num
+    have h_n_ge_one : (1 : ℝ) ≤ P.n := by
+      rw [h_n_eq_4]
+      norm_num
+    rw [div_le_one h_n_pos]
+    exact h_n_ge_one
+  have h_inv_nn : 0 ≤ 1 / (P.n : ℝ) := by
+    positivity
+  have h_neg_bound :
+      -(C * (1 + |Real.log T|) ^ 2) ≤
+        (1 / (P.n : ℝ)) * (-(C * (1 + |Real.log T|) ^ 2)) := by
+    have :
+        (1 / (P.n : ℝ)) * (C * (1 + |Real.log T|) ^ 2) ≤
+          C * (1 + |Real.log T|) ^ 2 := by
+      calc
+        (1 / (P.n : ℝ)) * (C * (1 + |Real.log T|) ^ 2)
+            ≤ 1 * (C * (1 + |Real.log T|) ^ 2) :=
+              mul_le_mul_of_nonneg_right h_inv_le_one (by positivity)
+        _ = C * (1 + |Real.log T|) ^ 2 := by
+            ring
+    linarith
+  have h_sum_eq :
+      a ^ d * ∑ x : FinLatticeSites d N,
+        wickMonomial P.n (smoothWickConstant d N a mass T)
+          ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) =
+        a ^ d * ∑ x : FinLatticeSites d N,
+          wickMonomial 4 (smoothWickConstant d N a mass T)
+            ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
+    rw [h_quartic]
+  have h_scaled' :
+      (1 / (P.n : ℝ)) * (-(C * (1 + |Real.log T|) ^ 2)) ≤
+        (1 / (P.n : ℝ)) *
+          (a ^ d * ∑ x : FinLatticeSites d N,
+            wickMonomial P.n (smoothWickConstant d N a mass T)
+              ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x))) := by
+    simpa [h_sum_eq] using mul_le_mul_of_nonneg_left h_sum' h_inv_nn
+  exact h_neg_bound.trans h_scaled'
+
+theorem canonicalSmoothInteraction_lower_bound_at_cutoff_quartic_uniform
+    {d : ℕ} (hd : d = 2) (P : InteractionPolynomial)
+    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    ∃ C : ℝ, 0 < C ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
+        (M : ℝ), 2 * C ≤ M →
+        ∀ (η : CanonicalJoint d N),
+          -(M / 2) ≤
+            canonicalSmoothInteraction d N a mass
+              (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η := by
+  obtain ⟨C, hC_pos, hbound⟩ :=
+    canonicalSmoothInteraction_lower_bound_log_uniform_in_aN
+      (d := d) hd P h_pure h_quartic mass L hL hmass
+  refine ⟨C, hC_pos, ?_⟩
+  intro N _ a ha hvol M hM η
+  have hT_pos :
+      0 < Pphi2.DynamicalCutoff.dynamicalCutoffScale C M :=
+    Pphi2.DynamicalCutoff.dynamicalCutoffScale_pos C M
+  have h_smooth :=
+    hbound N a ha hvol
+      (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) hT_pos η
+  have h_cutoff :
+      C * (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 2 ≤ M / 2 :=
+    Pphi2.DynamicalCutoff.dynamicalCutoffScale_log_sq_le C M hC_pos hM
+  linarith
+
+/-- **Nelson bridge reduction from a large-`M` canonical-joint rough tail.**
+
+Fix a cutoff constant `C` with the property that the smooth interaction at
+`T(M) = dynamicalCutoffScale C M` is bounded below by `-M/2` for all `M ≥ 2C`.
+If, in the same regime, the canonical-joint rough error has tail bound `ψ`,
+then the lattice Boltzmann `L²` moment is bounded by the layer-cake integral
+for the piecewise tail
+
+* `1` on `0 < M < 2C` (trivial small-`M` control),
+* `ψ(M)` on `M ≥ 2C`.
+
+This is the bridge-facing reduction theorem for the genuine field
+decomposition: all remaining substance is in the large-`M` rough tail. -/
+theorem expMoment_bound_of_cutoff_quartic_tail
+    {d : ℕ} (P : InteractionPolynomial)
+    (mass L : ℝ) (hmass : 0 < mass)
+    (C : ℝ)
+    (hsmooth :
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L)
+        (M : ℝ), 2 * C ≤ M →
+        ∀ (η : CanonicalJoint d N),
+          -(M / 2) ≤
+            canonicalSmoothInteraction d N a mass
+              (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η)
+    (ψ : ℝ → ENNReal)
+    (hintegral :
+      ∫⁻ M in Set.Ioi (0 : ℝ),
+        (if M < 2 * C then (1 : ENNReal) else ψ M) *
+          ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤) :
+    ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+      (hvol : (N : ℝ) * a = L),
+      (∀ M : ℝ, 2 * C ≤ M →
+        (canonicalJointMeasure d N)
+          {η | canonicalRoughError d N a mass
+              (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η ≤ -(M / 2)} ≤
+            ψ M) →
+      ∫ ω : Configuration (FinLatticeField d N),
+          (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+          ∂(latticeGaussianMeasure d N a mass ha hmass) ≤
+        1 + (∫⁻ M in Set.Ioi (0 : ℝ),
+          (if M < 2 * C then (1 : ENNReal) else ψ M) *
+            ENNReal.ofReal (2 * Real.exp (2 * M))).toReal := by
+  intro N _ a ha hvol htail
+  let Tfun : ℝ → ℝ := fun M =>
+    Pphi2.DynamicalCutoff.dynamicalCutoffScale C M
+  let π : ℝ → CanonicalJoint d N → Configuration (FinLatticeField d N) := fun M =>
+    canonicalSumConfig d N a mass (Tfun M)
+  let V_S : ℝ → CanonicalJoint d N → ℝ := fun M η =>
+    if hlarge : 2 * C ≤ M then
+      canonicalSmoothInteraction d N a mass (Tfun M) P η
+    else
+      -(M / 2)
+  let E_R : ℝ → CanonicalJoint d N → ℝ := fun M η =>
+    if hlarge : 2 * C ≤ M then
+      canonicalRoughError d N a mass (Tfun M) P η
+    else
+      canonicalFullInteractionJoint d N a mass (Tfun M) P η + M / 2
+  exact
+    Pphi2.LatticeBridge.bridgeAxiom_of_varying_coupled_setup_real
+      (d := d) (P := P) (mass := mass)
+      a ha hmass N
+      (μ := canonicalJointMeasure d N)
+      π
+      (hπ_meas := by
+        intro M
+        exact canonicalSumConfig_measurable (d := d) (N := N) (a := a) (mass := mass) (Tfun M))
+      (hpush := by
+        intro M
+        exact canonicalJointMeasure_map_canonicalSumConfig
+          (d := d) (N := N) (a := a) (mass := mass) ha hmass (Tfun M)
+          (Pphi2.DynamicalCutoff.dynamicalCutoffScale_pos C M))
+      V_S E_R
+      (hdecomp := by
+        intro M η
+        by_cases hlarge : 2 * C ≤ M
+        · simp [π, V_S, E_R, Tfun, hlarge, canonicalRoughError]
+        · simp [π, V_S, E_R, Tfun, hlarge, canonicalFullInteractionJoint_eq_interactionFunctional]
+      )
+      (hsmooth := by
+        intro M η
+        by_cases hlarge : 2 * C ≤ M
+        · simpa [V_S, hlarge] using hsmooth N a ha hvol M hlarge η
+        · simp [V_S, hlarge]
+      )
+      (ψ := fun M => if M < 2 * C then (1 : ENNReal) else ψ M)
+      (htail := by
+        intro M hM
+        by_cases hlarge : 2 * C ≤ M
+        · simpa [E_R, hlarge, if_neg (not_lt.mpr hlarge)] using htail M hlarge
+        · have htriv :
+            (canonicalJointMeasure d N)
+                {η | E_R M η ≤ -(M / 2)} ≤ 1 := by
+              refine le_trans (measure_mono (Set.subset_univ _)) ?_
+              simpa using (measure_univ : (canonicalJointMeasure d N) Set.univ = 1)
+          simpa [E_R, hlarge, if_pos (lt_of_not_ge hlarge)] using htriv
+      )
+      hintegral
+
+/-- **Canonical-joint rough tail from a transported standard-Gaussian chaos.**
+
+If the canonical rough error is represented pointwise by an `L²` random
+variable `F` on the transported standard Gaussian, and `F` lies in
+`wienerChaosLE n m` with an external norm bound `‖F‖ ≤ K`, then the
+negative tail of `canonicalRoughError` is controlled by the universal
+Janson exponent from `chaos_neg_tail_bound`.
+
+This isolates the only remaining substantive work for the Nelson bridge:
+construct the standard-Gaussian representative of `canonicalRoughError`
+and prove its chaos-membership / norm control. The measure transport itself
+is now theorem-level. -/
+theorem canonicalRoughError_neg_tail_of_stdGaussian
+    {d N : ℕ} [NeZero N] (a mass T : ℝ) (P : InteractionPolynomial)
+    (m : ℕ) (hm : 1 ≤ m) :
+    ∃ c_m : ℝ, 0 < c_m ∧
+      ∀ (F : MeasureTheory.Lp ℝ 2
+          (GaussianHilbert.stdGaussianFin
+            (Fintype.card (CanonicalJointSumIndex d N)))),
+        F ∈ GaussianHilbert.wienerChaosLE
+              (Fintype.card (CanonicalJointSumIndex d N)) m →
+        ∀ (K : ℝ), 0 < K → ‖F‖ ≤ K →
+        (∀ η : CanonicalJoint d N,
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ)
+            (canonicalJointStdGaussianMeasurableEquiv d N η) =
+              canonicalRoughError d N a mass T P η) →
+        ∀ (t : ℝ), 0 < t →
+          (canonicalJointMeasure d N)
+            {η | canonicalRoughError d N a mass T P η ≤ -t} ≤
+              2 * ENNReal.ofReal
+                (Real.exp (-c_m * (t / (2 * K)) ^ ((2 : ℝ) / m))) := by
+  obtain ⟨c_m, hc_m_pos, htail⟩ :=
+    Pphi2.ChaosTailBridge.chaos_neg_tail_bound
+      (Fintype.card (CanonicalJointSumIndex d N)) m hm
+  refine ⟨c_m, hc_m_pos, ?_⟩
+  intro F hF_chaos K hK_pos hF_norm hrepr t ht
+  have hset_eq :
+      {η | canonicalRoughError d N a mass T P η ≤ -t} =
+        (canonicalJointStdGaussianMeasurableEquiv d N) ⁻¹'
+          {ω |
+            (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+    ext η
+    simp [hrepr η]
+  have hset_meas :
+      MeasurableSet
+        {ω |
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+    simpa [Set.preimage, Set.setOf_mem_eq] using
+      (MeasureTheory.Lp.stronglyMeasurable F).measurable
+        (isClosed_Iic.measurableSet : MeasurableSet (Set.Iic (-t)))
+  calc
+    (canonicalJointMeasure d N) {η | canonicalRoughError d N a mass T P η ≤ -t}
+        =
+      (canonicalJointMeasure d N)
+        ((canonicalJointStdGaussianMeasurableEquiv d N) ⁻¹'
+          {ω |
+            (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t}) := by
+          rw [hset_eq]
+    _ =
+      (Measure.map
+        (canonicalJointStdGaussianMeasurableEquiv d N)
+        (canonicalJointMeasure d N))
+        {ω |
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+            symm
+            rw [Measure.map_apply
+              (canonicalJointStdGaussianMeasurableEquiv d N).measurable hset_meas]
+    _ =
+      (GaussianHilbert.stdGaussianFin
+        (Fintype.card (CanonicalJointSumIndex d N)))
+        {ω |
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+            rw [canonicalJointMeasure_map_stdGaussian (d := d) (N := N)]
+    _ ≤
+      2 * ENNReal.ofReal
+        (Real.exp (-c_m * (t / (2 * K)) ^ ((2 : ℝ) / m))) :=
+          htail F hF_chaos K hK_pos hF_norm t ht
 
 /-! ## S1: pointwise binomial decomposition
 

@@ -10,9 +10,12 @@ import Mathlib.Algebra.Order.BigOperators.Ring.Finset
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Probability.ProductMeasure
+import Mathlib.Probability.Distributions.Gaussian.HasGaussianLaw.Basic
+import Mathlib.Probability.Distributions.Gaussian.Multivariate
 import Mathlib.Probability.Distributions.Gaussian.Fernique
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Independence.Integration
+import GaussianField.CramerWold
 import GaussianField.Hypercontractive
 import GaussianField.WickMultivariate
 import GaussianHilbert.HermitePolynomials
@@ -57,6 +60,11 @@ noncomputable def canonicalJointMeasure (d N : ℕ) [NeZero N] :
   Measure.prod
     (Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1))
     (Measure.pi (fun _ : Fin d → Fin N => ProbabilityTheory.gaussianReal 0 1))
+
+instance canonicalJointMeasure_isProbability (d N : ℕ) [NeZero N] :
+    IsProbabilityMeasure (canonicalJointMeasure d N) := by
+  unfold canonicalJointMeasure
+  infer_instance
 
 abbrev CanonicalJointSumIndex (d N : ℕ) [NeZero N] :=
   (Fin d → Fin N) ⊕ (Fin d → Fin N)
@@ -129,6 +137,41 @@ theorem canonicalJointMeasure_map_stdGaussian
           (ProbabilityTheory.gaussianReal 0 1 : Measure ℝ))
         (α := fun _ : Fin (Fintype.card (CanonicalJointSumIndex d N)) => ℝ)
         (f := Fintype.equivFin (CanonicalJointSumIndex d N))).map_eq
+
+theorem canonicalJointMeasure_map_stdGaussianEuclidean
+    (d N : ℕ) [NeZero N] :
+    (canonicalJointMeasure d N).map
+        (fun η =>
+          WithLp.toLp 2
+            (((MeasurableEquiv.sumPiEquivProdPi
+              (fun _ : CanonicalJointSumIndex d N => ℝ)).symm) η)) =
+      ProbabilityTheory.stdGaussian
+        (EuclideanSpace ℝ (CanonicalJointSumIndex d N)) := by
+  have h_map_map :
+      Measure.map
+          (fun η =>
+            WithLp.toLp 2
+              (((MeasurableEquiv.sumPiEquivProdPi
+                (fun _ : CanonicalJointSumIndex d N => ℝ)).symm) η))
+          (canonicalJointMeasure d N) =
+        Measure.map
+          (WithLp.toLp 2)
+          ((canonicalJointMeasure d N).map
+            ((MeasurableEquiv.sumPiEquivProdPi
+              (fun _ : CanonicalJointSumIndex d N => ℝ)).symm)) := by
+    simpa [Function.comp] using
+      (Measure.map_map
+        (g := WithLp.toLp 2)
+        (f := (MeasurableEquiv.sumPiEquivProdPi
+          (fun _ : CanonicalJointSumIndex d N => ℝ)).symm)
+        (μ := canonicalJointMeasure d N)
+        (by fun_prop)
+        ((MeasurableEquiv.sumPiEquivProdPi
+          (fun _ : CanonicalJointSumIndex d N => ℝ)).symm.measurable)).symm
+  rw [h_map_map, canonicalJointMeasure_map_sum_pi_gaussian]
+  simpa using
+    (ProbabilityTheory.map_pi_eq_stdGaussian
+      (ι := CanonicalJointSumIndex d N))
 
 def canonicalEigenvalue (d N : ℕ) [NeZero N]
     (a mass : ℝ) (m : Fin d → Fin N) : ℝ :=
@@ -233,6 +276,14 @@ def latticeFieldToConfig (d N : ℕ) [NeZero N] (φ : FinLatticeField d N) :
     (f : FinLatticeField d N) :
     (latticeFieldToConfig d N φ) f =
       ∑ x : FinLatticeSites d N, f x * φ x := rfl
+
+theorem latticeFieldToConfig_eq_evalMapInv
+    (d N : ℕ) [NeZero N] (φ : FinLatticeField d N) :
+    latticeFieldToConfig d N φ = GaussianField.evalMapInv d N φ := by
+  apply ContinuousLinearMap.ext
+  intro f
+  simpa [latticeFieldToConfig] using
+    (GaussianField.evalMapInv_apply (d := d) (N := N) φ f).symm
 
 noncomputable def canonicalSmoothConfig (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (η : CanonicalJoint d N) :
@@ -346,6 +397,30 @@ theorem canonicalSumFieldFunction_pointwise_measurable
   exact (canonicalSmoothFieldFunction_pointwise_measurable d N a mass T x).add
     (canonicalRoughFieldFunction_pointwise_measurable d N a mass T x)
 
+theorem canonicalSmoothFieldFunction_measurable
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) :
+    Measurable (fun η : CanonicalJoint d N =>
+      canonicalSmoothFieldFunction d N a mass T η) := by
+  apply measurable_pi_iff.mpr
+  intro x
+  exact canonicalSmoothFieldFunction_pointwise_measurable d N a mass T x
+
+theorem canonicalRoughFieldFunction_measurable
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) :
+    Measurable (fun η : CanonicalJoint d N =>
+      canonicalRoughFieldFunction d N a mass T η) := by
+  apply measurable_pi_iff.mpr
+  intro x
+  exact canonicalRoughFieldFunction_pointwise_measurable d N a mass T x
+
+theorem canonicalSumFieldFunction_measurable
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) :
+    Measurable (fun η : CanonicalJoint d N =>
+      canonicalSumFieldFunction d N a mass T η) := by
+  apply measurable_pi_iff.mpr
+  intro x
+  exact canonicalSumFieldFunction_pointwise_measurable d N a mass T x
+
 noncomputable def canonicalSumConfig (d N : ℕ) [NeZero N]
     (a mass T : ℝ) (η : CanonicalJoint d N) :
     Configuration (FinLatticeField d N) :=
@@ -358,6 +433,184 @@ noncomputable def canonicalSumConfig (d N : ℕ) [NeZero N]
       canonicalSumFieldFunction d N a mass T η x := by
   rw [canonicalSumConfig, latticeFieldToConfig_apply]
   simp [finLatticeDelta]
+
+theorem canonicalSumConfig_measurable
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) :
+    Measurable (canonicalSumConfig d N a mass T) := by
+  rw [show canonicalSumConfig d N a mass T =
+      fun η => GaussianField.evalMapInv d N
+        (canonicalSumFieldFunction d N a mass T η) from by
+          funext η
+          rw [canonicalSumConfig, latticeFieldToConfig_eq_evalMapInv]]
+  exact (GaussianField.evalMapInv_measurable (d := d) (N := N)).comp
+    (canonicalSumFieldFunction_measurable (d := d) (N := N) (a := a) (mass := mass) T)
+
+noncomputable def canonicalStdFieldFunction
+    (d N : ℕ) [NeZero N] (a mass T : ℝ)
+    (ξ : EuclideanSpace ℝ (CanonicalJointSumIndex d N)) :
+    FinLatticeSites d N → ℝ :=
+  fun x =>
+    (Real.sqrt (a^d))⁻¹ *
+      ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * ξ (Sum.inl m) +
+    (Real.sqrt (a^d))⁻¹ *
+      ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * ξ (Sum.inr m)
+
+noncomputable def canonicalStdToFieldLinearMap
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) :
+    EuclideanSpace ℝ (CanonicalJointSumIndex d N) →ₗ[ℝ] FinLatticeField d N where
+  toFun := canonicalStdFieldFunction d N a mass T
+  map_add' := by
+    intro ξ ζ
+    funext x
+    change
+      (Real.sqrt (a ^ d))⁻¹ *
+          ∑ m : Fin d → Fin N,
+            canonicalSmoothModeCoeff d N a mass T x m *
+              (ξ.ofLp (Sum.inl m) + ζ.ofLp (Sum.inl m)) +
+        (Real.sqrt (a ^ d))⁻¹ *
+          ∑ m : Fin d → Fin N,
+            canonicalRoughModeCoeff d N a mass T x m *
+              (ξ.ofLp (Sum.inr m) + ζ.ofLp (Sum.inr m)) =
+      ((Real.sqrt (a ^ d))⁻¹ *
+          ∑ m : Fin d → Fin N,
+            canonicalSmoothModeCoeff d N a mass T x m * ξ.ofLp (Sum.inl m) +
+        (Real.sqrt (a ^ d))⁻¹ *
+          ∑ m : Fin d → Fin N,
+            canonicalRoughModeCoeff d N a mass T x m * ξ.ofLp (Sum.inr m)) +
+        ((Real.sqrt (a ^ d))⁻¹ *
+          ∑ m : Fin d → Fin N,
+            canonicalSmoothModeCoeff d N a mass T x m * ζ.ofLp (Sum.inl m) +
+          (Real.sqrt (a ^ d))⁻¹ *
+            ∑ m : Fin d → Fin N,
+              canonicalRoughModeCoeff d N a mass T x m * ζ.ofLp (Sum.inr m))
+    simp_rw [mul_add]
+    rw [Finset.sum_add_distrib, Finset.sum_add_distrib]
+    ring_nf
+  map_smul' := by
+    intro c ξ
+    funext x
+    change
+      (Real.sqrt (a ^ d))⁻¹ *
+          ∑ m : Fin d → Fin N,
+            canonicalSmoothModeCoeff d N a mass T x m * (c * ξ.ofLp (Sum.inl m)) +
+        (Real.sqrt (a ^ d))⁻¹ *
+          ∑ m : Fin d → Fin N,
+            canonicalRoughModeCoeff d N a mass T x m * (c * ξ.ofLp (Sum.inr m)) =
+      (RingHom.id ℝ) c *
+        ((Real.sqrt (a ^ d))⁻¹ *
+            ∑ m : Fin d → Fin N,
+              canonicalSmoothModeCoeff d N a mass T x m * ξ.ofLp (Sum.inl m) +
+          (Real.sqrt (a ^ d))⁻¹ *
+            ∑ m : Fin d → Fin N,
+              canonicalRoughModeCoeff d N a mass T x m * ξ.ofLp (Sum.inr m))
+    simp only [RingHom.id_apply]
+    rw [mul_add]
+    have hSmooth :
+        (∑ m : Fin d → Fin N,
+            canonicalSmoothModeCoeff d N a mass T x m * (c * ξ.ofLp (Sum.inl m))) =
+          c * ∑ m : Fin d → Fin N,
+            canonicalSmoothModeCoeff d N a mass T x m * ξ.ofLp (Sum.inl m) := by
+      rw [Finset.mul_sum]
+      refine Finset.sum_congr rfl ?_
+      intro m hm
+      ring
+    have hRough :
+        (∑ m : Fin d → Fin N,
+            canonicalRoughModeCoeff d N a mass T x m * (c * ξ.ofLp (Sum.inr m))) =
+          c * ∑ m : Fin d → Fin N,
+            canonicalRoughModeCoeff d N a mass T x m * ξ.ofLp (Sum.inr m) := by
+      rw [Finset.mul_sum]
+      refine Finset.sum_congr rfl ?_
+      intro m hm
+      ring
+    rw [hSmooth, hRough]
+    ring
+
+noncomputable def canonicalStdToFieldCLM
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) :
+    EuclideanSpace ℝ (CanonicalJointSumIndex d N) →L[ℝ] FinLatticeField d N :=
+  { toLinearMap := canonicalStdToFieldLinearMap d N a mass T
+    cont := (canonicalStdToFieldLinearMap d N a mass T).continuous_of_finiteDimensional }
+
+/-- The canonical field law obtained by pushing the Euclidean standard Gaussian
+through the smooth+rough linear field map. -/
+noncomputable def canonicalSumFieldLaw
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) : Measure (FinLatticeField d N) :=
+  (ProbabilityTheory.stdGaussian
+      (EuclideanSpace ℝ (CanonicalJointSumIndex d N))).map
+    (canonicalStdToFieldCLM d N a mass T)
+
+instance canonicalSumFieldLaw_isGaussian
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) :
+    ProbabilityTheory.IsGaussian (canonicalSumFieldLaw d N a mass T) := by
+  unfold canonicalSumFieldLaw
+  infer_instance
+
+noncomputable def sitePairingCLM
+    (d N : ℕ) [NeZero N] (f : FinLatticeField d N) :
+    FinLatticeField d N →L[ℝ] ℝ :=
+  { toLinearMap :=
+      { toFun := fun φ => ∑ x : FinLatticeSites d N, f x * φ x
+        map_add' := by
+          intro φ ψ
+          simp [mul_add, Finset.sum_add_distrib]
+        map_smul' := by
+          intro c φ
+          simp [Pi.smul_apply, smul_eq_mul, Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm] }
+    cont := (continuous_finset_sum _ fun x _ =>
+      continuous_const.mul (continuous_apply x)) }
+
+theorem canonicalStdFieldFunction_eq_canonicalSumFieldFunction
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) (η : CanonicalJoint d N) :
+    canonicalStdFieldFunction d N a mass T
+        (WithLp.toLp 2
+          (((MeasurableEquiv.sumPiEquivProdPi
+            (fun _ : CanonicalJointSumIndex d N => ℝ)).symm) η)) =
+      canonicalSumFieldFunction d N a mass T η := by
+  funext x
+  unfold canonicalStdFieldFunction canonicalSumFieldFunction
+    canonicalSmoothFieldFunction canonicalRoughFieldFunction
+  rfl
+
+theorem canonicalSumFieldLaw_eq_map_canonicalSumFieldFunction
+    (d N : ℕ) [NeZero N] (a mass T : ℝ) :
+    canonicalSumFieldLaw d N a mass T =
+      (canonicalJointMeasure d N).map
+        (canonicalSumFieldFunction d N a mass T) := by
+  unfold canonicalSumFieldLaw
+  rw [← canonicalJointMeasure_map_stdGaussianEuclidean (d := d) (N := N)]
+  have h_map_map :
+      Measure.map (canonicalStdToFieldCLM d N a mass T)
+          ((canonicalJointMeasure d N).map
+            (fun η =>
+              WithLp.toLp 2
+                (((MeasurableEquiv.sumPiEquivProdPi
+                  (fun _ : CanonicalJointSumIndex d N => ℝ)).symm) η))) =
+        Measure.map
+          (fun η =>
+            canonicalStdToFieldCLM d N a mass T
+              (WithLp.toLp 2
+                (((MeasurableEquiv.sumPiEquivProdPi
+                  (fun _ : CanonicalJointSumIndex d N => ℝ)).symm) η)))
+          (canonicalJointMeasure d N) := by
+    simpa [Function.comp] using
+      (Measure.map_map
+        (canonicalStdToFieldCLM d N a mass T).measurable
+        (by fun_prop : Measurable
+          (fun η =>
+            WithLp.toLp 2
+              (((MeasurableEquiv.sumPiEquivProdPi
+                (fun _ : CanonicalJointSumIndex d N => ℝ)).symm) η))))
+  rw [h_map_map]
+  rw [show
+      (fun η =>
+        canonicalStdToFieldCLM d N a mass T
+          (WithLp.toLp 2
+            (((MeasurableEquiv.sumPiEquivProdPi
+              (fun _ : CanonicalJointSumIndex d N => ℝ)).symm) η))) =
+        canonicalSumFieldFunction d N a mass T from by
+          funext η
+          exact canonicalStdFieldFunction_eq_canonicalSumFieldFunction d N a mass T η]
 
 theorem canonicalSmoothConfig_add_canonicalRoughConfig_eq_lift_sum
     (d N : ℕ) [NeZero N] (a mass T : ℝ) (η : CanonicalJoint d N) :
@@ -3609,6 +3862,339 @@ theorem canonicalSumFieldFunction_covariance_eq_GJ
                 intro m hm
                 rw [latticeFourierProductCoeff_delta (d := d) (N := N) x m,
                   latticeFourierProductCoeff_delta (d := d) (N := N) y m]
+
+private lemma latticeCovarianceGJ_eq_sum_delta_covariance
+    (ha : 0 < a) (hmass : 0 < mass)
+    (f g : FinLatticeField d N) :
+    GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) f g =
+      ∑ x : FinLatticeSites d N,
+        ∑ y : FinLatticeSites d N,
+          f x * g y *
+            GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass)
+              (finLatticeDelta d N x) (finLatticeDelta d N y) := by
+  rw [GaussianField.field_basis_decomposition_density (d := d) (N := N) f,
+    GaussianField.field_basis_decomposition_density (d := d) (N := N) g]
+  simp only [GaussianField.covariance, map_sum, map_smul, Pi.smul_apply, smul_eq_mul, sum_inner,
+    inner_sum, real_inner_smul_left, real_inner_smul_right, Finset.sum_apply]
+  simp [finLatticeDelta]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl ?_
+  intro x hx
+  refine Finset.sum_congr rfl ?_
+  intro y hy
+  rw [real_inner_comm]
+  ring
+
+private lemma canonicalSmoothFieldFunction_integral_zero
+    (T : ℝ) (x : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalSmoothFieldFunction d N a mass T η x
+      ∂(canonicalJointMeasure d N) = 0 := by
+  rw [canonicalJointMeasure]
+  rw [show (fun η : CanonicalJoint d N =>
+      canonicalSmoothFieldFunction d N a mass T η x) =
+      (fun z : ((Fin d → Fin N) → ℝ) × ((Fin d → Fin N) → ℝ) =>
+        canonicalSmoothFieldFunctionOfFst d N a mass T z.1 x) by
+      funext η
+      exact canonicalSmoothFieldFunction_eq_of_fst d N a mass T η.1 η.2 x]
+  rw [integral_fun_fst (E := ℝ)
+    (μ := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+    (ν := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+    (f := fun η_S : (Fin d → Fin N) → ℝ =>
+      canonicalSmoothFieldFunctionOfFst d N a mass T η_S x)]
+  simpa [canonicalSmoothFieldFunctionOfFst] using
+    canonicalSmoothFieldFunction_marginal_integral_zero (d := d) (N := N) (a := a) (mass := mass) T x
+
+private lemma canonicalRoughFieldFunction_integral_zero
+    (T : ℝ) (x : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalRoughFieldFunction d N a mass T η x
+      ∂(canonicalJointMeasure d N) = 0 := by
+  rw [canonicalJointMeasure]
+  rw [show (fun η : CanonicalJoint d N =>
+      canonicalRoughFieldFunction d N a mass T η x) =
+      (fun z : ((Fin d → Fin N) → ℝ) × ((Fin d → Fin N) → ℝ) =>
+        canonicalRoughFieldFunctionOfSnd d N a mass T z.2 x) by
+      funext η
+      exact canonicalRoughFieldFunction_eq_of_snd d N a mass T η.1 η.2 x]
+  rw [integral_fun_snd (E := ℝ)
+    (μ := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+    (ν := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
+    (f := fun η_R : (Fin d → Fin N) → ℝ =>
+      canonicalRoughFieldFunctionOfSnd d N a mass T η_R x)]
+  simpa [canonicalRoughFieldFunctionOfSnd] using
+    canonicalRoughFieldFunction_marginal_integral_zero (d := d) (N := N) (a := a) (mass := mass) T x
+
+private lemma canonicalSumFieldFunction_integral_zero
+    (T : ℝ) (x : FinLatticeSites d N) :
+    ∫ η : CanonicalJoint d N,
+      canonicalSumFieldFunction d N a mass T η x
+      ∂(canonicalJointMeasure d N) = 0 := by
+  change ∫ η : CanonicalJoint d N,
+      canonicalSmoothFieldFunction d N a mass T η x +
+        canonicalRoughFieldFunction d N a mass T η x
+      ∂(canonicalJointMeasure d N) = 0
+  have hs_int : Integrable
+      (fun η : CanonicalJoint d N => canonicalSmoothFieldFunction d N a mass T η x)
+      (canonicalJointMeasure d N) :=
+    (canonicalSmoothFieldFunction_memLp_two (d := d) (N := N) (a := a) (mass := mass) T x).integrable
+      one_le_two
+  have hr_int : Integrable
+      (fun η : CanonicalJoint d N => canonicalRoughFieldFunction d N a mass T η x)
+      (canonicalJointMeasure d N) :=
+    (canonicalRoughFieldFunction_memLp_two (d := d) (N := N) (a := a) (mass := mass) T x).integrable
+      one_le_two
+  rw [integral_add hs_int hr_int, canonicalSmoothFieldFunction_integral_zero,
+    canonicalRoughFieldFunction_integral_zero]
+  ring
+
+private lemma canonicalSumFieldFunction_pairing_memLp_two
+    (T : ℝ) (f : FinLatticeField d N) :
+    MemLp
+      (fun η : CanonicalJoint d N =>
+        ∑ x : FinLatticeSites d N, f x * canonicalSumFieldFunction d N a mass T η x)
+      2 (canonicalJointMeasure d N) := by
+  refine memLp_finset_sum _ (fun x _ => ?_)
+  refine MemLp.const_mul ?_ (f x)
+  exact canonicalSumFieldFunction_memLp_two (d := d) (N := N) (a := a) (mass := mass) T x
+
+private lemma canonicalSumFieldFunction_pairing_integral_zero
+    (T : ℝ) (f : FinLatticeField d N) :
+    ∫ η : CanonicalJoint d N,
+      ∑ x : FinLatticeSites d N, f x * canonicalSumFieldFunction d N a mass T η x
+      ∂(canonicalJointMeasure d N) = 0 := by
+  rw [integral_finset_sum]
+  · refine Finset.sum_eq_zero ?_
+    intro x hx
+    rw [integral_const_mul, canonicalSumFieldFunction_integral_zero]
+    ring
+  · intro x hx
+    refine Integrable.const_mul ?_ (f x)
+    exact (canonicalSumFieldFunction_memLp_two (d := d) (N := N) (a := a) (mass := mass) T x).integrable
+      one_le_two
+
+private lemma canonicalSumFieldLaw_pairing_integral_zero
+    (T : ℝ) (f : FinLatticeField d N) :
+    ∫ φ : FinLatticeField d N, sitePairingCLM d N f φ
+      ∂(canonicalSumFieldLaw d N a mass T) = 0 := by
+  rw [canonicalSumFieldLaw_eq_map_canonicalSumFieldFunction]
+  rw [integral_map
+    (canonicalSumFieldFunction_measurable d N a mass T).aemeasurable]
+  ·
+    change ∫ η : CanonicalJoint d N,
+        ∑ x : FinLatticeSites d N, f x * canonicalSumFieldFunction d N a mass T η x
+        ∂(canonicalJointMeasure d N) = 0
+    exact canonicalSumFieldFunction_pairing_integral_zero
+      (d := d) (N := N) (a := a) (mass := mass) T f
+  ·
+    exact (sitePairingCLM d N f).measurable.aestronglyMeasurable
+
+private lemma canonicalSumFieldLaw_pairing_cross_moment_eq_covariance
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (f g : FinLatticeField d N) :
+    ∫ φ : FinLatticeField d N, sitePairingCLM d N f φ * sitePairingCLM d N g φ
+      ∂(canonicalSumFieldLaw d N a mass T) =
+    GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) f g := by
+  rw [canonicalSumFieldLaw_eq_map_canonicalSumFieldFunction]
+  rw [integral_map
+    (canonicalSumFieldFunction_measurable d N a mass T).aemeasurable]
+  ·
+    change ∫ η : CanonicalJoint d N,
+        (∑ x : FinLatticeSites d N, f x * canonicalSumFieldFunction d N a mass T η x) *
+          (∑ y : FinLatticeSites d N, g y * canonicalSumFieldFunction d N a mass T η y)
+        ∂(canonicalJointMeasure d N) =
+      GaussianField.covariance (latticeCovarianceGJ d N a mass ha hmass) f g
+    let μ := canonicalJointMeasure d N
+    let X : FinLatticeSites d N → CanonicalJoint d N → ℝ :=
+      fun x η => f x * canonicalSumFieldFunction d N a mass T η x
+    let Y : FinLatticeSites d N → CanonicalJoint d N → ℝ :=
+      fun y η => g y * canonicalSumFieldFunction d N a mass T η y
+    have hX : ∀ x, MemLp (X x) 2 μ := by
+      intro x
+      dsimp [X, μ]
+      exact MemLp.const_mul
+        (canonicalSumFieldFunction_memLp_two (d := d) (N := N) (a := a) (mass := mass) T x)
+        (f x)
+    have hY : ∀ y, MemLp (Y y) 2 μ := by
+      intro y
+      dsimp [Y, μ]
+      exact MemLp.const_mul
+        (canonicalSumFieldFunction_memLp_two (d := d) (N := N) (a := a) (mass := mass) T y)
+        (g y)
+    have h_pair_f : MemLp (fun η : CanonicalJoint d N => ∑ x, X x η) 2 μ := by
+      simpa [X, μ] using
+        canonicalSumFieldFunction_pairing_memLp_two (d := d) (N := N) (a := a) (mass := mass) T f
+    have h_pair_g : MemLp (fun η : CanonicalJoint d N => ∑ y, Y y η) 2 μ := by
+      simpa [Y, μ] using
+        canonicalSumFieldFunction_pairing_memLp_two (d := d) (N := N) (a := a) (mass := mass) T g
+    have h_pair_f_zero : ∫ η, ∑ x, X x η ∂μ = 0 := by
+      simpa [X, μ] using
+        canonicalSumFieldFunction_pairing_integral_zero (d := d) (N := N) (a := a) (mass := mass) T f
+    have h_pair_g_zero : ∫ η, ∑ y, Y y η ∂μ = 0 := by
+      simpa [Y, μ] using
+        canonicalSumFieldFunction_pairing_integral_zero (d := d) (N := N) (a := a) (mass := mass) T g
+    have h_cov_pair :
+        cov[(fun η : CanonicalJoint d N => ∑ x, X x η),
+          (fun η : CanonicalJoint d N => ∑ y, Y y η); μ] =
+        ∫ η : CanonicalJoint d N, (∑ x, X x η) * (∑ y, Y y η) ∂μ := by
+      rw [covariance_eq_sub h_pair_f h_pair_g, h_pair_f_zero, h_pair_g_zero]
+      simp
+    have h_cov_sum :
+        cov[(fun η : CanonicalJoint d N => ∑ x, X x η),
+          (fun η : CanonicalJoint d N => ∑ y, Y y η); μ] =
+        ∑ x, ∑ y, cov[X x, Y y; μ] := by
+      exact covariance_fun_sum_fun_sum hX hY
+    rw [← h_cov_pair, h_cov_sum]
+    rw [latticeCovarianceGJ_eq_sum_delta_covariance (d := d) (N := N) (a := a) (mass := mass)
+      ha hmass f g]
+    refine Finset.sum_congr rfl ?_
+    intro x hx
+    refine Finset.sum_congr rfl ?_
+    intro y hy
+    have hX_zero : ∫ η, X x η ∂μ = 0 := by
+      simp only [X, μ]
+      rw [integral_const_mul, canonicalSumFieldFunction_integral_zero]
+      ring
+    have hY_zero : ∫ η, Y y η ∂μ = 0 := by
+      simp only [Y, μ]
+      rw [integral_const_mul, canonicalSumFieldFunction_integral_zero]
+      ring
+    rw [covariance_eq_sub (hX x) (hY y), hX_zero, hY_zero]
+    simp
+    have hxy :
+        (fun η : CanonicalJoint d N => X x η * Y y η) =
+        (fun η : CanonicalJoint d N =>
+          (f x * g y) *
+            (canonicalSumFieldFunction d N a mass T η x *
+              canonicalSumFieldFunction d N a mass T η y)) := by
+      funext η
+      simp [X, Y]
+      ring
+    rw [hxy, integral_const_mul]
+    rw [canonicalSumFieldFunction_covariance_eq_GJ
+      (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y]
+    by_cases hfx : f x = 0
+    · simp [hfx]
+    · by_cases hgy : g y = 0
+      · simp [hgy]
+      · have hxdelta : (fun z => if z = x then 1 else 0) = finLatticeDelta d N x := by
+          ext z
+          simp [finLatticeDelta]
+        have hydelta : (fun z => if z = y then 1 else 0) = finLatticeDelta d N y := by
+          ext z
+          simp [finLatticeDelta]
+        rw [hxdelta, hydelta]
+  ·
+    exact ((sitePairingCLM d N f).measurable.aestronglyMeasurable).mul
+      ((sitePairingCLM d N g).measurable.aestronglyMeasurable)
+
+private theorem canonicalSumFieldLaw_pairing_is_gaussian
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (f : FinLatticeField d N) :
+    (canonicalSumFieldLaw d N a mass T).map
+      (fun φ : FinLatticeField d N => ∑ x : FinLatticeSites d N, f x * φ x) =
+      gaussianReal 0
+        (@inner ℝ ell2' _
+          (latticeCovarianceGJ d N a mass ha hmass f)
+          (latticeCovarianceGJ d N a mass ha hmass f)).toNNReal := by
+  have h_gauss :=
+    (ProbabilityTheory.IsGaussian.map_eq_gaussianReal
+      (μ := canonicalSumFieldLaw d N a mass T)
+      (L := sitePairingCLM d N f))
+  change Measure.map (sitePairingCLM d N f) (canonicalSumFieldLaw d N a mass T) =
+    gaussianReal 0
+      (@inner ℝ ell2' _
+        (latticeCovarianceGJ d N a mass ha hmass f)
+        (latticeCovarianceGJ d N a mass ha hmass f)).toNNReal
+  rw [h_gauss]
+  apply (ProbabilityTheory.gaussianReal_ext_iff).2
+  constructor
+  · exact canonicalSumFieldLaw_pairing_integral_zero (d := d) (N := N) (a := a) (mass := mass) T f
+  · have h_var :
+        Var[sitePairingCLM d N f; canonicalSumFieldLaw d N a mass T] =
+          ∫ φ : FinLatticeField d N, (sitePairingCLM d N f φ) ^ 2
+            ∂(canonicalSumFieldLaw d N a mass T) := by
+      refine variance_of_integral_eq_zero
+        (sitePairingCLM d N f).measurable.aemeasurable ?_
+      exact canonicalSumFieldLaw_pairing_integral_zero
+        (d := d) (N := N) (a := a) (mass := mass) T f
+    rw [h_var, show (fun φ : FinLatticeField d N => (sitePairingCLM d N f φ) ^ 2) =
+        (fun φ : FinLatticeField d N => sitePairingCLM d N f φ * sitePairingCLM d N f φ) by
+          funext φ; ring]
+    rw [canonicalSumFieldLaw_pairing_cross_moment_eq_covariance
+      (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT f f]
+    rfl
+
+theorem canonicalSumFieldLaw_eq_latticeGaussianFieldLaw
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) :
+    canonicalSumFieldLaw d N a mass T =
+      latticeGaussianFieldLaw d N a mass ha hmass := by
+  letI : IsProbabilityMeasure (canonicalSumFieldLaw d N a mass T) := inferInstance
+  letI : IsProbabilityMeasure (latticeGaussianFieldLaw d N a mass ha hmass) := by
+    unfold latticeGaussianFieldLaw
+    exact Measure.isProbabilityMeasure_map
+      (measurable_evalMap (d := d) (N := N)).aemeasurable
+  apply GaussianField.cramerWold
+  intro f
+  exact (canonicalSumFieldLaw_pairing_is_gaussian
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT f).trans
+      (latticeGaussianFieldLaw_pairing_is_gaussian
+        (d := d) (N := N) a mass ha hmass f).symm
+
+theorem canonicalJointMeasure_map_canonicalSumConfig
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) :
+    (canonicalJointMeasure d N).map (canonicalSumConfig d N a mass T) =
+      latticeGaussianMeasure d N a mass ha hmass := by
+  rw [show canonicalSumConfig d N a mass T =
+      fun η => GaussianField.evalMapInv d N
+        (canonicalSumFieldFunction d N a mass T η) from by
+          funext η
+          rw [canonicalSumConfig, latticeFieldToConfig_eq_evalMapInv]]
+  have h_map_map :
+      Measure.map
+          (fun η => GaussianField.evalMapInv d N
+            (canonicalSumFieldFunction d N a mass T η))
+          (canonicalJointMeasure d N) =
+        Measure.map
+          (GaussianField.evalMapInv d N)
+          ((canonicalJointMeasure d N).map
+            (canonicalSumFieldFunction d N a mass T)) := by
+    simpa [Function.comp] using
+      (Measure.map_map
+        (g := GaussianField.evalMapInv d N)
+        (f := canonicalSumFieldFunction d N a mass T)
+        (μ := canonicalJointMeasure d N)
+        (GaussianField.evalMapInv_measurable (d := d) (N := N))
+        (canonicalSumFieldFunction_measurable
+          (d := d) (N := N) (a := a) (mass := mass) T)).symm
+  rw [h_map_map]
+  rw [← canonicalSumFieldLaw_eq_map_canonicalSumFieldFunction
+    (d := d) (N := N) (a := a) (mass := mass) T]
+  rw [canonicalSumFieldLaw_eq_latticeGaussianFieldLaw
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT]
+  rw [latticeGaussianFieldLaw]
+  rw [Measure.map_map
+    (g := GaussianField.evalMapInv d N)
+    (f := GaussianField.evalMap d N)
+    (μ := latticeGaussianMeasure d N a mass ha hmass)
+    (GaussianField.evalMapInv_measurable (d := d) (N := N))
+    (GaussianField.measurable_evalMap (d := d) (N := N))]
+  rw [show
+      GaussianField.evalMapInv d N ∘ GaussianField.evalMap d N = id from by
+          funext ω
+          exact GaussianField.evalMapInv_evalMap d N ω]
+  simp
+
+theorem integral_comp_canonicalSumConfig
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (F : Configuration (FinLatticeField d N) → ℝ) (hF : Measurable F) :
+    ∫ η, F (canonicalSumConfig d N a mass T η) ∂(canonicalJointMeasure d N) =
+      ∫ ω, F ω ∂(latticeGaussianMeasure d N a mass ha hmass) := by
+  rw [← integral_map
+    (canonicalSumConfig_measurable (d := d) (N := N) (a := a) (mass := mass) T).aemeasurable
+    hF.aestronglyMeasurable]
+  rw [canonicalJointMeasure_map_canonicalSumConfig
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT]
 
 end Variance
 

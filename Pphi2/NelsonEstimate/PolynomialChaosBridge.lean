@@ -66,6 +66,7 @@ similarly via a separate BC-limit lemma.
 
 import Pphi2.WickOrdering.WickPolynomial
 import Pphi2.InteractingMeasure.LatticeMeasure
+import Pphi2.NelsonEstimate.RoughErrorBound
 
 noncomputable section
 
@@ -157,5 +158,70 @@ theorem nelson_exponential_estimate_master_bounded
         ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
   obtain ⟨K, hK_pos, hbound⟩ := nelson_exponential_estimate_master d P mass hmass
   exact ⟨K, hK_pos, fun a ha _ N _ => hbound a ha N⟩
+
+/-- **Bounded-volume pure-quartic bridge from a canonical-joint rough tail.**
+
+This is the current theorem-level reduction of the remaining Cluster A axiom.
+At fixed physical volume `L = N * a`, if one supplies:
+
+* a cutoff constant `C`,
+* the smooth-side cutoff lower bound at that `C`,
+* a large-`M` tail bound for the canonical-joint rough error at
+  `T(M) = dynamicalCutoffScale C M`,
+* integrability of the resulting piecewise layer-cake tail,
+
+then the lattice Boltzmann `L²` moment is uniformly bounded in `(a, N)`
+subject to the volume constraint.
+
+What remains after this theorem is exactly the canonical-joint rough-tail
+input; the measure transport and dynamical-cutoff glue are now theorem-derived. -/
+theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_tail
+    {d : ℕ} (hd : d = 2) (P : InteractionPolynomial)
+    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass)
+    (C : ℝ)
+    (hsmooth :
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L)
+        (M : ℝ), 2 * C ≤ M →
+        ∀ (η : CanonicalJoint d N),
+          -(M / 2) ≤
+            canonicalSmoothInteraction d N a mass
+              (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η)
+    (ψ : ℝ → ENNReal)
+    (hintegral :
+      ∫⁻ M in Set.Ioi (0 : ℝ),
+        (if M < 2 * C then (1 : ENNReal) else ψ M) *
+          ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤)
+    (htail :
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L)
+        (M : ℝ), 2 * C ≤ M →
+          (canonicalJointMeasure d N)
+            {η | canonicalRoughError d N a mass
+                (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η ≤ -(M / 2)} ≤
+              ψ M) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L),
+        ∫ ω : Configuration (FinLatticeField d N),
+          (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+          ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
+  let K : ℝ := 1 + (∫⁻ M in Set.Ioi (0 : ℝ),
+    (if M < 2 * C then (1 : ENNReal) else ψ M) *
+      ENNReal.ofReal (2 * Real.exp (2 * M))).toReal
+  refine ⟨K, by
+    have h_nonneg :
+        0 ≤ (∫⁻ M in Set.Ioi (0 : ℝ),
+          (if M < 2 * C then (1 : ENNReal) else ψ M) *
+            ENNReal.ofReal (2 * Real.exp (2 * M))).toReal :=
+      ENNReal.toReal_nonneg
+    exact add_pos_of_pos_of_nonneg (by norm_num) h_nonneg, ?_⟩
+  intro N _ a ha hvol
+  simpa [K] using
+    (expMoment_bound_of_cutoff_quartic_tail
+      (d := d) P mass L hmass C hsmooth ψ hintegral
+      N a ha hvol (htail N a ha hvol))
 
 end Pphi2

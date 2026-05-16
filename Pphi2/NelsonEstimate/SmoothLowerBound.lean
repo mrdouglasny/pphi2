@@ -175,6 +175,14 @@ theorem smooth_interaction_lower_bound_log_uniform (ha : 0 < a) (hmass : 0 < mas
             (1 + |Real.log T|) ^ 2 := by ring
   linarith
 
+/-- **Uniform-in-`(a, N)` smooth-side classical lower bound.**
+
+At fixed macroscopic period `L = N * a` and mass `mass`, the smooth
+interaction admits a logarithmic lower bound with a constant depending
+only on `(L, mass)`, not on `(a, N)` separately. This is the bridge-facing
+version of `smooth_interaction_lower_bound_log_uniform`, using the proved
+Glimm-Jaffe heat-kernel bound
+`smoothWickConstant_le_log_uniform_in_aN`. -/
 theorem smooth_interaction_lower_bound_log (ha : 0 < a) (hmass : 0 < mass)
     (hd : d = 2) (L : ℝ) (hL : 0 < L) (ha_eq : a = L / N)
     (T : ℝ) (hT : 0 < T)
