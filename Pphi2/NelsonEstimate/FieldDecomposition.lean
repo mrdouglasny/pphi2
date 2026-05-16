@@ -968,6 +968,57 @@ private lemma latticeHeatKernel_diagonal_eq_dft_spectral
               rw [hcoeff m]
               ring
 
+private lemma latticeHeatKernel_entry_eq_dft_spectral
+    (ha : a ≠ 0) (t : ℝ) (x y : FinLatticeSites d N) :
+    latticeHeatKernelMatrix d N a t x y =
+      ∑ m : Fin d → Fin N,
+        Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
+          latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y /
+          latticeFourierProductNormSq N d m := by
+  let δx : FinLatticeField d N := fun z => if z = x then 1 else 0
+  let δy : FinLatticeField d N := fun z => if z = y then 1 else 0
+  have hspec := latticeHeatKernel_bilinear_eq_dft_spectral
+    (d := d) (N := N) (a := a) ha t δx δy
+  have hcoeffx :
+      ∀ m : Fin d → Fin N,
+        latticeFourierProductCoeff N d δx m = latticeFourierProductBasisFun N d m x := by
+    intro m
+    exact latticeFourierProductCoeff_delta (d := d) (N := N) x m
+  have hcoeffy :
+      ∀ m : Fin d → Fin N,
+        latticeFourierProductCoeff N d δy m = latticeFourierProductBasisFun N d m y := by
+    intro m
+    exact latticeFourierProductCoeff_delta (d := d) (N := N) y m
+  calc
+    latticeHeatKernelMatrix d N a t x y
+      = ∑ z : FinLatticeSites d N, δx z * ((latticeHeatKernelMatrix d N a t).mulVec δy) z := by
+          simp [δx, δy, Matrix.mulVec, dotProduct]
+    _ = ∑ m : Fin d → Fin N,
+          Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
+            latticeFourierProductCoeff N d δx m *
+            latticeFourierProductCoeff N d δy m /
+            latticeFourierProductNormSq N d m := hspec
+    _ = ∑ m : Fin d → Fin N,
+          Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
+          latticeFourierProductBasisFun N d m x *
+            latticeFourierProductBasisFun N d m y /
+            latticeFourierProductNormSq N d m := by
+              refine Finset.sum_congr rfl ?_
+              intro m hm
+              rw [hcoeffx m, hcoeffy m]
+
+/-- Spectral formula for an arbitrary heat-kernel entry. -/
+theorem latticeHeatKernel_entry_eq_eigenvalue_average
+    (ha : a ≠ 0) (t : ℝ) (x y : FinLatticeSites d N) :
+    latticeHeatKernelMatrix d N a t x y =
+      ∑ m : Fin d → Fin N,
+        Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
+          latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y /
+          latticeFourierProductNormSq N d m :=
+  latticeHeatKernel_entry_eq_dft_spectral (d := d) (N := N) (a := a) ha t x y
+
 private lemma latticeHeatKernel_diagonal_translation_invariant
     (t : ℝ) (x y : FinLatticeSites d N) :
     latticeHeatKernelMatrix d N a t y y =
@@ -1518,6 +1569,143 @@ private lemma roughWeight_family_sum_eq_average
             rw [canonicalRoughWeight_eq_integral_Icc
               (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT m]
 
+theorem heatKernel_diagonal_mass_weighted_eq_eigenvalue_average
+    (ha : 0 < a) (mass t : ℝ) (x : FinLatticeSites d N) :
+    Real.exp (-t * mass ^ 2) * latticeHeatKernelMatrix d N a t x x =
+      (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+        ∑ m : Fin d → Fin N,
+          Real.exp (-t * canonicalEigenvalue d N a mass m) := by
+  have ha' : a ≠ 0 := ne_of_gt ha
+  calc
+    Real.exp (-t * mass ^ 2) * latticeHeatKernelMatrix d N a t x x
+      = Real.exp (-t * mass ^ 2) *
+          ((1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+            ∑ m : Fin d → Fin N,
+              Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) := by
+                rw [latticeHeatKernel_diagonal_eq_average
+                  (d := d) (N := N) (a := a) ha' t x]
+    _ = (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+          ∑ m : Fin d → Fin N,
+            Real.exp (-t * mass ^ 2) *
+              Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) := by
+                calc
+                  Real.exp (-t * mass ^ 2) *
+                      ((1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+                        ∑ m : Fin d → Fin N,
+                          Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)))
+                    = (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+                        (Real.exp (-t * mass ^ 2) *
+                          ∑ m : Fin d → Fin N,
+                            Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) := by
+                              ring
+                  _ = (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+                        ∑ m : Fin d → Fin N,
+                          Real.exp (-t * mass ^ 2) *
+                            Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) := by
+                              rw [Finset.mul_sum]
+    _ = (1 / Fintype.card (FinLatticeSites d N) : ℝ) *
+          ∑ m : Fin d → Fin N,
+            Real.exp (-t * canonicalEigenvalue d N a mass m) := by
+                congr 1
+                refine Finset.sum_congr rfl ?_
+                intro m hm
+                unfold canonicalEigenvalue
+                rw [← Real.exp_add]
+                congr 1
+                ring
+
+private lemma latticeFourierProductBasisFun_zero
+    (x : FinLatticeSites d N) :
+    latticeFourierProductBasisFun N d (0 : Fin d → Fin N) x =
+      (1 / Real.sqrt (N : ℝ)) ^ d := by
+  simp [latticeFourierProductBasisFun, latticeFourierBasisFun]
+
+theorem heatKernel_row_sum_eq_one
+    (ha : 0 < a) (t : ℝ) (x : FinLatticeSites d N) :
+    ∑ y : FinLatticeSites d N, latticeHeatKernelMatrix d N a t x y = 1 := by
+  let c : ℝ := (1 / Real.sqrt (N : ℝ)) ^ d
+  have hc_pos : 0 < c := by
+    have hN_pos : 0 < (N : ℝ) := Nat.cast_pos.mpr (NeZero.pos N)
+    dsimp [c]
+    positivity
+  have hconst :
+      ∀ y : FinLatticeSites d N,
+        latticeFourierProductBasisFun N d (0 : Fin d → Fin N) y = c := by
+    intro y
+    simp [c, latticeFourierProductBasisFun_zero]
+  have hzero_mode :
+      (latticeHeatKernelMatrix d N a t).mulVec
+          (latticeFourierProductBasisFun N d (0 : Fin d → Fin N)) =
+        latticeFourierProductBasisFun N d (0 : Fin d → Fin N) := by
+    have ha' : a ≠ 0 := ne_of_gt ha
+    have hspec :
+        (latticeHeatKernelMatrix d N a t).mulVec
+            (latticeFourierProductBasisFun N d (0 : Fin d → Fin N)) =
+          Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a ((0 : Fin d → Fin N) i)) •
+            latticeFourierProductBasisFun N d (0 : Fin d → Fin N) := by
+      apply Matrix.IsHermitian.mulVec_exp_of_eigenvector
+        (hM := negLaplacianMatrix_isHermitian d N a) (t := t)
+      ext z
+      rw [negLaplacianMatrix]
+      rw [← massOperator_eq_matrix_mulVec (d := d) (N := N) (a := a) (mass := 0)
+        (f := latticeFourierProductBasisFun N d (0 : Fin d → Fin N)) z]
+      simpa using
+        (massOperator_product_eigenvector_family (N := N) d a 0 ha'
+          (0 : Fin d → Fin N) z)
+    simpa [latticeEigenvalue1d_zero] using hspec
+  have hx := congr_fun hzero_mode x
+  rw [Matrix.mulVec, dotProduct] at hx
+  have hsum :
+      ∑ y : FinLatticeSites d N,
+          latticeHeatKernelMatrix d N a t x y *
+            latticeFourierProductBasisFun N d (0 : Fin d → Fin N) y =
+        c * ∑ y : FinLatticeSites d N, latticeHeatKernelMatrix d N a t x y := by
+    simp_rw [hconst]
+    calc
+      ∑ y : FinLatticeSites d N, latticeHeatKernelMatrix d N a t x y * c
+        = ∑ y : FinLatticeSites d N, c * latticeHeatKernelMatrix d N a t x y := by
+            refine Finset.sum_congr rfl ?_
+            intro y hy
+            ring
+      _ = c * ∑ y : FinLatticeSites d N, latticeHeatKernelMatrix d N a t x y := by
+            rw [Finset.mul_sum]
+  rw [hconst x, hsum] at hx
+  have hx' : c * ∑ y : FinLatticeSites d N, latticeHeatKernelMatrix d N a t x y = c * 1 := by
+    simpa using hx
+  exact mul_left_cancel₀ (ne_of_gt hc_pos) hx'
+
+theorem heatKernel_row_pairing_eq_diagonal
+    (a s t : ℝ) (x : FinLatticeSites d N) :
+    ∑ y : FinLatticeSites d N,
+      latticeHeatKernelMatrix d N a s x y *
+        latticeHeatKernelMatrix d N a t x y =
+      latticeHeatKernelMatrix d N a (s + t) x x := by
+  have hsymm :
+      ∀ y : FinLatticeSites d N,
+        latticeHeatKernelMatrix d N a t x y =
+          latticeHeatKernelMatrix d N a t y x := by
+    intro y
+    have hT :
+        Matrix.transpose (latticeHeatKernelMatrix d N a t) = latticeHeatKernelMatrix d N a t := by
+      rw [← Matrix.conjTranspose_eq_transpose_of_trivial]
+      exact (latticeHeatKernelMatrix_isHermitian d N a t).eq
+    have hentry := congr_fun (congr_fun hT y) x
+    simpa [Matrix.transpose_apply] using hentry
+  calc
+    ∑ y : FinLatticeSites d N,
+        latticeHeatKernelMatrix d N a s x y *
+          latticeHeatKernelMatrix d N a t x y
+      = ∑ y : FinLatticeSites d N,
+          latticeHeatKernelMatrix d N a s x y *
+            latticeHeatKernelMatrix d N a t y x := by
+              refine Finset.sum_congr rfl ?_
+              intro y hy
+              rw [hsymm y]
+    _ = (latticeHeatKernelMatrix d N a s * latticeHeatKernelMatrix d N a t) x x := by
+          simp [Matrix.mul_apply]
+    _ = latticeHeatKernelMatrix d N a (s + t) x x := by
+          rw [← latticeHeatKernelMatrix_semigroup (d := d) (N := N) a s t]
+
 private lemma smoothWickConstant_eq_family_average
     (T : ℝ) :
     smoothWickConstant d N a mass T =
@@ -1646,6 +1834,328 @@ theorem canonicalRoughFieldFunction_covariance_eq
   unfold canonicalRoughCovariance
   exact canonicalRoughFieldFunction_self_moment
     (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y
+
+theorem canonicalRoughCovariance_eq_integral_Icc_heatKernel
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x y : FinLatticeSites d N) :
+    canonicalRoughCovariance d N a mass T x y =
+      (a ^ d : ℝ)⁻¹ *
+        ∫ t in Set.Icc 0 T,
+          Real.exp (-t * mass ^ 2) *
+            latticeHeatKernelMatrix d N a t x y := by
+  have ha' : a ≠ 0 := ne_of_gt ha
+  let c : (Fin d → Fin N) → ℝ := fun m =>
+    latticeFourierProductBasisFun N d m x *
+      latticeFourierProductBasisFun N d m y /
+      latticeFourierProductNormSq N d m
+  have h_int_coeff :
+      ∀ m : Fin d → Fin N,
+        IntegrableOn (fun t : ℝ =>
+          (Real.exp (-t * mass ^ 2) *
+            Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m) (Set.Icc 0 T) := by
+    intro m
+    have hcont : Continuous (fun t : ℝ =>
+      (Real.exp (-t * mass ^ 2) *
+        Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m) := by
+      fun_prop
+    exact hcont.integrableOn_Icc
+  have h_int_base :
+      ∀ m : Fin d → Fin N,
+        IntegrableOn (fun t : ℝ =>
+          Real.exp (-t * mass ^ 2) *
+            Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) (Set.Icc 0 T) := by
+    intro m
+    have hcont : Continuous (fun t : ℝ =>
+      Real.exp (-t * mass ^ 2) *
+        Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) := by
+      fun_prop
+    exact hcont.integrableOn_Icc
+  have hstart :
+      ∑ m : Fin d → Fin N,
+        canonicalRoughWeight d N a mass T m *
+          latticeFourierProductBasisFun N d m x *
+          latticeFourierProductBasisFun N d m y /
+          latticeFourierProductNormSq N d m =
+      ∑ m : Fin d → Fin N, canonicalRoughWeight d N a mass T m * c m := by
+        refine Finset.sum_congr rfl ?_
+        intro m hm
+        simp [c]
+        ring
+  unfold canonicalRoughCovariance
+  rw [hstart]
+  calc
+    (a ^ d : ℝ)⁻¹ * ∑ m : Fin d → Fin N, canonicalRoughWeight d N a mass T m * c m
+      = (a ^ d : ℝ)⁻¹ *
+          ∑ m : Fin d → Fin N,
+            ∫ t in Set.Icc 0 T,
+              (Real.exp (-t * mass ^ 2) *
+                Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m := by
+              congr 1
+              refine Finset.sum_congr rfl ?_
+              intro m hm
+              calc
+                canonicalRoughWeight d N a mass T m * c m
+                  = c m * canonicalRoughWeight d N a mass T m := by ring
+                _ = c m *
+                    ∫ t in Set.Icc 0 T,
+                      Real.exp (-t * mass ^ 2) *
+                        Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) := by
+                          rw [canonicalRoughWeight_eq_integral_Icc
+                            (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT m]
+                _ = ∫ t in Set.Icc 0 T,
+                    c m *
+                      (Real.exp (-t * mass ^ 2) *
+                        Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) := by
+                          rw [integral_const_mul]
+                _ = ∫ t in Set.Icc 0 T,
+                    (Real.exp (-t * mass ^ 2) *
+                      Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m := by
+                          apply integral_congr_ae
+                          filter_upwards with t
+                          ring
+    _ = (a ^ d : ℝ)⁻¹ *
+          ∫ t in Set.Icc 0 T,
+            ∑ m : Fin d → Fin N,
+              (Real.exp (-t * mass ^ 2) *
+                Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m := by
+                congr 1
+                symm
+                rw [integral_finset_sum]
+                intro m hm
+                exact h_int_coeff m
+    _ = (a ^ d : ℝ)⁻¹ *
+          ∫ t in Set.Icc 0 T,
+            Real.exp (-t * mass ^ 2) *
+              ∑ m : Fin d → Fin N,
+                Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) * c m := by
+                  congr 1
+                  apply integral_congr_ae
+                  filter_upwards with t
+                  symm
+                  rw [Finset.mul_sum]
+                  refine Finset.sum_congr rfl ?_
+                  intro m hm
+                  ring
+    _ = (a ^ d : ℝ)⁻¹ *
+          ∫ t in Set.Icc 0 T,
+            Real.exp (-t * mass ^ 2) * latticeHeatKernelMatrix d N a t x y := by
+                  congr 1
+                  apply integral_congr_ae
+                  filter_upwards with t
+                  calc
+                    Real.exp (-t * mass ^ 2) *
+                        ∑ m : Fin d → Fin N,
+                          Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) * c m
+                      = Real.exp (-t * mass ^ 2) *
+                          ∑ m : Fin d → Fin N,
+                            Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
+                              (latticeFourierProductBasisFun N d m x *
+                                latticeFourierProductBasisFun N d m y /
+                                latticeFourierProductNormSq N d m) := by
+                                  simpa [c]
+                    _ = Real.exp (-t * mass ^ 2) *
+                          ∑ m : Fin d → Fin N,
+                            Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
+                              latticeFourierProductBasisFun N d m x *
+                              latticeFourierProductBasisFun N d m y /
+                              latticeFourierProductNormSq N d m := by
+                                congr 1
+                                refine Finset.sum_congr rfl ?_
+                                intro m hm
+                                ring
+                    _ = Real.exp (-t * mass ^ 2) * latticeHeatKernelMatrix d N a t x y := by
+                          rw [latticeHeatKernel_entry_eq_dft_spectral
+                            (d := d) (N := N) (a := a) ha' t x y]
+
+theorem canonicalRoughCovariance_sq_row_sum_eq_double_integral
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x : FinLatticeSites d N) :
+    a ^ d * ∑ y : FinLatticeSites d N,
+      (canonicalRoughCovariance d N a mass T x y) ^ 2 =
+      (a ^ d : ℝ)⁻¹ *
+        ∫ s in Set.Icc 0 T,
+          ∫ t in Set.Icc 0 T,
+            Real.exp (-(s + t) * mass ^ 2) *
+              latticeHeatKernelMatrix d N a (s + t) x x := by
+  let I : Set ℝ := Set.Icc 0 T
+  let F : FinLatticeSites d N → ℝ → ℝ := fun y s =>
+    Real.exp (-s * mass ^ 2) * latticeHeatKernelMatrix d N a s x y
+  have ha_d_pos : (0 : ℝ) < a ^ d := pow_pos ha d
+  have hCov :
+      ∀ y : FinLatticeSites d N,
+        canonicalRoughCovariance d N a mass T x y =
+          (a ^ d : ℝ)⁻¹ * ∫ s in I, F y s := by
+    intro y
+    simpa [I, F] using canonicalRoughCovariance_eq_integral_Icc_heatKernel
+      (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x y
+  have hprod :
+      ∀ y : FinLatticeSites d N,
+        (∫ s in I, F y s) * ∫ t in I, F y t =
+          ∫ p in I ×ˢ I, F y p.1 * F y p.2 ∂(volume.prod volume) := by
+    intro y
+    symm
+    simpa [I, F] using
+      (MeasureTheory.setIntegral_prod_mul (μ := volume) (ν := volume) (f := F y) (g := F y) I I)
+  have hF_int :
+      ∀ y : FinLatticeSites d N,
+        Integrable (F y) (volume.restrict I) := by
+    intro y
+    have ha' : a ≠ 0 := ne_of_gt ha
+    let c : (Fin d → Fin N) → ℝ := fun m =>
+      latticeFourierProductBasisFun N d m x *
+        latticeFourierProductBasisFun N d m y /
+        latticeFourierProductNormSq N d m
+    have h_int_coeff :
+        ∀ m : Fin d → Fin N,
+          Integrable
+            (fun t : ℝ =>
+              (Real.exp (-t * mass ^ 2) *
+                Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m)
+            (volume.restrict I) := by
+      intro m
+      have hcont : Continuous (fun t : ℝ =>
+        (Real.exp (-t * mass ^ 2) *
+          Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m) := by
+        fun_prop
+      simpa [I] using hcont.integrableOn_Icc
+    have hsum :
+        (fun t : ℝ => F y t) =
+          fun t : ℝ =>
+            ∑ m : Fin d → Fin N,
+              (Real.exp (-t * mass ^ 2) *
+                Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m := by
+      funext t
+      dsimp [F]
+      calc
+        Real.exp (-t * mass ^ 2) * latticeHeatKernelMatrix d N a t x y
+          = Real.exp (-t * mass ^ 2) *
+              ∑ m : Fin d → Fin N,
+                Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
+                  latticeFourierProductBasisFun N d m x *
+                  latticeFourierProductBasisFun N d m y /
+                  latticeFourierProductNormSq N d m := by
+                    rw [latticeHeatKernel_entry_eq_dft_spectral
+                      (d := d) (N := N) (a := a) ha' t x y]
+        _ = Real.exp (-t * mass ^ 2) *
+              ∑ m : Fin d → Fin N,
+                Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) * c m := by
+                    congr 1
+                    refine Finset.sum_congr rfl ?_
+                    intro m hm
+                    simp [c]
+                    ring
+        _ = ∑ m : Fin d → Fin N,
+              (Real.exp (-t * mass ^ 2) *
+                Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m := by
+                    rw [Finset.mul_sum]
+                    refine Finset.sum_congr rfl ?_
+                    intro m hm
+                    ring
+    have hsum_int :
+        Integrable
+          (fun t : ℝ =>
+            ∑ m : Fin d → Fin N,
+              (Real.exp (-t * mass ^ 2) *
+                Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i))) * c m)
+          (volume.restrict I) :=
+      integrable_finset_sum _ (fun m _ => h_int_coeff m)
+    simpa [hsum] using hsum_int
+  have hprod_int :
+      ∀ y : FinLatticeSites d N,
+        Integrable
+          (fun p : ℝ × ℝ => F y p.1 * F y p.2)
+          ((volume.restrict I).prod (volume.restrict I)) := by
+    intro y
+    exact (hF_int y).mul_prod (hF_int y)
+  have hsum_int :
+      Integrable
+        (fun p : ℝ × ℝ => ∑ y : FinLatticeSites d N, F y p.1 * F y p.2)
+        ((volume.restrict I).prod (volume.restrict I)) := by
+    exact integrable_finset_sum _ (fun y _ => hprod_int y)
+  have hcollapse :
+      (fun p : ℝ × ℝ => ∑ y : FinLatticeSites d N, F y p.1 * F y p.2)
+        =ᵐ[((volume.restrict I).prod (volume.restrict I))]
+      (fun p : ℝ × ℝ =>
+        Real.exp (-(p.1 + p.2) * mass ^ 2) *
+          latticeHeatKernelMatrix d N a (p.1 + p.2) x x) := by
+    filter_upwards [] with p
+    calc
+      ∑ y : FinLatticeSites d N, F y p.1 * F y p.2
+        = ∑ y : FinLatticeSites d N,
+            (Real.exp (-p.1 * mass ^ 2) * Real.exp (-p.2 * mass ^ 2)) *
+              (latticeHeatKernelMatrix d N a p.1 x y *
+                latticeHeatKernelMatrix d N a p.2 x y) := by
+                  refine Finset.sum_congr rfl ?_
+                  intro y hy
+                  simp [F]
+                  ring
+      _ = (Real.exp (-p.1 * mass ^ 2) * Real.exp (-p.2 * mass ^ 2)) *
+            ∑ y : FinLatticeSites d N,
+              latticeHeatKernelMatrix d N a p.1 x y *
+                latticeHeatKernelMatrix d N a p.2 x y := by
+                  rw [Finset.mul_sum]
+      _ = (Real.exp (-p.1 * mass ^ 2) * Real.exp (-p.2 * mass ^ 2)) *
+            latticeHeatKernelMatrix d N a (p.1 + p.2) x x := by
+                  rw [heatKernel_row_pairing_eq_diagonal
+                    (d := d) (N := N) a p.1 p.2 x]
+      _ = Real.exp (-(p.1 + p.2) * mass ^ 2) *
+            latticeHeatKernelMatrix d N a (p.1 + p.2) x x := by
+                  rw [← Real.exp_add]
+                  congr 1
+                  ring_nf
+  have hdiag_int :
+      Integrable
+        (fun p : ℝ × ℝ =>
+          Real.exp (-(p.1 + p.2) * mass ^ 2) *
+            latticeHeatKernelMatrix d N a (p.1 + p.2) x x)
+        ((volume.restrict I).prod (volume.restrict I)) := by
+    exact hsum_int.congr hcollapse
+  calc
+    a ^ d * ∑ y : FinLatticeSites d N,
+        (canonicalRoughCovariance d N a mass T x y) ^ 2
+      = ∑ y : FinLatticeSites d N,
+          a ^ d * (canonicalRoughCovariance d N a mass T x y) ^ 2 := by
+            rw [Finset.mul_sum]
+    _ = ∑ y : FinLatticeSites d N,
+          (a ^ d : ℝ)⁻¹ * ((∫ s in I, F y s) * ∫ t in I, F y t) := by
+            refine Finset.sum_congr rfl ?_
+            intro y hy
+            rw [hCov y]
+            field_simp [ne_of_gt ha_d_pos]
+    _ = (a ^ d : ℝ)⁻¹ *
+          ∑ y : FinLatticeSites d N, ((∫ s in I, F y s) * ∫ t in I, F y t) := by
+            rw [← Finset.mul_sum]
+    _ = (a ^ d : ℝ)⁻¹ *
+          ∑ y : FinLatticeSites d N,
+            ∫ p in I ×ˢ I, F y p.1 * F y p.2 ∂(volume.prod volume) := by
+              congr 1
+              refine Finset.sum_congr rfl ?_
+              intro y hy
+              rw [hprod y]
+    _ = (a ^ d : ℝ)⁻¹ *
+          ∫ p,
+            ∑ y : FinLatticeSites d N, F y p.1 * F y p.2
+          ∂((volume.restrict I).prod (volume.restrict I)) := by
+              congr 1
+              rw [← Measure.prod_restrict I I]
+              symm
+              rw [MeasureTheory.integral_finset_sum]
+              intro y hy
+              exact hprod_int y
+    _ = (a ^ d : ℝ)⁻¹ *
+          ∫ p,
+            Real.exp (-(p.1 + p.2) * mass ^ 2) *
+              latticeHeatKernelMatrix d N a (p.1 + p.2) x x
+          ∂((volume.restrict I).prod (volume.restrict I)) := by
+              congr 1
+              exact MeasureTheory.integral_congr_ae hcollapse
+    _ = (a ^ d : ℝ)⁻¹ *
+          ∫ s in I,
+            ∫ t in I,
+              Real.exp (-(s + t) * mass ^ 2) *
+                latticeHeatKernelMatrix d N a (s + t) x x := by
+                  congr 1
+                  exact MeasureTheory.integral_prod _ hdiag_int
 
 private lemma integrable_pow_gaussianReal_one (k : ℕ) :
     MeasureTheory.Integrable (fun x : ℝ => x ^ k)
@@ -1985,7 +2495,7 @@ private lemma canonicalSmoothCovariance_eq_sum_gamma_mul_gamma
                       latticeFourierProductNormSq N d m) := by
                         ring
 
-private lemma canonicalRoughCovariance_eq_sum_gamma_mul_gamma
+theorem canonicalRoughCovariance_eq_sum_gamma_mul_gamma
     (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
     (x y : FinLatticeSites d N) :
     canonicalRoughCovariance d N a mass T x y =
