@@ -26,6 +26,77 @@ axioms (`gross_lsi_implies_hypercontractive` + 3 GaussianFin BE axioms).
 After Workstreams 2.5 + N1.b + N1.c + Route A all land, the closure becomes
 the Mathlib trio only.
 
+> ⚠️ The closure surface above is **conditional on a pin-chain merge** —
+> see "Branch chain & pin state" below.
+
+---
+
+## ⚠️ Branch chain & pin state (CRITICAL — audit-as-of 2026-05-16)
+
+This session's work is spread across **feature branches in all three repos**.
+pphi2's pins still point at each upstream's `main`, which **predates the
+Workstream C and markov-semigroups Phase 2 work**. The current
+`#print axioms` only shows `[trio + polynomial_chaos_exp_moment_bridge]`
+because the bridge is still an axiom — opaque, so its (would-be)
+transitive dependencies don't surface. When Workstream B converts the
+bridge to a theorem, the closure will reflect **the pinned upstream**,
+not the as-built feature-branch state.
+
+| Repo | Active branch | Has the new work? | pphi2's current pin | Pin currency |
+|---|---|---|---|---|
+| **pphi2** | `phase-b-discharge` | ✅ Workstream A + B-transport + master plan | — (self) | — |
+| **gaussian-hilbert** | `phase-3-smoke-test` | ✅ Workstream C (E.1, E.2, axiom retirement, doc refresh) | `main` (`75123d02`) | **pre-Workstream-C** |
+| **markov-semigroups** | `feat/lp-carrier-stdGaussianFin-dirichletmarkov` | ✅ Phase 2 bundle | `main` (`1bfe3868`), inherited via gaussian-hilbert | **pre-Phase-2** |
+
+### Why the build still works
+
+The bridge axiom `polynomial_chaos_exp_moment_bridge` is opaque, so
+`#print axioms` doesn't (yet) see the gaussian-hilbert /
+markov-semigroups chain. Once Workstream B discharges the bridge,
+`#print axioms` will surface whatever's behind it — and against the
+**current** pphi2 pins, that surface includes
+`ouSemigroupAct_eLpNorm_hypercontractive` as an axiom (pre-Workstream-C
+state in gaussian-hilbert main), **not** the post-discharge closure
+we've been planning around.
+
+### Required merge order (do this before Workstream B's final
+`#print axioms` verification)
+
+1. **markov-semigroups**: merge `feat/lp-carrier-stdGaussianFin-dirichletmarkov`
+   → main. 2 commits ahead of main (`6782dc7`, `2e9121f`). PR-ready,
+   builds clean.
+2. **gaussian-hilbert**: merge `phase-3-smoke-test` → main. 6 commits
+   ahead of main (`0f0c5eb`, `a1fc35e`, `fbb6701`, `e1bde62`, `029156d`,
+   `3a789d5`). PR-ready, builds clean. Includes a pin bump to the now-current
+   markov-semigroups main from step 1.
+3. **pphi2**: `lake update` to bump both gaussian-hilbert and
+   markov-semigroups pins to their new mains. Confirm `lake build` clean.
+   Then merge `phase-b-discharge` → main (after Workstream B finishes).
+
+After these three merges, pphi2 main consumes the actually-discharged
+gaussian-hilbert + markov-semigroups Phase 2 state. Workstream B's
+final axiom-closure verification will then produce the planned
+"`[trio + 4 inherited markov-semigroups axioms]`" closure.
+
+### Workstream B is **not blocked** by this
+
+Workstream B can continue development on `phase-b-discharge` against the
+current pins. Only the **final axiom-closure check** at end-of-Workstream-B
+needs the pin bumps to have happened — and we can do step 1 and step 2 of
+the merge order in parallel with Workstream B's development. **Recommended:
+land steps 1 + 2 now** so they're not in the way when Workstream B finishes.
+
+### Tracking sister-repo branch state
+
+A quick three-line audit:
+```sh
+git -C /Users/mdouglas/Documents/GitHub/pphi2          log origin/main..phase-b-discharge --oneline | wc -l
+git -C /Users/mdouglas/Documents/GitHub/gaussian-hilbert log origin/main..phase-3-smoke-test --oneline | wc -l
+git -C /tmp/markov-semigroups-phase2 log origin/main..feat/lp-carrier-stdGaussianFin-dirichletmarkov --oneline | wc -l
+```
+shows how many commits each branch is ahead of its main; "0" means the
+chain is fully merged.
+
 ---
 
 ## Workstreams at a glance
