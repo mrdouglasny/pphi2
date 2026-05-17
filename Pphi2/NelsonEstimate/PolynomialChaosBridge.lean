@@ -68,6 +68,7 @@ import Pphi2.WickOrdering.WickPolynomial
 import Pphi2.InteractingMeasure.LatticeMeasure
 import Pphi2.NelsonEstimate.RoughErrorBound
 import Pphi2.NelsonEstimate.IntegrabilityHelpers
+import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
 
 noncomputable section
 
@@ -160,6 +161,20 @@ private lemma one_add_abs_log_dynamicalCutoff_eq_sqrt
   rw [abs_of_nonpos hnonpos]
   ring
 
+private lemma sqrt_exp_sub (s : ℝ) :
+    Real.sqrt (Real.exp (1 - s)) = Real.exp ((1 - s) / 2) := by
+  rw [Real.sqrt_eq_rpow]
+  rw [show (Real.exp (1 - s)) ^ (1 / 2 : ℝ) =
+      Real.exp (((1 - s) : ℝ) * (1 / 2 : ℝ)) by
+    rw [← Real.exp_mul]]
+  ring_nf
+
+private lemma sqrt_pow_three {s : ℝ} (hs : 0 ≤ s) :
+    Real.sqrt (s ^ 3) = s ^ (3 / 2 : ℝ) := by
+  rw [Real.sqrt_eq_rpow]
+  rw [← Real.rpow_natCast, ← Real.rpow_mul hs]
+  norm_num
+
 /-- Explicit canonical-joint rough tail at the dynamical cutoff scale,
 specialized to the pure quartic case. -/
 theorem canonicalRoughError_cutoff_tail_quartic_uniform
@@ -194,11 +209,379 @@ theorem canonicalRoughError_cutoff_tail_quartic_uniform
 private def quarticPiecewiseTail (K C : ℝ) (M : ℝ) : ENNReal :=
   if M < 2 * C then 1 else quarticCutoffTail K C M
 
+private lemma quarticPiecewiseTail_le_two
+    (K C M : ℝ) (hM_nonneg : 0 ≤ M) :
+    quarticPiecewiseTail K C M ≤ 2 := by
+  unfold quarticPiecewiseTail
+  split_ifs with hM
+  · norm_num
+  · exact quarticCutoffTail_le_two K C M hM_nonneg
+
+private def quarticDecayConstant (K C : ℝ) : ℝ :=
+  Pphi2.ChaosTailBridge.chaosTailConstant 4 *
+    Real.sqrt (C / (2 * Real.sqrt K * Real.exp (1 / 2)))
+
+private lemma quarticDecayConstant_pos
+    {K C : ℝ} (hK_pos : 0 < K) (hC_pos : 0 < C) :
+    0 < quarticDecayConstant K C := by
+  unfold quarticDecayConstant
+  have hchaos :
+      0 < Pphi2.ChaosTailBridge.chaosTailConstant 4 :=
+    Pphi2.ChaosTailBridge.chaosTailConstant_pos 4 (by norm_num)
+  have hsqrt :
+      0 < Real.sqrt (C / (2 * Real.sqrt K * Real.exp (1 / 2))) := by
+    apply Real.sqrt_pos.2
+    refine div_pos hC_pos ?_
+    positivity
+  exact mul_pos hchaos hsqrt
+
+private lemma quartic_exp_growth_threshold
+    {A B : ℝ} (hA_pos : 0 < A) :
+    ∃ S : ℝ, 1 ≤ S ∧
+      ∀ s : ℝ, S ≤ s → B * s ^ (2 : ℝ) ≤ A * Real.exp (s / 4) := by
+  have h_tendsto :
+      Filter.Tendsto
+        (fun s : ℝ => A * Real.exp (s / 4) / s ^ (2 : ℝ))
+        Filter.atTop Filter.atTop := by
+    have h_base :
+        Filter.Tendsto
+          (fun s : ℝ => (s ^ (2 : ℝ))⁻¹ * Real.exp (s * (1 / 4)))
+          Filter.atTop Filter.atTop := by
+      simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using
+      tendsto_exp_mul_div_rpow_atTop (2 : ℝ) (1 / 4) (by positivity)
+    have h_mul :
+        Filter.Tendsto
+          (fun s : ℝ => A * ((s ^ (2 : ℝ))⁻¹ * Real.exp (s * (1 / 4))))
+          Filter.atTop Filter.atTop :=
+      Tendsto.const_mul_atTop hA_pos h_base
+    simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using h_mul
+  obtain ⟨S₀, hS₀⟩ :=
+    (Filter.mem_atTop_sets.mp <|
+      h_tendsto.eventually_ge_atTop B)
+  let S := max 1 S₀
+  refine ⟨S, le_max_left _ _, ?_⟩
+  intro s hs
+  have hs_ge_one : (1 : ℝ) ≤ s := le_trans (le_max_left _ _) hs
+  have hs_sq_pos : 0 < s ^ (2 : ℝ) := by
+    positivity
+  exact (le_div_iff₀ hs_sq_pos).mp <| hS₀ s (le_trans (le_max_right _ _) hs)
+
 /-- The explicit pure-quartic cutoff tail is layer-cake integrable. -/
-axiom quarticPiecewiseTail_layerCake_lt_top
+theorem quarticPiecewiseTail_layerCake_lt_top
     (K C : ℝ) (hK_pos : 0 < K) (hC_pos : 0 < C) :
     ∫⁻ M in Set.Ioi (0 : ℝ),
-      quarticPiecewiseTail K C M * ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤
+      quarticPiecewiseTail K C M * ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤ := by
+  let A := quarticDecayConstant K C
+  have hA_pos : 0 < A := quarticDecayConstant_pos hK_pos hC_pos
+  obtain ⟨S, hS_ge_one, hS_growth⟩ :=
+    quartic_exp_growth_threshold (A := A) (B := 6 * C + Real.log 4) hA_pos
+  let T₀ : ℝ := 2 * C * S ^ (2 : ℝ)
+  have hT₀_pos : 0 < T₀ := by
+    positivity
+  refine Pphi2.IntegrabilityHelpers.lintegral_layer_cake_lt_top_of_eventual_decay
+    (ψ := quarticPiecewiseTail K C) T₀ hT₀_pos ?_ ?_
+  · have hsmall_le :
+        ∫⁻ t in Set.Ioc (0 : ℝ) T₀,
+          quarticPiecewiseTail K C t * ENNReal.ofReal (2 * Real.exp (2 * t)) ≤
+          ∫⁻ t in Set.Ioc (0 : ℝ) T₀, ENNReal.ofReal (4 * Real.exp (2 * T₀)) := by
+      apply MeasureTheory.setLIntegral_mono' measurableSet_Ioc
+      intro M hM
+      have hM_nonneg : 0 ≤ M := hM.1.le
+      have htail :
+          quarticPiecewiseTail K C M ≤ 2 :=
+        quarticPiecewiseTail_le_two K C M hM_nonneg
+      have hexp :
+          2 * Real.exp (2 * M) ≤ 2 * Real.exp (2 * T₀) := by
+        refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+        apply Real.exp_le_exp.mpr
+        nlinarith [hM.2]
+      calc
+        quarticPiecewiseTail K C M *
+            ENNReal.ofReal (2 * Real.exp (2 * M))
+            ≤ 2 * ENNReal.ofReal (2 * Real.exp (2 * T₀)) := by
+                exact mul_le_mul' htail (ENNReal.ofReal_le_ofReal hexp)
+        _ = ENNReal.ofReal (4 * Real.exp (2 * T₀)) := by
+            calc
+              2 * ENNReal.ofReal (2 * Real.exp (2 * T₀))
+                  = ENNReal.ofReal 2 * ENNReal.ofReal (2 * Real.exp (2 * T₀)) := by
+                      norm_num
+              _ = ENNReal.ofReal (2 * (2 * Real.exp (2 * T₀))) := by
+                    rw [← ENNReal.ofReal_mul]
+                    positivity
+              _ = ENNReal.ofReal (4 * Real.exp (2 * T₀)) := by
+                    congr 1
+                    ring
+    have hsmall_const :
+        ∫⁻ t in Set.Ioc (0 : ℝ) T₀, ENNReal.ofReal (4 * Real.exp (2 * T₀)) < ⊤ := by
+      rw [MeasureTheory.setLIntegral_const]
+      exact ENNReal.mul_lt_top ENNReal.ofReal_lt_top measure_Ioc_lt_top
+    exact lt_of_le_of_lt hsmall_le hsmall_const
+  · intro M hM
+    have hM_gt2C : 2 * C < M := by
+      have hS_nonneg : 0 ≤ S := by linarith
+      have hS_sq_ge_one : (1 : ℝ) ≤ S ^ (2 : ℝ) := by
+        have hS_mul : (1 : ℝ) * 1 ≤ S * S :=
+          mul_le_mul hS_ge_one hS_ge_one (by positivity) hS_nonneg
+        simpa [pow_two] using hS_mul
+      calc
+        2 * C ≤ 2 * C * S ^ (2 : ℝ) := by
+          nlinarith [hC_pos.le, hS_sq_ge_one]
+        _ < M := hM
+    have hM_pos : 0 < M := by linarith
+    have hdiv_pos : 0 < M / (2 * C) := by
+      refine div_pos hM_pos ?_
+      positivity
+    let s : ℝ := Real.sqrt (M / (2 * C))
+    have hs_sq : s ^ (2 : ℝ) = M / (2 * C) := by
+      simp [s, Real.sq_sqrt hdiv_pos.le]
+    have hs_ge : S ≤ s := by
+      have hS_nonneg : 0 ≤ S := by linarith
+      rw [show S = Real.sqrt (S ^ (2 : ℝ)) by
+        simpa using (Real.sqrt_sq hS_nonneg).symm]
+      apply Real.sqrt_le_sqrt
+      have : S ^ (2 : ℝ) ≤ M / (2 * C) := by
+        refine (le_div_iff₀ ?_).mpr ?_
+        · positivity
+        · linarith
+      simpa [hs_sq] using this
+    have hs_ge_one : (1 : ℝ) ≤ s := le_trans hS_ge_one hs_ge
+    have hs_nonneg : 0 ≤ s := by linarith
+    have hT_eq :
+        Pphi2.DynamicalCutoff.dynamicalCutoffScale C M = Real.exp (1 - s) := by
+      simpa [s] using Pphi2.DynamicalCutoff.dynamicalCutoffScale_eq_exp C M hM_gt2C
+    have hlog_eq :
+        1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)| = s := by
+      simpa [s] using
+        one_add_abs_log_dynamicalCutoff_eq_sqrt (C := C) (M := M) hC_pos hM_gt2C
+    have hsqrt_three_le : Real.sqrt (s ^ 3) ≤ s ^ (2 : ℝ) := by
+      have hs2_nonneg : 0 ≤ s ^ (2 : ℝ) := by positivity
+      have hs_le_sq : s ≤ s ^ (2 : ℝ) := by
+        have hs_mul := mul_le_mul_of_nonneg_right hs_ge_one hs_nonneg
+        simpa [pow_two, one_mul] using hs_mul
+      have hsq :
+          s ^ 3 ≤ (s ^ (2 : ℝ)) ^ 2 := by
+        have hmul := mul_le_mul_of_nonneg_right hs_le_sq hs2_nonneg
+        simpa [pow_two, pow_succ, mul_assoc] using hmul
+      have hsqrt := Real.sqrt_le_sqrt hsq
+      simpa [Real.sqrt_sq_eq_abs, abs_of_nonneg hs2_nonneg] using hsqrt
+    have hden_eq :
+        2 *
+            Real.sqrt
+              (K * Pphi2.DynamicalCutoff.dynamicalCutoffScale C M *
+                (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3) =
+          2 * Real.sqrt K * Real.exp ((1 - s) / 2) * Real.sqrt (s ^ 3) := by
+      rw [hT_eq]
+      have hlog_exp : 1 + |Real.log (Real.exp (1 - s))| = s := by
+        rw [Real.log_exp]
+        have hnonpos : 1 - s ≤ 0 := by linarith
+        rw [abs_of_nonpos hnonpos]
+        ring
+      rw [hlog_exp]
+      rw [show K * Real.exp (1 - s) * s ^ 3 = K * (Real.exp (1 - s) * s ^ 3) by ring]
+      rw [Real.sqrt_mul (le_of_lt hK_pos)]
+      rw [show Real.sqrt (Real.exp (1 - s) * s ^ 3) =
+          Real.exp ((1 - s) / 2) * Real.sqrt (s ^ 3) by
+        rw [Real.sqrt_mul (by positivity)]
+        rw [sqrt_exp_sub]]
+      ring
+    have hden_le :
+        2 *
+            Real.sqrt
+              (K * Pphi2.DynamicalCutoff.dynamicalCutoffScale C M *
+                (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3) ≤
+          2 * Real.sqrt K * Real.exp ((1 - s) / 2) * s ^ (2 : ℝ) := by
+      rw [hden_eq]
+      have hfac : 0 ≤ 2 * Real.sqrt K * Real.exp ((1 - s) / 2) := by
+        positivity
+      nlinarith
+    have hM_half_eq : M / 2 = C * s ^ (2 : ℝ) := by
+      rw [hs_sq]
+      field_simp [hC_pos.ne']
+    have hratio_eq :
+        (M / 2) / (2 * Real.sqrt K * Real.exp ((1 - s) / 2) * s ^ (2 : ℝ)) =
+          C / (2 * Real.sqrt K * Real.exp ((1 - s) / 2)) := by
+      rw [hM_half_eq]
+      have hden : 2 * Real.sqrt K * Real.exp ((1 - s) / 2) ≠ 0 := by
+        positivity
+      have hs_sq_ne : s ^ (2 : ℝ) ≠ 0 := by
+        rw [hs_sq]
+        positivity
+      field_simp [hden, hs_sq_ne]
+    have hratio_lower :
+        C / (2 * Real.sqrt K * Real.exp ((1 - s) / 2)) ≤
+          (M / 2) /
+            (2 *
+              Real.sqrt
+                (K * Pphi2.DynamicalCutoff.dynamicalCutoffScale C M *
+                  (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3)) := by
+      calc
+        C / (2 * Real.sqrt K * Real.exp ((1 - s) / 2))
+            =
+              (M / 2) / (2 * Real.sqrt K * Real.exp ((1 - s) / 2) * s ^ (2 : ℝ)) :=
+          hratio_eq.symm
+        _ ≤
+            (M / 2) /
+              (2 *
+                Real.sqrt
+                  (K * Pphi2.DynamicalCutoff.dynamicalCutoffScale C M *
+                    (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3)) := by
+            have hden_pos :
+                0 <
+                  2 *
+                    Real.sqrt
+                      (K * Pphi2.DynamicalCutoff.dynamicalCutoffScale C M *
+                        (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3) := by
+              have hpow_pos :
+                  0 <
+                    (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3 := by
+                positivity
+              have hinner_pos :
+                  0 <
+                    K * Pphi2.DynamicalCutoff.dynamicalCutoffScale C M *
+                      (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3 := by
+                refine mul_pos ?_ hpow_pos
+                exact mul_pos hK_pos (Pphi2.DynamicalCutoff.dynamicalCutoffScale_pos C M)
+              refine mul_pos (by positivity) (Real.sqrt_pos.2 ?_)
+              exact hinner_pos
+            have hM_half_nonneg : 0 ≤ M / 2 := by linarith
+            refine div_le_div_of_nonneg_left hM_half_nonneg hden_pos hden_le
+    have hsqrt_rewrite :
+        Real.sqrt (C / (2 * Real.sqrt K * Real.exp ((1 - s) / 2))) =
+          Real.sqrt (C / (2 * Real.sqrt K * Real.exp (1 / 2))) * Real.exp (s / 4) := by
+      have hsplit :
+          C / (2 * Real.sqrt K * Real.exp ((1 - s) / 2)) =
+            (C / (2 * Real.sqrt K * Real.exp (1 / 2))) * Real.exp (s / 2) := by
+        have hden1 : 2 * Real.sqrt K * Real.exp ((1 - s) / 2) ≠ 0 := by positivity
+        have hden2 : 2 * Real.sqrt K * Real.exp (1 / 2) ≠ 0 := by positivity
+        rw [show Real.exp ((1 - s) / 2) = Real.exp (1 / 2) * Real.exp (-(s / 2)) by
+          rw [show ((1 - s) / 2 : ℝ) = (1 / 2 : ℝ) + (-(s / 2)) by ring]
+          rw [Real.exp_add]]
+        field_simp [hden1, hden2]
+        symm
+        calc
+          Real.exp (-(s / 2)) * Real.exp (s / 2) =
+              Real.exp (-(s / 2) + s / 2) := by
+                rw [← Real.exp_add]
+          _ = 1 := by
+                ring_nf
+                rw [Real.exp_zero]
+      rw [hsplit, Real.sqrt_mul (by
+        refine div_nonneg hC_pos.le ?_
+        positivity)]
+      rw [show Real.sqrt (Real.exp (s / 2)) = Real.exp (s / 4) by
+        rw [Real.sqrt_eq_rpow]
+        rw [show (Real.exp (s / 2)) ^ (1 / 2 : ℝ) =
+            Real.exp ((s / 2 : ℝ) * (1 / 2 : ℝ)) by
+          rw [← Real.exp_mul]]
+        ring_nf]
+    have hsqrt_lower :
+        Real.sqrt (C / (2 * Real.sqrt K * Real.exp ((1 - s) / 2))) ≤
+          Real.sqrt
+            ((M / 2) /
+              (2 *
+                Real.sqrt
+                  (K * Pphi2.DynamicalCutoff.dynamicalCutoffScale C M *
+                    (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3))) := by
+      exact Real.sqrt_le_sqrt hratio_lower
+    have hchaos :
+        quarticDecayConstant K C * Real.exp (s / 4) ≤
+          Pphi2.ChaosTailBridge.chaosTailConstant 4 *
+            Real.sqrt
+              ((M / 2) /
+                (2 *
+                  Real.sqrt
+                    (K * Pphi2.DynamicalCutoff.dynamicalCutoffScale C M *
+                      (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3))) := by
+      have hleft_eq :
+          quarticDecayConstant K C * Real.exp (s / 4) =
+            Pphi2.ChaosTailBridge.chaosTailConstant 4 *
+              Real.sqrt (C / (2 * Real.sqrt K * Real.exp ((1 - s) / 2))) := by
+        unfold quarticDecayConstant
+        rw [mul_assoc, ← hsqrt_rewrite]
+      rw [hleft_eq]
+      exact mul_le_mul_of_nonneg_left hsqrt_lower
+        (le_of_lt (Pphi2.ChaosTailBridge.chaosTailConstant_pos 4 (by norm_num)))
+    have htail_bound :
+        quarticCutoffTail K C M ≤
+          ENNReal.ofReal
+            (2 * Real.exp (-(quarticDecayConstant K C * Real.exp (s / 4)))) := by
+      unfold quarticCutoffTail
+      apply ENNReal.ofReal_le_ofReal
+      refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+      apply Real.exp_le_exp.mpr
+      have hchaos' :
+          quarticDecayConstant K C * Real.exp (s / 4) ≤
+            Pphi2.ChaosTailBridge.chaosTailConstant 4 *
+              ((M / 2) /
+                (2 *
+                  Real.sqrt
+                    (K * Pphi2.DynamicalCutoff.dynamicalCutoffScale C M *
+                      (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3))) ^
+                ((2 : ℝ) / 4) := by
+        simpa [show ((2 : ℝ) / 4) = (1 / 2 : ℝ) by norm_num, Real.sqrt_eq_rpow] using hchaos
+      nlinarith [hchaos']
+    have hs_sq_ge_one : (1 : ℝ) ≤ s ^ (2 : ℝ) := by
+      nlinarith [hs_ge_one]
+    have hlog_four_nonneg : 0 ≤ Real.log 4 := by
+      exact le_of_lt (Real.log_pos (by norm_num))
+    have hgrowth_s :
+        (6 * C + Real.log 4) * s ^ (2 : ℝ) ≤ A * Real.exp (s / 4) :=
+      hS_growth s hs_ge
+    have hlog_growth :
+        Real.log 4 + 6 * C * s ^ (2 : ℝ) ≤ A * Real.exp (s / 4) := by
+      calc
+        Real.log 4 + 6 * C * s ^ (2 : ℝ) ≤
+            (Real.log 4 + 6 * C) * s ^ (2 : ℝ) := by
+              nlinarith [hs_sq_ge_one, hlog_four_nonneg, hC_pos.le]
+        _ = (6 * C + Real.log 4) * s ^ (2 : ℝ) := by ring
+        _ ≤ A * Real.exp (s / 4) := hgrowth_s
+    have hreal_bound :
+        4 * Real.exp (2 * M - A * Real.exp (s / 4)) ≤ Real.exp (-M) := by
+      have hM_eq : M = 2 * C * s ^ (2 : ℝ) := by
+        rw [hs_sq]
+        field_simp [hC_pos.ne']
+      have hexp :
+          Real.log 4 + (2 * M - A * Real.exp (s / 4)) ≤ -M := by
+        rw [hM_eq]
+        linarith
+      calc
+        4 * Real.exp (2 * M - A * Real.exp (s / 4))
+            = Real.exp (Real.log 4) * Real.exp (2 * M - A * Real.exp (s / 4)) := by
+                rw [Real.exp_log (by norm_num : (0 : ℝ) < 4)]
+        _ = Real.exp (Real.log 4 + (2 * M - A * Real.exp (s / 4))) := by
+              rw [← Real.exp_add]
+        _ ≤ Real.exp (-M) := Real.exp_le_exp.mpr hexp
+    unfold quarticPiecewiseTail
+    rw [if_neg (not_lt.mpr (le_of_lt hM_gt2C))]
+    calc
+      quarticCutoffTail K C M * ENNReal.ofReal (2 * Real.exp (2 * M))
+          ≤
+            ENNReal.ofReal
+              (2 * Real.exp (-(quarticDecayConstant K C * Real.exp (s / 4)))) *
+              ENNReal.ofReal (2 * Real.exp (2 * M)) := by
+                exact mul_le_mul' htail_bound le_rfl
+      _ =
+          ENNReal.ofReal
+            ((2 * Real.exp (-(quarticDecayConstant K C * Real.exp (s / 4)))) *
+              (2 * Real.exp (2 * M))) := by
+                rw [← ENNReal.ofReal_mul]
+                positivity
+      _ = ENNReal.ofReal (4 * Real.exp (2 * M - A * Real.exp (s / 4))) := by
+            congr 1
+            calc
+              (2 * Real.exp (-(quarticDecayConstant K C * Real.exp (s / 4)))) *
+                  (2 * Real.exp (2 * M))
+                  = 4 *
+                      (Real.exp (-(quarticDecayConstant K C * Real.exp (s / 4))) *
+                        Real.exp (2 * M)) := by ring
+              _ = 4 * Real.exp (-(quarticDecayConstant K C * Real.exp (s / 4)) + 2 * M) := by
+                    rw [← Real.exp_add]
+              _ = 4 * Real.exp (2 * M - A * Real.exp (s / 4)) := by
+                    congr 1
+                    simpa [A, mul_comm, mul_left_comm, mul_assoc] using
+                      show -(quarticDecayConstant K C * Real.exp (s / 4)) + 2 * M =
+                          2 * M - A * Real.exp (s / 4) by ring
+      _ ≤ ENNReal.ofReal (Real.exp (-M)) := ENNReal.ofReal_le_ofReal hreal_bound
 
 /-- **Master bridge axiom: Nelson exponential estimate from polynomial chaos.**
 
