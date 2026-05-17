@@ -1,10 +1,12 @@
 # T² φ⁴₂ continuum limit — master plan & progress tracker
 
-**Last refreshed:** 2026-05-16
+**Last refreshed:** 2026-05-17 (post-merge-consolidation)
 **Repo:** pphi2 (this) + sister repos gaussian-hilbert, markov-semigroups
 **Endpoint:** `Pphi2.torusInteracting_satisfies_OS` (OS0 + OS1 + OS2 for the T²_L
 symmetric-torus φ⁴₂ continuum limit)
-**Branch:** `phase-b-discharge` (current working branch; not yet merged to main)
+**Branch:** `main` (all three repos are now single-active-branch on `main` after
+the 2026-05-17 consolidation; the prior feature branches are preserved as
+`archive/*` tags — see "Branch state" below)
 
 This document is the **single source of truth** for the T² OS0–OS2 endpoint
 campaign. It tracks the five workstreams that, when complete, reduce the
@@ -26,76 +28,37 @@ axioms (`gross_lsi_implies_hypercontractive` + 3 GaussianFin BE axioms).
 After Workstreams 2.5 + N1.b + N1.c + Route A all land, the closure becomes
 the Mathlib trio only.
 
-> ⚠️ The closure surface above is **conditional on a pin-chain merge** —
-> see "Branch chain & pin state" below.
-
 ---
 
-## ⚠️ Branch chain & pin state (CRITICAL — audit-as-of 2026-05-17)
+## Branch state — consolidated 2026-05-17
 
-The campaign's work is spread across **feature branches in all three repos**.
-pphi2's pins still point at each upstream's `main`, which **predates the
-Workstream C, markov-semigroups Phase 2, and Route A work**. The current
-`#print axioms` only shows `[trio + polynomial_chaos_exp_moment_bridge]`
-because the bridge is still an axiom — opaque, so its (would-be)
-transitive dependencies don't surface. When Workstream B converts the
-bridge to a theorem, the closure will reflect **the pinned upstream**,
-not the as-built feature-branch state.
+All three repos are now single-active-branch on `main`. The prior
+feature branches (`phase-b-discharge` in pphi2, `phase-3-smoke-test` in
+gaussian-hilbert, `feat/lp-carrier-stdGaussianFin-dirichletmarkov` in
+markov-semigroups) have been merged into their respective `main`s and
+preserved as `archive/*` tags. The pin-chain fragmentation flagged in
+prior revisions of this doc is **resolved**.
 
-| Repo | Active branch | HEAD | New work on branch | pphi2's pin | Pin currency |
-|---|---|---|---|---|---|
-| **pphi2** | `phase-b-discharge` | `d5d274a` | Workstreams A + B (incl. wickPolynomial_lower_bound_general blocker just landed) + master plan | — (self) | — |
-| **gaussian-hilbert** | `phase-3-smoke-test` | `3a789d5` | Workstream C (E.1, E.2, axiom retirement, doc refresh) — 6 commits ahead of main | `main` (`85496cc`) | **pre-Workstream-C** |
-| **markov-semigroups** | `feat/lp-carrier-stdGaussianFin-dirichletmarkov` | `aa9cc47` | Phase 2 bundle + **G2 complete + Gross-discharge scaffolding** (P2/P3 work in flight) — 6 commits ahead of main | `main` (`8ed9e528`, inherited via gaussian-hilbert) | **pre-Phase-2 and pre-Gross-scaffold** |
+| Repo | Active branch | HEAD | Archive tags |
+|---|---|---|---|
+| **pphi2** | `main` | `b0ebee3` (merge: phase-b-discharge +45 into main) | 9 `archive/*` tags (incl. `archive/phase-b-discharge`, `archive/pr10`, …) |
+| **gaussian-hilbert** | `main` | `2df8345` (deps: track markov-semigroups main) | `archive/phase-3-smoke-test` |
+| **markov-semigroups** | `main` | `c6e0e6b` (merge: Gross-discharge G2-complete + GrossODE P2/P3 scaffold) | `archive/feat/lp-carrier-stdGaussianFin-dirichletmarkov` |
 
-### Why the build still works
+**pphi2 pin state on main:**
+- gaussian-hilbert: `2df83459` (post-Workstream-C)
+- MarkovSemigroups: `c6e0e6bb` (inherited via gaussian-hilbert; post-Phase-2 + post-Gross-scaffolding)
+- GaussianField: `269fbc2e`
+- bochner: `b70e84b8`
 
-The bridge axiom `polynomial_chaos_exp_moment_bridge` is opaque, so
-`#print axioms` doesn't (yet) see the gaussian-hilbert /
-markov-semigroups chain. Once Workstream B discharges the bridge,
-`#print axioms` will surface whatever's behind it — and against the
-**current** pphi2 pins, that surface includes
-`ouSemigroupAct_eLpNorm_hypercontractive` as an axiom (pre-Workstream-C
-state in gaussian-hilbert main), **not** the post-discharge closure
-we've been planning around.
-
-### Required merge order (do this before Workstream B's final
-`#print axioms` verification)
-
-1. **markov-semigroups**: merge `feat/lp-carrier-stdGaussianFin-dirichletmarkov`
-   → main. 2 commits ahead of main (`6782dc7`, `2e9121f`). PR-ready,
-   builds clean.
-2. **gaussian-hilbert**: merge `phase-3-smoke-test` → main. 6 commits
-   ahead of main (`0f0c5eb`, `a1fc35e`, `fbb6701`, `e1bde62`, `029156d`,
-   `3a789d5`). PR-ready, builds clean. Includes a pin bump to the now-current
-   markov-semigroups main from step 1.
-3. **pphi2**: `lake update` to bump both gaussian-hilbert and
-   markov-semigroups pins to their new mains. Confirm `lake build` clean.
-   Then merge `phase-b-discharge` → main (after Workstream B finishes).
-
-After these three merges, pphi2 main consumes the actually-discharged
-gaussian-hilbert + markov-semigroups Phase 2 state. Workstream B's
-final axiom-closure verification will then produce the planned
-"`[trio + 4 inherited markov-semigroups axioms]`" closure.
-
-### Workstream B is **not blocked** by this
-
-Workstream B can continue development on `phase-b-discharge` against the
-current pins. Only the **final axiom-closure check** at end-of-Workstream-B
-needs the pin bumps to have happened — and we can do step 1 and step 2 of
-the merge order in parallel with Workstream B's development. **Recommended:
-land steps 1 + 2 now** so they're not in the way when Workstream B finishes.
-
-### Tracking sister-repo branch state
-
-A quick three-line audit:
-```sh
-git -C /Users/mdouglas/Documents/GitHub/pphi2          log origin/main..phase-b-discharge --oneline | wc -l
-git -C /Users/mdouglas/Documents/GitHub/gaussian-hilbert log origin/main..phase-3-smoke-test --oneline | wc -l
-git -C /tmp/markov-semigroups-phase2 log origin/main..feat/lp-carrier-stdGaussianFin-dirichletmarkov --oneline | wc -l
-```
-shows how many commits each branch is ahead of its main; "0" means the
-chain is fully merged.
+`lake build` is clean on pphi2 `main`. The endpoint axiom closure
+(measured against the consolidated state) is unchanged from earlier:
+`[propext, Classical.choice, Quot.sound, polynomial_chaos_exp_moment_bridge]`.
+The bridge is still an opaque axiom, so the closure does not yet
+surface the inherited markov-semigroups axioms — when Workstream B
+converts the bridge to a theorem, the closure will widen to include
+the markov-semigroups inherited textbook axioms (Gross + GaussianFin
+BE tensor lifts).
 
 ---
 
@@ -104,12 +67,12 @@ chain is fully merged.
 | # | Workstream | Repo | Status | Effort remaining |
 |---|---|---|---|---|
 | A | Phase B Glimm–Jaffe Fourier estimates (pphi2) | pphi2 | ✅ COMPLETE 2026-05-16 | — |
-| C | OU/Mehler hypercontractivity (gaussian-hilbert) | gaussian-hilbert | ✅ COMPLETE 2026-05-15 (on `phase-3-smoke-test`) | merge to gaussian-hilbert main |
+| C | OU/Mehler hypercontractivity (gaussian-hilbert) | gaussian-hilbert | ✅ COMPLETE 2026-05-15; on main since 2026-05-17 | — |
 | **B** | `polynomial_chaos_exp_moment_bridge` (pphi2) | pphi2 | 🔄 in flight — blocker `wickPolynomial_lower_bound_general` resolved 2026-05-17; lift + narrow-signature refactor next | ~150–300 lines / ~1 wk |
 | **2.5** | Fresh-Fubini lift for `ouSemigroupFin_l2_sq_hasDerivWithinAt` | markov-semigroups | not started | ~1.5 days |
 | **N1.b** | `ouSemigroupFin_preserves_IsCore` | markov-semigroups | not started | ~3–5 days |
 | **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | not started | ~3–5 days |
-| **Route A** | Abstract `gross_lsi_implies_hypercontractive` | markov-semigroups | 🔄 **G2 + Gross-ODE scaffolding done 2026-05-17**; P2/P3 algebra + W rewire in flight | ~weeks (was multi-week) |
+| **Route A** | Abstract `gross_lsi_implies_hypercontractive` | markov-semigroups | 🔄 **G2 + Gross-ODE scaffolding on main 2026-05-17**; P2/P3 algebra + W rewire in flight | ~weeks (was multi-week) |
 
 **Total parallel wall-clock to fully zero-local-axiom T² endpoint:** ~3–5 weeks
 if all five run in parallel; ~6–10 weeks serial. Route A still dominates the
@@ -182,7 +145,7 @@ gaussian-hilbert axiom). gaussian-hilbert is now zero-local-axiom.
 **Sub-phases (all done):**
 - Phase 1 (markov-semigroups Lp-carrier abstract refactor): done before this session.
 - Phase 2 (concrete `stdGaussianFin_dirichletMarkovSemigroup` bundle): markov-semigroups
-  `feat/lp-carrier-stdGaussianFin-dirichletmarkov`, commit `6782dc7`.
+  now on markov-semigroups `main` (commit `6782dc7` is preserved as `archive/feat/lp-carrier-stdGaussianFin-dirichletmarkov`).
 - Phase 3 wire-in (gaussian-hilbert smoke test): commit `0f0c5eb`.
 - Stage E.1: LSI bridge through bundle: commit `fbb6701`.
 - Stage E.2: concrete `eLpNorm` hypercontractivity from abstract `IsHypercontractive`: commit `e1bde62`.
@@ -226,7 +189,7 @@ axiom polynomial_chaos_exp_moment_bridge
 5. Dynamical cutoff `T(M) := exp(−(√(M/(2C₁)) − 1))` → doubly-exp tail in `M` — ⏳ not yet wired.
 6. Layer-cake integration of `∫ exp(−V)² dμ` — ⏳ scaffolding exists in `LayerCake.lean`.
 
-**Recent infrastructure landed (chronological, all on `phase-b-discharge`):**
+**Recent infrastructure landed (chronological; all merged into pphi2 `main` 2026-05-17 via `archive/phase-b-discharge`):**
 
 - `31df956` (2026-05-16) — transport-layer public API in `FieldDecomposition.lean`.
 - `1e19b49` (2026-05-16) — Step 4 measure-transport `canonicalRoughError_neg_tail_of_stdGaussian`.
@@ -367,9 +330,7 @@ axiom — the one Mathlib doesn't have.
 **Plans index:** [`markov-semigroups/plans/README.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/README.md)
 catalogues both Route A and the superseded Route B alternative.
 
-**G2 + scaffolding landed 2026-05-17** (branch
-`feat/lp-carrier-stdGaussianFin-dirichletmarkov`, 6 commits ahead of
-markov-semigroups main, tip `aa9cc47`):
+**G2 + scaffolding landed 2026-05-17** (now on markov-semigroups `main` since 2026-05-17; merge tip `aa9cc47` preserved as `archive/feat/lp-carrier-stdGaussianFin-dirichletmarkov`):
 
 - `GaussianFin.generatorCompat_stdGaussianFin` is **sorry-free**.
   `#print axioms` = standard trio + exactly two custom axioms:
@@ -545,4 +506,4 @@ final inherited textbook axiom.
 - `gaussian-hilbert/STATUS.md`, `gaussian-hilbert/AXIOM_AUDIT.md`
 - `markov-semigroups/status.md`, `markov-semigroups/AXIOM_AUDIT.md`
 
-**Per-commit log of this campaign:** see `git log phase-b-discharge ^main`.
+**Per-commit log of this campaign:** the prior `phase-b-discharge` history is preserved as the `archive/phase-b-discharge` tag; `git log archive/phase-b-discharge` (or browsing the merge commit `b0ebee3` on main) shows the full per-commit trail.
