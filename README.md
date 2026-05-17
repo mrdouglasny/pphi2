@@ -12,18 +12,26 @@ following the Glimm-Jaffe/Nelson lattice approach.
 
 The lattice-action normalisation diagnosed in early May 2026 (a missing
 `a^d` Riemann-sum prefactor on the kinetic term, identified by a
-Gemini-vetted scaling analysis) has been resolved on the
-[`fix/lattice-action-normalization`](https://github.com/mrdouglasny/pphi2/tree/fix/lattice-action-normalization)
-branch. The Glimm–Jaffe-aligned action `S = (a^d/2) ⟨φ, M_a φ⟩` is now
-the project default, with `latticeCovarianceGJ` and the matching
+Gemini-vetted scaling analysis) was resolved and merged into `main`;
+the historical fix branch is preserved as the
+[`archive/fix/lattice-action-normalization`](https://github.com/mrdouglasny/pphi2/releases/tag/archive%2Ffix%2Flattice-action-normalization)
+tag for reference. The Glimm–Jaffe-aligned action `S = (a^d/2) ⟨φ, M_a φ⟩`
+is now the project default, with `latticeCovarianceGJ` and the matching
 `gaussianDensity = exp(-(a^d/2)⟨φ, Qφ⟩)`. The OS0–OS4 chain in
 `Pphi2/Main.lean` proves theorems about the textbook GJ-aligned measure.
-Of the 11 Stage 1 axioms introduced for the genuine uniform bounds,
-9 are now theorems (Cluster B — embedding-normalisation pairs — done; 4
-Cluster A axioms remain, all reducing to the same Glimm–Jaffe Ch. 8
-dynamical-cutoff Nelson estimate). See
-[`docs/lattice-action-normalization-fix.md`](docs/lattice-action-normalization-fix.md)
-for diagnosis, fix architecture, and Phase 2 progress.
+The Stage 1 / Cluster A / Cluster B axiom inventory introduced for
+the genuine uniform bounds has since been substantially discharged via
+Workstream A (Phase B Glimm–Jaffe Fourier estimates, complete 2026-05-16;
+both `smoothWickConstant_le_log_uniform_in_aN` and
+`canonicalRoughCovariance_pow_sum_le_uniform_in_aN` are now theorems)
+and Workstream C (gaussian-hilbert OU/Mehler discharge, complete
+2026-05-15). The single remaining non-Mathlib axiom on the T²_L OS0–OS2
+critical path is `polynomial_chaos_exp_moment_bridge` (Workstream B,
+in flight; the last math blocker `wickPolynomial_lower_bound_general`
+resolved 2026-05-17). For per-axiom status, plans, and the full
+multi-repo roadmap, see [`docs/T2-master-plan.md`](docs/T2-master-plan.md);
+for the original lattice-action diagnosis see
+[`docs/lattice-action-normalization-fix.md`](docs/lattice-action-normalization-fix.md).
 
 ## What this project proves
 
