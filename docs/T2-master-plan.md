@@ -23,10 +23,13 @@ only. Per-workstream details and proof plans live in their dedicated docs
 [propext, Classical.choice, Quot.sound, polynomial_chaos_exp_moment_bridge]
 ```
 
-After Workstream B lands, the closure transitively surfaces 4 markov-semigroups
-axioms (`gross_lsi_implies_hypercontractive` + 3 GaussianFin BE axioms).
-After Workstreams 2.5 + N1.b + N1.c + Route A all land, the closure becomes
-the Mathlib trio only.
+After Workstream B lands, the closure transitively surfaces **4 markov-semigroups
+axioms** (`gross_lsi_implies_hypercontractive` + 3 GaussianFin BE tensor-lifts).
+Reducing the closure further requires Workstreams 2.5, N1.b, N1.c (one BE
+axiom each), Route A (Gross + Stroock–Varopoulos, but introduces 2 new G2
+axioms when W rewire lands), and finally Workstreams G2.a + G2.b to
+discharge those. See "Complete axiom-and-sorry inventory" below for the
+full per-axiom accounting.
 
 ---
 
@@ -62,6 +65,85 @@ BE tensor lifts).
 
 ---
 
+## Complete axiom-and-sorry inventory on the T² OS0–OS2 critical path
+
+This is the **comprehensive** list of every axiom and sorry that has
+to be closed to get `torusInteracting_satisfies_OS` to the Mathlib trio
+only. Each row links to its discharge plan / workstream.
+
+### Sorries on the T² OS0–OS2 critical path
+
+**None.** Pphi2's active build has zero `sorry` tactics; the
+grep matches in `TorusInteractingOS.lean`, `TorusGaussianLimit.lean`,
+`TorusTightness.lean`, `RoughErrorBound.lean` are docstring fragments
+("modulo 2 sorry's", "S3 is the gating sorry", etc.) describing
+historical or hypothetical states, **not live `sorry` tactics**.
+Verified 2026-05-17 on `main`.
+
+### Axioms on the T² OS0–OS2 critical path
+
+**Current** (`#print axioms torusInteracting_satisfies_OS` on `main`):
+
+| Axiom | Location | Workstream / discharge plan |
+|---|---|---|
+| `polynomial_chaos_exp_moment_bridge` | `Pphi2/NelsonEstimate/PolynomialChaosBridge.lean:624` | **Workstream B** (in flight; blocker resolved 2026-05-17). Plan: [`docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`](polynomial-chaos-exp-moment-bridge-proof-plan.md). Next steps: lift `polynomial_chaos_exp_moment_bridge_quartic_bounded` to general `P` (using `wickPolynomial_lower_bound_general`); narrow the master signature to require `_hvol`; rewire fixed-volume consumers. |
+
+**After Workstream B lands** (bridge becomes theorem; closure widens
+to surface the markov-semigroups inheritance):
+
+| Axiom | Location | Workstream / discharge plan |
+|---|---|---|
+| `gross_lsi_implies_hypercontractive` (legacy abstract axiom) | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A**. Plan: [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md). Status (2026-05-17): G2 sorry-free + GrossODE P2/P3 scaffolded; remaining endgame is P2 (one Leibniz kernel + thin glue) → P3 algebra → W (rewire). |
+| `ouSemigroupFin_l2_sq_hasDerivWithinAt` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2643` | **Workstream 2.5** (fresh-Fubini lift). Plan: inline at `EuclideanFin.lean:2637-2641` (dual-vetted gemini-2.5-pro + gemini-3.1-pro 2026-05-13). Per-axiom row in [`markov-semigroups/AXIOM_AUDIT.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/AXIOM_AUDIT.md). |
+| `ouSemigroupFin_preserves_IsCore` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2771` | **Workstream N1.b**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md` (search `ouSemigroupFin_preserves_IsCore`). Strategy: change-of-variables on Mehler integral + `ContDiff.integral`. |
+| `ouSemigroupFin_entropy_sq_decay_bound` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2799` | **Workstream N1.c**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. Strategy: telescoping over coordinates + proved 1D `Gaussian1D.bakryEmerySpace.semigroup_entropy_sq_decay_bound`. |
+
+**After Route A's W-rewire lands** — `gross_lsi_implies_hypercontractive`
+is replaced by the proved `gross_lsi_implies_hypercontractive_of_hypotheses`
+in `Abstract/GrossODE.lean`, which adds the following to the closure:
+
+| Axiom | Location | Workstream / discharge plan |
+|---|---|---|
+| `gaussianFin_diffQuot_tendsto_Lp` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFinLp.lean` (G2 dependency) | **Workstream G2.a** *(implicit)*. General Mathlib-native fact (operator/`fderiv`/`Measure.pi gaussianReal`), Gemini-vetted **Standard**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. No dedicated discharge plan yet; ultimately wants to upstream to Mathlib. |
+| `gaussianFin_integrationByParts` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFinLp.lean` (G2 dependency) | **Workstream G2.b** *(implicit)*. General Mathlib-native γ-IBP fact, Gemini-vetted **Standard / Likely correct**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. No dedicated discharge plan yet; ultimately wants to upstream to Mathlib. |
+| `stroock_varopoulos` | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean` | **Route A Phase 4** (per `plans/gross-discharge.md`, "discharge stroock_varopoulos itself (reuses Route B's pointwise lemma)"). |
+
+### Honest accounting of "trio-only"
+
+To reach `[propext, Classical.choice, Quot.sound]` only, **every** of
+the 7 axioms above has to close. The 5-workstream framework
+(B + C + 2.5 + N1.b + N1.c + Route A) handles 4 of them directly
+(B, 2.5, N1.b, N1.c, Route A endgame) but **introduces 3 new
+ones** via Route A's W-rewire that need their own discharge work:
+- `gaussianFin_diffQuot_tendsto_Lp` (Workstream G2.a — implicit, no
+  dedicated plan)
+- `gaussianFin_integrationByParts` (Workstream G2.b — implicit, no
+  dedicated plan)
+- `stroock_varopoulos` (Route A Phase 4, planned)
+
+The 2 G2 axioms are textbook-vetted ("Standard / Likely correct" by
+Gemini) and are good Mathlib upstream candidates — they're not novel
+mathematics, just analysis facts the project happens to need.
+A reasonable mathematical resting point is "trio + `gaussianFin_diffQuot_tendsto_Lp`
++ `gaussianFin_integrationByParts`" — vetted textbook axioms only.
+
+**Workstreams not on this list:** `phase-3-smoke-test` (gaussian-hilbert,
+Workstream C) is complete and contributed nothing axiomatic — the
+discharge of `ouSemigroupAct_eLpNorm_hypercontractive` introduced no
+new local axioms; the resulting theorem's closure is entirely composed
+of the inherited markov-semigroups axioms listed above.
+
+### Pphi2 axioms NOT on the T² OS0–OS2 critical path (off-route inventory)
+
+For context, pphi2 has 17 active axioms total. The other 16 are for
+other constructions (S'(ℝ²) bridge, OS3 reflection positivity, OS4
+mass gap, Route B' asymmetric-torus IR limit, Ward identity refinement,
+Gaussian continuum-limit propagator convergence, etc.) — listed in
+[`docs/AXIOM_STATUS.md`](AXIOM_STATUS.md) and [`AXIOM_AUDIT.md`](../AXIOM_AUDIT.md).
+None of them are load-bearing for `torusInteracting_satisfies_OS`.
+
+---
+
 ## Workstreams at a glance
 
 | # | Workstream | Repo | Status | Effort remaining |
@@ -72,11 +154,15 @@ BE tensor lifts).
 | **2.5** | Fresh-Fubini lift for `ouSemigroupFin_l2_sq_hasDerivWithinAt` | markov-semigroups | not started | ~1.5 days |
 | **N1.b** | `ouSemigroupFin_preserves_IsCore` | markov-semigroups | not started | ~3–5 days |
 | **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | not started | ~3–5 days |
-| **Route A** | Abstract `gross_lsi_implies_hypercontractive` | markov-semigroups | 🔄 **G2 + Gross-ODE scaffolding on main 2026-05-17**; P2/P3 algebra + W rewire in flight | ~weeks (was multi-week) |
+| **Route A** | Abstract `gross_lsi_implies_hypercontractive` + `stroock_varopoulos` (Phase 4) | markov-semigroups | 🔄 **G2 + Gross-ODE scaffolding on main 2026-05-17**; P2/P3 algebra + W rewire + Phase 4 in flight | ~weeks (was multi-week) |
+| **G2.a** | Discharge `gaussianFin_diffQuot_tendsto_Lp` *(surfaces on T² path only after Route A's W rewire)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
+| **G2.b** | Discharge `gaussianFin_integrationByParts` *(surfaces on T² path only after Route A's W rewire)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
 
-**Total parallel wall-clock to fully zero-local-axiom T² endpoint:** ~3–5 weeks
-if all five run in parallel; ~6–10 weeks serial. Route A still dominates the
-critical path; G2-complete is a major architectural unblock.
+**Total parallel wall-clock to "trio + 4 inherited markov-semigroups axioms" (M1):** ~1 wk (Workstream B alone).
+**To "trio + 2 G2 textbook-vetted axioms" (M4b):** ~3–5 weeks if B + 2.5 + N1.b + N1.c + Route A run in parallel.
+**To fully trio-only (M5):** further G2.a + G2.b work, ideally as Mathlib upstreams.
+
+Route A still dominates the critical path; G2-complete is a major architectural unblock. **Workstream B is the highest-ROI immediate target** — it unblocks the M1 closure visibility.
 
 ---
 
@@ -470,18 +556,39 @@ final inherited textbook axiom.
 
 ## Milestones
 
-- **M1 (passes within ~2 wk):** Workstream B lands. pphi2 has **zero local
-  axioms on the T² critical path**. Endpoint closure becomes the standard
-  trio + 4 inherited markov-semigroups axioms. Defensible mathematical
-  resting point.
-- **M2 (passes within ~2 wk + Workstream 2.5):** Phase 2.5 lands. One
-  inherited axiom drops (closure: trio + 3 markov-semigroups axioms).
-- **M3 (passes within ~3 wk):** N1.b and N1.c land. Closure: trio +
-  `gross_lsi_implies_hypercontractive` only. T² OS0–OS2 reduced to a single
-  textbook axiom (Gross 1975).
-- **M4 (multi-week from M3):** Route A lands. Closure: standard Mathlib
-  trio only. **T² OS0–OS2 proved end-to-end in Lean modulo Mathlib's
-  classical axioms.** This is the project's ultimate axiom-free milestone.
+(See "Complete axiom-and-sorry inventory" section above for the
+per-axiom accounting.)
+
+- **M1 (passes within ~2 wk):** Workstream B lands. pphi2 has **zero
+  local axioms on the T² critical path**. Endpoint closure becomes
+  the standard trio + 4 inherited markov-semigroups axioms (Gross +
+  3 GaussianFin BE tensor-lifts). Defensible mathematical resting
+  point.
+- **M2 (passes within ~2 wk + Workstream 2.5):** Phase 2.5 lands.
+  One inherited axiom drops (closure: trio + 3 markov-semigroups
+  axioms).
+- **M3 (passes within ~3 wk):** N1.b and N1.c land. Closure: trio
+  + `gross_lsi_implies_hypercontractive` only. T² OS0–OS2 reduced
+  to a single textbook axiom (Gross 1975).
+- **M4a (multi-week from M3):** Route A's P2 + P3 + W rewire lands.
+  `gross_lsi_implies_hypercontractive` is replaced by the proved
+  `gross_lsi_implies_hypercontractive_of_hypotheses`. **Closure changes
+  shape** rather than shrinks: drops Gross, adds 3 new ones
+  (`gaussianFin_diffQuot_tendsto_Lp`, `gaussianFin_integrationByParts`,
+  `stroock_varopoulos`). All three are textbook-vetted; the two G2
+  axioms are general Mathlib-native ("Standard / Likely correct" per
+  gemini-3.1-pro-preview) and good upstream candidates.
+- **M4b (a few days from M4a):** Route A Phase 4 lands.
+  `stroock_varopoulos` discharged via Route B's pointwise lemma.
+  Closure: trio + 2 G2 axioms (`gaussianFin_diffQuot_tendsto_Lp`,
+  `gaussianFin_integrationByParts`). This is the **honest "trio +
+  textbook-vetted" resting point** — every remaining axiom is a
+  general analysis fact that wants to be in Mathlib.
+- **M5 (further work, no dedicated plans yet):** Discharge the 2
+  G2 axioms (Workstreams G2.a, G2.b). Both are general
+  Mathlib-native; the long-term path is to upstream them to Mathlib
+  rather than maintain in-project. Closure: **standard Mathlib trio
+  only**. This is the project's ultimate axiom-free milestone.
 
 ---
 
