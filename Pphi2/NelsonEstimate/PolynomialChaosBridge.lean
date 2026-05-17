@@ -67,14 +67,138 @@ similarly via a separate BC-limit lemma.
 import Pphi2.WickOrdering.WickPolynomial
 import Pphi2.InteractingMeasure.LatticeMeasure
 import Pphi2.NelsonEstimate.RoughErrorBound
+import Pphi2.NelsonEstimate.IntegrabilityHelpers
 
 noncomputable section
 
-open MeasureTheory Real GaussianField
+open MeasureTheory Real GaussianField Filter
 
 namespace Pphi2
 
 variable (d : ℕ)
+
+private def quarticCutoffTail (K C : ℝ) (M : ℝ) : ENNReal :=
+  ENNReal.ofReal
+    (2 * Real.exp
+      (-(Pphi2.ChaosTailBridge.chaosTailConstant 4) *
+        ((M / 2) /
+          (2 * Real.sqrt
+            (K * (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) *
+              (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3))) ^
+          ((2 : ℝ) / 4)))
+
+private lemma quarticCutoffTail_le_two (K C M : ℝ) (hM_nonneg : 0 ≤ M) :
+    quarticCutoffTail K C M ≤ 2 := by
+  unfold quarticCutoffTail
+  have h_exp_le_one :
+      Real.exp
+        (-(Pphi2.ChaosTailBridge.chaosTailConstant 4) *
+          ((M / 2) /
+            (2 * Real.sqrt
+              (K * (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) *
+                (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3))) ^
+            (1 / 2 : ℝ)) ≤ 1 := by
+    apply Real.exp_le_one_iff.mpr
+    have hbase :
+        0 ≤
+          (Pphi2.ChaosTailBridge.chaosTailConstant 4) *
+            ((M / 2) /
+              (2 * Real.sqrt
+                (K * (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) *
+                  (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3))) ^
+              ((2 : ℝ) / 4) := by
+      have hconst :
+          0 ≤ Pphi2.ChaosTailBridge.chaosTailConstant 4 := by
+        exact le_of_lt (Pphi2.ChaosTailBridge.chaosTailConstant_pos 4 (by norm_num))
+      have hbase_nonneg :
+          0 ≤
+            (M / 2) /
+              (2 * Real.sqrt
+                (K * (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) *
+                  (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3)) := by
+        refine div_nonneg ?_ ?_
+        · exact div_nonneg hM_nonneg (by norm_num)
+        · positivity
+      have hrpow :
+          0 ≤
+            ((M / 2) /
+              (2 * Real.sqrt
+                (K * (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) *
+                  (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3))) ^
+              ((2 : ℝ) / 4) := by
+        exact Real.rpow_nonneg hbase_nonneg _
+      exact mul_nonneg hconst hrpow
+    linarith
+  have h_le : ENNReal.ofReal
+      (2 * Real.exp
+        (-(Pphi2.ChaosTailBridge.chaosTailConstant 4) *
+          ((M / 2) /
+            (2 * Real.sqrt
+              (K * (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) *
+                (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 3))) ^
+            ((2 : ℝ) / 4))) ≤ ENNReal.ofReal 2 := by
+    refine ENNReal.ofReal_le_ofReal ?_
+    nlinarith
+  simpa using h_le
+
+private lemma one_add_abs_log_dynamicalCutoff_eq_sqrt
+    {C M : ℝ} (hC_pos : 0 < C) (hM : 2 * C < M) :
+    1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)| =
+      Real.sqrt (M / (2 * C)) := by
+  rw [Pphi2.DynamicalCutoff.dynamicalCutoffScale_eq_exp C M hM, Real.log_exp]
+  have hdiv_pos : 0 < M / (2 * C) := by
+    refine div_pos ?_ ?_
+    · linarith
+    · positivity
+  have hsqrt_ge_one : 1 ≤ Real.sqrt (M / (2 * C)) := by
+    rw [show (1 : ℝ) = Real.sqrt 1 by rw [Real.sqrt_one]]
+    apply Real.sqrt_le_sqrt
+    rw [one_le_div (by positivity)]
+    linarith
+  have hnonpos : 1 - Real.sqrt (M / (2 * C)) ≤ 0 := by
+    linarith
+  rw [abs_of_nonpos hnonpos]
+  ring
+
+/-- Explicit canonical-joint rough tail at the dynamical cutoff scale,
+specialized to the pure quartic case. -/
+theorem canonicalRoughError_cutoff_tail_quartic_uniform
+    (P : InteractionPolynomial)
+    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (C : ℝ), 0 < C →
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L)
+        (M : ℝ), 2 * C ≤ M →
+          (canonicalJointMeasure 2 N)
+            {η | canonicalRoughError 2 N a mass
+                (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η ≤ -(M / 2)} ≤
+              quarticCutoffTail K C M := by
+  obtain ⟨K, hK_pos, htail⟩ :=
+    canonicalRoughError_neg_tail_uniform_in_aN P mass L hL hmass
+  refine ⟨K, hK_pos, ?_⟩
+  intro C hC_pos N _ a ha hvol M hM
+  have hT_pos :
+      0 < Pphi2.DynamicalCutoff.dynamicalCutoffScale C M :=
+    Pphi2.DynamicalCutoff.dynamicalCutoffScale_pos C M
+  have hM_pos : 0 < M := by
+    linarith
+  have htail' :=
+    htail N a ha hvol
+      (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) hT_pos
+      (M / 2) (by linarith)
+  simpa [quarticCutoffTail, h_quartic] using htail'
+
+private def quarticPiecewiseTail (K C : ℝ) (M : ℝ) : ENNReal :=
+  if M < 2 * C then 1 else quarticCutoffTail K C M
+
+/-- The explicit pure-quartic cutoff tail is layer-cake integrable. -/
+axiom quarticPiecewiseTail_layerCake_lt_top
+    (K C : ℝ) (hK_pos : 0 < K) (hC_pos : 0 < C) :
+    ∫⁻ M in Set.Ioi (0 : ℝ),
+      quarticPiecewiseTail K C M * ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤
 
 /-- **Master bridge axiom: Nelson exponential estimate from polynomial chaos.**
 
@@ -223,5 +347,77 @@ theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_tail
     (expMoment_bound_of_cutoff_quartic_tail
       (d := d) P mass L hmass C hsmooth ψ hintegral
       N a ha hvol (htail N a ha hvol))
+
+/-- Pure quartic bounded-volume bridge, with the explicit cutoff tail
+already substituted. The only remaining hypothesis is integrability of the
+piecewise layer-cake tail built from `quarticCutoffTail`. -/
+theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_cutoffTail
+    (P : InteractionPolynomial)
+    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass)
+    (K C : ℝ) (hC_pos : 0 < C)
+    (hsmooth :
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L)
+        (M : ℝ), 2 * C ≤ M →
+        ∀ (η : CanonicalJoint 2 N),
+          -(M / 2) ≤
+            canonicalSmoothInteraction 2 N a mass
+              (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η)
+    (htail :
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L)
+        (M : ℝ), 2 * C ≤ M →
+          (canonicalJointMeasure 2 N)
+            {η | canonicalRoughError 2 N a mass
+                (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η ≤ -(M / 2)} ≤
+              quarticCutoffTail K C M)
+    (hintegral :
+      ∫⁻ M in Set.Ioi (0 : ℝ),
+        quarticPiecewiseTail K C M *
+          ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤) :
+    ∃ K' : ℝ, 0 < K' ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L),
+        ∫ ω : Configuration (FinLatticeField 2 N),
+          (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2
+          ∂(latticeGaussianMeasure 2 N a mass ha hmass) ≤ K' := by
+  exact
+    polynomial_chaos_exp_moment_bridge_quartic_bounded_of_tail
+      (d := 2) rfl P h_pure h_quartic mass L hL hmass C
+      hsmooth
+      (quarticCutoffTail K C)
+      (by simpa [quarticPiecewiseTail] using hintegral)
+      htail
+
+/-- Pure quartic bounded-volume bridge with the proved smooth cutoff bound and
+explicit canonical-joint rough cutoff tail already substituted.
+
+This reduces the remaining Workstream B gap to the standalone layer-cake
+integrability helper for `quarticPiecewiseTail`. -/
+theorem polynomial_chaos_exp_moment_bridge_quartic_bounded
+    (P : InteractionPolynomial)
+    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (h_quartic : P.n = 4)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    ∃ K' : ℝ, 0 < K' ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L),
+        ∫ ω : Configuration (FinLatticeField 2 N),
+          (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2
+          ∂(latticeGaussianMeasure 2 N a mass ha hmass) ≤ K' := by
+  obtain ⟨C, hC_pos, hsmooth⟩ :=
+    canonicalSmoothInteraction_lower_bound_at_cutoff_quartic_uniform
+      (d := 2) rfl P h_pure h_quartic mass L hL hmass
+  obtain ⟨K, hK_pos, htail⟩ :=
+    canonicalRoughError_cutoff_tail_quartic_uniform
+      P h_pure h_quartic mass L hL hmass
+  exact
+    polynomial_chaos_exp_moment_bridge_quartic_bounded_of_cutoffTail
+      P h_pure h_quartic mass L hL hmass K C hC_pos
+      hsmooth
+      (htail C hC_pos)
+      (quarticPiecewiseTail_layerCake_lt_top K C hK_pos hC_pos)
 
 end Pphi2

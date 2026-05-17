@@ -505,6 +505,155 @@ theorem canonicalRoughError_neg_tail_of_stdGaussian
         (Real.exp (-c_m * (t / (2 * K)) ^ ((2 : ℝ) / m))) :=
           htail F hF_chaos K hK_pos hF_norm t ht
 
+/-- The explicit-constant version of
+`canonicalRoughError_neg_tail_of_stdGaussian`. This is the form needed for
+uniformity in the lattice size `N`: the tail exponent is fixed to
+`chaosTailConstant m`, which depends only on the chaos degree. -/
+theorem canonicalRoughError_neg_tail_of_stdGaussian_explicit
+    {d N : ℕ} [NeZero N] (a mass T : ℝ) (P : InteractionPolynomial)
+    (m : ℕ) (hm : 1 ≤ m) :
+    ∀ (F : MeasureTheory.Lp ℝ 2
+        (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N)))),
+      F ∈ GaussianHilbert.wienerChaosLE
+            (Fintype.card (CanonicalJointSumIndex d N)) m →
+      ∀ (K : ℝ), 0 < K → ‖F‖ ≤ K →
+      (∀ η : CanonicalJoint d N,
+        (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ)
+          (canonicalJointStdGaussianMeasurableEquiv d N η) =
+            canonicalRoughError d N a mass T P η) →
+      ∀ (t : ℝ), 0 < t →
+        (canonicalJointMeasure d N)
+          {η | canonicalRoughError d N a mass T P η ≤ -t} ≤
+            2 * ENNReal.ofReal
+              (Real.exp
+                (-(Pphi2.ChaosTailBridge.chaosTailConstant m) *
+                  (t / (2 * K)) ^ ((2 : ℝ) / m))) := by
+  intro F hF_chaos K hK_pos hF_norm hrepr t ht
+  have hset_eq :
+      {η | canonicalRoughError d N a mass T P η ≤ -t} =
+        (canonicalJointStdGaussianMeasurableEquiv d N) ⁻¹'
+          {ω |
+            (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+    ext η
+    simp [hrepr η]
+  have hset_meas :
+      MeasurableSet
+        {ω |
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+    simpa [Set.preimage, Set.setOf_mem_eq] using
+      (MeasureTheory.Lp.stronglyMeasurable F).measurable
+        (isClosed_Iic.measurableSet : MeasurableSet (Set.Iic (-t)))
+  calc
+    (canonicalJointMeasure d N) {η | canonicalRoughError d N a mass T P η ≤ -t}
+        =
+      (canonicalJointMeasure d N)
+        ((canonicalJointStdGaussianMeasurableEquiv d N) ⁻¹'
+          {ω |
+            (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t}) := by
+          rw [hset_eq]
+    _ =
+      (Measure.map
+        (canonicalJointStdGaussianMeasurableEquiv d N)
+        (canonicalJointMeasure d N))
+        {ω |
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+            symm
+            rw [Measure.map_apply
+              (canonicalJointStdGaussianMeasurableEquiv d N).measurable hset_meas]
+    _ =
+      (GaussianHilbert.stdGaussianFin
+        (Fintype.card (CanonicalJointSumIndex d N)))
+        {ω |
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+            rw [canonicalJointMeasure_map_stdGaussian (d := d) (N := N)]
+    _ ≤
+      2 * ENNReal.ofReal
+        (Real.exp
+          (-(Pphi2.ChaosTailBridge.chaosTailConstant m) *
+            (t / (2 * K)) ^ ((2 : ℝ) / m))) :=
+          Pphi2.ChaosTailBridge.chaos_neg_tail_bound_explicit
+            (Fintype.card (CanonicalJointSumIndex d N)) m hm
+            F hF_chaos K hK_pos hF_norm t ht
+
+/-- AE-transport version of
+`canonicalRoughError_neg_tail_of_stdGaussian_explicit`.
+
+This is the form compatible with the natural `Lp` representative
+`hf.toLp f`: the transported standard-Gaussian function only agrees with the
+canonical rough error almost everywhere, not pointwise. -/
+theorem canonicalRoughError_neg_tail_of_stdGaussian_explicit_ae
+    {d N : ℕ} [NeZero N] (a mass T : ℝ) (P : InteractionPolynomial)
+    (m : ℕ) (hm : 1 ≤ m) :
+    ∀ (F : MeasureTheory.Lp ℝ 2
+        (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N)))),
+      F ∈ GaussianHilbert.wienerChaosLE
+            (Fintype.card (CanonicalJointSumIndex d N)) m →
+      ∀ (K : ℝ), 0 < K → ‖F‖ ≤ K →
+      (∀ᵐ η ∂(canonicalJointMeasure d N),
+        (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ)
+          (canonicalJointStdGaussianMeasurableEquiv d N η) =
+            canonicalRoughError d N a mass T P η) →
+      ∀ (t : ℝ), 0 < t →
+        (canonicalJointMeasure d N)
+          {η | canonicalRoughError d N a mass T P η ≤ -t} ≤
+            2 * ENNReal.ofReal
+              (Real.exp
+                (-(Pphi2.ChaosTailBridge.chaosTailConstant m) *
+                  (t / (2 * K)) ^ ((2 : ℝ) / m))) := by
+  intro F hF_chaos K hK_pos hF_norm hrepr t ht
+  have hset_ae :
+      {η | canonicalRoughError d N a mass T P η ≤ -t} =ᵐ[canonicalJointMeasure d N]
+        (canonicalJointStdGaussianMeasurableEquiv d N) ⁻¹'
+          {ω |
+            (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+    filter_upwards [hrepr] with η hη
+    change
+      (canonicalRoughError d N a mass T P η ≤ -t) =
+        (((F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ)
+          (canonicalJointStdGaussianMeasurableEquiv d N η)) ≤ -t)
+    rw [← hη]
+  have hset_meas :
+      MeasurableSet
+        {ω |
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+    simpa [Set.preimage, Set.setOf_mem_eq] using
+      (MeasureTheory.Lp.stronglyMeasurable F).measurable
+        (isClosed_Iic.measurableSet : MeasurableSet (Set.Iic (-t)))
+  calc
+    (canonicalJointMeasure d N) {η | canonicalRoughError d N a mass T P η ≤ -t}
+        =
+      (canonicalJointMeasure d N)
+        ((canonicalJointStdGaussianMeasurableEquiv d N) ⁻¹'
+          {ω |
+            (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t}) := by
+          exact measure_congr hset_ae
+    _ =
+      (Measure.map
+        (canonicalJointStdGaussianMeasurableEquiv d N)
+        (canonicalJointMeasure d N))
+        {ω |
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+            symm
+            rw [Measure.map_apply
+              (canonicalJointStdGaussianMeasurableEquiv d N).measurable]
+            exact hset_meas
+    _ =
+      (GaussianHilbert.stdGaussianFin
+        (Fintype.card (CanonicalJointSumIndex d N)))
+        {ω |
+          (F : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ω ≤ -t} := by
+            rw [canonicalJointMeasure_map_stdGaussian (d := d) (N := N)]
+    _ ≤
+      2 * ENNReal.ofReal
+        (Real.exp
+          (-(Pphi2.ChaosTailBridge.chaosTailConstant m) *
+            (t / (2 * K)) ^ ((2 : ℝ) / m))) :=
+      Pphi2.ChaosTailBridge.chaos_neg_tail_bound_explicit
+        (Fintype.card (CanonicalJointSumIndex d N)) m hm
+        F hF_chaos K hK_pos hF_norm t ht
+
 private lemma wickMonomial_one_eq_hermiteEval (n : ℕ) (x : ℝ) :
     wickMonomial n 1 x =
       ((Polynomial.hermite n).map (Int.castRingHom ℝ)).eval x := by
@@ -518,6 +667,14 @@ private lemma multiWickMonomial_eq_hermiteMultiEval
   refine Finset.prod_congr rfl ?_
   intro i hi
   exact wickMonomial_one_eq_hermiteEval (α i) (ξ i)
+
+private theorem wickMonomial_eq_root_local : ∀ (n : ℕ) (c x : ℝ),
+    wickMonomial n c x = _root_.wickMonomial n c x
+  | 0, _, _ => rfl
+  | 1, _, _ => rfl
+  | n + 2, c, x => by
+      simp only [Pphi2.wickMonomial_succ_succ, _root_.wickMonomial_succ_succ]
+      rw [wickMonomial_eq_root_local (n + 1), wickMonomial_eq_root_local n]
 
 private theorem finite_hermite_sum_mem_wienerChaosLE
     {n d : ℕ} (s : Finset (Fin n → ℕ)) (c : (Fin n → ℕ) → ℝ)
@@ -793,6 +950,394 @@ private lemma canonicalJointMultiIndexOfPair_wick_prod
       ξ (canonicalStdInrIndex d N m) := by
   rfl
 
+private def wickExpansionCoeff {ι : Type*} [Fintype ι]
+    (k : ℕ) (γ : ι → ℝ) (α : ι → ℕ) : ℝ :=
+  ((k.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) *
+    ∏ j, γ j ^ α j
+
+private def canonicalSiteCrossStd
+    (T : ℝ) (x : FinLatticeSites d N) (k j : ℕ)
+    (ξ : canonicalStdIndex d N → ℝ) : ℝ :=
+  wickMonomial j (smoothWickConstant d N a mass T)
+      (canonicalSmoothFieldFunction d N a mass T
+        ((canonicalJointStdGaussianMeasurableEquiv d N).symm ξ) x) *
+    wickMonomial (k - j) (roughWickConstant d N a mass T)
+      (canonicalRoughFieldFunction d N a mass T
+        ((canonicalJointStdGaussianMeasurableEquiv d N).symm ξ) x)
+
+private lemma canonicalEigenvalue_pos_local
+    (ha : 0 < a) (hmass : 0 < mass) (m : Fin d → Fin N) :
+    0 < canonicalEigenvalue d N a mass m := by
+  unfold canonicalEigenvalue
+  have hsum_nonneg : 0 ≤ ∑ i : Fin d, latticeEigenvalue1d N a (m i) :=
+    Finset.sum_nonneg (fun i _ => latticeEigenvalue1d_nonneg N a (m i))
+  nlinarith [sq_pos_of_pos hmass]
+
+private lemma canonicalSmoothWeight_nonneg_local
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (m : Fin d → Fin N) :
+    0 ≤ canonicalSmoothWeight d N a mass T m := by
+  unfold canonicalSmoothWeight
+  exact div_nonneg (le_of_lt (Real.exp_pos _))
+    (canonicalEigenvalue_pos_local (d := d) (N := N) (a := a) (mass := mass) ha hmass m).le
+
+private lemma canonicalRoughWeight_nonneg_local
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (m : Fin d → Fin N) :
+    0 ≤ canonicalRoughWeight d N a mass T m := by
+  unfold canonicalRoughWeight
+  have hLam :=
+    canonicalEigenvalue_pos_local (d := d) (N := N) (a := a) (mass := mass) ha hmass m
+  have h_exp_le : Real.exp (-T * canonicalEigenvalue d N a mass m) ≤ 1 := by
+    apply Real.exp_le_one_iff.mpr
+    nlinarith
+  have h_num : 0 ≤ 1 - Real.exp (-T * canonicalEigenvalue d N a mass m) := by
+    linarith
+  exact div_nonneg h_num hLam.le
+
+private lemma canonicalSmoothGamma_sq_sum_eq_wickConstant
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x : FinLatticeSites d N) :
+    ∑ m : Fin d → Fin N, (canonicalSmoothGamma d N a mass T x m) ^ 2 =
+      smoothWickConstant d N a mass T := by
+  rw [← canonicalSmoothFieldFunction_self_moment_eq_smoothWickConstant
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x]
+  unfold canonicalSmoothFieldFunction_self_moment_diag
+  rw [canonicalSmoothFieldFunction_covariance_eq
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x x]
+  unfold canonicalSmoothCovariance
+  have ha_d_pos : (0 : ℝ) < a ^ d := pow_pos ha d
+  calc
+    ∑ m : Fin d → Fin N, (canonicalSmoothGamma d N a mass T x m) ^ 2
+      = ∑ m : Fin d → Fin N,
+          (a ^ d : ℝ)⁻¹ *
+            (canonicalSmoothWeight d N a mass T m *
+              latticeFourierProductBasisFun N d m x *
+              latticeFourierProductBasisFun N d m x /
+              latticeFourierProductNormSq N d m) := by
+              refine Finset.sum_congr rfl ?_
+              intro m hm
+              have hC :
+                  0 ≤ canonicalSmoothWeight d N a mass T m /
+                    latticeFourierProductNormSq N d m := by
+                apply div_nonneg
+                · exact canonicalSmoothWeight_nonneg_local
+                    (d := d) (N := N) (a := a) (mass := mass) ha hmass T m
+                · exact (latticeFourierProductNormSq_pos (N := N) d m).le
+              have h_sq :
+                  Real.sqrt
+                      (canonicalSmoothWeight d N a mass T m /
+                        latticeFourierProductNormSq N d m) *
+                    Real.sqrt
+                      (canonicalSmoothWeight d N a mass T m /
+                        latticeFourierProductNormSq N d m) =
+                  canonicalSmoothWeight d N a mass T m /
+                    latticeFourierProductNormSq N d m :=
+                Real.mul_self_sqrt hC
+              have h_gamma :
+                  canonicalSmoothGamma d N a mass T x m =
+                    (Real.sqrt (a ^ d))⁻¹ *
+                      (Real.sqrt
+                          (canonicalSmoothWeight d N a mass T m /
+                            latticeFourierProductNormSq N d m) *
+                        latticeFourierProductBasisFun N d m x) := by
+                rfl
+              rw [h_gamma, sq]
+              calc
+                ((Real.sqrt (a ^ d))⁻¹ *
+                    (Real.sqrt
+                        (canonicalSmoothWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m) *
+                      latticeFourierProductBasisFun N d m x)) *
+                    ((Real.sqrt (a ^ d))⁻¹ *
+                      (Real.sqrt
+                          (canonicalSmoothWeight d N a mass T m /
+                            latticeFourierProductNormSq N d m) *
+                        latticeFourierProductBasisFun N d m x))
+                    =
+                  ((Real.sqrt (a ^ d))⁻¹ * (Real.sqrt (a ^ d))⁻¹) *
+                    (Real.sqrt
+                        (canonicalSmoothWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m) *
+                      Real.sqrt
+                        (canonicalSmoothWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m)) *
+                    (latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m x) := by
+                        ring
+                _ = (a ^ d : ℝ)⁻¹ *
+                    (canonicalSmoothWeight d N a mass T m /
+                      latticeFourierProductNormSq N d m) *
+                    ((latticeFourierProductBasisFun N d m x) ^ 2) := by
+                      rw [← mul_inv, ← Real.sqrt_mul (le_of_lt ha_d_pos),
+                        Real.sqrt_mul_self (le_of_lt ha_d_pos), h_sq]
+                      ring
+                _ = (a ^ d : ℝ)⁻¹ *
+                    (canonicalSmoothWeight d N a mass T m *
+                      latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m x /
+                      latticeFourierProductNormSq N d m) := by
+                        ring
+    _ = (a ^ d : ℝ)⁻¹ *
+        ∑ m : Fin d → Fin N,
+          canonicalSmoothWeight d N a mass T m *
+            latticeFourierProductBasisFun N d m x *
+            latticeFourierProductBasisFun N d m x /
+            latticeFourierProductNormSq N d m := by
+              rw [← Finset.mul_sum]
+
+private lemma canonicalRoughGamma_sq_sum_eq_wickConstant
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x : FinLatticeSites d N) :
+    ∑ m : Fin d → Fin N, (canonicalRoughGamma d N a mass T x m) ^ 2 =
+      roughWickConstant d N a mass T := by
+  rw [← canonicalRoughFieldFunction_self_moment_eq_roughWickConstant
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x]
+  unfold canonicalRoughFieldFunction_self_moment_diag
+  rw [canonicalRoughFieldFunction_covariance_eq
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x x]
+  unfold canonicalRoughCovariance
+  have ha_d_pos : (0 : ℝ) < a ^ d := pow_pos ha d
+  calc
+    ∑ m : Fin d → Fin N, (canonicalRoughGamma d N a mass T x m) ^ 2
+      = ∑ m : Fin d → Fin N,
+          (a ^ d : ℝ)⁻¹ *
+            (canonicalRoughWeight d N a mass T m *
+              latticeFourierProductBasisFun N d m x *
+              latticeFourierProductBasisFun N d m x /
+              latticeFourierProductNormSq N d m) := by
+              refine Finset.sum_congr rfl ?_
+              intro m hm
+              have hC :
+                  0 ≤ canonicalRoughWeight d N a mass T m /
+                    latticeFourierProductNormSq N d m := by
+                apply div_nonneg
+                · exact canonicalRoughWeight_nonneg_local
+                    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT m
+                · exact (latticeFourierProductNormSq_pos (N := N) d m).le
+              have h_sq :
+                  Real.sqrt
+                      (canonicalRoughWeight d N a mass T m /
+                        latticeFourierProductNormSq N d m) *
+                    Real.sqrt
+                      (canonicalRoughWeight d N a mass T m /
+                        latticeFourierProductNormSq N d m) =
+                  canonicalRoughWeight d N a mass T m /
+                    latticeFourierProductNormSq N d m :=
+                Real.mul_self_sqrt hC
+              have h_gamma :
+                  canonicalRoughGamma d N a mass T x m =
+                    (Real.sqrt (a ^ d))⁻¹ *
+                      (Real.sqrt
+                          (canonicalRoughWeight d N a mass T m /
+                            latticeFourierProductNormSq N d m) *
+                        latticeFourierProductBasisFun N d m x) := by
+                rfl
+              rw [h_gamma, sq]
+              calc
+                ((Real.sqrt (a ^ d))⁻¹ *
+                    (Real.sqrt
+                        (canonicalRoughWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m) *
+                      latticeFourierProductBasisFun N d m x)) *
+                    ((Real.sqrt (a ^ d))⁻¹ *
+                      (Real.sqrt
+                          (canonicalRoughWeight d N a mass T m /
+                            latticeFourierProductNormSq N d m) *
+                        latticeFourierProductBasisFun N d m x))
+                    =
+                  ((Real.sqrt (a ^ d))⁻¹ * (Real.sqrt (a ^ d))⁻¹) *
+                    (Real.sqrt
+                        (canonicalRoughWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m) *
+                      Real.sqrt
+                        (canonicalRoughWeight d N a mass T m /
+                          latticeFourierProductNormSq N d m)) *
+                    (latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m x) := by
+                        ring
+                _ = (a ^ d : ℝ)⁻¹ *
+                    (canonicalRoughWeight d N a mass T m /
+                      latticeFourierProductNormSq N d m) *
+                    ((latticeFourierProductBasisFun N d m x) ^ 2) := by
+                      rw [← mul_inv, ← Real.sqrt_mul (le_of_lt ha_d_pos),
+                        Real.sqrt_mul_self (le_of_lt ha_d_pos), h_sq]
+                      ring
+                _ = (a ^ d : ℝ)⁻¹ *
+                    (canonicalRoughWeight d N a mass T m *
+                      latticeFourierProductBasisFun N d m x *
+                      latticeFourierProductBasisFun N d m x /
+                      latticeFourierProductNormSq N d m) := by
+                        ring
+    _ = (a ^ d : ℝ)⁻¹ *
+        ∑ m : Fin d → Fin N,
+          canonicalRoughWeight d N a mass T m *
+            latticeFourierProductBasisFun N d m x *
+            latticeFourierProductBasisFun N d m x /
+            latticeFourierProductNormSq N d m := by
+              rw [← Finset.mul_sum]
+
+private lemma canonicalSmoothFieldFunction_std_eq_sum_gamma
+    (T : ℝ) (x : FinLatticeSites d N) (ξ : canonicalStdIndex d N → ℝ) :
+    canonicalSmoothFieldFunction d N a mass T
+        ((canonicalJointStdGaussianMeasurableEquiv d N).symm ξ) x =
+      ∑ m : Fin d → Fin N,
+        canonicalSmoothGamma d N a mass T x m * ξ (canonicalStdInlIndex d N m) := by
+  simpa using
+    (canonicalSmoothFieldFunctionOfFst_eq_sum_gamma
+      (d := d) (N := N) (a := a) (mass := mass) T
+      (((canonicalJointStdGaussianMeasurableEquiv d N).symm ξ).1) x)
+
+private lemma canonicalRoughFieldFunction_std_eq_sum_gamma
+    (T : ℝ) (x : FinLatticeSites d N) (ξ : canonicalStdIndex d N → ℝ) :
+    canonicalRoughFieldFunction d N a mass T
+        ((canonicalJointStdGaussianMeasurableEquiv d N).symm ξ) x =
+      ∑ m : Fin d → Fin N,
+        canonicalRoughGamma d N a mass T x m * ξ (canonicalStdInrIndex d N m) := by
+  simpa using
+    (canonicalRoughFieldFunctionOfSnd_eq_sum_gamma
+      (d := d) (N := N) (a := a) (mass := mass) T
+      (((canonicalJointStdGaussianMeasurableEquiv d N).symm ξ).2) x)
+
+private theorem canonicalSiteCrossStd_mem_wienerChaosLE
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (x : FinLatticeSites d N) (k j : ℕ) (hjk : j ≤ k) :
+    ∃ hf : MeasureTheory.MemLp
+        (canonicalSiteCrossStd d N a mass T x k j) 2
+        (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N))),
+      (hf.toLp (canonicalSiteCrossStd d N a mass T x k j)) ∈
+        GaussianHilbert.wienerChaosLE
+          (Fintype.card (CanonicalJointSumIndex d N)) k := by
+  classical
+  let γS : (Fin d → Fin N) → ℝ := canonicalSmoothGamma d N a mass T x
+  let γR : (Fin d → Fin N) → ℝ := canonicalRoughGamma d N a mass T x
+  let sS := multiIndicesOfTotalDegree (Fin d → Fin N) j
+  let sR := multiIndicesOfTotalDegree (Fin d → Fin N) (k - j)
+  let β : ((Fin d → Fin N) → ℕ) × ((Fin d → Fin N) → ℕ) →
+      canonicalStdIndex d N → ℕ :=
+    fun p => canonicalJointMultiIndexOfPair d N p.1 p.2
+  let c : ((Fin d → Fin N) → ℕ) × ((Fin d → Fin N) → ℕ) → ℝ :=
+    fun p =>
+      wickExpansionCoeff j γS p.1 *
+        wickExpansionCoeff (k - j) γR p.2
+  let f : (canonicalStdIndex d N → ℝ) → ℝ :=
+    canonicalSiteCrossStd d N a mass T x k j
+  let g : (canonicalStdIndex d N → ℝ) → ℝ :=
+    fun ξ => ∑ p ∈ sS.product sR, c p * ∏ i, wickMonomial (β p i) 1 (ξ i)
+  have hf_def : f = g := by
+    funext ξ
+    unfold f g canonicalSiteCrossStd c β wickExpansionCoeff
+    rw [show smoothWickConstant d N a mass T = ∑ m : Fin d → Fin N, (γS m) ^ 2 from by
+      simpa [γS] using
+        (canonicalSmoothGamma_sq_sum_eq_wickConstant
+          (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x).symm]
+    rw [show roughWickConstant d N a mass T = ∑ m : Fin d → Fin N, (γR m) ^ 2 from by
+      simpa [γR] using
+        (canonicalRoughGamma_sq_sum_eq_wickConstant
+          (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT x).symm]
+    rw [canonicalSmoothFieldFunction_std_eq_sum_gamma
+      (d := d) (N := N) (a := a) (mass := mass) T x ξ]
+    rw [canonicalRoughFieldFunction_std_eq_sum_gamma
+      (d := d) (N := N) (a := a) (mass := mass) T x ξ]
+    rw [show
+      wickMonomial j (∑ m : Fin d → Fin N, (γS m) ^ 2)
+          (∑ m : Fin d → Fin N, canonicalSmoothGamma d N a mass T x m *
+            ξ (canonicalStdInlIndex d N m)) =
+        ∑ α ∈ sS,
+          wickExpansionCoeff j γS α *
+            ∏ m : Fin d → Fin N, wickMonomial (α m) 1 (ξ (canonicalStdInlIndex d N m)) from by
+              simpa [γS, wickMonomial_eq_root_local] using
+                (wickMonomial_pow_sum_expansion_of_totalDegree
+                  (γ := γS) (ξ := fun m => ξ (canonicalStdInlIndex d N m)) (k := j))]
+    rw [show
+      wickMonomial (k - j) (∑ m : Fin d → Fin N, (γR m) ^ 2)
+          (∑ m : Fin d → Fin N, canonicalRoughGamma d N a mass T x m *
+            ξ (canonicalStdInrIndex d N m)) =
+        ∑ α ∈ sR,
+          wickExpansionCoeff (k - j) γR α *
+            ∏ m : Fin d → Fin N, wickMonomial (α m) 1 (ξ (canonicalStdInrIndex d N m)) from by
+              simpa [γR, wickMonomial_eq_root_local] using
+                (wickMonomial_pow_sum_expansion_of_totalDegree
+                  (γ := γR) (ξ := fun m => ξ (canonicalStdInrIndex d N m)) (k := k - j))]
+    rw [Finset.sum_mul_sum, ← Finset.sum_product']
+    refine Finset.sum_congr rfl ?_
+    intro p hp
+    rcases p with ⟨αS, αR⟩
+    calc
+      (wickExpansionCoeff j γS αS * ∏ m, wickMonomial (αS m) 1 (ξ (canonicalStdInlIndex d N m))) *
+          (wickExpansionCoeff (k - j) γR αR * ∏ m, wickMonomial (αR m) 1 (ξ (canonicalStdInrIndex d N m)))
+        =
+          (wickExpansionCoeff j γS αS * wickExpansionCoeff (k - j) γR αR) *
+            ((∏ m, wickMonomial (αS m) 1 (ξ (canonicalStdInlIndex d N m))) *
+              ∏ m, wickMonomial (αR m) 1 (ξ (canonicalStdInrIndex d N m))) := by
+                ring
+      _ =
+          (wickExpansionCoeff j γS αS * wickExpansionCoeff (k - j) γR αR) *
+            ∏ i, wickMonomial (canonicalJointMultiIndexOfPair d N αS αR i) 1 (ξ i) := by
+              simpa [canonicalJointMultiIndexOfPair] using
+                (congrArg
+                  (fun z =>
+                    (wickExpansionCoeff j γS αS * wickExpansionCoeff (k - j) γR αR) * z)
+                  (canonicalJointMultiIndexOfPair_wick_prod
+                    (d := d) (N := N) αS αR ξ).symm)
+      _ = ((↑j.factorial / ∏ j, ↑(αS j).factorial) * ∏ j, γS j ^ αS j) *
+            ((↑(k - j).factorial / ∏ j, ↑(αR j).factorial) * ∏ j, γR j ^ αR j) *
+              ∏ i, wickMonomial (canonicalJointMultiIndexOfPair d N αS αR i) 1 (ξ i) := by
+                unfold wickExpansionCoeff
+                ring
+  have hg_memLp : MeasureTheory.MemLp g 2
+      (GaussianHilbert.stdGaussianFin
+        (Fintype.card (CanonicalJointSumIndex d N))) := by
+    refine memLp_finset_sum (sS.product sR) ?_
+    intro p hp
+    have h_term :
+        MeasureTheory.MemLp
+          (fun ξ : canonicalStdIndex d N → ℝ =>
+            c p * ∏ i, wickMonomial (β p i) 1 (ξ i))
+          2
+          (GaussianHilbert.stdGaussianFin
+            (Fintype.card (CanonicalJointSumIndex d N))) := by
+      have h_eq :
+          (fun ξ : canonicalStdIndex d N → ℝ =>
+            c p * ∏ i, wickMonomial (β p i) 1 (ξ i)) =
+          fun ξ => c p * GaussianHilbert.hermiteMultiEval (β p) ξ := by
+        funext ξ
+        rw [multiWickMonomial_eq_hermiteMultiEval (β p) ξ]
+      rw [h_eq]
+      exact (GaussianHilbert.hermiteMultiEval_memLp (β p)).const_mul (c p)
+    exact h_term
+  let hf : MeasureTheory.MemLp
+      (canonicalSiteCrossStd d N a mass T x k j) 2
+      (GaussianHilbert.stdGaussianFin
+        (Fintype.card (CanonicalJointSumIndex d N))) := by
+          simpa [f, g, hf_def] using hg_memLp
+  refine ⟨hf, ?_⟩
+  refine finite_indexed_wick_sum_mem_wienerChaosLE
+    (s := sS.product sR) β c ?_
+    (canonicalSiteCrossStd d N a mass T x k j)
+    (by simpa [f, g] using hf_def)
+    hf
+  intro p hp
+  rcases Finset.mem_product.mp hp with ⟨hpS, hpR⟩
+  have hpSdeg : ∑ m : Fin d → Fin N, p.1 m = j := by
+    have hpS' : (∀ a : Fin d → Fin N, p.1 a ≤ j) ∧ ∑ a : Fin d → Fin N, p.1 a = j := by
+      simpa [sS, multiIndicesOfTotalDegree] using hpS
+    exact hpS'.2
+  have hpRdeg : ∑ m : Fin d → Fin N, p.2 m = k - j := by
+    have hpR' : (∀ a : Fin d → Fin N, p.2 a ≤ k - j) ∧
+        ∑ a : Fin d → Fin N, p.2 a = k - j := by
+      simpa [sR, multiIndicesOfTotalDegree] using hpR
+    exact hpR'.2
+  calc
+    GaussianHilbert.MultiIndex.totalDegree (β p)
+        = (∑ m : Fin d → Fin N, p.1 m) +
+            ∑ m : Fin d → Fin N, p.2 m := by
+              simpa [GaussianHilbert.MultiIndex.totalDegree] using
+                canonicalJointMultiIndexOfPair_totalDegree
+                  (d := d) (N := N) p.1 p.2
+    _ = j + (k - j) := by rw [hpSdeg, hpRdeg]
+    _ ≤ k := by
+          exact le_of_eq (Nat.add_sub_of_le hjk)
+
 /-! ## S1: pointwise binomial decomposition
 
 Expand each per-site difference of Wick polynomials via the binomial
@@ -923,6 +1468,398 @@ lemma canonicalRoughError_eq_sum_over_cross_terms
     refine Finset.sum_congr rfl fun j _ => ?_
     simp only [mul_assoc, ← Finset.mul_sum]
     ring
+
+private lemma wienerChaosLE_mono
+    {n k l : ℕ} (hkl : k ≤ l) :
+    GaussianHilbert.wienerChaosLE n k ≤
+      GaussianHilbert.wienerChaosLE n l := by
+  rw [GaussianHilbert.wienerChaosLE, GaussianHilbert.wienerChaosLE]
+  refine iSup₂_le fun i hi => ?_
+  refine le_iSup_of_le i ?_
+  refine le_iSup_of_le ?_ le_rfl
+  exact Finset.mem_range.mpr <|
+    lt_of_lt_of_le (Finset.mem_range.mp hi) (Nat.succ_le_succ hkl)
+
+/-- Standard-Gaussian representative of a single rough cross-term. -/
+private def canonicalCrossTermStd
+    (T : ℝ) (k j : ℕ) (ξ : canonicalStdIndex d N → ℝ) : ℝ :=
+  a ^ d * ∑ x : FinLatticeSites d N, canonicalSiteCrossStd d N a mass T x k j ξ
+
+@[simp] private lemma canonicalCrossTermStd_eq
+    (T : ℝ) (η : CanonicalJoint d N) (k j : ℕ) :
+    canonicalCrossTermStd d N a mass T k j
+        (canonicalJointStdGaussianMeasurableEquiv d N η) =
+      canonicalCrossTerm d N a mass T η k j := by
+  unfold canonicalCrossTermStd canonicalCrossTerm canonicalSiteCrossStd
+  simp
+
+private theorem canonicalCrossTermStd_mem_wienerChaosLE
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (k j : ℕ) (hjk : j ≤ k) :
+    ∃ hf : MeasureTheory.MemLp
+        (canonicalCrossTermStd d N a mass T k j) 2
+        (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N))),
+      (hf.toLp (canonicalCrossTermStd d N a mass T k j)) ∈
+        GaussianHilbert.wienerChaosLE
+          (Fintype.card (CanonicalJointSumIndex d N)) k := by
+  classical
+  let μ := GaussianHilbert.stdGaussianFin
+    (Fintype.card (CanonicalJointSumIndex d N))
+  let hfSite :
+      ∀ x : FinLatticeSites d N,
+        MeasureTheory.MemLp
+          (fun ξ : canonicalStdIndex d N → ℝ =>
+            canonicalSiteCrossStd d N a mass T x k j ξ) 2 μ :=
+    fun x =>
+      Classical.choose <|
+        canonicalSiteCrossStd_mem_wienerChaosLE
+          (d := d) (N := N) (a := a) (mass := mass)
+          ha hmass T hT x k j hjk
+  have hfSite_spec :
+      ∀ x : FinLatticeSites d N,
+        ((hfSite x).toLp
+          (fun ξ : canonicalStdIndex d N → ℝ =>
+            canonicalSiteCrossStd d N a mass T x k j ξ)) ∈
+          GaussianHilbert.wienerChaosLE
+            (Fintype.card (CanonicalJointSumIndex d N)) k := by
+    intro x
+    exact
+      Classical.choose_spec <|
+        canonicalSiteCrossStd_mem_wienerChaosLE
+          (d := d) (N := N) (a := a) (mass := mass)
+          ha hmass T hT x k j hjk
+  have hsum_memLp :
+      MeasureTheory.MemLp
+        (fun ξ : canonicalStdIndex d N → ℝ =>
+          ∑ x : FinLatticeSites d N, canonicalSiteCrossStd d N a mass T x k j ξ)
+        2 μ := by
+    refine memLp_finset_sum Finset.univ ?_
+    intro x hx
+    simpa using hfSite x
+  let hf : MeasureTheory.MemLp
+      (canonicalCrossTermStd d N a mass T k j) 2 μ := by
+        simpa [canonicalCrossTermStd] using hsum_memLp.const_mul (a ^ d)
+  refine ⟨hf, ?_⟩
+  have h_toLp :
+      hf.toLp (canonicalCrossTermStd d N a mass T k j) =
+        (a ^ d) • ∑ x : FinLatticeSites d N,
+          (hfSite x).toLp
+            (fun ξ : canonicalStdIndex d N → ℝ =>
+              canonicalSiteCrossStd d N a mass T x k j ξ) := by
+    apply MeasureTheory.Lp.ext
+    refine (MemLp.coeFn_toLp hf).trans ?_
+    symm
+    refine (MeasureTheory.Lp.coeFn_smul (a ^ d)
+      (∑ x : FinLatticeSites d N,
+        (hfSite x).toLp
+          (fun ξ : canonicalStdIndex d N → ℝ =>
+            canonicalSiteCrossStd d N a mass T x k j ξ))).trans ?_
+    have hsum_coe :
+        (((∑ x : FinLatticeSites d N,
+            (hfSite x).toLp
+              (fun ξ : canonicalStdIndex d N → ℝ =>
+                canonicalSiteCrossStd d N a mass T x k j ξ) :
+              MeasureTheory.Lp ℝ 2 μ) :
+          (canonicalStdIndex d N → ℝ) → ℝ)) =ᵐ[μ]
+            ∑ x : FinLatticeSites d N,
+              (((hfSite x).toLp
+                (fun ξ : canonicalStdIndex d N → ℝ =>
+                  canonicalSiteCrossStd d N a mass T x k j ξ) :
+                  MeasureTheory.Lp ℝ 2 μ) :
+                (canonicalStdIndex d N → ℝ) → ℝ) :=
+      MeasureTheory.Lp.coeFn_finset_sum Finset.univ
+        (fun x =>
+          (hfSite x).toLp
+            (fun ξ : canonicalStdIndex d N → ℝ =>
+              canonicalSiteCrossStd d N a mass T x k j ξ))
+    have h_each :
+        ∀ x ∈ ((Finset.univ : Finset (FinLatticeSites d N)) : Set (FinLatticeSites d N)),
+          ∀ᵐ ξ ∂μ,
+            (((hfSite x).toLp
+              (fun ξ : canonicalStdIndex d N → ℝ =>
+                canonicalSiteCrossStd d N a mass T x k j ξ) :
+                MeasureTheory.Lp ℝ 2 μ) :
+              (canonicalStdIndex d N → ℝ) → ℝ) ξ =
+              canonicalSiteCrossStd d N a mass T x k j ξ := by
+      intro x _
+      exact MemLp.coeFn_toLp (hfSite x)
+    have h_ae_all :
+        ∀ᵐ ξ ∂μ,
+          ∀ x ∈ ((Finset.univ : Finset (FinLatticeSites d N)) : Set (FinLatticeSites d N)),
+            (((hfSite x).toLp
+              (fun ξ : canonicalStdIndex d N → ℝ =>
+                canonicalSiteCrossStd d N a mass T x k j ξ) :
+                MeasureTheory.Lp ℝ 2 μ) :
+              (canonicalStdIndex d N → ℝ) → ℝ) ξ =
+              canonicalSiteCrossStd d N a mass T x k j ξ :=
+      (ae_ball_iff (Finset.univ : Finset (FinLatticeSites d N)).countable_toSet).mpr h_each
+    filter_upwards [hsum_coe, h_ae_all] with ξ hsumξ hξ
+    rw [Pi.smul_apply, hsumξ, Finset.sum_apply, canonicalCrossTermStd]
+    congr 1
+    exact Finset.sum_congr rfl fun x hx =>
+      hξ x (Finset.mem_coe.mpr (by simpa using hx))
+  rw [h_toLp]
+  apply Submodule.smul_mem
+  apply Submodule.sum_mem
+  intro x hx
+  exact hfSite_spec x
+
+private theorem canonicalCrossTermLinearCombo_mem_wienerChaosLE
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (k l : ℕ) (hkl : k ≤ l) (c : ℕ → ℝ) :
+    ∃ hf : MeasureTheory.MemLp
+        (fun ξ : canonicalStdIndex d N → ℝ =>
+          ∑ j ∈ Finset.range k, c j * canonicalCrossTermStd d N a mass T k j ξ)
+        2
+        (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N))),
+      (hf.toLp
+        (fun ξ : canonicalStdIndex d N → ℝ =>
+          ∑ j ∈ Finset.range k, c j * canonicalCrossTermStd d N a mass T k j ξ)) ∈
+        GaussianHilbert.wienerChaosLE
+          (Fintype.card (CanonicalJointSumIndex d N)) l := by
+  classical
+  let μ := GaussianHilbert.stdGaussianFin
+    (Fintype.card (CanonicalJointSumIndex d N))
+  let F : ℕ → MeasureTheory.Lp ℝ 2 μ := fun j =>
+    if hj : j ∈ Finset.range k then
+      let hfj :=
+        Classical.choose <|
+          canonicalCrossTermStd_mem_wienerChaosLE
+            (d := d) (N := N) (a := a) (mass := mass)
+            ha hmass T hT k j (Nat.le_of_lt (Finset.mem_range.mp hj))
+      hfj.toLp (canonicalCrossTermStd d N a mass T k j)
+    else 0
+  have hmemLp :
+      MeasureTheory.MemLp
+        (fun ξ : canonicalStdIndex d N → ℝ =>
+          ∑ j ∈ Finset.range k, c j * canonicalCrossTermStd d N a mass T k j ξ)
+        2 μ := by
+    refine memLp_finset_sum (Finset.range k) ?_
+    intro j hj
+    let hfj :=
+      Classical.choose <|
+        canonicalCrossTermStd_mem_wienerChaosLE
+          (d := d) (N := N) (a := a) (mass := mass)
+          ha hmass T hT k j (Nat.le_of_lt (Finset.mem_range.mp hj))
+    simpa using (hfj.const_mul (c j))
+  refine ⟨hmemLp, ?_⟩
+  have h_toLp :
+      hmemLp.toLp
+        (fun ξ : canonicalStdIndex d N → ℝ =>
+          ∑ j ∈ Finset.range k, c j * canonicalCrossTermStd d N a mass T k j ξ) =
+        ∑ j ∈ Finset.range k, c j • F j := by
+    apply MeasureTheory.Lp.ext
+    refine (MemLp.coeFn_toLp hmemLp).trans ?_
+    symm
+    have hsum_coe :
+        (((∑ j ∈ Finset.range k, c j • F j : MeasureTheory.Lp ℝ 2 μ) :
+          (canonicalStdIndex d N → ℝ) → ℝ)) =ᵐ[μ]
+            ∑ j ∈ Finset.range k,
+              (((c j • F j : MeasureTheory.Lp ℝ 2 μ) :
+                (canonicalStdIndex d N → ℝ) → ℝ)) :=
+      MeasureTheory.Lp.coeFn_finset_sum (Finset.range k) (fun j => c j • F j)
+    have h_each :
+        ∀ j ∈ ((Finset.range k : Finset ℕ) : Set ℕ),
+          ∀ᵐ ξ ∂μ,
+            (((c j • F j : MeasureTheory.Lp ℝ 2 μ) :
+              (canonicalStdIndex d N → ℝ) → ℝ) ξ) =
+              c j * canonicalCrossTermStd d N a mass T k j ξ := by
+      intro j hjset
+      have hj : j ∈ Finset.range k := Finset.mem_coe.mp hjset
+      dsimp [F]
+      simp only [hj, ↓reduceDIte]
+      let hfj :=
+        Classical.choose <|
+          canonicalCrossTermStd_mem_wienerChaosLE
+            (d := d) (N := N) (a := a) (mass := mass)
+            ha hmass T hT k j (Nat.le_of_lt (Finset.mem_range.mp hj))
+      refine (MeasureTheory.Lp.coeFn_smul (c j)
+        (hfj.toLp (canonicalCrossTermStd d N a mass T k j))).trans ?_
+      filter_upwards [MemLp.coeFn_toLp hfj] with ξ hξ
+      simp [hξ, smul_eq_mul]
+    have h_ae_all :
+        ∀ᵐ ξ ∂μ,
+          ∀ j ∈ ((Finset.range k : Finset ℕ) : Set ℕ),
+            (((c j • F j : MeasureTheory.Lp ℝ 2 μ) :
+              (canonicalStdIndex d N → ℝ) → ℝ) ξ) =
+              c j * canonicalCrossTermStd d N a mass T k j ξ :=
+      (ae_ball_iff (Finset.range k).countable_toSet).mpr h_each
+    refine hsum_coe.trans ?_
+    filter_upwards [h_ae_all] with ξ hξ
+    rw [Finset.sum_apply]
+    exact Finset.sum_congr rfl fun j hj =>
+      hξ j (Finset.mem_coe.mpr hj)
+  rw [h_toLp]
+  apply Submodule.sum_mem
+  intro j hj
+  apply Submodule.smul_mem
+  have hmemk :
+      F j ∈ GaussianHilbert.wienerChaosLE
+        (Fintype.card (CanonicalJointSumIndex d N)) k := by
+    dsimp [F]
+    simp only [hj, ↓reduceDIte]
+    exact Classical.choose_spec <|
+      canonicalCrossTermStd_mem_wienerChaosLE
+        (d := d) (N := N) (a := a) (mass := mass)
+        ha hmass T hT k j (Nat.le_of_lt (Finset.mem_range.mp hj))
+  exact wienerChaosLE_mono (n := Fintype.card (CanonicalJointSumIndex d N)) hkl hmemk
+
+/-- Standard-Gaussian representative of the full canonical rough error. -/
+private def canonicalRoughErrorStd
+    (T : ℝ) (P : InteractionPolynomial) (ξ : canonicalStdIndex d N → ℝ) : ℝ :=
+  (1 / P.n : ℝ) * ∑ j ∈ Finset.range P.n,
+      (P.n.choose j : ℝ) * canonicalCrossTermStd d N a mass T P.n j ξ
+  + ∑ m : Fin P.n, P.coeff m *
+      ∑ j ∈ Finset.range (m : ℕ),
+        ((m : ℕ).choose j : ℝ) *
+          canonicalCrossTermStd d N a mass T (m : ℕ) j ξ
+
+@[simp] private lemma canonicalRoughErrorStd_eq
+    (T : ℝ) (P : InteractionPolynomial) (η : CanonicalJoint d N) :
+    canonicalRoughErrorStd d N a mass T P
+        (canonicalJointStdGaussianMeasurableEquiv d N η) =
+      canonicalRoughError d N a mass T P η := by
+  rw [canonicalRoughError_eq_sum_over_cross_terms]
+  unfold canonicalRoughErrorStd
+  refine congr_arg₂ (· + ·) ?_ ?_
+  · simp only [canonicalCrossTermStd_eq]
+  · refine Finset.sum_congr rfl ?_
+    intro m hm
+    simp only [canonicalCrossTermStd_eq]
+
+private theorem canonicalRoughErrorStd_mem_wienerChaosLE
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (P : InteractionPolynomial) :
+    ∃ hf : MeasureTheory.MemLp
+        (canonicalRoughErrorStd d N a mass T P) 2
+        (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N))),
+      (hf.toLp (canonicalRoughErrorStd d N a mass T P)) ∈
+        GaussianHilbert.wienerChaosLE
+          (Fintype.card (CanonicalJointSumIndex d N)) P.n := by
+  classical
+  let μ := GaussianHilbert.stdGaussianFin
+    (Fintype.card (CanonicalJointSumIndex d N))
+  let leadSum : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ := fun ξ =>
+    ∑ j ∈ Finset.range P.n,
+      (P.n.choose j : ℝ) * canonicalCrossTermStd d N a mass T P.n j ξ
+  let lead : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ := fun ξ =>
+    (1 / P.n : ℝ) • leadSum ξ
+  obtain ⟨hfLeadSum, hLeadSumChaos⟩ :=
+    canonicalCrossTermLinearCombo_mem_wienerChaosLE
+      (d := d) (N := N) (a := a) (mass := mass)
+      ha hmass T hT P.n P.n le_rfl (fun j => (P.n.choose j : ℝ))
+  let hfLead : MeasureTheory.MemLp lead 2 μ := hfLeadSum.const_smul (1 / P.n : ℝ)
+  have hLeadChaos :
+      (hfLead.toLp lead) ∈
+        GaussianHilbert.wienerChaosLE
+          (Fintype.card (CanonicalJointSumIndex d N)) P.n := by
+    have hLead_toLp :
+        hfLead.toLp lead =
+          (1 / P.n : ℝ) • hfLeadSum.toLp leadSum := by
+      simpa [lead, leadSum] using
+        (MeasureTheory.MemLp.toLp_const_smul (1 / P.n : ℝ) hfLeadSum)
+    rw [hLead_toLp]
+    exact Submodule.smul_mem _ _ hLeadSumChaos
+  let perInner : Fin P.n →
+      ((Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) := fun m ξ =>
+    ∑ j ∈ Finset.range (m : ℕ),
+      ((m : ℕ).choose j : ℝ) *
+        canonicalCrossTermStd d N a mass T (m : ℕ) j ξ
+  let per : (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ := fun ξ =>
+    ∑ m : Fin P.n, P.coeff m * perInner m ξ
+  have hPerInner :
+      ∀ m : Fin P.n,
+        ∃ hf : MeasureTheory.MemLp (perInner m) 2 μ,
+          (hf.toLp (perInner m)) ∈
+            GaussianHilbert.wienerChaosLE
+              (Fintype.card (CanonicalJointSumIndex d N)) P.n := by
+    intro m
+    exact canonicalCrossTermLinearCombo_mem_wienerChaosLE
+      (d := d) (N := N) (a := a) (mass := mass)
+      ha hmass T hT (m : ℕ) P.n (Nat.le_of_lt m.2)
+      (fun j => ((m : ℕ).choose j : ℝ))
+  let hfPerInner : ∀ m : Fin P.n, MeasureTheory.MemLp (perInner m) 2 μ :=
+    fun m => (hPerInner m).choose
+  have hPerInnerChaos :
+      ∀ m : Fin P.n,
+        ((hfPerInner m).toLp (perInner m)) ∈
+          GaussianHilbert.wienerChaosLE
+            (Fintype.card (CanonicalJointSumIndex d N)) P.n := by
+    intro m
+    exact (hPerInner m).choose_spec
+  have hfPer : MeasureTheory.MemLp per 2 μ := by
+    refine memLp_finset_sum Finset.univ ?_
+    intro m hm
+    simpa [perInner] using (hfPerInner m).const_mul (P.coeff m)
+  have hPerChaos :
+      (hfPer.toLp per) ∈
+        GaussianHilbert.wienerChaosLE
+          (Fintype.card (CanonicalJointSumIndex d N)) P.n := by
+    have hPer_toLp :
+        hfPer.toLp per =
+          ∑ m : Fin P.n, P.coeff m • (hfPerInner m).toLp (perInner m) := by
+      apply MeasureTheory.Lp.ext
+      refine (MemLp.coeFn_toLp hfPer).trans ?_
+      symm
+      have hsum_coe :
+          (((∑ m : Fin P.n, P.coeff m • (hfPerInner m).toLp (perInner m) :
+              MeasureTheory.Lp ℝ 2 μ) :
+            (canonicalStdIndex d N → ℝ) → ℝ)) =ᵐ[μ]
+              ∑ m : Fin P.n,
+                (((P.coeff m • (hfPerInner m).toLp (perInner m) :
+                    MeasureTheory.Lp ℝ 2 μ) :
+                  (canonicalStdIndex d N → ℝ) → ℝ)) :=
+        MeasureTheory.Lp.coeFn_finset_sum Finset.univ
+          (fun m => P.coeff m • (hfPerInner m).toLp (perInner m))
+      have h_each :
+          ∀ m ∈ ((Finset.univ : Finset (Fin P.n)) : Set (Fin P.n)),
+            ∀ᵐ ξ ∂μ,
+              (((P.coeff m • (hfPerInner m).toLp (perInner m) :
+                  MeasureTheory.Lp ℝ 2 μ) :
+                (canonicalStdIndex d N → ℝ) → ℝ) ξ) =
+                P.coeff m * perInner m ξ := by
+        intro m hm
+        refine (MeasureTheory.Lp.coeFn_smul (P.coeff m)
+          ((hfPerInner m).toLp (perInner m))).trans ?_
+        filter_upwards [MemLp.coeFn_toLp (hfPerInner m)] with ξ hξ
+        simp [hξ, smul_eq_mul]
+      have h_ae_all :
+          ∀ᵐ ξ ∂μ,
+            ∀ m ∈ ((Finset.univ : Finset (Fin P.n)) : Set (Fin P.n)),
+              (((P.coeff m • (hfPerInner m).toLp (perInner m) :
+                  MeasureTheory.Lp ℝ 2 μ) :
+                (canonicalStdIndex d N → ℝ) → ℝ) ξ) =
+                P.coeff m * perInner m ξ :=
+        (ae_ball_iff (Finset.univ : Finset (Fin P.n)).countable_toSet).mpr h_each
+      refine hsum_coe.trans ?_
+      filter_upwards [h_ae_all] with ξ hξ
+      rw [Finset.sum_apply]
+      exact Finset.sum_congr rfl fun m hm =>
+        hξ m (Finset.mem_coe.mpr hm)
+    rw [hPer_toLp]
+    apply Submodule.sum_mem
+    intro m hm
+    exact Submodule.smul_mem _ _ (hPerInnerChaos m)
+  have hf : MeasureTheory.MemLp (canonicalRoughErrorStd d N a mass T P) 2 μ := by
+    change MeasureTheory.MemLp (fun ξ => lead ξ + per ξ) 2 μ
+    simpa using hfLead.add hfPer
+  refine ⟨hf, ?_⟩
+  have h_toLp :
+      hf.toLp (canonicalRoughErrorStd d N a mass T P) =
+        hfLead.toLp lead + hfPer.toLp per := by
+    calc
+      hf.toLp (canonicalRoughErrorStd d N a mass T P)
+          = MeasureTheory.MemLp.toLp (fun ξ => lead ξ + per ξ) (hfLead.add hfPer) := by
+              apply MeasureTheory.MemLp.toLp_congr hf (hfLead.add hfPer)
+              filter_upwards with ξ
+              simp [canonicalRoughErrorStd, lead, leadSum, per, perInner, smul_eq_mul]
+      _ = hfLead.toLp lead + hfPer.toLp per := by
+            simpa using (MeasureTheory.MemLp.toLp_add hfLead hfPer)
+  rw [h_toLp]
+  exact Submodule.add_mem _ hLeadChaos hPerChaos
 
 /-! ## Generic L² Pythagoras (two functions)
 
@@ -2708,6 +3645,133 @@ theorem rough_error_variance
             (mul_le_mul_of_nonneg_right hK0_le_K h_common_nonneg)
     _ = K * T * (1 + |Real.log T|) ^ (P.n - 1) := by
           rfl
+
+/-- Uniform canonical-joint rough negative tail from `rough_error_variance`.
+
+This packages the canonical standard-Gaussian representative,
+its `wienerChaosLE` membership, and the variance estimate into the
+dimension-independent concentration bound. The only scale input is the
+square root of the variance witness from `rough_error_variance`. -/
+theorem canonicalRoughError_neg_tail_uniform_in_aN
+    (P : InteractionPolynomial)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L)
+        (T : ℝ) (hT : 0 < T)
+        (t : ℝ) (ht : 0 < t),
+        (canonicalJointMeasure 2 N)
+          {η | canonicalRoughError 2 N a mass T P η ≤ -t} ≤
+            2 * ENNReal.ofReal
+              (Real.exp
+                (-(Pphi2.ChaosTailBridge.chaosTailConstant P.n) *
+                  (t /
+                    (2 * Real.sqrt
+                      (K * T * (1 + |Real.log T|) ^ (P.n - 1)))) ^
+                    ((2 : ℝ) / P.n))) := by
+  obtain ⟨K, hK_pos, hvar⟩ :=
+    rough_error_variance (d := 2) rfl P L mass hL hmass
+  refine ⟨K, hK_pos, ?_⟩
+  intro N _ a ha hvol T hT t ht
+  let nStd : ℕ := Fintype.card (CanonicalJointSumIndex 2 N)
+  obtain ⟨hf, hF_chaos⟩ :=
+    canonicalRoughErrorStd_mem_wienerChaosLE
+      (d := 2) (N := N) (a := a) (mass := mass) ha hmass T hT P
+  let F : MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin nStd) :=
+    hf.toLp (canonicalRoughErrorStd 2 N a mass T P)
+  have hrepr_joint :
+      ∀ᵐ η ∂(canonicalJointMeasure 2 N),
+        (F : (Fin nStd → ℝ) → ℝ)
+          (canonicalJointStdGaussianMeasurableEquiv 2 N η) =
+            canonicalRoughError 2 N a mass T P η := by
+    have hrepr_std :
+        ∀ᵐ ξ ∂(GaussianHilbert.stdGaussianFin nStd),
+          (F : (Fin nStd → ℝ) → ℝ) ξ =
+            canonicalRoughErrorStd 2 N a mass T P ξ := by
+      simpa [F] using
+        (MemLp.coeFn_toLp hf :
+          (hf.toLp (canonicalRoughErrorStd 2 N a mass T P) : (Fin nStd → ℝ) → ℝ)
+            =ᵐ[GaussianHilbert.stdGaussianFin nStd]
+              canonicalRoughErrorStd 2 N a mass T P)
+    have hrepr_map :
+        ∀ᵐ η ∂(canonicalJointMeasure 2 N),
+          (F : (Fin nStd → ℝ) → ℝ)
+            (canonicalJointStdGaussianMeasurableEquiv 2 N η) =
+              canonicalRoughErrorStd 2 N a mass T P
+                (canonicalJointStdGaussianMeasurableEquiv 2 N η) := by
+      have hrepr_std' :
+          ∀ᵐ ξ ∂((canonicalJointMeasure 2 N).map
+            (canonicalJointStdGaussianMeasurableEquiv 2 N)),
+            (F : (Fin nStd → ℝ) → ℝ) ξ =
+              canonicalRoughErrorStd 2 N a mass T P ξ := by
+        simpa [nStd, canonicalJointMeasure_map_stdGaussian (d := 2) (N := N)] using hrepr_std
+      exact MeasureTheory.ae_of_ae_map
+        (canonicalJointStdGaussianMeasurableEquiv 2 N).measurable.aemeasurable
+        hrepr_std'
+    filter_upwards [hrepr_map] with η hη
+    simpa using hη.trans
+      (canonicalRoughErrorStd_eq
+        (d := 2) (N := N) (a := a) (mass := mass) (T := T) (P := P) η)
+  have hF_norm_sq :
+      ‖F‖ ^ 2 =
+        ∫ ξ, (canonicalRoughErrorStd 2 N a mass T P ξ) ^ 2
+          ∂(GaussianHilbert.stdGaussianFin nStd) := by
+    change
+      ‖hf.toLp (canonicalRoughErrorStd 2 N a mass T P)‖ ^ 2 =
+        ∫ ξ, (canonicalRoughErrorStd 2 N a mass T P ξ) ^ 2
+          ∂(GaussianHilbert.stdGaussianFin nStd)
+    rw [← real_inner_self_eq_norm_sq, MeasureTheory.L2.inner_def]
+    refine integral_congr_ae ?_
+    filter_upwards [MemLp.coeFn_toLp hf] with ξ hξ
+    simp [hξ, sq]
+  have hsq_integrable :
+      Integrable (fun ξ => (canonicalRoughErrorStd 2 N a mass T P ξ) ^ 2)
+        (GaussianHilbert.stdGaussianFin nStd) := hf.integrable_sq
+  have hsq_integrable_map :
+      Integrable (fun ξ => (canonicalRoughErrorStd 2 N a mass T P ξ) ^ 2)
+        ((canonicalJointMeasure 2 N).map
+          (canonicalJointStdGaussianMeasurableEquiv 2 N)) := by
+    simpa [nStd, canonicalJointMeasure_map_stdGaussian (d := 2) (N := N)] using hsq_integrable
+  have hstd_eq_joint :
+      ∫ ξ, (canonicalRoughErrorStd 2 N a mass T P ξ) ^ 2
+          ∂(GaussianHilbert.stdGaussianFin nStd) =
+        ∫ η, (canonicalRoughError 2 N a mass T P η) ^ 2
+          ∂(canonicalJointMeasure 2 N) := by
+    rw [← canonicalJointMeasure_map_stdGaussian (d := 2) (N := N)]
+    rw [integral_map
+      (canonicalJointStdGaussianMeasurableEquiv 2 N).measurable.aemeasurable
+      hsq_integrable_map.aestronglyMeasurable]
+    refine integral_congr_ae ?_
+    filter_upwards [Filter.Eventually.of_forall
+      (fun η : CanonicalJoint 2 N =>
+        canonicalRoughErrorStd_eq
+          (d := 2) (N := N) (a := a) (mass := mass) (T := T) (P := P) η)] with η hη
+    simp [hη]
+  have hvar_bound :
+      ‖F‖ ^ 2 ≤ K * T * (1 + |Real.log T|) ^ (P.n - 1) := by
+    rw [hF_norm_sq, hstd_eq_joint]
+    exact hvar N a ha hvol T hT
+  have hscale_pos :
+      0 <
+        Real.sqrt (K * T * (1 + |Real.log T|) ^ (P.n - 1)) := by
+    apply Real.sqrt_pos.2
+    positivity
+  have hscale_norm :
+      ‖F‖ ≤ Real.sqrt (K * T * (1 + |Real.log T|) ^ (P.n - 1)) := by
+    have hnonneg :
+        0 ≤ K * T * (1 + |Real.log T|) ^ (P.n - 1) := by positivity
+    have hsq :
+        ‖F‖ ^ 2 ≤
+          (Real.sqrt (K * T * (1 + |Real.log T|) ^ (P.n - 1))) ^ 2 := by
+      simpa [Real.sq_sqrt hnonneg] using hvar_bound
+    nlinarith [hsq, norm_nonneg F, Real.sqrt_nonneg (K * T * (1 + |Real.log T|) ^ (P.n - 1))]
+  exact
+    canonicalRoughError_neg_tail_of_stdGaussian_explicit_ae
+      (d := 2) (N := N) a mass T P P.n
+      (le_trans (by norm_num) P.hn_ge)
+      F hF_chaos
+      (Real.sqrt (K * T * (1 + |Real.log T|) ^ (P.n - 1)))
+      hscale_pos hscale_norm hrepr_joint t ht
 
 end Pphi2
 
