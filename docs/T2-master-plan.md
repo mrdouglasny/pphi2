@@ -226,22 +226,51 @@ axiom polynomial_chaos_exp_moment_bridge
 5. Dynamical cutoff `T(M) := exp(−(√(M/(2C₁)) − 1))` → doubly-exp tail in `M` — ⏳ not yet wired.
 6. Layer-cake integration of `∫ exp(−V)² dμ` — ⏳ scaffolding exists in `LayerCake.lean`.
 
-**Recent infrastructure landed** (commit `31df956`, 2026-05-16): the **transport-layer
-public API** in `FieldDecomposition.lean`:
-- `canonicalSumFieldFunction_add`, `_smul`, `_pointwise_measurable`
-- `canonicalSumConfig` + `canonicalSumConfig_apply_delta` (@[simp])
-- `canonical{Smooth,Rough,Sum}FieldFunction_memLp_two`
+**Recent infrastructure landed (chronological, all on `phase-b-discharge`):**
 
-These prepare the φ = φ_S + φ_R decomposition to be composed against the
-lattice GFF measure via pushforward / interaction-law transport.
+- `31df956` (2026-05-16) — transport-layer public API in `FieldDecomposition.lean`
+  (additivity, smul, pointwise measurability, `canonicalSumConfig`, `memLp_two` lemmas).
+- `1e19b49` (2026-05-16) — Step 4 measure-transport: `canonicalRoughError_neg_tail_of_stdGaussian`
+  (RoughErrorBound.lean:442), composing `canonicalJointMeasure_map_stdGaussian` +
+  `chaos_neg_tail_bound`.
+- `6ca2b1f` (2026-05-16) — Step 1/2 chaos-transport scaffolding:
+  `finite_indexed_wick_sum_mem_wienerChaosLE`, `canonicalStdIndex` family,
+  `canonicalJointMultiIndexOfPair` + total-degree + Wick-product lemmas, plus
+  inverse-coordinate lemmas for `canonicalJointStdGaussianMeasurableEquiv.symm`.
+- `aed826d` (2026-05-17) — Step 5 + partial Step 6:
+  `polynomial_chaos_exp_moment_bridge_quartic_bounded` (PolynomialChaosBridge.lean:399)
+  composes the smooth cutoff bound + rough cutoff tail automatically for the
+  pure-quartic, bounded-volume case. Step 6 (layer-cake) gap isolated as a
+  single staging axiom `quarticPiecewiseTail_layerCake_lt_top` — a pure
+  integrability fact (finiteness of the layer-cake integral under the
+  derived doubly-exponential tail).
+
+**Current state of the 6 steps:**
+
+| Step | Status |
+|---|---|
+| 1 — Covariance split | ✅ done |
+| 2 — Wick binomial decomposition | ✅ done |
+| 3 — Smooth-side classical bound | ✅ done |
+| 4 — Rough-side polynomial-chaos concentration | ✅ measure-transport + scaffolding done; representative + chaos-membership work in flight |
+| 5 — Dynamical cutoff `T(M)` | ✅ done (via `polynomial_chaos_exp_moment_bridge_quartic_bounded`) |
+| 6 — Layer-cake integration | 🟡 gap isolated as staging axiom `quarticPiecewiseTail_layerCake_lt_top` |
+| **Master bridge** | 🔄 still an axiom; quartic-bounded specialisation is a theorem |
+
+**Pphi2 active axiom count:** 17 → 18 (the new staging axiom `quarticPiecewiseTail_layerCake_lt_top` is in PolynomialChaosBridge.lean).
 
 **Next concrete steps:**
-1. Prove the canonical sum-field law matches the lattice field law (pushforward equality).
-2. State `canonicalFullInteractionJoint` / `canonicalRoughError` as
-   measurable observables under that transport.
-3. Steps 5 + 6 of the 6-step plan.
+1. Discharge `quarticPiecewiseTail_layerCake_lt_top` (pure integrability;
+   doubly-exp tail dominates `exp(2M)` so `∫₀^∞ ... dM < ∞` is elementary
+   Lebesgue-integral bookkeeping). Pphi2 axiom count then drops back to 17.
+2. Use `polynomial_chaos_exp_moment_bridge_quartic_bounded` to push the
+   quartic bounded-volume case upward toward the master bridge
+   `polynomial_chaos_exp_moment_bridge`.
+3. After (2): pphi2 has **zero non-Mathlib axioms** on the T² critical
+   path; inherited markov-semigroups axioms then surface in the
+   `#print axioms` closure (subject to the branch-chain merge documented above).
 
-**Estimated remaining: ~300–500 lines / 1–2 weeks.**
+**Estimated remaining:** ~200–400 lines / 1 week.
 
 ---
 
