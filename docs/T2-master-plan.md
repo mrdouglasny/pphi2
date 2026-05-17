@@ -31,22 +31,22 @@ the Mathlib trio only.
 
 ---
 
-## ⚠️ Branch chain & pin state (CRITICAL — audit-as-of 2026-05-16)
+## ⚠️ Branch chain & pin state (CRITICAL — audit-as-of 2026-05-17)
 
-This session's work is spread across **feature branches in all three repos**.
+The campaign's work is spread across **feature branches in all three repos**.
 pphi2's pins still point at each upstream's `main`, which **predates the
-Workstream C and markov-semigroups Phase 2 work**. The current
+Workstream C, markov-semigroups Phase 2, and Route A work**. The current
 `#print axioms` only shows `[trio + polynomial_chaos_exp_moment_bridge]`
 because the bridge is still an axiom — opaque, so its (would-be)
 transitive dependencies don't surface. When Workstream B converts the
 bridge to a theorem, the closure will reflect **the pinned upstream**,
 not the as-built feature-branch state.
 
-| Repo | Active branch | Has the new work? | pphi2's current pin | Pin currency |
-|---|---|---|---|---|
-| **pphi2** | `phase-b-discharge` | ✅ Workstream A + B-transport + master plan | — (self) | — |
-| **gaussian-hilbert** | `phase-3-smoke-test` | ✅ Workstream C (E.1, E.2, axiom retirement, doc refresh) | `main` (`75123d02`) | **pre-Workstream-C** |
-| **markov-semigroups** | `feat/lp-carrier-stdGaussianFin-dirichletmarkov` | ✅ Phase 2 bundle | `main` (`1bfe3868`), inherited via gaussian-hilbert | **pre-Phase-2** |
+| Repo | Active branch | HEAD | New work on branch | pphi2's pin | Pin currency |
+|---|---|---|---|---|---|
+| **pphi2** | `phase-b-discharge` | `d5d274a` | Workstreams A + B (incl. wickPolynomial_lower_bound_general blocker just landed) + master plan | — (self) | — |
+| **gaussian-hilbert** | `phase-3-smoke-test` | `3a789d5` | Workstream C (E.1, E.2, axiom retirement, doc refresh) — 6 commits ahead of main | `main` (`85496cc`) | **pre-Workstream-C** |
+| **markov-semigroups** | `feat/lp-carrier-stdGaussianFin-dirichletmarkov` | `aa9cc47` | Phase 2 bundle + **G2 complete + Gross-discharge scaffolding** (P2/P3 work in flight) — 6 commits ahead of main | `main` (`8ed9e528`, inherited via gaussian-hilbert) | **pre-Phase-2 and pre-Gross-scaffold** |
 
 ### Why the build still works
 
@@ -104,16 +104,16 @@ chain is fully merged.
 | # | Workstream | Repo | Status | Effort remaining |
 |---|---|---|---|---|
 | A | Phase B Glimm–Jaffe Fourier estimates (pphi2) | pphi2 | ✅ COMPLETE 2026-05-16 | — |
-| C | OU/Mehler hypercontractivity (gaussian-hilbert) | gaussian-hilbert | ✅ COMPLETE 2026-05-15 | — |
-| **B** | `polynomial_chaos_exp_moment_bridge` (pphi2) | pphi2 | 🔄 in flight | ~1–2 wk |
+| C | OU/Mehler hypercontractivity (gaussian-hilbert) | gaussian-hilbert | ✅ COMPLETE 2026-05-15 (on `phase-3-smoke-test`) | merge to gaussian-hilbert main |
+| **B** | `polynomial_chaos_exp_moment_bridge` (pphi2) | pphi2 | 🔄 in flight — blocker `wickPolynomial_lower_bound_general` resolved 2026-05-17; lift + narrow-signature refactor next | ~150–300 lines / ~1 wk |
 | **2.5** | Fresh-Fubini lift for `ouSemigroupFin_l2_sq_hasDerivWithinAt` | markov-semigroups | not started | ~1.5 days |
 | **N1.b** | `ouSemigroupFin_preserves_IsCore` | markov-semigroups | not started | ~3–5 days |
 | **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | not started | ~3–5 days |
-| **Route A** | Abstract `gross_lsi_implies_hypercontractive` | markov-semigroups | not started (plan drafted) | multi-week, structural |
+| **Route A** | Abstract `gross_lsi_implies_hypercontractive` | markov-semigroups | 🔄 **G2 + Gross-ODE scaffolding done 2026-05-17**; P2/P3 algebra + W rewire in flight | ~weeks (was multi-week) |
 
 **Total parallel wall-clock to fully zero-local-axiom T² endpoint:** ~3–5 weeks
-if all five run in parallel; ~6–10 weeks serial. Route A dominates the
-critical path.
+if all five run in parallel; ~6–10 weeks serial. Route A still dominates the
+critical path; G2-complete is a major architectural unblock.
 
 ---
 
@@ -228,22 +228,16 @@ axiom polynomial_chaos_exp_moment_bridge
 
 **Recent infrastructure landed (chronological, all on `phase-b-discharge`):**
 
-- `31df956` (2026-05-16) — transport-layer public API in `FieldDecomposition.lean`
-  (additivity, smul, pointwise measurability, `canonicalSumConfig`, `memLp_two` lemmas).
-- `1e19b49` (2026-05-16) — Step 4 measure-transport: `canonicalRoughError_neg_tail_of_stdGaussian`
-  (RoughErrorBound.lean:442), composing `canonicalJointMeasure_map_stdGaussian` +
-  `chaos_neg_tail_bound`.
-- `6ca2b1f` (2026-05-16) — Step 1/2 chaos-transport scaffolding:
-  `finite_indexed_wick_sum_mem_wienerChaosLE`, `canonicalStdIndex` family,
-  `canonicalJointMultiIndexOfPair` + total-degree + Wick-product lemmas, plus
-  inverse-coordinate lemmas for `canonicalJointStdGaussianMeasurableEquiv.symm`.
-- `aed826d` (2026-05-17) — Step 5 + partial Step 6:
-  `polynomial_chaos_exp_moment_bridge_quartic_bounded` (PolynomialChaosBridge.lean:399)
-  composes the smooth cutoff bound + rough cutoff tail automatically for the
-  pure-quartic, bounded-volume case. Step 6 (layer-cake) gap isolated as a
-  single staging axiom `quarticPiecewiseTail_layerCake_lt_top` — a pure
-  integrability fact (finiteness of the layer-cake integral under the
-  derived doubly-exponential tail).
+- `31df956` (2026-05-16) — transport-layer public API in `FieldDecomposition.lean`.
+- `1e19b49` (2026-05-16) — Step 4 measure-transport `canonicalRoughError_neg_tail_of_stdGaussian`.
+- `6ca2b1f` (2026-05-16) — Step 1/2 chaos-transport scaffolding (`finite_indexed_wick_sum_mem_wienerChaosLE`, etc.).
+- `aed826d` (2026-05-17) — Step 5 + partial Step 6: `polynomial_chaos_exp_moment_bridge_quartic_bounded` for the pure-quartic bounded-volume case.
+- `59c771f` (2026-05-17) — Step 6 closed: `quarticPiecewiseTail_layerCake_lt_top` discharged from axiom to theorem (small-M + large-M split with doubly-exponential decay envelope).
+- `d5d274a` (2026-05-17) — **`wickPolynomial_lower_bound_general`** (WickPolynomial.lean:913): the
+  quantitative general smooth-side bound `wickPolynomial P c x ≥ -A·(1 + c^(P.n/2))` for arbitrary even `P`. The single
+  blocker for lifting the bridge from quartic to general `P`. Proof normalizes by `s = 1/√c`,
+  proves a uniform lower bound for the compact unit-variance family `normalizedWickPolynomialPoly P s`,
+  then rescales back.
 
 **Current state of the 6 steps:**
 
@@ -251,26 +245,46 @@ axiom polynomial_chaos_exp_moment_bridge
 |---|---|
 | 1 — Covariance split | ✅ done |
 | 2 — Wick binomial decomposition | ✅ done |
-| 3 — Smooth-side classical bound | ✅ done |
-| 4 — Rough-side polynomial-chaos concentration | ✅ measure-transport + scaffolding done; representative + chaos-membership work in flight |
+| 3 — Smooth-side classical bound | ✅ done **(now general in `P` via `wickPolynomial_lower_bound_general`)** |
+| 4 — Rough-side polynomial-chaos concentration | ✅ general in `P` at `RoughErrorBound.lean:3655` |
 | 5 — Dynamical cutoff `T(M)` | ✅ done (via `polynomial_chaos_exp_moment_bridge_quartic_bounded`) |
-| 6 — Layer-cake integration | 🟡 gap isolated as staging axiom `quarticPiecewiseTail_layerCake_lt_top` |
-| **Master bridge** | 🔄 still an axiom; quartic-bounded specialisation is a theorem |
+| 6 — Layer-cake integration | ✅ done (`quarticPiecewiseTail_layerCake_lt_top` is a theorem) |
+| **Master bridge** | 🔄 still an axiom; **the original `∀ a > 0` statement is mathematically false** without a volume constraint — needs a narrowing refactor + lift from quartic to general `P` |
 
-**Pphi2 active axiom count:** 17 → 18 (the new staging axiom `quarticPiecewiseTail_layerCake_lt_top` is in PolynomialChaosBridge.lean).
+**Pphi2 active axiom count:** 17 (back from the temporary 18 after the staging axiom discharge).
+
+**Critical design decision: the master axiom statement is over-strong.** The proof
+plan (`docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`:282) flags that
+`∃ K, ∀ a > 0, ∀ N, …` is **false** without a volume constraint — the
+`interactionFunctional_bounded_below` witness scales like `a^d · |Λ|`, not uniformly in N.
+The original `∀ a > 0` shape was a "downstream-consumer convenience" that turned out
+to be unprovable.
+
+**Consumer audit (verified 2026-05-17):** both consumers
+(`nelson_exponential_estimate_lattice` in NelsonEstimate.lean:81 and
+`asymNelson_exponential_estimate` in AsymTorusInteractingLimit.lean:69) already
+operate at fixed `L = N·a` (via `circleSpacing L N = L/N` and `asymGeomSpacing Lt Ls N`
+respectively). They pass **general `P`** through, but always at bounded volume. So the
+refactor is invisible to downstream callers.
 
 **Next concrete steps:**
-1. Discharge `quarticPiecewiseTail_layerCake_lt_top` (pure integrability;
-   doubly-exp tail dominates `exp(2M)` so `∫₀^∞ ... dM < ∞` is elementary
-   Lebesgue-integral bookkeeping). Pphi2 axiom count then drops back to 17.
-2. Use `polynomial_chaos_exp_moment_bridge_quartic_bounded` to push the
-   quartic bounded-volume case upward toward the master bridge
-   `polynomial_chaos_exp_moment_bridge`.
-3. After (2): pphi2 has **zero non-Mathlib axioms** on the T² critical
-   path; inherited markov-semigroups axioms then surface in the
-   `#print axioms` closure (subject to the branch-chain merge documented above).
 
-**Estimated remaining:** ~200–400 lines / 1 week.
+1. **Lift `polynomial_chaos_exp_moment_bridge_quartic_bounded` to general even `P`**:
+   thread `m := P.n` through `canonicalRoughError_neg_tail_of_stdGaussian` and use
+   the new `wickPolynomial_lower_bound_general` for the smooth cutoff threshold
+   `T(M)` (degree-dependent: `s = P.n / 2` instead of hardcoded `s = 2`).
+2. **Narrow the master axiom** to require `_hvol : (N:ℝ)*a = L` (replacing the false
+   `∀ a > 0` with the honest bounded-volume statement). The lifted general-`P`
+   theorem discharges it directly.
+3. **Rewire consumers** (mechanical — both already supply `circleSpacing_volume_eq` /
+   `asymGeomSpacing_volume_eq` as one-liners).
+
+After (1)+(2)+(3): `polynomial_chaos_exp_moment_bridge` becomes a theorem with its
+(corrected) bounded-volume signature; pphi2 active axiom count drops **17 → 16**;
+`#print axioms torusInteracting_satisfies_OS` no longer cites it (modulo the
+branch-chain merge).
+
+**Estimated remaining:** ~150–300 lines / ~1 week.
 
 ---
 
@@ -340,19 +354,76 @@ telescope over k and sum the 1D bounds. Per-step uses the proved
 
 ### Route A — Abstract `gross_lsi_implies_hypercontractive`
 
-**Repo:** markov-semigroups · **Status: not started (plan drafted by another agent)**
-**Effort: ~1700–3000 lines, multi-week.**
+**Repo:** markov-semigroups · **Status: 🔄 in flight (G2 complete + Gross-ODE scaffolding landed; P2/P3 work items in progress)**
+**Effort remaining: ~weeks (P2/P3 algebra + W rewire).**
 
 Discharges the abstract Gross 1975 theorem at
 `MarkovSemigroups/Abstract/Hypercontractivity.lean:269`. The "headline"
 axiom — the one Mathlib doesn't have.
 
 **Primary plan doc:** [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md)
-(lives on markov-semigroups `main` via commits `ef272f6` and `6dc2026`;
-not on the Phase 2 feature branch — see Branch chain section above).
+(lives on markov-semigroups `main` via commits `ef272f6` and `6dc2026`).
 
 **Plans index:** [`markov-semigroups/plans/README.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/README.md)
 catalogues both Route A and the superseded Route B alternative.
+
+**G2 + scaffolding landed 2026-05-17** (branch
+`feat/lp-carrier-stdGaussianFin-dirichletmarkov`, 6 commits ahead of
+markov-semigroups main, tip `aa9cc47`):
+
+- `GaussianFin.generatorCompat_stdGaussianFin` is **sorry-free**.
+  `#print axioms` = standard trio + exactly two custom axioms:
+  `gaussianFin_diffQuot_tendsto_Lp` and `gaussianFin_integrationByParts`
+  — both *general, Mathlib-native* (no project defs;
+  operator/`fderiv`/`Measure.pi gaussianReal`), Gemini-vetted
+  **Standard / Likely correct**.
+- A third Gross-discharge axiom `gaussianOU_heatEquation_within_zero`
+  (also Standard-vetted) was subsumed by the DCT axiom and is **off**
+  `generatorCompat`'s live critical path (retained as reusable
+  textbook infrastructure).
+- These discharged the deep `EuclideanGenerator{Lp,Limit}` cruxes
+  (heat equation, γ-IBP, DCT) that previous attempts stalled on.
+- The prior `ouGeneratorFin_ibp` Lp-coercion bridge is also closed.
+
+**Abstract Gross relocated + P2/P3 scaffolded:**
+
+- `gross_lsi_implies_hypercontractive_of_hypotheses` moved out of
+  `Abstract/Hypercontractivity.lean` (the `CoreSemigroupInvariant` /
+  `GeneratorCompat` / `StroockVaropoulos` predicates stay there) into
+  a new `Abstract/GrossODE.lean`.
+- The legacy `gross_lsi_implies_hypercontractive` axiom is retained
+  (non-breaking; gaussian-hilbert keeps compiling) until P2/P3 close
+  and the call-site is rewired (the **W** workstream step).
+- In `GrossODE.lean`: the exponent-path calculus (`grossExponent`,
+  `hasDerivAt_grossExponent` = the `q'=2ρ(q-1)` coupling), the
+  **P2 chain-rule assembly** (`grossLogNorm_hasDerivWithinAt` from
+  F'/Ent via `field_simp;ring`), the **P3 `antitoneOn` closure**
+  (`antitoneOn_of_hasDerivWithinAt_nonpos` on `Set.Ici 0`), and the
+  elementary `hasDerivAt_abs_rpow_exponent` are all **proved**.
+- The P2 bottleneck is decomposed (no axiom — that would be circular)
+  into a general Mathlib-native exponent-path Leibniz lemma (its
+  pointwise core proved) and a general Mathlib-native Bochner–Leibniz
+  lemma through a strong-`L²` derivative (the reusable kernel, *to be
+  proved*, not axiomatized).
+
+**Current markov-semigroups axiom / sorry inventory** (on the active
+feature branch, per `markov-semigroups/status.md` 2026-05-17 entry;
+`AXIOM_AUDIT.md` is canonical for the registered set):
+
+- **19 declared `.lean` axioms**: the 3 Gross-discharge general axioms
+  above, 3 `EuclideanFin` BE tensor-lift axioms (Phase 2.5 / N1.b /
+  N1.c targets), 4 `EuclideanTests` scratch axioms, the legacy abstract
+  Gross/S-V trio (legacy until rewire), Dobrushin–Zegarliński,
+  Schwartz-convolution, diamagnetic.
+- **9 sorries**: 8 in `Abstract/GrossODE.lean` (documented P2/P3 work
+  items — `grossPow_pos`, `grossEntropy_eq`, the two general Leibniz
+  lemmas, the `grossPow_hasDerivWithinAt` glue, `grossLogNorm_deriv_nonpos`
+  P3 algebra, the `antitoneOn` continuity bridge, and the final
+  `eLpNorm↔∫·^q` reduction) + 1 in `TwoPoint.lean` (quarantined,
+  mathematically false for jump processes).
+
+**Remaining Gross endgame:** P2 (the one general Leibniz kernel + thin
+glue) → P3 algebra → W (call-site rewire).
 
 **Why Route A, not Route B (concrete Gaussian1D):** the live pphi2 chain
 consumes the abstract axiom (via gaussian-hilbert
