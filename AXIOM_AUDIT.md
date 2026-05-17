@@ -1,19 +1,245 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert
 
-**Updated**: 2026-05-10 (post gaussian-hilbert split)
-**pphi2**: 19 axioms, 0 sorries (active build) | **pinned Lake GaussianField** (`9c66a40`): 8 axioms, 0 sorries | **pinned Lake MarkovSemigroups** (`3cb482d`): 11 axioms, 0 sorries | **pinned Lake gaussian-hilbert** (`05ee231`): 4 axioms, 0 sorries
+**Last updated**: 2026-05-16.
 
-Note: pphi2 count includes 1 private axiom
-(`gaussian_rp_cov_perfect_square`). The markov-semigroups count is 11
-(2 core hypercontractivity + 2 concentration/Poincaré + 4 Gaussian1D
-BGL + 2 DZ + 1 matrix; the 3 Gaussian-OU placeholder axioms moved to
-gaussian-hilbert in the split). gaussian-hilbert holds 4 axioms (1
-polynomial-density + 3 OU placeholder), all relevant to Janson's chaos
-/ hypercontractivity material — see
-`.lake/packages/«gaussian-hilbert»/README.md` and
-`.lake/packages/«gaussian-hilbert»/TODO.md`. gaussian-field count
-dropped from 9 to 8 (lost `polynomial_dense_L2_of_subGaussian` to
-gaussian-hilbert).
+## 2026-05-15 — Lp-carrier Phase 2 + gaussian-hilbert Phase 3 wire-in
+
+The 2026-05-13 → 2026-05-15 sister-repo work substantially advanced the
+upstream layers without changing pphi2's own axiom count:
+
+* **markov-semigroups Lp-carrier Phase 2** (commit `6782dc7` on
+  `feat/lp-carrier-stdGaussianFin-dirichletmarkov`): concrete
+  `GaussianFin.stdGaussianFin_dirichletMarkovSemigroup n :
+  DirichletMarkovSemigroup (Fin n → ℝ)` bundle + 7 proved
+  operator-valued semigroup laws on `Lp ℝ 2 (γFin n)`. Active axiom
+  count unchanged at 11. The bundle's `energy_eq_deriv` field uses an
+  interim polarization proof that makes the existing
+  `ouSemigroupFin_l2_sq_hasDerivWithinAt` axiom load-bearing at the
+  public bundle boundary; Phase 2.5 fresh-Fubini cleanup is queued
+  (~1.5 days, would drop the count to 10).
+* **gaussian-hilbert Phase 3 smoke test** (commit `0f0c5eb` on
+  `phase-3-smoke-test`): bumps the markov-semigroups pin to the
+  Phase 2 branch and adds two compiling `example` checks confirming
+  the bundle reaches the public boundary and slots into
+  `gross_lsi_implies_hypercontractive`. gaussian-hilbert's local
+  axiom count unchanged at 1, but the closure of
+  `stdGaussianFin_dirichletMarkovSemigroup` from this repo now
+  visibly carries `ouSemigroupFin_l2_sq_hasDerivWithinAt` until
+  Phase 2.5 lands.
+
+**Impact on pphi2:** Workstream C (gaussian-hilbert OU/Mehler
+discharge) of the T² OS0–OS2 chain is now ~80% complete with ~1–2
+active days of E.1+E.2 adapters remaining. See
+[`docs/T2-continuum-limit-status-2026-05-13.md`](docs/T2-continuum-limit-status-2026-05-13.md)
+(refreshed 2026-05-15) for the full rollup.
+
+## Purpose
+
+In this project, an **axiom** is a *vetted provable theorem with a
+vetted discharge plan* — not a fundamental unprovable assumption. Each
+axiom listed below is:
+
+1. A standard textbook fact, with explicit literature citation.
+2. Reviewed for type correctness, hypothesis sufficiency, and
+   non-vacuity (typically by a Gemini deep-think pass and/or a
+   literature cross-check).
+3. Accompanied by a concrete plan to discharge it into a Lean theorem
+   (inline in the row, or linked to a dedicated discharge-plan doc).
+
+We use the `axiom` keyword as a *staging point* — it lets the project
+proceed to use a result before its full Lean proof is assembled, while
+keeping the trust boundary explicit and discharge progress trackable.
+The goal is for every entry to eventually become a proved theorem.
+
+Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
+(This was migrated from `docs/axiom_audit.md` to top-level
+`AXIOM_AUDIT.md` per the new convention.)
+
+## Summary
+
+| Package | Axioms | Sorries | Pin |
+|---|---|---|---|
+| **pphi2** (active build) | 17 | 0 | — |
+| **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
+| **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
+| **gaussian-hilbert** (pinned, tracks `main`) | 1 *(was 4 in last audit; see 2026-05-{10,11} entries)* | 0 | `main` |
+
+Notes:
+
+* pphi2 count includes 2 private axioms
+  (`gaussian_rp_cov_perfect_square`,
+  `asymTorusInteracting_exponentialMomentBound`).
+* The pphi2 pin for **GaussianField is stale** relative to current
+  upstream `main` (today's upstream is at ~3 axioms thanks to the
+  2026-05-10 spatial-translation + master-equivariance discharges).
+  Pin bump deferred until PR #16 lands.
+* **gaussian-hilbert is at 1 axiom** as of 2026-05-11 thanks to
+  back-to-back discharges of `ouSemigroupAct` (spectral shortcut,
+  2026-05-10), `ouSemigroupAct_eq_smul_of_mem_wienerChaos` (same), and
+  `polynomial_dense_L2_of_subGaussian` (L²-orthogonal-complement /
+  Carleman, 2026-05-11). The remaining axiom is
+  `ouSemigroupAct_eLpNorm_hypercontractive` (Bonami-Beckner-Nelson) —
+  discharge plan at `gaussian-hilbert/docs/hypercontractivity-discharge-plan.md`.
+* The markov-semigroups count is 11 (2 core hypercontractivity + 2
+  concentration/Poincaré + 4 Gaussian1D BGL + 2 DZ + 1 matrix; the 3
+  Gaussian-OU placeholder axioms moved to gaussian-hilbert in the
+  2026-05-10 split, and 2 of those have since been discharged
+  upstream).
+
+## 2026-05-16 Phase B textbook axioms discharged
+
+The two Phase B textbook axioms in
+`Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean` are now theorems:
+
+- `smoothWickConstant_le_log_uniform_in_aN`
+- `canonicalRoughCovariance_pow_sum_le_uniform_in_aN`
+
+What landed:
+- `HeatKernelBound.lean`: Phase 1b smooth-side discharge.
+- `FieldDecomposition.lean`: the heat-kernel/Fubini/semigroup bridge
+  lemmas for the rough side.
+- `CovarianceBoundsGJ.lean`: Phase 2 (`m = 1`), Phase 3 (`m = 2`), and
+  Phase 4 (`m ≥ 3`) completed, including the final Bochner/Minkowski
+  argument.
+
+Verification:
+- `lake build` succeeds for the full project.
+- `#print axioms Pphi2.rough_error_variance` now shows only
+  `[propext, Classical.choice, Quot.sound]`.
+
+Net effect:
+- pphi2 axiom count: `19 → 17`
+- pphi2 sorry count: unchanged at `0`
+- `rough_error_variance` is now fully theorem-derived from the standard
+  logical trio, with no local Phase B analytical axioms remaining.
+
+The remaining T² interacting critical-path axiom in pphi2 is now only
+`polynomial_chaos_exp_moment_bridge`.
+
+## 2026-05-12 (later) S4 + S5 discharged using Phase B axioms
+
+Following the Phase B textbook-axiom proposal + Gemini DT vetting (entry
+below), the two proposed axioms were introduced into
+`Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean` and used to prove S4
+and S5. **First time the rough_error_variance critical-path file has
+zero sorries.**
+
+What landed (Codex):
+- `Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean` (new file, 33 lines):
+  the two Phase B textbook axioms with the corrected `hd : d = 2` +
+  post-∃ T-quantifier signatures.
+- `canonicalCrossTerm_l2_sq_le` (S4, RoughErrorBound.lean:1275): proved
+  by diagonal 2-site Wick formula + Hölder-style covariance bounding +
+  the two new axioms.
+- `rough_error_variance` (S5, RoughErrorBound.lean:1517): proved by
+  S3 (canonicalRoughError_l2_sq_eq) + S4 + integrability discharges +
+  finite-sum arithmetic.
+- Generic integrability helpers: `integrable_sum_mul_sum_of_pairwise`
+  (line 274), `integrable_sq_real_sum_of_pairwise` (line 299).
+
+Verification: `#print axioms` confirms exactly
+`[propext, Classical.choice, Quot.sound,
+ smoothWickConstant_le_log_uniform_in_aN,
+ canonicalRoughCovariance_pow_sum_le_uniform_in_aN]` for both S4 and S5.
+
+Pphi2 sorry count: 2 → 0.
+Pphi2 axiom count: 17 → 19.
+
+**Status of the polynomial_chaos_exp_moment_bridge critical-path
+axiom:** Step 1 (`rough_error_variance`) is now complete. Remaining
+phases 2 + 3 (apply Janson 5.10 for L^p + tail bounds; layer-cake
+assembly into `LatticeRoughErrorSetup`) are described in
+`docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`. Neither adds
+new pphi2 axioms beyond the two Phase B textbook axioms here.
+
+## 2026-05-12 Phase B textbook axiom proposal + Gemini DT vetting
+
+After yesterday's S3 discharge (`canonicalCrossTerm_inner_eq_zero`
+axiom-free) and the upstream variance identification, the only
+remaining analytical content on `rough_error_variance` is the
+Glimm-Jaffe Ch. 8 Fourier estimates needed for S4. Two textbook
+axioms suffice to close S4 + S5 (the two remaining pphi2 sorries):
+
+1. **`smoothWickConstant_le_log_uniform_in_aN`** — Glimm-Jaffe Thm 8.5.2
+   (smooth-side, d=2). `smoothWickConstant T ≤ A + B·(1 + |log T|)`
+   uniform in (N, a) at fixed L = N·a.
+
+2. **`canonicalRoughCovariance_pow_sum_le_uniform_in_aN`** —
+   Glimm-Jaffe Thm 8.5.2 (rough-side, d=2). `a^d · Σ_y |C_R(x,y)|^m
+   ≤ C_m · T` for all m ≥ 1, uniform in (N, a) at fixed L.
+
+Plan: [`docs/phase-B-textbook-axioms.md`](docs/phase-B-textbook-axioms.md).
+Discharge plan inline (per `AXIOM_MANAGEMENT.md` requirement):
+
+- **Axiom 1 discharge (~500–800 lines, ~2–3 weeks):** tighten the
+  existing `heat_kernel_1d_bound` (currently with the trivial `C = N`
+  constant) to the textbook (a, N)-uniform `C(L)` form via the
+  existing `gaussian_sum_bound` (`HeatKernelBound.lean:204` already
+  proves `Σ exp(-α k²) ≤ √(π/α) + 1` with uniform constant via the
+  `sin² ≥ (2/π)² · x²` bound on [0, π/2]). Propagate through
+  `heat_kernel_trace_bound`, `smoothVariance_from_heat_kernel`,
+  `smoothVariance_le_log_uniform`. Reference: Glimm-Jaffe Thm 8.5.2 +
+  Lemma 8.5.4 (lattice heat kernel trace); Reed-Simon vol. II Thm
+  XI.2 (heat kernel trace).
+
+- **Axiom 2 discharge (~300–500 lines, ~1–2 weeks):** m=1 case from
+  the Schwinger identity + heat-kernel probability normalisation
+  (`a^d · Σ_y p_t(x, y) = 1`, hence `a^d · Σ_y C_R(x, y) = ∫_0^T 1 dt
+  = T`); m=2 from a position-space rewrite of the existing
+  `roughCovariance_sq_summable` via Plancherel + translation
+  invariance; m ≥ 3 from Hölder interpolation between m=2 and the
+  off-diagonal L^∞ bound on C_R (which decays Gaussian-exponentially
+  in |x − y|, dominating the at-most-logarithmic coincident-points
+  divergence in d=2). Reference: Glimm-Jaffe Thm 8.5.2 + Lemma 8.5.5
+  (rough covariance position-space estimates); Janson, *Gaussian
+  Hilbert Spaces*, Ch. 6.
+
+**Gemini deep-think vetting (2026-05-12)** of both axioms — verdict
+Standard / DT — caught two bugs in the initial draft, fixes landed
+at commit `73eb939`:
+
+(i) **d = 2 trap.** Both axioms are mathematically false for d ≥ 3
+(smooth diverges as T^{-1/2}, rough L^m scales as `T^{m(1-d/2) + d/2}`
+which diverges for m ≥ 3 at d = 3). The linear-in-T scaling is a
+magical d=2 property: `m(1-1) + 1 = 1` exactly when d = 2. Corrected
+statements carry `hd : d = 2`.
+
+(ii) **S4/S5 quantifier trap.** Both existing sorry signatures had
+`T` bound *before* `∃ K`, allowing Skolemization `K = K(T)` that
+would nullify the O(T · polylog) scaling. Corrected by moving `T`
+inside the `∀ N a` block, after `∃ K`, so K is forced to be a
+function only of `(k, j, mass, L)` (S4) or `(P, mass, L)` (S5).
+
+**Status: NOT yet introduced into the codebase.** When introduced,
+pphi2 sorry count drops 2 → 0 (S4 + S5 close); axiom count goes
+17 → 19. Combined Phase B discharge effort ~3-5 weeks at recalibrated
+project norms. The axioms are at the right granularity to be lifted
+into upstream gaussian-field once discharged (they're about lattice
+Fourier estimates, not pphi2-specific).
+
+## 2026-05-11 audit pass (gaussian-hilbert polynomial-density discharge)
+
+Upstream gaussian-hilbert discharged `polynomial_dense_L2_of_subGaussian`
+via the L²-orthogonal-complement / Carleman moment-determinacy route
+(commit
+[`265b30e`](https://github.com/mrdouglasny/gaussian-hilbert/commit/265b30e)).
+
+Verified via `#print axioms` against gaussian-hilbert main: the entire
+chaos-pipeline up to and including `chaosCoordEquiv`, `ouSemigroupAct`,
+and `ouSemigroupAct_eq_smul_of_mem_wienerChaos` now depends on only
+the standard logical axioms (`propext`, `Classical.choice`, `Quot.sound`).
+The single remaining gaussian-hilbert axiom
+(`ouSemigroupAct_eLpNorm_hypercontractive`) is intentionally deferred —
+it requires the Mehler integral + LSI tensorization / Bakry-Émery
+(documented in `gaussian-hilbert/docs/hypercontractivity-discharge-plan.md`).
+
+**Downstream impact on pphi2**: the polynomial-chaos concentration
+chain (`bonami_nelson_chaos`, `polynomial_chaos_concentration`) now
+depends transitively on **one** upstream axiom — the deferred
+hypercontractivity placeholder. Once pphi2's gaussian-hilbert pin is
+bumped to current `main`, pphi2's Cluster A axioms (the four Nelson
+exponential estimates) become "one upstream axiom away" from native
+discharge.
 
 ## 2026-05-10 plan revision: `rough_error_variance` Step 1 rev 2 (Gemini DT)
 
@@ -439,26 +665,41 @@ gaussian-hilbert with the chaos cluster.*
 
 ---
 
-## gaussian-hilbert Axioms (pinned Lake dependency `05ee231`: 4 active, 0 sorries)
+## gaussian-hilbert Axioms (pinned at `main`: 1 active, 0 sorries — current upstream main as of 2026-05-11)
 
-*New repository as of 2026-05-10 — combined home for finite-dim Gaussian
-Hilbert space theory (Janson 1997). Holds the 4 chaos files
-(HermitePolynomials, WienerChaos, OUEigenfunctions, PolynomialChaosConcentration)
-+ the polynomial-density axiom file moved out of markov-semigroups +
-gaussian-field. See README + TODO + docs/{ou-mehler-discharge-plan,polynomial-chaos-roadmap}.md
-in the repo for the full development roadmap.*
+*Combined home for finite-dim Gaussian Hilbert space theory (Janson
+1997). Holds the chaos files (HermitePolynomials, WienerChaos,
+OUEigenfunctions, PolynomialChaosConcentration) + PolynomialDensity.
+See the repo's `README.md`, `STATUS.md`, `AXIOM_AUDIT.md`, and the
+plan docs in `docs/`.*
 
 | File | Axioms | Sorries | Notes |
 |------|--------|---------|-------|
-| `GaussianHilbert/PolynomialDensity.lean` | 1 | 0 | `polynomial_dense_L2_of_subGaussian` — multivariate polynomial L²-density for sub-Gaussian measures. **Standard** (Gemini DT-2.5; Janson Thm 2.6). Originally introduced in gaussian-field (2026-05-09), moved here in the split. |
-| `GaussianHilbert/OUEigenfunctions.lean` | 3 | 0 | `ouSemigroupAct` (placeholder OU operator), `ouSemigroupAct_eq_smul_of_mem_wienerChaos` (eigenvalue action), `ouSemigroupAct_eLpNorm_hypercontractive` (Nelson HC). **Placeholder** (LP) — discharge plan: [ou-mehler-discharge-plan.md](../../../pphi2/.lake/packages/«gaussian-hilbert»/docs/ou-mehler-discharge-plan.md), ~3-4 weeks via Mehler kernel + Bakry-Émery + Gross. These are the load-bearing axioms behind pphi2's `polynomial_chaos_concentration` consumer. |
-| **Total** | **4** | **0** | |
+| `GaussianHilbert/OUEigenfunctions.lean` | 1 | 0 | `ouSemigroupAct_eLpNorm_hypercontractive` (Bonami-Beckner-Nelson HC, Nelson 1973 / BGL Thm 5.2.3). **Placeholder** (LP). Discharge plan: [`gaussian-hilbert/docs/hypercontractivity-discharge-plan.md`](https://github.com/mrdouglasny/gaussian-hilbert/blob/main/docs/hypercontractivity-discharge-plan.md), ~2.5-3.5 weeks (Route W: Mehler integral + agreement theorem + LSI tensorization shortcut + wire-in; +1 textbook axiom in markov-semigroups). Route N (~3.5-4.5 weeks, no new axioms) also available. |
+| **Total** | **1** | **0** | |
+
+### Recently discharged in upstream (between 2026-05-10 and 2026-05-11)
+
+| Former axiom | File:Line | Discharged | Notes |
+|---|---|---|---|
+| `polynomial_dense_L2_of_subGaussian` | `GaussianHilbert/PolynomialDensity.lean:605` | 2026-05-11 ([commit `265b30e`](https://github.com/mrdouglasny/gaussian-hilbert/commit/265b30e)) | L²-orthogonal-complement / Carleman moment-determinacy route. ~590 lines. |
+| `ouSemigroupAct` | `GaussianHilbert/OUEigenfunctions.lean:657` | 2026-05-10 ([commit `e6235e9`](https://github.com/mrdouglasny/gaussian-hilbert/commit/e6235e9)) | Spectral shortcut: defined as the diagonal `f_k ↦ e^{-kt} f_k` on the Wiener-chaos Hilbert sum. |
+| `ouSemigroupAct_eq_smul_of_mem_wienerChaos` | `GaussianHilbert/OUEigenfunctions.lean:680` | 2026-05-10 (same commit) | Chaos-eigenvalue identity, proved from the spectral construction. |
 
 **Transitive dep summary:** pphi2's `polynomial_chaos_concentration`
 consumer (`Pphi2.NelsonEstimate.{ChaosTailBridge, PolynomialChaosBridge}`)
-sees these 3 OU placeholder axioms (not the polynomial-density axiom,
-which is consumed only by gaussian-hilbert's internal `hermiteMulti_dense`
-and `wienerChaos_isHilbertSum` proved theorems).
+now sees a **single** upstream axiom in gaussian-hilbert
+(`ouSemigroupAct_eLpNorm_hypercontractive`), down from 3 in the
+2026-05-10 audit. The polynomial-density discharge and OU spectral
+discharge propagate to all of `hermiteMulti_dense`,
+`wienerChaos_isHilbertSum`, `chaosCoordEquiv`, `ouSemigroupAct`, and
+`ouSemigroupAct_eq_smul_of_mem_wienerChaos` (all now Lean-built-ins-only
+upstream).
+
+**Pin status note**: pphi2's `gaussian-hilbert` requirement is on
+`rev = "main"`, so a `lake update gaussian-hilbert` would pick up the
+current state automatically. Deferred until pphi2 PR #16 lands to
+avoid disturbing the active review.
 
 ---
 

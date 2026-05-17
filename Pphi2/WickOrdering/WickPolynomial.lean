@@ -589,6 +589,401 @@ theorem wickPolynomial_uniform_bounded_below
     change wickPolynomial P p₀.1 p₀.2 ≤ wickPolynomial P c x at h_min
     linarith [neg_abs_le (f p₀)]
 
+/-! ## General lower bound with explicit `c`-growth -/
+
+/-- A rescaled unit-variance polynomial family that appears after factoring
+`c ^ (P.n / 2)` out of `wickPolynomial P c x` for `c > 0`. The parameter
+`s = 1 / √c` ranges over `[0, 1]` when `c ≥ 1`. -/
+private def normalizedWickPolynomialPoly (P : InteractionPolynomial) (s : ℝ) : Polynomial ℝ :=
+  C (1 / P.n : ℝ) * wickMonomialPoly P.n 1 +
+  ∑ m : Fin P.n, C (P.coeff m * s ^ (P.n - (m : ℕ))) * wickMonomialPoly (m : ℕ) 1
+
+private theorem normalizedWickPolynomialPoly_eval
+    (P : InteractionPolynomial) (s x : ℝ) :
+    (normalizedWickPolynomialPoly P s).eval x =
+      (1 / P.n : ℝ) * wickMonomial P.n 1 x +
+      ∑ m : Fin P.n, P.coeff m * s ^ (P.n - (m : ℕ)) * wickMonomial (m : ℕ) 1 x := by
+  unfold normalizedWickPolynomialPoly
+  simp only [eval_add, eval_mul, eval_C, eval_finset_sum, wickMonomialPoly_eval]
+
+private theorem normalizedWickPolynomialPoly_leading_natDegree
+    (P : InteractionPolynomial) (_ : ℝ) :
+    (C (1 / P.n : ℝ) * wickMonomialPoly P.n 1).natDegree = P.n := by
+  have h1n : (1 / P.n : ℝ) ≠ 0 := by
+    have hP : (0 : ℕ) < P.n := by
+      have := P.hn_ge
+      omega
+    positivity
+  rw [natDegree_C_mul h1n, wickMonomialPoly_natDegree]
+
+private theorem normalizedWickPolynomialPoly_leading_ne_zero
+    (P : InteractionPolynomial) (s : ℝ) :
+    C (1 / P.n : ℝ) * wickMonomialPoly P.n 1 ≠ 0 := by
+  intro h
+  have hdeg := normalizedWickPolynomialPoly_leading_natDegree P s
+  rw [h, natDegree_zero] at hdeg
+  have hzero : P.n = 0 := by simpa using hdeg.symm
+  have := P.hn_ge
+  omega
+
+private theorem normalizedWickPolynomialPoly_sum_natDegree_lt
+    (P : InteractionPolynomial) (s : ℝ) :
+    (∑ m : Fin P.n, C (P.coeff m * s ^ (P.n - (m : ℕ))) * wickMonomialPoly (m : ℕ) 1).natDegree <
+      P.n := by
+  have hn_pos : 0 < P.n := by
+    have := P.hn_ge
+    omega
+  suffices h :
+      (∑ m : Fin P.n, C (P.coeff m * s ^ (P.n - (m : ℕ))) * wickMonomialPoly (m : ℕ) 1).natDegree
+        ≤ P.n - 1 by
+    omega
+  apply le_trans (natDegree_sum_le _ _)
+  apply Finset.sup_le
+  intro m hm
+  calc
+    (C (P.coeff m * s ^ (P.n - (m : ℕ))) * wickMonomialPoly (m : ℕ) 1).natDegree
+        ≤
+          (C (P.coeff m * s ^ (P.n - (m : ℕ)))).natDegree +
+            (wickMonomialPoly (m : ℕ) 1).natDegree :=
+          natDegree_mul_le
+    _ = 0 + (m : ℕ) := by rw [natDegree_C, wickMonomialPoly_natDegree]
+    _ = (m : ℕ) := zero_add _
+    _ ≤ P.n - 1 := by
+      have := m.is_lt
+      omega
+
+private theorem normalizedWickPolynomialPoly_natDegree
+    (P : InteractionPolynomial) (s : ℝ) :
+    (normalizedWickPolynomialPoly P s).natDegree = P.n := by
+  unfold normalizedWickPolynomialPoly
+  have h_lead := normalizedWickPolynomialPoly_leading_natDegree P s
+  have h_sum := normalizedWickPolynomialPoly_sum_natDegree_lt P s
+  have hlt :
+      (∑ m : Fin P.n, C (P.coeff m * s ^ (P.n - (m : ℕ))) * wickMonomialPoly (↑m) 1).natDegree <
+        (C (1 / (P.n : ℝ)) * wickMonomialPoly P.n 1).natDegree := by
+    rw [h_lead]
+    exact h_sum
+  rw [natDegree_add_eq_left_of_natDegree_lt hlt, h_lead]
+
+private theorem normalizedWickPolynomialPoly_leadingCoeff
+    (P : InteractionPolynomial) (s : ℝ) :
+    (normalizedWickPolynomialPoly P s).leadingCoeff = 1 / P.n := by
+  unfold normalizedWickPolynomialPoly
+  have hne := normalizedWickPolynomialPoly_leading_ne_zero P s
+  have h_lead := normalizedWickPolynomialPoly_leading_natDegree P s
+  have h_sum := normalizedWickPolynomialPoly_sum_natDegree_lt P s
+  rw [leadingCoeff_add_of_degree_lt']
+  · rw [leadingCoeff_mul, leadingCoeff_C, (wickMonomialPoly_monic P.n 1).leadingCoeff, mul_one]
+  · calc
+      degree (∑ m : Fin P.n, C (P.coeff m * s ^ (P.n - (m : ℕ))) * wickMonomialPoly (m : ℕ) 1)
+          ≤
+            ↑(∑ m : Fin P.n,
+                C (P.coeff m * s ^ (P.n - (m : ℕ))) * wickMonomialPoly (m : ℕ) 1).natDegree :=
+            degree_le_natDegree
+      _ < ↑P.n := by exact_mod_cast h_sum
+      _ = ↑(C (1 / ↑P.n : ℝ) * wickMonomialPoly P.n 1).natDegree := by rw [h_lead]
+      _ = degree (C (1 / ↑P.n : ℝ) * wickMonomialPoly P.n 1) := by
+            rw [degree_eq_natDegree hne]
+
+private theorem normalizedWickPolynomialPoly_coeff_continuous
+    (P : InteractionPolynomial) (i : ℕ) :
+    Continuous (fun s : ℝ => (normalizedWickPolynomialPoly P s).coeff i) := by
+  have h_eq : ∀ s, (normalizedWickPolynomialPoly P s).coeff i =
+      (1 / P.n : ℝ) * (wickMonomialPoly P.n 1).coeff i +
+      ∑ m : Fin P.n,
+        (P.coeff m * s ^ (P.n - (m : ℕ))) * (wickMonomialPoly (m : ℕ) 1).coeff i := by
+    intro s
+    unfold normalizedWickPolynomialPoly
+    rw [Polynomial.coeff_add, Polynomial.coeff_C_mul, Polynomial.finset_sum_coeff]
+    apply congrArg (fun t => (1 / P.n : ℝ) * (wickMonomialPoly P.n 1).coeff i + t)
+    apply Finset.sum_congr rfl
+    intro m hm
+    rw [mul_assoc, Polynomial.coeff_C_mul]
+    simp [mul_assoc, mul_left_comm, mul_comm]
+  simp_rw [h_eq]
+  apply Continuous.add
+  · exact continuous_const
+  · apply continuous_finset_sum
+    intro m _
+    exact (continuous_const.mul (continuous_id.pow _)).mul continuous_const
+
+/-- Uniform lower bound for the normalized unit-variance family obtained by
+factoring out the highest `c`-power from `wickPolynomial P c x`. -/
+private theorem normalizedWickPolynomialPoly_uniform_bounded_below
+    (P : InteractionPolynomial) :
+    ∃ A : ℝ, 0 < A ∧ ∀ (s : ℝ), 0 ≤ s → s ≤ 1 → ∀ x : ℝ,
+      (normalizedWickPolynomialPoly P s).eval x ≥ -A := by
+  set n := P.n with hn_def
+  have hn_ge : 4 ≤ n := P.hn_ge
+  have hn_even : Even n := P.hn_even
+  have hn_pos : 0 < n := by omega
+  set lc : ℝ := 1 / n
+  have hlc_pos : 0 < lc := div_pos one_pos (by exact_mod_cast hn_pos)
+  have hcoeff_sum_cont : Continuous (fun s : ℝ =>
+      (Finset.range n).sum (fun i => |(normalizedWickPolynomialPoly P s).coeff i|)) :=
+    continuous_finset_sum _ fun i _ =>
+      (normalizedWickPolynomialPoly_coeff_continuous P i).abs
+  obtain ⟨s₀, hs₀_mem, hs₀_max⟩ := isCompact_Icc.exists_isMaxOn
+    (Set.nonempty_Icc.mpr zero_le_one) hcoeff_sum_cont.continuousOn
+  set Mcoeff : ℝ :=
+    (Finset.range n).sum (fun i => |(normalizedWickPolynomialPoly P s₀).coeff i|)
+  have hM_bound : ∀ s ∈ Set.Icc 0 1,
+      (Finset.range n).sum (fun i => |(normalizedWickPolynomialPoly P s).coeff i|) ≤ Mcoeff :=
+    fun s hs => hs₀_max hs
+  have hM_nonneg : 0 ≤ Mcoeff := Finset.sum_nonneg fun i _ => abs_nonneg _
+  set R : ℝ := max 1 (Mcoeff / lc + 1)
+  have hR_ge1 : 1 ≤ R := le_max_left 1 _
+  have hR_pos : 0 < R := lt_of_lt_of_le one_pos hR_ge1
+  have hMR : Mcoeff < lc * R := by
+    have : Mcoeff / lc < R :=
+      lt_of_lt_of_le (by linarith) (le_max_right 1 _)
+    rwa [div_lt_iff₀ hlc_pos, mul_comm] at this
+  have hclaim : ∀ s ∈ Set.Icc 0 1, ∀ x : ℝ, R ≤ |x| →
+      0 ≤ (normalizedWickPolynomialPoly P s).eval x := by
+    intro s hs x hxR
+    have hx1 : 1 ≤ |x| := le_trans hR_ge1 hxR
+    set p := normalizedWickPolynomialPoly P s
+    have hp_deg : p.natDegree = n := normalizedWickPolynomialPoly_natDegree P s
+    have hp_lc : p.leadingCoeff = lc := by
+      simpa [lc, hn_def] using normalizedWickPolynomialPoly_leadingCoeff P s
+    have hcn : p.coeff n = lc := by
+      rw [show n = p.natDegree from hp_deg.symm]
+      exact hp_lc
+    have hp_eq : p.eval x = lc * x ^ n +
+        (Finset.range n).sum (fun i => p.coeff i * x ^ i) := by
+      simp only [eval_eq_sum_range, Finset.sum_range_succ, hp_deg]
+      rw [hcn]
+      ring
+    have hxn_eq : x ^ n = |x| ^ n := (hn_even.pow_abs x).symm
+    have hrest_bound : |(Finset.range n).sum (fun i => p.coeff i * x ^ i)|
+        ≤ Mcoeff * |x| ^ (n - 1) := by
+      calc
+        |(Finset.range n).sum fun i => p.coeff i * x ^ i|
+            ≤ (Finset.range n).sum fun i => |p.coeff i| * |x| ^ i := by
+              calc
+                _ ≤ (Finset.range n).sum fun i => |p.coeff i * x ^ i| :=
+                      Finset.abs_sum_le_sum_abs _ _
+                _ = _ := by congr 1; ext i; rw [abs_mul, abs_pow]
+        _ ≤ (Finset.range n).sum fun i => |p.coeff i| * |x| ^ (n - 1) := by
+              apply Finset.sum_le_sum
+              intro i hi
+              exact mul_le_mul_of_nonneg_left
+                (pow_le_pow_right₀ hx1 (by
+                  have := Finset.mem_range.mp hi
+                  omega))
+                (abs_nonneg _)
+        _ = ((Finset.range n).sum fun i => |p.coeff i|) * |x| ^ (n - 1) :=
+              (Finset.sum_mul ..).symm
+        _ ≤ Mcoeff * |x| ^ (n - 1) :=
+              mul_le_mul_of_nonneg_right (hM_bound s hs)
+                (pow_nonneg (abs_nonneg x) _)
+    have hlead_split : lc * |x| ^ n = (lc * |x|) * |x| ^ (n - 1) := by
+      have : |x| ^ n = |x| ^ (n - 1) * |x| := by
+        conv_lhs => rw [show n = (n - 1) + 1 by omega, pow_succ]
+      rw [this]
+      ring
+    have hlcx_bound : Mcoeff ≤ lc * |x| :=
+      le_of_lt (lt_of_lt_of_le hMR
+        (mul_le_mul_of_nonneg_left hxR (le_of_lt hlc_pos)))
+    have hxn1 : 0 ≤ |x| ^ (n - 1) := pow_nonneg (abs_nonneg x) _
+    have hrest_lower : -(Mcoeff * |x| ^ (n - 1)) ≤
+        (Finset.range n).sum (fun i => p.coeff i * x ^ i) :=
+      neg_le_of_abs_le hrest_bound
+    rw [hp_eq, hxn_eq, hlead_split]
+    nlinarith [mul_le_mul_of_nonneg_right hlcx_bound hxn1]
+  set K := Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (-R) R
+  have hK_compact : IsCompact K := isCompact_Icc.prod isCompact_Icc
+  have hK_ne : K.Nonempty :=
+    ⟨⟨0, 0⟩, by
+      refine Set.mk_mem_prod ?_ ?_
+      · exact Set.mem_Icc.mpr ⟨le_rfl, zero_le_one⟩
+      · exact Set.mem_Icc.mpr ⟨by linarith, by linarith⟩⟩
+  set f : ℝ × ℝ → ℝ := fun p => (normalizedWickPolynomialPoly P p.1).eval p.2
+  have hf_cont : Continuous f := by
+    change Continuous (fun p : ℝ × ℝ => (normalizedWickPolynomialPoly P p.1).eval p.2)
+    rw [show (fun p : ℝ × ℝ => (normalizedWickPolynomialPoly P p.1).eval p.2) =
+        (fun p : ℝ × ℝ =>
+          (1 / P.n : ℝ) * wickMonomial P.n 1 p.2 +
+            ∑ m : Fin P.n,
+              P.coeff m * p.1 ^ (P.n - (m : ℕ)) * wickMonomial (m : ℕ) 1 p.2) by
+          funext p
+          rw [normalizedWickPolynomialPoly_eval]]
+    apply Continuous.add
+    · exact continuous_const.mul
+        ((wickMonomial_continuous₂ n).comp (continuous_const.prodMk continuous_snd))
+    · apply continuous_finset_sum
+      intro m _
+      exact ((continuous_const.mul (continuous_fst.pow _)).mul
+        ((wickMonomial_continuous₂ m).comp (continuous_const.prodMk continuous_snd)))
+  obtain ⟨p₀, hp₀_mem, hp₀_min⟩ := hK_compact.exists_isMinOn hK_ne hf_cont.continuousOn
+  refine ⟨|f p₀| + 1, by positivity, fun s hs0 hs1 x => ?_⟩
+  by_cases hx : R ≤ |x|
+  · have := hclaim s ⟨hs0, hs1⟩ x hx
+    linarith [abs_nonneg (f p₀)]
+  · push Not at hx
+    have hx_bound : x ∈ Set.Icc (-R) R := by
+      rw [Set.mem_Icc]
+      constructor
+      · linarith [(abs_lt.mp hx).1]
+      · linarith [(abs_lt.mp hx).2]
+    have hmem : (s, x) ∈ K := Set.mk_mem_prod ⟨hs0, hs1⟩ hx_bound
+    have h_min : f p₀ ≤ f (s, x) := hp₀_min hmem
+    change (normalizedWickPolynomialPoly P p₀.1).eval p₀.2 ≤
+      (normalizedWickPolynomialPoly P s).eval x at h_min
+    linarith [neg_abs_le (f p₀)]
+
+private theorem wickMonomial_rescale_to_unit
+    (n : ℕ) {c : ℝ} (hc : 0 < c) (x : ℝ) :
+    wickMonomial n c x =
+      Real.sqrt c ^ n * wickMonomial n 1 (x / Real.sqrt c) := by
+  have h := wickMonomial_homogeneity n (Real.sqrt c) 1 (x / Real.sqrt c)
+  have hsqrt_ne : Real.sqrt c ≠ 0 := by positivity
+  have hx : Real.sqrt c * (x / Real.sqrt c) = x := by
+    field_simp [hsqrt_ne]
+  rw [wickMonomial_eq_root, wickMonomial_eq_root]
+  simpa [Real.sq_sqrt hc.le, one_mul, hx] using h
+
+private theorem wickPolynomial_eq_normalized_scale
+    (P : InteractionPolynomial) {c : ℝ} (hc : 0 < c) (x : ℝ) :
+    wickPolynomial P c x =
+      Real.sqrt c ^ P.n *
+        (normalizedWickPolynomialPoly P ((Real.sqrt c)⁻¹)).eval (x / Real.sqrt c) := by
+  let y : ℝ := x / Real.sqrt c
+  let γ : ℝ := Real.sqrt c
+  have hγ_ne : γ ≠ 0 := by
+    dsimp [γ]
+    positivity
+  have hterm :
+      ∀ m : ℕ,
+        wickMonomial m c x = γ ^ m * wickMonomial m 1 y := by
+    intro m
+    simpa [γ, y] using wickMonomial_rescale_to_unit m hc x
+  unfold wickPolynomial
+  rw [normalizedWickPolynomialPoly_eval]
+  simp_rw [hterm]
+  have hlead :
+      (1 / P.n : ℝ) * (γ ^ P.n * wickMonomial P.n 1 y) =
+        γ ^ P.n * ((1 / P.n : ℝ) * wickMonomial P.n 1 y) := by
+    ring
+  rw [hlead]
+  have hsum :
+      ∑ m : Fin P.n, P.coeff m * (γ ^ (m : ℕ) * wickMonomial (m : ℕ) 1 y) =
+        γ ^ P.n *
+          ∑ m : Fin P.n,
+            P.coeff m * γ⁻¹ ^ (P.n - (m : ℕ)) * wickMonomial (m : ℕ) 1 y := by
+    calc
+      ∑ m : Fin P.n, P.coeff m * (γ ^ (m : ℕ) * wickMonomial (m : ℕ) 1 y)
+          = ∑ m : Fin P.n,
+              γ ^ P.n * (P.coeff m * γ⁻¹ ^ (P.n - (m : ℕ)) * wickMonomial (m : ℕ) 1 y) := by
+                apply Finset.sum_congr rfl
+                intro m hm
+                have hpow :
+                    γ ^ P.n * γ⁻¹ ^ (P.n - (m : ℕ)) = γ ^ (m : ℕ) := by
+                  have hm_le : (m : ℕ) ≤ P.n := Nat.le_of_lt m.2
+                  have hsplit : γ ^ P.n = γ ^ (P.n - (m : ℕ)) * γ ^ (m : ℕ) := by
+                    calc
+                      γ ^ P.n = γ ^ ((P.n - (m : ℕ)) + (m : ℕ)) := by
+                        exact congrArg (fun t : ℕ => γ ^ t) (Nat.sub_add_cancel hm_le).symm
+                      _ = γ ^ (P.n - (m : ℕ)) * γ ^ (m : ℕ) := by
+                        rw [pow_add]
+                  calc
+                    γ ^ P.n * γ⁻¹ ^ (P.n - (m : ℕ))
+                        = (γ ^ (P.n - (m : ℕ)) * γ ^ (m : ℕ)) *
+                            γ⁻¹ ^ (P.n - (m : ℕ)) := by rw [hsplit]
+                    _ = γ ^ (m : ℕ) := by
+                          rw [inv_pow]
+                          field_simp [hγ_ne]
+                calc
+                  P.coeff m * (γ ^ (m : ℕ) * wickMonomial (m : ℕ) 1 y)
+                      = P.coeff m * ((γ ^ P.n * γ⁻¹ ^ (P.n - (m : ℕ))) *
+                          wickMonomial (m : ℕ) 1 y) := by rw [hpow]
+                  _ = γ ^ P.n *
+                      (P.coeff m * γ⁻¹ ^ (P.n - (m : ℕ)) *
+                        wickMonomial (m : ℕ) 1 y) := by ring
+      _ = γ ^ P.n *
+            ∑ m : Fin P.n,
+              P.coeff m * γ⁻¹ ^ (P.n - (m : ℕ)) * wickMonomial (m : ℕ) 1 y := by
+                rw [Finset.mul_sum]
+  rw [hsum]
+  ring
+
+/-- General sitewise lower bound for the Wick polynomial, with the growth in
+the Wick constant controlled by the top degree `P.n / 2`. This is the smooth-side
+estimate needed for the bounded-volume Nelson bridge for general even `P`. -/
+theorem wickPolynomial_lower_bound_general (P : InteractionPolynomial) :
+    ∃ A : ℝ, 0 ≤ A ∧
+      ∀ (c x : ℝ), 0 ≤ c →
+        wickPolynomial P c x ≥ -A * (1 + c ^ (P.n / 2)) := by
+  obtain ⟨A_small, hA_small_pos, hsmall⟩ :=
+    wickPolynomial_uniform_bounded_below P 1 zero_le_one
+  obtain ⟨A_large, hA_large_pos, hlarge⟩ :=
+    normalizedWickPolynomialPoly_uniform_bounded_below P
+  let A : ℝ := max A_small A_large
+  refine ⟨A, le_of_lt (lt_of_lt_of_le hA_small_pos (le_max_left _ _)), ?_⟩
+  intro c x hc
+  by_cases hc1 : c ≤ 1
+  · have hbase : wickPolynomial P c x ≥ -A_small := hsmall c hc hc1 x
+    have hfactor : 1 ≤ 1 + c ^ (P.n / 2) := by
+      have hpow_nonneg : 0 ≤ c ^ (P.n / 2) := pow_nonneg hc _
+      linarith
+    have hbound : -A * (1 + c ^ (P.n / 2)) ≤ -A_small := by
+      have h1 : -A ≤ -A_small := by
+        have hA_small_le_A : A_small ≤ A := le_max_left _ _
+        linarith
+      have h2 : -A * (1 + c ^ (P.n / 2)) ≤ -A * 1 := by
+        have hnegA : -A ≤ 0 := by
+          have hA_nonneg : 0 ≤ A := le_trans (le_of_lt hA_small_pos) (le_max_left _ _)
+          linarith
+        simpa using mul_le_mul_of_nonpos_left hfactor hnegA
+      linarith
+    exact le_trans hbound hbase
+  · have hc_gt_one : 1 < c := lt_of_not_ge hc1
+    have hc_pos : 0 < c := lt_trans zero_lt_one hc_gt_one
+    have hs_nonneg : 0 ≤ (Real.sqrt c)⁻¹ := by positivity
+    have hs_le_one : (Real.sqrt c)⁻¹ ≤ 1 := by
+      have hsqrt_ge_one : 1 ≤ Real.sqrt c := by
+        rw [show (1 : ℝ) = Real.sqrt 1 by rw [Real.sqrt_one]]
+        exact Real.sqrt_le_sqrt hc_gt_one.le
+      have hsqrt_pos : 0 < Real.sqrt c := by positivity
+      rwa [inv_le_one₀ hsqrt_pos]
+    have hnorm :
+        (normalizedWickPolynomialPoly P ((Real.sqrt c)⁻¹)).eval (x / Real.sqrt c) ≥ -A_large :=
+      hlarge ((Real.sqrt c)⁻¹) hs_nonneg hs_le_one (x / Real.sqrt c)
+    have hsqrt_pow_nonneg : 0 ≤ Real.sqrt c ^ P.n := by positivity
+    have hscaled := mul_le_mul_of_nonneg_left hnorm hsqrt_pow_nonneg
+    have hsqrt_even :
+        Real.sqrt c ^ P.n = c ^ (P.n / 2) := by
+      obtain ⟨k, hk⟩ := P.hn_even
+      rw [hk]
+      rw [show (k + k) / 2 = k by omega]
+      rw [show k + k = 2 * k by omega, pow_mul]
+      have hsq : Real.sqrt c ^ 2 = c := by
+        nlinarith [Real.sq_sqrt hc]
+      rw [hsq]
+    have hpoly_eq := wickPolynomial_eq_normalized_scale P hc_pos x
+    have hscaled' : -(A_large * c ^ (P.n / 2)) ≤ wickPolynomial P c x := by
+      calc
+        -(A_large * c ^ (P.n / 2))
+            = Real.sqrt c ^ P.n * (-A_large) := by
+                rw [hsqrt_even]
+                ring
+        _ ≤ Real.sqrt c ^ P.n *
+              (normalizedWickPolynomialPoly P ((Real.sqrt c)⁻¹)).eval (x / Real.sqrt c) :=
+              hscaled
+        _ = wickPolynomial P c x := hpoly_eq.symm
+    have hA_ge_large : A_large ≤ A := le_max_right _ _
+    have hbound : -A * (1 + c ^ (P.n / 2)) ≤ -(A_large * c ^ (P.n / 2)) := by
+      have hA_nonneg : 0 ≤ A := le_trans (le_of_lt hA_small_pos) (le_max_left _ _)
+      have hpow_nonneg : 0 ≤ c ^ (P.n / 2) := pow_nonneg hc (P.n / 2)
+      have hmul : A_large * c ^ (P.n / 2) ≤ A * (1 + c ^ (P.n / 2)) := by
+        calc
+          A_large * c ^ (P.n / 2) ≤ A * c ^ (P.n / 2) :=
+            mul_le_mul_of_nonneg_right hA_ge_large hpow_nonneg
+          _ ≤ A * (1 + c ^ (P.n / 2)) :=
+            mul_le_mul_of_nonneg_left (by linarith) hA_nonneg
+      linarith
+    exact le_trans hbound hscaled'
+
 end Pphi2
 
 end

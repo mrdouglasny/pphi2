@@ -1,4 +1,27 @@
-# `rough_error_variance` — implementation plan
+# `rough_error_variance` — implementation plan [COMPLETED 2026-05-12]
+
+> **STATUS: PROVED.** `rough_error_variance` is fully proved at
+> `Pphi2/NelsonEstimate/RoughErrorBound.lean:1517` (commit `6db65d9`).
+> All five steps S1, S2, S3, S4, S5 completed:
+>
+> | Step | Lemma | Status |
+> |---|---|---|
+> | S1 (binomial decomposition) | `canonicalRoughError_pointwise_decomposition` | ✅ axiom-free |
+> | S2 (cross-term reindex) | `canonicalRoughError_eq_sum_over_cross_terms` | ✅ axiom-free |
+> | S3 (L²-sq composition) | `canonicalRoughError_l2_sq_eq` | ✅ axiom-free (Codex 2026-05-12) |
+> | S3 (cross-term orthogonality) | `canonicalCrossTerm_inner_eq_zero` | ✅ axiom-free (Codex 2026-05-12) |
+> | S4 (per-cross-term L² bound) | `canonicalCrossTerm_l2_sq_le` | ✅ proved using Phase B axioms (Codex 2026-05-12) |
+> | S5 (assembly) | `rough_error_variance` | ✅ proved using S3 + S4 (Codex 2026-05-12) |
+>
+> `#print axioms rough_error_variance` shows
+> `[propext, Classical.choice, Quot.sound,
+> smoothWickConstant_le_log_uniform_in_aN,
+> canonicalRoughCovariance_pow_sum_le_uniform_in_aN]` — the standard
+> Mathlib trio plus the two Gemini-vetted Phase B textbook axioms in
+> `CovarianceBoundsGJ.lean` (which themselves have explicit discharge
+> plans in `phase-B-textbook-axioms.md`).
+>
+> The plan body below describes the design that was executed.
 
 *Revised 2026-05-10 (rev 2) after Gemini deep-think review (see
 [`rough-error-variance-deep-think-review.md`](rough-error-variance-deep-think-review.md)
