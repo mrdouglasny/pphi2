@@ -222,17 +222,17 @@ None of them are load-bearing for `torusInteracting_satisfies_OS`.
 | **2.5** | Fresh-Fubini lift for `ouSemigroupFin_l2_sq_hasDerivWithinAt` | markov-semigroups | ✅ **COMPLETE 2026-05-19** (discharged by Codex, commit `897b661`, merged via `c0e0ce3`; theorem in `EuclideanFinBE.lean` via the two G2 axioms — **not the planned fresh-Fubini route**) | — (pin propagation pending) |
 | **PIN** | Propagate ms `c0e0ce3` → gaussian-hilbert → pphi2 | gh + pphi2 | not started | ~1 build cycle (pphi2 = 3896 jobs) |
 | **N1.b** | `ouSemigroupFin_preserves_IsCore` | markov-semigroups | ✅ **FULLY DISCHARGED 2026-05-19** — axiom-free, sorry-free, `#print axioms`=trio, build green. Branch `discharge/n1b-preserves-iscore` `9f4beff` (Cameron–Martin + `contDiff_succ_iff_fderiv` route). **Not yet merged to ms `main` / propagated.** | — (merge + propagate pending) |
-| **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | 🔄 **in progress** — `axiom`→`theorem`, 1 `sorry`. Original gemini-vetted strategy had a **fatal C∞ error** (single-coord Mehler doesn't smooth passthrough coords; iterates only C², counterexample-confirmed). T1 layer fully proved (axiom-free, 9 lemmas). Corrected **C²-route Gemini-vetted SOUND** (deep-think + 3.1-pro 2026-05-19) with one mandatory S1 fix (`IsCore2Fin` = joint C¹ + per-coord 1D-slice-C², **never joint C²**). Finisher running on `discharge/n1c-entropy-decay` (WIP `72e0ff8`, N1.b merged in at `69fc001`). | ~2–4 days |
+| **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | ✅ **FULLY DISCHARGED 2026-05-19** — axiom-free, sorry-free, `#print axioms`=trio, build green (3205 jobs). Branch `discharge/n1c-entropy-decay` `bd7f950` (**also subsumes N1.b** via merge `69fc001`). Original gemini-vetted strategy had a fatal C∞ error (counterexample-confirmed); discharged via a Gemini-re-vetted **frozen-slot 1-parameter slice route** that avoids `IsCore2Fin` entirely. **Not yet merged to ms `main` / propagated.** | — (merge + propagate pending) |
 | **Route A** | Abstract `gross_lsi_implies_hypercontractive` + `stroock_varopoulos` (Phase 4) | markov-semigroups | 🔄 **G2 ✅ done; P2 decomposed (8 sorries in `GrossODE.lean`), P3 scaffolded** (2026-05-19); remaining: P2 Leibniz kernel + glue (~400–700 L) → P3 algebra (~200–400 L) → W rewire (~10–30 L) → Phase 4 | ~weeks |
 | **G2.a** | Discharge `gaussianFin_diffQuot_tendsto_Lp` *(now ON the T² path early — via the 2.5 discharge, not via Route A W-rewire)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
 | **G2.b** | Discharge `gaussianFin_integrationByParts` *(now ON the T² path early — via the 2.5 discharge)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
 
 **Total parallel wall-clock to "trio + 4 inherited markov-semigroups axioms" (M1):** reached 2026-05-18 (state (a), pre-2.5 pin).
-**Workstream 2.5 (done 2026-05-19) changes closure *shape* not size** — once propagated, the path becomes trio + Gross + N1.b + N1.c + 2 G2 axioms (5 inherited, all but Gross textbook-vetted).
-**To "trio + 2 G2 textbook-vetted axioms" (M4b):** ~3–5 weeks if N1.b + N1.c + Route A run in parallel.
+**As of 2026-05-19, all three GaussianFin BE axioms are discharged** (2.5 in ms `main`; N1.b + N1.c on branch `discharge/n1c-entropy-decay` `bd7f950`, not yet propagated). Once propagated, the T² path closure is **trio + Gross + 2 G2 axioms** — every non-Gross axiom is textbook-vetted general analysis. This is the M4b-shape resting point, reached *before* Route A even lands (2.5 routed through the G2 axioms).
+**To "trio + 2 G2 textbook-vetted axioms":** blocked only on Route A (Gross) + the merge/propagation. Route A is the sole genuinely-novel remaining axiom.
 **To fully trio-only (M5):** further G2.a + G2.b work, ideally as Mathlib upstreams.
 
-Route A still dominates the critical path; G2-complete is a major architectural unblock. As of 2026-05-19, Workstreams **B, C, 2.5, and N1.b are all done** (N1.b on its branch, not yet propagated) and **N1.c is in progress** (corrected C²-route Gemini-vetted SOUND, finisher running). The remaining genuinely-novel inherited axiom besides Gross is just N1.c. Highest-ROI next actions: finish N1.c, then **merge N1.b + N1.c to ms `main` and propagate the pin chain** (so pphi2's endpoint reflects 2.5 + N1.b + N1.c), with **Route A** the long pole.
+Route A now **solely** dominates the critical path. As of 2026-05-19, Workstreams **B, C, 2.5, N1.b, and N1.c are all done** (N1.b + N1.c on `discharge/n1c-entropy-decay`, not yet propagated). Highest-ROI next actions: **merge `discharge/n1c-entropy-decay` (subsumes N1.b) to ms `main` and propagate the pin chain** (so pphi2's endpoint reflects 2.5 + N1.b + N1.c at once), with **Route A** the long pole.
 
 ---
 
@@ -468,42 +468,43 @@ technique + Mathlib API discoveries.
 
 ### Workstream N1.c — `ouSemigroupFin_entropy_sq_decay_bound`
 
-**Repo:** markov-semigroups · **Status: 🔄 in progress**
-(`axiom`→`theorem`, 1 `sorry`; branch `discharge/n1c-entropy-decay`,
-WIP `72e0ff8`, N1.b merged in at `69fc001`) · **Effort: ~2–4 days**
+**Repo:** markov-semigroups · **Status: ✅ FULLY DISCHARGED 2026-05-19**
+(branch `discharge/n1c-entropy-decay`, commit `bd7f950`; this branch
+**also subsumes N1.b** via merge `69fc001`; not yet merged to ms
+`main` / propagated)
+
+`ouSemigroupFin_entropy_sq_decay_bound` is now an axiom-free,
+sorry-free `theorem`; `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (verified after a full clean build — `lake env lean`
+alone can spuriously report `sorryAx` from a stale `.olean`); full
+build green (3205 jobs). `EuclideanFin.lean` has 0 axioms, 0 sorries.
 
 **The originally gemini-3.1-pro-vetted (2026-05-13) "telescoping over
 coordinates + proved 1D" strategy contained a fatal mathematical
-error**, discovered during formalization 2026-05-19 and independently
-re-vetted wrong by Gemini deep-think + 3.1-pro: it assumed the
-single-coordinate Mehler telescope iterates `ouCoord j t g` stay C∞
-(`IsCoreFin`). They do not — single-coord Mehler smooths only the
-*integrated* coordinate; passthrough coords inherit `g`'s regularity
-with no gain, so under `IsCoreFin` (pure ≤2nd-order bounds) the iterate
-is generically only **C² jointly, not C∞** (3rd passthrough derivative
-diverges for `t > ½ ln 2`; explicit counterexample). See
-[[ms-n1c-telescoping-c2-finding]] (project memory).
+error** (discovered 2026-05-19, independently re-vetted wrong by Gemini
+deep-think + 3.1-pro): it assumed the single-coordinate Mehler
+telescope iterates `ouCoord j t g` stay C∞. They do not — single-coord
+Mehler smooths only the *integrated* coordinate, so under `IsCoreFin`
+(pure ≤2nd-order bounds) the iterate is generically only C² jointly
+(3rd passthrough derivative diverges for `t > ½ ln 2`; explicit
+counterexample). See [[ms-n1c-telescoping-c2-finding]] (project memory).
 
-**Salvaged (axiom-free):** the T1 factorization layer is fully proved —
-9 lemmas (`ouCoord`, `ouCoordSet`, `ouCoord_ouCoordSet` composition
-step, `integral_ouCoordSet_eq` mean preservation, measurability,
-bounds), plus the ε→0 DCT tail and the centered-entropy→Boltzmann
-reduction.
-
-**Corrected C²-route — Gemini-vetted SOUND** (deep-think + 3.1-pro
-2026-05-19) with one mandatory S1 fix. S1–S5: a C² core predicate →
-its `ouCoord`/`ouCoordSet` preservation → a C²-weakened per-coordinate
-step lemma → one-shot orthogonal Fisher monotonicity → telescope to
-exactly `2(1−e^{−2t})·E`. The crux (S3 holds at C², no hidden
-C³/Γ₂), S4, S5, and the counterexample are all confirmed correct.
-**Mandatory S1 correction:** `IsCore2Fin` must **not** be joint
-`ContDiff ℝ 2` (joint C² forces mixed partials `∂_i∂_j f`, whose
-γ-integrable Hessian dominator `IsCoreFin` cannot supply — only
-Calderón–Zygmund/BMO rescues it, infeasible in Lean). Use **joint
-`ContDiff ℝ 1` + per-coordinate 1D-slice-C² with globally bounded
-*pure* 2nd partials**; mixed partials then never appear (S3 uses only
-1D slices, S4 only 1st-order gradients). Finisher running with this
-baked in; highest formalizer risk is the S1/S2 ContDiff-API boundary.
+**Route actually taken** (Gemini-re-vetted before implementing —
+lower-risk than even the corrected S1–S5 C²-route, which it
+superseded): **no `IsCore2Fin` predicate at all**. Refactor the
+per-coordinate step lemma to slice-level hypotheses with an *abstract
+slice-derivative*; exploit the **frozen-slot decoupling** — for
+`k∉S`, `setShift S t (update x k r) y = update (setShift S t x y) k r`,
+so the `k`-slice of `ouCoordSet S t g` is a *1-parameter* γ-average of
+`g`'s `k`-slices — never needing mixed partials or joint C². Single
+real-parameter differentiation under the γ-integral via Mathlib
+`hasDerivAt_integral_of_dominated_loc_of_deriv_le` with a *constant*
+dominator (γₙ is a probability measure). Pointwise kernel
+Cauchy–Schwarz (`cauchy_schwarz_measure`) + `integral_ouCoordSet_eq`
+give orthogonal Fisher monotonicity; `Finset.induction` telescope +
+ε→0 DCT tail close it. The salvaged axiom-free T1 factorization layer
+(9 lemmas: `ouCoord`, `ouCoordSet`, `ouCoord_ouCoordSet`,
+`integral_ouCoordSet_eq`, …) was reused.
 
 ---
 
@@ -645,23 +646,25 @@ should be co-staged** if running concurrently.
 
 ## Recommended sequencing
 
-**Done:** Workstreams A, B, C, **2.5, N1.b** all complete (N1.b on
-branch `discharge/n1b-preserves-iscore`, not yet propagated). **N1.c
-in progress** (corrected C²-route Gemini-vetted SOUND, finisher
-running on `discharge/n1c-entropy-decay`). Remaining: finish N1.c, the
-pin/branch propagation, Route A, and the off-route G2.a/G2.b.
+**Done:** Workstreams A, B, C, **2.5, N1.b, N1.c** all complete. N1.b +
+N1.c are both on branch `discharge/n1c-entropy-decay` `bd7f950`
+(N1.c's branch subsumes N1.b via merge `69fc001`), axiom-free, build
+green, **not yet merged to ms `main` / propagated**. Remaining: the
+branch merge + pin propagation, Route A, and the off-route G2.a/G2.b.
 
 **Immediate:**
 
-1. **Finish N1.c** — finisher running with the Gemini-vetted corrected
-   S1 (`IsCore2Fin` = joint C¹ + per-coord 1D-slice-C², never joint
-   C²) baked in. ~2–4 days.
-2. **Merge + propagate** once N1.c lands — merge `discharge/n1b-…` and
-   `discharge/n1c-…` into ms `main`; gaussian-hilbert bumps ms pin →
-   new HEAD, rebuild; pphi2 bumps gh+ms pins, rebuild (3896 jobs),
-   re-verify `#print axioms torusInteracting_satisfies_OS`. This makes
-   2.5 + N1.b + N1.c all real in the pphi2 endpoint at once.
-3. **Route A** — the long pole; P2 kernel + P3 algebra + W + Phase 4.
+1. **Merge + propagate** — merge `discharge/n1c-entropy-decay`
+   (subsumes N1.b) into ms `main`; verify `#print axioms` of both
+   theorems = trio on `main` after a full `lake build` (the `.olean`
+   staleness caveat: `lake env lean` alone can spuriously report
+   `sorryAx`); gaussian-hilbert bumps ms pin → new HEAD, rebuild;
+   pphi2 bumps gh+ms pins, rebuild (3896 jobs), re-verify
+   `#print axioms torusInteracting_satisfies_OS`. This makes
+   2.5 + N1.b + N1.c all real in the pphi2 endpoint at once →
+   closure becomes trio + Gross + 2 G2 axioms.
+2. **Route A** — the sole remaining long pole; P2 kernel + P3 algebra
+   + W + Phase 4.
 
 **Note:** N1.b and N1.c both live in `EuclideanFin.lean` (post-`c0e0ce3`
 refactor); they were developed in separate worktrees and the N1.c
@@ -698,10 +701,16 @@ per-axiom accounting.)
   axiom drops → trio + 3" was wrong; the discharge routes through the
   G2 axioms, not fresh Fubini. This is the M4a-style shape change
   arriving early.)*
-- **M3 (passes within ~3 wk):** N1.b and N1.c land. Closure: trio
-  + `gross_lsi_implies_hypercontractive` + 2 G2 axioms. (Was "Gross
-  only" under the old M2 assumption; now also carries the 2 G2 axioms
-  because 2.5 routed through them.)
+- **M3 — ✅ ACHIEVED in markov-semigroups 2026-05-19; pending branch
+  merge + pin propagation to be visible in pphi2.** N1.b and N1.c are
+  both fully discharged (axiom-free, build green) on branch
+  `discharge/n1c-entropy-decay` `bd7f950`. Post-propagation closure:
+  **trio + `gross_lsi_implies_hypercontractive` + 2 G2 axioms.** All
+  three GaussianFin BE axioms are now theorems; the only genuinely-novel
+  remaining axiom on the T² path is Gross. *(N1.c's original
+  gemini-vetted strategy had a fatal C∞ error — see the N1.c
+  workstream detail; it was rescued via a re-vetted frozen-slot
+  1-parameter route.)*
 - **M4a (multi-week from M3):** Route A's P2 + P3 + W rewire lands.
   `gross_lsi_implies_hypercontractive` is replaced by the proved
   `gross_lsi_implies_hypercontractive_of_hypotheses`. The 2 G2 axioms
