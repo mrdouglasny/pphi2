@@ -1,6 +1,6 @@
 # T² φ⁴₂ continuum limit — master plan & progress tracker
 
-**Last refreshed:** 2026-05-17 (post-merge-consolidation)
+**Last refreshed:** 2026-05-18 (post-Workstream-B completion)
 **Repo:** pphi2 (this) + sister repos gaussian-hilbert, markov-semigroups
 **Endpoint:** `Pphi2.torusInteracting_satisfies_OS` (OS0 + OS1 + OS2 for the T²_L
 symmetric-torus φ⁴₂ continuum limit)
@@ -19,31 +19,24 @@ only. Per-workstream details and proof plans live in their dedicated docs
 ## Current closure
 
 `#print axioms Pphi2.torusInteracting_satisfies_OS` (verified 2026-05-18 after
-the 3-step `polynomial_chaos_exp_moment_bridge` discharge):
+discharging `degreePiecewiseTail_layerCake_lt_top`):
 
 ```
 [propext, Classical.choice, Quot.sound,
  gross_lsi_implies_hypercontractive,                  ← Route A
  GaussianFin.ouSemigroupFin_entropy_sq_decay_bound,   ← N1.c
  GaussianFin.ouSemigroupFin_l2_sq_hasDerivWithinAt,   ← Phase 2.5
- GaussianFin.ouSemigroupFin_preserves_IsCore,         ← N1.b
- Pphi2.degreePiecewiseTail_layerCake_lt_top]          ← new pphi2 staging axiom (general-P layer-cake)
+ GaussianFin.ouSemigroupFin_preserves_IsCore]         ← N1.b
 ```
 
-**M1 reached (modulo one staging axiom).** `polynomial_chaos_exp_moment_bridge`
-is now a theorem (with the corrected bounded-volume signature requiring
-`_hvol : (N:ℝ) * a = L`). The closure surfaced the 4 expected inherited
-markov-semigroups axioms as the master plan predicted. One additional
-pphi2 staging axiom — `degreePiecewiseTail_layerCake_lt_top` — is the
-general-`P` analogue of the quartic-case `quarticPiecewiseTail_layerCake_lt_top`
-that was discharged at commit `59c771f`. It's a pure integrability fact
-(finiteness of a Lebesgue integral whose integrand has doubly-exponential
-decay) and is the same flavour of "easy follow-up" as the quartic version.
+**M1 fully reached.** `polynomial_chaos_exp_moment_bridge` is now a theorem
+(with the corrected bounded-volume signature requiring
+`_hvol : (N:ℝ) * a = L`), and the general-`P` layer-cake follow-up
+`degreePiecewiseTail_layerCake_lt_top` is also discharged. The closure is now
+exactly the 4 expected inherited markov-semigroups axioms.
 
-To reduce the closure further: discharge `degreePiecewiseTail_layerCake_lt_top`
-(~50–100 lines, same small-M/large-M template as the quartic discharge),
-then proceed with Workstreams 2.5, N1.b, N1.c, Route A, G2.a, G2.b per the
-inventory below.
+To reduce the closure further, proceed with Workstreams 2.5, N1.b, N1.c,
+Route A, G2.a, G2.b per the inventory below.
 
 ---
 
@@ -72,8 +65,10 @@ prior revisions of this doc is **resolved**.
 `polynomial_chaos_exp_moment_bridge` is no longer an axiom — the
 3-step lift+narrow+rewire (Workstream B's "Next concrete steps") landed
 at commit `e09419a`, converting it to a theorem with the corrected
-bounded-volume signature. The endpoint closure now reflects this — see
-"Current closure" above.
+bounded-volume signature, and the remaining general-`P` layer-cake
+follow-up `degreePiecewiseTail_layerCake_lt_top` is now discharged as
+well. The endpoint closure now reflects this — see "Current closure"
+above.
 
 ---
 
@@ -95,11 +90,10 @@ Verified 2026-05-17 on `main`.
 ### Axioms on the T² OS0–OS2 critical path
 
 **Current** (`#print axioms torusInteracting_satisfies_OS` on `main`,
-post-Workstream-B-discharge 2026-05-18):
+post-Workstream-B completion 2026-05-18):
 
 | Axiom | Location | Workstream / discharge plan |
 |---|---|---|
-| `Pphi2.degreePiecewiseTail_layerCake_lt_top` | `Pphi2/NelsonEstimate/PolynomialChaosBridge.lean:718` | **Workstream B follow-up** (staging axiom). Pure integrability — finiteness of `∫ degreePiecewiseTail K C M · 2·exp(2M) dM`. Discharge by the same small-M/large-M split used for the quartic case `quarticPiecewiseTail_layerCake_lt_top` (commit `59c771f`); doubly-exp tail of `degreePiecewiseTail` dominates `exp(2M)` for any `P.n ≥ 4`. ~50-100 lines. |
 | `gross_lsi_implies_hypercontractive` (legacy abstract axiom) | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A**. Plan: [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md). Status (2026-05-17): G2 sorry-free + GrossODE P2/P3 scaffolded; remaining endgame is P2 (one Leibniz kernel + thin glue) → P3 algebra → W (rewire). |
 | `ouSemigroupFin_l2_sq_hasDerivWithinAt` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2643` | **Workstream 2.5** (fresh-Fubini lift). Plan: inline at `EuclideanFin.lean:2637-2641` (dual-vetted gemini-2.5-pro + gemini-3.1-pro 2026-05-13). Per-axiom row in [`markov-semigroups/AXIOM_AUDIT.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/AXIOM_AUDIT.md). |
 | `ouSemigroupFin_preserves_IsCore` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2771` | **Workstream N1.b**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md` (search `ouSemigroupFin_preserves_IsCore`). Strategy: change-of-variables on Mehler integral + `ContDiff.integral`. |
@@ -108,7 +102,8 @@ post-Workstream-B-discharge 2026-05-18):
 **Historical note:** `polynomial_chaos_exp_moment_bridge` was the master
 bridge axiom that previously dominated the closure. As of 2026-05-18
 (commit `e09419a`) it is a theorem with the corrected bounded-volume
-signature; the closure widening above is the consequence.
+signature, and the staged follow-up `degreePiecewiseTail_layerCake_lt_top`
+has now also been retired; the closure widening above is the consequence.
 
 **After Route A's W-rewire lands** — `gross_lsi_implies_hypercontractive`
 is replaced by the proved `gross_lsi_implies_hypercontractive_of_hypotheses`
@@ -147,8 +142,8 @@ of the inherited markov-semigroups axioms listed above.
 
 ### Pphi2 axioms NOT on the T² OS0–OS2 critical path (off-route inventory)
 
-For context, pphi2 has 17 active axioms total. The other 16 are for
-other constructions (S'(ℝ²) bridge, OS3 reflection positivity, OS4
+For context, pphi2 has 17 active axioms total. All 17 are now off the
+T² OS0–OS2 critical path and are for other constructions (S'(ℝ²) bridge, OS3 reflection positivity, OS4
 mass gap, Route B' asymmetric-torus IR limit, Ward identity refinement,
 Gaussian continuum-limit propagator convergence, etc.) — listed in
 [`docs/AXIOM_STATUS.md`](AXIOM_STATUS.md) and [`AXIOM_AUDIT.md`](../AXIOM_AUDIT.md).
@@ -162,7 +157,7 @@ None of them are load-bearing for `torusInteracting_satisfies_OS`.
 |---|---|---|---|---|
 | A | Phase B Glimm–Jaffe Fourier estimates (pphi2) | pphi2 | ✅ COMPLETE 2026-05-16 | — |
 | C | OU/Mehler hypercontractivity (gaussian-hilbert) | gaussian-hilbert | ✅ COMPLETE 2026-05-15; on main since 2026-05-17 | — |
-| **B** | `polynomial_chaos_exp_moment_bridge` (pphi2) | pphi2 | ✅ **DISCHARGED 2026-05-18** (3-step lift+narrow+rewire, commit `e09419a`); 1 staging axiom `degreePiecewiseTail_layerCake_lt_top` remains as easy follow-up | ~50–100 lines (staging axiom) |
+| **B** | `polynomial_chaos_exp_moment_bridge` (pphi2) | pphi2 | ✅ **COMPLETE 2026-05-18** (3-step lift+narrow+rewire landed at `e09419a`; general-`P` layer-cake follow-up discharged the same day) | — |
 | **2.5** | Fresh-Fubini lift for `ouSemigroupFin_l2_sq_hasDerivWithinAt` | markov-semigroups | not started | ~1.5 days |
 | **N1.b** | `ouSemigroupFin_preserves_IsCore` | markov-semigroups | not started | ~3–5 days |
 | **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | not started | ~3–5 days |
@@ -170,11 +165,11 @@ None of them are load-bearing for `torusInteracting_satisfies_OS`.
 | **G2.a** | Discharge `gaussianFin_diffQuot_tendsto_Lp` *(surfaces on T² path only after Route A's W rewire)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
 | **G2.b** | Discharge `gaussianFin_integrationByParts` *(surfaces on T² path only after Route A's W rewire)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
 
-**Total parallel wall-clock to "trio + 4 inherited markov-semigroups axioms" (M1):** ~1 wk (Workstream B alone).
+**Total parallel wall-clock to "trio + 4 inherited markov-semigroups axioms" (M1):** reached 2026-05-18.
 **To "trio + 2 G2 textbook-vetted axioms" (M4b):** ~3–5 weeks if B + 2.5 + N1.b + N1.c + Route A run in parallel.
 **To fully trio-only (M5):** further G2.a + G2.b work, ideally as Mathlib upstreams.
 
-Route A still dominates the critical path; G2-complete is a major architectural unblock. **Workstream B is the highest-ROI immediate target** — it unblocks the M1 closure visibility.
+Route A still dominates the critical path; G2-complete is a major architectural unblock. With Workstream B complete, the highest-ROI immediate targets are Workstreams 2.5, N1.b, and N1.c.
 
 ---
 
