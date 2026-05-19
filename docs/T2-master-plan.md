@@ -18,18 +18,32 @@ only. Per-workstream details and proof plans live in their dedicated docs
 
 ## Current closure
 
-`#print axioms Pphi2.torusInteracting_satisfies_OS` (verified 2026-05-16):
+`#print axioms Pphi2.torusInteracting_satisfies_OS` (verified 2026-05-18 after
+the 3-step `polynomial_chaos_exp_moment_bridge` discharge):
+
 ```
-[propext, Classical.choice, Quot.sound, polynomial_chaos_exp_moment_bridge]
+[propext, Classical.choice, Quot.sound,
+ gross_lsi_implies_hypercontractive,                  ← Route A
+ GaussianFin.ouSemigroupFin_entropy_sq_decay_bound,   ← N1.c
+ GaussianFin.ouSemigroupFin_l2_sq_hasDerivWithinAt,   ← Phase 2.5
+ GaussianFin.ouSemigroupFin_preserves_IsCore,         ← N1.b
+ Pphi2.degreePiecewiseTail_layerCake_lt_top]          ← new pphi2 staging axiom (general-P layer-cake)
 ```
 
-After Workstream B lands, the closure transitively surfaces **4 markov-semigroups
-axioms** (`gross_lsi_implies_hypercontractive` + 3 GaussianFin BE tensor-lifts).
-Reducing the closure further requires Workstreams 2.5, N1.b, N1.c (one BE
-axiom each), Route A (Gross + Stroock–Varopoulos, but introduces 2 new G2
-axioms when W rewire lands), and finally Workstreams G2.a + G2.b to
-discharge those. See "Complete axiom-and-sorry inventory" below for the
-full per-axiom accounting.
+**M1 reached (modulo one staging axiom).** `polynomial_chaos_exp_moment_bridge`
+is now a theorem (with the corrected bounded-volume signature requiring
+`_hvol : (N:ℝ) * a = L`). The closure surfaced the 4 expected inherited
+markov-semigroups axioms as the master plan predicted. One additional
+pphi2 staging axiom — `degreePiecewiseTail_layerCake_lt_top` — is the
+general-`P` analogue of the quartic-case `quarticPiecewiseTail_layerCake_lt_top`
+that was discharged at commit `59c771f`. It's a pure integrability fact
+(finiteness of a Lebesgue integral whose integrand has doubly-exponential
+decay) and is the same flavour of "easy follow-up" as the quartic version.
+
+To reduce the closure further: discharge `degreePiecewiseTail_layerCake_lt_top`
+(~50–100 lines, same small-M/large-M template as the quartic discharge),
+then proceed with Workstreams 2.5, N1.b, N1.c, Route A, G2.a, G2.b per the
+inventory below.
 
 ---
 
@@ -54,14 +68,12 @@ prior revisions of this doc is **resolved**.
 - GaussianField: `269fbc2e`
 - bochner: `b70e84b8`
 
-`lake build` is clean on pphi2 `main`. The endpoint axiom closure
-(measured against the consolidated state) is unchanged from earlier:
-`[propext, Classical.choice, Quot.sound, polynomial_chaos_exp_moment_bridge]`.
-The bridge is still an opaque axiom, so the closure does not yet
-surface the inherited markov-semigroups axioms — when Workstream B
-converts the bridge to a theorem, the closure will widen to include
-the markov-semigroups inherited textbook axioms (Gross + GaussianFin
-BE tensor lifts).
+`lake build` is clean on pphi2 `main` (3896 jobs). As of 2026-05-18,
+`polynomial_chaos_exp_moment_bridge` is no longer an axiom — the
+3-step lift+narrow+rewire (Workstream B's "Next concrete steps") landed
+at commit `e09419a`, converting it to a theorem with the corrected
+bounded-volume signature. The endpoint closure now reflects this — see
+"Current closure" above.
 
 ---
 
@@ -82,21 +94,21 @@ Verified 2026-05-17 on `main`.
 
 ### Axioms on the T² OS0–OS2 critical path
 
-**Current** (`#print axioms torusInteracting_satisfies_OS` on `main`):
+**Current** (`#print axioms torusInteracting_satisfies_OS` on `main`,
+post-Workstream-B-discharge 2026-05-18):
 
 | Axiom | Location | Workstream / discharge plan |
 |---|---|---|
-| `polynomial_chaos_exp_moment_bridge` | `Pphi2/NelsonEstimate/PolynomialChaosBridge.lean:624` | **Workstream B** (in flight; blocker resolved 2026-05-17). Plan: [`docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`](polynomial-chaos-exp-moment-bridge-proof-plan.md). Next steps: lift `polynomial_chaos_exp_moment_bridge_quartic_bounded` to general `P` (using `wickPolynomial_lower_bound_general`); narrow the master signature to require `_hvol`; rewire fixed-volume consumers. |
-
-**After Workstream B lands** (bridge becomes theorem; closure widens
-to surface the markov-semigroups inheritance):
-
-| Axiom | Location | Workstream / discharge plan |
-|---|---|---|
+| `Pphi2.degreePiecewiseTail_layerCake_lt_top` | `Pphi2/NelsonEstimate/PolynomialChaosBridge.lean:718` | **Workstream B follow-up** (staging axiom). Pure integrability — finiteness of `∫ degreePiecewiseTail K C M · 2·exp(2M) dM`. Discharge by the same small-M/large-M split used for the quartic case `quarticPiecewiseTail_layerCake_lt_top` (commit `59c771f`); doubly-exp tail of `degreePiecewiseTail` dominates `exp(2M)` for any `P.n ≥ 4`. ~50-100 lines. |
 | `gross_lsi_implies_hypercontractive` (legacy abstract axiom) | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A**. Plan: [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md). Status (2026-05-17): G2 sorry-free + GrossODE P2/P3 scaffolded; remaining endgame is P2 (one Leibniz kernel + thin glue) → P3 algebra → W (rewire). |
 | `ouSemigroupFin_l2_sq_hasDerivWithinAt` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2643` | **Workstream 2.5** (fresh-Fubini lift). Plan: inline at `EuclideanFin.lean:2637-2641` (dual-vetted gemini-2.5-pro + gemini-3.1-pro 2026-05-13). Per-axiom row in [`markov-semigroups/AXIOM_AUDIT.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/AXIOM_AUDIT.md). |
 | `ouSemigroupFin_preserves_IsCore` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2771` | **Workstream N1.b**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md` (search `ouSemigroupFin_preserves_IsCore`). Strategy: change-of-variables on Mehler integral + `ContDiff.integral`. |
 | `ouSemigroupFin_entropy_sq_decay_bound` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2799` | **Workstream N1.c**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. Strategy: telescoping over coordinates + proved 1D `Gaussian1D.bakryEmerySpace.semigroup_entropy_sq_decay_bound`. |
+
+**Historical note:** `polynomial_chaos_exp_moment_bridge` was the master
+bridge axiom that previously dominated the closure. As of 2026-05-18
+(commit `e09419a`) it is a theorem with the corrected bounded-volume
+signature; the closure widening above is the consequence.
 
 **After Route A's W-rewire lands** — `gross_lsi_implies_hypercontractive`
 is replaced by the proved `gross_lsi_implies_hypercontractive_of_hypotheses`
@@ -150,7 +162,7 @@ None of them are load-bearing for `torusInteracting_satisfies_OS`.
 |---|---|---|---|---|
 | A | Phase B Glimm–Jaffe Fourier estimates (pphi2) | pphi2 | ✅ COMPLETE 2026-05-16 | — |
 | C | OU/Mehler hypercontractivity (gaussian-hilbert) | gaussian-hilbert | ✅ COMPLETE 2026-05-15; on main since 2026-05-17 | — |
-| **B** | `polynomial_chaos_exp_moment_bridge` (pphi2) | pphi2 | 🔄 in flight — blocker `wickPolynomial_lower_bound_general` resolved 2026-05-17; lift + narrow-signature refactor next | ~150–300 lines / ~1 wk |
+| **B** | `polynomial_chaos_exp_moment_bridge` (pphi2) | pphi2 | ✅ **DISCHARGED 2026-05-18** (3-step lift+narrow+rewire, commit `e09419a`); 1 staging axiom `degreePiecewiseTail_layerCake_lt_top` remains as easy follow-up | ~50–100 lines (staging axiom) |
 | **2.5** | Fresh-Fubini lift for `ouSemigroupFin_l2_sq_hasDerivWithinAt` | markov-semigroups | not started | ~1.5 days |
 | **N1.b** | `ouSemigroupFin_preserves_IsCore` | markov-semigroups | not started | ~3–5 days |
 | **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | not started | ~3–5 days |
