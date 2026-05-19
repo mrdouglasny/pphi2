@@ -87,8 +87,13 @@ theorem nelson_exponential_estimate_lattice
         ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass
           (circleSpacing_pos L N) hmass) ≤ K := by
   obtain ⟨K, hK_pos, hbound⟩ :=
-    nelson_exponential_estimate_master 2 P mass hmass
-  exact ⟨K, hK_pos, fun N _ => hbound (circleSpacing L N) (circleSpacing_pos L N) N⟩
+    nelson_exponential_estimate_master (d := 2) rfl P mass L hL.out hmass
+  refine ⟨K, hK_pos, fun N _ => ?_⟩
+  have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
+  have hvol : (N : ℝ) * circleSpacing L N = L := by
+    rw [circleSpacing_eq]
+    field_simp [hN]
+  exact hbound N (circleSpacing L N) (circleSpacing_pos L N) hvol
 
 end Pphi2
 

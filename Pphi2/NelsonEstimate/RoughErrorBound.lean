@@ -163,20 +163,20 @@ theorem canonicalSmoothInteraction_lower_bound_at_cutoff_quartic
 
 theorem canonicalSmoothInteraction_lower_bound_log_uniform_in_aN
     {d : ℕ} (hd : d = 2) (P : InteractionPolynomial)
-    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
-    (h_quartic : P.n = 4)
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
         (_hvol : (N : ℝ) * a = L)
         (T : ℝ) (_hT : 0 < T)
         (η : CanonicalJoint d N),
-        -(C * (1 + |Real.log T|) ^ 2) ≤
+        -(C * (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) ≤
           canonicalSmoothInteraction d N a mass T P η := by
   obtain ⟨A, B, hA_nn, hB_nn, hABound⟩ :=
     smoothWickConstant_le_log_uniform_in_aN hd mass L hL hmass
+  obtain ⟨A0, hA0_nn, hpoly_lb⟩ := wickPolynomial_lower_bound_general P
   let K : ℝ := A + B
-  let C : ℝ := 6 * L ^ d * K ^ 2 + 1
+  let C : ℝ :=
+    L ^ d * A0 * (1 + K ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) + 1
   refine ⟨C, by positivity, ?_⟩
   intro N _ a ha hvol T hT η
   have hN_ne : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
@@ -185,9 +185,6 @@ theorem canonicalSmoothInteraction_lower_bound_log_uniform_in_aN
     simpa [mul_comm] using hvol
   rw [canonicalSmoothInteraction_eq_latticeSmoothInteraction
     (d := d) (N := N) (a := a) (mass := mass) T P η]
-  rw [Pphi2.LatticeSetup.latticeSmoothInteraction_of_pure
-    (d := d) (N := N) (a := a) (mass := mass) P h_pure T
-    (canonicalSmoothConfig d N a mass T η)]
   have hc_S_nn : 0 ≤ smoothWickConstant d N a mass T := by
     unfold smoothWickConstant
     have ha_d_pos : (0 : ℝ) < a ^ d := pow_pos ha d
@@ -210,99 +207,148 @@ theorem canonicalSmoothInteraction_lower_bound_log_uniform_in_aN
       _ = K * (1 + |Real.log T|) := by
           simp [K]
           ring
+  have hcard :
+      (Fintype.card (FinLatticeSites d N) : ℝ) = (N : ℝ) ^ d := by
+    simp only [Fintype.card_fun, ZMod.card, Fintype.card_fin]
+    push_cast
+    rfl
+  have hvol_pow :
+      a ^ d * (Fintype.card (FinLatticeSites d N) : ℝ) = L ^ d := by
+    rw [hcard, ha_eq, div_pow]
+    simp only [div_eq_mul_inv]
+    field_simp [hN_ne]
   have h_lower :
-      -(6 * L ^ d * smoothWickConstant d N a mass T ^ 2) ≤
+      -(L ^ d * A0 *
+          (1 + smoothWickConstant d N a mass T ^
+            Pphi2.DynamicalCutoff.degreeCutoffPower P)) ≤
         a ^ d * ∑ x : FinLatticeSites d N,
-          wickMonomial 4 (smoothWickConstant d N a mass T)
+          wickPolynomial P (smoothWickConstant d N a mass T)
             ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
-    simpa using
-      (smooth_interaction_lower_bound_volume
-        (d := d) (N := N) (a := a) ha L hL ha_eq
-        (smoothWickConstant d N a mass T) hc_S_nn
-        (fun x => (canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)))
-  have h_sq :
-      (smoothWickConstant d N a mass T) ^ 2 ≤
-        (K * (1 + |Real.log T|)) ^ 2 := by
-    exact sq_le_sq' (by linarith [hc_S_nn]) h_cS_bound
+    have h_site :
+        ∀ x : FinLatticeSites d N,
+          -(A0 * (1 + smoothWickConstant d N a mass T ^
+              Pphi2.DynamicalCutoff.degreeCutoffPower P)) ≤
+            wickPolynomial P (smoothWickConstant d N a mass T)
+              ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
+      intro x
+      simpa [Pphi2.DynamicalCutoff.degreeCutoffPower] using
+        hpoly_lb (smoothWickConstant d N a mass T)
+          ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) hc_S_nn
+    have h_sum_const :
+        -((Fintype.card (FinLatticeSites d N) : ℝ) *
+            (A0 * (1 + smoothWickConstant d N a mass T ^
+              Pphi2.DynamicalCutoff.degreeCutoffPower P))) ≤
+          ∑ x : FinLatticeSites d N,
+            wickPolynomial P (smoothWickConstant d N a mass T)
+              ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
+      calc
+        ∑ x : FinLatticeSites d N,
+            wickPolynomial P (smoothWickConstant d N a mass T)
+              ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x))
+            ≥ ∑ _x : FinLatticeSites d N,
+                (-(A0 * (1 + smoothWickConstant d N a mass T ^
+                  Pphi2.DynamicalCutoff.degreeCutoffPower P))) :=
+              Finset.sum_le_sum fun x _ => h_site x
+        _ = (Fintype.card (FinLatticeSites d N) : ℝ) *
+              (-(A0 * (1 + smoothWickConstant d N a mass T ^
+                Pphi2.DynamicalCutoff.degreeCutoffPower P))) := by
+              simp [Finset.sum_const, nsmul_eq_mul, Finset.card_univ]
+        _ = _ := by ring
+    have ha_pow_nonneg : 0 ≤ a ^ d := pow_nonneg ha.le d
+    have h_scaled := mul_le_mul_of_nonneg_left h_sum_const ha_pow_nonneg
+    have hscaled_eq :
+        a ^ d *
+            -(↑(Fintype.card (FinLatticeSites d N)) *
+                (A0 *
+                  (1 + smoothWickConstant d N a mass T ^
+                    Pphi2.DynamicalCutoff.degreeCutoffPower P))) =
+          -(L ^ d * A0 *
+              (1 + smoothWickConstant d N a mass T ^
+                Pphi2.DynamicalCutoff.degreeCutoffPower P)) := by
+      calc
+        a ^ d *
+            -(↑(Fintype.card (FinLatticeSites d N)) *
+                (A0 *
+                  (1 + smoothWickConstant d N a mass T ^
+                    Pphi2.DynamicalCutoff.degreeCutoffPower P)))
+            = -(a ^ d * ↑(Fintype.card (FinLatticeSites d N)) *
+                (A0 *
+                  (1 + smoothWickConstant d N a mass T ^
+                    Pphi2.DynamicalCutoff.degreeCutoffPower P))) := by ring
+        _ = -(L ^ d * A0 *
+              (1 + smoothWickConstant d N a mass T ^
+                Pphi2.DynamicalCutoff.degreeCutoffPower P)) := by
+              rw [hvol_pow]
+              ring
+    rw [hscaled_eq] at h_scaled
+    exact h_scaled
+  have hu_pow_one :
+      1 ≤ (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P := by
+    have := pow_le_pow_left₀ (show (0 : ℝ) ≤ 1 by norm_num) hu_one
+      (Pphi2.DynamicalCutoff.degreeCutoffPower P)
+    simpa using this
+  have hpow_bound :
+      1 + smoothWickConstant d N a mass T ^ Pphi2.DynamicalCutoff.degreeCutoffPower P ≤
+        (1 + K ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) *
+          (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P := by
+    have hpow :
+        smoothWickConstant d N a mass T ^ Pphi2.DynamicalCutoff.degreeCutoffPower P ≤
+          (K * (1 + |Real.log T|)) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P := by
+      exact pow_le_pow_left₀ hc_S_nn h_cS_bound _
+    calc
+      1 + smoothWickConstant d N a mass T ^ Pphi2.DynamicalCutoff.degreeCutoffPower P
+          ≤ 1 + (K * (1 + |Real.log T|)) ^
+              Pphi2.DynamicalCutoff.degreeCutoffPower P := by
+                linarith
+      _ = 1 + K ^ Pphi2.DynamicalCutoff.degreeCutoffPower P *
+            (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P := by
+              rw [mul_pow]
+      _ ≤ (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P +
+            K ^ Pphi2.DynamicalCutoff.degreeCutoffPower P *
+              (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P := by
+              linarith
+      _ = (1 + K ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) *
+            (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P := by
+              ring
   have h_sum :
-      -(6 * L ^ d * K ^ 2 * (1 + |Real.log T|) ^ 2) ≤
+      -(L ^ d * A0 * (1 + K ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) *
+          (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) ≤
         a ^ d * ∑ x : FinLatticeSites d N,
-          wickMonomial 4 (smoothWickConstant d N a mass T)
+          wickPolynomial P (smoothWickConstant d N a mass T)
             ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
     have h_chain :
-        -(6 * L ^ d * K ^ 2 * (1 + |Real.log T|) ^ 2) ≤
-          -(6 * L ^ d * smoothWickConstant d N a mass T ^ 2) := by
+        -(L ^ d * A0 * (1 + K ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) *
+            (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) ≤
+          -(L ^ d * A0 *
+            (1 + smoothWickConstant d N a mass T ^
+              Pphi2.DynamicalCutoff.degreeCutoffPower P)) := by
       apply neg_le_neg
-      calc
-        6 * L ^ d * smoothWickConstant d N a mass T ^ 2
-            ≤ 6 * L ^ d * (K * (1 + |Real.log T|)) ^ 2 :=
-              mul_le_mul_of_nonneg_left h_sq (by positivity)
-        _ = 6 * L ^ d * K ^ 2 * (1 + |Real.log T|) ^ 2 := by
-            ring
+      have hpref_nonneg : 0 ≤ L ^ d * A0 := by positivity
+      simpa [mul_assoc, mul_left_comm, mul_comm] using
+        mul_le_mul_of_nonneg_left hpow_bound hpref_nonneg
     exact le_trans h_chain h_lower
   have hC_ge :
-      6 * L ^ d * K ^ 2 ≤ C := by
+      L ^ d * A0 * (1 + K ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) ≤ C := by
     simp [C]
   have h_sum' :
-      -(C * (1 + |Real.log T|) ^ 2) ≤
+      -(C * (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) ≤
         a ^ d * ∑ x : FinLatticeSites d N,
-          wickMonomial 4 (smoothWickConstant d N a mass T)
+          wickPolynomial P (smoothWickConstant d N a mass T)
             ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
     have h_chain :
-        -(C * (1 + |Real.log T|) ^ 2) ≤
-          -(6 * L ^ d * K ^ 2 * (1 + |Real.log T|) ^ 2) := by
+        -(C * (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) ≤
+          -(L ^ d * A0 * (1 + K ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) *
+            (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P) := by
       apply neg_le_neg
       simpa [mul_assoc, mul_left_comm, mul_comm] using
         mul_le_mul_of_nonneg_right hC_ge
-          (show 0 ≤ (1 + |Real.log T|) ^ 2 by positivity)
+          (show 0 ≤ (1 + |Real.log T|) ^ Pphi2.DynamicalCutoff.degreeCutoffPower P by
+            positivity)
     exact le_trans h_chain h_sum
-  have h_n_eq_4 : (P.n : ℝ) = 4 := by
-    exact_mod_cast h_quartic
-  have h_inv_le_one : (1 : ℝ) / P.n ≤ 1 := by
-    have h_n_pos : (0 : ℝ) < P.n := by
-      rw [h_n_eq_4]
-      norm_num
-    have h_n_ge_one : (1 : ℝ) ≤ P.n := by
-      rw [h_n_eq_4]
-      norm_num
-    rw [div_le_one h_n_pos]
-    exact h_n_ge_one
-  have h_inv_nn : 0 ≤ 1 / (P.n : ℝ) := by
-    positivity
-  have h_neg_bound :
-      -(C * (1 + |Real.log T|) ^ 2) ≤
-        (1 / (P.n : ℝ)) * (-(C * (1 + |Real.log T|) ^ 2)) := by
-    have :
-        (1 / (P.n : ℝ)) * (C * (1 + |Real.log T|) ^ 2) ≤
-          C * (1 + |Real.log T|) ^ 2 := by
-      calc
-        (1 / (P.n : ℝ)) * (C * (1 + |Real.log T|) ^ 2)
-            ≤ 1 * (C * (1 + |Real.log T|) ^ 2) :=
-              mul_le_mul_of_nonneg_right h_inv_le_one (by positivity)
-        _ = C * (1 + |Real.log T|) ^ 2 := by
-            ring
-    linarith
-  have h_sum_eq :
-      a ^ d * ∑ x : FinLatticeSites d N,
-        wickMonomial P.n (smoothWickConstant d N a mass T)
-          ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) =
-        a ^ d * ∑ x : FinLatticeSites d N,
-          wickMonomial 4 (smoothWickConstant d N a mass T)
-            ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x)) := by
-    rw [h_quartic]
-  have h_scaled' :
-      (1 / (P.n : ℝ)) * (-(C * (1 + |Real.log T|) ^ 2)) ≤
-        (1 / (P.n : ℝ)) *
-          (a ^ d * ∑ x : FinLatticeSites d N,
-            wickMonomial P.n (smoothWickConstant d N a mass T)
-              ((canonicalSmoothConfig d N a mass T η) (finLatticeDelta d N x))) := by
-    simpa [h_sum_eq] using mul_le_mul_of_nonneg_left h_sum' h_inv_nn
-  exact h_neg_bound.trans h_scaled'
+  simpa using h_sum'
 
-theorem canonicalSmoothInteraction_lower_bound_at_cutoff_quartic_uniform
+theorem canonicalSmoothInteraction_lower_bound_at_cutoff_uniform
     {d : ℕ} (hd : d = 2) (P : InteractionPolynomial)
-    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
-    (h_quartic : P.n = 4)
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
@@ -311,21 +357,22 @@ theorem canonicalSmoothInteraction_lower_bound_at_cutoff_quartic_uniform
         ∀ (η : CanonicalJoint d N),
           -(M / 2) ≤
             canonicalSmoothInteraction d N a mass
-              (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η := by
+              (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) P η := by
   obtain ⟨C, hC_pos, hbound⟩ :=
     canonicalSmoothInteraction_lower_bound_log_uniform_in_aN
-      (d := d) hd P h_pure h_quartic mass L hL hmass
+      (d := d) hd P mass L hL hmass
   refine ⟨C, hC_pos, ?_⟩
   intro N _ a ha hvol M hM η
   have hT_pos :
-      0 < Pphi2.DynamicalCutoff.dynamicalCutoffScale C M :=
-    Pphi2.DynamicalCutoff.dynamicalCutoffScale_pos C M
+      0 < Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M :=
+    Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale_pos P C M
   have h_smooth :=
     hbound N a ha hvol
-      (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) hT_pos η
+      (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) hT_pos η
   have h_cutoff :
-      C * (1 + |Real.log (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M)|) ^ 2 ≤ M / 2 :=
-    Pphi2.DynamicalCutoff.dynamicalCutoffScale_log_sq_le C M hC_pos hM
+      C * (1 + |Real.log (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M)|) ^
+          Pphi2.DynamicalCutoff.degreeCutoffPower P ≤ M / 2 :=
+    Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale_log_pow_le P C M hC_pos hM
   linarith
 
 /-- **Nelson bridge reduction from a large-`M` canonical-joint rough tail.**
@@ -400,6 +447,97 @@ theorem expMoment_bound_of_cutoff_quartic_tail
         exact canonicalJointMeasure_map_canonicalSumConfig
           (d := d) (N := N) (a := a) (mass := mass) ha hmass (Tfun M)
           (Pphi2.DynamicalCutoff.dynamicalCutoffScale_pos C M))
+      V_S E_R
+      (hdecomp := by
+        intro M η
+        by_cases hlarge : 2 * C ≤ M
+        · simp [π, V_S, E_R, Tfun, hlarge, canonicalRoughError]
+        · simp [π, V_S, E_R, Tfun, hlarge, canonicalFullInteractionJoint_eq_interactionFunctional]
+      )
+      (hsmooth := by
+        intro M η
+        by_cases hlarge : 2 * C ≤ M
+        · simpa [V_S, hlarge] using hsmooth N a ha hvol M hlarge η
+        · simp [V_S, hlarge]
+      )
+      (ψ := fun M => if M < 2 * C then (1 : ENNReal) else ψ M)
+      (htail := by
+        intro M hM
+        by_cases hlarge : 2 * C ≤ M
+        · simpa [E_R, hlarge, if_neg (not_lt.mpr hlarge)] using htail M hlarge
+        · have htriv :
+            (canonicalJointMeasure d N)
+                {η | E_R M η ≤ -(M / 2)} ≤ 1 := by
+              refine le_trans (measure_mono (Set.subset_univ _)) ?_
+              simpa using (measure_univ : (canonicalJointMeasure d N) Set.univ = 1)
+          simpa [E_R, hlarge, if_pos (lt_of_not_ge hlarge)] using htriv
+      )
+      hintegral
+
+/-- Degree-adapted bridge reduction from a large-`M` canonical-joint rough tail.
+
+This is the general even-`P` analogue of
+`expMoment_bound_of_cutoff_quartic_tail`, using the degree-dependent
+cutoff scale `degreeDynamicalCutoffScale`. -/
+theorem expMoment_bound_of_cutoff_degree_tail
+    {d : ℕ} (P : InteractionPolynomial)
+    (mass L : ℝ) (hmass : 0 < mass)
+    (C : ℝ)
+    (hsmooth :
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L)
+        (M : ℝ), 2 * C ≤ M →
+        ∀ (η : CanonicalJoint d N),
+          -(M / 2) ≤
+            canonicalSmoothInteraction d N a mass
+              (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) P η)
+    (ψ : ℝ → ENNReal)
+    (hintegral :
+      ∫⁻ M in Set.Ioi (0 : ℝ),
+        (if M < 2 * C then (1 : ENNReal) else ψ M) *
+          ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤) :
+    ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+      (hvol : (N : ℝ) * a = L),
+      (∀ M : ℝ, 2 * C ≤ M →
+        (canonicalJointMeasure d N)
+          {η | canonicalRoughError d N a mass
+              (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) P η ≤ -(M / 2)} ≤
+            ψ M) →
+      ∫ ω : Configuration (FinLatticeField d N),
+          (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+          ∂(latticeGaussianMeasure d N a mass ha hmass) ≤
+        1 + (∫⁻ M in Set.Ioi (0 : ℝ),
+          (if M < 2 * C then (1 : ENNReal) else ψ M) *
+            ENNReal.ofReal (2 * Real.exp (2 * M))).toReal := by
+  intro N _ a ha hvol htail
+  let Tfun : ℝ → ℝ := fun M =>
+    Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M
+  let π : ℝ → CanonicalJoint d N → Configuration (FinLatticeField d N) := fun M =>
+    canonicalSumConfig d N a mass (Tfun M)
+  let V_S : ℝ → CanonicalJoint d N → ℝ := fun M η =>
+    if hlarge : 2 * C ≤ M then
+      canonicalSmoothInteraction d N a mass (Tfun M) P η
+    else
+      -(M / 2)
+  let E_R : ℝ → CanonicalJoint d N → ℝ := fun M η =>
+    if hlarge : 2 * C ≤ M then
+      canonicalRoughError d N a mass (Tfun M) P η
+    else
+      canonicalFullInteractionJoint d N a mass (Tfun M) P η + M / 2
+  exact
+    Pphi2.LatticeBridge.bridgeAxiom_of_varying_coupled_setup_real
+      (d := d) (P := P) (mass := mass)
+      a ha hmass N
+      (μ := canonicalJointMeasure d N)
+      π
+      (hπ_meas := by
+        intro M
+        exact canonicalSumConfig_measurable (d := d) (N := N) (a := a) (mass := mass) (Tfun M))
+      (hpush := by
+        intro M
+        exact canonicalJointMeasure_map_canonicalSumConfig
+          (d := d) (N := N) (a := a) (mass := mass) ha hmass (Tfun M)
+          (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale_pos P C M))
       V_S E_R
       (hdecomp := by
         intro M η

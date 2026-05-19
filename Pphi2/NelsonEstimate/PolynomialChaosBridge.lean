@@ -583,109 +583,148 @@ theorem quarticPiecewiseTail_layerCake_lt_top
                           2 * M - A * Real.exp (s / 4) by ring
       _ ≤ ENNReal.ofReal (Real.exp (-M)) := ENNReal.ofReal_le_ofReal hreal_bound
 
-/-- **Master bridge axiom: Nelson exponential estimate from polynomial chaos.**
+private lemma two_div_degree_eq_inv_cutoffPower (P : InteractionPolynomial) :
+    ((2 : ℝ) / P.n) =
+      (1 / (Pphi2.DynamicalCutoff.degreeCutoffPower P : ℝ)) := by
+  obtain ⟨k, hk⟩ := P.hn_even
+  have hk_pos : 0 < k := by
+    have hnk : 4 ≤ k + k := by simpa [hk] using P.hn_ge
+    omega
+  have hkpow : Pphi2.DynamicalCutoff.degreeCutoffPower P = k := by
+    dsimp [Pphi2.DynamicalCutoff.degreeCutoffPower]
+    rw [hk]
+    omega
+  rw [hk, hkpow]
+  field_simp [show (k : ℝ) ≠ 0 by exact_mod_cast (ne_of_gt hk_pos)]
+  simpa [two_mul]
 
-For a lattice GFF on `(ℤ/Nℤ)^d` with spacing `a > 0` and mass `m > 0`,
-and an even interaction polynomial `P`, there is a constant `K > 0`
-independent of `N` (and `a` in the regime `0 < a ≤ 1`) such that
-$$
-  \int \exp(-2 V_a(\omega))^2 \, d\mu_{\rm GFF} \le K.
-$$
+private def degreeCutoffTail
+    (P : InteractionPolynomial) (K C : ℝ) (M : ℝ) : ENNReal :=
+  ENNReal.ofReal
+    (2 * Real.exp
+      (-(Pphi2.ChaosTailBridge.chaosTailConstant P.n) *
+        ((M / 2) /
+          (2 * Real.sqrt
+            (K * (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) *
+              (1 + |Real.log (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M)|) ^
+                (P.n - 1)))) ^
+          (1 / (Pphi2.DynamicalCutoff.degreeCutoffPower P : ℝ))))
 
-**Proof outline (Glimm–Jaffe Ch. 8 / Simon Ch. I dynamical cutoff):**
-1. Split the field $\phi = \phi_S + \phi_R$ via the covariance-split
-   $C = C_S(T) + C_R(T)$ in `NelsonEstimate/CovarianceSplit.lean`.
-2. Smooth-side classical lower bound:
-   $V_S(\phi_S) \ge -C_1 (1 + |\log T|)^2$, proved as
-   `smooth_interaction_lower_bound_log` in `SmoothLowerBound.lean`.
-3. Rough-side polynomial-chaos concentration: for the rough error
-   $E_R = V(\phi) - V_S(\phi_S)$, which is a degree-$\deg P$ Wick
-   polynomial in $\phi_R$ (so lives in $\mathcal H^{\le \deg P}$),
-   apply Janson Theorem 5.10
-   (`GaussianHilbert.PolynomialChaosConcentration`,
-   currently axiomatized in markov-semigroups awaiting upstream proof):
-   $\mathbb P(|E_R| > \lambda) \le 2 \exp(- c \, \lambda^{2/\deg P} \,
-   T^{-\delta/\deg P})$, with $\delta$ from the rough-covariance
-   estimate.
-4. Dynamical cutoff: choose $T = T(M)$ such that
-   $C_1 (\log T)^2 = M/2$, i.e. $T = \exp(-\sqrt{M/(2 C_1)})$. Then
-   $V(\phi) \le -M$ implies $|E_R| \ge M/2$, giving doubly-exponential
-   tail decay.
-5. Integrate $\int_0^\infty \exp(2M) \, \mathbb P(V \le -M) \, dM
-   < \infty$ uniformly in $N$.
+private lemma degreeCutoffTail_le_two
+    (P : InteractionPolynomial) (K C M : ℝ) (hM_nonneg : 0 ≤ M) :
+    degreeCutoffTail P K C M ≤ 2 := by
+  unfold degreeCutoffTail
+  have h_exp_le_one :
+      Real.exp
+        (-(Pphi2.ChaosTailBridge.chaosTailConstant P.n) *
+          ((M / 2) /
+            (2 * Real.sqrt
+              (K * (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) *
+                (1 + |Real.log (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M)|) ^
+                  (P.n - 1)))) ^
+            (1 / (Pphi2.DynamicalCutoff.degreeCutoffPower P : ℝ))) ≤ 1 := by
+    apply Real.exp_le_one_iff.mpr
+    have hbase :
+        0 ≤
+          Pphi2.ChaosTailBridge.chaosTailConstant P.n *
+            ((M / 2) /
+              (2 * Real.sqrt
+                (K * (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) *
+                  (1 + |Real.log (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M)|) ^
+                    (P.n - 1)))) ^
+              (1 / (Pphi2.DynamicalCutoff.degreeCutoffPower P : ℝ)) := by
+      have hconst :
+          0 ≤ Pphi2.ChaosTailBridge.chaosTailConstant P.n := by
+        exact le_of_lt <|
+          Pphi2.ChaosTailBridge.chaosTailConstant_pos P.n (by
+            have := P.hn_ge
+            omega)
+      have hbase_nonneg :
+          0 ≤
+            (M / 2) /
+              (2 * Real.sqrt
+                (K * (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) *
+                  (1 + |Real.log (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M)|) ^
+                    (P.n - 1))) := by
+        refine div_nonneg ?_ ?_
+        · exact div_nonneg hM_nonneg (by norm_num)
+        · positivity
+      have hrpow :
+          0 ≤
+            ((M / 2) /
+              (2 * Real.sqrt
+                (K * (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) *
+                  (1 + |Real.log (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M)|) ^
+                    (P.n - 1)))) ^
+              (1 / (Pphi2.DynamicalCutoff.degreeCutoffPower P : ℝ)) := by
+        exact Real.rpow_nonneg hbase_nonneg _
+      exact mul_nonneg hconst hrpow
+    linarith
+  have h_le : ENNReal.ofReal
+      (2 * Real.exp
+        (-(Pphi2.ChaosTailBridge.chaosTailConstant P.n) *
+          ((M / 2) /
+            (2 * Real.sqrt
+              (K * (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) *
+                (1 + |Real.log (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M)|) ^
+                  (P.n - 1)))) ^
+            (1 / (Pphi2.DynamicalCutoff.degreeCutoffPower P : ℝ)))) ≤ ENNReal.ofReal 2 := by
+    refine ENNReal.ofReal_le_ofReal ?_
+    nlinarith
+  simpa using h_le
 
-**Cross-reference.** The upstream Janson Theorem 5.10
-(`polynomial_chaos_concentration` in markov-semigroups) provides
-ingredient 3 in abstract form. Ingredients 2 and 4 are pphi2-local.
-A future PR can replace this axiom with a derivation once
-markov-semigroups is dependable from pphi2 (Mathlib-pin sync needed
-across the project family) and the GFF↔standard-Gaussian change of
-variables is wired in. -/
-axiom polynomial_chaos_exp_moment_bridge
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
-    ∃ (K : ℝ), 0 < K ∧
-    ∀ (a : ℝ) (ha : 0 < a),
-    ∀ (N : ℕ) [NeZero N],
-    ∫ ω : Configuration (FinLatticeField d N),
-        (exp (-interactionFunctional d N P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K
+theorem canonicalRoughError_cutoff_tail_uniform
+    (P : InteractionPolynomial)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (C : ℝ), 0 < C →
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (hvol : (N : ℝ) * a = L)
+        (M : ℝ), 2 * C ≤ M →
+          (canonicalJointMeasure 2 N)
+            {η | canonicalRoughError 2 N a mass
+                (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) P η ≤ -(M / 2)} ≤
+              degreeCutoffTail P K C M := by
+  obtain ⟨K, hK_pos, htail⟩ :=
+    canonicalRoughError_neg_tail_uniform_in_aN P mass L hL hmass
+  refine ⟨K, hK_pos, ?_⟩
+  intro C hC_pos N _ a ha hvol M hM
+  have hT_pos :
+      0 < Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M :=
+    Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale_pos P C M
+  have hM_pos : 0 < M := by linarith
+  have htail' :=
+    htail N a ha hvol
+      (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) hT_pos
+      (M / 2) (by linarith)
+  simpa [degreeCutoffTail, two_div_degree_eq_inv_cutoffPower P] using htail'
 
-/-- **Master theorem: lattice Nelson exponential estimate**, derived
-from `polynomial_chaos_exp_moment_bridge` by trivial unfolding (the
-theorem is the bridge with witness extracted).
+private def degreePiecewiseTail
+    (P : InteractionPolynomial) (K C : ℝ) (M : ℝ) : ENNReal :=
+  if M < 2 * C then 1 else degreeCutoffTail P K C M
 
-**Note on strength.** The textbook Glimm–Jaffe Ch. 8 result is uniform
-in `(a, N)` for `a` in any bounded interval (canonically `(0, 1]`).
-The bridge as stated here is over-stated to `∀ a > 0`; the
-discharge plan is to (a) tighten the bridge axiom to `a ≤ 1` once
-the upstream `polynomial_chaos_concentration` derivation is wired in,
-and (b) absorb finite-`N` small-`a` (`a > 1`) values into a downstream
-witness `K'`. Until then the over-statement is preserved here for
-downstream convenience — see the audit notes in `docs/axiom_audit.md`. -/
-theorem nelson_exponential_estimate_master
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
-    ∃ (K : ℝ), 0 < K ∧
-    ∀ (a : ℝ) (ha : 0 < a),
-    ∀ (N : ℕ) [NeZero N],
-    ∫ ω : Configuration (FinLatticeField d N),
-        (exp (-interactionFunctional d N P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K :=
-  polynomial_chaos_exp_moment_bridge d P mass hmass
+private lemma degreePiecewiseTail_le_two
+    (P : InteractionPolynomial) (K C M : ℝ) (hM_nonneg : 0 ≤ M) :
+    degreePiecewiseTail P K C M ≤ 2 := by
+  unfold degreePiecewiseTail
+  split_ifs with hM
+  · norm_num
+  · exact degreeCutoffTail_le_two P K C M hM_nonneg
 
-/-- Convenience corollary: master theorem with `a ≤ 1` constraint
-preserved (matches the existing `exponential_moment_bound` axiom shape
-exactly). -/
-theorem nelson_exponential_estimate_master_bounded
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
-    ∃ (K : ℝ), 0 < K ∧
-    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-    ∀ (N : ℕ) [NeZero N],
-    ∫ ω : Configuration (FinLatticeField d N),
-        (exp (-interactionFunctional d N P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
-  obtain ⟨K, hK_pos, hbound⟩ := nelson_exponential_estimate_master d P mass hmass
-  exact ⟨K, hK_pos, fun a ha _ N _ => hbound a ha N⟩
+/-- Integrability of the degree-adapted piecewise cutoff tail.
 
-/-- **Bounded-volume pure-quartic bridge from a canonical-joint rough tail.**
+This is the remaining analytic gap in the fully theorem-derived
+general even-`P` bounded-volume bridge. -/
+axiom degreePiecewiseTail_layerCake_lt_top
+    (P : InteractionPolynomial)
+    (K C : ℝ) (hK_pos : 0 < K) (hC_pos : 0 < C) :
+    ∫⁻ M in Set.Ioi (0 : ℝ),
+      degreePiecewiseTail P K C M *
+        ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤
 
-This is the current theorem-level reduction of the remaining Cluster A axiom.
-At fixed physical volume `L = N * a`, if one supplies:
-
-* a cutoff constant `C`,
-* the smooth-side cutoff lower bound at that `C`,
-* a large-`M` tail bound for the canonical-joint rough error at
-  `T(M) = dynamicalCutoffScale C M`,
-* integrability of the resulting piecewise layer-cake tail,
-
-then the lattice Boltzmann `L²` moment is uniformly bounded in `(a, N)`
-subject to the volume constraint.
-
-What remains after this theorem is exactly the canonical-joint rough-tail
-input; the measure transport and dynamical-cutoff glue are now theorem-derived. -/
-theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_tail
+/-- Bounded-volume bridge from a canonical-joint degree-cutoff rough tail. -/
+theorem polynomial_chaos_exp_moment_bridge_bounded_of_tail
     {d : ℕ} (hd : d = 2) (P : InteractionPolynomial)
-    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
-    (h_quartic : P.n = 4)
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass)
     (C : ℝ)
     (hsmooth :
@@ -695,7 +734,7 @@ theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_tail
         ∀ (η : CanonicalJoint d N),
           -(M / 2) ≤
             canonicalSmoothInteraction d N a mass
-              (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η)
+              (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) P η)
     (ψ : ℝ → ENNReal)
     (hintegral :
       ∫⁻ M in Set.Ioi (0 : ℝ),
@@ -707,7 +746,7 @@ theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_tail
         (M : ℝ), 2 * C ≤ M →
           (canonicalJointMeasure d N)
             {η | canonicalRoughError d N a mass
-                (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η ≤ -(M / 2)} ≤
+                (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) P η ≤ -(M / 2)} ≤
               ψ M) :
     ∃ K : ℝ, 0 < K ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
@@ -727,17 +766,13 @@ theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_tail
     exact add_pos_of_pos_of_nonneg (by norm_num) h_nonneg, ?_⟩
   intro N _ a ha hvol
   simpa [K] using
-    (expMoment_bound_of_cutoff_quartic_tail
+    (expMoment_bound_of_cutoff_degree_tail
       (d := d) P mass L hmass C hsmooth ψ hintegral
       N a ha hvol (htail N a ha hvol))
 
-/-- Pure quartic bounded-volume bridge, with the explicit cutoff tail
-already substituted. The only remaining hypothesis is integrability of the
-piecewise layer-cake tail built from `quarticCutoffTail`. -/
-theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_cutoffTail
+/-- Bounded-volume bridge with the explicit degree-cutoff tail substituted. -/
+theorem polynomial_chaos_exp_moment_bridge_bounded_of_cutoffTail
     (P : InteractionPolynomial)
-    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
-    (h_quartic : P.n = 4)
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass)
     (K C : ℝ) (hC_pos : 0 < C)
     (hsmooth :
@@ -747,18 +782,18 @@ theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_cutoffTail
         ∀ (η : CanonicalJoint 2 N),
           -(M / 2) ≤
             canonicalSmoothInteraction 2 N a mass
-              (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η)
+              (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) P η)
     (htail :
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
         (hvol : (N : ℝ) * a = L)
         (M : ℝ), 2 * C ≤ M →
           (canonicalJointMeasure 2 N)
             {η | canonicalRoughError 2 N a mass
-                (Pphi2.DynamicalCutoff.dynamicalCutoffScale C M) P η ≤ -(M / 2)} ≤
-              quarticCutoffTail K C M)
+                (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) P η ≤ -(M / 2)} ≤
+              degreeCutoffTail P K C M)
     (hintegral :
       ∫⁻ M in Set.Ioi (0 : ℝ),
-        quarticPiecewiseTail K C M *
+        degreePiecewiseTail P K C M *
           ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤) :
     ∃ K' : ℝ, 0 < K' ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
@@ -767,22 +802,17 @@ theorem polynomial_chaos_exp_moment_bridge_quartic_bounded_of_cutoffTail
           (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2
           ∂(latticeGaussianMeasure 2 N a mass ha hmass) ≤ K' := by
   exact
-    polynomial_chaos_exp_moment_bridge_quartic_bounded_of_tail
-      (d := 2) rfl P h_pure h_quartic mass L hL hmass C
+    polynomial_chaos_exp_moment_bridge_bounded_of_tail
+      (d := 2) rfl P mass L hL hmass C
       hsmooth
-      (quarticCutoffTail K C)
-      (by simpa [quarticPiecewiseTail] using hintegral)
+      (degreeCutoffTail P K C)
+      (by simpa [degreePiecewiseTail] using hintegral)
       htail
 
-/-- Pure quartic bounded-volume bridge with the proved smooth cutoff bound and
-explicit canonical-joint rough cutoff tail already substituted.
-
-This reduces the remaining Workstream B gap to the standalone layer-cake
-integrability helper for `quarticPiecewiseTail`. -/
-theorem polynomial_chaos_exp_moment_bridge_quartic_bounded
+/-- General even-`P` bounded-volume bridge with the proved degree-adapted
+smooth bound and explicit canonical-joint rough cutoff tail substituted. -/
+theorem polynomial_chaos_exp_moment_bridge_bounded
     (P : InteractionPolynomial)
-    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
-    (h_quartic : P.n = 4)
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ K' : ℝ, 0 < K' ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
@@ -791,16 +821,53 @@ theorem polynomial_chaos_exp_moment_bridge_quartic_bounded
           (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2
           ∂(latticeGaussianMeasure 2 N a mass ha hmass) ≤ K' := by
   obtain ⟨C, hC_pos, hsmooth⟩ :=
-    canonicalSmoothInteraction_lower_bound_at_cutoff_quartic_uniform
-      (d := 2) rfl P h_pure h_quartic mass L hL hmass
+    canonicalSmoothInteraction_lower_bound_at_cutoff_uniform
+      (d := 2) rfl P mass L hL hmass
   obtain ⟨K, hK_pos, htail⟩ :=
-    canonicalRoughError_cutoff_tail_quartic_uniform
-      P h_pure h_quartic mass L hL hmass
+    canonicalRoughError_cutoff_tail_uniform
+      P mass L hL hmass
   exact
-    polynomial_chaos_exp_moment_bridge_quartic_bounded_of_cutoffTail
-      P h_pure h_quartic mass L hL hmass K C hC_pos
+    polynomial_chaos_exp_moment_bridge_bounded_of_cutoffTail
+      P mass L hL hmass K C hC_pos
       hsmooth
       (htail C hC_pos)
-      (quarticPiecewiseTail_layerCake_lt_top K C hK_pos hC_pos)
+      (degreePiecewiseTail_layerCake_lt_top P K C hK_pos hC_pos)
+
+/-- Fixed-volume Nelson bridge in the only dimension used downstream. -/
+theorem polynomial_chaos_exp_moment_bridge
+    (hd : d = 2) (P : InteractionPolynomial)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L),
+        ∫ ω : Configuration (FinLatticeField d N),
+          (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+          ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
+  subst d
+  simpa using polynomial_chaos_exp_moment_bridge_bounded P mass L hL hmass
+
+/-- Fixed-volume master theorem for the lattice Nelson estimate. -/
+theorem nelson_exponential_estimate_master
+    (hd : d = 2) (P : InteractionPolynomial)
+    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L),
+        ∫ ω : Configuration (FinLatticeField d N),
+          (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+          ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K :=
+  polynomial_chaos_exp_moment_bridge (d := d) hd P mass L hL hmass
+
+/-- Compatibility wrapper preserving the pre-refactor `a ≤ 1` interface used by
+`Hypercontractivity.lean`. This remains axiomatic until the non-fixed-volume
+consumer is reworked onto the bounded-volume bridge. -/
+axiom nelson_exponential_estimate_master_bounded
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    ∃ (K : ℝ), 0 < K ∧
+    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    ∀ (N : ℕ) [NeZero N],
+    ∫ ω : Configuration (FinLatticeField d N),
+        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K
 
 end Pphi2

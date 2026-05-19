@@ -75,9 +75,23 @@ theorem asymNelson_exponential_estimate
         ∂(latticeGaussianMeasure 2 N (asymGeomSpacing Lt Ls N) mass
           (asymGeomSpacing_pos Lt Ls N) hmass) ≤ K := by
   obtain ⟨K, hK_pos, hbound⟩ :=
-    Pphi2.nelson_exponential_estimate_master 2 P mass hmass
-  exact ⟨K, hK_pos, fun N _ =>
-    hbound (asymGeomSpacing Lt Ls N) (asymGeomSpacing_pos Lt Ls N) N⟩
+    Pphi2.nelson_exponential_estimate_master
+      (d := 2) rfl P mass (Real.sqrt (Lt * Ls))
+      (Real.sqrt_pos.2 (mul_pos hLt.out hLs.out)) hmass
+  refine ⟨K, hK_pos, fun N _ => ?_⟩
+  have hvol_sq : ((N : ℝ) * asymGeomSpacing Lt Ls N) ^ 2 = Lt * Ls := by
+    calc
+      ((N : ℝ) * asymGeomSpacing Lt Ls N) ^ 2
+          = asymGeomSpacing Lt Ls N ^ 2 * (N : ℝ) ^ 2 := by ring
+      _ = Lt * Ls := by
+          simpa [mul_assoc, mul_left_comm, mul_comm] using asymGeomSpacing_sq_mul_sq Lt Ls N
+  have hvol :
+      (N : ℝ) * asymGeomSpacing Lt Ls N = Real.sqrt (Lt * Ls) := by
+    have hnonneg : 0 ≤ (N : ℝ) * asymGeomSpacing Lt Ls N := by
+      exact mul_nonneg (Nat.cast_nonneg N) (asymGeomSpacing_pos Lt Ls N).le
+    have h := congrArg Real.sqrt hvol_sq
+    simpa [Real.sqrt_sq_eq_abs, abs_of_nonneg hnonneg] using h
+  exact hbound N (asymGeomSpacing Lt Ls N) (asymGeomSpacing_pos Lt Ls N) hvol
 /-- The asymmetric torus interacting measure is a probability measure. -/
 instance asymTorusInteractingMeasure_isProbability (N : ℕ) [NeZero N]
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :

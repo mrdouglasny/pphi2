@@ -156,6 +156,111 @@ theorem dynamicalCutoffScale_le_one (C M : ℝ) (hC_pos : 0 < C) :
         ≤ Real.exp 0 := Real.exp_le_exp.mpr hexpr
       _ = 1 := Real.exp_zero
 
+/-- The degree-adapted logarithmic power in the Nelson cutoff:
+`degreeCutoffPower P = P.n / 2`. Since `P.n` is even and at least `4`,
+this is a positive natural number. -/
+def degreeCutoffPower (P : InteractionPolynomial) : ℕ := P.n / 2
+
+theorem degreeCutoffPower_pos (P : InteractionPolynomial) :
+    0 < degreeCutoffPower P := by
+  change 0 < P.n.div 2
+  exact Nat.div_pos_iff.mpr ⟨by norm_num, le_trans (by norm_num) P.hn_ge⟩
+
+/-- Degree-adapted dynamical cutoff.
+
+If the smooth-side deterministic lower bound has the form
+`V_S ≥ -C * (1 + |log T|)^(P.n / 2)`, then this chooses the cutoff
+scale so that `C * (1 + |log T|)^(P.n / 2) ≤ M / 2` on the large-`M`
+regime. -/
+noncomputable def degreeDynamicalCutoffScale
+    (P : InteractionPolynomial) (C M : ℝ) : ℝ :=
+  if M ≤ 2 * C then 1 else
+    Real.exp (1 - (M / (2 * C)) ^ (1 / (degreeCutoffPower P : ℝ)))
+
+/-- The degree-adapted cutoff scale is strictly positive. -/
+theorem degreeDynamicalCutoffScale_pos
+    (P : InteractionPolynomial) (C M : ℝ) :
+    0 < degreeDynamicalCutoffScale P C M := by
+  unfold degreeDynamicalCutoffScale
+  split_ifs with h
+  · exact one_pos
+  · exact Real.exp_pos _
+
+/-- On the small-`M` regime, the degree-adapted cutoff scale is `1`. -/
+theorem degreeDynamicalCutoffScale_eq_one
+    (P : InteractionPolynomial) (C M : ℝ) (h : M ≤ 2 * C) :
+    degreeDynamicalCutoffScale P C M = 1 := by
+  unfold degreeDynamicalCutoffScale
+  rw [if_pos h]
+
+/-- On the large-`M` regime, the degree-adapted cutoff scale is the
+explicit exponential formula. -/
+theorem degreeDynamicalCutoffScale_eq_exp
+    (P : InteractionPolynomial) (C M : ℝ) (h : 2 * C < M) :
+    degreeDynamicalCutoffScale P C M =
+      Real.exp (1 - (M / (2 * C)) ^ (1 / (degreeCutoffPower P : ℝ))) := by
+  unfold degreeDynamicalCutoffScale
+  rw [if_neg (not_le.mpr h)]
+
+private lemma degreeCutoffParam_pow
+    (P : InteractionPolynomial) {x : ℝ} (hx : 0 ≤ x) :
+    (x ^ (1 / (degreeCutoffPower P : ℝ))) ^ degreeCutoffPower P = x := by
+  have hk_pos : 0 < (degreeCutoffPower P : ℝ) := by
+    exact_mod_cast degreeCutoffPower_pos P
+  have hk_ne : (degreeCutoffPower P : ℝ) ≠ 0 := by positivity
+  rw [← Real.rpow_natCast, ← Real.rpow_mul hx]
+  have hmul : (1 / (degreeCutoffPower P : ℝ)) * (degreeCutoffPower P : ℝ) = 1 := by
+    field_simp [hk_ne]
+  rw [hmul, Real.rpow_one]
+
+/-- On the large-`M` regime, the logarithmic factor of the
+degree-adapted cutoff is the explicit `degreeCutoffPower`-root. -/
+theorem one_add_abs_log_degreeDynamicalCutoff_eq_rpow
+    (P : InteractionPolynomial) {C M : ℝ}
+    (hC_pos : 0 < C) (hM : 2 * C < M) :
+    1 + |Real.log (degreeDynamicalCutoffScale P C M)| =
+      (M / (2 * C)) ^ (1 / (degreeCutoffPower P : ℝ)) := by
+  rw [degreeDynamicalCutoffScale_eq_exp P C M hM, Real.log_exp]
+  have hdiv_pos : 0 < M / (2 * C) := by
+    refine div_pos ?_ ?_
+    · linarith
+    · positivity
+  have hdiv_ge_one : 1 ≤ M / (2 * C) := by
+    rw [one_le_div (by positivity)]
+    linarith
+  have hroot_ge_one :
+      1 ≤ (M / (2 * C)) ^ (1 / (degreeCutoffPower P : ℝ)) := by
+    have h_exp_nonneg : 0 ≤ 1 / (degreeCutoffPower P : ℝ) := by positivity
+    calc
+      (1 : ℝ) = (1 : ℝ) ^ (1 / (degreeCutoffPower P : ℝ)) := by
+        symm
+        rw [one_rpow]
+      _ ≤ (M / (2 * C)) ^ (1 / (degreeCutoffPower P : ℝ)) :=
+        Real.rpow_le_rpow (by positivity) hdiv_ge_one h_exp_nonneg
+  have hnonpos :
+      1 - (M / (2 * C)) ^ (1 / (degreeCutoffPower P : ℝ)) ≤ 0 := by
+    linarith
+  rw [abs_of_nonpos hnonpos]
+  ring
+
+/-- Defining property of the degree-adapted cutoff:
+for `M ≥ 2C`, it makes `C * (1 + |log T|)^(P.n / 2) ≤ M / 2`. -/
+theorem degreeDynamicalCutoffScale_log_pow_le
+    (P : InteractionPolynomial) (C M : ℝ) (hC_pos : 0 < C) (hM : 2 * C ≤ M) :
+    C * (1 + |Real.log (degreeDynamicalCutoffScale P C M)|) ^ degreeCutoffPower P ≤
+      M / 2 := by
+  rcases eq_or_lt_of_le hM with hM_eq | hM_gt
+  · rw [degreeDynamicalCutoffScale_eq_one P C M (le_of_eq hM_eq.symm), Real.log_one,
+      abs_zero, add_zero, one_pow, mul_one]
+    linarith
+  · rw [one_add_abs_log_degreeDynamicalCutoff_eq_rpow P hC_pos hM_gt]
+    have hdiv_nonneg : 0 ≤ M / (2 * C) := by
+      refine div_nonneg ?_ ?_
+      · linarith
+      · positivity
+    rw [degreeCutoffParam_pow P hdiv_nonneg]
+    rw [show C * (M / (2 * C)) = M / 2 by field_simp]
+
 /-! ## Smooth-side bound at the dynamical cutoff scale
 
 Combining `smooth_interaction_lower_bound_log_uniform` (smooth
