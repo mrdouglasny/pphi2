@@ -1,6 +1,6 @@
 # T² φ⁴₂ continuum limit — master plan & progress tracker
 
-**Last refreshed:** 2026-05-18 (post-Workstream-B completion)
+**Last refreshed:** 2026-05-19 (post-Workstream-2.5 discharge; pin chain still stale — see "Branch state")
 **Repo:** pphi2 (this) + sister repos gaussian-hilbert, markov-semigroups
 **Endpoint:** `Pphi2.torusInteracting_satisfies_OS` (OS0 + OS1 + OS2 for the T²_L
 symmetric-torus φ⁴₂ continuum limit)
@@ -18,25 +18,58 @@ only. Per-workstream details and proof plans live in their dedicated docs
 
 ## Current closure
 
-`#print axioms Pphi2.torusInteracting_satisfies_OS` (verified 2026-05-18 after
-discharging `degreePiecewiseTail_layerCake_lt_top`):
+**Two states must be distinguished — the pin chain is stale.**
+
+**(a) What pphi2 `main` actually prints today** (`#print axioms
+Pphi2.torusInteracting_satisfies_OS`, pphi2 `main` `e5cd440`, which pins
+markov-semigroups at the *pre-2.5* `c6e0e6b`):
 
 ```
 [propext, Classical.choice, Quot.sound,
  gross_lsi_implies_hypercontractive,                  ← Route A
  GaussianFin.ouSemigroupFin_entropy_sq_decay_bound,   ← N1.c
- GaussianFin.ouSemigroupFin_l2_sq_hasDerivWithinAt,   ← Phase 2.5
+ GaussianFin.ouSemigroupFin_l2_sq_hasDerivWithinAt,   ← Phase 2.5 (still axiom in the pinned ms)
  GaussianFin.ouSemigroupFin_preserves_IsCore]         ← N1.b
 ```
 
-**M1 fully reached.** `polynomial_chaos_exp_moment_bridge` is now a theorem
-(with the corrected bounded-volume signature requiring
-`_hvol : (N:ℝ) * a = L`), and the general-`P` layer-cake follow-up
-`degreePiecewiseTail_layerCake_lt_top` is also discharged. The closure is now
-exactly the 4 expected inherited markov-semigroups axioms.
+This is the closure the M1 milestone reached. It has **not changed yet**
+because gaussian-hilbert and pphi2 still pin markov-semigroups at
+`c6e0e6b`, predating today's Workstream-2.5 discharge.
 
-To reduce the closure further, proceed with Workstreams 2.5, N1.b, N1.c,
-Route A, G2.a, G2.b per the inventory below.
+**(b) What it will print after the pin chain propagates** (markov-semigroups
+`c0e0ce3`, 2026-05-19, discharged `ouSemigroupFin_l2_sq_hasDerivWithinAt` to
+a theorem in `EuclideanFinBE.lean` via the two G2 axioms — verified
+`#print axioms GaussianFin.ouSemigroupFin_l2_sq_hasDerivWithinAt =
+[propext, Classical.choice, Quot.sound, gaussianFin_diffQuot_tendsto_Lp,
+gaussianFin_integrationByParts, ouSemigroupFin_preserves_IsCore]`):
+
+```
+[propext, Classical.choice, Quot.sound,
+ gross_lsi_implies_hypercontractive,                  ← Route A
+ GaussianFin.ouSemigroupFin_entropy_sq_decay_bound,   ← N1.c
+ GaussianFin.ouSemigroupFin_preserves_IsCore,         ← N1.b
+ GaussianFin.gaussianFin_diffQuot_tendsto_Lp,         ← G2.a (NEW on path via 2.5)
+ GaussianFin.gaussianFin_integrationByParts]          ← G2.b (NEW on path via 2.5)
+```
+
+**M1 fully reached** (state (a)): `polynomial_chaos_exp_moment_bridge` is a
+theorem and `degreePiecewiseTail_layerCake_lt_top` is discharged.
+
+**Workstream 2.5 is COMPLETE in markov-semigroups but not yet propagated.**
+Its discharge does **not shrink** the closure — it trades
+`ouSemigroupFin_l2_sq_hasDerivWithinAt` for the two G2 axioms
+(`gaussianFin_diffQuot_tendsto_Lp`, `gaussianFin_integrationByParts`),
+both Gemini-vetted "Standard / Likely correct" general Mathlib-native
+facts. So the closure-shape change the plan originally predicted only
+for **M4a** (drop one, add the G2 pair) has **arrived early** via the
+2.5 route. The post-propagation count is 5 inherited axioms (was 4),
+but qualitatively better: every non-Gross axiom is now a textbook
+analysis fact.
+
+To realize state (b) and reduce further: (1) propagate the pin chain
+(gaussian-hilbert → bump ms to `c0e0ce3`, rebuild; pphi2 → bump gh+ms,
+rebuild, re-verify), then proceed with Workstreams N1.b, N1.c, Route A,
+G2.a, G2.b per the inventory below.
 
 ---
 
@@ -49,26 +82,36 @@ markov-semigroups) have been merged into their respective `main`s and
 preserved as `archive/*` tags. The pin-chain fragmentation flagged in
 prior revisions of this doc is **resolved**.
 
-| Repo | Active branch | HEAD | Archive tags |
-|---|---|---|---|
-| **pphi2** | `main` | `b0ebee3` (merge: phase-b-discharge +45 into main) | 9 `archive/*` tags (incl. `archive/phase-b-discharge`, `archive/pr10`, …) |
-| **gaussian-hilbert** | `main` | `2df8345` (deps: track markov-semigroups main) | `archive/phase-3-smoke-test` |
-| **markov-semigroups** | `main` | `c6e0e6b` (merge: Gross-discharge G2-complete + GrossODE P2/P3 scaffold) | `archive/feat/lp-carrier-stdGaussianFin-dirichletmarkov` |
+| Repo | Active branch | HEAD | Pins ms at | Archive tags |
+|---|---|---|---|---|
+| **pphi2** | `main` | `e5cd440` (Workstream B follow-up — M1 reached) | `c6e0e6b` (via gh) | 9 `archive/*` tags (incl. `archive/phase-b-discharge`, `archive/pr10`, …) |
+| **gaussian-hilbert** | `main` | `2df8345` (deps: track markov-semigroups main) | `c6e0e6b` | `archive/phase-3-smoke-test` |
+| **markov-semigroups** | `main` | `c0e0ce3` (feat: discharge GaussianFin l2 derivative — Workstream 2.5, 2026-05-19) | — | `archive/feat/lp-carrier-stdGaussianFin-dirichletmarkov` |
 
-**pphi2 pin state on main:**
-- gaussian-hilbert: `2df83459` (post-Workstream-C)
-- MarkovSemigroups: `c6e0e6bb` (inherited via gaussian-hilbert; post-Phase-2 + post-Gross-scaffolding)
+**⚠️ Pin chain is stale (re-fragmented 2026-05-19).** markov-semigroups
+`main` advanced from `c6e0e6b` → `c0e0ce3` today (Workstream 2.5
+discharge), but **neither gaussian-hilbert nor pphi2 has bumped its pin**.
+Both still pin ms at the pre-2.5 `c6e0e6b`. Consequence: pphi2's endpoint
+closure still shows the old state-(a) 4-axiom shape; none of today's 2.5
+discharge is visible downstream until the chain is propagated.
+
+**pphi2 pin state on main (all pre-2.5):**
+- gaussian-hilbert: `2df83459` (post-Workstream-C; pins ms `c6e0e6b`)
+- MarkovSemigroups: `c6e0e6bb` (inherited via gaussian-hilbert; **pre-2.5** — ms main is now `c0e0ce3`)
 - GaussianField: `269fbc2e`
 - bochner: `b70e84b8`
 
-`lake build` is clean on pphi2 `main` (3896 jobs). As of 2026-05-18,
-`polynomial_chaos_exp_moment_bridge` is no longer an axiom — the
-3-step lift+narrow+rewire (Workstream B's "Next concrete steps") landed
-at commit `e09419a`, converting it to a theorem with the corrected
-bounded-volume signature, and the remaining general-`P` layer-cake
-follow-up `degreePiecewiseTail_layerCake_lt_top` is now discharged as
-well. The endpoint closure now reflects this — see "Current closure"
-above.
+`lake build` is clean on pphi2 `main` (3896 jobs) as of 2026-05-18.
+`polynomial_chaos_exp_moment_bridge` is a theorem (commit `e09419a`,
+corrected bounded-volume signature) and `degreePiecewiseTail_layerCake_lt_top`
+is discharged (commit `e5cd440`) — M1 is reached. The Workstream 2.5
+discharge in markov-semigroups `c0e0ce3` (2026-05-19) is **not yet
+reflected** in pphi2's closure pending pin propagation — see "Current
+closure" state (a) vs (b) above.
+
+**Pin-propagation procedure to realize state (b):**
+1. gaussian-hilbert: bump `MarkovSemigroups` pin → `c0e0ce3`, `lake build`, commit.
+2. pphi2: bump `«gaussian-hilbert»` + `MarkovSemigroups` pins, `lake build` (3896 jobs), re-run `#print axioms Pphi2.torusInteracting_satisfies_OS`, confirm state (b), commit.
 
 ---
 
@@ -89,39 +132,57 @@ Verified 2026-05-17 on `main`.
 
 ### Axioms on the T² OS0–OS2 critical path
 
-**Current** (`#print axioms torusInteracting_satisfies_OS` on `main`,
-post-Workstream-B completion 2026-05-18):
+**State (a) — what pphi2 `main` prints today** (pre-2.5 pin `c6e0e6b`,
+post-Workstream-B 2026-05-18). 4 inherited axioms:
 
 | Axiom | Location | Workstream / discharge plan |
 |---|---|---|
-| `gross_lsi_implies_hypercontractive` (legacy abstract axiom) | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A**. Plan: [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md). Status (2026-05-17): G2 sorry-free + GrossODE P2/P3 scaffolded; remaining endgame is P2 (one Leibniz kernel + thin glue) → P3 algebra → W (rewire). |
-| `ouSemigroupFin_l2_sq_hasDerivWithinAt` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2643` | **Workstream 2.5** (fresh-Fubini lift). Plan: inline at `EuclideanFin.lean:2637-2641` (dual-vetted gemini-2.5-pro + gemini-3.1-pro 2026-05-13). Per-axiom row in [`markov-semigroups/AXIOM_AUDIT.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/AXIOM_AUDIT.md). |
-| `ouSemigroupFin_preserves_IsCore` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2771` | **Workstream N1.b**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md` (search `ouSemigroupFin_preserves_IsCore`). Strategy: change-of-variables on Mehler integral + `ContDiff.integral`. |
-| `ouSemigroupFin_entropy_sq_decay_bound` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2799` | **Workstream N1.c**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. Strategy: telescoping over coordinates + proved 1D `Gaussian1D.bakryEmerySpace.semigroup_entropy_sq_decay_bound`. |
+| `gross_lsi_implies_hypercontractive` (legacy abstract axiom) | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A**. Plan: [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md). Status (2026-05-19): G2 ✅ done; P2 decomposed (8 documented sorries in `Abstract/GrossODE.lean`), P3 scaffolded; remaining endgame is the P2 Leibniz kernel + glue → P3 algebra → W (rewire). |
+| `ouSemigroupFin_l2_sq_hasDerivWithinAt` | `markov-semigroups` ms `c6e0e6b`: `EuclideanFin.lean:2643` | **Workstream 2.5 — ✅ DISCHARGED in ms `c0e0ce3` (2026-05-19)** but not yet propagated (pin stale). On state-(b) it disappears, replaced by the two G2 axioms below. |
+| `ouSemigroupFin_preserves_IsCore` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2641` | **Workstream N1.b**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md` (search `ouSemigroupFin_preserves_IsCore`). Strategy: change-of-variables on Mehler integral + `ContDiff.integral`. |
+| `ouSemigroupFin_entropy_sq_decay_bound` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2669` | **Workstream N1.c**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. Strategy: telescoping over coordinates + proved 1D `Gaussian1D.bakryEmerySpace.semigroup_entropy_sq_decay_bound`. |
+
+**State (b) — after pin propagation** (ms `c0e0ce3`). Workstream 2.5's
+discharge replaces `ouSemigroupFin_l2_sq_hasDerivWithinAt` with the two
+G2 axioms. 5 inherited axioms:
+
+| Axiom | Location | Workstream / discharge plan |
+|---|---|---|
+| `gross_lsi_implies_hypercontractive` | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A** (as above). |
+| `ouSemigroupFin_preserves_IsCore` | `EuclideanFin.lean:2641` | **Workstream N1.b** (as above). |
+| `ouSemigroupFin_entropy_sq_decay_bound` | `EuclideanFin.lean:2669` | **Workstream N1.c** (as above). |
+| `gaussianFin_diffQuot_tendsto_Lp` | `markov-semigroups/.../EuclideanGeneratorLimit.lean:183` | **Workstream G2.a** *(now on the critical path early, via the 2.5 discharge — no longer "only after Route A W-rewire")*. General Mathlib-native (operator/`fderiv`/`Measure.pi gaussianReal`), Gemini-vetted **Standard / Likely correct**. No dedicated discharge plan; ideal Mathlib upstream. |
+| `gaussianFin_integrationByParts` | `markov-semigroups/.../EuclideanGeneratorLp.lean:134` | **Workstream G2.b** *(now on the critical path early, via the 2.5 discharge)*. General Mathlib-native γ-IBP fact, Gemini-vetted **Standard / Likely correct**. No dedicated discharge plan; ideal Mathlib upstream. |
 
 **Historical note:** `polynomial_chaos_exp_moment_bridge` was the master
 bridge axiom that previously dominated the closure. As of 2026-05-18
 (commit `e09419a`) it is a theorem with the corrected bounded-volume
 signature, and the staged follow-up `degreePiecewiseTail_layerCake_lt_top`
-has now also been retired; the closure widening above is the consequence.
+has now also been retired.
 
 **After Route A's W-rewire lands** — `gross_lsi_implies_hypercontractive`
 is replaced by the proved `gross_lsi_implies_hypercontractive_of_hypotheses`
-in `Abstract/GrossODE.lean`, which adds the following to the closure:
+in `Abstract/GrossODE.lean`. Because the two G2 axioms are **already on
+the path via the 2.5 discharge**, the W-rewire now adds only one *new*
+axiom to the closure:
 
 | Axiom | Location | Workstream / discharge plan |
 |---|---|---|
-| `gaussianFin_diffQuot_tendsto_Lp` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFinLp.lean` (G2 dependency) | **Workstream G2.a** *(implicit)*. General Mathlib-native fact (operator/`fderiv`/`Measure.pi gaussianReal`), Gemini-vetted **Standard**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. No dedicated discharge plan yet; ultimately wants to upstream to Mathlib. |
-| `gaussianFin_integrationByParts` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFinLp.lean` (G2 dependency) | **Workstream G2.b** *(implicit)*. General Mathlib-native γ-IBP fact, Gemini-vetted **Standard / Likely correct**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. No dedicated discharge plan yet; ultimately wants to upstream to Mathlib. |
-| `stroock_varopoulos` | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean` | **Route A Phase 4** (per `plans/gross-discharge.md`, "discharge stroock_varopoulos itself (reuses Route B's pointwise lemma)"). |
+| `stroock_varopoulos` | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:242` | **Route A Phase 4** (per `plans/gross-discharge.md`, "discharge stroock_varopoulos itself (reuses Route B's pointwise lemma)"). |
 
 ### Honest accounting of "trio-only"
 
-To reach `[propext, Classical.choice, Quot.sound]` only, **every** of
-the 7 axioms above has to close. The 5-workstream framework
-(B + C + 2.5 + N1.b + N1.c + Route A) handles 4 of them directly
-(B, 2.5, N1.b, N1.c, Route A endgame) but **introduces 3 new
-ones** via Route A's W-rewire that need their own discharge work:
+To reach `[propext, Classical.choice, Quot.sound]` only, **every**
+axiom on the state-(b) path plus `stroock_varopoulos` has to close —
+5 axioms: Gross (Route A), `ouSemigroupFin_preserves_IsCore` (N1.b),
+`ouSemigroupFin_entropy_sq_decay_bound` (N1.c),
+`gaussianFin_diffQuot_tendsto_Lp` (G2.a),
+`gaussianFin_integrationByParts` (G2.b); then `stroock_varopoulos`
+(Route A Phase 4) once the W-rewire lands. The 2 G2 axioms moved onto
+the path **earlier than the plan originally projected** (the 2.5
+discharge routes through them rather than through fresh Fubini), so
+they are no longer "introduced by Route A" — they need their own
+discharge work regardless of Route A timing:
 - `gaussianFin_diffQuot_tendsto_Lp` (Workstream G2.a — implicit, no
   dedicated plan)
 - `gaussianFin_integrationByParts` (Workstream G2.b — implicit, no
@@ -158,18 +219,20 @@ None of them are load-bearing for `torusInteracting_satisfies_OS`.
 | A | Phase B Glimm–Jaffe Fourier estimates (pphi2) | pphi2 | ✅ COMPLETE 2026-05-16 | — |
 | C | OU/Mehler hypercontractivity (gaussian-hilbert) | gaussian-hilbert | ✅ COMPLETE 2026-05-15; on main since 2026-05-17 | — |
 | **B** | `polynomial_chaos_exp_moment_bridge` (pphi2) | pphi2 | ✅ **COMPLETE 2026-05-18** (3-step lift+narrow+rewire landed at `e09419a`; general-`P` layer-cake follow-up discharged the same day) | — |
-| **2.5** | Fresh-Fubini lift for `ouSemigroupFin_l2_sq_hasDerivWithinAt` | markov-semigroups | not started | ~1.5 days |
-| **N1.b** | `ouSemigroupFin_preserves_IsCore` | markov-semigroups | not started | ~3–5 days |
-| **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | not started | ~3–5 days |
-| **Route A** | Abstract `gross_lsi_implies_hypercontractive` + `stroock_varopoulos` (Phase 4) | markov-semigroups | 🔄 **G2 + Gross-ODE scaffolding on main 2026-05-17**; P2/P3 algebra + W rewire + Phase 4 in flight | ~weeks (was multi-week) |
-| **G2.a** | Discharge `gaussianFin_diffQuot_tendsto_Lp` *(surfaces on T² path only after Route A's W rewire)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
-| **G2.b** | Discharge `gaussianFin_integrationByParts` *(surfaces on T² path only after Route A's W rewire)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
+| **2.5** | Fresh-Fubini lift for `ouSemigroupFin_l2_sq_hasDerivWithinAt` | markov-semigroups | ✅ **COMPLETE 2026-05-19** (discharged by Codex, commit `897b661`, merged via `c0e0ce3`; theorem in `EuclideanFinBE.lean` via the two G2 axioms — **not the planned fresh-Fubini route**) | — (pin propagation pending) |
+| **PIN** | Propagate ms `c0e0ce3` → gaussian-hilbert → pphi2 | gh + pphi2 | not started | ~1 build cycle (pphi2 = 3896 jobs) |
+| **N1.b** | `ouSemigroupFin_preserves_IsCore` | markov-semigroups | ✅ **FULLY DISCHARGED 2026-05-19** — axiom-free, sorry-free, `#print axioms`=trio, build green. Branch `discharge/n1b-preserves-iscore` `9f4beff` (Cameron–Martin + `contDiff_succ_iff_fderiv` route). **Not yet merged to ms `main` / propagated.** | — (merge + propagate pending) |
+| **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | 🔄 **in progress** — `axiom`→`theorem`, 1 `sorry`. Original gemini-vetted strategy had a **fatal C∞ error** (single-coord Mehler doesn't smooth passthrough coords; iterates only C², counterexample-confirmed). T1 layer fully proved (axiom-free, 9 lemmas). Corrected **C²-route Gemini-vetted SOUND** (deep-think + 3.1-pro 2026-05-19) with one mandatory S1 fix (`IsCore2Fin` = joint C¹ + per-coord 1D-slice-C², **never joint C²**). Finisher running on `discharge/n1c-entropy-decay` (WIP `72e0ff8`, N1.b merged in at `69fc001`). | ~2–4 days |
+| **Route A** | Abstract `gross_lsi_implies_hypercontractive` + `stroock_varopoulos` (Phase 4) | markov-semigroups | 🔄 **G2 ✅ done; P2 decomposed (8 sorries in `GrossODE.lean`), P3 scaffolded** (2026-05-19); remaining: P2 Leibniz kernel + glue (~400–700 L) → P3 algebra (~200–400 L) → W rewire (~10–30 L) → Phase 4 | ~weeks |
+| **G2.a** | Discharge `gaussianFin_diffQuot_tendsto_Lp` *(now ON the T² path early — via the 2.5 discharge, not via Route A W-rewire)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
+| **G2.b** | Discharge `gaussianFin_integrationByParts` *(now ON the T² path early — via the 2.5 discharge)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
 
-**Total parallel wall-clock to "trio + 4 inherited markov-semigroups axioms" (M1):** reached 2026-05-18.
-**To "trio + 2 G2 textbook-vetted axioms" (M4b):** ~3–5 weeks if B + 2.5 + N1.b + N1.c + Route A run in parallel.
+**Total parallel wall-clock to "trio + 4 inherited markov-semigroups axioms" (M1):** reached 2026-05-18 (state (a), pre-2.5 pin).
+**Workstream 2.5 (done 2026-05-19) changes closure *shape* not size** — once propagated, the path becomes trio + Gross + N1.b + N1.c + 2 G2 axioms (5 inherited, all but Gross textbook-vetted).
+**To "trio + 2 G2 textbook-vetted axioms" (M4b):** ~3–5 weeks if N1.b + N1.c + Route A run in parallel.
 **To fully trio-only (M5):** further G2.a + G2.b work, ideally as Mathlib upstreams.
 
-Route A still dominates the critical path; G2-complete is a major architectural unblock. With Workstream B complete, the highest-ROI immediate targets are Workstreams 2.5, N1.b, and N1.c.
+Route A still dominates the critical path; G2-complete is a major architectural unblock. As of 2026-05-19, Workstreams **B, C, 2.5, and N1.b are all done** (N1.b on its branch, not yet propagated) and **N1.c is in progress** (corrected C²-route Gemini-vetted SOUND, finisher running). The remaining genuinely-novel inherited axiom besides Gross is just N1.c. Highest-ROI next actions: finish N1.c, then **merge N1.b + N1.c to ms `main` and propagate the pin chain** (so pphi2's endpoint reflects 2.5 + N1.b + N1.c), with **Route A** the long pole.
 
 ---
 
@@ -195,8 +258,10 @@ Route A still dominates the critical path; G2-complete is a major architectural 
                 └─────────────────────────────┘
 ```
 
-Pieces (1), (2), (4) are proved end-to-end. Piece (3) is the bridge axiom
-`polynomial_chaos_exp_moment_bridge` (Workstream B target).
+All four pieces are proved end-to-end. Piece (3) was the bridge axiom
+`polynomial_chaos_exp_moment_bridge`; it is a **theorem** as of
+2026-05-18 (Workstream B complete, commit `e09419a`, bounded-volume
+signature).
 
 ---
 
@@ -344,74 +409,108 @@ branch-chain merge).
 
 ---
 
-### Workstream 2.5 — Fresh-Fubini for `ouSemigroupFin_l2_sq_hasDerivWithinAt`
+### Workstream 2.5 — `ouSemigroupFin_l2_sq_hasDerivWithinAt`
 
-**Repo:** markov-semigroups · **Status: not started (dual-vetted plan in place)**
-**Effort: ~1.5 active days.**
+**Repo:** markov-semigroups · **Status: ✅ COMPLETE 2026-05-19**
 
-Replaces the polarization-based proof of `energy_eq_deriv` in the Phase 2
-bundle with the fresh-Fubini lift of the discharged 1D theorem
-`Gaussian1D.bakryEmerySpace.semigroup_l2_sq_hasDerivWithinAt`. This
-discharges `ouSemigroupFin_l2_sq_hasDerivWithinAt` in
-`MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2643`.
+`ouSemigroupFin_l2_sq_hasDerivWithinAt` is now a **theorem** in
+`MarkovSemigroups/Instances/WorkInProgress/EuclideanFinBE.lean:446`
+(discharged by Codex, commit `897b661`, merged into markov-semigroups
+`main` via `c0e0ce3`). The axiom is removed from `EuclideanFin.lean`.
 
-**Strategy** (per the discharge plan documented inline at EuclideanFin.lean:2637-2641,
-dual-vetted by gemini-2.5-pro + gemini-3.1-pro on 2026-05-13):
-- Fubini lift through `ouSemigroupFin_insertNth_eq` and `integral_γFin_succAbove`.
-- Differentiate per-coordinate via the proved 1D fact.
-- Recombine by linearity of derivative.
-- Use dominated convergence to justify swap of `∂/∫`.
+**Route actually taken — not the planned fresh-Fubini lift.** Instead of
+the dual-vetted Fubini-through-`ouSemigroupFin_insertNth_eq` plan, the
+discharge identifies `∫ (P_s f)² dγ_n` with the L² pairing
+`⟪[f], P_{2s}[f]⟫`, differentiates the pairing via the strong-L²
+difference-quotient theorem, then converts the derivative to
+`−2·E(P_t f, P_t f)` via the multivariate Gaussian integration-by-parts
+identity.
 
-**Side effects:** drops markov-semigroups' GaussianFin axiom count 11 → 10
-and removes one of the 4 inherited axioms from the T² closure.
+**Closure consequence — shape change, not a shrink.** The discharged
+theorem's verified closure is
+`[propext, Classical.choice, Quot.sound, gaussianFin_diffQuot_tendsto_Lp,
+gaussianFin_integrationByParts, ouSemigroupFin_preserves_IsCore]`. So
+2.5 trades `ouSemigroupFin_l2_sq_hasDerivWithinAt` for the two G2 axioms
+(`gaussianFin_diffQuot_tendsto_Lp`, `gaussianFin_integrationByParts`) —
+both Gemini-vetted "Standard / Likely correct" general Mathlib-native
+facts. This is the M4a-style shape change arriving early (see
+"Milestones"). N1.b's `ouSemigroupFin_preserves_IsCore` also appears in
+this closure (it always did, as a dependency).
 
-**Why now:** smallest, well-vetted plan, biggest impact-per-effort.
+**Remaining to realize it in pphi2:** propagate the pin chain (Workstream
+**PIN** in the table) — gaussian-hilbert and pphi2 still pin ms at the
+pre-2.5 `c6e0e6b`.
 
 ---
 
 ### Workstream N1.b — `ouSemigroupFin_preserves_IsCore`
 
-**Repo:** markov-semigroups · **Status: not started**
-**Effort: ~3–5 active days.**
+**Repo:** markov-semigroups · **Status: ✅ FULLY DISCHARGED 2026-05-19**
+(branch `discharge/n1b-preserves-iscore`, commit `9f4beff`; not yet
+merged to ms `main` / propagated)
 
-Discharges the core-preservation axiom at
-`MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2771`. The
-1D analogue was historically axiomatised and is now proved (commit `890e022`,
-Path C Hermite IBP).
+`ouSemigroupFin_preserves_IsCore` is now an axiom-free, sorry-free
+`theorem`; `#print axioms` = `[propext, Classical.choice, Quot.sound]`;
+full build green (3203 jobs). ms GaussianFin axiom count 11 → 10
+(AXIOM_AUDIT/status/README updated on the branch).
 
-**Strategy** (per gemini-3.1-pro-preview vetting 2026-05-13, in AXIOM_AUDIT.md):
-- Change of variables on the Mehler integral:
-  `(P_t f)(x) = ∫ f(z) · ρ_t(x, z) dz` where `ρ_t(x, z)` is the shifted
-  Gaussian density (C^∞ in x).
-- Apply `ContDiff.integral` to push derivatives onto the kernel rather
-  than `f`.
-- Deliberately avoids the multi-index Hermite-IBP route (notoriously hard
-  in Lean4 due to `iteratedFDeriv`'s symmetric-multilinear formulation).
+**Route taken** (Gemini-deep-think-refined Cameron–Martin route, *not* the
+originally-planned explicit-density `ContDiff.integral`): Cameron–Martin
+weight keeping the γ measure + `contDiff_succ_iff_fderiv` strong
+induction (deliberately avoids `iteratedFDeriv`). Chain: `cameronMartin1D`
+→ `gaussianFin_cameronMartin` (tensorize by induction on `n` via
+`integral_γFin_succAbove`) → `ouSemigroupFin_eq_cmKernel` →
+`contDiff_laplaceFamily` → `contDiff_ouSemigroupFin_of_bounded`. See
+[[ms-cameron-martin-contdiff-route]] (project memory) for the reusable
+technique + Mathlib API discoveries.
 
 ---
 
 ### Workstream N1.c — `ouSemigroupFin_entropy_sq_decay_bound`
 
-**Repo:** markov-semigroups · **Status: not started**
-**Effort: ~3–5 active days.**
+**Repo:** markov-semigroups · **Status: 🔄 in progress**
+(`axiom`→`theorem`, 1 `sorry`; branch `discharge/n1c-entropy-decay`,
+WIP `72e0ff8`, N1.b merged in at `69fc001`) · **Effort: ~2–4 days**
 
-Discharges the entropy-decay axiom at
-`MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2799`. The
-1D analogue is proved (commit `1b3f797`, A1+A2 decomposition).
+**The originally gemini-3.1-pro-vetted (2026-05-13) "telescoping over
+coordinates + proved 1D" strategy contained a fatal mathematical
+error**, discovered during formalization 2026-05-19 and independently
+re-vetted wrong by Gemini deep-think + 3.1-pro: it assumed the
+single-coordinate Mehler telescope iterates `ouCoord j t g` stay C∞
+(`IsCoreFin`). They do not — single-coord Mehler smooths only the
+*integrated* coordinate; passthrough coords inherit `g`'s regularity
+with no gain, so under `IsCoreFin` (pure ≤2nd-order bounds) the iterate
+is generically only **C² jointly, not C∞** (3rd passthrough derivative
+diverges for `t > ½ ln 2`; explicit counterexample). See
+[[ms-n1c-telescoping-c2-finding]] (project memory).
 
-**Strategy** (per gemini-3.1-pro-preview corrected discharge plan, AXIOM_AUDIT.md):
-**Telescoping argument** (the naïve chain rule fails): peel one Mehler factor
-`P_t^{(k)}` at a time and use γ_k-invariance to make the macroscopic
-terms cancel across the *difference* `Ent(h) − Ent(P_t^{(k)} h)`, then
-telescope over k and sum the 1D bounds. Per-step uses the proved
-`Gaussian1D.bakryEmerySpace.semigroup_entropy_sq_decay_bound`.
+**Salvaged (axiom-free):** the T1 factorization layer is fully proved —
+9 lemmas (`ouCoord`, `ouCoordSet`, `ouCoord_ouCoordSet` composition
+step, `integral_ouCoordSet_eq` mean preservation, measurability,
+bounds), plus the ε→0 DCT tail and the centered-entropy→Boltzmann
+reduction.
+
+**Corrected C²-route — Gemini-vetted SOUND** (deep-think + 3.1-pro
+2026-05-19) with one mandatory S1 fix. S1–S5: a C² core predicate →
+its `ouCoord`/`ouCoordSet` preservation → a C²-weakened per-coordinate
+step lemma → one-shot orthogonal Fisher monotonicity → telescope to
+exactly `2(1−e^{−2t})·E`. The crux (S3 holds at C², no hidden
+C³/Γ₂), S4, S5, and the counterexample are all confirmed correct.
+**Mandatory S1 correction:** `IsCore2Fin` must **not** be joint
+`ContDiff ℝ 2` (joint C² forces mixed partials `∂_i∂_j f`, whose
+γ-integrable Hessian dominator `IsCoreFin` cannot supply — only
+Calderón–Zygmund/BMO rescues it, infeasible in Lean). Use **joint
+`ContDiff ℝ 1` + per-coordinate 1D-slice-C² with globally bounded
+*pure* 2nd partials**; mixed partials then never appear (S3 uses only
+1D slices, S4 only 1st-order gradients). Finisher running with this
+baked in; highest formalizer risk is the S1/S2 ContDiff-API boundary.
 
 ---
 
 ### Route A — Abstract `gross_lsi_implies_hypercontractive`
 
-**Repo:** markov-semigroups · **Status: 🔄 in flight (G2 complete + Gross-ODE scaffolding landed; P2/P3 work items in progress)**
-**Effort remaining: ~weeks (P2/P3 algebra + W rewire).**
+**Repo:** markov-semigroups · **Status: 🔄 in flight (2026-05-19: G2 ✅ done; P2 decomposed — 8 documented sorries in `Abstract/GrossODE.lean`; P3 scaffolded)**
+**Effort remaining: ~weeks.** Per `plans/gross-discharge.md` (2026-05-19): P2 = the one general Mathlib-native `hasDerivWithinAt_integral_of_strongL2Deriv` Leibniz kernel + DCT plumbing + `grossPow_*`/glue (~400–700 L), then P3 algebra (`grossLogNorm_deriv_nonpos` + interior-continuity bridge + final `eLpNorm↔∫·^q` reduction, ~200–400 L), then W rewire (~10–30 L), then Phase 4 (`stroock_varopoulos`).
 
 Discharges the abstract Gross 1975 theorem at
 `MarkovSemigroups/Abstract/Hypercontractivity.lean:269`. The "headline"
@@ -518,11 +617,11 @@ Stroock–Varopoulos / Mehler-kernel techniques.
 ## Dependency / coordination map
 
 ```
-pphi2 (Workstream B in flight)
+pphi2 (Workstreams A+B done; pins gh@2df8345, ms@c6e0e6b — PRE-2.5, STALE)
    ↓ imports
-gaussian-hilbert (zero local axioms; Workstream C done)
+gaussian-hilbert (zero local axioms; Workstream C done; pins ms@c6e0e6b — PRE-2.5, STALE)
    ↓ imports
-markov-semigroups (Workstreams 2.5 + N1.b + N1.c + Route A live here)
+markov-semigroups main@c0e0ce3 (2.5 ✅ done; N1.b + N1.c + Route A live here)
 ```
 
 **File-level conflict matrix:**
@@ -546,12 +645,29 @@ should be co-staged** if running concurrently.
 
 ## Recommended sequencing
 
-**Parallel tracks (independent worktrees):**
+**Done:** Workstreams A, B, C, **2.5, N1.b** all complete (N1.b on
+branch `discharge/n1b-preserves-iscore`, not yet propagated). **N1.c
+in progress** (corrected C²-route Gemini-vetted SOUND, finisher
+running on `discharge/n1c-entropy-decay`). Remaining: finish N1.c, the
+pin/branch propagation, Route A, and the off-route G2.a/G2.b.
 
-1. **Workstream B in pphi2** — keep pushing; ~1–2 wk.
-2. **Workstream 2.5 in markov-semigroups** — dispatch now (smallest, dual-vetted, ~1.5 days). Highest impact-per-effort.
-3. **Workstream N1.b in markov-semigroups** — dispatch in parallel with 2.5; different file region, no conflict.
-4. **Workstream N1.c in markov-semigroups** — dispatch in parallel; different file region.
+**Immediate:**
+
+1. **Finish N1.c** — finisher running with the Gemini-vetted corrected
+   S1 (`IsCore2Fin` = joint C¹ + per-coord 1D-slice-C², never joint
+   C²) baked in. ~2–4 days.
+2. **Merge + propagate** once N1.c lands — merge `discharge/n1b-…` and
+   `discharge/n1c-…` into ms `main`; gaussian-hilbert bumps ms pin →
+   new HEAD, rebuild; pphi2 bumps gh+ms pins, rebuild (3896 jobs),
+   re-verify `#print axioms torusInteracting_satisfies_OS`. This makes
+   2.5 + N1.b + N1.c all real in the pphi2 endpoint at once.
+3. **Route A** — the long pole; P2 kernel + P3 algebra + W + Phase 4.
+
+**Note:** N1.b and N1.c both live in `EuclideanFin.lean` (post-`c0e0ce3`
+refactor); they were developed in separate worktrees and the N1.c
+branch already merged N1.b in cleanly at `69fc001` (zero conflicts —
+disjoint declaration blocks), so the eventual ms-`main` merge is N1.c's
+branch (which subsumes N1.b).
 
 **Route A:** vet the Phase 0 design with Gemini deep-think + Codex *before* touching the
 `DirichletMarkovSemigroup` structure. The other agent flagged this as the
@@ -566,25 +682,32 @@ final inherited textbook axiom.
 (See "Complete axiom-and-sorry inventory" section above for the
 per-axiom accounting.)
 
-- **M1 (passes within ~2 wk):** Workstream B lands. pphi2 has **zero
-  local axioms on the T² critical path**. Endpoint closure becomes
-  the standard trio + 4 inherited markov-semigroups axioms (Gross +
-  3 GaussianFin BE tensor-lifts). Defensible mathematical resting
-  point.
-- **M2 (passes within ~2 wk + Workstream 2.5):** Phase 2.5 lands.
-  One inherited axiom drops (closure: trio + 3 markov-semigroups
-  axioms).
+- **M1 — ✅ REACHED 2026-05-18 (state (a)):** Workstream B landed.
+  pphi2 has **zero local axioms on the T² critical path**. Endpoint
+  closure is the standard trio + 4 inherited markov-semigroups axioms
+  (Gross + 3 GaussianFin BE tensor-lifts). Defensible mathematical
+  resting point. *(Still the live closure on pphi2 `main` until pin
+  propagation.)*
+- **M2 — ✅ ACHIEVED in markov-semigroups 2026-05-19; pending pin
+  propagation to be visible in pphi2.** Workstream 2.5 landed. It does
+  **not** drop an axiom — it **changes the closure shape**: trades
+  `ouSemigroupFin_l2_sq_hasDerivWithinAt` for the two G2 axioms
+  (`gaussianFin_diffQuot_tendsto_Lp`, `gaussianFin_integrationByParts`).
+  Post-propagation closure (state (b)): trio + Gross + N1.b + N1.c + 2
+  G2 = 5 inherited axioms. *(The original M2 prediction "one inherited
+  axiom drops → trio + 3" was wrong; the discharge routes through the
+  G2 axioms, not fresh Fubini. This is the M4a-style shape change
+  arriving early.)*
 - **M3 (passes within ~3 wk):** N1.b and N1.c land. Closure: trio
-  + `gross_lsi_implies_hypercontractive` only. T² OS0–OS2 reduced
-  to a single textbook axiom (Gross 1975).
+  + `gross_lsi_implies_hypercontractive` + 2 G2 axioms. (Was "Gross
+  only" under the old M2 assumption; now also carries the 2 G2 axioms
+  because 2.5 routed through them.)
 - **M4a (multi-week from M3):** Route A's P2 + P3 + W rewire lands.
   `gross_lsi_implies_hypercontractive` is replaced by the proved
-  `gross_lsi_implies_hypercontractive_of_hypotheses`. **Closure changes
-  shape** rather than shrinks: drops Gross, adds 3 new ones
-  (`gaussianFin_diffQuot_tendsto_Lp`, `gaussianFin_integrationByParts`,
-  `stroock_varopoulos`). All three are textbook-vetted; the two G2
-  axioms are general Mathlib-native ("Standard / Likely correct" per
-  gemini-3.1-pro-preview) and good upstream candidates.
+  `gross_lsi_implies_hypercontractive_of_hypotheses`. The 2 G2 axioms
+  are **already on the path** (via 2.5), so the W-rewire now adds only
+  **one** new axiom (`stroock_varopoulos`), not three. Closure: trio +
+  2 G2 + `stroock_varopoulos`.
 - **M4b (a few days from M4a):** Route A Phase 4 lands.
   `stroock_varopoulos` discharged via Route B's pointwise lemma.
   Closure: trio + 2 G2 axioms (`gaussianFin_diffQuot_tendsto_Lp`,
