@@ -61,7 +61,7 @@ Verified via `#print axioms`: **0 non-builtin axioms**. Fully proved.
 
 | Axiom | File | Discharge plan | Effort |
 |---|---|---|---|
-| `latticeGreenBilinear_basis_tendsto_continuum` | `GaussianContinuumLimit/PropagatorConvergence.lean:103` | [`lattice-green-flat-Rd-discharge-plan.md`](lattice-green-flat-Rd-discharge-plan.md) (Strategy A) | ~3 weeks |
+| `latticeGreenBilinear_basis_tendsto_continuum` | `GaussianContinuumLimit/PropagatorConvergence.lean:103` | [`lattice-green-flat-Rd-discharge-plan.md`](../plans/lattice-green-flat-Rd-discharge-plan.md) (Strategy A) | ~3 weeks |
 
 NOT on the T² critical path. Only needed if the project pushes to flat-ℝ²
 S'(ℝ²) Wightman directly.
@@ -125,7 +125,7 @@ design and discharge notes remain in
 
 | Axiom | File:Line | Rating | Sources | Notes |
 |---|---|---|---|---|
-| `latticeGreenBilinear_basis_tendsto_continuum` | `GaussianContinuumLimit/PropagatorConvergence.lean:103` | Standard | SA | Spectral lattice Green bilinear → continuum on basis pairs. **Plan**: [`lattice-green-flat-Rd-discharge-plan.md`](lattice-green-flat-Rd-discharge-plan.md) (Strategy A, ~3 weeks). NOT on T² critical path. |
+| `latticeGreenBilinear_basis_tendsto_continuum` | `GaussianContinuumLimit/PropagatorConvergence.lean:103` | Standard | SA | Spectral lattice Green bilinear → continuum on basis pairs. **Plan**: [`lattice-green-flat-Rd-discharge-plan.md`](../plans/lattice-green-flat-Rd-discharge-plan.md) (Strategy A, ~3 weeks). NOT on T² critical path. |
 
 ### AsymTorus (1 axiom)
 
