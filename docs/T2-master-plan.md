@@ -1,6 +1,6 @@
 # T² φ⁴₂ continuum limit — master plan & progress tracker
 
-**Last refreshed:** 2026-05-19 (post full propagation — 2.5 + N1.b + N1.c live in the pphi2 endpoint; closure = trio + Gross + 2 G2 axioms)
+**Last refreshed:** 2026-05-20 (P2 Leibniz kernel analytic toolkit proved axiom-free in markov-semigroups; closure = trio + Gross + 2 G2 axioms, with Gross's analytic crux now substantially advanced — see "Route A" workstream below)
 **Repo:** pphi2 (this) + sister repos gaussian-hilbert, markov-semigroups
 **Endpoint:** `Pphi2.torusInteracting_satisfies_OS` (OS0 + OS1 + OS2 for the T²_L
 symmetric-torus φ⁴₂ continuum limit)
@@ -125,7 +125,7 @@ post-Workstream-B 2026-05-18). 4 inherited axioms:
 
 | Axiom | Location | Workstream / discharge plan |
 |---|---|---|
-| `gross_lsi_implies_hypercontractive` (legacy abstract axiom) | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A**. Plan: [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md). Status (2026-05-19): G2 ✅ done; P2 decomposed (8 documented sorries in `Abstract/GrossODE.lean`), P3 scaffolded; remaining endgame is the P2 Leibniz kernel + glue → P3 algebra → W (rewire). |
+| `gross_lsi_implies_hypercontractive` (legacy abstract axiom) | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A**. Plan: [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md). Status (2026-05-20): G2 ✅ done; **P2 analytic toolkit proved axiom-free** — 11-lemma toolkit in `Abstract/GrossODE.lean` (FTC factoring, M_σ + factorization + a.e./pointwise sub bounds + measurability + MemLp + UI, **in-measure convergence**, **Vitali L²-convergence**, target MemLp); the main theorem `hasDerivWithinAt_integral_of_strongL2Deriv` body remains a documented `sorry` (9-step composition plan; ~120–150 L of Mathlib-API plumbing). P3 scaffolded. Remaining endgame: P2 main-theorem composition → P3 algebra → W rewire → Phase 4 (`stroock_varopoulos`). See [`markov-semigroups/plans/p2-strongL2-leibniz-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/p2-strongL2-leibniz-discharge.md). |
 | `ouSemigroupFin_l2_sq_hasDerivWithinAt` | `markov-semigroups` ms `c6e0e6b`: `EuclideanFin.lean:2643` | **Workstream 2.5 — ✅ DISCHARGED in ms `c0e0ce3` (2026-05-19)** but not yet propagated (pin stale). On state-(b) it disappears, replaced by the two G2 axioms below. |
 | `ouSemigroupFin_preserves_IsCore` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2641` | **Workstream N1.b**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md` (search `ouSemigroupFin_preserves_IsCore`). Strategy: change-of-variables on Mehler integral + `ContDiff.integral`. |
 | `ouSemigroupFin_entropy_sq_decay_bound` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2669` | **Workstream N1.c**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. Strategy: telescoping over coordinates + proved 1D `Gaussian1D.bakryEmerySpace.semigroup_entropy_sq_decay_bound`. |
@@ -211,7 +211,7 @@ None of them are load-bearing for `torusInteracting_satisfies_OS`.
 | **PIN** | Propagate ms `c0e0ce3` → gaussian-hilbert → pphi2 | gh + pphi2 | not started | ~1 build cycle (pphi2 = 3896 jobs) |
 | **N1.b** | `ouSemigroupFin_preserves_IsCore` | markov-semigroups | ✅ **FULLY DISCHARGED 2026-05-19** — axiom-free, sorry-free, `#print axioms`=trio, build green. Branch `discharge/n1b-preserves-iscore` `9f4beff` (Cameron–Martin + `contDiff_succ_iff_fderiv` route). **Not yet merged to ms `main` / propagated.** | — (merge + propagate pending) |
 | **N1.c** | `ouSemigroupFin_entropy_sq_decay_bound` | markov-semigroups | ✅ **FULLY DISCHARGED 2026-05-19** — axiom-free, sorry-free, `#print axioms`=trio, build green (3205 jobs). Branch `discharge/n1c-entropy-decay` `bd7f950` (**also subsumes N1.b** via merge `69fc001`). Original gemini-vetted strategy had a fatal C∞ error (counterexample-confirmed); discharged via a Gemini-re-vetted **frozen-slot 1-parameter slice route** that avoids `IsCore2Fin` entirely. **Not yet merged to ms `main` / propagated.** | — (merge + propagate pending) |
-| **Route A** | Abstract `gross_lsi_implies_hypercontractive` + `stroock_varopoulos` (Phase 4) | markov-semigroups | 🔄 **G2 ✅ done; P2 decomposed (8 sorries in `GrossODE.lean`), P3 scaffolded** (2026-05-19); remaining: P2 Leibniz kernel + glue (~400–700 L) → P3 algebra (~200–400 L) → W rewire (~10–30 L) → Phase 4 | ~weeks |
+| **Route A** | Abstract `gross_lsi_implies_hypercontractive` + `stroock_varopoulos` (Phase 4) | markov-semigroups | 🔄 **G2 ✅ done; P2 analytic toolkit ✅ proved axiom-free (11 lemmas, incl. in-measure + Vitali L²); P3 scaffolded** (2026-05-20). Remaining: P2 main-theorem composition (~120–150 L, plumbing only) → P3 algebra (~200–400 L) → W rewire (~10–30 L) → Phase 4 | ~weeks |
 | **G2.a** | Discharge `gaussianFin_diffQuot_tendsto_Lp` *(now ON the T² path early — via the 2.5 discharge, not via Route A W-rewire)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
 | **G2.b** | Discharge `gaussianFin_integrationByParts` *(now ON the T² path early — via the 2.5 discharge)* | markov-semigroups | not started; no dedicated plan; ideally upstream to Mathlib | unscoped — depends on Mathlib infrastructure availability |
 
@@ -220,7 +220,7 @@ None of them are load-bearing for `torusInteracting_satisfies_OS`.
 **To "trio + 2 G2 textbook-vetted axioms":** blocked only on Route A (Gross) + the merge/propagation. Route A is the sole genuinely-novel remaining axiom.
 **To fully trio-only (M5):** further G2.a + G2.b work, ideally as Mathlib upstreams.
 
-Route A now **solely** dominates the critical path. As of 2026-05-19, Workstreams **B, C, 2.5, N1.b, and N1.c are all done** (N1.b + N1.c on `discharge/n1c-entropy-decay`, not yet propagated). Highest-ROI next actions: **merge `discharge/n1c-entropy-decay` (subsumes N1.b) to ms `main` and propagate the pin chain** (so pphi2's endpoint reflects 2.5 + N1.b + N1.c at once), with **Route A** the long pole.
+Route A now **solely** dominates the critical path. As of 2026-05-20, Workstreams **B, C, 2.5, N1.b, and N1.c are all done and propagated**; **Route A's P2 analytic toolkit is also proved axiom-free** (in-measure + Vitali landed in ms `Abstract/GrossODE.lean` this session — see Route A workstream detail). The Gross axiom's analytic crux is no longer the open question; what remains is the P2 main-theorem composition (~120–150 L Mathlib plumbing) + P3 algebra + W rewire + Phase 4. Highest-ROI next action: finish the P2 main-theorem body in `Abstract/GrossODE.lean` (all inputs proved; 9-step composition plan inline + in `plans/p2-strongL2-leibniz-discharge.md`).
 
 ---
 
@@ -498,8 +498,13 @@ give orthogonal Fisher monotonicity; `Finset.induction` telescope +
 
 ### Route A — Abstract `gross_lsi_implies_hypercontractive`
 
-**Repo:** markov-semigroups · **Status: 🔄 in flight (2026-05-19: G2 ✅ done; P2 decomposed — 8 documented sorries in `Abstract/GrossODE.lean`; P3 scaffolded)**
-**Effort remaining: ~weeks.** Per `plans/gross-discharge.md` (2026-05-19): P2 = the one general Mathlib-native `hasDerivWithinAt_integral_of_strongL2Deriv` Leibniz kernel + DCT plumbing + `grossPow_*`/glue (~400–700 L), then P3 algebra (`grossLogNorm_deriv_nonpos` + interior-continuity bridge + final `eLpNorm↔∫·^q` reduction, ~200–400 L), then W rewire (~10–30 L), then Phase 4 (`stroock_varopoulos`).
+**Repo:** markov-semigroups · **Status: 🔄 in flight (2026-05-20: G2 ✅ done; P2 analytic toolkit ✅ proved axiom-free; P3 scaffolded)**
+**Effort remaining: ~weeks.** Per `plans/gross-discharge.md` and `plans/p2-strongL2-leibniz-discharge.md` (2026-05-20):
+* **P2 analytic toolkit ✅** — 11-lemma proof toolkit in `Abstract/GrossODE.lean` covering FTC factoring, `averagedDerivField` def + factorization + a.e./pointwise sub bounds + measurability + MemLp, the user's UI helper, **in-measure convergence** (`averagedDerivField_tendstoInMeasure`), **Vitali L²-convergence** (`averagedDerivField_tendsto_eLpNorm`), and the target `MemLp(ψ' ∘ u_s)`. The lemma statement was Gemini-counterexample false originally; patched to the corrected `h_u_bound`-orbit form. Main theorem body is a documented `sorry` with a 9-step composition plan (~120–150 L Mathlib-API plumbing remain: Lp lifting, `Filter.Tendsto.inner`, integrated factorization, `hasDerivWithinAt_iff_tendsto_slope` close).
+* Remaining `hasDerivAt_integral_rpow_exponent` DCT plumbing + `grossPow_*`/glue ⬜.
+* P3 algebra (`grossLogNorm_deriv_nonpos` + interior-continuity bridge + final `eLpNorm ↔ ∫·^q` reduction, ~200–400 L) ⬜.
+* W rewire (~10–30 L) ⬜.
+* Phase 4 (`stroock_varopoulos`) ⬜.
 
 Discharges the abstract Gross 1975 theorem at
 `MarkovSemigroups/Abstract/Hypercontractivity.lean:269`. The "headline"
