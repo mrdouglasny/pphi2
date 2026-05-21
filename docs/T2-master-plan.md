@@ -1,6 +1,6 @@
 # T² φ⁴₂ continuum limit — master plan & progress tracker
 
-**Last refreshed:** 2026-05-20 (**P2 Leibniz kernel ✅ FULLY DISCHARGED axiom-free** in markov-semigroups — `hasDerivWithinAt_integral_of_strongL2Deriv` is now a theorem with `#print axioms` = Mathlib core only. Closure = trio + Gross + 2 G2 axioms; Gross's analytic crux is *closed*. Remaining for Gross discharge: P3 algebra + W rewire + Phase 4.)
+**Last refreshed:** 2026-05-21 (**Gross abstract spine ✅ FULLY PROVED** in markov-semigroups on branch `gross-grossPow-hasDerivWithinAt-body`, *unmerged*: `gross_lsi_implies_hypercontractive_of_hypotheses` is a complete theorem and `Abstract/GrossODE.lean` is **sorry-free**, `#print axioms` = Mathlib trio only. P2 (`grossPow_hasDerivWithinAt`), P3 (`grossLogNorm_deriv_nonpos`), and the general-`f` reduction all closed; the theorem takes four per-instance predicates `CoreSemigroupInvariant` / `GeneratorCompat` / `StroockVaropoulos`@`1<q` / `CoreLpL2Approx`. **Remaining for the live pphi2 closure: merge the branch to ms `main` + the W-step** — discharge those four predicates for the GaussianFin/OU instance in gaussian-hilbert. Until then the pphi2 endpoint still prints `gross_lsi_implies_hypercontractive` (closure unchanged = trio + Gross + 2 G2 axioms). Prior (2026-05-20): P2 Leibniz kernel discharged.)
 **Repo:** pphi2 (this) + sister repos gaussian-hilbert, markov-semigroups
 **Endpoint:** `Pphi2.torusInteracting_satisfies_OS` (OS0 + OS1 + OS2 for the T²_L
 symmetric-torus φ⁴₂ continuum limit)
@@ -125,7 +125,7 @@ post-Workstream-B 2026-05-18). 4 inherited axioms:
 
 | Axiom | Location | Workstream / discharge plan |
 |---|---|---|
-| `gross_lsi_implies_hypercontractive` (legacy abstract axiom) | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A**. Plan: [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md). Status (2026-05-20): G2 ✅ done; **P2 ✅ FULLY DISCHARGED axiom-free** — `hasDerivWithinAt_integral_of_strongL2Deriv` is now a theorem (`#print axioms` = Mathlib core only). Proof = 11-lemma toolkit (FTC factoring, M_σ + factorization, a.e./pointwise sub bounds, measurability, MemLp, UI, **in-measure convergence**, **Vitali L²-convergence**, target MemLp) + ~150-line 9-step body. Statement is project-definition-free → Mathlib-upstreamable. P3 scaffolded. Remaining endgame: P3 algebra (~200–400 L) → W rewire (~10–30 L) → Phase 4 (`stroock_varopoulos`). See [`markov-semigroups/plans/p2-strongL2-leibniz-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/p2-strongL2-leibniz-discharge.md). |
+| `gross_lsi_implies_hypercontractive` (legacy abstract axiom) | `markov-semigroups/MarkovSemigroups/Abstract/Hypercontractivity.lean:269` | **Route A**. Plan: [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md). Status (2026-05-21): **ABSTRACT SPINE COMPLETE** on branch `gross-grossPow-hasDerivWithinAt-body` (*unmerged*; pphi2 still pins ms `main`, so this row is unchanged on `main` until propagation). P2 (`grossPow_hasDerivWithinAt`), P3 (`grossLogNorm_deriv_nonpos`), `grossLogNorm_antitoneOn`, the core+positive bound `eLpNorm_orbit_le_of_core_pos`, and the final general-`f` reduction `gross_lsi_implies_hypercontractive_of_hypotheses` are **all proved**; `Abstract/GrossODE.lean` is **sorry-free** (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). The theorem takes four per-instance hypotheses: `CoreSemigroupInvariant`, `GeneratorCompat`, `StroockVaropoulos` (relaxed `2≤q → 1<q`, deep-think vetted), and `CoreLpL2Approx` (new 4th predicate, deep-think vetted). **Remaining endgame: merge to ms `main` → W-step** (discharge the four predicates for GaussianFin/OU — e.g. mollified-`+1/n` density for `CoreLpL2Approx`). No separate "P3 algebra / Phase 4" remains. See [`markov-semigroups/plans/gross-discharge.md`](https://github.com/mrdouglasny/markov-semigroups/blob/main/plans/gross-discharge.md) §W. |
 | `ouSemigroupFin_l2_sq_hasDerivWithinAt` | `markov-semigroups` ms `c6e0e6b`: `EuclideanFin.lean:2643` | **Workstream 2.5 — ✅ DISCHARGED in ms `c0e0ce3` (2026-05-19)** but not yet propagated (pin stale). On state-(b) it disappears, replaced by the two G2 axioms below. |
 | `ouSemigroupFin_preserves_IsCore` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2641` | **Workstream N1.b**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md` (search `ouSemigroupFin_preserves_IsCore`). Strategy: change-of-variables on Mehler integral + `ContDiff.integral`. |
 | `ouSemigroupFin_entropy_sq_decay_bound` | `markov-semigroups/MarkovSemigroups/Instances/WorkInProgress/EuclideanFin.lean:2669` | **Workstream N1.c**. Per-axiom row in `markov-semigroups/AXIOM_AUDIT.md`. Strategy: telescoping over coordinates + proved 1D `Gaussian1D.bakryEmerySpace.semigroup_entropy_sq_decay_bound`. |
@@ -149,10 +149,16 @@ signature, and the staged follow-up `degreePiecewiseTail_layerCake_lt_top`
 has now also been retired.
 
 **After Route A's W-rewire lands** — `gross_lsi_implies_hypercontractive`
-is replaced by the proved `gross_lsi_implies_hypercontractive_of_hypotheses`
-in `Abstract/GrossODE.lean`. Because the two G2 axioms are **already on
-the path via the 2.5 discharge**, the W-rewire now adds only one *new*
-axiom to the closure:
+is replaced by the now-proved `gross_lsi_implies_hypercontractive_of_hypotheses`
+in `Abstract/GrossODE.lean` (complete as of 2026-05-21, branch unmerged),
+fed the four discharged per-instance predicates for GaussianFin/OU:
+`CoreSemigroupInvariant`, `GeneratorCompat`, `StroockVaropoulos` (at the
+relaxed `1 < q`), and `CoreLpL2Approx`. `GeneratorCompat` rests on the two
+G2 axioms (**already on the path** via the 2.5 discharge); `CoreLpL2Approx`
+is **instance-provable with no new axiom** (mollified-`+1/n` density,
+deep-think vetted routine). So the W-rewire still adds only one *new* axiom
+to the closure — the Stroock–Varopoulos comparison used to discharge the
+`StroockVaropoulos` predicate at the instance:
 
 | Axiom | Location | Workstream / discharge plan |
 |---|---|---|
