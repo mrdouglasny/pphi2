@@ -556,7 +556,7 @@ noncomputable def sitePairingCLM
           simp [mul_add, Finset.sum_add_distrib]
         map_smul' := by
           intro c φ
-          simp [Pi.smul_apply, smul_eq_mul, Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm] }
+          simp [Pi.smul_apply, smul_eq_mul, Finset.mul_sum, mul_left_comm] }
     cont := (continuous_finset_sum _ fun x _ =>
       continuous_const.mul (continuous_apply x)) }
 
@@ -618,11 +618,10 @@ theorem canonicalSmoothConfig_add_canonicalRoughConfig_eq_lift_sum
       latticeFieldToConfig d N (canonicalSumFieldFunction d N a mass T η) := by
   apply ContinuousLinearMap.ext
   intro f
-  show ∑ x : FinLatticeSites d N, f x * canonicalSmoothFieldFunction d N a mass T η x +
+  change ∑ x : FinLatticeSites d N, f x * canonicalSmoothFieldFunction d N a mass T η x +
       ∑ x : FinLatticeSites d N, f x * canonicalRoughFieldFunction d N a mass T η x =
     ∑ x : FinLatticeSites d N, f x * canonicalSumFieldFunction d N a mass T η x
-  simp [canonicalSmoothConfig, canonicalRoughConfig, latticeFieldToConfig,
-    canonicalSumFieldFunction, mul_add, Finset.sum_add_distrib]
+  simp [canonicalSumFieldFunction, mul_add, Finset.sum_add_distrib]
 
 section Variance
 
@@ -855,7 +854,7 @@ theorem canonicalSmoothRough_cross_moment_zero
   ring
 
 private lemma canonicalEigenvalue_pos
-    (ha : 0 < a) (hmass : 0 < mass) (m : Fin d → Fin N) :
+    (_ha : 0 < a) (hmass : 0 < mass) (m : Fin d → Fin N) :
     0 < canonicalEigenvalue d N a mass m := by
   unfold canonicalEigenvalue
   have hsum_nonneg : 0 ≤ ∑ i : Fin d, latticeEigenvalue1d N a (m i) :=
@@ -891,7 +890,7 @@ private lemma canonicalEigenvalue_split
   ring
 
 private lemma canonicalSmoothFieldFunction_self_moment
-    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (_hT : 0 < T)
     (x y : FinLatticeSites d N) :
     ∫ η : CanonicalJoint d N,
       canonicalSmoothFieldFunction d N a mass T η x *
@@ -905,8 +904,21 @@ private lemma canonicalSmoothFieldFunction_self_moment
           latticeFourierProductNormSq N d m := by
   rw [canonicalJointMeasure]
   simp only [canonicalSmoothFieldFunction]
-  have h_fst :=
-    integral_fun_fst (E := ℝ)
+  have h_fst :
+      ∫ z : ((Fin d → Fin N) → ℝ) × ((Fin d → Fin N) → ℝ),
+          ((Real.sqrt (a ^ d))⁻¹ *
+              ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * z.1 m) *
+            ((Real.sqrt (a ^ d))⁻¹ *
+              ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T y m * z.1 m)
+          ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)).prod
+            (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) =
+        ∫ η_S : (Fin d → Fin N) → ℝ,
+          ((Real.sqrt (a ^ d))⁻¹ *
+              ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m) *
+            ((Real.sqrt (a ^ d))⁻¹ *
+              ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T y m * η_S m)
+          ∂Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1) := by
+    simpa using integral_fun_fst (E := ℝ)
       (μ := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
       (ν := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
       (f := fun η_S : (Fin d → Fin N) → ℝ =>
@@ -914,7 +926,6 @@ private lemma canonicalSmoothFieldFunction_self_moment
             ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T x m * η_S m) *
           ((Real.sqrt (a^d))⁻¹ *
             ∑ m : Fin d → Fin N, canonicalSmoothModeCoeff d N a mass T y m * η_S m))
-  simp at h_fst
   rw [h_fst]
   have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
   have hsqrt_sq : (Real.sqrt (a^d))⁻¹ * (Real.sqrt (a^d))⁻¹ = (a^d : ℝ)⁻¹ := by
@@ -985,8 +996,21 @@ private lemma canonicalRoughFieldFunction_self_moment
           latticeFourierProductNormSq N d m := by
   rw [canonicalJointMeasure]
   simp only [canonicalRoughFieldFunction]
-  have h_snd :=
-    integral_fun_snd (E := ℝ)
+  have h_snd :
+      ∫ z : ((Fin d → Fin N) → ℝ) × ((Fin d → Fin N) → ℝ),
+          ((Real.sqrt (a ^ d))⁻¹ *
+              ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * z.2 m) *
+            ((Real.sqrt (a ^ d))⁻¹ *
+              ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T y m * z.2 m)
+          ∂(Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)).prod
+            (Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1)) =
+        ∫ η_R : (Fin d → Fin N) → ℝ,
+          ((Real.sqrt (a ^ d))⁻¹ *
+              ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η_R m) *
+            ((Real.sqrt (a ^ d))⁻¹ *
+              ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T y m * η_R m)
+          ∂Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1) := by
+    simpa using integral_fun_snd (E := ℝ)
       (μ := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
       (ν := Measure.pi (fun _ : Fin d → Fin N => gaussianReal 0 1))
       (f := fun η_R : (Fin d → Fin N) → ℝ =>
@@ -994,7 +1018,6 @@ private lemma canonicalRoughFieldFunction_self_moment
             ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T x m * η_R m) *
           ((Real.sqrt (a^d))⁻¹ *
             ∑ m : Fin d → Fin N, canonicalRoughModeCoeff d N a mass T y m * η_R m))
-  simp at h_snd
   rw [h_snd]
   have ha_d_pos : (0 : ℝ) < a^d := pow_pos ha d
   have hsqrt_sq : (Real.sqrt (a^d))⁻¹ * (Real.sqrt (a^d))⁻¹ = (a^d : ℝ)⁻¹ := by
@@ -1691,7 +1714,7 @@ private lemma smoothWeight_family_sum_eq_average
                           Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
                             ((latticeFourierProductBasisFun N d m x) ^ 2 /
                               latticeFourierProductNormSq N d m) := by
-                                simpa [c]
+                                simp [c]
                   _ = Real.exp (-t * mass ^ 2) * latticeHeatKernelMatrix d N a t x x := by
                         have hdiag' :
                             ∑ m : Fin d → Fin N,
@@ -1879,7 +1902,7 @@ private lemma roughWeight_family_sum_eq_average
                           Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
                             ((latticeFourierProductBasisFun N d m x) ^ 2 /
                               latticeFourierProductNormSq N d m) := by
-                                simpa [c]
+                                simp [c]
                   _ = Real.exp (-t * mass ^ 2) * latticeHeatKernelMatrix d N a t x x := by
                         have hdiag' :
                             ∑ m : Fin d → Fin N,
@@ -2143,7 +2166,7 @@ noncomputable def canonicalRoughCovariance
         latticeFourierProductNormSq N d m
 
 noncomputable def canonicalSmoothFieldFunction_self_moment_diag
-    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (_ha : 0 < a) (_hmass : 0 < mass) (T : ℝ) (_hT : 0 < T)
     (x : FinLatticeSites d N) : ℝ :=
   ∫ η : CanonicalJoint d N,
     canonicalSmoothFieldFunction d N a mass T η x *
@@ -2151,7 +2174,7 @@ noncomputable def canonicalSmoothFieldFunction_self_moment_diag
     ∂(canonicalJointMeasure d N)
 
 noncomputable def canonicalRoughFieldFunction_self_moment_diag
-    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
+    (_ha : 0 < a) (_hmass : 0 < mass) (T : ℝ) (_hT : 0 < T)
     (x : FinLatticeSites d N) : ℝ :=
   ∫ η : CanonicalJoint d N,
     canonicalRoughFieldFunction d N a mass T η x *
@@ -2346,7 +2369,7 @@ theorem canonicalRoughCovariance_eq_integral_Icc_heatKernel
                               (latticeFourierProductBasisFun N d m x *
                                 latticeFourierProductBasisFun N d m y /
                                 latticeFourierProductNormSq N d m) := by
-                                  simpa [c]
+                                  simp [c]
                     _ = Real.exp (-t * mass ^ 2) *
                           ∑ m : Fin d → Fin N,
                             Real.exp (-t * ∑ i : Fin d, latticeEigenvalue1d N a (m i)) *
@@ -2972,7 +2995,7 @@ theorem canonicalRoughCovariance_eq_sum_gamma_mul_gamma
                         ring
 
 private theorem wickPower_two_site_pi_gaussianReal_eq_zero_of_ne
-    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {ι : Type*} [Fintype ι]
     (γ_x γ_y : ι → ℝ) {n m : ℕ} (hnm : n ≠ m) :
     ∫ ξ : ι → ℝ,
       wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * ξ j) *
@@ -3081,7 +3104,7 @@ private theorem wickPower_two_site_pi_gaussianReal_eq_zero_of_ne
   · simp [hαβ, diagFac]
 
 private theorem wickPower_two_site_pi_gaussianReal_integrable
-    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {ι : Type*} [Fintype ι]
     (γ_x γ_y : ι → ℝ) (n m : ℕ) :
     Integrable
       (fun ξ : ι → ℝ =>
@@ -3211,7 +3234,7 @@ private lemma sum_pow_eq_sum_multiIndices_generic
   simp [hmult]
 
 private theorem wickPower_two_site_pi_gaussianReal_eq_diag
-    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {ι : Type*} [Fintype ι]
     (γ_x γ_y : ι → ℝ) (n : ℕ) :
     ∫ ξ : ι → ℝ,
       wickMonomial n (∑ j, (γ_x j) ^ 2) (∑ j, γ_x j * ξ j) *
@@ -3880,7 +3903,13 @@ private lemma latticeCovarianceGJ_eq_sum_delta_covariance
     GaussianField.field_basis_decomposition_density (d := d) (N := N) g]
   simp only [GaussianField.covariance, map_sum, map_smul, Pi.smul_apply, smul_eq_mul, sum_inner,
     inner_sum, real_inner_smul_left, real_inner_smul_right, Finset.sum_apply]
-  simp [finLatticeDelta]
+  have hsum_f : ∀ x, ∑ x_2, f x_2 * finLatticeDelta d N x_2 x = f x := by
+    intro x
+    simp [finLatticeDelta]
+  have hsum_g : ∀ x, ∑ x_1, g x_1 * finLatticeDelta d N x_1 x = g x := by
+    intro x
+    simp [finLatticeDelta]
+  simp_rw [hsum_f, hsum_g]
   rw [Finset.sum_comm]
   refine Finset.sum_congr rfl ?_
   intro x hx
@@ -3907,7 +3936,8 @@ private lemma canonicalSmoothFieldFunction_integral_zero
     (f := fun η_S : (Fin d → Fin N) → ℝ =>
       canonicalSmoothFieldFunctionOfFst d N a mass T η_S x)]
   simpa [canonicalSmoothFieldFunctionOfFst] using
-    canonicalSmoothFieldFunction_marginal_integral_zero (d := d) (N := N) (a := a) (mass := mass) T x
+    canonicalSmoothFieldFunction_marginal_integral_zero
+      (d := d) (N := N) (a := a) (mass := mass) T x
 
 private lemma canonicalRoughFieldFunction_integral_zero
     (T : ℝ) (x : FinLatticeSites d N) :
@@ -3927,7 +3957,8 @@ private lemma canonicalRoughFieldFunction_integral_zero
     (f := fun η_R : (Fin d → Fin N) → ℝ =>
       canonicalRoughFieldFunctionOfSnd d N a mass T η_R x)]
   simpa [canonicalRoughFieldFunctionOfSnd] using
-    canonicalRoughFieldFunction_marginal_integral_zero (d := d) (N := N) (a := a) (mass := mass) T x
+    canonicalRoughFieldFunction_marginal_integral_zero
+      (d := d) (N := N) (a := a) (mass := mass) T x
 
 private lemma canonicalSumFieldFunction_integral_zero
     (T : ℝ) (x : FinLatticeSites d N) :
@@ -3941,13 +3972,13 @@ private lemma canonicalSumFieldFunction_integral_zero
   have hs_int : Integrable
       (fun η : CanonicalJoint d N => canonicalSmoothFieldFunction d N a mass T η x)
       (canonicalJointMeasure d N) :=
-    (canonicalSmoothFieldFunction_memLp_two (d := d) (N := N) (a := a) (mass := mass) T x).integrable
-      one_le_two
+    (canonicalSmoothFieldFunction_memLp_two
+      (d := d) (N := N) (a := a) (mass := mass) T x).integrable one_le_two
   have hr_int : Integrable
       (fun η : CanonicalJoint d N => canonicalRoughFieldFunction d N a mass T η x)
       (canonicalJointMeasure d N) :=
-    (canonicalRoughFieldFunction_memLp_two (d := d) (N := N) (a := a) (mass := mass) T x).integrable
-      one_le_two
+    (canonicalRoughFieldFunction_memLp_two
+      (d := d) (N := N) (a := a) (mass := mass) T x).integrable one_le_two
   rw [integral_add hs_int hr_int, canonicalSmoothFieldFunction_integral_zero,
     canonicalRoughFieldFunction_integral_zero]
   ring
@@ -3974,8 +4005,8 @@ private lemma canonicalSumFieldFunction_pairing_integral_zero
     ring
   · intro x hx
     refine Integrable.const_mul ?_ (f x)
-    exact (canonicalSumFieldFunction_memLp_two (d := d) (N := N) (a := a) (mass := mass) T x).integrable
-      one_le_two
+    exact (canonicalSumFieldFunction_memLp_two
+      (d := d) (N := N) (a := a) (mass := mass) T x).integrable one_le_two
 
 private lemma canonicalSumFieldLaw_pairing_integral_zero
     (T : ℝ) (f : FinLatticeField d N) :
@@ -3984,14 +4015,12 @@ private lemma canonicalSumFieldLaw_pairing_integral_zero
   rw [canonicalSumFieldLaw_eq_map_canonicalSumFieldFunction]
   rw [integral_map
     (canonicalSumFieldFunction_measurable d N a mass T).aemeasurable]
-  ·
-    change ∫ η : CanonicalJoint d N,
+  · change ∫ η : CanonicalJoint d N,
         ∑ x : FinLatticeSites d N, f x * canonicalSumFieldFunction d N a mass T η x
         ∂(canonicalJointMeasure d N) = 0
     exact canonicalSumFieldFunction_pairing_integral_zero
       (d := d) (N := N) (a := a) (mass := mass) T f
-  ·
-    exact (sitePairingCLM d N f).measurable.aestronglyMeasurable
+  · exact (sitePairingCLM d N f).measurable.aestronglyMeasurable
 
 private lemma canonicalSumFieldLaw_pairing_cross_moment_eq_covariance
     (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T)
@@ -4002,8 +4031,7 @@ private lemma canonicalSumFieldLaw_pairing_cross_moment_eq_covariance
   rw [canonicalSumFieldLaw_eq_map_canonicalSumFieldFunction]
   rw [integral_map
     (canonicalSumFieldFunction_measurable d N a mass T).aemeasurable]
-  ·
-    change ∫ η : CanonicalJoint d N,
+  · change ∫ η : CanonicalJoint d N,
         (∑ x : FinLatticeSites d N, f x * canonicalSumFieldFunction d N a mass T η x) *
           (∑ y : FinLatticeSites d N, g y * canonicalSumFieldFunction d N a mass T η y)
         ∂(canonicalJointMeasure d N) =
@@ -4033,10 +4061,12 @@ private lemma canonicalSumFieldLaw_pairing_cross_moment_eq_covariance
         canonicalSumFieldFunction_pairing_memLp_two (d := d) (N := N) (a := a) (mass := mass) T g
     have h_pair_f_zero : ∫ η, ∑ x, X x η ∂μ = 0 := by
       simpa [X, μ] using
-        canonicalSumFieldFunction_pairing_integral_zero (d := d) (N := N) (a := a) (mass := mass) T f
+        canonicalSumFieldFunction_pairing_integral_zero
+          (d := d) (N := N) (a := a) (mass := mass) T f
     have h_pair_g_zero : ∫ η, ∑ y, Y y η ∂μ = 0 := by
       simpa [Y, μ] using
-        canonicalSumFieldFunction_pairing_integral_zero (d := d) (N := N) (a := a) (mass := mass) T g
+        canonicalSumFieldFunction_pairing_integral_zero
+          (d := d) (N := N) (a := a) (mass := mass) T g
     have h_cov_pair :
         cov[(fun η : CanonicalJoint d N => ∑ x, X x η),
           (fun η : CanonicalJoint d N => ∑ y, Y y η); μ] =
@@ -4064,7 +4094,7 @@ private lemma canonicalSumFieldLaw_pairing_cross_moment_eq_covariance
       rw [integral_const_mul, canonicalSumFieldFunction_integral_zero]
       ring
     rw [covariance_eq_sub (hX x) (hY y), hX_zero, hY_zero]
-    simp
+    simp only [Pi.mul_apply, mul_zero, sub_zero]
     have hxy :
         (fun η : CanonicalJoint d N => X x η * Y y η) =
         (fun η : CanonicalJoint d N =>
@@ -4088,8 +4118,7 @@ private lemma canonicalSumFieldLaw_pairing_cross_moment_eq_covariance
           ext z
           simp [finLatticeDelta]
         rw [hxdelta, hydelta]
-  ·
-    exact ((sitePairingCLM d N f).measurable.aestronglyMeasurable).mul
+  · exact ((sitePairingCLM d N f).measurable.aestronglyMeasurable).mul
       ((sitePairingCLM d N g).measurable.aestronglyMeasurable)
 
 private theorem canonicalSumFieldLaw_pairing_is_gaussian

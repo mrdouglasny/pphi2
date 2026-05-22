@@ -393,8 +393,8 @@ theorem expMoment_bound_of_cutoff_quartic_tail
     (mass L : ℝ) (hmass : 0 < mass)
     (C : ℝ)
     (hsmooth :
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L)
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
         (M : ℝ), 2 * C ≤ M →
         ∀ (η : CanonicalJoint d N),
           -(M / 2) ≤
@@ -406,7 +406,7 @@ theorem expMoment_bound_of_cutoff_quartic_tail
         (if M < 2 * C then (1 : ENNReal) else ψ M) *
           ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤) :
     ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-      (hvol : (N : ℝ) * a = L),
+      (_hvol : (N : ℝ) * a = L),
       (∀ M : ℝ, 2 * C ≤ M →
         (canonicalJointMeasure d N)
           {η | canonicalRoughError d N a mass
@@ -469,7 +469,7 @@ theorem expMoment_bound_of_cutoff_quartic_tail
             (canonicalJointMeasure d N)
                 {η | E_R M η ≤ -(M / 2)} ≤ 1 := by
               refine le_trans (measure_mono (Set.subset_univ _)) ?_
-              simpa using (measure_univ : (canonicalJointMeasure d N) Set.univ = 1)
+              simp
           simpa [E_R, hlarge, if_pos (lt_of_not_ge hlarge)] using htriv
       )
       hintegral
@@ -484,8 +484,8 @@ theorem expMoment_bound_of_cutoff_degree_tail
     (mass L : ℝ) (hmass : 0 < mass)
     (C : ℝ)
     (hsmooth :
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L)
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
         (M : ℝ), 2 * C ≤ M →
         ∀ (η : CanonicalJoint d N),
           -(M / 2) ≤
@@ -497,7 +497,7 @@ theorem expMoment_bound_of_cutoff_degree_tail
         (if M < 2 * C then (1 : ENNReal) else ψ M) *
           ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤) :
     ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-      (hvol : (N : ℝ) * a = L),
+      (_hvol : (N : ℝ) * a = L),
       (∀ M : ℝ, 2 * C ≤ M →
         (canonicalJointMeasure d N)
           {η | canonicalRoughError d N a mass
@@ -560,7 +560,7 @@ theorem expMoment_bound_of_cutoff_degree_tail
             (canonicalJointMeasure d N)
                 {η | E_R M η ≤ -(M / 2)} ≤ 1 := by
               refine le_trans (measure_mono (Set.subset_univ _)) ?_
-              simpa using (measure_univ : (canonicalJointMeasure d N) Set.univ = 1)
+              simp
           simpa [E_R, hlarge, if_pos (lt_of_not_ge hlarge)] using htriv
       )
       hintegral
@@ -909,7 +909,7 @@ private theorem finite_wick_sum_mem_wienerChaosLE
   exact finite_hermite_sum_mem_wienerChaosLE s c hdeg f h_eq hf
 
 private theorem finite_indexed_wick_sum_mem_wienerChaosLE
-    {ι : Type*} [DecidableEq ι] {n d : ℕ}
+    {ι : Type*} {n d : ℕ}
     (s : Finset ι) (β : ι → Fin n → ℕ) (c : ι → ℝ)
     (hdeg : ∀ i ∈ s, GaussianHilbert.MultiIndex.totalDegree (β i) ≤ d)
     (f : (Fin n → ℝ) → ℝ)
@@ -1067,7 +1067,12 @@ private lemma canonicalJointMultiIndexOfPair_wick_prod
                   (ξ (Fintype.equivFin (CanonicalJointSumIndex d N) s))))
     _ = (∏ m : Fin d → Fin N, f (Sum.inl m)) *
           ∏ m : Fin d → Fin N, f (Sum.inr m) := by
-            simpa [f] using (Fintype.prod_sum_type f)
+            rw [show (∏ s : CanonicalJointSumIndex d N,
+                wickMonomial (Sum.elim αS αR s) 1
+                  (ξ (Fintype.equivFin (CanonicalJointSumIndex d N) s))) =
+                  ∏ s : CanonicalJointSumIndex d N, f s by
+                  simp [f]]
+            exact Fintype.prod_sum_type f
     _ = (∏ m : Fin d → Fin N,
           wickMonomial (αS m) 1
             (ξ (canonicalStdInlIndex d N m))) *
@@ -1104,7 +1109,7 @@ private def canonicalSiteCrossStd
         ((canonicalJointStdGaussianMeasurableEquiv d N).symm ξ) x)
 
 private lemma canonicalEigenvalue_pos_local
-    (ha : 0 < a) (hmass : 0 < mass) (m : Fin d → Fin N) :
+    (_ha : 0 < a) (hmass : 0 < mass) (m : Fin d → Fin N) :
     0 < canonicalEigenvalue d N a mass m := by
   unfold canonicalEigenvalue
   have hsum_nonneg : 0 ≤ ∑ i : Fin d, latticeEigenvalue1d N a (m i) :=
@@ -1402,7 +1407,8 @@ private theorem canonicalSiteCrossStd_mem_wienerChaosLE
     rcases p with ⟨αS, αR⟩
     calc
       (wickExpansionCoeff j γS αS * ∏ m, wickMonomial (αS m) 1 (ξ (canonicalStdInlIndex d N m))) *
-          (wickExpansionCoeff (k - j) γR αR * ∏ m, wickMonomial (αR m) 1 (ξ (canonicalStdInrIndex d N m)))
+          (wickExpansionCoeff (k - j) γR αR *
+            ∏ m, wickMonomial (αR m) 1 (ξ (canonicalStdInrIndex d N m)))
         =
           (wickExpansionCoeff j γS αS * wickExpansionCoeff (k - j) γR αR) *
             ((∏ m, wickMonomial (αS m) 1 (ξ (canonicalStdInlIndex d N m))) *
@@ -1736,7 +1742,7 @@ private theorem canonicalCrossTermStd_mem_wienerChaosLE
     rw [Pi.smul_apply, hsumξ, Finset.sum_apply, canonicalCrossTermStd]
     congr 1
     exact Finset.sum_congr rfl fun x hx =>
-      hξ x (Finset.mem_coe.mpr (by simpa using hx))
+      hξ x (Finset.mem_coe.mpr hx)
   rw [h_toLp]
   apply Submodule.smul_mem
   apply Submodule.sum_mem
@@ -2999,12 +3005,12 @@ lemma canonicalCrossTerm_l2_sq_eq_covSum
                             ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
                               (canonicalSmoothCovariance d N a mass T x y ^ j *
                                 canonicalRoughCovariance d N a mass T x y ^ (k - j)) =
-                        ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
+                          ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
                           ∑ x : FinLatticeSites d N,
                             ∑ y : FinLatticeSites d N,
                               (canonicalSmoothCovariance d N a mass T x y ^ j *
                                 canonicalRoughCovariance d N a mass T x y ^ (k - j)) := by
-                          simp [Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm]
+                          simp [Finset.mul_sum, mul_assoc, mul_comm]
                     rw [hfactor]
     _ = ((a ^ d) * (a ^ d)) * ((j.factorial : ℝ) * ((k - j).factorial : ℝ)) *
           ∑ x : FinLatticeSites d N,
@@ -3182,7 +3188,7 @@ theorem canonicalCrossTerm_l2_sq_le
               ∑ x : FinLatticeSites 2 N,
                 ∑ y : FinLatticeSites 2 N,
                   |canonicalRoughCovariance 2 N a mass T x y| ^ (k - j) := by
-              simp [Finset.mul_sum, mul_assoc, mul_left_comm, mul_comm]
+              simp [Finset.mul_sum, mul_comm]
     have h_rough_sum :
         a ^ 2 *
           ∑ x : FinLatticeSites 2 N,
@@ -3321,7 +3327,7 @@ theorem rough_error_variance
   have hKLead_pos : ∀ j (hj : j ∈ Finset.range P.n), 0 < KLeadFun j := by
     intro j hj
     dsimp [KLeadFun]
-    simp [hj]
+    rw [dif_pos hj]
     exact
       (Classical.choose_spec
         (canonicalCrossTerm_l2_sq_le
@@ -3336,7 +3342,7 @@ theorem rough_error_variance
             KLeadFun j * T * (1 + |Real.log T|) ^ j := by
     intro j hj N _ a ha h_vol T hT
     dsimp [KLeadFun]
-    simp [hj]
+    rw [dif_pos hj]
     exact
       (Classical.choose_spec
         (canonicalCrossTerm_l2_sq_le
@@ -3346,7 +3352,7 @@ theorem rough_error_variance
       ∀ (m : Fin P.n) (j : ℕ) (hj : j ∈ Finset.range (m : ℕ)), 0 < KPerFun m j := by
     intro m j hj
     dsimp [KPerFun]
-    simp [hj]
+    rw [dif_pos hj]
     exact
       (Classical.choose_spec
         (canonicalCrossTerm_l2_sq_le
@@ -3361,7 +3367,7 @@ theorem rough_error_variance
             KPerFun m j * T * (1 + |Real.log T|) ^ j := by
     intro m j hj N _ a ha h_vol T hT
     dsimp [KPerFun]
-    simp [hj]
+    rw [dif_pos hj]
     exact
       (Classical.choose_spec
         (canonicalCrossTerm_l2_sq_le
@@ -3794,10 +3800,10 @@ theorem canonicalRoughError_neg_tail_uniform_in_aN
     (P : InteractionPolynomial)
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ K : ℝ, 0 < K ∧
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L)
-        (T : ℝ) (hT : 0 < T)
-        (t : ℝ) (ht : 0 < t),
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
+        (T : ℝ) (_hT : 0 < T)
+        (t : ℝ) (_ht : 0 < t),
         (canonicalJointMeasure 2 N)
           {η | canonicalRoughError 2 N a mass T P η ≤ -t} ≤
             2 * ENNReal.ofReal
