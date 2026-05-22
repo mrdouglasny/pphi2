@@ -16,40 +16,20 @@ only. Per-workstream details and proof plans live in their dedicated docs
 
 ---
 
-## Current closure — STATE (b) IS NOW LIVE (propagated 2026-05-19)
+## Current closure — SINGLE NON-STANDARD AXIOM (realized at the pphi2 endpoint 2026-05-22)
 
 **Verified `#print axioms Pphi2.torusInteracting_satisfies_OS` on pphi2
-`main` after the full pin-chain propagation + clean 3900-job build:**
+`main` after bumping pins to gh `87c558a` / ms `5e23f24` + clean 3904-job build:**
 
 ```
 [propext, Classical.choice, Quot.sound,           ← Mathlib trio
- gross_lsi_implies_hypercontractive,              ← Route A (sole genuinely-novel axiom)
- GaussianFin.gaussianFin_diffQuot_tendsto_Lp,     ← G2.a (textbook-vetted, Mathlib-upstream candidate)
- GaussianFin.gaussianFin_integrationByParts]      ← G2.b (textbook-vetted, Mathlib-upstream candidate)
+ GaussianFin.gaussianFin_diffQuot_tendsto_Lp]      ← the SOLE remaining non-standard axiom
 ```
 
-**This is better than the originally-projected state (b).** The plan
-expected 5 inherited axioms (Gross + N1.b + N1.c + 2 G2). N1.b
-(`ouSemigroupFin_preserves_IsCore`) and N1.c
-(`ouSemigroupFin_entropy_sq_decay_bound`) were both **fully discharged
-to axiom-free theorems** before propagation, so they do **not** appear
-in the closure at all. The live closure is **trio + Gross + 2 G2
-axioms** — every non-Gross axiom is a Gemini-vetted general
-Mathlib-native analysis fact. **This is the M4b "honest trio +
-textbook-vetted" resting point, reached before Route A even lands.**
+**The endpoint now rests on a single non-standard axiom.** Compared with the
+prior resting point (**trio + Gross + 2 G2**), this session discharged three of
+the four non-trivial axioms and propagated them all the way to the pphi2 endpoint:
 
-### ⬆️ UPSTREAM (ms + gh `main`) — discharged this session, NOT YET PINNED BY pphi2
-
-The endpoint closure above is what pphi2 **currently** prints with its **stale**
-pins (gh `4ac0667` / ms `6293402`). On the live ms + gh `main`s
-(**ms `5e23f24`, gh `87c558a`**), the chain has been reduced to a **single**
-non-standard axiom:
-
-```
-[propext, Classical.choice, GaussianFin.gaussianFin_diffQuot_tendsto_Lp, Quot.sound]
-```
-
-discharged this session (all merged, full builds green):
 - **Gross** `gross_lsi_implies_hypercontractive` — eliminated (ms PR #5): the four
   predicates `CoreSemigroupInvariant` / `GeneratorCompat` / `StroockVaropoulos` /
   `CoreLpL2Approx` discharged for GaussianFin in `EuclideanHypercontractive.lean`,
@@ -60,6 +40,15 @@ discharged this session (all merged, full builds green):
   discharges it for `ouGammaFin` via `partialDeriv_rpow`.
 - **IBP** `gaussianFin_integrationByParts` — eliminated (ms PR #10): coordinatewise
   Fubini lift of the proved 1D `Gaussian1D.gaussian_dirichlet_form_bilinear`.
+
+(N1.b `ouSemigroupFin_preserves_IsCore` and N1.c `ouSemigroupFin_entropy_sq_decay_bound`
+were discharged to axiom-free theorems earlier, so they never appear in the closure.)
+
+**The lone remaining axiom** `gaussianFin_diffQuot_tendsto_Lp` (strong-L²
+difference-quotient limit `(P_t f − f)/t → Lf`) is the hardest of the four — its
+discharge route also needs the separate `gaussianOU_heatEquation_within_zero` axiom
+plus a segment-uniform L² DCT dominator (the obstruction Codex flagged 2026-05-16).
+This is the last step to the all-Mathlib-trio endpoint.
 
 **To realize this in the pphi2 endpoint:** bump pphi2's `gaussian-hilbert` pin → gh
 `87c558a` and `MarkovSemigroups` pin → ms `5e23f24` (force-clear the dep `.lake/build`
@@ -83,10 +72,11 @@ DCT dominator).
   build; endpoint closure verified as above.
 
 **M1, M2, M3 all fully realized in the pphi2 endpoint.** The only
-genuinely-novel axiom remaining on the T² OS0–OS2 path is
-`gross_lsi_implies_hypercontractive` (Route A — the long pole). The 2
-G2 axioms are general analysis facts that ultimately want to upstream
-to Mathlib (Workstreams G2.a/G2.b, M5).
+non-standard axiom remaining on the T² OS0–OS2 path (as of 2026-05-22) is
+`gaussianFin_diffQuot_tendsto_Lp` (Workstream G2.a) — `gross_lsi_implies_hypercontractive`,
+`stroock_varopoulos`, and `gaussianFin_integrationByParts` have all been discharged and
+propagated to the pphi2 endpoint. The lone survivor is a general analysis fact that
+ultimately wants to upstream to Mathlib (M5).
 
 **Lessons recorded:** the 2.5 commit was an under-reviewed breaking
 refactor (deleted a committed downstream-consumed bundle with no
@@ -108,29 +98,25 @@ prior revisions of this doc is **resolved**.
 
 | Repo | Active branch | HEAD | Pins ms at | Archive tags |
 |---|---|---|---|---|
-| **pphi2** | `main` | pin-bump commit (gh `4ac0667` + ms `6293402`) atop `e5cd440` | `6293402` (via gh) | 9 `archive/*` tags (incl. `archive/phase-b-discharge`, `archive/pr10`, …) |
-| **gaussian-hilbert** | `main` | `4ac0667` (ms pin → `6293402`; `HypercontractivityFromBE` import fix) — pushed | `6293402` | `archive/phase-3-smoke-test` |
-| **markov-semigroups** | `main` | `6293402` (2.5 + N1.b + N1.c + `stdGaussianFin_dirichletMarkovSemigroup` bundle restore) — pushed | — | `archive/feat/lp-carrier-stdGaussianFin-dirichletmarkov` |
+| **pphi2** | `main` | pin-bump commit (gh `87c558a` + ms `5e23f24`) — endpoint at trio + 1 axiom | `5e23f24` | 9 `archive/*` tags (incl. `archive/phase-b-discharge`, `archive/pr10`, …) |
+| **gaussian-hilbert** | `main` | `87c558a` (ms pin → `5e23f24`; rewired to proved `stdGaussianFin_isHypercontractive`) — pushed | `5e23f24` | `archive/phase-3-smoke-test` |
+| **markov-semigroups** | `main` | `5e23f24` (W-step discharges + `Diffusion/StroockVaropoulos.lean` + IBP-as-theorem) — pushed | — | `archive/feat/lp-carrier-stdGaussianFin-dirichletmarkov` |
 
-**⚠️ Pin chain is stale (re-fragmented 2026-05-19).** markov-semigroups
-`main` advanced from `c6e0e6b` → `c0e0ce3` today (Workstream 2.5
-discharge), but **neither gaussian-hilbert nor pphi2 has bumped its pin**.
-Both still pin ms at the pre-2.5 `c6e0e6b`. Consequence: pphi2's endpoint
-closure still shows the old state-(a) 4-axiom shape; none of today's 2.5
-discharge is visible downstream until the chain is propagated.
+**Pin chain propagated 2026-05-22 (W-step + S–V + IBP discharges).**
+markov-semigroups `main` advanced to `5e23f24`, gaussian-hilbert to `87c558a`,
+and pphi2 bumped both pins (force-clearing the dep `.lake/build` caches), so all
+of this session's axiom discharges are now realized in the pphi2 endpoint.
 
-**pphi2 pin state on main (PROPAGATED 2026-05-19):**
-- gaussian-hilbert: `4ac0667` (ms pin `6293402`; `HypercontractivityFromBE` import → `EuclideanFinBE`)
-- MarkovSemigroups: `6293402` (2.5 + N1.b + N1.c + bundle restore; inherited via gaussian-hilbert)
+**pphi2 pin state on main (PROPAGATED 2026-05-22):**
+- gaussian-hilbert: `87c558a` (ms pin `5e23f24`; rewired to proved `stdGaussianFin_isHypercontractive`)
+- MarkovSemigroups: `5e23f24` (W-step discharges + `Diffusion/StroockVaropoulos.lean` + IBP-as-theorem)
 - GaussianField: `269fbc2e`
 - bochner: `b70e84b8`
 
-`lake build` is clean on pphi2 `main` (3900 jobs) as of 2026-05-19,
-**with the bumped pins**. Endpoint closure verified = trio + Gross + 2
-G2 axioms (see "Current closure"). The pin-chain fragmentation is
-**resolved**: all of 2.5 + N1.b + N1.c are now realized in the pphi2
-endpoint. (The pphi2 manifest pin-bump commit also carries this doc
-update.)
+`lake build` is clean on pphi2 `main` (**3904 jobs**) as of 2026-05-22 with the
+bumped pins. Endpoint closure verified = **trio + `gaussianFin_diffQuot_tendsto_Lp`**
+(a single non-standard axiom — see "Current closure"). The pphi2 manifest pin-bump
+commit also carries this doc update.
 
 ---
 
