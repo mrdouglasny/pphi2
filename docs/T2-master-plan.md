@@ -8,11 +8,12 @@ symmetric-torus φ⁴₂ continuum limit)
 the 2026-05-17 consolidation; the prior feature branches are preserved as
 `archive/*` tags — see "Branch state" below)
 
-This document is the **single source of truth** for the T² OS0–OS2 endpoint
-campaign. It tracks the five workstreams that, when complete, reduce the
-endpoint's axiom closure to `[propext, Classical.choice, Quot.sound]`
-only. Per-workstream details and proof plans live in their dedicated docs
-(linked from each row below).
+This document is the **single source of truth** for the T² OS0–OS2 endpoint.
+The campaign is **complete**: the endpoint's axiom closure is now
+`[propext, Classical.choice, Quot.sound]` (the bare Mathlib trio). §"The proof,
+as built" outlines the actual proof; the workstream sections further down are the
+historical record of how each axiom was discharged (preserved as provenance, with
+links to the per-workstream docs).
 
 ---
 
@@ -76,6 +77,131 @@ adapter/flag); and lake does **not** invalidate dependency `.olean`
 caches on a git-pin change — cross-repo pin bumps must force-clear
 `.lake/packages/<dep>/.lake/build` before rebuilding, else stale-cache
 phantom errors. See project memory.
+
+---
+
+## The proof, as built (axiom-free)
+
+This section outlines the actual proof now that the construction is complete and
+the endpoint closure is the bare Mathlib trio. Names are Lean identifiers; the
+file map is in §"Mathematical structure of the endpoint" and the per-step detail
+in the workstream sections below.
+
+### The theorem
+
+`Pphi2.torusInteracting_satisfies_OS` (`Pphi2/TorusContinuumLimit/TorusInteractingOS.lean`):
+for an interaction polynomial `P` and mass `m > 0`, the weak-limit probability
+measure `μ` of the lattice φ⁴₂ measures on the symmetric torus T²_L satisfies
+`SatisfiesTorusOS L μ` — the bundle of
+
+- **OS0 (analyticity)** `TorusOS0_Analyticity`: the generating functional
+  `Z[f] = ∫ exp(i ω(f)) dμ` extends to an entire function of the complex test-function
+  coefficients;
+- **OS1 (regularity)** `TorusOS1_Regularity`: `‖Z_ℂ[f_re,f_im]‖ ≤ exp(q(f_re)+q(f_im))`
+  for a continuous seminorm `q(f) = G_L(f,f) + |log K|`;
+- **OS2 (Euclidean invariance)**: `TorusOS2_TranslationInvariance` (translations on T²_L)
+  and `TorusOS2_D4Invariance` (coordinate swap + time reflection — the lattice point group).
+
+OS3 (reflection positivity) is **deliberately not** part of the torus endpoint: RP is
+natural on the cylinder S¹×ℝ, not the compact torus (the RP route is the separate
+`AsymTorus` / IR-limit development). The torus endpoint is the clean OS0–OS2 statement.
+
+### The construction
+
+`torusInteractingMeasure L N P m` is the lattice φ⁴₂ measure at spacing `a = L/N`,
+pushed forward to S'(T²_L) by the embedding `torusEmbedLift`:
+`(1/Z_N) exp(−V_N) dμ_{GFF,N}`, where `V_N = a² Σ_x :P(φ(x)):` is the Wick-ordered
+interaction and `μ_{GFF,N}` the lattice Gaussian free field. The continuum limit is
+**N → ∞ at fixed physical volume L** (UV limit, IR fixed) — `torusInteractingLimit_exists`
+extracts a weakly convergent subsequence `μ`.
+
+### Four-step skeleton
+
+1. **Uniform second moments ⇒ tightness.** `sup_N ∫ (ω f)² dμ_{P,N} < ∞`, via
+   Cauchy–Schwarz on the Boltzmann weight (`Z_N ≥ 1` by Jensen) + Nelson's bound on
+   `∫ e^{−2V} dμ_{GFF}` + Gaussian hypercontractivity (`∫(ωg)⁴ ≤ 9(∫(ωg)²)²`) +
+   the uniform two-point bound `torusEmbeddedTwoPoint_uniform_bound` (continuum Green's
+   function `G_L` is bounded on test functions by spectral decay).
+2. **Prokhorov.** Mitoma–Chebyshev turns the uniform second moments into tightness;
+   Prokhorov on the Polish configuration space (`prokhorov_configuration`) gives the
+   weak limit `μ`.
+3. **Nelson's exponential estimate.** `nelson_exponential_estimate` (a *theorem*):
+   `∫ e^{−2V} dμ_{GFF,N} ≤ K` uniformly in N — the analytic heart, see the backbone below.
+4. **OS axioms transfer through the weak limit.** Each axiom holds at every cutoff N and
+   passes to `μ` by weak convergence.
+
+### OS0 / OS1 — the exponential-moment route
+
+Both rest on `torusInteracting_exponentialMomentBound`: `∫ e^{|ω f|} dμ ≤ K e^{G_L(f,f)}`,
+uniform in f. Its cutoff form `torusInteractingMeasure_exponentialMomentBound_cutoff`
+uses Cauchy–Schwarz + Nelson's estimate per N, then passes to the limit (truncation +
+MCT + `hconv`). Given it:
+
+- **OS0** (`torusInteracting_os0`): the integrand `exp(i Σ zⱼ ω(Jⱼ))` is pointwise entire
+  in `z` and dominated by `Σ exp(n C_K |ω(Jⱼ)|)` (integrable by the moment bound), so
+  `analyticOnNhd_integral` (Morera under the integral) gives entirety.
+- **OS1** (`torusInteracting_os1`): triangle inequality + `‖exp(i x − y)‖ = e^{−y}` +
+  the moment bound, absorbing `K` into the seminorm `q`.
+
+### OS2 — exact lattice symmetries, transferred
+
+Translation (`torusInteracting_os2_translation` ← `torusInteractingLimit_translation_invariant`)
+uses `torusGF_latticeApproximation_error_vanishes` (the discrete shift approximates the
+continuum translation with O(a) error) + uniqueness of weak limits. D4
+(`torusInteracting_os2_D4`) is *exact at each N*: the discrete Laplacian and mass operator
+commute with swap / time reflection (`finiteLaplacian_swap_commute`,
+`massOperator_swap_commute`), so the lattice action and Boltzmann weight are invariant
+(`interactingLatticeMeasure_swap_invariant`, `..._timeReflection_invariant`); the
+pushforward and weak limit inherit it.
+
+### The hypercontractivity backbone — now fully axiom-free
+
+Nelson's estimate (step 3) is the only place a deep probabilistic input enters, and the
+chain from the endpoint down to it is now **entirely proved** (this is what made the
+endpoint axiom-free):
+
+```
+torusInteracting_satisfies_OS                                   (pphi2)
+  → torusInteracting_exponentialMomentBound
+    → nelson_exponential_estimate (lattice)
+      → nelson_exponential_estimate_master
+        → polynomial_chaos_exp_moment_bridge       (THEOREM, Workstream B)
+          → chaos_neg_tail_bound                                (pphi2/NelsonEstimate)
+            → polynomial_chaos_concentration  (Janson Thm 5.10) (gaussian-hilbert)
+              → bonami_nelson_chaos / Wiener-chaos hypercontractivity
+                → stdGaussianFin_dirichletMarkovSemigroup_isHypercontractive (gh)
+                  → GaussianFin.stdGaussianFin_isHypercontractive            (markov-semigroups)
+                    → gross_lsi_implies_hypercontractive_of_hypotheses  (PROVED, Gross 1975)
+                      + the four discharged predicates:
+                        CoreSemigroupInvariant, GeneratorCompat,
+                        StroockVaropoulos (= BakryEmerySpace.stroockVaropoulos_eq,
+                          the diffusion S–V *equality*), CoreLpL2Approx
+                      ← Bakry–Émery LSI for the Gaussian OU semigroup
+                        (stdGaussianFin.bakryEmerySpace, ρ = 1)
+```
+
+Every node is a theorem: Gross's LSI⇒hypercontractivity is proved by the semigroup
+interpolation ODE (`Abstract/GrossODE.lean`); the four per-instance hypotheses are
+discharged for the multivariate Gaussian OU semigroup (Stroock–Varopoulos as a chain-rule
+*equality* on the carré-du-champ, integration-by-parts as a Fubini lift of the 1D Gaussian
+IBP, and the strong-L² generator limit as an L²-dominated-convergence upgrade of the
+pointwise OU heat equation); the Bakry–Émery LSI itself is `BakryEmerySpace.satisfiesLogSobolev`.
+`#print axioms` of every node is `[propext, Classical.choice, Quot.sound]`.
+
+### Cross-repo architecture
+
+```
+markov-semigroups   Bakry–Émery / Gross LSI ⇒ hypercontractivity (abstract + Gaussian OU)
+        ▲
+gaussian-hilbert    Wiener-chaos hypercontractivity → polynomial_chaos_concentration (Janson)
+        ▲
+pphi2               Nelson estimate → tightness + OS0/OS1/OS2 for the T²_L φ⁴₂ limit
+```
+
+pphi2 imports gaussian-hilbert (for `polynomial_chaos_concentration`); gaussian-hilbert
+imports markov-semigroups (for the LSI/hypercontractivity). All three are public and
+git-pinned (see Branch state); a fresh clone + `lake build` reproduces the axiom-free
+endpoint.
 
 ---
 
