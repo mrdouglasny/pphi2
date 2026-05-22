@@ -194,7 +194,7 @@ theorem lintegral_expSq_neg_le_layer_cake
   apply le_of_eq
   apply setLIntegral_congr_fun measurableSet_Ioi
   intro t ht
-  show μ {a | t ≤ W a} * ENNReal.ofReal (2 * Real.exp (2 * t)) =
+  change μ {a | t ≤ W a} * ENNReal.ofReal (2 * Real.exp (2 * t)) =
        μ {a | V a ≤ -t} * ENNReal.ofReal (2 * Real.exp (2 * t))
   rw [setOf_le_max_eq_setOf_le_neg V ht]
 

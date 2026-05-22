@@ -179,13 +179,13 @@ private lemma sqrt_pow_three {s : ℝ} (hs : 0 ≤ s) :
 specialized to the pure quartic case. -/
 theorem canonicalRoughError_cutoff_tail_quartic_uniform
     (P : InteractionPolynomial)
-    (h_pure : ∀ m : Fin P.n, P.coeff m = 0)
+    (_h_pure : ∀ m : Fin P.n, P.coeff m = 0)
     (h_quartic : P.n = 4)
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ K : ℝ, 0 < K ∧
       ∀ (C : ℝ), 0 < C →
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L)
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
         (M : ℝ), 2 * C ≤ M →
           (canonicalJointMeasure 2 N)
             {η | canonicalRoughError 2 N a mass
@@ -596,7 +596,7 @@ private lemma two_div_degree_eq_inv_cutoffPower (P : InteractionPolynomial) :
     omega
   rw [hk, hkpow]
   field_simp [show (k : ℝ) ≠ 0 by exact_mod_cast (ne_of_gt hk_pos)]
-  simpa [two_mul]
+  simp [two_mul]
 
 private def degreeCutoffTail
     (P : InteractionPolynomial) (K C : ℝ) (M : ℝ) : ENNReal :=
@@ -678,8 +678,8 @@ theorem canonicalRoughError_cutoff_tail_uniform
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ K : ℝ, 0 < K ∧
       ∀ (C : ℝ), 0 < C →
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L)
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
         (M : ℝ), 2 * C ≤ M →
           (canonicalJointMeasure 2 N)
             {η | canonicalRoughError 2 N a mass
@@ -1170,12 +1170,12 @@ theorem degreePiecewiseTail_layerCake_lt_top
 
 /-- Bounded-volume bridge from a canonical-joint degree-cutoff rough tail. -/
 theorem polynomial_chaos_exp_moment_bridge_bounded_of_tail
-    {d : ℕ} (hd : d = 2) (P : InteractionPolynomial)
-    (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass)
+    {d : ℕ} (_hd : d = 2) (P : InteractionPolynomial)
+    (mass L : ℝ) (_hL : 0 < L) (hmass : 0 < mass)
     (C : ℝ)
     (hsmooth :
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L)
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
         (M : ℝ), 2 * C ≤ M →
         ∀ (η : CanonicalJoint d N),
           -(M / 2) ≤
@@ -1187,8 +1187,8 @@ theorem polynomial_chaos_exp_moment_bridge_bounded_of_tail
         (if M < 2 * C then (1 : ENNReal) else ψ M) *
           ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤)
     (htail :
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L)
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
         (M : ℝ), 2 * C ≤ M →
           (canonicalJointMeasure d N)
             {η | canonicalRoughError d N a mass
@@ -1196,7 +1196,7 @@ theorem polynomial_chaos_exp_moment_bridge_bounded_of_tail
               ψ M) :
     ∃ K : ℝ, 0 < K ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L),
+        (_hvol : (N : ℝ) * a = L),
         ∫ ω : Configuration (FinLatticeField d N),
           (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
           ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
@@ -1220,18 +1220,18 @@ theorem polynomial_chaos_exp_moment_bridge_bounded_of_tail
 theorem polynomial_chaos_exp_moment_bridge_bounded_of_cutoffTail
     (P : InteractionPolynomial)
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass)
-    (K C : ℝ) (hC_pos : 0 < C)
+    (K C : ℝ) (_hC_pos : 0 < C)
     (hsmooth :
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L)
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
         (M : ℝ), 2 * C ≤ M →
         ∀ (η : CanonicalJoint 2 N),
           -(M / 2) ≤
             canonicalSmoothInteraction 2 N a mass
               (Pphi2.DynamicalCutoff.degreeDynamicalCutoffScale P C M) P η)
     (htail :
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L)
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
+        (_hvol : (N : ℝ) * a = L)
         (M : ℝ), 2 * C ≤ M →
           (canonicalJointMeasure 2 N)
             {η | canonicalRoughError 2 N a mass
@@ -1243,7 +1243,7 @@ theorem polynomial_chaos_exp_moment_bridge_bounded_of_cutoffTail
           ENNReal.ofReal (2 * Real.exp (2 * M)) < ⊤) :
     ∃ K' : ℝ, 0 < K' ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L),
+        (_hvol : (N : ℝ) * a = L),
         ∫ ω : Configuration (FinLatticeField 2 N),
           (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2
           ∂(latticeGaussianMeasure 2 N a mass ha hmass) ≤ K' := by
@@ -1262,7 +1262,7 @@ theorem polynomial_chaos_exp_moment_bridge_bounded
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ K' : ℝ, 0 < K' ∧
       ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
-        (hvol : (N : ℝ) * a = L),
+        (_hvol : (N : ℝ) * a = L),
         ∫ ω : Configuration (FinLatticeField 2 N),
           (Real.exp (-interactionFunctional 2 N P a mass ω)) ^ 2
           ∂(latticeGaussianMeasure 2 N a mass ha hmass) ≤ K' := by

@@ -44,8 +44,11 @@ private lemma unitSquare_inv_add_integral_eq_two_log_two :
     intro u hu
     have hshift := intervalIntegral.integral_comp_add_left
       (f := fun x : ℝ => (1 : ℝ) / x) (a := (0 : ℝ)) (b := 1) u
-    rw [show (∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v)) = ∫ x in u..u + 1, (1 : ℝ) / x by
-      simpa [add_comm] using hshift]
+    have hshift' :
+        (∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v)) = ∫ x in u..u + 1, (1 : ℝ) / x := by
+      convert hshift using 1
+      simp
+    rw [hshift']
     have hu1 : 0 < u + 1 := by
       nlinarith [hu.1]
     rw [integral_one_div_of_pos hu.1 hu1]
@@ -103,10 +106,15 @@ private lemma squareIntegral_inv_add_scale (T : ℝ) (hT : 0 < T) :
     have h := intervalIntegral.smul_integral_comp_mul_left
       (f := fun x : ℝ => (1 : ℝ) / (T * u + x)) (a := (0 : ℝ)) (b := 1) T
     rw [smul_eq_mul] at h
+    have hscale :
+        (∫ t in (0 : ℝ)..T, (1 : ℝ) / (T * u + t)) =
+          T * ∫ v in (0 : ℝ)..1, (1 : ℝ) / (T * u + T * v) := by
+      convert h.symm using 1
+      simp [add_comm]
     calc
       (∫ t in (0 : ℝ)..T, (1 : ℝ) / (T * u + t))
         = T * ∫ v in (0 : ℝ)..1, (1 : ℝ) / (T * u + T * v) := by
-            simpa [hT.le, add_comm, add_left_comm, add_assoc] using h.symm
+            rw [hscale]
       _ = ∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v) := by
             rw [← intervalIntegral.integral_const_mul]
             apply intervalIntegral.integral_congr_ae
@@ -247,8 +255,8 @@ private lemma prefactor_eq_L_inv_sq
 private lemma heatKernel_diagonal_mass_weighted_le_uniform
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a) (hvol : (N : ℝ) * a = L)
-        (u : ℝ) (hu : 0 < u) (x : FinLatticeSites 2 N),
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+        (u : ℝ) (_hu : 0 < u) (x : FinLatticeSites 2 N),
         Real.exp (-u * mass ^ 2) * latticeHeatKernelMatrix 2 N a u x x ≤
           (1 / Fintype.card (FinLatticeSites 2 N) : ℝ) *
             (C * (1 + 1 / Real.sqrt u) ^ 2 * Real.exp (-u * mass ^ 2)) := by
@@ -314,7 +322,10 @@ private lemma integrable_inv_add_Ioc
   have hdom : Integrable
       (fun p : ℝ × ℝ => (1 / Real.sqrt p.1) * (1 / Real.sqrt p.2))
       ((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))) := by
-    simpa using Integrable.mul_prod (one_div_sqrt_integrable_Ioc T hT) (one_div_sqrt_integrable_Ioc T hT)
+    simpa using
+      Integrable.mul_prod
+        (one_div_sqrt_integrable_Ioc T hT)
+        (one_div_sqrt_integrable_Ioc T hT)
   have hpos :
       ∀ᵐ p : ℝ × ℝ ∂((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))),
         0 < p.1 ∧ 0 < p.2 := by
@@ -326,7 +337,8 @@ private lemma integrable_inv_add_Ioc
     simpa [Measure.prod_restrict] using hpos_restrict
   refine Integrable.mono' hdom ?_ ?_
   · simpa [one_div] using
-      (((measurable_fst.add measurable_snd : Measurable fun p : ℝ × ℝ => p.1 + p.2).inv).aestronglyMeasurable)
+      (((measurable_fst.add measurable_snd :
+          Measurable fun p : ℝ × ℝ => p.1 + p.2).inv).aestronglyMeasurable)
   · filter_upwards [hpos] with p hp
     rcases p with ⟨s, t⟩
     have hs : 0 < s := hp.1
@@ -344,7 +356,8 @@ private lemma integrable_inv_add_Ioc
       have htsqrt_ne : Real.sqrt t ≠ 0 := by positivity
       have hA_nonneg : 0 ≤ (1 / Real.sqrt s) * (1 / Real.sqrt t) := by positivity
       calc
-        1 / (2 * (Real.sqrt s * Real.sqrt t)) = (1 / 2) * ((1 / Real.sqrt s) * (1 / Real.sqrt t)) := by
+        1 / (2 * (Real.sqrt s * Real.sqrt t))
+            = (1 / 2) * ((1 / Real.sqrt s) * (1 / Real.sqrt t)) := by
           field_simp [hsqrt_ne, htsqrt_ne]
         _ ≤ (1 / Real.sqrt s) * (1 / Real.sqrt t) := by
           nlinarith
@@ -367,9 +380,16 @@ private lemma integrable_inv_add_mul_exp_Ioc
       exact add_pos hp.1.1 hp.2.1
     simpa [Measure.prod_restrict] using hpos_restrict
   refine Integrable.mono' hdom ?_ ?_
-  · simpa [one_div] using
-      ((((measurable_fst.add measurable_snd : Measurable fun p : ℝ × ℝ => p.1 + p.2).inv).mul
-        ((((measurable_fst.add measurable_snd : Measurable fun p : ℝ × ℝ => p.1 + p.2).neg).mul_const μ).exp)).aestronglyMeasurable)
+  · have hmeas :
+        AEStronglyMeasurable
+          (fun p : ℝ × ℝ => (p.1 + p.2)⁻¹ * Real.exp (-(p.1 + p.2) * μ))
+          ((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))) := by
+        have hmeas' : Measurable
+            (fun p : ℝ × ℝ => (p.1 + p.2)⁻¹ * Real.exp (-(p.1 + p.2) * μ)) :=
+          (((measurable_fst.add measurable_snd).inv).mul
+            ((((measurable_fst.add measurable_snd).neg).mul_const μ).exp))
+        exact hmeas'.aestronglyMeasurable
+    simpa [one_div] using hmeas
   · filter_upwards [hpos] with p hp
     have hexp_le : Real.exp (-(p.1 + p.2) * μ) ≤ 1 := by
       apply Real.exp_le_one_iff.mpr
@@ -493,8 +513,8 @@ private lemma ioc_prod_inv_add_mul_exp_integral_le
 private theorem canonicalRoughCovariance_pow_two_sum_le_uniform_in_aN
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ C2 : ℝ, 0 < C2 ∧
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a) (hvol : (N : ℝ) * a = L)
-        (T : ℝ) (hT : 0 < T) (x : FinLatticeSites 2 N),
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+        (T : ℝ) (_hT : 0 < T) (x : FinLatticeSites 2 N),
         a ^ 2 * ∑ y : FinLatticeSites 2 N,
           |canonicalRoughCovariance 2 N a mass T x y| ^ 2 ≤ C2 * T := by
   obtain ⟨C, hC_pos, hCdiag⟩ := heatKernel_diagonal_mass_weighted_le_uniform mass L hL hmass
@@ -689,8 +709,8 @@ the position-space absolute row sum of the canonical rough covariance is
 theorem canonicalRoughCovariance_pow_one_sum_le_uniform_in_aN_proved
     (mass L : ℝ) (_hL : 0 < L) (hmass : 0 < mass) :
     ∃ C1 : ℝ, 0 < C1 ∧
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a) (_hvol : (N : ℝ) * a = L)
-        (T : ℝ) (hT : 0 < T) (x : FinLatticeSites 2 N),
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+        (T : ℝ) (_hT : 0 < T) (x : FinLatticeSites 2 N),
         a ^ 2 * ∑ y : FinLatticeSites 2 N,
           |canonicalRoughCovariance 2 N a mass T x y| ≤ C1 * T := by
   refine ⟨1, by positivity, ?_⟩
@@ -831,8 +851,8 @@ the position-space square row sum of the canonical rough covariance is
 theorem canonicalRoughCovariance_pow_two_sum_le_uniform_in_aN_proved
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ C2 : ℝ, 0 < C2 ∧
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a) (hvol : (N : ℝ) * a = L)
-        (T : ℝ) (hT : 0 < T) (x : FinLatticeSites 2 N),
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+        (T : ℝ) (_hT : 0 < T) (x : FinLatticeSites 2 N),
         a ^ 2 * ∑ y : FinLatticeSites 2 N,
           |canonicalRoughCovariance 2 N a mass T x y| ^ 2 ≤ C2 * T :=
   canonicalRoughCovariance_pow_two_sum_le_uniform_in_aN mass L hL hmass
@@ -958,8 +978,8 @@ private lemma exp_mul_one_add_inv_sqrt_sq_le_const_div
 private lemma heatKernel_entry_mass_weighted_le_div
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass) :
     ∃ B : ℝ, 0 < B ∧
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a) (hvol : (N : ℝ) * a = L)
-        (t : ℝ) (ht : 0 < t) (x y : FinLatticeSites 2 N),
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+        (t : ℝ) (_ht : 0 < t) (x y : FinLatticeSites 2 N),
         (a ^ 2 : ℝ)⁻¹ * Real.exp (-t * mass ^ 2) *
             latticeHeatKernelMatrix 2 N a t x y ≤
           B / t := by
@@ -1100,7 +1120,9 @@ private lemma rpow_two_div_nat_mul_nat
     (a ^ (2 / (m : ℝ))) ^ (m : ℝ)
       = a ^ ((2 / (m : ℝ)) * (m : ℝ)) := by
           rw [← Real.rpow_mul (le_of_lt ha)]
-    _ = a ^ 2 := by simpa [hmul]
+    _ = a ^ 2 := by
+          rw [hmul]
+          simp
 
 private lemma div_pow_nat_sub_one_rpow_inv_eq
     (m : ℕ) (hm : 1 ≤ m) (B t : ℝ) (hB : 0 ≤ B) (ht : 0 < t) :
@@ -1161,8 +1183,8 @@ private lemma rough_heatKernel_slice_weighted_pow_sum_le
     (mass L : ℝ) (hL : 0 < L) (hmass : 0 < mass)
     (m : ℕ) (hm : 1 ≤ m) :
     ∃ B : ℝ, 0 < B ∧
-      ∀ (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a) (hvol : (N : ℝ) * a = L)
-        (t : ℝ) (ht : 0 < t) (x : FinLatticeSites 2 N),
+      ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+        (t : ℝ) (_ht : 0 < t) (x : FinLatticeSites 2 N),
         ∑ y : FinLatticeSites 2 N,
           ‖a ^ (2 / (m : ℝ)) *
               ((a ^ 2 : ℝ)⁻¹ * Real.exp (-t * mass ^ 2) *

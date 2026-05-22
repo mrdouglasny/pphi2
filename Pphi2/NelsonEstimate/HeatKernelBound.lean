@@ -60,7 +60,7 @@ theorem schwinger_smooth_Ioi (lam : ℝ) (hlam : 0 < lam) (T : ℝ) :
     fun t _ => hasDerivAt_neg_exp_div lam hlam_ne t
   -- F(t) → 0 as t → ∞ (exponential decay)
   have h_tendsto : Filter.Tendsto F Filter.atTop (nhds 0) := by
-    show Filter.Tendsto (fun t => -rexp (-t * lam) / lam) Filter.atTop (nhds 0)
+    change Filter.Tendsto (fun t => -rexp (-t * lam) / lam) Filter.atTop (nhds 0)
     have h1 := (Real.tendsto_exp_neg_atTop_nhds_zero.comp
         (Filter.tendsto_id.const_mul_atTop hlam)).neg.div_const lam
     simp only [neg_zero, zero_div] at h1
@@ -74,14 +74,14 @@ theorem schwinger_smooth_Ioi (lam : ℝ) (hlam : 0 < lam) (T : ℝ) :
   -- h_ftc : ∫ Ioi T, exp(-tλ) = 0 - F(T) = exp(-Tλ)/λ
   rw [h_ftc]; simp only [F]; ring
 
-theorem schwinger_smooth (lam : ℝ) (hlam : 0 < lam) (T : ℝ) (hT : 0 ≤ T) :
+theorem schwinger_smooth (lam : ℝ) (hlam : 0 < lam) (T : ℝ) (_hT : 0 ≤ T) :
     exp (-T * lam) / lam = ∫ t in Set.Ici T, exp (-t * lam) := by
   rw [MeasureTheory.integral_Ici_eq_integral_Ioi]
   exact schwinger_smooth_Ioi lam hlam T
 
 /-- Schwinger identity for the rough covariance:
 `(1 - exp(-T·λ)) / λ = ∫₀ᵀ exp(-t·λ) dt` for λ > 0, T ≥ 0. -/
-theorem schwinger_rough_interval (lam : ℝ) (hlam : 0 < lam) (T : ℝ) (hT : 0 ≤ T) :
+theorem schwinger_rough_interval (lam : ℝ) (hlam : 0 < lam) (T : ℝ) (_hT : 0 ≤ T) :
     (1 - exp (-T * lam)) / lam = ∫ t in (0)..T, exp (-t * lam) := by
   have hlam_ne : lam ≠ 0 := ne_of_gt hlam
   set F := fun t => -exp (-t * lam) / lam
@@ -248,7 +248,7 @@ theorem gaussian_sum_bound (α : ℝ) (hα : 0 < α) :
 
 Uses sin² ≥ (2/π)²x² to reduce to Gaussian sums, then the Gaussian
 sum bound. The constant C depends on L = a·N but NOT on N separately. -/
-theorem heat_kernel_1d_bound (N : ℕ) [NeZero N] (a : ℝ) (ha : 0 < a)
+theorem heat_kernel_1d_bound (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a)
     (t : ℝ) (ht : 0 < t) :
     ∃ C : ℝ, 0 < C ∧
     (∑ k ∈ range N,
@@ -320,7 +320,7 @@ theorem heat_kernel_trace_bound (d N : ℕ) [NeZero N]
 `Σ exp(-Tλ_k)/λ_k = ∫_T^∞ H(t) dt ≤ ∫_T^∞ C/t dt = C·|log T| + const` -/
 theorem smoothVariance_from_heat_kernel (d N : ℕ) [NeZero N]
     (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
-    (hd : d = 2) (T : ℝ) (hT : 0 < T) :
+    (_hd : d = 2) (T : ℝ) (hT : 0 < T) :
     ∃ C : ℝ, 0 < C ∧
     (∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
       smoothCovEigenvalue d N a mass T m : ℝ) ≤ C * (1 + |log T|) := by
@@ -355,7 +355,7 @@ theorem smoothVariance_from_heat_kernel (d N : ℕ) [NeZero N]
 `Σ C_R(k)² = ∫₀ᵀ∫₀ᵀ H(t₁+t₂) dt₁ dt₂ ≤ ∫₀ᵀ∫₀ᵀ C/(t₁+t₂) dt₁dt₂ = O(T)` -/
 theorem roughVariance_from_heat_kernel (d N : ℕ) [NeZero N]
     (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
-    (hd : d = 2) (T : ℝ) (hT : 0 < T) :
+    (_hd : d = 2) (T : ℝ) (hT : 0 < T) :
     ∃ C : ℝ, 0 < C ∧
     (∑ m ∈ range (Fintype.card (FinLatticeSites d N)),
       roughCovEigenvalue d N a mass T m ^ 2 : ℝ) ≤ C * T := by
@@ -448,7 +448,7 @@ private lemma sin_sq_pi_k_div_N_ge_min_sq (N k : ℕ) [NeZero N] (hk : k < N) :
       Real.sin (π * (j : ℝ) / N) ^ 2 := by
     by_cases h : k ≤ N - k
     · simp [j, h]
-    · push_neg at h
+    · push Not at h
       have hj : j = N - k := by simp [j, Nat.min_def, not_le.mpr h]
       rw [hj]
       have := sin_pi_div_N_reflect N k hk_le
@@ -586,7 +586,7 @@ private lemma sum_range_exp_neg_sq_le (α : ℝ) (hα : 0 < α) (N : ℕ) :
     (∑ j ∈ Finset.range N, Real.exp (-α * ((j : ℝ)) ^ 2)) ≤ 1 + Real.sqrt (π / α) := by
   rcases Nat.eq_zero_or_pos N with hN | hN
   · subst hN
-    simp
+    simp only [range_zero, neg_mul, sum_empty]
     positivity
   -- N ≥ 1: embed range N into Icc(-(N-1))(N-1) of ℤ via (j:ℕ) ↦ (j:ℤ).
   have h_inj : ∀ a₁ ∈ (Finset.range N), ∀ a₂ ∈ (Finset.range N),
@@ -779,7 +779,7 @@ via `Finset.sum_range`, `Equiv.sum_comp` (for `Fintype.equivFin`),
 final step. The integrand factorization uses `Real.exp_add` and
 `Real.exp_sum`. -/
 theorem heat_kernel_trace_bound_uniform (d : ℕ) (L : ℝ) (hL : 0 < L)
-    (mass : ℝ) (hmass : 0 < mass) :
+    (mass : ℝ) (_hmass : 0 < mass) :
     ∃ C : ℝ, 0 < C ∧
     ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
       (t : ℝ) (_ht : 0 < t),
@@ -818,8 +818,8 @@ theorem heat_kernel_trace_bound_uniform (d : ℕ) (L : ℝ) (hL : 0 < L)
     have hk_back :
         (Fintype.equivFin (FinLatticeSites d N)).symm
             ⟨((Fintype.equivFin (FinLatticeSites d N)) k).val, hm_lt⟩ = k := by
-      simp [Equiv.symm_apply_eq, Fin.eta]
-    show Real.exp (-t * latticeEigenvalue d N a mass _) = _
+      simp [Fin.eta]
+    change Real.exp (-t * latticeEigenvalue d N a mass _) = _
     rw [hev_eq, hlap_eq, hk_back]
     -- Now exp(-t · ((4/a²) · Σ_i sin² + mass²))
     -- = exp(-t · mass²) · exp(-t · (4/a²) · Σ_i sin²)
@@ -1191,12 +1191,13 @@ theorem smoothWickConstant_le_log_uniform_in_aN_proved
                 simpa using mul_le_mul_of_nonneg_left hexp_le_one hnonneg
           _ = ∫ s in T..1, (1 / s : ℝ) := by
                 rw [intervalIntegral.integral_of_le hT1]
-          _ = Real.log (1 / T) := by
+              _ = Real.log (1 / T) := by
                 simpa using integral_one_div_of_pos hT (by norm_num : (0 : ℝ) < 1)
-          _ = |Real.log T| := by
+              _ = |Real.log T| := by
                 have hlog : Real.log T ≤ 0 := Real.log_nonpos hT.le hT1
                 have hlog_inv : Real.log (1 / T) = -Real.log T := by
-                  simpa [one_div] using (Real.log_inv (show T ≠ 0 by linarith))
+                  rw [one_div]
+                  simp [Real.log_inv]
                 rw [hlog_inv, abs_of_nonpos hlog]
       have hright_le :
           ∫ s in Set.Ioi 1, (1 / s) * Real.exp (-s * mass ^ 2) ≤ 1 / mass ^ 2 := by

@@ -62,10 +62,10 @@ tail-integrability bound depending only on `(P, mass)`, not on
 structure LatticeRoughErrorSetup
     (d : ℕ) (P : InteractionPolynomial) (mass : ℝ) where
   /-- The smooth-side interaction at depth `M`. -/
-  V_S : ∀ (a : ℝ) (N : ℕ) [NeZero N],
+  V_S : ∀ (_a : ℝ) (N : ℕ) [NeZero N],
     ℝ → Configuration (FinLatticeField d N) → ℝ
   /-- The rough-side error at depth `M`. -/
-  E_R : ∀ (a : ℝ) (N : ℕ) [NeZero N],
+  E_R : ∀ (_a : ℝ) (N : ℕ) [NeZero N],
     ℝ → Configuration (FinLatticeField d N) → ℝ
   /-- The decomposition holds pointwise. -/
   hdecomp : ∀ (a : ℝ) (N : ℕ) [NeZero N]
