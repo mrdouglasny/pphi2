@@ -1,6 +1,6 @@
 # T² φ⁴₂ continuum limit — master plan & progress tracker
 
-**Last refreshed:** 2026-05-22 (**Gross abstract spine ✅ FULLY PROVED & MERGED to ms `main`** at `5d09d4a` via [PR #3](https://github.com/mrdouglasny/markov-semigroups/pull/3): `gross_lsi_implies_hypercontractive_of_hypotheses` is a complete theorem and `Abstract/GrossODE.lean` is **sorry-free**, `#print axioms` = Mathlib trio only. P2 (`grossPow_hasDerivWithinAt`), P3 (`grossLogNorm_deriv_nonpos`), and the general-`f` reduction all closed; the theorem takes four per-instance predicates `CoreSemigroupInvariant` / `GeneratorCompat` / `StroockVaropoulos`@`1<q` / `CoreLpL2Approx`. **Remaining for the live pphi2 closure: the W-step + pin bumps** — discharge those four predicates for the GaussianFin/OU instance in gaussian-hilbert, then bump gh/pphi2 pins to ms `5d09d4a`+. Until those land, the pphi2 endpoint still prints `gross_lsi_implies_hypercontractive` (closure unchanged = trio + Gross + 2 G2 axioms; pphi2 still pins the pre-merge ms `main`). Prior (2026-05-21): abstract spine completed on branch; (2026-05-20): P2 Leibniz kernel discharged.)
+**Last refreshed:** 2026-05-22 (**W-STEP COMPLETE + Gross / Stroock–Varopoulos / IBP axioms all discharged in ms+gh `main` — chain now at a single non-standard axiom.** All four per-instance predicates (`CoreSemigroupInvariant` / `GeneratorCompat` / `StroockVaropoulos` / `CoreLpL2Approx`) are discharged for the GaussianFin/OU instance in ms `EuclideanHypercontractive.lean` and assembled into `stdGaussianFin_isHypercontractive` via the proved `gross_lsi_implies_hypercontractive_of_hypotheses` (ms PR #5), eliminating `gross_lsi_implies_hypercontractive`. Then `stroock_varopoulos` was discharged via the new diffusion **equality** `BakryEmerySpace.stroockVaropoulos_eq` (ms PR #7, `Diffusion/StroockVaropoulos.lean`), and `gaussianFin_integrationByParts` via the coordinatewise-Fubini lift of the proved 1D IBP (ms PR #10). **ms `main` = `5e23f24`, gh `main` = `87c558a`**; on those, `#print axioms …_isHypercontractive` = `[propext, Classical.choice, gaussianFin_diffQuot_tendsto_Lp, Quot.sound]` — the **only** remaining non-standard axiom is `gaussianFin_diffQuot_tendsto_Lp` (strong-L² difference-quotient limit). **⚠️ pphi2 PINS ARE STALE** (still gh `4ac0667` / ms `6293402`, pre-W-step), so the *pphi2 endpoint* below still prints the old 3-axiom closure until pphi2 bumps its gh/ms pins. Prior (this session): W-step + S–V + IBP discharged; (2026-05-21): abstract spine merged at `5d09d4a` via PR #3.)
 **Repo:** pphi2 (this) + sister repos gaussian-hilbert, markov-semigroups
 **Endpoint:** `Pphi2.torusInteracting_satisfies_OS` (OS0 + OS1 + OS2 for the T²_L
 symmetric-torus φ⁴₂ continuum limit)
@@ -37,6 +37,37 @@ in the closure at all. The live closure is **trio + Gross + 2 G2
 axioms** — every non-Gross axiom is a Gemini-vetted general
 Mathlib-native analysis fact. **This is the M4b "honest trio +
 textbook-vetted" resting point, reached before Route A even lands.**
+
+### ⬆️ UPSTREAM (ms + gh `main`) — discharged this session, NOT YET PINNED BY pphi2
+
+The endpoint closure above is what pphi2 **currently** prints with its **stale**
+pins (gh `4ac0667` / ms `6293402`). On the live ms + gh `main`s
+(**ms `5e23f24`, gh `87c558a`**), the chain has been reduced to a **single**
+non-standard axiom:
+
+```
+[propext, Classical.choice, GaussianFin.gaussianFin_diffQuot_tendsto_Lp, Quot.sound]
+```
+
+discharged this session (all merged, full builds green):
+- **Gross** `gross_lsi_implies_hypercontractive` — eliminated (ms PR #5): the four
+  predicates `CoreSemigroupInvariant` / `GeneratorCompat` / `StroockVaropoulos` /
+  `CoreLpL2Approx` discharged for GaussianFin in `EuclideanHypercontractive.lean`,
+  assembled via the proved `…_of_hypotheses` into `stdGaussianFin_isHypercontractive`.
+- **Stroock–Varopoulos** `stroock_varopoulos` — eliminated (ms PR #7): the new
+  `Diffusion/StroockVaropoulos.lean` proves S–V as an **equality** for any diffusion
+  form (`BakryEmerySpace.RpowChainRule` ⇒ `stroockVaropoulos_eq`); `GaussianFin.rpowChainRule`
+  discharges it for `ouGammaFin` via `partialDeriv_rpow`.
+- **IBP** `gaussianFin_integrationByParts` — eliminated (ms PR #10): coordinatewise
+  Fubini lift of the proved 1D `Gaussian1D.gaussian_dirichlet_form_bilinear`.
+
+**To realize this in the pphi2 endpoint:** bump pphi2's `gaussian-hilbert` pin → gh
+`87c558a` and `MarkovSemigroups` pin → ms `5e23f24` (force-clear the dep `.lake/build`
+caches), rebuild, and re-verify `#print axioms Pphi2.torusInteracting_satisfies_OS`
+(expected: trio + `gaussianFin_diffQuot_tendsto_Lp`). The lone remaining axiom
+`gaussianFin_diffQuot_tendsto_Lp` is the hardest of the four (its discharge route also
+needs the separate `gaussianOU_heatEquation_within_zero` axiom + a segment-uniform L²
+DCT dominator).
 
 **Propagation path that realized this (2026-05-19):**
 - ms `main`: `bd7f950` (2.5 + N1.b + N1.c, all axiom-free) → `6293402`
