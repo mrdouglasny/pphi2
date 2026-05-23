@@ -16,8 +16,10 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-22): 19 raw axioms (17 real — 15 public + 2
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-22): 18 raw axioms (16 real — 14 public + 2
 `private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
+— `measure_determined_by_schwinger` discharged to a theorem 2026-05-22 (moment determinacy via
+entire MGF + Cramér–Wold; `MeasureUniqueness.lean`)
 **+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
 `count_axioms.sh`). pphi2 also depends on markov-semigroups and gaussian-hilbert (axiom counts
 track `main` — see [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) and each repo's own
@@ -647,7 +649,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`pphi2_nonGaussian`~~ | Main | **Proved** | Uses `pphi2_nonGaussianity` axiom. |
 | `pphi2_nontriviality` | Main | Hard | ∫ (ω f)² dμ > 0 for all f ≠ 0. Correlation inequalities (Griffiths, FKG). |
 | ~~`pphi2_nonGaussianity`~~ | Main | **PROVED** | Proved from `continuumLimit_nonGaussian` by providing a fixed sequence `aₙ = 1/(n+1)`. |
-| `measure_determined_by_schwinger` | Bridge | Medium | Moment determinacy on S'(ℝ²) with exponential (Fernique-type) moment bound. |
+| ~~`measure_determined_by_schwinger`~~ | Bridge | **Proved** | Moment determinacy on S'(ℝ²): finite exp-moment ⟹ entire MGF ⟹ equal moments give equal MGF (identity theorem) ⟹ equal law; Cramér–Wold lifts. `MeasureUniqueness.lean`; bare-trio. |
 | ~~`wick_constant_comparison`~~ | ~~Bridge~~ | — | **Removed** — duplicate of `wickConstant_log_divergence`, moved to Unused/. |
 | `same_continuum_measure` | Bridge | Medium | pphi2 and Phi4 constructions agree at weak coupling. Requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
 | `os2_from_phi4` | Bridge | Medium | OS2 for Phi4 continuum limit. Requires `IsPhi4ContinuumLimit` hypothesis. |
@@ -875,7 +877,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `schwinger_agreement` | Bridge | Cluster expansion uniqueness (Guerra-Rosen-Simon). |
 | `same_continuum_measure` | Bridge | pphi2 and Phi4 agree at weak coupling. |
 | `os2_from_phi4` | Bridge | OS2 for Phi4 continuum limit. |
-| `measure_determined_by_schwinger` | Bridge | Moment determinacy on S'(ℝ²). |
+| ~~`measure_determined_by_schwinger`~~ | Bridge | **Proved** 2026-05-22 — moment determinacy via entire MGF + Cramér–Wold (`MeasureUniqueness.lean`). |
 | `two_point_clustering_from_spectral_gap` | OS4_MassGap | 2-point clustering from mass gap with cyclic torus time separation. |
 | `general_clustering_from_spectral_gap` | OS4_MassGap | Bounded observables; `G` on `latticeConfigEuclideanTimeShift`, decay measured in `latticeEuclideanTimeSeparation`. |
 | `second_moment_uniform` | Tightness | Uniform second moments for interacting measure. |

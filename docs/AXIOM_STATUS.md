@@ -8,14 +8,14 @@ passes and discharges. Last refreshed: 2026-05-22.*
 
 | Count | Value |
 |---|---|
-| pphi2 axioms (active) | **17** (15 public + 2 `private`) — down from 19 after the 2026-05-16 Phase B discharge |
+| pphi2 axioms (active) | **16** (14 public + 2 `private`) — down from 17 after the 2026-05-22 moment-determinacy discharge (`measure_determined_by_schwinger` is now a theorem) |
 | pphi2 sorries | **0** — `rough_error_variance` is now fully proved; `#print axioms Pphi2.rough_error_variance` shows only `[propext, Classical.choice, Quot.sound]`. |
 | `lake build` | clean (3857 jobs) |
 | Direct upstream deps (pins from `lake-manifest.json`) | gaussian-field (`269fbc2e`, **3 axioms / 0 sorries** — verified via `count_axioms.sh`); gibbs-variational (`45eb21b`, **0 axioms / 1 off-critical-path sorry**); markov-semigroups (`5bf4444`, tracks `main`), gaussian-hilbert (`7531830`, tracks `main`), bochner (`b70e84b8`, tracks `main`). Sister-repo axiom counts drift with `main` and are not re-verifiable from here (`count_axioms.sh` covers only pphi2 + gaussian-field) — see each repo's own `AXIOM_AUDIT.md` for current figures (gaussian-hilbert was ~1 axiom at the 2026-05-11 audit; markov-semigroups ~11). |
 
-The `scripts/count_axioms.sh` script reports 19 because of two
+The `scripts/count_axioms.sh` script reports 18 because of two
 `axiom`-prefixed words in docstrings at `LatticeBridge.lean:21` and
-`LayerCake.lean:85`. The actual count is 17.
+`LayerCake.lean:85`. The actual count is 16.
 
 ### Conventions
 
@@ -68,11 +68,16 @@ S'(ℝ²) Wightman directly.
 
 ## Full axiom inventory
 
-### Bridge / phase-6 (5 axioms — pphi2 ↔ φ⁴ classification)
+### Bridge / phase-6 (4 axioms — pphi2 ↔ φ⁴ classification)
+
+*`measure_determined_by_schwinger` was discharged to a theorem on 2026-05-22 (proof in
+`TorusContinuumLimit/MeasureUniqueness.lean`: `measure_eq_of_moments` — the finite exponential
+moment makes the 1D MGF entire, so equal moments force equal MGFs (identity theorem) hence equal
+laws; Cramér–Wold lifts to the full measure). It depends only on `[propext, Classical.choice,
+Quot.sound]`.*
 
 | Axiom | File:Line | Rating | Sources | Notes |
 |---|---|---|---|---|
-| `measure_determined_by_schwinger` | `Bridge.lean:229` | Likely correct | DT 2026-02-24 | Moment determinacy via Fernique-type bound. |
 | `schwinger_agreement` | `Bridge.lean:263` | Likely correct | DT 2026-02-24 | n-point Schwinger function equality at weak coupling. |
 | `os2_from_phi4` | `Bridge.lean:334` | Likely correct | DT 2026-02-24 | Requires `IsPhi4ContinuumLimit`. |
 | `wick_constant_comparison` | `Bridge.lean` | Standard | DT 2026-02-24 | Wick constant `≈ (2π)⁻¹ log(1/a) + bounded`. |
