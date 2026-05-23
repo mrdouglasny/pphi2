@@ -110,22 +110,36 @@ and it gates M-cyl-1. Do not treat M-cyl-1 as "a few weeks" without qualifying o
   - **Discharge routes for the deferred CYL-1a axiom (when its proof is eventually attempted),
     ranked.** *Do not default to cluster expansion* — its combinatorics (polymer models,
     Mayer/tree expansions, activity bounds) is the least Lean-friendly genre in constructive
-    QFT (single-use, bookkeeping-heavy), and the modern SPDE program bypasses it. In **d=2**
-    the field needs only Wick ordering (no regularity structures / paracontrolled UV machinery
-    — that debt is a 3D problem). Ranked by fit to *this* ecosystem:
-    1. **FKG / correlation inequalities** (in-house: `gaussian-field` FKG, released) — cheapest,
-       most Lean-friendly; gives volume-monotone moments / tightness directly. Check how far it
-       reaches toward the full Green-controlled exponential moment.
-    2. **Stochastic quantization (Langevin + LSI / Boué–Dupuis variational formula)** — the
-       strategic route. The exp-moment *is* the free energy; the Boué–Dupuis test-drift Ansatz
-       gives an **extensive** (hence Lₜ-uniform) bound with no graphs. Foundations are partly
-       in-house (`brownian-motion` Itô; `markov-semigroups` Cameron–Martin/LSI); gaps = Girsanov
-       + the variational representation. **Unifying payoff:** Φ⁴₂ is the invariant measure of the
-       Langevin SDE, so extending the just-completed Bakry–Émery/LSI machinery to the Φ⁴₂
-       generator would yield **both CYL-1a and CYL-2a** (the mass gap) in one framework.
-    3. **Cluster expansion (Glimm-Jaffe-Spencer)** — classical fallback only; worst prover fit.
-    (Gemini deep-think, 2026-05-22, concurred: keep axiomatized now; Mathlib's stochastic layer
-    is not yet Boué–Dupuis-ready, but it is being built — so this is investment, not from-scratch.)
+    QFT (single-use, bookkeeping-heavy). In **d=2** the field needs only Wick ordering (no
+    regularity structures / paracontrolled UV machinery — that debt is a 3D problem). Ranked:
+    1. **Finite-dimensional Boué–Dupuis / Gibbs variational formula at the lattice (LEAD).**
+       Key realization (Gemini deep-think, 2026-05-22): Boué–Dupuis is a representation theorem
+       for the Laplace transform of a **Gaussian measure**, *not* an SPDE result — so applied to
+       the *finite lattice* (where the regularized measure is a high-dimensional multivariate
+       Gaussian) it is just **finite-dimensional Gaussian IBP + Cameron–Martin/Girsanov-shift +
+       convex optimization** — Donsker–Varadhan / Gibbs duality
+       `−log E_μ[e^{−V}] = inf_u E[V(φ+u) + ½‖u‖²_{CM}]`. **No Itô, no Wiener space, no
+       regularity structures.** Prove the bound at the lattice with constants **uniform in the
+       dimension** (both the UV `N→∞` at fixed `L` and the IR `Lₜ→∞`) via a *local* test drift
+       cancelling the Wick-ordered φ⁴ → the RHS is **extensive** (volume-linear) → uniform after
+       dividing by volume; the bound then passes through both limits. d=2 Wick ordering is the
+       only UV subtlety, absorbed by the drift. **The finite-dim pieces are exactly in-house:**
+       `gaussianFin_integrationByParts` (proved this session) and `gaussian_cameronMartin`
+       (markov-semigroups). Higher-leverage than cluster expansion: the variational formula is
+       *universal* (scales to Φ⁴₃, gauge theories), not a weakly-coupled-lattice one-off.
+    2. **FKG / correlation inequalities** (in-house: `gaussian-field` FKG, released) — cheap
+       *assist* for volume-monotone second moments / tightness; may not reach the full
+       exponential moment alone, but useful in combination.
+    3. **LSI / Bakry–Émery for the Φ⁴₂ generator** — same entropy/variational circle as route 1
+       (LSI ⇔ a log-Sobolev/entropy inequality). **Unifying payoff:** an LSI for the Φ⁴₂ measure
+       (extending the just-completed Gaussian Bakry–Émery machinery to the φ⁴ generator) would
+       yield **both CYL-1a and CYL-2a** (the mass gap) in one framework — also finite-dim at the
+       lattice. The deepest investment, the biggest reuse.
+    4. **Cluster expansion (Glimm-Jaffe-Spencer)** — classical fallback only; worst prover fit.
+    (Gemini deep-think, 2026-05-22: keep axiomatized for M-cyl-1; for the eventual proof, the
+    **finite-dimensional** variational formula bypasses the SPDE/stochastic-calculus library
+    entirely and is the most elegant + structurally sound Lean path — investment, not
+    from-scratch combinatorics.)
 - **CYL-1b `…EventuallyReflectionPositive` — prove finite-stage pullback RP (the real RP
   work).** The CF-limit transfer is **already done**: `cylinderMeasureReflectionPositive_of_tendsto_cf`
   (`CylinderOS.lean:404`) plus the sequence adapters `.of_forall` (`:334`) and
