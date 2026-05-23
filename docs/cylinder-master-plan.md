@@ -2,6 +2,9 @@
 
 **Created:** 2026-05-22 (after the T² OS0–OS2 endpoint reached the bare Mathlib trio —
 see `docs/T2-master-plan.md`).
+**Reviewed:** 2026-05-22, Gemini deep-think (2 ultrareview passes + a strategy vetting) —
+verdict: architecture sound. Folded in: axiomatize CYL-1a for M-cyl-1, exact-reflection-symmetry
+audit for CYL-1b, and `a`-independent gap as a prerequisite of CYL-2a.
 **Repo:** pphi2 (this) + sister repos gaussian-hilbert, markov-semigroups, OSreconstruction.
 **Goal endpoint:** the P(φ)₂ measure on the **cylinder S¹(Lₛ) × ℝ** (finite spatial
 circle, infinite Euclidean time) satisfies **OS0–OS4** — adding **reflection positivity
@@ -89,11 +92,21 @@ and it gates M-cyl-1. Do not treat M-cyl-1 as "a few weeks" without qualifying o
     bound `routeBPrime_cylinder_OS` consumes. So the IR-limit step is wired.
   - **What is MISSING (the real obstruction):** proving the concrete UV-limit asymmetric-torus
     measures satisfy `MeasureHasGreenMomentBound` with constants **uniform in Lₜ**. This is the
-    infinite-volume/locality control of constructive QFT — likely requires locality machinery
-    (cluster expansion, correlation inequalities, or chessboard estimates), **or** is taken as
-    a single upstream textbook axiom (Glimm-Jaffe Part III). This is the cylinder's first deep
-    analytic theorem and the dominant risk to M-cyl-1's timeline — comparable in weight to
-    CYL-2a, and arguably the gating item for OS0/OS1 themselves.
+    infinite-volume/locality control of constructive QFT — a full Lean proof requires locality
+    machinery (cluster expansion, correlation inequalities, or chessboard estimates). This is
+    the cylinder's first deep analytic theorem and the dominant risk to M-cyl-1's timeline —
+    comparable in weight to CYL-2a, and arguably the gating item for OS0/OS1 themselves.
+  - **DECISION for M-cyl-1 (Gemini deep-think, 2026-05-22): axiomatize, don't grind.**
+    Formalizing a cluster expansion from scratch is a months-scale undertaking that would
+    bottleneck the whole campaign. For the M-cyl-1 release, encapsulate the Lₜ-uniform bound as
+    a **single dedicated Glimm-Jaffe axiom** (a `GlimmJaffe`-namespaced axiom / axiom class —
+    e.g. `GlimmJaffe.asymTorus_uniformGreenMoment`, stated exactly as the missing
+    `…HasUniformGreenMomentBound` input, vetted DT/GR, with a discharge-plan docstring citing
+    Glimm-Jaffe Part III). This isolates the analytic debt cleanly while letting the entire
+    OS0–OS3 structural wiring compile and be verified end-to-end. The cluster-expansion *proof*
+    of this axiom then becomes a separate, deferred discharge campaign (a CYL-3-class item), to
+    be tackled only after the structure is locked — exactly the pattern that retired the Gross
+    axiom on the torus side.
 - **CYL-1b `…EventuallyReflectionPositive` — prove finite-stage pullback RP (the real RP
   work).** The CF-limit transfer is **already done**: `cylinderMeasureReflectionPositive_of_tendsto_cf`
   (`CylinderOS.lean:404`) plus the sequence adapters `.of_forall` (`:334`) and
@@ -102,6 +115,12 @@ and it gates M-cyl-1. Do not treat M-cyl-1 as "a few weeks" without qualifying o
   lattice RP `action_decomposition` (`OS3_RP_Lattice.lean`) with the weak-limit closure
   `rp_closed_under_weak_limit` (`OS3_RP_Inheritance.lean`) at the finite-Lₜ stage, then feed
   it through `.of_eventually_full`.
+  - *Caveat (Gemini):* lattice RP needs **exact** reflection symmetry of the discrete action
+    across the reflection plane. Audit the lattice derivative / link displacements / plaquette
+    anchors for any geometric asymmetry across `t ↦ −t` — a discrete artifact there breaks
+    `action_decomposition` and would also doom the CYL-2a transfer (which leans on the same
+    reflection symmetry). Watch the `FinLatticeSites = Fin d → Fin N` vs `Fin Nₜ × Fin Nₛ`
+    indexing mismatch noted in the OS3 file.
 - **CYL-1c `…HasCylinderOS2Symmetry` — integration, largely done.** The bridge
   `AsymTorusSequenceHasCylinderOS2Symmetry.of_torusOS` (`CylinderOS.lean:380`) already
   projects the exact OS2 translation + time-reflection clauses from the bundled
@@ -124,6 +143,11 @@ Euclidean-time separation → ∞) ⇒ unique vacuum (ergodicity already proved)
   the cylinder's "Nelson-estimate-class" hard theorem and the **single largest blocking
   obligation of the OS4 endpoint** — it is *not* one of the existing textbook axioms (see the
   inventory). Likely the long pole.
+  - *Caveat (Gemini):* the continuum limit is delicate precisely because the bare gap can
+    scale with the spacing `a`. **Decouple the gap from `a` first** — i.e. land
+    `spectral_gap_uniform` (a lower bound independent of `a`, `SpectralGap.lean:89`) *before*
+    attempting CYL-2a; transferring an `a`-dependent gap to the continuum is meaningless. So
+    CYL-3's `spectral_gap_uniform` is effectively a prerequisite of CYL-2a, not parallel to it.
 - **CYL-2b — clustering from the gap.** Apply `two_point_clustering_from_spectral_gap` /
   `general_clustering_from_spectral_gap` (`OS4_MassGap.lean:137,160`) to the transferred gap,
   then `clustering_implies_ergodicity`. Mostly assembly once CYL-2a lands.
@@ -207,13 +231,16 @@ reconstruction additionally needs CYL-4a.
 
 1. **CYL-1** → **`cylinder_satisfies_OS0123`**, unconditional cylinder OS0+OS1+OS2+OS3.
    The wiring pieces are near-term (b = finite-stage pullback RP fed to the existing CF
-   transfer; c = OS2 via `of_torusOS`; d = OS1 lane), **but the milestone is gated on CYL-1a**
-   = the Lₜ-uniform exp-moment bound, a real infinite-volume-control theorem (the first hard
-   bottleneck — possibly cluster-expansion/locality work or an upstream axiom). Decide early
-   whether to *prove* CYL-1a or accept it as a vetted textbook axiom; that choice sets the
-   M-cyl-1 timeline. *The reward: the first construction with reflection positivity.*
-2. **CYL-2a** — spectral-gap transfer to the continuum. The second hard analytic crux (OS4);
-   budget time comparable to CYL-1a (the cylinder's analogue of the Nelson/hypercontractivity work).
+   transfer; c = OS2 via `of_torusOS`; d = OS1 lane). For CYL-1a — the Lₜ-uniform exp-moment
+   bound — the **decided path (Gemini deep-think) is to axiomatize**: introduce the dedicated
+   `GlimmJaffe`-namespaced uniform-moment axiom and build M-cyl-1 on it now, deferring the
+   cluster-expansion proof to a later discharge campaign. So M-cyl-1 is genuinely near-term;
+   the analytic debt is isolated to one vetted axiom. *The reward: the first construction with
+   reflection positivity.*
+2. **CYL-3 `spectral_gap_uniform` (gap independent of `a`) → then CYL-2a** — spectral-gap
+   transfer to the continuum. The `a`-independent gap is a *prerequisite* of the transfer
+   (transferring an `a`-dependent gap is meaningless), so do it first. CYL-2a is then the
+   second hard analytic crux (OS4); budget time comparable to CYL-1a's eventual proof.
 3. **CYL-2b + CYL-3** — assemble OS4 from the transferred gap; discharge the four OS4 textbook
    axioms toward the trio.
 4. **CYL-4a then CYL-4b** — package + prove `LinearGrowth`, then invoke reconstruction →
