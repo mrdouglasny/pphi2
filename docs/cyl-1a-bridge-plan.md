@@ -44,26 +44,44 @@ cylinder tightness + OS0 (`routeBPrime_cylinder_OS`).
 
 ## The bridge — four steps
 
-### Step 0 — Whitening: `latticeGaussianMeasure ≅ pushforward of stdGaussian` (the lynchpin; NEW)
+### Step 0 — Whitening: `latticeGaussianMeasure ≅ pushforward of stdGaussian` (~80% done upstream)
 
-The base lattice Gaussian is centered on `ℝ^{N²}` with PD covariance `C`. Build the linear
-isomorphism `W_N := C^{−1/2}` (whitening map) and prove
+**Already proved in gaussian-field** — `GaussianField/StandardGaussianBridge.lean:435`:
 
 ```
-(latticeGaussianMeasure 2 N a mass …).map W_N = stdGaussian (N²)
-   ⇔   stdGaussian (N²).map W_N⁻¹ = latticeGaussianMeasure …
+gffOrthonormalProj_pushforward_eq_stdGaussian :
+  Measure.map (gffOrthonormalProj d N a mass ha hmass) (latticeGaussianMeasure d N a mass ha hmass)
+    = Measure.pi (fun _ : FinLatticeSites d N => gaussianReal 0 1)
 ```
 
-- General, upstreamable lemma (best home: a finite-dim section of `gaussian-field`, or a
-  `GibbsVariational.FiniteGaussian` module): *a finite-dim centered Gaussian with PD covariance `C`
-  is `(stdGaussian n).map (C^{1/2} ∘ ·)`.* Needs the bridge `GaussianField.measure` (finite-dim
-  covariance) ↔ `Measure.pi gaussianReal` — check what gaussian-field already gives via
-  `massEigenbasis` / covariance diagonalization (`Lattice/Covariance.lean`).
-- Also need the linear iso between the dual-pairing representation
-  `Configuration (FinLatticeField) = WeakDual ℝ (…)` and the coordinate space `ℝ^{N²}` carrying
-  `stdGaussian`.
-- Outcome: `∫ exp(−V_a) dμ_GFF = ∫ exp(−V_a ∘ W_N⁻¹) d(stdGaussian (N²))`, so P-A/P-C apply with
-  `V := V_a ∘ W_N⁻¹`.
+So the whitening map already exists as `gffOrthonormalProj` (the Gram–Schmidt/orthonormalisation
+of the field coordinates; `StandardGaussianBridge.lean:101`), it is **linear and continuous**
+(`gffOrthonormalProjCLM : Configuration (FinLatticeField d N) →L[ℝ] (FinLatticeSites d N → ℝ)`,
+line 306, with `gffOrthonormalProjCLM_eq`), and its pushforward of the lattice GFF is exactly the
+product standard Gaussian — which is `GibbsVariational.stdGaussian` modulo the index type
+(`FinLatticeSites d N` vs `Fin (N^d)`). Proof there is via `iIndepFun` + per-coordinate `N(0,1)`
+(`gffOrthonormalCoord_normal` / `_independent`). The companion charFun form is
+`gffOrthonormalProj_charFun` (line 465).
+
+**Residual (small, new):**
+- *(0b) Invertibility.* Package `gffOrthonormalProjCLM` as a `ContinuousLinearEquiv` (the whitening
+  of a PD covariance on a finite-dim space is invertible) so that `V_a` and each pairing
+  `ω ↦ ω f` factor through it: `V_a = Ṽ ∘ gffOrthonormalProj` with `Ṽ = V_a ∘ proj⁻¹`, and likewise
+  the linear functionals. Then `∫ exp(−V_a) dμ_GFF = ∫ exp(−Ṽ) d(stdGaussian)` by `integral_map`,
+  so P-A/P-C apply with `V := Ṽ`.
+- *(0c) Index match.* Either reindex `FinLatticeSites d N ≃ Fin (N^d)` (`Fintype.equivFin` +
+  `Measure.pi_map_piCongrLeft`), **or** — cleaner — generalise `GibbsVariational.stdGaussian` and
+  `neg_log_integral_exp_neg_le` from `Fin n` to an arbitrary `Fintype ι`. The latter is nearly free:
+  `klDiv_pi` and `klDiv_gaussianReal_shift` are already general/coordinatewise, and P-C only uses
+  `Fin n` through `stdGaussian n` and `∑ i, (h i)²`.
+
+*(Alternative/complementary route, also upstream: `GaussianField/Density.lean`'s explicit
+massEigenbasis density — `sitePairing_eq_massEigenbasis_sum`,
+`normalizedGaussianDensityMeasure_charFunDual_eq_latticeGaussianFieldLaw` (line 1014) — diagonalises
+the same covariance and matches the lattice law by `charFunDual` uniqueness.)*
+
+Verify `gffOrthonormalProj_pushforward_eq_stdGaussian` is itself bare-trio (`#print axioms`) when
+wiring, since the whole CYL-1a discharge rests on it.
 
 ### Step 1 — Partition-function lower bound (free energy), volume-uniform
 
