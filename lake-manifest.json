@@ -5,7 +5,7 @@
    "type": "git",
    "subDir": null,
    "scope": "mrdouglasny",
-   "rev": "45eb21b901e675f18952d056efd2b4768ba17167",
+   "rev": "d4ae138e63cbdda9bde303f6b8f453a4188553ea",
    "name": "GibbsVariational",
    "manifestFile": "lake-manifest.json",
    "inputRev": "main",
