@@ -18,13 +18,14 @@ Euclidean/Minkowski interfaces.
 
 **Current counter (`./scripts/count_axioms.sh`, 2026-05-22): 19 raw axioms (17 real — 15 public + 2
 `private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
-**+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined**. pphi2 also depends on
-markov-semigroups (11 axioms / 0 sorries) and gaussian-hilbert (4 axioms / 0 sorries) for the
-upstream `polynomial_chaos_concentration` API used by Cluster A, and now on
-[`gibbs-variational`](https://github.com/mrdouglasny/gibbs-variational) (0 axioms, 1 off-critical-path
-`sorry`) for the finite-dim Boué–Dupuis bound that will discharge the cylinder CYL-1a Green-moment
-input. See [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) for the canonical inventory (refreshed
-2026-05-16).
+**+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
+`count_axioms.sh`). pphi2 also depends on markov-semigroups and gaussian-hilbert (axiom counts
+track `main` — see [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) and each repo's own
+`AXIOM_AUDIT.md`) for the upstream `polynomial_chaos_concentration` API used by Cluster A, and now
+on [`gibbs-variational`](https://github.com/mrdouglasny/gibbs-variational) (0 axioms, 1
+off-critical-path `sorry`) for the finite-dim Boué–Dupuis bound that will discharge the cylinder
+CYL-1a Green-moment input. See [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) for the canonical
+inventory (refreshed 2026-05-22).
 
 Recent change (2026-05-08, post PR #14 merge): **5 Stage 1 GJ axioms
 discharged in Phase 2** plus three additional pphi2 axioms cleared by
