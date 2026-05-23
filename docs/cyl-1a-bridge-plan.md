@@ -3,6 +3,32 @@
 *Draft 2026-05-22. How to discharge the cylinder volume-uniform Green-moment input using the
 `gibbs-variational` finite-dim Boué–Dupuis bound (now a pinned dependency).*
 
+> ## ⚠️ Correction (2026-05-23): the actual CYL-1a gap is *not* Boué–Dupuis
+>
+> A code audit shows the **lattice exponential-moment bound is already proved**, so the
+> Boué–Dupuis route below (Steps 0–2) would only *re-derive* it — it is general, reusable
+> infrastructure, not the CYL-1a gating piece. Specifically:
+> * `asymTorusInteractingMeasure_exponentialMomentBound_cutoff` (`AsymTorus/AsymTorusOS.lean:669`,
+>   **proved**, via `asymNelson_exponential_estimate`): `∫ exp(|ωf|) dμ_N ≤ K·exp(σ²_N(f))` with `K`
+>   uniform in `N`, RHS the *lattice* second moment `σ²_N(f) = ∫(ωg)² dμ_GFF` (its docstring notes
+>   that putting the continuum Green there at cutoff level needs a *false* spectral comparison).
+> * `asymGaussian_second_moment_uniform_bound` (`AsymTorus/AsymTorusInteractingLimit.lean:331`,
+>   **proved**): `σ²_N(f) ≤ Cg(f)` with `Cg(f)` a continuous (Sobolev-seminorm) function of `f`.
+>
+> So the genuine remaining gap is the **limit-transfer axiom**
+> `asymTorusInteracting_exponentialMomentBound` (`AsymTorusOS.lean:852`): lift the finite-`N` bound
+> `∫ exp(|ωf|) dμ_N ≤ K·exp(Cg(f))` to the BC-limit measure `μ`. Its own docstring gives the route —
+> mirror the proved `cylinderIR_uniform_exponential_moment` / `cylinderIR_os0`'s
+> `limit_exponential_moment`: **truncate** `exp(|ωf|)` by `min(·,M)` (bounded continuous, since
+> `ω↦ωf` is weak-\* continuous), apply the BC-convergence hypothesis `hconv` to each truncation, then
+> **MCT** as `M→∞`. `q(f) := log K + Cg(f)` is the resulting continuous seminorm; integrability
+> follows from the finite bound. **No Boué–Dupuis, no whitening, no covariance comparison needed.**
+>
+> The Boué–Dupuis / `gibbs-variational` stack (P-A/B/C, all proved on the bare trio) and the Step-0
+> whitening (`gffOrthonormalProj_pushforward_eq_stdGaussian`, upstream) remain valuable as a *clean
+> alternative derivation* and as general moment-bound infrastructure — but they are not on the
+> CYL-1a critical path. The sections below are retained for that alternative route.
+
 ## Target
 
 `MeasureHasGreenMomentBound Ls mass hmass K C μ` — `Pphi2/AsymTorus/MomentBoundOS1.lean:107`:
