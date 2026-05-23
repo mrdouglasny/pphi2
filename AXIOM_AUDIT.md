@@ -59,7 +59,7 @@ Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 
 | Package | Axioms | Sorries | Pin |
 |---|---|---|---|
-| **pphi2** (active build) | 16 | 0 | — |
+| **pphi2** (active build) | 15 | 0 | — |
 | **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
 | **gaussian-hilbert** (pinned, tracks `main`) | 1 *(was 4 in last audit; see 2026-05-{10,11} entries)* | 0 | `main` |
@@ -441,7 +441,7 @@ the same Glimm–Jaffe Ch. 8 estimate.
 | File | Active axioms | Names |
 |------|---------------|-------|
 | `Pphi2/AsymTorus/AsymTorusInteractingLimit.lean` | 1 | `asymNelson_exponential_estimate` |
-| `Pphi2/AsymTorus/AsymTorusOS.lean` | 1 | `asymTorusInteracting_exponentialMomentBound` |
+| `Pphi2/AsymTorus/AsymTorusOS.lean` | 0 | — (`asymTorusInteracting_exponentialMomentBound` discharged 2026-05-23) |
 | `Pphi2/ContinuumLimit/Hypercontractivity.lean` | 1 | `exponential_moment_bound` |
 | `Pphi2/NelsonEstimate/NelsonEstimate.lean` | 1 | `nelson_exponential_estimate_lattice` |
 | **Subtotal** | **4** | |

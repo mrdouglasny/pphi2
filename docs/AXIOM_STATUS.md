@@ -8,14 +8,14 @@ passes and discharges. Last refreshed: 2026-05-22.*
 
 | Count | Value |
 |---|---|
-| pphi2 axioms (active) | **16** (14 public + 2 `private`) — down from 17 after the 2026-05-22 moment-determinacy discharge (`measure_determined_by_schwinger` is now a theorem) |
+| pphi2 axioms (active) | **15** (14 public + 1 `private`) — down from 16 after the 2026-05-23 discharge of `asymTorusInteracting_exponentialMomentBound` (BC-limit lift, now a theorem), and from 17 after the 2026-05-22 `measure_determined_by_schwinger` discharge |
 | pphi2 sorries | **0** — `rough_error_variance` is now fully proved; `#print axioms Pphi2.rough_error_variance` shows only `[propext, Classical.choice, Quot.sound]`. |
 | `lake build` | clean (3857 jobs) |
 | Direct upstream deps (pins from `lake-manifest.json`) | gaussian-field (`269fbc2e`, **3 axioms / 0 sorries** — verified via `count_axioms.sh`); gibbs-variational (`45eb21b`, **0 axioms / 1 off-critical-path sorry**); markov-semigroups (`5bf4444`, tracks `main`), gaussian-hilbert (`7531830`, tracks `main`), bochner (`b70e84b8`, tracks `main`). Sister-repo axiom counts drift with `main` and are not re-verifiable from here (`count_axioms.sh` covers only pphi2 + gaussian-field) — see each repo's own `AXIOM_AUDIT.md` for current figures (gaussian-hilbert was ~1 axiom at the 2026-05-11 audit; markov-semigroups ~11). |
 
-The `scripts/count_axioms.sh` script reports 18 because of two
+The `scripts/count_axioms.sh` script reports 17 because of two
 `axiom`-prefixed words in docstrings at `LatticeBridge.lean:21` and
-`LayerCake.lean:85`. The actual count is 16.
+`LayerCake.lean:85`. The actual count is 15.
 
 ### Conventions
 
@@ -132,11 +132,14 @@ design and discharge notes remain in
 |---|---|---|---|---|
 | `latticeGreenBilinear_basis_tendsto_continuum` | `GaussianContinuumLimit/PropagatorConvergence.lean:103` | Standard | SA | Spectral lattice Green bilinear → continuum on basis pairs. **Plan**: [`lattice-green-flat-Rd-discharge-plan.md`](../plans/lattice-green-flat-Rd-discharge-plan.md) (Strategy A, ~3 weeks). NOT on T² critical path. |
 
-### AsymTorus (1 axiom)
+### AsymTorus (0 axioms)
 
-| Axiom | File:Line | Rating | Sources | Notes |
-|---|---|---|---|---|
-| `asymTorusInteracting_exponentialMomentBound` (`private`) | `AsymTorus/AsymTorusOS.lean:852` | Standard | — | BC-limit lift of the lattice exp-moment bound to the asymmetric-torus continuum measure. Sister of Cluster A but structurally different (BC convergence). |
+*`asymTorusInteracting_exponentialMomentBound` was discharged to a `private theorem` on 2026-05-23
+(`AsymTorusOS.lean:852`): combine the proved cutoff exp-moment bound
+(`asymTorusInteractingMeasure_exponentialMomentBound_cutoff`) with the uniform second-moment bound
+(`asymGaussian_second_moment_uniform_bound`) to get a continuous witness `q`, then lift to the
+BC-limit measure by truncation (`min(exp|ωf|, M)`, bounded continuous) + monotone convergence.
+`asymTorusInteracting_satisfies_OS` now depends only on `[propext, Classical.choice, Quot.sound]`.*
 
 ## Upstream axiom counts (transitively imported)
 

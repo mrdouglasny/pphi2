@@ -16,10 +16,11 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-22): 18 raw axioms (16 real — 14 public + 2
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-23): 17 raw axioms (15 real — 14 public + 1
 `private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
-— `measure_determined_by_schwinger` discharged to a theorem 2026-05-22 (moment determinacy via
-entire MGF + Cramér–Wold; `MeasureUniqueness.lean`)
+— two discharges this cycle: `measure_determined_by_schwinger` (2026-05-22, moment determinacy via
+entire MGF + Cramér–Wold; `MeasureUniqueness.lean`) and `asymTorusInteracting_exponentialMomentBound`
+(2026-05-23, BC-limit lift via cutoff bound + truncation/MCT; `AsymTorusOS.lean`)
 **+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
 `count_axioms.sh`). pphi2 also depends on markov-semigroups and gaussian-hilbert (axiom counts
 track `main` — see [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) and each repo's own
@@ -260,8 +261,8 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 4T | `NelsonEstimate/FieldDecomposition.lean` | 0 axioms, 2 sorries (the canonical smooth/rough self-moment helper lemmas are proved; the remaining `canonicalSumFieldFunction_covariance` and `canonicalSumFieldFunction_covariance_eq_GJ` assembly proofs still need the integral-splitting step and the `massEigenvalues`/`latticeEigenvalue` bridge). |
 | 4T | `NelsonEstimate/{SmoothLowerBound,RoughErrorBound}.lean` | 0 axioms, 0 sorries (Phase 2 infrastructure, ready to wire into the real Nelson proof). |
 | B' | `AsymTorus/AsymTorusEmbedding.lean` | 0 axioms, 0 sorries |
-| B' | `AsymTorus/AsymTorusInteractingLimit.lean` | 1 axiom, 0 sorries (`asymNelson_exponential_estimate` only — Cluster A Nelson estimate; Phase 2 Cluster B complete 2026-05-08: `asymGaussian_second_moment_uniform_bound` discharged via the new `evalAsymAtFinSiteGJ` GJ asym embedding). |
-| B' | `AsymTorus/AsymTorusOS.lean` | 1 axiom, 0 sorries (`asymTorusInteracting_exponentialMomentBound` only — Cluster A; Phase 2 Cluster B complete 2026-05-08: `asymGf_sub_norm_le_seminorm` discharged via the same `(a²)⁻¹·a_geom² = 1` cancellation pattern as the symmetric pair). |
+| B' | `AsymTorus/AsymTorusInteractingLimit.lean` | **0 axioms, 0 sorries** (`asymNelson_exponential_estimate` is a theorem; `asymGaussian_second_moment_uniform_bound` discharged 2026-05-08 via the new `evalAsymAtFinSiteGJ` GJ asym embedding). |
+| B' | `AsymTorus/AsymTorusOS.lean` | **0 axioms, 0 sorries** (`asymTorusInteracting_exponentialMomentBound` discharged 2026-05-23 — BC-limit lift of the proved cutoff exp-moment bound via truncation + MCT; Phase 2 Cluster B complete 2026-05-08: `asymGf_sub_norm_le_seminorm` discharged). |
 | 6 | `Bridge.lean` | 3 axioms, 0 sorries |
 | B'IR | `IRLimit/Periodization.lean` | 0 axioms, 0 sorries (re-exports from gaussian-field) |
 | B'IR | `IRLimit/CylinderEmbedding.lean` | **0 axioms, 0 sorries** (intertwining proved via NTP pure tensor density) |
