@@ -107,6 +107,25 @@ and it gates M-cyl-1. Do not treat M-cyl-1 as "a few weeks" without qualifying o
     of this axiom then becomes a separate, deferred discharge campaign (a CYL-3-class item), to
     be tackled only after the structure is locked — exactly the pattern that retired the Gross
     axiom on the torus side.
+  - **Discharge routes for the deferred CYL-1a axiom (when its proof is eventually attempted),
+    ranked.** *Do not default to cluster expansion* — its combinatorics (polymer models,
+    Mayer/tree expansions, activity bounds) is the least Lean-friendly genre in constructive
+    QFT (single-use, bookkeeping-heavy), and the modern SPDE program bypasses it. In **d=2**
+    the field needs only Wick ordering (no regularity structures / paracontrolled UV machinery
+    — that debt is a 3D problem). Ranked by fit to *this* ecosystem:
+    1. **FKG / correlation inequalities** (in-house: `gaussian-field` FKG, released) — cheapest,
+       most Lean-friendly; gives volume-monotone moments / tightness directly. Check how far it
+       reaches toward the full Green-controlled exponential moment.
+    2. **Stochastic quantization (Langevin + LSI / Boué–Dupuis variational formula)** — the
+       strategic route. The exp-moment *is* the free energy; the Boué–Dupuis test-drift Ansatz
+       gives an **extensive** (hence Lₜ-uniform) bound with no graphs. Foundations are partly
+       in-house (`brownian-motion` Itô; `markov-semigroups` Cameron–Martin/LSI); gaps = Girsanov
+       + the variational representation. **Unifying payoff:** Φ⁴₂ is the invariant measure of the
+       Langevin SDE, so extending the just-completed Bakry–Émery/LSI machinery to the Φ⁴₂
+       generator would yield **both CYL-1a and CYL-2a** (the mass gap) in one framework.
+    3. **Cluster expansion (Glimm-Jaffe-Spencer)** — classical fallback only; worst prover fit.
+    (Gemini deep-think, 2026-05-22, concurred: keep axiomatized now; Mathlib's stochastic layer
+    is not yet Boué–Dupuis-ready, but it is being built — so this is investment, not from-scratch.)
 - **CYL-1b `…EventuallyReflectionPositive` — prove finite-stage pullback RP (the real RP
   work).** The CF-limit transfer is **already done**: `cylinderMeasureReflectionPositive_of_tendsto_cf`
   (`CylinderOS.lean:404`) plus the sequence adapters `.of_forall` (`:334`) and
