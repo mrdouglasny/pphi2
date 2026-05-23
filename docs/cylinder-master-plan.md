@@ -9,10 +9,16 @@ circle, infinite Euclidean time) satisfies **OS0–OS4** — adding **reflection
 not give. OS3 is what makes the cylinder the gateway to **OS reconstruction → a Wightman
 QFT in 1+1d with a positive mass gap**.
 
-This is the successor campaign to the torus. Per the calibration in the torus plan and
-the heavy reuse below, the realistic horizon is **a few weeks** to unconditional OS0–OS3
-and OS4-modulo-textbook-axioms; the genuine new crux (spectral-gap transfer to the
-continuum) is the long pole.
+This is the successor campaign to the torus, and much of the *scaffolding* is reused — but
+unlike the torus (a fixed-volume UV limit), the cylinder is an **infinite-volume (Lₜ→∞)
+limit**, so it has two genuinely-new deep analytic theorems, not just plumbing: the
+**Lₜ-uniform exponential-moment bound** (CYL-1a — gating OS0/OS1) and the **spectral-gap
+transfer to the continuum** (CYL-2a — gating OS4). Either may need constructive-QFT locality
+machinery (cluster expansion / correlation inequalities / chessboard estimates) or a textbook
+axiom. So the timeline is **not** "a few weeks of reuse": the integration/wiring pieces are
+near-term, but **M-cyl-1 (unconditional OS0–OS3) is gated on CYL-1a**, which is a real
+infinite-volume-control theorem and the first hard bottleneck. Forecast honestly: near-term
+*modulo* the Lₜ-uniform input.
 
 ---
 
@@ -66,13 +72,28 @@ the partial M-cyl-1 theorem.)
 ## Workstreams
 
 ### CYL-1 — unconditional OS0+OS1+OS2+OS3  (`cylinder_satisfies_OS0123`, M-cyl-1)
-Discharge the three conditions of `routeBPrime_cylinder_OS` **and** add OS1. Heavy reuse of
-torus machinery and the existing cylinder adapters — much of this is integration, with one
-genuine analytic piece (CYL-1a) and one real RP proof (CYL-1b).
+Discharge the three conditions of `routeBPrime_cylinder_OS` **and** add OS1. Two of the four
+items are integration/wiring (CYL-1c, CYL-1d) and one is a contained RP proof (CYL-1b) — but
+**CYL-1a is a genuine constructive-QFT bottleneck (infinite-volume control), not free reuse**,
+and it gates M-cyl-1. Do not treat M-cyl-1 as "a few weeks" without qualifying on CYL-1a.
 
-- **CYL-1a `…HasUniformGreenMomentBound` (genuine analytic piece).** Exp-moment bound along
-  the Lₜ-sequence, same shape as the torus `torusInteracting_exponentialMomentBound`. Reuse
-  the **axiom-free** Nelson estimate + hypercontractivity (geometry-agnostic — see Reuse).
+- **CYL-1a `…HasUniformGreenMomentBound` — the IR/volume-uniformity bottleneck (HARD).** The
+  cylinder is the **Lₜ→∞ (infinite-volume) limit**, so the exponential-moment bound must hold
+  with constants **uniform in the time extent Lₜ**, not merely uniform in the lattice spacing.
+  The repo's own `AsymTorus/MomentBoundOS1.lean` is explicit (its docstring + the "Caveat on
+  Lt-uniformity"): deriving the Lₜ-uniform `K, C` is **not** an elementary consequence of
+  Nelson's estimate + Cauchy-Schwarz — the naive transfer leaves explicit volume (Lₜ) growth.
+  - **What IS done:** the *reduction* — `cylinderPullback_expMoment_uniform_bound` composes a
+    per-measure Green-controlled bound `MeasureHasGreenMomentBound` with
+    `torusGreen_uniform_bound` (gaussian-field) to yield the exact uniform cylinder-seminorm
+    bound `routeBPrime_cylinder_OS` consumes. So the IR-limit step is wired.
+  - **What is MISSING (the real obstruction):** proving the concrete UV-limit asymmetric-torus
+    measures satisfy `MeasureHasGreenMomentBound` with constants **uniform in Lₜ**. This is the
+    infinite-volume/locality control of constructive QFT — likely requires locality machinery
+    (cluster expansion, correlation inequalities, or chessboard estimates), **or** is taken as
+    a single upstream textbook axiom (Glimm-Jaffe Part III). This is the cylinder's first deep
+    analytic theorem and the dominant risk to M-cyl-1's timeline — comparable in weight to
+    CYL-2a, and arguably the gating item for OS0/OS1 themselves.
 - **CYL-1b `…EventuallyReflectionPositive` — prove finite-stage pullback RP (the real RP
   work).** The CF-limit transfer is **already done**: `cylinderMeasureReflectionPositive_of_tendsto_cf`
   (`CylinderOS.lean:404`) plus the sequence adapters `.of_forall` (`:334`) and
@@ -151,17 +172,19 @@ Torus-specific (needs a cylinder analogue): the lattice→continuum **embedding*
 ## Blocking obligations (two kinds: new theorems + textbook-vetted axioms)
 
 Reaching the full OS0–OS4 endpoint on the trio requires **new theorems** *and* discharging
-existing **axioms**. The axiom table alone understates the scope — the largest blocker is a
-new theorem (CYL-2a), not an axiom.
+existing **axioms**. The axiom table alone understates the scope — **two** of the blockers are
+deep new theorems (CYL-1a and CYL-2a), and one of them (CYL-1a) gates even the *first*
+milestone OS0/OS1, not just OS4.
 
-**New theorems still to prove** (no current analogue):
+**New theorems still to prove** (no current analogue) — ordered by difficulty:
 
-| Obligation | Workstream | Gates | Note |
+| Obligation | Workstream | Gates | Difficulty |
 |---|---|---|---|
-| spectral-gap transfer lattice→continuum | **CYL-2a** | OS4 | the crux / long pole; not an existing axiom |
-| `LinearGrowth` witness for the cylinder OSPackage | **CYL-4a** | reconstruction | genuine analytic input, not implied by OS0–OS4 |
-| OS1 transfer through the IR limit | **CYL-1d** | OS1 | extends the OS0 transfer; modest |
-| finite-stage pullback RP | **CYL-1b** | OS3 | combines proved lattice RP + weak-limit closure |
+| **Lₜ-uniform** Green-controlled exp-moment bound (infinite-volume control) | **CYL-1a** | OS0, OS1 | **HARD** — likely cluster expansion / correlation inequalities / chessboard, or an upstream axiom; the reduction is wired, the uniform-in-Lₜ input is not. Gates M-cyl-1. |
+| spectral-gap transfer lattice→continuum | **CYL-2a** | OS4 | **HARD** — the OS4 crux / long pole; not an existing axiom |
+| `LinearGrowth` witness for the cylinder OSPackage | **CYL-4a** | reconstruction | medium — genuine analytic input, not implied by OS0–OS4 |
+| OS1 transfer through the IR limit | **CYL-1d** | OS1 | modest — extends the OS0 transfer (but itself rests on CYL-1a) |
+| finite-stage pullback RP | **CYL-1b** | OS3 | contained — combines proved lattice RP + weak-limit closure |
 
 **Existing axioms to discharge** (all textbook-vetted; CYL-3):
 
@@ -173,19 +196,24 @@ new theorem (CYL-2a), not an axiom.
 | `general_clustering_from_spectral_gap` | `OSProofs/OS4_MassGap.lean:160` | OS4 | GRS 1975 II §IV; Glimm-Jaffe §6.2 |
 | `rotation_cf_defect_polylog_bound` | `OSProofs/OS2_WardIdentity.lean:614` | (torus OS2 rotation; **not** needed for the cylinder, whose OS2 is translation+reflection only) | Glimm-Jaffe §19.2 |
 
-OS0+OS1+OS2+OS3 on the cylinder need **no axioms** once CYL-1 lands. OS4 needs *both* the
-CYL-2a new theorem *and* the four OS4 axioms above; reconstruction additionally needs CYL-4a.
+OS0+OS1+OS2+OS3 on the cylinder add **no new axioms** once CYL-1 lands — *provided CYL-1a is
+proved* (if instead the Lₜ-uniform moment bound is taken as a textbook axiom, that one axiom
+gates OS0/OS1). OS4 needs *both* the CYL-2a new theorem *and* the four OS4 axioms above;
+reconstruction additionally needs CYL-4a.
 
 ---
 
 ## Recommended sequencing
 
-1. **CYL-1** (a = the analytic exp-moment piece; b = finite-stage pullback RP fed to the
-   existing CF transfer; c = OS2 wiring via `of_torusOS`; d = OS1 lane) →
-   **`cylinder_satisfies_OS0123`**, unconditional cylinder OS0+OS1+OS2+OS3. Near-term, high
-   reuse. *The satisfying first milestone — the first construction with reflection positivity.*
-2. **CYL-2a** — spectral-gap transfer to the continuum. The hard analytic crux; budget the
-   most time here (the cylinder's analogue of the Nelson/hypercontractivity work).
+1. **CYL-1** → **`cylinder_satisfies_OS0123`**, unconditional cylinder OS0+OS1+OS2+OS3.
+   The wiring pieces are near-term (b = finite-stage pullback RP fed to the existing CF
+   transfer; c = OS2 via `of_torusOS`; d = OS1 lane), **but the milestone is gated on CYL-1a**
+   = the Lₜ-uniform exp-moment bound, a real infinite-volume-control theorem (the first hard
+   bottleneck — possibly cluster-expansion/locality work or an upstream axiom). Decide early
+   whether to *prove* CYL-1a or accept it as a vetted textbook axiom; that choice sets the
+   M-cyl-1 timeline. *The reward: the first construction with reflection positivity.*
+2. **CYL-2a** — spectral-gap transfer to the continuum. The second hard analytic crux (OS4);
+   budget time comparable to CYL-1a (the cylinder's analogue of the Nelson/hypercontractivity work).
 3. **CYL-2b + CYL-3** — assemble OS4 from the transferred gap; discharge the four OS4 textbook
    axioms toward the trio.
 4. **CYL-4a then CYL-4b** — package + prove `LinearGrowth`, then invoke reconstruction →
