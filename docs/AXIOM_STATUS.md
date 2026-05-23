@@ -2,7 +2,7 @@
 
 *Current state of pphi2's axiom inventory. No history — see
 [`axiom_audit.md`](axiom_audit.md) for the historical log of audit
-passes and discharges. Last refreshed: 2026-05-16.*
+passes and discharges. Last refreshed: 2026-05-22.*
 
 ## At a glance
 
@@ -11,7 +11,7 @@ passes and discharges. Last refreshed: 2026-05-16.*
 | pphi2 axioms (active) | **17** (15 public + 2 `private`) — down from 19 after the 2026-05-16 Phase B discharge |
 | pphi2 sorries | **0** — `rough_error_variance` is now fully proved; `#print axioms Pphi2.rough_error_variance` shows only `[propext, Classical.choice, Quot.sound]`. |
 | `lake build` | clean (3857 jobs) |
-| Direct upstream deps | gaussian-field (`269fbc2`, 3 axioms / 0 sorries), markov-semigroups (`3cb482d`, 11 axioms / 0 sorries), gaussian-hilbert (`05ee231`, 4 axioms / 0 sorries), bochner (`main`) |
+| Direct upstream deps (pins from `lake-manifest.json`) | gaussian-field (`269fbc2e`, **3 axioms / 0 sorries** — verified via `count_axioms.sh`); gibbs-variational (`45eb21b`, **0 axioms / 1 off-critical-path sorry**); markov-semigroups (`5bf4444`, tracks `main`), gaussian-hilbert (`7531830`, tracks `main`), bochner (`b70e84b8`, tracks `main`). Sister-repo axiom counts drift with `main` and are not re-verifiable from here (`count_axioms.sh` covers only pphi2 + gaussian-field) — see each repo's own `AXIOM_AUDIT.md` for current figures (gaussian-hilbert was ~1 axiom at the 2026-05-11 audit; markov-semigroups ~11). |
 
 The `scripts/count_axioms.sh` script reports 19 because of two
 `axiom`-prefixed words in docstrings at `LatticeBridge.lean:21` and

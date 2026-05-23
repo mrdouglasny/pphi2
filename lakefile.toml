@@ -26,6 +26,12 @@ scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gaussian-hilbert.git"
 rev = "main"
 
+[[require]]
+name = "GibbsVariational"
+scope = "mrdouglasny"
+git = "https://github.com/mrdouglasny/gibbs-variational.git"
+rev = "main"
+
 [[lean_lib]]
 name = "Pphi2"
 needs = ["Common"]

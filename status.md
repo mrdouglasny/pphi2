@@ -16,10 +16,16 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-09): 19 axioms, 0 sorries** (pphi2)
-**+ 6 axioms, 1 sorry** (gaussian-field) = **26 combined**. pphi2 now also depends on markov-semigroups
-(at the v4.29.0-aligned `7d55117` pin) for the upstream
-`polynomial_chaos_concentration` API used by Cluster A.
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-22): 19 raw axioms (17 real — 15 public + 2
+`private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
+**+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
+`count_axioms.sh`). pphi2 also depends on markov-semigroups and gaussian-hilbert (axiom counts
+track `main` — see [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) and each repo's own
+`AXIOM_AUDIT.md`) for the upstream `polynomial_chaos_concentration` API used by Cluster A, and now
+on [`gibbs-variational`](https://github.com/mrdouglasny/gibbs-variational) (0 axioms, 1
+off-critical-path `sorry`) for the finite-dim Boué–Dupuis bound that will discharge the cylinder
+CYL-1a Green-moment input. See [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) for the canonical
+inventory (refreshed 2026-05-22).
 
 Recent change (2026-05-08, post PR #14 merge): **5 Stage 1 GJ axioms
 discharged in Phase 2** plus three additional pphi2 axioms cleared by
