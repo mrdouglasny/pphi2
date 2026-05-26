@@ -32,30 +32,33 @@ Single spacing `a`; site counts `Nt`, `Ns`; periods `Lt = Nt·a`, `Ls = Ns·a`. 
 > no `latticeCovarianceAsym` synonym needed, and the square convergence machinery (stated
 > over `latticeCovariance`) applies once the bridge below is in place.
 >
-> **Phase 1b remaining port checklist** (dependency order; the convergence sorry sits on top):
-> 1. **Abstract-spectral side** (port from `Laplacian.lean` / `SpectralCovariance.lean`):
->    - `finiteLaplacianAsym_neg_semidefinite` (port `Laplacian.lean:204` + helper
->      `direction_sum_eq_neg_sq` — now two explicit directions instead of `∑ Fin d`),
->    - `massOperatorAsym_pos_def` (port `massOperator_pos_def`),
->    - `massOperatorMatrixAsym_eigenvalues_pos` / `massEigenvaluesAsym_pos` (port),
->    - `spectralLatticeCovarianceAsym_inner` (port `spectralLatticeCovariance_inner`; the
->      `covariance … = ∑_k λ_k⁻¹ ⟪e_k,f⟫⟪e_k,g⟫` identity),
->    - `massOperator_eigenCoeff_eq_eigenvalues_mul_eigenCoeff` analogue,
->    - `massEigenbasis_sum_mul_sum_eq_site_inner` analogue (abstract Parseval / completeness).
->    These are generic Hermitian-eigendecomposition facts — `massEigenvaluesAsym`/
->    `massEigenvectorBasisAsym` are defined identically to the square, so the ports are mechanical.
-> 2. **`massOperator_surjective_2d_asym`** (port `CirculantDFT2d.lean:188`; uses pos-def from 1).
-> 3. **`dft_eigencoeff_massOperator_2d_asym`** (port `:208`; uses the *already-proved*
->    `massOperator_product_eigenvector_asym` + `finiteLaplacianAsym_selfAdjoint`).
-> 4. **`abstract_spectral_eq_dft_spectral_2d_asym`** — the bridge (port `:233`; assembles
->    1+2+3 + the already-proved `dft_parseval_2d_asym`). This is the analogue of the single
->    most important square lemma; once it lands the convergence is "just" Tannery.
-> 5. **The convergence** `lattice_green_tendsto_continuum_asym` — port the whole
+> **Phase 1b port checklist** (dependency order; the convergence sorry sits on top):
+> 1. ✅ **DONE** (`ee953fd`, `161b2dc`, `bec5bcb`) — **abstract-spectral side**:
+>    `asym_field_basis_decomp`, `asym_direction_sum_eq_neg_sq`,
+>    `finiteLaplacianAsym_neg_semidefinite`, `massOperatorAsym_pos_def`,
+>    `massOperatorAsym_eq_matrix_mulVec`, `massOperatorAsym_eigenCoeff_eq_eigenvalues_mul_eigenCoeff`,
+>    `massEigenbasisAsym_sum_mul_sum_eq_site_inner`, `massOperatorMatrixAsym_eigenvalues_pos`,
+>    `spectralLatticeCovarianceAsym_inner`, plus DFT-side `sum_factor_asym`,
+>    `dft_parseval_2d_asym`, `massOperator_product_eigenvector_asym`. (Needed
+>    `import Mathlib.Analysis.Matrix.PosDef`; use `.mulVec` method, not `*ᵥ`.)
+> 2. ✅ **DONE** (`8492cc9`) — `massOperatorAsym_surjective`.
+> 3. ✅ **DONE** (`8492cc9`) — `dft_eigencoeff_massOperatorAsym`.
+> 4. ✅ **DONE** (`8492cc9`) — `abstract_spectral_eq_dft_spectral_2d_asym` (the bridge, +
+>    helper `covariance_spectralLatticeCovarianceAsym_eq`). **All new rectangular spectral
+>    infrastructure proved; the convergence is now "just" Tannery.**
+> 5. **TODO — the convergence** `lattice_green_tendsto_continuum_asym`. Port the
 >    `Convergence.lean` Tannery stack (`latticeGreenTerm2dAsym`, `_tendsto`, `_norm_le`,
->    `summable_bound`, `_pure`, then DM-expansion to general elements). The 1D domination
+>    `summable_bound`, `_pure`, then DM-expansion to general elements). Connection: identify
+>    `covariance (spectralLatticeCovarianceAsym …) (evalAsym (pure f₁ f₂)) (evalAsym (pure g₁ g₂))`
+>    with `∑ latticeGreenTerm2dAsym` via `abstract_spectral_eq_dft_spectral_2d_asym` (step 4)
+>    + `evalAsymTorusAtSite` on pure tensors = product of `circleRestriction`s (mirror
+>    `lattice_covariance_pure_eq_2d_spectral`, `Convergence.lean:67`). The 1D domination
 >    `latticeDFTCoeff1d_quadratic_bound L` is reused **verbatim per direction** (`Lt`, `Ls`),
 >    so the `Lt≠Ls` obstruction is gone and constants are `Lt`-uniform. Largest sub-piece (~the
 >    bulk of the 1219-line `Convergence.lean`, re-assembled with two circle sizes sharing `a`).
+>    Check the continuum target: scaffold currently states `greenFunctionBilinear mass hmass f g`
+>    — confirm this is the rectangular-torus Green (dispersion `(2πp/Lt)²+(2πq/Ls)²`) vs.
+>    `asymTorusContinuumGreen`, and align if needed.
 
 ### 1a. Isotropic covariance on `AsymLatticeField Nt Ns`
 
