@@ -63,11 +63,48 @@ theorem asym_torus_propagator_convergence (mass : ℝ) (hmass : 0 < mass)
       atTop (nhds (asymTorusContinuumGreen Lt Ls mass hmass f g))
 ```
 **Port route** (mirror `torus_propagator_convergence`): the GJ-aligned asym embedding
-(`asymLatticeTestFn` carries the `(L/N)`-per-coord factor, `latticeCovarianceGJ` the
-`(a^d)⁻¹`) makes the same `d=2` cancellation, reducing to gaussian-field's bare-CLM
-convergence `lattice_green_tendsto_continuum` evaluated on the asym `evalAtSite` test
-functions. Expected effort: modest — it is the symmetric proof with the asym spacing
-`asymGeomSpacing` and the asym continuum Green `asymTorusContinuumGreen`.
+(`asymLatticeTestFn` carries the `√(Lt·Ls)/N` geometric-mean factor via
+`evalAsymAtFinSiteGJ`, `latticeCovarianceGJ` the `(a^d)⁻¹`) makes the same `d=2`
+cancellation, reducing the pphi2-side wrapper to gaussian-field's bare-CLM convergence
+on the asym `evalAsymAtFinSite` test functions.
+
+### Where the delta actually bottoms out (traced 2026-05-26)
+
+The pphi2 wrapper is a **clean mirror** of the symmetric proof — but it reduces to a
+gaussian-field convergence that **does not yet exist**:
+
+- gaussian-field's `lattice_green_tendsto_continuum` (`Lattice/Convergence.lean:1121`)
+  and its per-mode core `lattice_green_tendsto_continuum_pure` (`:433`) are **square-only**:
+  a single circle size `L` for both directions (`SmoothMap_Circle L`, square dispersion),
+  target `greenFunctionBilinear`.
+- The asym torus has the **same isotropic lattice covariance** (geometric-mean spacing
+  `asymGeomSpacing`) but **rectangular evaluation** — `evalAsymTorusAtSite` uses `Lt/N`
+  (time) and `Ls/N` (space) per direction — converging to the **rectangular**
+  `asymTorusContinuumGreen` (dispersion `(2πp/Lt)² + (2πq/Ls)² + m²`).
+
+So the genuine missing piece is a **rectangular generalization of
+`lattice_green_tendsto_continuum`** in gaussian-field: the lattice→continuum Green
+convergence with `SmoothMap_Circle Lt ⊗ SmoothMap_Circle Ls` test functions and the
+rectangular continuum Green. The *core convergence* (isotropic lattice resolvent →
+continuum resolvent) is shared with the square case; only the test-function space and
+the continuum target change.
+
+**Cost.** The proof is assembled **per Fourier mode** (Tannery over `ℕ×ℕ` +
+`latticeDFTCoeff1d_quadratic_bound` per 1D direction). If the 2D term `latticeGreenTerm2d`
+factors into 1D terms parametric in the circle size, the rectangular version is a
+**moderate refactor** (instantiate the two factors with `Lt`, `Ls`); otherwise a larger
+re-derivation. This is standard constructive-QFT analysis (Glimm–Jaffe), not novel math.
+
+**Decision (effort vs. axiom).** Two options:
+- **(a) Generalize the gaussian-field proof** to the rectangle — zero-axiom, real labor
+  (size set by the 1D factorization; check `latticeGreenTerm2d` first).
+- **(b) Vetted textbook axiom.** The lattice→continuum covariance convergence on a
+  rectangular torus is a standard, well-established fact, and the *square* case is fully
+  proved (`torus_propagator_convergence`) — strong evidence it is formalizable. Per the
+  project's textbook-axiom policy, state `asym_torus_propagator_convergence` as a cited,
+  audited axiom (Glimm–Jaffe; symmetric analogue proved) and spend effort on the harder,
+  more novel pieces (OS3 RP, or the OS4 mass gap). The pphi2 wrapper + assembly close the
+  cylinder OS0 chain either way.
 
 ## Assembly of `MeasureHasGreenMomentBound`
 
