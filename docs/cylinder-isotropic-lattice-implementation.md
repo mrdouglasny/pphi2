@@ -22,15 +22,21 @@ Single spacing `a`; site counts `Nt`, `Ns`; periods `Lt = Nt·a`, `Ls = Ns·a`. 
 
 ## Phase 1 — gaussian-field: heterogeneous covariance + convergence
 
-> **Status (2026-05-26).** Phase 1a is **DONE** and committed on branch
-> `cylinder-isotropic-lattice` (`gaussian-field/Lattice/AsymCovariance.lean`); Phase 1b's
-> DFT-side foundation is done too. Commits: `ab7b3ed` (chain), `21f306c`
-> (`finiteLaplacianAsym_selfAdjoint`), `ee953fd` (rectangular Parseval + product eigenvector).
-> The single remaining `sorry` is `lattice_green_tendsto_continuum_asym` (the convergence).
+> **Status (2026-05-26). Phases 1a + 1b COMPLETE.** `gaussian-field/Lattice/AsymCovariance.lean`
+> builds with **0 sorry, 0 custom axioms** (`lattice_green_tendsto_continuum_asym` depends only
+> on `[propext, Classical.choice, Quot.sound]`); full `lake build` green. The rectangular
+> lattice→continuum Green's-function convergence — the honest, metric-correct cylinder-OS0
+> "delta" (dispersion `(2πp/Lt)²+(2πq/Ls)²`, `Lt`-uniform) — is a proved theorem, on branch
+> `cylinder-isotropic-lattice`. Commits `ab7b3ed`→`5bb35e8`.
 > Key discovery: `latticeCovariance := spectralLatticeCovariance` *definitionally*
-> (`Covariance.lean:97`), so `spectralLatticeCovarianceAsym` is exactly the right object —
-> no `latticeCovarianceAsym` synonym needed, and the square convergence machinery (stated
-> over `latticeCovariance`) applies once the bridge below is in place.
+> (`Covariance.lean:97`), so `spectralLatticeCovarianceAsym` is exactly the right object and
+> the square convergence machinery ports directly.
+>
+> **Remaining for the cylinder construction:** Phase 2 (pphi2 `AsymTorus/` refactor —
+> replace `finToAsymSite`/`asymGeomSpacing` with the `Z_Nt×Z_Ns` isotropic lattice and
+> re-target the embedding/cutoff/Nelson/second-moment to it) and Phase 3 (assemble
+> `MeasureHasGreenMomentBound` as a theorem from the cutoff bound + this convergence + the
+> limit transfer, feeding `routeBPrime_cylinder_OS`). These are in pphi2, not gaussian-field.
 >
 > **Phase 1b port checklist** (dependency order; the convergence sorry sits on top):
 > 1. ✅ **DONE** (`ee953fd`, `161b2dc`, `bec5bcb`) — **abstract-spectral side**:
@@ -77,15 +83,16 @@ Single spacing `a`; site counts `Nt`, `Ns`; periods `Lt = Nt·a`, `Ls = Ns·a`. 
 >        (All names resolved first try.)
 >      - ✅ **DONE** (`6481d5b`) — `lattice_covariance_pure_abs_le_asym` (mixed flat×quadratic
 >        uniform bound; per-size hyps; keep the `0 ≤ C` from `quadratic_bound`, don't `by positivity`).
->      - **TODO** — `lattice_green_tendsto_pure_right_asym` (square `:723`–`883`) and
->        `lattice_covariance_general_basis_bound_asym` (square `:935`–`1120`), then the main
->        theorem (square `:1121`–`1216`). **Adaptation needed (not mechanical):** the square uses one
->        `L`, so one `basis_growth` constant `A₀, r₀`; the rectangle has two factors `SMC Lt`,
->        `SMC Ls` → two `basis_growth` invocations with `(A₀₁,r₀₁)`/`(A₀₂,r₀₂)`, so the bound carries
->        `(1+unpair.1)^r₀₁·(1+unpair.2)^r₀₂` and `h_unpair_le` becomes `≤ (1+m)^(r₀₁+r₀₂)`, with
->        `coeff_decay (E := AsymTorusTestFunction Lt Ls) (r₀₁+r₀₂+2)`.
->      ~440 lines remain (the hard analysis — spectral diagonalization, per-mode limits, pure-tensor
->      Tannery — is all done; what's left is the two-factor DMS bound bookkeeping).
+>      - ✅ **DONE** (`d0ce67f`) — `latticeDFTCoeff1d_seminorm_quadratic_gen` (re-port of the
+>        private square seminorm-explicit quadratic bound, for a general circle size).
+>      - ✅ **DONE** (`9e29ffb`) — `lattice_green_tendsto_pure_right_asym` (Phase A: general `f`,
+>        pure `g`), two-factor adaptation with distinct `basis_growth` exponents `r₁, r₂`.
+>      - ✅ **DONE** (`5bb35e8`) — `lattice_covariance_general_basis_bound_asym` (four
+>        `basis_growth` invocations, sobolev 0/2 × `SMC Lt`/`SMC Ls`; `rn = r₀₁+r₀₂`, `rm = rq₁+rq₂`)
+>        **and the main theorem** `lattice_green_tendsto_continuum_asym` (Phase-B DM-expansion in `g`).
+>        Per-size flat/quad bounds via `simp only [(Nt k−1)+1 = Nt k]` (not `rw` — dodges the
+>        `[NeZero]` instance-motive issue).
+>      **Phase 1b COMPLETE: 0 sorry, 0 custom axioms, full `lake build` green.**
 >    The 1D domination `latticeDFTCoeff1d_quadratic_bound L` reused verbatim per direction
 >    (any size = `N+1`), so `Lt≠Ls` obstruction gone, constants `Lt`-uniform.
 >    - **Continuum target:** scaffold states `greenFunctionBilinear mass hmass f g` on
