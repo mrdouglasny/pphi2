@@ -323,14 +323,14 @@ weak limit by `weakLimit_exponential_moment` (truncation + MCT). `MeasureHasGree
 never produced for the metric-mismatched square construction, is here a **theorem**. -/
 theorem asymTorusIso_measureHasGreenMomentBound_of_cutoff
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
-    (K : ℝ) (_hK_pos : 0 < K)
+    (K C : ℝ) (_hK_pos : 0 < K)
     (hcutoff : ∀ (f : AsymTorusTestFunction Lt Ls) (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
       (a : ℝ) (ha : 0 < a), (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
       Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
         Real.exp (|ω f|)) (asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) ∧
       ∫ ω : Configuration (AsymTorusTestFunction Lt Ls),
         Real.exp (|ω f|) ∂(asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) ≤
-      K * Real.exp (∫ ω : Configuration (AsymLatticeField Nt Ns),
+      K * Real.exp (C * ∫ ω : Configuration (AsymLatticeField Nt Ns),
         (ω (asymLatticeTestFnIso Lt Ls Nt Ns a f)) ^ 2
         ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)))
     (Nt Ns : ℕ → ℕ) (a : ℕ → ℝ)
@@ -339,7 +339,7 @@ theorem asymTorusIso_measureHasGreenMomentBound_of_cutoff
     (ha0 : Filter.Tendsto a Filter.atTop (nhds 0)) :
     ∃ (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls))),
       IsProbabilityMeasure μ ∧
-        MeasureHasGreenMomentBound Ls mass hmass K 1 μ := by
+        MeasureHasGreenMomentBound Ls mass hmass K C μ := by
   obtain ⟨μ, hμ_prob, φ, hφ_mono, hconv⟩ :=
     asymTorusIso_interacting_limit_exists Lt Ls P mass hmass Nt Ns a hNt hNs ha hvolt hvols ha0
   haveI := hμ_prob
@@ -355,7 +355,7 @@ theorem asymTorusIso_measureHasGreenMomentBound_of_cutoff
     exact asymTorusInteractingMeasureIso_isProbability Lt Ls (Nt (φ n)) (Ns (φ n)) (a (φ n))
       P mass (ha (φ n)) hmass
   -- The lattice second moment along the subsequence
-  set B : ℕ → ℝ := fun n => K * Real.exp (haveI := hNt (φ n); haveI := hNs (φ n)
+  set B : ℕ → ℝ := fun n => K * Real.exp (C * haveI := hNt (φ n); haveI := hNs (φ n)
     ∫ ω : Configuration (AsymLatticeField (Nt (φ n)) (Ns (φ n))),
       (ω (asymLatticeTestFnIso Lt Ls (Nt (φ n)) (Ns (φ n)) (a (φ n)) f)) ^ 2
       ∂(latticeGaussianMeasureAsym (Nt (φ n)) (Ns (φ n)) (a (φ n)) mass (ha (φ n)) hmass))
@@ -380,9 +380,10 @@ theorem asymTorusIso_measureHasGreenMomentBound_of_cutoff
     rw [heq]
     exact second_moment_asym_tendsto Lt Ls mass hmass Nt Ns a hNt hNs ha hvolt hvols ha0 f f
   have hB_tendsto : Filter.Tendsto B Filter.atTop
-      (nhds (K * Real.exp (asymTorusContinuumGreen Lt Ls mass hmass f f))) := by
+      (nhds (K * Real.exp (C * asymTorusContinuumGreen Lt Ls mass hmass f f))) := by
     rw [hB_def]
-    exact ((Real.continuous_exp.tendsto _).comp (hσ2_full.comp hφ_atTop)).const_mul K
+    exact ((Real.continuous_exp.tendsto _).comp
+      ((hσ2_full.comp hφ_atTop).const_mul C)).const_mul K
   -- Uniform per-n exponential moment bound from the cutoff bound
   have h_unif : ∀ n, Integrable (fun ω => Real.exp (|ω f|)) (ν n) ∧
       ∫ ω, Real.exp (|ω f|) ∂(ν n) ≤ B n := fun n => by
@@ -395,10 +396,8 @@ theorem asymTorusIso_measureHasGreenMomentBound_of_cutoff
     fun g hg_cont hg_bdd => hconv g hg_cont hg_bdd
   -- Pass to the weak limit (truncation + MCT)
   obtain ⟨hint, hle⟩ := weakLimit_exponential_moment ν hν_prob μ hbc f B
-    (K * Real.exp (asymTorusContinuumGreen Lt Ls mass hmass f f)) hB_tendsto h_unif
-  refine ⟨hint, ?_⟩
-  rw [one_mul]
-  exact hle
+    (K * Real.exp (C * asymTorusContinuumGreen Lt Ls mass hmass f f)) hB_tendsto h_unif
+  exact ⟨hint, hle⟩
 
 /-- `…_of_cutoff` with the cutoff bound built from a Nelson `L²` constant `Knel` via
 `…_cutoff_of_nelson`; the resulting Green-moment constant is `√(2·Knel)`. -/
@@ -417,11 +416,12 @@ theorem asymTorusIso_measureHasGreenMomentBound_of_nelson
     ∃ (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls))),
       IsProbabilityMeasure μ ∧
         MeasureHasGreenMomentBound Ls mass hmass (Real.sqrt (2 * Knel)) 1 μ :=
-  asymTorusIso_measureHasGreenMomentBound_of_cutoff Lt Ls P mass hmass (Real.sqrt (2 * Knel))
+  asymTorusIso_measureHasGreenMomentBound_of_cutoff Lt Ls P mass hmass (Real.sqrt (2 * Knel)) 1
     (Real.sqrt_pos_of_pos (by linarith))
-    (fun f Nt Ns _ _ a ha hvt hvs =>
-      asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff_of_nelson
-        Lt Ls P mass hmass Knel hKnel_pos hKnel_bound f Nt Ns a ha hvt hvs)
+    (fun f Nt Ns _ _ a ha hvt hvs => by
+      simpa only [one_mul] using
+        asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff_of_nelson
+          Lt Ls P mass hmass Knel hKnel_pos hKnel_bound f Nt Ns a ha hvt hvs)
     Nt Ns a hNt hNs ha hvolt hvols ha0
 
 /-- **The isotropic UV continuum limit has the Green-controlled exponential moment bound.**
@@ -459,21 +459,21 @@ NB: the hypothesis is on the **interacting** moment, *not* the Nelson `L²` mome
 the latter genuinely grows like `e^{f|Λ|}` (free energy) and is never volume-uniform. -/
 theorem asymTorusIso_cylinderUniformGreenBound
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
-    (K : ℝ) (hK_pos : 0 < K)
+    (K C : ℝ) (hK_pos : 0 < K)
     (hUnif : ∀ (L : ℝ) [Fact (0 < L)] (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
       (Nt : ℝ) * a = L → (Ns : ℝ) * a = Ls → ∀ f : AsymTorusTestFunction L Ls,
       Integrable (fun ω : Configuration (AsymTorusTestFunction L Ls) =>
         Real.exp (|ω f|)) (asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ∧
       ∫ ω : Configuration (AsymTorusTestFunction L Ls),
         Real.exp (|ω f|) ∂(asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ≤
-      K * Real.exp (∫ ω : Configuration (AsymLatticeField Nt Ns),
+      K * Real.exp (C * ∫ ω : Configuration (AsymLatticeField Nt Ns),
         (ω (asymLatticeTestFnIso L Ls Nt Ns a f)) ^ 2
         ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass))) :
     ∃ (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
       (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls))),
       Filter.Tendsto Lt Filter.atTop Filter.atTop ∧
       (∀ n, IsProbabilityMeasure (μ n)) ∧
-      AsymTorusSequenceHasUniformGreenMomentBound Ls mass hmass K 1 Lt hLt μ := by
+      AsymTorusSequenceHasUniformGreenMomentBound Ls mass hmass K C Lt hLt μ := by
   have hLs_pos : 0 < Ls := hLs.out
   set Lt : ℕ → ℝ := fun n => ((n : ℝ) + 1) * Ls with hLt_def
   have hLt_pos : ∀ n, 0 < Lt n := fun n => by rw [hLt_def]; positivity
@@ -481,10 +481,10 @@ theorem asymTorusIso_cylinderUniformGreenBound
   -- For each IR period Lt n, the UV continuum measure with the uniform Green bound
   have hbound : ∀ n, ∃ μ : Measure (Configuration (AsymTorusTestFunction (Lt n) Ls)),
       IsProbabilityMeasure μ ∧
-      @MeasureHasGreenMomentBound Ls _ (Lt n) (hLtfact n) mass hmass K 1 μ := by
+      @MeasureHasGreenMomentBound Ls _ (Lt n) (hLtfact n) mass hmass K C μ := by
     intro n
     haveI := hLtfact n
-    exact asymTorusIso_measureHasGreenMomentBound_of_cutoff (Lt n) Ls P mass hmass K hK_pos
+    exact asymTorusIso_measureHasGreenMomentBound_of_cutoff (Lt n) Ls P mass hmass K C hK_pos
       (fun f Nt Ns _ _ b hb hvt hvs => hUnif (Lt n) Nt Ns b hb hvt hvs f)
       (fun k => (n + 1) * (k + 1)) (fun k => k + 1) (fun k => Ls / ((k : ℝ) + 1))
       (fun k => ⟨by positivity⟩) (fun k => ⟨by positivity⟩) (fun k => by positivity)
@@ -502,7 +502,7 @@ theorem asymTorusIso_cylinderUniformGreenBound
     exact Filter.Tendsto.atTop_mul_const hLs_pos
       ((tendsto_natCast_atTop_atTop (R := ℝ)).atTop_add tendsto_const_nhds)
   · exact AsymTorusSequenceHasUniformGreenMomentBound.of_forall Ls mass hmass
-      K 1 Lt hLtfact μ hμ_green
+      K C Lt hLtfact μ hμ_green
 
 /-- **Route-B′ cylinder OS0/OS1/OS2/OS3 from a volume-uniform interacting exp-moment** (isotropic
 construction).
@@ -516,14 +516,14 @@ crux that the metric-mismatched square construction never supplied — is produc
 `asymTorusIso_cylinderUniformGreenBound`; the rest is the proved `routeBPrime_cylinder_OS`. -/
 theorem routeBPrimeIso_cylinder_OS
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
-    (K : ℝ) (hK_pos : 0 < K)
+    (K C : ℝ) (hK_pos : 0 < K) (hC_pos : 0 < C)
     (hUnif : ∀ (L : ℝ) [Fact (0 < L)] (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
       (Nt : ℝ) * a = L → (Ns : ℝ) * a = Ls → ∀ f : AsymTorusTestFunction L Ls,
       Integrable (fun ω : Configuration (AsymTorusTestFunction L Ls) =>
         Real.exp (|ω f|)) (asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ∧
       ∫ ω : Configuration (AsymTorusTestFunction L Ls),
         Real.exp (|ω f|) ∂(asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ≤
-      K * Real.exp (∫ ω : Configuration (AsymLatticeField Nt Ns),
+      K * Real.exp (C * ∫ ω : Configuration (AsymLatticeField Nt Ns),
         (ω (asymLatticeTestFnIso L Ls Nt Ns a f)) ^ 2
         ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)))
     (hRP : ∀ (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
@@ -553,10 +553,87 @@ theorem routeBPrimeIso_cylinder_OS
           ↑(ω ((f i : CylinderTestFunction Ls) -
             cylinderTimeReflection Ls (f j : CylinderTestFunction Ls)))) ∂ν).re) := by
   obtain ⟨Lt, hLt, μ, hLt_tend, hμ_prob, hμ_green⟩ :=
-    asymTorusIso_cylinderUniformGreenBound Ls P mass hmass K hK_pos hUnif
-  exact routeBPrime_cylinder_OS Ls mass hmass K 1
-    hK_pos one_pos Lt hLt hLt_tend μ hμ_prob hμ_green
+    asymTorusIso_cylinderUniformGreenBound Ls P mass hmass K C hK_pos hUnif
+  exact routeBPrime_cylinder_OS Ls mass hmass K C
+    hK_pos hC_pos Lt hLt hLt_tend μ hμ_prob hμ_green
     (hRP Lt hLt μ) (hOS2 Lt hLt μ)
+
+/-- **Volume-uniform interacting exponential moment for P(φ)₂ on the cylinder** (textbook axiom).
+
+There exist constants `K, C > 0` (depending on `P`, `mass`, `Ls`, but **uniform in the time period
+`L` and in the lattice `(Nt, Ns, a)`**) such that every isotropic-lattice interacting measure
+`μ_int` on `Z_Nt × Z_Ns` (with `Nt·a = L`, `Ns·a = Ls`), pushed to the torus, has
+
+  `∫ exp(|ω f|) dμ_int ≤ K · exp(C · σ²(f))`,    `σ²(f) = ∫ (ω·asymLatticeTestFnIso f)² dμ_{GFF}`.
+
+This is *the* central uniform bound of constructive P(φ)₂: the finite-volume interacting measures
+have exponential moments bounded uniformly in the volume `L·Ls` (and the UV cutoff `a`). It is the
+input the metric-mismatched square construction never supplied; it discharges the `hUnif` hypothesis
+of `asymTorusIso_cylinderUniformGreenBound` / `routeBPrimeIso_cylinder_OS`.
+
+Reference: Glimm–Jaffe, *Quantum Physics*, Ch. 18–19; Simon, *P(φ)₂ Euclidean QFT*, Ch. V, VIII;
+Newman (1975), *Comm. Math. Phys.* 41 (Lee–Yang / Gaussian-domination of the MGF);
+Glimm–Jaffe–Spencer (cluster expansion).
+Strategy: the lattice action for Wick-ordered even `P` is ferromagnetic with single-site measure in
+the Simon–Griffiths (Lee–Yang) class, so by Newman's theorem the interacting MGF is dominated by the
+Gaussian with the *interacting* variance, `E[e^{ω f}]_int ≤ e^{½⟨(ω f)²⟩_int}` (giving `K = 2` via
+`e^{|x|} ≤ e^x + e^{-x}`); the interacting two-point function is bounded by `C₀·(free)` via the
+strict mass gap (Källén–Lehmann / lattice sum rule), so `⟨(ω f)²⟩_int ≤ C₀·σ²(f)` and `C = C₀/2`.
+Fixed `Ls` with `L → ∞` is quasi-1D, so Perron–Frobenius keeps the mass gap strictly positive and
+the susceptibility bounded — the volume-uniformity direction is safe.
+
+✅ Vetted: deep-think-gemini (2026-05-27): with the `C·σ²` exponent (coefficient `C`, **not** `1` —
+`1` is false in infinite volume since the interacting susceptibility can exceed `2/m²`) the
+statement is **Standard / Likely correct**; uniformity in `L` and `a` confirmed via the Newman bound
++ mass-gap variance domination; fixed-`Ls` quasi-1D is the safe direction. See
+`docs/cylinder-conditional-inputs-provability.md` §4. -/
+axiom asymInteracting_expMoment_volume_uniform
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    ∃ K C : ℝ, 0 < K ∧ 0 < C ∧
+      ∀ (L : ℝ) [Fact (0 < L)] (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
+        (Nt : ℝ) * a = L → (Ns : ℝ) * a = Ls → ∀ f : AsymTorusTestFunction L Ls,
+        Integrable (fun ω : Configuration (AsymTorusTestFunction L Ls) =>
+          Real.exp (|ω f|)) (asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ∧
+        ∫ ω : Configuration (AsymTorusTestFunction L Ls),
+          Real.exp (|ω f|) ∂(asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ≤
+        K * Real.exp (C * ∫ ω : Configuration (AsymLatticeField Nt Ns),
+          (ω (asymLatticeTestFnIso L Ls Nt Ns a f)) ^ 2
+          ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass))
+
+/-- **Cylinder OS0/OS1/OS2/OS3 for the isotropic P(φ)₂ construction**, unconditional in the
+volume-uniform exp-moment (now supplied by `asymInteracting_expMoment_volume_uniform`), conditional
+only on the separate reflection-positivity (OS3) and OS2-symmetry inputs. -/
+theorem cylinderIso_OS_of_RP_OS2
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (hRP : ∀ (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
+        (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls))),
+        CylinderMeasureSequenceEventuallyReflectionPositive Ls
+          (fun n => letI : Fact (0 < Lt n) := hLt n; cylinderPullbackMeasure (Lt n) Ls (μ n)))
+    (hOS2 : ∀ (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
+        (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls))),
+        AsymTorusSequenceHasCylinderOS2Symmetry Ls Lt hLt μ) :
+    ∃ (ν : Measure (Configuration (CylinderTestFunction Ls))),
+    IsProbabilityMeasure ν ∧
+    (∀ (n : ℕ) (J : Fin n → CylinderTestFunction Ls),
+      AnalyticOnNhd ℂ (fun z : Fin n → ℂ =>
+        ∫ ω, Complex.exp (∑ i, Complex.I * z i * ↑(ω (J i))) ∂ν) Set.univ) ∧
+    (∀ (f : CylinderTestFunction Ls),
+      ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν =
+      ∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderTimeReflection Ls f))) ∂ν) ∧
+    (∀ (τ : ℝ) (f : CylinderTestFunction Ls),
+      ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν =
+      ∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderTranslation Ls 0 τ f))) ∂ν) ∧
+    (∀ (v : ℝ) (f : CylinderTestFunction Ls),
+      ∫ ω, Complex.exp (Complex.I * ↑(ω f)) ∂ν =
+      ∫ ω, Complex.exp (Complex.I * ↑(ω (cylinderSpatialTranslation Ls v f))) ∂ν) ∧
+    (∀ (n : ℕ) (f : Fin n → ↥(cylinderPositiveTimeSubmodule Ls)) (c : Fin n → ℂ),
+      0 ≤ (∑ i, ∑ j, c i * starRingEnd ℂ (c j) *
+        ∫ ω, Complex.exp (Complex.I *
+          ↑(ω ((f i : CylinderTestFunction Ls) -
+            cylinderTimeReflection Ls (f j : CylinderTestFunction Ls)))) ∂ν).re) := by
+  obtain ⟨K, C, hK_pos, hC_pos, hUnif⟩ :=
+    asymInteracting_expMoment_volume_uniform Ls P mass hmass
+  exact routeBPrimeIso_cylinder_OS Ls P mass hmass K C hK_pos hC_pos hUnif hRP hOS2
 
 end Pphi2
 

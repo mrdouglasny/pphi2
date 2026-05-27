@@ -19,17 +19,21 @@ Euclidean/Minkowski interfaces.
 **Current counter (`./scripts/count_axioms.sh`, 2026-05-22): 19 raw axioms (17 real — 15 public + 2
 `private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
 **+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
-`count_axioms.sh`). On branch `cylinder-isotropic-lattice` (Phase-2 cylinder refactor, isotropic
-files now wired into `Pphi2.lean`): `count_axioms.sh` reports pphi2 **21 raw / 19 real**, 0
-sorries — the 17-real base plus two deep-think-vetted isotropic-redesign axioms,
+`count_axioms.sh`). On branch `cylinder-isotropic-lattice` (Phase-2/3 cylinder construction,
+isotropic files wired into `Pphi2.lean`): `count_axioms.sh` reports pphi2 **22 raw / 20 real**, 0
+sorries — the 17-real base plus three deep-think-vetted isotropic-redesign axioms:
 `asymChaosCutoffDecomposition` (`AsymTorus/AsymNelson.lean`, heterogeneous Nelson chaos
-decomposition) and `wickConstantAsym_eq_variance` (`AsymTorus/AsymWickMean.lean`, site variance =
-Wick constant for the circulant `Z_Nt × Z_Ns` GFF). gaussian-field **3** (the Phase-1b
-`AsymCovariance` convergence `lattice_green_tendsto_continuum_asym` added 0 axioms), with
-GaussianField pinned at `5bb35e8`. The generic Gaussian exp-moment lemma
-`GaussianField.gaussian_exp_abs_moment` (`GeneralResults/GaussianExpMoment.lean`) and the iso
-cutoff exp-moment bound `asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff`
-(`AsymTorus/AsymCutoffBound.lean`) are theorems (0 new axioms). pphi2 also depends on markov-semigroups and gaussian-hilbert (axiom counts
+decomposition), `wickConstantAsym_eq_variance` (`AsymTorus/AsymWickMean.lean`, site variance =
+Wick constant for the circulant `Z_Nt × Z_Ns` GFF), and `asymInteracting_expMoment_volume_uniform`
+(`AsymTorus/AsymContinuumLimit.lean`, the volume-uniform interacting exp-moment — the genuine
+cluster-expansion input). gaussian-field **3** (the Phase-1b `AsymCovariance` convergence
+`lattice_green_tendsto_continuum_asym` added 0 axioms), with GaussianField pinned at `5bb35e8`.
+Phase 3 produces `MeasureHasGreenMomentBound` as a theorem (per `Lt`) and, via the three axioms,
+`cylinderIso_OS_of_RP_OS2`: cylinder `S¹(Ls)×ℝ` OS0/OS1/OS2/OS3 conditional only on the separate
+reflection-positivity and OS2-symmetry inputs. The generic Gaussian exp-moment lemma
+`GaussianField.gaussian_exp_abs_moment` and the weak-limit transfer
+`GaussianField.weakLimit_exponential_moment` are theorems (0 axioms). See
+`docs/cylinder-conditional-inputs-provability.md` for the input-by-input provability map. pphi2 also depends on markov-semigroups and gaussian-hilbert (axiom counts
 track `main` — see [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) and each repo's own
 `AXIOM_AUDIT.md`) for the upstream `polynomial_chaos_concentration` API used by Cluster A, and now
 on [`gibbs-variational`](https://github.com/mrdouglasny/gibbs-variational) (0 axioms, 1

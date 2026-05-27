@@ -43,12 +43,17 @@ hypothesis whose provability we must vet.
 ```
 
 `#print axioms`:
-- `asymTorusIso_measureHasGreenMomentBound` and `asymTorusIso_cylinderUniformGreenBound`:
-  `[propext, Classical.choice, Quot.sound, asymChaosCutoffDecomposition, wickConstantAsym_eq_variance]`.
-- `routeBPrimeIso_cylinder_OS`: the above **+** `GaussianField.embed_l2_uniform_bound`.
+- `asymTorusIso_measureHasGreenMomentBound` / `asymTorusIso_cylinderUniformGreenBound` /
+  `routeBPrimeIso_cylinder_OS` (the conditional theorems):
+  `[propext, Classical.choice, Quot.sound, asymChaosCutoffDecomposition, wickConstantAsym_eq_variance]`
+  (`routeBPrimeIso_cylinder_OS` additionally `+ GaussianField.embed_l2_uniform_bound`).
+- `cylinderIso_OS_of_RP_OS2` (the §4-unconditional theorem): the above **+**
+  `asymInteracting_expMoment_volume_uniform` (§4 is now an axiom — see below).
 
-So six things to vet: two project axioms (§1, §2), one upstream gaussian-field axiom (§3),
-and three hypotheses of the final theorem (§4 volume-uniformity, §5 OS3, §6 OS2).
+**Update (2026-05-27):** §4 has been **promoted from hypothesis to a vetted `axiom`**
+(`asymInteracting_expMoment_volume_uniform`), so `cylinderIso_OS_of_RP_OS2` needs only the §5/§6
+inputs. So now: **three** project axioms (§1, §2, §4), one upstream gaussian-field axiom (§3), and
+two remaining hypotheses (§5 OS3, §6 OS2).
 
 ---
 
@@ -258,7 +263,7 @@ a hypothesis here because it is a separate (easy) development.
 | §1 `wickConstantAsym_eq_variance` | axiom | ✅ | **High** | circulant diagonal; square analogue proved |
 | §2 `asymChaosCutoffDecomposition` | axiom | ✅ | **Medium** | port 15.5K-line square Nelson machinery |
 | §3 `embed_l2_uniform_bound` | axiom (upstream) | ✅ | **High** | periodization, Stein–Weiss; pre-existing |
-| §4 volume-uniformity (★) | hypothesis | ✅ (now form (★)) | **Deep** (the real one) | corrected to interacting-moment form; cluster-expansion |
+| §4 volume-uniformity (★) | **axiom** `asymInteracting_expMoment_volume_uniform` | ✅ (form `K·e^{C·σ²}`) | **Deep** (the real one) | DT-vetted with `∃C`; cluster-expansion / mass-gap |
 | §5 `hRP` (OS3) | hypothesis | ✅ | Medium–High | lattice RP + weak-limit inheritance |
 | §6 `hOS2` | hypothesis | ✅ | High | discrete translation/reflection invariance |
 
@@ -266,7 +271,9 @@ a hypothesis here because it is a separate (easy) development.
 dominates the linear lower bound, ≡ cluster expansion). Everything else is either a standard fact
 or a mechanical port of already-proved square-track material.
 
-**Status (2026-05-27):** §4 has been corrected in Lean to the true interacting-moment form (★), so
-`routeBPrimeIso_cylinder_OS` is now a meaningful (non-vacuous) conditional theorem. The remaining
-mathematical work is to *discharge* §4 (cluster expansion / pressure bound) and §5–§6 (lattice RP
-+ symmetry), and the two axioms §1–§2 (ports of proved square-track material).
+**Status (2026-05-27):** §4 is corrected to the true interacting-moment form (★) and **promoted to
+a deep-think-vetted `axiom`** `asymInteracting_expMoment_volume_uniform`, so `cylinderIso_OS_of_RP_OS2`
+gives cylinder OS0/OS1/OS2/OS3 unconditional in §4 (only §5/§6 remain as hypotheses). pphi2 on the
+branch: **22 raw / 20 real axioms**, 0 sorries. The remaining mathematical work is to *discharge*
+the three isotropic axioms: §1, §2 (ports of proved square-track material) and §4 (the genuine
+cluster-expansion / pressure-bound result), plus the §5–§6 inputs (lattice RP + symmetry).
