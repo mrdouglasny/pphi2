@@ -19,7 +19,11 @@ Simon, *The P(φ)₂ Euclidean QFT*, Ch. VIII; Glimm–Jaffe, *Quantum Physics*,
 -/
 
 import Pphi2.AsymTorus.AsymCutoffBound
+import Pphi2.AsymTorus.MomentBoundOS1
+import Pphi2.GeneralResults.WeakLimitMoment
 import GaussianField.HypercontractiveNat
+import GaussianField.Tightness
+import GaussianField.ConfigurationEmbedding
 
 noncomputable section
 
@@ -198,6 +202,192 @@ theorem asymTorusIso_interacting_second_moment_uniform
       ≤ Cdt * σ2 k := hCdt f (Nt k) (Ns k) (a k) (ha k) (hvolt k) (hvols k)
     _ ≤ Cdt * Cg := mul_le_mul_of_nonneg_left (hσ2_le k) hCdt_pos.le
     _ ≤ Cdt * Cg + 1 := by linarith
+
+/-- The isotropic-lattice interacting measure pushed to the torus is a probability measure. -/
+theorem asymTorusInteractingMeasureIso_isProbability (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a : ℝ) (P : InteractionPolynomial) (mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
+    IsProbabilityMeasure (asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) := by
+  haveI := interactingLatticeMeasureAsym_isProbability Nt Ns P a mass ha hmass
+  exact Measure.isProbabilityMeasure_map
+    (asymTorusEmbedLiftIso_measurable Lt Ls Nt Ns a).aemeasurable
+
+/-- The squared evaluation `(ω f)²` is integrable under the isotropic interacting torus measure.
+Pushes through the embedding to `(ω g)²` under `interactingLatticeMeasureAsym`, then bounds the
+Boltzmann-weighted Gaussian integral via `pairing_memLp` + bounded-below interaction. -/
+theorem asymTorusInteractingMeasureIso_sq_integrable (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a : ℝ) (P : InteractionPolynomial) (mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f : AsymTorusTestFunction Lt Ls) :
+    Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) => (ω f) ^ 2)
+      (asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) := by
+  unfold asymTorusInteractingMeasureIso
+  rw [integrable_map_measure
+    ((configuration_eval_measurable f).pow_const 2).aestronglyMeasurable
+    (asymTorusEmbedLiftIso_measurable Lt Ls Nt Ns a).aemeasurable]
+  have h_eq : (fun ω : Configuration (AsymTorusTestFunction Lt Ls) => (ω f) ^ 2) ∘
+      (asymTorusEmbedLiftIso Lt Ls Nt Ns a) =
+      fun ω : Configuration (AsymLatticeField Nt Ns) =>
+        (ω (asymLatticeTestFnIso Lt Ls Nt Ns a f)) ^ 2 := by
+    ext ω; simp [Function.comp, asymTorusEmbedLiftIso_eval_eq Lt Ls Nt Ns a f ω]
+  rw [h_eq]
+  set g := asymLatticeTestFnIso Lt Ls Nt Ns a f
+  set μ_GFF := latticeGaussianMeasureAsym Nt Ns a mass ha hmass
+  set bw := boltzmannWeightAsym Nt Ns P a mass
+  obtain ⟨B, hB⟩ := interactionFunctionalAsym_bounded_below Nt Ns P a mass ha hmass
+  have hZ := partitionFunctionAsym_pos Nt Ns P a mass ha hmass
+  suffices h : Integrable (fun ω : Configuration (AsymLatticeField Nt Ns) => (ω g) ^ 2)
+      (μ_GFF.withDensity (fun ω => ENNReal.ofReal (bw ω))) by
+    unfold interactingLatticeMeasureAsym
+    exact h.smul_measure (ENNReal.inv_ne_top.mpr ((ENNReal.ofReal_pos.mpr hZ).ne'))
+  have hf_meas : Measurable (fun ω : Configuration (AsymLatticeField Nt Ns) =>
+      ENNReal.ofReal (bw ω)) :=
+    ENNReal.measurable_ofReal.comp
+      ((interactionFunctionalAsym_measurable Nt Ns P a mass).neg.exp)
+  apply (integrable_withDensity_iff hf_meas
+    (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mpr
+  have hbw_simp : ∀ ω : Configuration (AsymLatticeField Nt Ns),
+      (ENNReal.ofReal (bw ω)).toReal = bw ω :=
+    fun ω => ENNReal.toReal_ofReal (le_of_lt (boltzmannWeightAsym_pos Nt Ns P a mass ω))
+  simp_rw [hbw_simp]
+  have h_sq_int : Integrable (fun ω : Configuration (AsymLatticeField Nt Ns) => (ω g) ^ 2) μ_GFF :=
+    (pairing_memLp (latticeCovarianceAsymGJ Nt Ns a mass ha hmass) g 2).integrable_sq
+  apply (h_sq_int.mul_const (Real.exp B)).mono
+  · exact ((configuration_eval_measurable g).pow_const 2).aestronglyMeasurable.mul
+      (Measurable.aestronglyMeasurable
+        (interactionFunctionalAsym_measurable Nt Ns P a mass).neg.exp)
+  · exact Filter.Eventually.of_forall fun ω => by
+      simp only [Real.norm_eq_abs]
+      have h1 : 0 ≤ (ω g) ^ 2 := sq_nonneg _
+      have h2 : 0 < bw ω := boltzmannWeightAsym_pos Nt Ns P a mass ω
+      have h3 : bw ω ≤ Real.exp B := by
+        change Real.exp (-interactionFunctionalAsym Nt Ns P a mass ω) ≤ Real.exp B
+        exact Real.exp_le_exp_of_le (by linarith [hB ω])
+      rw [abs_of_nonneg (mul_nonneg h1 (le_of_lt h2)),
+          abs_of_nonneg (mul_nonneg h1 (le_of_lt (Real.exp_pos B)))]
+      exact mul_le_mul_of_nonneg_left h3 h1
+
+/-- **Existence of the isotropic UV continuum limit.** Along any isotropic lattice sequence
+`(Nt k, Ns k, a k)` with `Nt k·a k = Lt`, `Ns k·a k = Ls`, `a k → 0`, a subsequence of the
+interacting torus measures converges weakly to a probability measure `μ` on
+`Configuration (AsymTorusTestFunction Lt Ls)`.
+
+Tightness from the uniform second moment (`asymTorusIso_interacting_second_moment_uniform`) via
+Mitoma–Chebyshev (`configuration_tight_of_uniform_second_moments`), then Prokhorov extraction.
+Heterogeneous analogue of `asymTorusInteractingLimit_exists`. -/
+theorem asymTorusIso_interacting_limit_exists
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (Nt Ns : ℕ → ℕ) (a : ℕ → ℝ)
+    (hNt : ∀ k, NeZero (Nt k)) (hNs : ∀ k, NeZero (Ns k)) (ha : ∀ k, 0 < a k)
+    (hvolt : ∀ k, (Nt k : ℝ) * a k = Lt) (hvols : ∀ k, (Ns k : ℝ) * a k = Ls)
+    (ha0 : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    ∃ (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls)))
+      (_ : IsProbabilityMeasure μ) (φ : ℕ → ℕ) (_ : StrictMono φ),
+    ∀ (F : Configuration (AsymTorusTestFunction Lt Ls) → ℝ),
+      Continuous F → (∃ C, ∀ x, |F x| ≤ C) →
+        Filter.Tendsto (fun n => ∫ ω, F ω ∂(haveI := hNt (φ n); haveI := hNs (φ n)
+            asymTorusInteractingMeasureIso Lt Ls (Nt (φ n)) (Ns (φ n)) (a (φ n)) P mass
+              (ha (φ n)) hmass))
+          Filter.atTop (nhds (∫ ω, F ω ∂μ)) := by
+  set ν : ℕ → Measure (Configuration (AsymTorusTestFunction Lt Ls)) := fun k =>
+    haveI := hNt k; haveI := hNs k
+    asymTorusInteractingMeasureIso Lt Ls (Nt k) (Ns k) (a k) P mass (ha k) hmass with hν_def
+  have hν_prob : ∀ k, IsProbabilityMeasure (ν k) := fun k => by
+    haveI := hNt k; haveI := hNs k
+    exact asymTorusInteractingMeasureIso_isProbability Lt Ls (Nt k) (Ns k) (a k) P mass (ha k) hmass
+  obtain ⟨φ, μ, hφ_mono, hμ_prob, hconv⟩ := prokhorov_configuration ν hν_prob
+    (fun ε hε => by
+      refine configuration_tight_of_uniform_second_moments ν hν_prob
+        (fun f k => by
+          haveI := hNt k; haveI := hNs k
+          exact asymTorusInteractingMeasureIso_sq_integrable Lt Ls (Nt k) (Ns k) (a k)
+            P mass (ha k) hmass f)
+        (fun f => by
+          obtain ⟨C, _, hC⟩ := asymTorusIso_interacting_second_moment_uniform Lt Ls P mass hmass
+            Nt Ns a hNt hNs ha hvolt hvols ha0 f
+          exact ⟨C, fun k => hC k⟩)
+        ε hε)
+  exact ⟨μ, hμ_prob, φ, hφ_mono, hconv⟩
+
+/-- **The isotropic UV continuum limit has the Green-controlled exponential moment bound.**
+
+Along any isotropic lattice sequence `(Nt k, Ns k, a k)` (volume `Lt`, `Ls`; `a k → 0`), the UV
+continuum-limit torus measure `μ` satisfies `MeasureHasGreenMomentBound` with `C = 1` and the
+*uniform* Nelson constant `K`:
+
+  `∫ exp(|ω f|) dμ ≤ K · exp(asymTorusContinuumGreen f f)`.
+
+This is the Phase-3 endpoint: the cutoff bound `∫ exp|ωf| dμ̃_k ≤ K·exp(σ²_k)` (`K` uniform) plus
+`σ²_k → asymTorusContinuumGreen f f` (`second_moment_asym_tendsto`) pass to the weak limit by
+`weakLimit_exponential_moment` (truncation + MCT). `MeasureHasGreenMomentBound`, never produced for
+the metric-mismatched square construction, is here a **theorem** (modulo the two analytic
+axioms). -/
+theorem asymTorusIso_measureHasGreenMomentBound
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (Nt Ns : ℕ → ℕ) (a : ℕ → ℝ)
+    (hNt : ∀ k, NeZero (Nt k)) (hNs : ∀ k, NeZero (Ns k)) (ha : ∀ k, 0 < a k)
+    (hvolt : ∀ k, (Nt k : ℝ) * a k = Lt) (hvols : ∀ k, (Ns k : ℝ) * a k = Ls)
+    (ha0 : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    ∃ (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls))) (K : ℝ),
+      IsProbabilityMeasure μ ∧ 0 < K ∧ MeasureHasGreenMomentBound Ls mass hmass K 1 μ := by
+  obtain ⟨μ, hμ_prob, φ, hφ_mono, hconv⟩ :=
+    asymTorusIso_interacting_limit_exists Lt Ls P mass hmass Nt Ns a hNt hNs ha hvolt hvols ha0
+  obtain ⟨K, hK_pos, hcutoff⟩ :=
+    asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff Lt Ls P mass hmass
+  haveI := hμ_prob
+  refine ⟨μ, K, hμ_prob, hK_pos, fun f => ?_⟩
+  -- Subsequence measures and their uniform probability instances
+  set ν : ℕ → Measure (Configuration (AsymTorusTestFunction Lt Ls)) := fun n =>
+    haveI := hNt (φ n); haveI := hNs (φ n)
+    asymTorusInteractingMeasureIso Lt Ls (Nt (φ n)) (Ns (φ n)) (a (φ n)) P mass (ha (φ n)) hmass
+    with hν_def
+  have hν_prob : ∀ n, IsProbabilityMeasure (ν n) := fun n => by
+    haveI := hNt (φ n); haveI := hNs (φ n)
+    exact asymTorusInteractingMeasureIso_isProbability Lt Ls (Nt (φ n)) (Ns (φ n)) (a (φ n))
+      P mass (ha (φ n)) hmass
+  -- The lattice second moment along the subsequence
+  set B : ℕ → ℝ := fun n => K * Real.exp (haveI := hNt (φ n); haveI := hNs (φ n)
+    ∫ ω : Configuration (AsymLatticeField (Nt (φ n)) (Ns (φ n))),
+      (ω (asymLatticeTestFnIso Lt Ls (Nt (φ n)) (Ns (φ n)) (a (φ n)) f)) ^ 2
+      ∂(latticeGaussianMeasureAsym (Nt (φ n)) (Ns (φ n)) (a (φ n)) mass (ha (φ n)) hmass))
+    with hB_def
+  -- B n → K · exp(asymTorusContinuumGreen f f): the σ² converge to the Green's function
+  have hφ_atTop : Filter.Tendsto φ Filter.atTop Filter.atTop := hφ_mono.tendsto_atTop
+  have hσ2_full : Filter.Tendsto (fun k => haveI := hNt k; haveI := hNs k
+      ∫ ω : Configuration (AsymLatticeField (Nt k) (Ns k)),
+        (ω (asymLatticeTestFnIso Lt Ls (Nt k) (Ns k) (a k) f)) ^ 2
+        ∂(latticeGaussianMeasureAsym (Nt k) (Ns k) (a k) mass (ha k) hmass))
+      Filter.atTop (nhds (asymTorusContinuumGreen Lt Ls mass hmass f f)) := by
+    have heq : (fun k => haveI := hNt k; haveI := hNs k
+        ∫ ω : Configuration (AsymLatticeField (Nt k) (Ns k)),
+          (ω (asymLatticeTestFnIso Lt Ls (Nt k) (Ns k) (a k) f)) ^ 2
+          ∂(latticeGaussianMeasureAsym (Nt k) (Ns k) (a k) mass (ha k) hmass)) =
+        fun k => haveI := hNt k; haveI := hNs k
+          covariance (latticeCovarianceAsymGJ (Nt k) (Ns k) (a k) mass (ha k) hmass)
+            (asymLatticeTestFnIso Lt Ls (Nt k) (Ns k) (a k) f)
+            (asymLatticeTestFnIso Lt Ls (Nt k) (Ns k) (a k) f) := by
+      funext k; haveI := hNt k; haveI := hNs k
+      exact second_moment_eq_covariance _ _
+    rw [heq]
+    exact second_moment_asym_tendsto Lt Ls mass hmass Nt Ns a hNt hNs ha hvolt hvols ha0 f f
+  have hB_tendsto : Filter.Tendsto B Filter.atTop
+      (nhds (K * Real.exp (asymTorusContinuumGreen Lt Ls mass hmass f f))) := by
+    rw [hB_def]
+    exact ((Real.continuous_exp.tendsto _).comp (hσ2_full.comp hφ_atTop)).const_mul K
+  -- Uniform per-n exponential moment bound from the cutoff bound
+  have h_unif : ∀ n, Integrable (fun ω => Real.exp (|ω f|)) (ν n) ∧
+      ∫ ω, Real.exp (|ω f|) ∂(ν n) ≤ B n := fun n => by
+    haveI := hNt (φ n); haveI := hNs (φ n)
+    exact hcutoff f (Nt (φ n)) (Ns (φ n)) (a (φ n)) (ha (φ n)) (hvolt (φ n)) (hvols (φ n))
+  -- Bounded-continuous weak convergence along the subsequence
+  have hbc : ∀ (g : Configuration (AsymTorusTestFunction Lt Ls) → ℝ),
+      Continuous g → (∃ C, ∀ x, |g x| ≤ C) →
+      Filter.Tendsto (fun n => ∫ ω, g ω ∂(ν n)) Filter.atTop (nhds (∫ ω, g ω ∂μ)) :=
+    fun g hg_cont hg_bdd => hconv g hg_cont hg_bdd
+  -- Pass to the weak limit (truncation + MCT)
+  obtain ⟨hint, hle⟩ := weakLimit_exponential_moment ν hν_prob μ hbc f B
+    (K * Real.exp (asymTorusContinuumGreen Lt Ls mass hmass f f)) hB_tendsto h_unif
+  refine ⟨hint, ?_⟩
+  rw [one_mul]
+  exact hle
 
 end Pphi2
 
