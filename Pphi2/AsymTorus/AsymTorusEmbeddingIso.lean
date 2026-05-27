@@ -32,7 +32,7 @@ import Pphi2.AsymTorus.AsymTorusEmbedding
 
 noncomputable section
 
-open GaussianField MeasureTheory
+open GaussianField MeasureTheory Filter Topology
 
 namespace Pphi2
 
@@ -110,6 +110,67 @@ def asymTorusInteractingMeasureIso (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
     Measure (Configuration (AsymTorusTestFunction Lt Ls)) :=
   Measure.map (asymTorusEmbedLiftIso Lt Ls Nt Ns a)
     (interactingLatticeMeasureAsym Nt Ns P a mass ha hmass)
+
+/-! ## Second moment = spectral covariance, and its continuum limit -/
+
+/-- **The GJ-weight cancellation.** The lattice second moment of the embedding test functions
+under the GJ covariance equals the bare spectral covariance of the (unweighted) site
+evaluations: `covariance(latticeCovarianceAsymGJ)(a·evalAsym f)(a·evalAsym g) =
+covariance(spectralLatticeCovarianceAsym)(evalAsym f)(evalAsym g)`. The `(√(a²))⁻¹ = a⁻¹`
+factor of `latticeCovarianceAsymGJ` cancels the `a` GJ weight (twice ⟹ `(a⁻¹·a)² = 1`). -/
+theorem second_moment_asym_eq_spectral (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f g : AsymTorusTestFunction Lt Ls) :
+    covariance (latticeCovarianceAsymGJ Nt Ns a mass ha hmass)
+      (asymLatticeTestFnIso Lt Ls Nt Ns a f) (asymLatticeTestFnIso Lt Ls Nt Ns a g) =
+    covariance (spectralLatticeCovarianceAsym Nt Ns a mass ha hmass)
+      (fun x => evalAsymTorusAtSite Lt Ls Nt Ns x f)
+      (fun x => evalAsymTorusAtSite Lt Ls Nt Ns x g) := by
+  have ha0 : a ≠ 0 := ne_of_gt ha
+  have hc : (Real.sqrt (a ^ 2))⁻¹ * a = 1 := by
+    rw [Real.sqrt_sq ha.le]; exact inv_mul_cancel₀ ha0
+  have htf : ∀ h : AsymTorusTestFunction Lt Ls,
+      asymLatticeTestFnIso Lt Ls Nt Ns a h =
+      a • (fun x => evalAsymTorusAtSite Lt Ls Nt Ns x h) := by
+    intro h; funext x
+    simp [asymLatticeTestFnIso, evalAsymTorusAtSiteGJ_apply, Pi.smul_apply, smul_eq_mul]
+  rw [htf f, htf g]
+  unfold covariance latticeCovarianceAsymGJ
+  rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.smul_apply, map_smul, map_smul,
+    smul_smul, smul_smul, hc, one_smul, one_smul]
+
+/-- **The embedded second moment converges to the continuum rectangular Green's function.**
+Along any isotropic sequence `(Nt k, Ns k, a k)` with `Nt k·a k = Lt`, `Ns k·a k = Ls`,
+`a k → 0`, the lattice second moment of the embedding test functions tends to
+`asymTorusContinuumGreen Lt Ls mass hmass f g`. Combines `second_moment_asym_eq_spectral`
+with the Phase-1b convergence `lattice_green_tendsto_continuum_asym`. -/
+theorem second_moment_asym_tendsto
+    (mass : ℝ) (hmass : 0 < mass)
+    (Nt Ns : ℕ → ℕ) (a : ℕ → ℝ)
+    (hNt : ∀ k, NeZero (Nt k)) (hNs : ∀ k, NeZero (Ns k))
+    (ha : ∀ k, 0 < a k)
+    (hLt : ∀ k, (Nt k : ℝ) * a k = Lt) (hLs : ∀ k, (Ns k : ℝ) * a k = Ls)
+    (ha0 : Tendsto a atTop (nhds 0))
+    (f g : AsymTorusTestFunction Lt Ls) :
+    Tendsto (fun k => haveI := hNt k; haveI := hNs k
+        covariance (latticeCovarianceAsymGJ (Nt k) (Ns k) (a k) mass (ha k) hmass)
+          (asymLatticeTestFnIso Lt Ls (Nt k) (Ns k) (a k) f)
+          (asymLatticeTestFnIso Lt Ls (Nt k) (Ns k) (a k) g))
+      atTop
+      (nhds (asymTorusContinuumGreen Lt Ls mass hmass f g)) := by
+  have heq : ∀ k, (haveI := hNt k; haveI := hNs k
+      covariance (latticeCovarianceAsymGJ (Nt k) (Ns k) (a k) mass (ha k) hmass)
+        (asymLatticeTestFnIso Lt Ls (Nt k) (Ns k) (a k) f)
+        (asymLatticeTestFnIso Lt Ls (Nt k) (Ns k) (a k) g)) =
+      (haveI := hNt k; haveI := hNs k
+      covariance (spectralLatticeCovarianceAsym (Nt k) (Ns k) (a k) mass (ha k) hmass)
+        (fun x => evalAsymTorusAtSite Lt Ls (Nt k) (Ns k) x f)
+        (fun x => evalAsymTorusAtSite Lt Ls (Nt k) (Ns k) x g)) := by
+    intro k; haveI := hNt k; haveI := hNs k
+    exact second_moment_asym_eq_spectral Lt Ls (Nt k) (Ns k) (a k) mass (ha k) hmass f g
+  simp_rw [heq]
+  unfold asymTorusContinuumGreen
+  exact lattice_green_tendsto_continuum_asym Lt Ls mass hmass Nt Ns a hNt hNs ha hLt hLs ha0 f g
 
 end Pphi2
 

@@ -215,6 +215,16 @@ instance latticeGaussianMeasureAsym_isProbability (Nt Ns : ℕ) [NeZero Nt] [NeZ
   unfold latticeGaussianMeasureAsym
   exact GaussianField.measure_isProbability (latticeCovarianceAsymGJ Nt Ns a mass ha hmass)
 
+/-- The two-point function of the heterogeneous lattice Gaussian measure equals the GJ-aligned
+isotropic covariance bilinear form. -/
+theorem latticeGaussianMeasureAsym_cross_moment (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (f g : AsymLatticeField Nt Ns) :
+    ∫ ω : Configuration (AsymLatticeField Nt Ns),
+      (ω f) * (ω g) ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass) =
+    GaussianField.covariance (latticeCovarianceAsymGJ Nt Ns a mass ha hmass) f g := by
+  unfold latticeGaussianMeasureAsym
+  exact GaussianField.cross_moment_eq_covariance _ f g
+
 /-! ## Wick ordering constant (heterogeneous lattice) -/
 
 /-- The Wick ordering constant on the heterogeneous lattice (GJ-aligned diagonal of the
