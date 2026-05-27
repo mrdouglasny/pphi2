@@ -52,17 +52,11 @@ Single spacing `a`; site counts `Nt`, `Ns`; periods `Lt = Nt·a`, `Ls = Ns·a`. 
 >      `latticeGreenTerm2dAsym_norm_le` (per-direction DFT quadratic decay; per-size bound
 >      hyps), `summable_bound_asym`. (Term def needs `[NeZero Nt] [NeZero Ns]` since it uses
 >      `Nt/Ns` directly, unlike the square's `N+1`.)
->    - **TODO — per-mode convergence** `latticeGreenTerm2dAsym_tendsto`. Port square
->      `latticeGreenTerm2d_tendsto` (`Convergence.lean:231`). **Subtlety:** the square 1D inputs
->      (`latticeEigenvalue1d_tendsto_continuum`, `latticeDFTCoeff1d_tendsto`,
->      `latticeFourierNormSq_eventually_one`) are all the `N+1` form, and `circleSpacing M`
->      needs `[NeZero M]` (so `fun M => circleSpacing Lt M` is NOT total). Reindex via
->      `Nt k − 1`: prove `Tendsto (fun k => Nt k − 1) atTop atTop` (from `Tendsto Nt atTop atTop`,
->      via `tendsto_atTop_atTop` + `omega`), then `(square_lemma).comp hNt1` + `Tendsto.congr`
->      using `(Nt k − 1)+1 = Nt k` and `a k = circleSpacing Lt (Nt k) = Lt/Nt k` (from `hLt`).
->      `Tendsto Nt atTop atTop` itself: `(Nt k : ℝ) = Lt·(a k)⁻¹`,
->      `tendsto_inv_nhdsGT_zero.comp` (a→𝓝[>]0 from `ha0`+`0<a k`), `Tendsto.const_mul_atTop`,
->      `tendsto_natCast_atTop_iff`. Same for `Ns`.
+>    - ✅ **DONE** (`9949a19`) — per-mode convergence `latticeGreenTerm2dAsym_tendsto`, via
+>      the `Nt k − 1` reindexing of the square `N+1`-form 1D inputs (`tendsto_inv_nhdsGT_zero`
+>      for `Nt k → ∞`, `.comp hNt1` + `Tendsto.congr` with `(Nt k−1)+1 = Nt k`, then
+>      `Tendsto.div` of the 4-DFT numerator by the `(eig+eig+mass²)·normSq·normSq` denominator).
+>      The instance-in-`k`-lambda (`[NeZero (Nt k)]`) assembled through defeq without issue.
 >    - **TODO — covariance↔tsum** (`lattice_covariance_eq_tsum_pure` analogue): from
 >      `abstract_spectral_eq_dft_spectral_2d_asym` (step 4) + `tsum_eq_sum` (extend the
 >      `Fin Nt × Fin Ns` sum by zero via `latticeGreenTerm2dAsym_zero_of_ge`) +
