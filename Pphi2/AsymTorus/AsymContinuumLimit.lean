@@ -484,17 +484,24 @@ theorem asymTorusIso_cylinderUniformGreenBound
       @MeasureHasGreenMomentBound Ls _ (Lt n) (hLtfact n) mass hmass K C μ := by
     intro n
     haveI := hLtfact n
+    -- Exactly-isotropic sequence with BOTH lattice extents even (Nt_k = 2(n+1)(k+1),
+    -- Ns_k = 2(k+1), a_k = Ls/(2(k+1))): even time extent Nt is required for lattice reflection
+    -- positivity (the reflection plane sits cleanly between sites), keeping Lt n = (n+1)·Ls fixed.
     exact asymTorusIso_measureHasGreenMomentBound_of_cutoff (Lt n) Ls P mass hmass K C hK_pos
       (fun f Nt Ns _ _ b hb hvt hvs => hUnif (Lt n) Nt Ns b hb hvt hvs f)
-      (fun k => (n + 1) * (k + 1)) (fun k => k + 1) (fun k => Ls / ((k : ℝ) + 1))
+      (fun k => 2 * (n + 1) * (k + 1)) (fun k => 2 * (k + 1))
+      (fun k => Ls / (2 * ((k : ℝ) + 1)))
       (fun k => ⟨by positivity⟩) (fun k => ⟨by positivity⟩) (fun k => by positivity)
       (fun k => by rw [hLt_def]; push_cast; field_simp)
       (fun k => by push_cast; field_simp)
       (by
-        have h1 : Filter.Tendsto (fun k : ℕ => 1 / ((k : ℝ) + 1)) Filter.atTop (nhds 0) :=
-          tendsto_one_div_add_atTop_nhds_zero_nat
-        have := h1.const_mul Ls
-        simpa [mul_one_div, mul_zero] using this)
+        have h2 : Filter.Tendsto (fun k : ℕ => (Ls / 2) * (1 / ((k : ℝ) + 1)))
+            Filter.atTop (nhds 0) := by
+          simpa using tendsto_one_div_add_atTop_nhds_zero_nat.const_mul (Ls / 2)
+        have heq : (fun k : ℕ => Ls / (2 * ((k : ℝ) + 1))) =
+            fun k : ℕ => (Ls / 2) * (1 / ((k : ℝ) + 1)) := by
+          ext k; rw [mul_one_div, div_div]
+        rw [heq]; exact h2)
   choose μ hμ_prob hμ_green using hbound
   refine ⟨Lt, hLtfact, μ, ?_, hμ_prob, ?_⟩
   · -- Lt n = (n+1)·Ls → ∞
@@ -579,8 +586,12 @@ the Simon–Griffiths (Lee–Yang) class, so by Newman's theorem the interacting
 Gaussian with the *interacting* variance, `E[e^{ω f}]_int ≤ e^{½⟨(ω f)²⟩_int}` (giving `K = 2` via
 `e^{|x|} ≤ e^x + e^{-x}`); the interacting two-point function is bounded by `C₀·(free)` via the
 strict mass gap (Källén–Lehmann / lattice sum rule), so `⟨(ω f)²⟩_int ≤ C₀·σ²(f)` and `C = C₀/2`.
-Fixed `Ls` with `L → ∞` is quasi-1D, so Perron–Frobenius keeps the mass gap strictly positive and
-the susceptibility bounded — the volume-uniformity direction is safe.
+**Cylinder shortcut (avoids the full spatial cluster expansion):** with `Ls` fixed and `L → ∞` this
+is a *1D* thermodynamic limit — no phase transition — and the transfer matrix `T = e^{-aH_{Ls}}` has
+a strictly isolated, non-degenerate maximal eigenvalue by the (infinite-dim) Perron–Frobenius
+theorem, so the cylinder mass gap `m₁ > 0` is unconditional and the susceptibility stays bounded.
+The bound is then discharged via chessboard estimates (Fröhlich–Simon–Spencer) + the transfer-matrix
+spectral radius, not a spatial cluster expansion.
 
 ✅ Vetted: deep-think-gemini (2026-05-27): with the `C·σ²` exponent (coefficient `C`, **not** `1` —
 `1` is false in infinite volume since the interacting susceptibility can exceed `2/m²`) the

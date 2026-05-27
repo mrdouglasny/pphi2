@@ -191,6 +191,15 @@ Glimm–Jaffe–Spencer-level."*
 *the* central theorem of constructive P(φ)₂ (Glimm–Jaffe Ch. 18–19; Simon Ch. V, VIII;
 Glimm–Jaffe–Spencer cluster expansion). It is comparable in difficulty to `spectral_gap_uniform`.
 
+**Cylinder discharge shortcut (external review, 2026-05-27).** The full *spatial* cluster expansion
+is **not** needed here. With `Ls` fixed and `L → ∞`, this is a **1D** thermodynamic limit — no phase
+transition — and the transfer matrix `T = e^{-aH_{Ls}}` has a strictly isolated, non-degenerate
+maximal eigenvalue by the infinite-dimensional Perron–Frobenius theorem. Hence the cylinder mass gap
+`m₁ > 0` is *unconditional* and the susceptibility stays bounded as `L → ∞`. The bound is then
+dischargeable via **chessboard estimates (Fröhlich–Simon–Spencer) + the transfer-matrix spectral
+radius**, saving the bulk of a spatial-cluster-expansion formalization. (`spectral_gap_uniform` in
+the square track is the analogous transfer-matrix-gap input.)
+
 **Lean correction (applied 2026-05-27).** The hypothesis is now form (★) above. Internally a new
 `asymTorusIso_measureHasGreenMomentBound_of_cutoff` threads the uniform `K` directly (the old
 `_of_nelson` is kept as the `√(2·Knel)` specialization), so the weak-limit transfer
@@ -222,10 +231,24 @@ is the Osterwalder–Seiler / Nelson reflection-positivity of the lattice transf
 **Provability: MEDIUM–HIGH (standard, but a separate development).** Lattice RP for reflection-
 symmetric nearest-neighbour Gaussian + even interaction is textbook (Glimm–Jaffe Ch. 6, 10;
 Osterwalder–Seiler). The pphi2 square track already has an RP layer (`OS3_RP_Lattice`,
-`OS3_RP_Inheritance`); the isotropic `Z_Nt × Z_Ns` lattice is reflection-symmetric across a time
-row (`Nt` even, or reflect through a site), so the same argument applies. This input is genuinely
-*independent* of the moment bounds (it is about positivity, not integrability) and is provable; it
-is left as a hypothesis here only because it belongs to a different work-stream (cyl-OS3).
+`OS3_RP_Inheritance`). RP survives the UV and IR weak limits natively (closed condition,
+non-strict inequality).
+
+**Even-`Nt` requirement (external review, 2026-05-27) — now satisfied.** Lattice RP on a periodic
+*time* torus `Z_Nt` needs `Nt` **even**, so the two reflection planes sit between sites and split
+the torus into two equal halves (no fixed-site obstruction). The IR-family construction in
+`asymTorusIso_cylinderUniformGreenBound` was updated to the exactly-isotropic sequence
+`Nt_k = 2(n+1)(k+1)`, `Ns_k = 2(k+1)`, `a_k = Ls/(2(k+1))` — **both extents even** — keeping
+`Lt n = (n+1)·Ls` and `a_k → 0`. So the family fed to the IR limit is OS3-ready.
+
+**Caveat on the `hRP`/`hOS2` shape.** In `routeBPrimeIso_cylinder_OS` / `cylinderIso_OS_of_RP_OS2`
+these are stated `∀ (Lt) (hLt) (μ), …` (all families). That is *over-strong*: a genuine OS3 proof
+establishes RP for the **specific** even-`Nt`-derived family the construction produces, not for
+arbitrary `μ`. The honest usage is to `obtain` the family from
+`asymTorusIso_cylinderUniformGreenBound` and apply the proved `routeBPrime_cylinder_OS` with RP/OS2
+for *that* family. A future refinement narrows the hypotheses to the constructed family (it is
+left ∀-quantified now only because that family is `Classical.choose`-constructed and unnamed). This
+input is *independent* of the moment bounds and belongs to the cyl-OS3 work-stream.
 
 ---
 
