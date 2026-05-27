@@ -70,12 +70,22 @@ Single spacing `a`; site counts `Nt`, `Ns`; periods `Lt = Nt·a`, `Ls = Ns·a`. 
 >      (`lattice_green_tendsto_continuum_asym_pure`): `tendsto_tsum_of_dominated_convergence`
 >      over per-mode + domination + summability; per-size DFT bounds from the uniform
 >      quadratic bound via `(Nt k − 1)+1 = Nt k`.
->    - **TODO — DM-expansion to general elements** (`lattice_green_tendsto_continuum_asym`,
->      the remaining sorry). Port square `Convergence.lean:470`–`1216`: `ntp_basis_eq_pure_asym`,
->      `covariance_dm_expansion_left` analogue, `lattice_green_tendsto_pure_right` analogue,
->      `lattice_covariance_general_basis_bound` analogue, `greenCLM_left`/`greenFunctionBilinear_symm`,
->      then DM-expand `g` (and `f`) over the DMS basis + Tannery with the uniform polynomial bound.
->      Largest remaining sub-piece (~650 lines of generic DMS bookkeeping; the hard analysis is done).
+>    - **DM-expansion to general elements** (`lattice_green_tendsto_continuum_asym`) — IN PROGRESS:
+>      - ✅ **DONE** (`a15c602`) — infrastructure: `ntp_basis_eq_pure_asym`,
+>        `greenFunctionBilinear_continuous_left_asym` + `greenCLM_left_asym`, `evalLatticeMapAsym`,
+>        `latticeCovCLM_left_asym`, `covariance_dm_expansion_left_asym`, `summable_inv_sq_sq_asym`.
+>        (All names resolved first try.)
+>      - ✅ **DONE** (`6481d5b`) — `lattice_covariance_pure_abs_le_asym` (mixed flat×quadratic
+>        uniform bound; per-size hyps; keep the `0 ≤ C` from `quadratic_bound`, don't `by positivity`).
+>      - **TODO** — `lattice_green_tendsto_pure_right_asym` (square `:723`–`883`) and
+>        `lattice_covariance_general_basis_bound_asym` (square `:935`–`1120`), then the main
+>        theorem (square `:1121`–`1216`). **Adaptation needed (not mechanical):** the square uses one
+>        `L`, so one `basis_growth` constant `A₀, r₀`; the rectangle has two factors `SMC Lt`,
+>        `SMC Ls` → two `basis_growth` invocations with `(A₀₁,r₀₁)`/`(A₀₂,r₀₂)`, so the bound carries
+>        `(1+unpair.1)^r₀₁·(1+unpair.2)^r₀₂` and `h_unpair_le` becomes `≤ (1+m)^(r₀₁+r₀₂)`, with
+>        `coeff_decay (E := AsymTorusTestFunction Lt Ls) (r₀₁+r₀₂+2)`.
+>      ~440 lines remain (the hard analysis — spectral diagonalization, per-mode limits, pure-tensor
+>      Tannery — is all done; what's left is the two-factor DMS bound bookkeeping).
 >    The 1D domination `latticeDFTCoeff1d_quadratic_bound L` reused verbatim per direction
 >    (any size = `N+1`), so `Lt≠Ls` obstruction gone, constants `Lt`-uniform.
 >    - **Continuum target:** scaffold states `greenFunctionBilinear mass hmass f g` on
