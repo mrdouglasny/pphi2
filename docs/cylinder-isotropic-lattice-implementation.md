@@ -46,19 +46,39 @@ Single spacing `a`; site counts `Nt`, `Ns`; periods `Lt = Nt·a`, `Ls = Ns·a`. 
 > 4. ✅ **DONE** (`8492cc9`) — `abstract_spectral_eq_dft_spectral_2d_asym` (the bridge, +
 >    helper `covariance_spectralLatticeCovarianceAsym_eq`). **All new rectangular spectral
 >    infrastructure proved; the convergence is now "just" Tannery.**
-> 5. **TODO — the convergence** `lattice_green_tendsto_continuum_asym`. Port the
->    `Convergence.lean` Tannery stack (`latticeGreenTerm2dAsym`, `_tendsto`, `_norm_le`,
->    `summable_bound`, `_pure`, then DM-expansion to general elements). Connection: identify
->    `covariance (spectralLatticeCovarianceAsym …) (evalAsym (pure f₁ f₂)) (evalAsym (pure g₁ g₂))`
->    with `∑ latticeGreenTerm2dAsym` via `abstract_spectral_eq_dft_spectral_2d_asym` (step 4)
->    + `evalAsymTorusAtSite` on pure tensors = product of `circleRestriction`s (mirror
->    `lattice_covariance_pure_eq_2d_spectral`, `Convergence.lean:67`). The 1D domination
->    `latticeDFTCoeff1d_quadratic_bound L` is reused **verbatim per direction** (`Lt`, `Ls`),
->    so the `Lt≠Ls` obstruction is gone and constants are `Lt`-uniform. Largest sub-piece (~the
->    bulk of the 1219-line `Convergence.lean`, re-assembled with two circle sizes sharing `a`).
->    Check the continuum target: scaffold currently states `greenFunctionBilinear mass hmass f g`
->    — confirm this is the rectangular-torus Green (dispersion `(2πp/Lt)²+(2πq/Ls)²`) vs.
->    `asymTorusContinuumGreen`, and align if needed.
+> 5. **The convergence** `lattice_green_tendsto_continuum_asym` — IN PROGRESS. Sub-blocks:
+>    - ✅ **DONE** (`01ed8d4`) — domination block: `latticeGreenTerm2dAsym`,
+>      `continuumGreenTerm2dAsym`, `latticeGreenTerm2dAsym_zero_of_ge`,
+>      `latticeGreenTerm2dAsym_norm_le` (per-direction DFT quadratic decay; per-size bound
+>      hyps), `summable_bound_asym`. (Term def needs `[NeZero Nt] [NeZero Ns]` since it uses
+>      `Nt/Ns` directly, unlike the square's `N+1`.)
+>    - **TODO — per-mode convergence** `latticeGreenTerm2dAsym_tendsto`. Port square
+>      `latticeGreenTerm2d_tendsto` (`Convergence.lean:231`). **Subtlety:** the square 1D inputs
+>      (`latticeEigenvalue1d_tendsto_continuum`, `latticeDFTCoeff1d_tendsto`,
+>      `latticeFourierNormSq_eventually_one`) are all the `N+1` form, and `circleSpacing M`
+>      needs `[NeZero M]` (so `fun M => circleSpacing Lt M` is NOT total). Reindex via
+>      `Nt k − 1`: prove `Tendsto (fun k => Nt k − 1) atTop atTop` (from `Tendsto Nt atTop atTop`,
+>      via `tendsto_atTop_atTop` + `omega`), then `(square_lemma).comp hNt1` + `Tendsto.congr`
+>      using `(Nt k − 1)+1 = Nt k` and `a k = circleSpacing Lt (Nt k) = Lt/Nt k` (from `hLt`).
+>      `Tendsto Nt atTop atTop` itself: `(Nt k : ℝ) = Lt·(a k)⁻¹`,
+>      `tendsto_inv_nhdsGT_zero.comp` (a→𝓝[>]0 from `ha0`+`0<a k`), `Tendsto.const_mul_atTop`,
+>      `tendsto_natCast_atTop_iff`. Same for `Ns`.
+>    - **TODO — covariance↔tsum** (`lattice_covariance_eq_tsum_pure` analogue): from
+>      `abstract_spectral_eq_dft_spectral_2d_asym` (step 4) + `tsum_eq_sum` (extend the
+>      `Fin Nt × Fin Ns` sum by zero via `latticeGreenTerm2dAsym_zero_of_ge`) +
+>      `evalAsym (pure f₁ f₂) x = circleRestriction Lt Nt f₁ x.1 · circleRestriction Ls Ns f₂ x.2`
+>      (the asym `hpure`, mirror `Convergence.lean:85`) ⟹ DFT coeff factors as
+>      `latticeDFTCoeff1d Lt Nt f₁ · latticeDFTCoeff1d Ls Ns f₂`.
+>    - **TODO — continuum↔tsum** (`greenFunctionBilinear_pure_eq_tsum` analogue, `:191`):
+>      `Nat.pairEquiv` + tensor eigenvalue = sum of 1D eigenvalues + `pure_val`.
+>    - **TODO — Tannery assembly** `..._pure` (`:433`): `tendsto_tsum_of_dominated_convergence`
+>      with the three DONE/TODO pieces; then **DM-expansion** to general elements (`:470`–`:1219`).
+>    The 1D domination `latticeDFTCoeff1d_quadratic_bound L` reused verbatim per direction
+>    (any size = `N+1`), so `Lt≠Ls` obstruction gone, constants `Lt`-uniform.
+>    - **Continuum target:** scaffold states `greenFunctionBilinear mass hmass f g` on
+>      `AsymTorusTestFunction Lt Ls = SMC Lt ⊗̂ SMC Ls`; its eigenvalues come from
+>      `HasLaplacianEigenvalues (SMC Lt)`/`(SMC Ls)` = `(2πp/Lt)²`/`(2πq/Ls)²` — i.e. the
+>      correct rectangular Green, so no realignment needed (matches `continuumGreenTerm2dAsym`).
 
 ### 1a. Isotropic covariance on `AsymLatticeField Nt Ns`
 
