@@ -83,15 +83,21 @@ def asymCanonicalRoughModeCoeff (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
   Real.sqrt (asymCanonicalRoughWeight Nt Ns a mass T m / asymCanonicalNormSq Nt Ns m) *
     asymCanonicalBasis Nt Ns m x
 
-/-- The smooth field synthesized from the first (smooth) Gaussian family. -/
+/-- The smooth field synthesized from the first (smooth) Gaussian family. The `(√(a²))⁻¹ = 1/a`
+prefix is the Glimm–Jaffe `d = 2` normalization, matching
+`latticeCovarianceAsymGJ = (√(a²))⁻¹ • spectral`: it makes the synthesis covariance equal the GJ
+covariance (not the bare spectral one). -/
 def asymCanonicalSmoothFieldFunction (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
     (a mass T : ℝ) (η : AsymCanonicalJoint Nt Ns) : AsymLatticeField Nt Ns :=
-  fun x => ∑ m : AsymCanonicalMode Nt Ns, asymCanonicalSmoothModeCoeff Nt Ns a mass T x m * η.1 m
+  fun x => (Real.sqrt (a ^ 2))⁻¹ *
+    ∑ m : AsymCanonicalMode Nt Ns, asymCanonicalSmoothModeCoeff Nt Ns a mass T x m * η.1 m
 
-/-- The rough field synthesized from the second (rough) Gaussian family. -/
+/-- The rough field synthesized from the second (rough) Gaussian family (same GJ `(√(a²))⁻¹`
+prefix as the smooth part). -/
 def asymCanonicalRoughFieldFunction (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
     (a mass T : ℝ) (η : AsymCanonicalJoint Nt Ns) : AsymLatticeField Nt Ns :=
-  fun x => ∑ m : AsymCanonicalMode Nt Ns, asymCanonicalRoughModeCoeff Nt Ns a mass T x m * η.2 m
+  fun x => (Real.sqrt (a ^ 2))⁻¹ *
+    ∑ m : AsymCanonicalMode Nt Ns, asymCanonicalRoughModeCoeff Nt Ns a mass T x m * η.2 m
 
 /-- The synthesized field `φ_S + φ_R`; its law (under `asymCanonicalJointMeasure`) is the lattice
 GFF — the `pushforward_eq_GFF` identity, the next target (see the redesign doc). -/

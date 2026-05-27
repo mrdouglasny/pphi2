@@ -103,9 +103,45 @@ bound (`canonicalSmoothInteraction_lower_bound_…`) and the chaos rough-tail
 (`canonicalRoughError_…_tail` via the generic `ChaosTailBridge`) transfer near-verbatim. The generic
 engine (`bridgeAxiom_of_setup_real_generic`, layer-cake, `ChaosTailBridge`) is reused unchanged.
 
+## Normalization (the GJ prefix — easy to get wrong)
+
+The square `canonicalSmoothFieldFunction` carries a **`(√(a^d))⁻¹` prefix**
+(`FieldDecomposition.lean:208`): `φ_S η x = (√(a^d))⁻¹ · Σ_m smoothModeCoeff(x,m)·η.1 m`. This is
+exactly the GJ factor of `latticeCovarianceGJ = (√(a^d))⁻¹ • spectral` — without it the synthesis
+produces the *bare* spectral covariance, not the GJ one, and `pushforward_eq_GFF` is false. The asym
+analogue uses `(√(a²))⁻¹ = 1/a` (d = 2), matching `latticeCovarianceAsymGJ = (√(a²))⁻¹ • spectral`.
+**The foundational `asymCanonical{Smooth,Rough}FieldFunction` defs carry this prefix.** The square
+records the resulting identity as `canonicalSumFieldFunction_covariance` (covariance =
+`(a^d)⁻¹·Σ_m B(x)B(y)/(λ_m·normSq)`) → `canonicalSumFieldFunction_covariance_eq_GJ`.
+
+## Precise `★ pushforward_eq_GFF` route (mirrors the square)
+
+`map (φ_S+φ_R) asymCanonicalJointMeasure = latticeGaussianMeasureAsym` reduces, via **Cramér–Wold**
+(`GaussianField.cramerWold`, the route of the square `canonicalSumFieldLaw_eq_latticeGaussianFieldLaw`,
+`FieldDecomposition.lean:4161`), to: every site-pairing `⟨f, φ_S+φ_R⟩` has the same Gaussian law as
+`⟨f, GFF⟩`. The two pairing-Gaussian lemmas to port:
+1. `asymCanonicalSumFieldLaw_pairing_is_gaussian` — `⟨f, φ_S+φ_R⟩` is `N(0, ⟪T_GJ f, T_GJ f⟫)`. The
+   synthesis law is the image of a standard Gaussian on `EuclideanSpace` under the synthesis CLM
+   (`canonicalStdToFieldCLM` analogue), so it is Gaussian by `ProbabilityTheory.IsGaussian` +
+   `IsGaussian.map_eq_gaussianReal`; the variance is `(a²)⁻¹·Σ_m ⟨f,B_m⟩²/(λ_m·normSq)` =
+   `⟪T_GJ f, T_GJ f⟫` (smoothWeight+roughWeight = 1/λ — `asymCanonicalSmoothWeight_add_roughWeight`,
+   **proved** — times the `(a²)⁻¹` GJ prefix²).
+2. `latticeGaussianFieldLaw_asym_pairing_is_gaussian` — `⟨f, GFF⟩` is `N(0, ⟪T_GJ f, T_GJ f⟫)` by
+   `GaussianField.pairing_is_gaussian` (generic) + `second_moment_eq_covariance`.
+The variances match because `⟪T_GJ f, T_GJ f⟫ = (a²)⁻¹·Σ_m ⟨f,B_m⟩²/(λ_m·normSq)` by
+`abstract_spectral_eq_dft_spectral_2d_asym` (Phase 1b) + the `(a²)⁻¹` GJ scaling
+(`latticeCovarianceAsymGJ_inner_eq_inv_a_sq_spectral`, **proved** in `AsymWickVariance.lean`).
+
+Remaining infrastructure to port for this: the synthesis CLM (`canonicalStdToFieldCLM` analogue),
+the `IsGaussian` instance of its image law, and the `evalMap`/`evalMapInv` config↔field bridge — the
+square's `FieldDecomposition.lean:424–4220`. Substantial but well-specified; no new mathematics
+(reuses Mathlib `IsGaussian`/`stdGaussian` + `GaussianField.cramerWold`/`pairing_is_gaussian` + the
+Phase-1b DFT identity).
+
 ## Foundational Lean status
 
-Foundational definitions stood up in `Pphi2/NelsonEstimate/AsymFieldDecomposition.lean` (the type,
-measure, eigenvalue, weights, mode coeffs, synthesis, sum, structure instance) to validate the
-architecture compiles; `★ pushforward_eq_GFF` is stated with this proof plan and is the first real
-target. [Status updated as the file lands.]
+Foundational definitions are in `Pphi2/NelsonEstimate/AsymFieldDecomposition.lean` (type, measure +
+`IsProbabilityMeasure`, eigenvalue, smooth/rough weights with the proved `…_add_roughWeight = 1/λ`,
+product DFT basis + normSq, mode coeffs, smooth/rough/sum synthesis **with the `(√(a²))⁻¹` GJ
+prefix**) — compiles, 0 axioms, 0 sorries, wired into `Pphi2.lean`. `★ pushforward_eq_GFF` is the
+next target via the Cramér–Wold route above.
