@@ -138,10 +138,23 @@ square's `FieldDecomposition.lean:424–4220`. Substantial but well-specified; n
 (reuses Mathlib `IsGaussian`/`stdGaussian` + `GaussianField.cramerWold`/`pairing_is_gaussian` + the
 Phase-1b DFT identity).
 
-## Foundational Lean status
+## Lean status — `★ pushforward_eq_GFF` is PROVED (2026-05-27)
 
-Foundational definitions are in `Pphi2/NelsonEstimate/AsymFieldDecomposition.lean` (type, measure +
-`IsProbabilityMeasure`, eigenvalue, smooth/rough weights with the proved `…_add_roughWeight = 1/λ`,
-product DFT basis + normSq, mode coeffs, smooth/rough/sum synthesis **with the `(√(a²))⁻¹` GJ
-prefix**) — compiles, 0 axioms, 0 sorries, wired into `Pphi2.lean`. `★ pushforward_eq_GFF` is the
-next target via the Cramér–Wold route above.
+`Pphi2/NelsonEstimate/AsymFieldDecomposition.lean` (≈1730 lines, 0 axioms, 0 sorries, wired into
+`Pphi2.lean`) now contains the full chain through the deep identity:
+
+```
+asymCanonicalJointMeasure_map_sumConfig :
+  (asymCanonicalJointMeasure Nt Ns).map (asymCanonicalSumConfig …) = latticeGaussianMeasureAsym …
+```
+`#print axioms = [propext, Classical.choice, Quot.sound]` (verified). The whole square chain was
+ported: the synthesis CLM (`asymCanonicalStdToFieldCLM`), its Gaussian law
+(`asymCanonicalSumFieldLaw`, `IsGaussian`), the `evalMap`/`evalMapInv` config↔field bridge, the
+covariance computation (`asymCanonicalSumFieldFunction_covariance` = `(a²)⁻¹·Σ B/(λ·normSq)`,
+`…_covariance_eq_GJ`), the two pairing-Gaussian lemmas, and **Cramér–Wold**
+(`asymCanonicalSumFieldLaw_eq_asymLatticeGaussianFieldLaw`).
+
+**This is the §2 bottleneck cleared.** Downstream — `CovarianceBoundsGJ` / `RoughErrorBound` (the
+smooth lower bound + rough chaos tail) + `asymChaosCutoffDecomposition` itself — port by
+substitution against these definitions, reusing the generic engine (`bridgeAxiom_of_setup_real_generic`,
+`ChaosTailBridge`, layer-cake) unchanged.
