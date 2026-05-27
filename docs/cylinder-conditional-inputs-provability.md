@@ -130,20 +130,29 @@ estimate, fully sketched.
 
 ---
 
-## 4. `hKnel_uniform` — volume-uniform exp-moment **(⚠ MIS-STATED — read carefully)**
+## 4. The volume-uniform exp-moment input  **(corrected 2026-05-27 — now form (★))**
 
-This is the hypothesis I currently feed `asymTorusIso_cylinderUniformGreenBound` /
-`routeBPrimeIso_cylinder_OS`:
+> **History.** The first cut of `asymTorusIso_cylinderUniformGreenBound` /
+> `routeBPrimeIso_cylinder_OS` took the hypothesis
+> `hKnel_uniform : ∀ L>0 …, ∫ e^{-2V_Λ} dμ_GFF ≤ Knel` (uniform Nelson `L²` across periods). **That
+> form is FALSE** (see below), so the theorem was vacuous. It has been **replaced** by the
+> interacting-moment form (★); the verdict below applies to (★).
+
+The current hypothesis of both theorems:
 
 ```lean
-(Knel : ℝ) (hKnel_pos : 0 < Knel)
-(hKnel_uniform : ∀ (L : ℝ), 0 < L → ∀ (Nt Ns) [NeZero][NeZero] (a) (ha), Nt·a = L → Ns·a = Ls →
-    ∫ ω, (Real.exp (-interactionFunctionalAsym Nt Ns P a mass ω))^2 ∂μ_GFF ≤ Knel)
+(K : ℝ) (hK_pos : 0 < K)
+(hUnif : ∀ (L : ℝ) [Fact (0 < L)] (Nt Ns) [NeZero][NeZero] (a) (ha), Nt·a = L → Ns·a = Ls → ∀ f,
+    Integrable (e^{|ωf|}) (asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ∧
+    ∫ e^{|ωf|} ∂(asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass)
+      ≤ K · e^{∫ (ω·asymLatticeTestFnIso L Ls Nt Ns a f)² dμ_GFF})            -- (★)
 ```
 
-i.e. `∫ e^{-2V_Λ} dμ_GFF ≤ Knel` **uniformly across all periods `L = Lt`** (volume `L·Ls`).
+i.e. the **interacting** exp-moment `∫ e^{|ωf|} dμ_int ≤ K·e^{σ²}`, uniform in the period `L` (the
+`σ²` Green-control on the RHS is allowed to depend on `f`, `L`; only the prefactor `K` must be
+uniform).
 
-**⚠ This hypothesis is FALSE — it is not satisfiable, so the theorem as stated is vacuous.**
+**Why the naive `∫ e^{-2V} ≤ Knel` form was FALSE (and is no longer used).**
 
 `∫ e^{-2V_Λ} dμ_GFF` **grows exponentially in the volume `|Λ|`.** Heuristically the sites
 decorrelate, so `∫ e^{-2V_Λ} ≈ ∏_{x∈Λ} E[e^{-2a²:P(φ_x):}]`, and each factor is `≥ 1` by Jensen
@@ -177,21 +186,13 @@ Glimm–Jaffe–Spencer-level."*
 *the* central theorem of constructive P(φ)₂ (Glimm–Jaffe Ch. 18–19; Simon Ch. V, VIII;
 Glimm–Jaffe–Spencer cluster expansion). It is comparable in difficulty to `spectral_gap_uniform`.
 
-**Recommended Lean correction.** Replace the `hKnel_uniform` hypothesis (uniform `∫e^{-2V}`, false)
-by the uniform **interacting** cutoff bound (★) directly:
-
-```lean
-(K : ℝ) (hK_pos : 0 < K)
-(hUnif : ∀ (L : ℝ), 0 < L → ∀ (Nt Ns) [NeZero][NeZero] (a) (ha), Nt·a = L → Ns·a = Ls →
-    ∀ f, Integrable (e^{|ωf|}) μ_int ∧ ∫ e^{|ωf|} dμ_int ≤ K · e^{σ²})
-```
-
-Then `asymTorusIso_cylinderUniformGreenBound` threads this uniform `K` (no `√(2·)`), and the
-weak-limit transfer (`weakLimit_exponential_moment`) gives `MeasureHasGreenMomentBound … K 1 μ`
-with uniform `K`. The per-`Lt` machinery is unchanged; only the *source* of the uniform constant
-moves from "uniform Nelson `L²`" (false) to "uniform interacting moment" (true, deep). This keeps
-the assembly axiom-free and isolates the one genuine cluster-expansion input as an honest, true
-hypothesis. **This correction is needed before the conditional theorem is meaningful.**
+**Lean correction (applied 2026-05-27).** The hypothesis is now form (★) above. Internally a new
+`asymTorusIso_measureHasGreenMomentBound_of_cutoff` threads the uniform `K` directly (the old
+`_of_nelson` is kept as the `√(2·Knel)` specialization), so the weak-limit transfer
+(`weakLimit_exponential_moment`) gives `MeasureHasGreenMomentBound … K 1 μ` with uniform `K`. The
+per-`Lt` machinery is unchanged; only the *source* of the uniform constant moved from "uniform
+Nelson `L²`" (false) to "uniform interacting moment" (true, deep). The assembly stays axiom-free
+and isolates the one genuine cluster-expansion input as an honest, true hypothesis.
 
 ---
 
@@ -257,7 +258,7 @@ a hypothesis here because it is a separate (easy) development.
 | §1 `wickConstantAsym_eq_variance` | axiom | ✅ | **High** | circulant diagonal; square analogue proved |
 | §2 `asymChaosCutoffDecomposition` | axiom | ✅ | **Medium** | port 15.5K-line square Nelson machinery |
 | §3 `embed_l2_uniform_bound` | axiom (upstream) | ✅ | **High** | periodization, Stein–Weiss; pre-existing |
-| §4 volume-uniformity | hypothesis | **mis-stated** | **Deep** (the real one) | **fix to interacting-moment form (★)**; then cluster-expansion |
+| §4 volume-uniformity (★) | hypothesis | ✅ (now form (★)) | **Deep** (the real one) | corrected to interacting-moment form; cluster-expansion |
 | §5 `hRP` (OS3) | hypothesis | ✅ | Medium–High | lattice RP + weak-limit inheritance |
 | §6 `hOS2` | hypothesis | ✅ | High | discrete translation/reflection invariance |
 
@@ -265,5 +266,7 @@ a hypothesis here because it is a separate (easy) development.
 dominates the linear lower bound, ≡ cluster expansion). Everything else is either a standard fact
 or a mechanical port of already-proved square-track material.
 
-**Action item before the conditional theorem is meaningful:** correct §4 in Lean from the (false)
-uniform-`∫e^{-2V}` form to the (true, deep) uniform-interacting-moment form (★).
+**Status (2026-05-27):** §4 has been corrected in Lean to the true interacting-moment form (★), so
+`routeBPrimeIso_cylinder_OS` is now a meaningful (non-vacuous) conditional theorem. The remaining
+mathematical work is to *discharge* §4 (cluster expansion / pressure bound) and §5–§6 (lattice RP
++ symmetry), and the two axioms §1–§2 (ports of proved square-track material).

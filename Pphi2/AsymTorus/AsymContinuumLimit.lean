@@ -309,39 +309,22 @@ theorem asymTorusIso_interacting_limit_exists
         ε hε)
   exact ⟨μ, hμ_prob, φ, hφ_mono, hconv⟩
 
-/-- **The isotropic UV continuum limit has the Green-controlled exponential moment bound.**
+/-- **The isotropic UV continuum limit has the Green-controlled exponential moment bound** — from
+a cutoff bound with an explicit constant `K`.
 
-Along any isotropic lattice sequence `(Nt k, Ns k, a k)` (volume `Lt`, `Ls`; `a k → 0`), the UV
-continuum-limit torus measure `μ` satisfies `MeasureHasGreenMomentBound` with `C = 1` and the
-*uniform* Nelson constant `K`:
+Given the lattice cutoff bound `∫ exp|ωf| dμ̃_int ≤ K·exp(σ²)` at fixed `(Lt, Ls)` (with `K`
+constant in `(Nt, Ns, a)`), the UV continuum-limit torus measure `μ` along any isotropic sequence
+satisfies `MeasureHasGreenMomentBound` with the *same* `K` and `C = 1`:
 
   `∫ exp(|ω f|) dμ ≤ K · exp(asymTorusContinuumGreen f f)`.
 
-This is the Phase-3 endpoint: the cutoff bound `∫ exp|ωf| dμ̃_k ≤ K·exp(σ²_k)` (`K` uniform) plus
-`σ²_k → asymTorusContinuumGreen f f` (`second_moment_asym_tendsto`) pass to the weak limit by
-`weakLimit_exponential_moment` (truncation + MCT). `MeasureHasGreenMomentBound`, never produced for
-the metric-mismatched square construction, is here a **theorem** (modulo the two analytic
-axioms). -/
-theorem asymTorusIso_measureHasGreenMomentBound_of_nelson
+The cutoff bound + `σ²_k → asymTorusContinuumGreen f f` (`second_moment_asym_tendsto`) pass to the
+weak limit by `weakLimit_exponential_moment` (truncation + MCT). `MeasureHasGreenMomentBound`,
+never produced for the metric-mismatched square construction, is here a **theorem**. -/
+theorem asymTorusIso_measureHasGreenMomentBound_of_cutoff
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
-    (Knel : ℝ) (hKnel_pos : 0 < Knel)
-    (hKnel_bound : ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
-      (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
-      ∫ ω : Configuration (AsymLatticeField Nt Ns),
-        (Real.exp (-interactionFunctionalAsym Nt Ns P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass) ≤ Knel)
-    (Nt Ns : ℕ → ℕ) (a : ℕ → ℝ)
-    (hNt : ∀ k, NeZero (Nt k)) (hNs : ∀ k, NeZero (Ns k)) (ha : ∀ k, 0 < a k)
-    (hvolt : ∀ k, (Nt k : ℝ) * a k = Lt) (hvols : ∀ k, (Ns k : ℝ) * a k = Ls)
-    (ha0 : Filter.Tendsto a Filter.atTop (nhds 0)) :
-    ∃ (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls))),
-      IsProbabilityMeasure μ ∧
-        MeasureHasGreenMomentBound Ls mass hmass (Real.sqrt (2 * Knel)) 1 μ := by
-  obtain ⟨μ, hμ_prob, φ, hφ_mono, hconv⟩ :=
-    asymTorusIso_interacting_limit_exists Lt Ls P mass hmass Nt Ns a hNt hNs ha hvolt hvols ha0
-  set K : ℝ := Real.sqrt (2 * Knel) with hK_def
-  have hK_pos : 0 < K := Real.sqrt_pos_of_pos (by linarith)
-  have hcutoff : ∀ (f : AsymTorusTestFunction Lt Ls) (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (K : ℝ) (_hK_pos : 0 < K)
+    (hcutoff : ∀ (f : AsymTorusTestFunction Lt Ls) (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
       (a : ℝ) (ha : 0 < a), (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
       Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
         Real.exp (|ω f|)) (asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) ∧
@@ -349,10 +332,16 @@ theorem asymTorusIso_measureHasGreenMomentBound_of_nelson
         Real.exp (|ω f|) ∂(asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) ≤
       K * Real.exp (∫ ω : Configuration (AsymLatticeField Nt Ns),
         (ω (asymLatticeTestFnIso Lt Ls Nt Ns a f)) ^ 2
-        ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)) :=
-    fun f Nt Ns _ _ a ha hvolt hvols =>
-      asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff_of_nelson
-        Lt Ls P mass hmass Knel hKnel_pos hKnel_bound f Nt Ns a ha hvolt hvols
+        ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)))
+    (Nt Ns : ℕ → ℕ) (a : ℕ → ℝ)
+    (hNt : ∀ k, NeZero (Nt k)) (hNs : ∀ k, NeZero (Ns k)) (ha : ∀ k, 0 < a k)
+    (hvolt : ∀ k, (Nt k : ℝ) * a k = Lt) (hvols : ∀ k, (Ns k : ℝ) * a k = Ls)
+    (ha0 : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    ∃ (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls))),
+      IsProbabilityMeasure μ ∧
+        MeasureHasGreenMomentBound Ls mass hmass K 1 μ := by
+  obtain ⟨μ, hμ_prob, φ, hφ_mono, hconv⟩ :=
+    asymTorusIso_interacting_limit_exists Lt Ls P mass hmass Nt Ns a hNt hNs ha hvolt hvols ha0
   haveI := hμ_prob
   refine ⟨μ, hμ_prob, ?_⟩
   intro f
@@ -411,6 +400,30 @@ theorem asymTorusIso_measureHasGreenMomentBound_of_nelson
   rw [one_mul]
   exact hle
 
+/-- `…_of_cutoff` with the cutoff bound built from a Nelson `L²` constant `Knel` via
+`…_cutoff_of_nelson`; the resulting Green-moment constant is `√(2·Knel)`. -/
+theorem asymTorusIso_measureHasGreenMomentBound_of_nelson
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (Knel : ℝ) (hKnel_pos : 0 < Knel)
+    (hKnel_bound : ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
+      (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
+      ∫ ω : Configuration (AsymLatticeField Nt Ns),
+        (Real.exp (-interactionFunctionalAsym Nt Ns P a mass ω)) ^ 2
+        ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass) ≤ Knel)
+    (Nt Ns : ℕ → ℕ) (a : ℕ → ℝ)
+    (hNt : ∀ k, NeZero (Nt k)) (hNs : ∀ k, NeZero (Ns k)) (ha : ∀ k, 0 < a k)
+    (hvolt : ∀ k, (Nt k : ℝ) * a k = Lt) (hvols : ∀ k, (Ns k : ℝ) * a k = Ls)
+    (ha0 : Filter.Tendsto a Filter.atTop (nhds 0)) :
+    ∃ (μ : Measure (Configuration (AsymTorusTestFunction Lt Ls))),
+      IsProbabilityMeasure μ ∧
+        MeasureHasGreenMomentBound Ls mass hmass (Real.sqrt (2 * Knel)) 1 μ :=
+  asymTorusIso_measureHasGreenMomentBound_of_cutoff Lt Ls P mass hmass (Real.sqrt (2 * Knel))
+    (Real.sqrt_pos_of_pos (by linarith))
+    (fun f Nt Ns _ _ a ha hvt hvs =>
+      asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff_of_nelson
+        Lt Ls P mass hmass Knel hKnel_pos hKnel_bound f Nt Ns a ha hvt hvs)
+    Nt Ns a hNt hNs ha hvolt hvols ha0
+
 /-- **The isotropic UV continuum limit has the Green-controlled exponential moment bound.**
 Thin wrapper over `…_of_nelson` with the (volume-`(Lt,Ls)`-dependent) Nelson constant supplied by
 `asymNelson_exponential_estimate_iso`. -/
@@ -428,34 +441,39 @@ theorem asymTorusIso_measureHasGreenMomentBound
     P mass hmass Knel hKnel_pos hKnel_bound Nt Ns a hNt hNs ha hvolt hvols ha0
   exact ⟨μ, Real.sqrt (2 * Knel), hμ_prob, Real.sqrt_pos_of_pos (by linarith), hMHGMB⟩
 
-/-- **Conditional cylinder Green-moment input from a volume-uniform Nelson bound.**
+/-- **Conditional cylinder Green-moment input from a volume-uniform *interacting* exp-moment.**
 
-Given a *single* exponential-moment constant `Knel` that bounds the Nelson `L²` moment uniformly
-across all periods `L` (at fixed spatial period `Ls`) — the volume-uniformity that for P(φ)₂ is a
-cluster-expansion-level fact — the isotropic construction supplies the full IR family for
-`routeBPrime_cylinder_OS`: periods `Lt n = (n+1)·Ls → ∞` (rational-compatible, so the UV limit
-exists at each `n`), UV-continuum measures `μ n`, and the uniform Green-moment bound
-`AsymTorusSequenceHasUniformGreenMomentBound` with the single constant `√(2·Knel)`.
+Given a *single* constant `K` bounding the **interacting** exponential moment
+`∫ exp|ωf| dμ_int ≤ K·exp(σ²)` uniformly across all periods `L` (at fixed `Ls`) — the genuine
+volume-uniformity (`Z⁻¹ ≥ e^{-p|Λ|}` pressure cancels the linear lower bound `e^{c|Λ|}`; a
+cluster-expansion-level fact for P(φ)₂, see `docs/cylinder-conditional-inputs-provability.md` §4) —
+the isotropic construction supplies the full IR family for `routeBPrime_cylinder_OS`: periods
+`Lt n = (n+1)·Ls → ∞` (rational-compatible, so the UV limit exists at each `n`), UV-continuum
+measures `μ n`, and `AsymTorusSequenceHasUniformGreenMomentBound` with the single constant `K`.
 
-Each `μ n` is built by `asymTorusIso_measureHasGreenMomentBound_of_nelson` along the exactly-
+Each `μ n` is built by `asymTorusIso_measureHasGreenMomentBound_of_cutoff` along the exactly-
 isotropic sequence `Ns_k = k+1`, `a_k = Ls/(k+1)`, `Nt_k = (n+1)(k+1)` (so `Nt_k·a_k = Lt n`,
-`Ns_k·a_k = Ls`, `a_k → 0`). This closes Route-B′ OS0/OS1/OS2 modulo the one volume-uniformity
-input (plus the separate OS3 reflection-positivity and OS2 symmetry inputs of
-`routeBPrime_cylinder_OS`). -/
+`Ns_k·a_k = Ls`, `a_k → 0`).
+
+NB: the hypothesis is on the **interacting** moment, *not* the Nelson `L²` moment `∫ e^{-2V}` —
+the latter genuinely grows like `e^{f|Λ|}` (free energy) and is never volume-uniform. -/
 theorem asymTorusIso_cylinderUniformGreenBound
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
-    (Knel : ℝ) (hKnel_pos : 0 < Knel)
-    (hKnel_uniform : ∀ (L : ℝ), 0 < L → ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
-      (Nt : ℝ) * a = L → (Ns : ℝ) * a = Ls →
-      ∫ ω : Configuration (AsymLatticeField Nt Ns),
-        (Real.exp (-interactionFunctionalAsym Nt Ns P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass) ≤ Knel) :
+    (K : ℝ) (hK_pos : 0 < K)
+    (hUnif : ∀ (L : ℝ) [Fact (0 < L)] (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
+      (Nt : ℝ) * a = L → (Ns : ℝ) * a = Ls → ∀ f : AsymTorusTestFunction L Ls,
+      Integrable (fun ω : Configuration (AsymTorusTestFunction L Ls) =>
+        Real.exp (|ω f|)) (asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ∧
+      ∫ ω : Configuration (AsymTorusTestFunction L Ls),
+        Real.exp (|ω f|) ∂(asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ≤
+      K * Real.exp (∫ ω : Configuration (AsymLatticeField Nt Ns),
+        (ω (asymLatticeTestFnIso L Ls Nt Ns a f)) ^ 2
+        ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass))) :
     ∃ (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
       (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls))),
       Filter.Tendsto Lt Filter.atTop Filter.atTop ∧
       (∀ n, IsProbabilityMeasure (μ n)) ∧
-      AsymTorusSequenceHasUniformGreenMomentBound Ls mass hmass (Real.sqrt (2 * Knel)) 1
-        Lt hLt μ := by
+      AsymTorusSequenceHasUniformGreenMomentBound Ls mass hmass K 1 Lt hLt μ := by
   have hLs_pos : 0 < Ls := hLs.out
   set Lt : ℕ → ℝ := fun n => ((n : ℝ) + 1) * Ls with hLt_def
   have hLt_pos : ∀ n, 0 < Lt n := fun n => by rw [hLt_def]; positivity
@@ -463,13 +481,11 @@ theorem asymTorusIso_cylinderUniformGreenBound
   -- For each IR period Lt n, the UV continuum measure with the uniform Green bound
   have hbound : ∀ n, ∃ μ : Measure (Configuration (AsymTorusTestFunction (Lt n) Ls)),
       IsProbabilityMeasure μ ∧
-      @MeasureHasGreenMomentBound Ls _ (Lt n) (hLtfact n) mass hmass
-        (Real.sqrt (2 * Knel)) 1 μ := by
+      @MeasureHasGreenMomentBound Ls _ (Lt n) (hLtfact n) mass hmass K 1 μ := by
     intro n
     haveI := hLtfact n
-    have hk_ne : ∀ k : ℕ, ((k : ℝ) + 1) ≠ 0 := fun k => by positivity
-    exact asymTorusIso_measureHasGreenMomentBound_of_nelson (Lt n) Ls P mass hmass Knel hKnel_pos
-      (fun Nt Ns _ _ b hb hvt hvs => hKnel_uniform (Lt n) (hLt_pos n) Nt Ns b hb hvt hvs)
+    exact asymTorusIso_measureHasGreenMomentBound_of_cutoff (Lt n) Ls P mass hmass K hK_pos
+      (fun f Nt Ns _ _ b hb hvt hvs => hUnif (Lt n) Nt Ns b hb hvt hvs f)
       (fun k => (n + 1) * (k + 1)) (fun k => k + 1) (fun k => Ls / ((k : ℝ) + 1))
       (fun k => ⟨by positivity⟩) (fun k => ⟨by positivity⟩) (fun k => by positivity)
       (fun k => by rw [hLt_def]; push_cast; field_simp)
@@ -486,25 +502,30 @@ theorem asymTorusIso_cylinderUniformGreenBound
     exact Filter.Tendsto.atTop_mul_const hLs_pos
       ((tendsto_natCast_atTop_atTop (R := ℝ)).atTop_add tendsto_const_nhds)
   · exact AsymTorusSequenceHasUniformGreenMomentBound.of_forall Ls mass hmass
-      (Real.sqrt (2 * Knel)) 1 Lt hLtfact μ hμ_green
+      K 1 Lt hLtfact μ hμ_green
 
-/-- **Route-B′ cylinder OS0/OS1/OS2 from a volume-uniform Nelson bound** (isotropic construction).
+/-- **Route-B′ cylinder OS0/OS1/OS2/OS3 from a volume-uniform interacting exp-moment** (isotropic
+construction).
 
-The complete conditional closure: given the single volume-uniform Nelson constant `Knel` (the
-cluster-expansion input) plus the separate reflection-positivity (OS3) and OS2-symmetry inputs for
-the IR family it produces, the isotropic `Z_Nt × Z_Ns` construction yields a cylinder
-`S¹(Ls) × ℝ` measure satisfying OS0 (analyticity), OS2 (Euclidean invariance), and OS3 (reflection
-positivity). The uniform Green-moment bound — the crux that the metric-mismatched square
-construction never supplied — is produced by `asymTorusIso_cylinderUniformGreenBound`; the rest is
-the proved `routeBPrime_cylinder_OS`. -/
+The complete conditional closure: given the single volume-uniform interacting exp-moment constant
+`K` (the cluster-expansion input — see `asymTorusIso_cylinderUniformGreenBound`) plus the separate
+reflection-positivity (OS3) and OS2-symmetry inputs for the IR family it produces, the isotropic
+`Z_Nt × Z_Ns` construction yields a cylinder `S¹(Ls) × ℝ` measure satisfying OS0 (analyticity),
+OS2 (Euclidean invariance), and OS3 (reflection positivity). The uniform Green-moment bound — the
+crux that the metric-mismatched square construction never supplied — is produced by
+`asymTorusIso_cylinderUniformGreenBound`; the rest is the proved `routeBPrime_cylinder_OS`. -/
 theorem routeBPrimeIso_cylinder_OS
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
-    (Knel : ℝ) (hKnel_pos : 0 < Knel)
-    (hKnel_uniform : ∀ (L : ℝ), 0 < L → ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
-      (Nt : ℝ) * a = L → (Ns : ℝ) * a = Ls →
-      ∫ ω : Configuration (AsymLatticeField Nt Ns),
-        (Real.exp (-interactionFunctionalAsym Nt Ns P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass) ≤ Knel)
+    (K : ℝ) (hK_pos : 0 < K)
+    (hUnif : ∀ (L : ℝ) [Fact (0 < L)] (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
+      (Nt : ℝ) * a = L → (Ns : ℝ) * a = Ls → ∀ f : AsymTorusTestFunction L Ls,
+      Integrable (fun ω : Configuration (AsymTorusTestFunction L Ls) =>
+        Real.exp (|ω f|)) (asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ∧
+      ∫ ω : Configuration (AsymTorusTestFunction L Ls),
+        Real.exp (|ω f|) ∂(asymTorusInteractingMeasureIso L Ls Nt Ns a P mass ha hmass) ≤
+      K * Real.exp (∫ ω : Configuration (AsymLatticeField Nt Ns),
+        (ω (asymLatticeTestFnIso L Ls Nt Ns a f)) ^ 2
+        ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)))
     (hRP : ∀ (Lt : ℕ → ℝ) (hLt : ∀ n, Fact (0 < Lt n))
         (μ : ∀ n, Measure (Configuration (AsymTorusTestFunction (Lt n) Ls))),
         CylinderMeasureSequenceEventuallyReflectionPositive Ls
@@ -532,9 +553,9 @@ theorem routeBPrimeIso_cylinder_OS
           ↑(ω ((f i : CylinderTestFunction Ls) -
             cylinderTimeReflection Ls (f j : CylinderTestFunction Ls)))) ∂ν).re) := by
   obtain ⟨Lt, hLt, μ, hLt_tend, hμ_prob, hμ_green⟩ :=
-    asymTorusIso_cylinderUniformGreenBound Ls P mass hmass Knel hKnel_pos hKnel_uniform
-  exact routeBPrime_cylinder_OS Ls mass hmass (Real.sqrt (2 * Knel)) 1
-    (Real.sqrt_pos_of_pos (by linarith)) one_pos Lt hLt hLt_tend μ hμ_prob hμ_green
+    asymTorusIso_cylinderUniformGreenBound Ls P mass hmass K hK_pos hUnif
+  exact routeBPrime_cylinder_OS Ls mass hmass K 1
+    hK_pos one_pos Lt hLt hLt_tend μ hμ_prob hμ_green
     (hRP Lt hLt μ) (hOS2 Lt hLt μ)
 
 end Pphi2
