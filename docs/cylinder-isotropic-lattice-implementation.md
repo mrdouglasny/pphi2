@@ -218,15 +218,40 @@ Then re-derive on the new lattice (each is a port of its current form with `Nt,N
 
 ## Phase 3 — assembly (`MeasureHasGreenMomentBound` becomes a theorem)
 
+> **Status (2026-05-27). Phase 3 COMPLETE** (conditional on the one volume-uniformity input,
+> 0 new axioms), in `AsymTorus/AsymContinuumLimit.lean` + `GeneralResults/WeakLimitMoment.lean`:
+> - `asymTorusIso_interacting_second_moment_density_transfer` / `_uniform`: interacting 2nd moment
+>   ≤ `3√K`·(free Gaussian 2nd moment), uniformly bounded along an isotropic sequence (the free 2nd
+>   moment *converges* to the Green's function, hence is bounded).
+> - `asymTorusIso_interacting_limit_exists`: tightness (`configuration_tight_of_uniform_second_
+>   moments`) + Prokhorov → the UV continuum limit `μ` on the fixed-`(Lt,Ls)` torus.
+> - `GaussianField.weakLimit_exponential_moment` (generic): the truncation+MCT transfer of an
+>   exp-moment bound `∫ exp|ωf| dνₙ ≤ Bₙ → B∞` through a bounded-continuous weak limit.
+> - `asymTorusIso_measureHasGreenMomentBound`: **`MeasureHasGreenMomentBound` is a theorem** for the
+>   UV limit (`C = 1`) — the crux the metric-mismatched square construction never produced.
+> - `asymTorusIso_cylinderUniformGreenBound`: from a *single* volume-uniform Nelson constant `Knel`
+>   it builds the full IR family (`Lt n = (n+1)·Ls → ∞`, rational-compatible; exactly-isotropic
+>   sequence `Ns_k = k+1`, `a_k = Ls/(k+1)`, `Nt_k = (n+1)(k+1)`) and proves
+>   `AsymTorusSequenceHasUniformGreenMomentBound` with the single constant `√(2 Knel)`.
+> - `routeBPrimeIso_cylinder_OS`: feeds `routeBPrime_cylinder_OS` to yield cylinder OS0/OS1/OS2/OS3,
+>   conditional on (i) the volume-uniform Nelson bound `Knel`, (ii) OS3 reflection positivity,
+>   (iii) OS2 symmetry — the three separate inputs.
+>
+> **The volume-uniformity** (a single `Knel` across all periods `Lt`) is the genuine remaining
+> analytic content (cluster-expansion-level, per `MomentBoundOS1.lean`'s docstring); it is taken as
+> an explicit hypothesis rather than axiomatized, so the assembly is **axiom-free** (depends only on
+> the two existing isotropic axioms + the standard trio; the cylinder-OS theorem also pulls the
+> pre-existing `GaussianField.embed_l2_uniform_bound` via `routeBPrime`).
+
 ```
-∫ exp|ωf| dμ_{Nt,Ns} ≤ K·exp(σ²_{Nt,Ns}(f))     [Phase 2 cutoff bound, K uniform]
+∫ exp|ωf| dμ_{Nt,Ns} ≤ K·exp(σ²_{Nt,Ns}(f))     [Phase 2 cutoff bound, K uniform at fixed volume]
 σ²_{Nt,Ns}(f) → asymTorusContinuumGreen(f,f)      [Phase 1b convergence, TRUE]
-μ_{Nt,Ns} ⇀ μ  ⟹  ∫ exp|ωf| dμ ≤ K·exp(asymTorusContinuumGreen(f,f))   [lower-semicontinuity]
+μ_{Nt,Ns} ⇀ μ  ⟹  ∫ exp|ωf| dμ ≤ K·exp(asymTorusContinuumGreen(f,f))   [truncation + MCT]
 ```
-⟹ `MeasureHasGreenMomentBound` (`C=1`) as a **theorem, no axiom**. Then
-`AsymTorusSequenceHasUniformGreenMomentBound.of_forall_ge_one` (`IRTightness.lean:68`) — *uniform in `Lt`*
-because Phase 1b's constants are — and `routeBPrime_cylinder_OS` (`CylinderOS.lean:460`) gives cylinder
-OS0+OS1+OS2. (OS3 is the separate eventual-RP input; OS4 the separate cyl-2 mass gap.)
+⟹ `MeasureHasGreenMomentBound` (`C=1`) as a **theorem**. Then a single volume-uniform `Knel`
+gives `AsymTorusSequenceHasUniformGreenMomentBound`, and `routeBPrime_cylinder_OS`
+(`CylinderOS.lean:460`) gives cylinder OS0+OS1+OS2(+OS3 with the RP input). (OS4 is the separate
+cyl-2 mass gap.)
 
 ## Correspondence (square proved → heterogeneous target)
 

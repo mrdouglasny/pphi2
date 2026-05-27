@@ -46,22 +46,23 @@ For each torus test function `f` and lattice `(Nt, Ns, a)` with `Nt·a = Lt`, `N
 with `K` the universal Nelson constant and `σ² = ∫ (ω g)² dμ_{GFF,asym}` the heterogeneous lattice
 second moment of `g = asymLatticeTestFnIso f`. Heterogeneous analogue of
 `asymTorusInteractingMeasure_exponentialMomentBound_cutoff`. -/
-theorem asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
-    ∃ K : ℝ, 0 < K ∧ ∀ (f : AsymTorusTestFunction Lt Ls) (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
-      (a : ℝ) (ha : 0 < a), (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
+theorem asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff_of_nelson
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (K : ℝ) (hK_pos : 0 < K)
+    (hK_bound : ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
+      (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
+      ∫ ω : Configuration (AsymLatticeField Nt Ns),
+        (Real.exp (-interactionFunctionalAsym Nt Ns P a mass ω)) ^ 2
+        ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass) ≤ K)
+    (f : AsymTorusTestFunction Lt Ls) (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a : ℝ) (ha : 0 < a) (hvolt : (Nt : ℝ) * a = Lt) (hvols : (Ns : ℝ) * a = Ls) :
     Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
       Real.exp (|ω f|)) (asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) ∧
     ∫ ω : Configuration (AsymTorusTestFunction Lt Ls),
       Real.exp (|ω f|) ∂(asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) ≤
-    K * Real.exp (∫ ω : Configuration (AsymLatticeField Nt Ns),
+    Real.sqrt (2 * K) * Real.exp (∫ ω : Configuration (AsymLatticeField Nt Ns),
       (ω (asymLatticeTestFnIso Lt Ls Nt Ns a f)) ^ 2
       ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)) := by
-  -- Uniform Nelson constant K (independent of Nt, Ns, a)
-  obtain ⟨K, hK_pos, hK_bound⟩ :=
-    asymNelson_exponential_estimate_iso P mass hmass Lt Ls hLt.out hLs.out
-  refine ⟨Real.sqrt (2 * K), Real.sqrt_pos_of_pos (by linarith), ?_⟩
-  intro f Nt Ns _ _ a ha hvolt hvols
   -- Setup
   set μ_int := interactingLatticeMeasureAsym Nt Ns P a mass ha hmass
   set μ_GFF := latticeGaussianMeasureAsym Nt Ns a mass ha hmass
@@ -188,6 +189,27 @@ theorem asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff
           rw [mul_comm (Real.sqrt K) (Real.sqrt 2),
               ← Real.sqrt_mul (by norm_num : (0:ℝ) ≤ 2)]
   exact ⟨hF_int_int, h_integral_bound⟩
+
+/-- **Cutoff-level exponential moment bound for the isotropic interacting measure** (with the
+volume-uniform Nelson constant supplied by `asymNelson_exponential_estimate_iso`). Thin wrapper
+over `…_cutoff_of_nelson`. -/
+theorem asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    ∃ K : ℝ, 0 < K ∧ ∀ (f : AsymTorusTestFunction Lt Ls) (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+      (a : ℝ) (ha : 0 < a), (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
+    Integrable (fun ω : Configuration (AsymTorusTestFunction Lt Ls) =>
+      Real.exp (|ω f|)) (asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) ∧
+    ∫ ω : Configuration (AsymTorusTestFunction Lt Ls),
+      Real.exp (|ω f|) ∂(asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) ≤
+    K * Real.exp (∫ ω : Configuration (AsymLatticeField Nt Ns),
+      (ω (asymLatticeTestFnIso Lt Ls Nt Ns a f)) ^ 2
+      ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)) := by
+  obtain ⟨K, hK_pos, hK_bound⟩ :=
+    asymNelson_exponential_estimate_iso P mass hmass Lt Ls hLt.out hLs.out
+  exact ⟨Real.sqrt (2 * K), Real.sqrt_pos_of_pos (by linarith),
+    fun f Nt Ns _ _ a ha hvolt hvols =>
+      asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff_of_nelson
+        Lt Ls P mass hmass K hK_pos hK_bound f Nt Ns a ha hvolt hvols⟩
 
 end Pphi2
 
