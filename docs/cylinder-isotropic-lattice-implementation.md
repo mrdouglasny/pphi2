@@ -57,16 +57,25 @@ Single spacing `a`; site counts `Nt`, `Ns`; periods `Lt = Nt·a`, `Ls = Ns·a`. 
 >      for `Nt k → ∞`, `.comp hNt1` + `Tendsto.congr` with `(Nt k−1)+1 = Nt k`, then
 >      `Tendsto.div` of the 4-DFT numerator by the `(eig+eig+mass²)·normSq·normSq` denominator).
 >      The instance-in-`k`-lambda (`[NeZero (Nt k)]`) assembled through defeq without issue.
->    - **TODO — covariance↔tsum** (`lattice_covariance_eq_tsum_pure` analogue): from
->      `abstract_spectral_eq_dft_spectral_2d_asym` (step 4) + `tsum_eq_sum` (extend the
->      `Fin Nt × Fin Ns` sum by zero via `latticeGreenTerm2dAsym_zero_of_ge`) +
->      `evalAsym (pure f₁ f₂) x = circleRestriction Lt Nt f₁ x.1 · circleRestriction Ls Ns f₂ x.2`
->      (the asym `hpure`, mirror `Convergence.lean:85`) ⟹ DFT coeff factors as
->      `latticeDFTCoeff1d Lt Nt f₁ · latticeDFTCoeff1d Ls Ns f₂`.
->    - **TODO — continuum↔tsum** (`greenFunctionBilinear_pure_eq_tsum` analogue, `:191`):
->      `Nat.pairEquiv` + tensor eigenvalue = sum of 1D eigenvalues + `pure_val`.
->    - **TODO — Tannery assembly** `..._pure` (`:433`): `tendsto_tsum_of_dominated_convergence`
->      with the three DONE/TODO pieces; then **DM-expansion** to general elements (`:470`–`:1219`).
+>    - ✅ **DONE** (`e675ead`) — covariance↔tsum (`lattice_covariance_pure_eq_2d_spectral_asym`
+>      + `lattice_covariance_eq_tsum_pure_asym`): the bridge + `hpure`
+>      (`evalAsym (pure) = circleRestriction ⊗ circleRestriction`) + `hcoeff`
+>      (`sum_factor_asym` + `Fintype.sum_mul_sum`, `dsimp only` to reduce `(a,b).1/.2`) +
+>      `tsum_eq_sum`.
+>    - ✅ **DONE** (`ebc54b5`) — continuum↔tsum (`greenFunctionBilinear_pure_eq_tsum_asym`):
+>      NTP eigenvalue = sum of 1D eigenvalues (rfl), `NuclearTensorProduct.pure_val`,
+>      `Nat.pairEquiv.symm.tsum_eq`. (Needed to qualify `NuclearTensorProduct.pure_val` —
+>      this file does not `open NuclearTensorProduct`.)
+>    - ✅ **DONE** (`d21b421`) — Tannery assembly for pure tensors
+>      (`lattice_green_tendsto_continuum_asym_pure`): `tendsto_tsum_of_dominated_convergence`
+>      over per-mode + domination + summability; per-size DFT bounds from the uniform
+>      quadratic bound via `(Nt k − 1)+1 = Nt k`.
+>    - **TODO — DM-expansion to general elements** (`lattice_green_tendsto_continuum_asym`,
+>      the remaining sorry). Port square `Convergence.lean:470`–`1216`: `ntp_basis_eq_pure_asym`,
+>      `covariance_dm_expansion_left` analogue, `lattice_green_tendsto_pure_right` analogue,
+>      `lattice_covariance_general_basis_bound` analogue, `greenCLM_left`/`greenFunctionBilinear_symm`,
+>      then DM-expand `g` (and `f`) over the DMS basis + Tannery with the uniform polynomial bound.
+>      Largest remaining sub-piece (~650 lines of generic DMS bookkeeping; the hard analysis is done).
 >    The 1D domination `latticeDFTCoeff1d_quadratic_bound L` reused verbatim per direction
 >    (any size = `N+1`), so `Lt≠Ls` obstruction gone, constants `Lt`-uniform.
 >    - **Continuum target:** scaffold states `greenFunctionBilinear mass hmass f g` on
