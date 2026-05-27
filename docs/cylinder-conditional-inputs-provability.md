@@ -42,22 +42,29 @@ hypothesis whose provability we must vet.
       |                                          + GaussianField.embed_l2_uniform_bound (§3, via routeBPrime)
 ```
 
-`#print axioms`:
+`#print axioms` (2026-05-27, after §1 discharge):
 - `asymTorusIso_measureHasGreenMomentBound` / `asymTorusIso_cylinderUniformGreenBound` /
   `routeBPrimeIso_cylinder_OS` (the conditional theorems):
-  `[propext, Classical.choice, Quot.sound, asymChaosCutoffDecomposition, wickConstantAsym_eq_variance]`
+  `[propext, Classical.choice, Quot.sound, asymChaosCutoffDecomposition]`
   (`routeBPrimeIso_cylinder_OS` additionally `+ GaussianField.embed_l2_uniform_bound`).
 - `cylinderIso_OS_of_RP_OS2` (the §4-unconditional theorem): the above **+**
-  `asymInteracting_expMoment_volume_uniform` (§4 is now an axiom — see below).
+  `asymInteracting_expMoment_volume_uniform`.
 
-**Update (2026-05-27):** §4 has been **promoted from hypothesis to a vetted `axiom`**
-(`asymInteracting_expMoment_volume_uniform`), so `cylinderIso_OS_of_RP_OS2` needs only the §5/§6
-inputs. So now: **three** project axioms (§1, §2, §4), one upstream gaussian-field axiom (§3), and
-two remaining hypotheses (§5 OS3, §6 OS2).
+So now: **two** project axioms (§2, §4), one upstream gaussian-field axiom (§3), and two remaining
+hypotheses (§5 OS3, §6 OS2). §1 `wickConstantAsym_eq_variance` was discharged to a theorem (so it no
+longer appears above); §4 was promoted from hypothesis to a vetted axiom.
 
 ---
 
-## 1. `wickConstantAsym_eq_variance` — **axiom** (`AsymTorus/AsymWickMean.lean`)
+## 1. `wickConstantAsym_eq_variance` — **DISCHARGED → theorem** (2026-05-27)
+
+> **Update.** No longer an axiom. Proved in `AsymTorus/AsymWickVariance.lean` by the algebraic
+> circulant route predicted below: `massOperatorAsym_translation_commute` +
+> `spectralCovAsym_massOperator_eq` + shift isometry ⟹
+> `covariance_spectralLatticeCovarianceAsym_translation_invariant` ⟹ the diagonal is constant =
+> `(1/|Λ|)Σ_k λ_k⁻¹` (orthonormality of `massEigenvectorBasisAsym`), times the GJ `(a²)⁻¹` factor.
+> `#print axioms wickConstantAsym_eq_variance = [propext, Classical.choice, Quot.sound]`. The
+> original statement/justification is retained below for the record.
 
 ```lean
 axiom wickConstantAsym_eq_variance (Nt Ns) [NeZero Nt] [NeZero Ns] (a mass) (ha : 0<a) (hmass : 0<mass)
@@ -283,7 +290,7 @@ a hypothesis here because it is a separate (easy) development.
 
 | Input | Status | True? | Provability | Notes |
 |---|---|---|---|---|
-| §1 `wickConstantAsym_eq_variance` | axiom | ✅ | **High** | circulant diagonal; square analogue proved |
+| §1 `wickConstantAsym_eq_variance` | **DISCHARGED → theorem** | ✅ | done | circulant diagonal; proved 2026-05-27 (`AsymWickVariance.lean`) |
 | §2 `asymChaosCutoffDecomposition` | axiom | ✅ | **Medium** | port 15.5K-line square Nelson machinery |
 | §3 `embed_l2_uniform_bound` | axiom (upstream) | ✅ | **High** | periodization, Stein–Weiss; pre-existing |
 | §4 volume-uniformity (★) | **axiom** `asymInteracting_expMoment_volume_uniform` | ✅ (form `K·e^{C·σ²}`) | **Deep** (the real one) | DT-vetted with `∃C`; cluster-expansion / mass-gap |
@@ -294,9 +301,10 @@ a hypothesis here because it is a separate (easy) development.
 dominates the linear lower bound, ≡ cluster expansion). Everything else is either a standard fact
 or a mechanical port of already-proved square-track material.
 
-**Status (2026-05-27):** §4 is corrected to the true interacting-moment form (★) and **promoted to
-a deep-think-vetted `axiom`** `asymInteracting_expMoment_volume_uniform`, so `cylinderIso_OS_of_RP_OS2`
-gives cylinder OS0/OS1/OS2/OS3 unconditional in §4 (only §5/§6 remain as hypotheses). pphi2 on the
-branch: **22 raw / 20 real axioms**, 0 sorries. The remaining mathematical work is to *discharge*
-the three isotropic axioms: §1, §2 (ports of proved square-track material) and §4 (the genuine
-cluster-expansion / pressure-bound result), plus the §5–§6 inputs (lattice RP + symmetry).
+**Status (2026-05-27):** §4 is the true interacting-moment form (★), a deep-think-vetted `axiom`
+`asymInteracting_expMoment_volume_uniform`; `cylinderIso_OS_of_RP_OS2` gives cylinder
+OS0/OS1/OS2/OS3 unconditional in §4 (only §5/§6 remain as hypotheses). **§1 has been discharged to a
+theorem.** pphi2 on the branch: **21 raw / 19 real axioms**, 0 sorries. The two remaining isotropic
+axioms are §2 `asymChaosCutoffDecomposition` (port of proved square Nelson machinery) and §4 (the
+genuine cluster-expansion / transfer-matrix-gap result); plus the §5–§6 hypotheses (lattice RP +
+symmetry — see `cylinder-os3-discharge-plan.md`).

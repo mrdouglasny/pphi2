@@ -11,13 +11,13 @@ the square chain in `ContinuumLimit/Hypercontractivity.lean`.
 
 The genuine analytic input — that the site variance `Var[ω(δ_x)]` of the heterogeneous GFF equals
 `wickConstantAsym` at every site `x` (translation invariance of the circulant covariance's
-diagonal) — is isolated as the vetted axiom `wickConstantAsym_eq_variance`. Everything else is
-derived from it via the *generic* Gaussian-field API (`pairing_is_gaussian`,
+diagonal) — is proved in `AsymWickVariance.lean`. Everything else is derived from it via the
+*generic* Gaussian-field API (`pairing_is_gaussian`,
 `gaussian_hermite_zero_mean`).
 
 ## Main results
 
-- `wickConstantAsym_eq_variance` — **axiom**: site variance equals the Wick constant.
+- `wickConstantAsym_eq_variance` — site variance equals the Wick constant.
 - `wickMonomialAsym_latticeGaussian` — Wick monomials of order `n ≥ 1` have zero GFF mean.
 - `interactionFunctionalAsym_mean_nonpos` — `∫ V_a dμ_{GFF} ≤ 0`.
 - `partitionFunctionAsym_ge_one` — `Z_a ≥ 1`.
@@ -28,6 +28,7 @@ Glimm–Jaffe, *Quantum Physics*, §I.3, §9; Simon, *P(φ)₂* (1974), §I.
 -/
 
 import Pphi2.AsymTorus.AsymLatticeMeasure
+import Pphi2.AsymTorus.AsymWickVariance
 import Pphi2.GeneralResults.GaussianHermiteMean
 import GaussianField.Properties
 import Mathlib.Analysis.Convex.Integral
@@ -38,7 +39,7 @@ open MeasureTheory ProbabilityTheory GaussianField
 
 namespace Pphi2
 
-/-- **Site variance of the heterogeneous lattice GFF equals the Wick constant** (textbook axiom).
+/-- **Site variance of the heterogeneous lattice GFF equals the Wick constant.**
 
 For the P(φ)₂ Gaussian free field on the isotropic heterogeneous lattice `Z_Nt × Z_Ns`, the
 variance of the site evaluation `ω ↦ ω(δ_x)` is the same at every site `x` and equals
@@ -58,22 +59,31 @@ representation, hence so does its inverse square root, hence `C(δ_x, δ_x) = C(
 This is the heterogeneous analogue of the *proved* square `wickConstant_eq_variance`
 (`ContinuumLimit/Hypercontractivity.lean`), whose proof routes through the finite-dimensional
 Lebesgue density representation of the lattice GFF and translation-volume-preservation.
-
-Reference: Glimm–Jaffe, *Quantum Physics*, §I.3 / §9 (Wick ordering = covariance subtraction).
-Strategy: port the square translation-invariance (Lebesgue density representation
-`latticeGaussianMeasureAsym_density_integral` + volume-preserving shift on the Euclidean
-configuration space `Z_Nt × Z_Ns → ℝ`), OR derive the diagonal site-independence algebraically
-from the DFT shift identities (`cos_shift_sum`, `sin_shift_sum`) on the product lattice.
-
-✅ Vetted: deep-think-gemini (Likely correct / Standard) — circulant-matrix diagonal independence
-is unconditionally true; the `(a²)⁻¹` GJ normalization matches the `d = 2` lattice action; the
-statement is exactly what Wick ordering requires (marginal `ω(δ_x) ∼ N(0, wickConstantAsym)`). -/
-axiom wickConstantAsym_eq_variance (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+Reference: Glimm–Jaffe, *Quantum Physics*, §I.3 / §9 (Wick ordering = covariance subtraction). -/
+theorem wickConstantAsym_eq_variance (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
     (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (x : AsymLatticeSites Nt Ns) :
     (wickConstantAsym Nt Ns a mass : ℝ) =
     @inner ℝ ell2' _
       (latticeCovarianceAsymGJ Nt Ns a mass ha hmass (asymLatticeDelta Nt Ns x))
-      (latticeCovarianceAsymGJ Nt Ns a mass ha hmass (asymLatticeDelta Nt Ns x))
+      (latticeCovarianceAsymGJ Nt Ns a mass ha hmass (asymLatticeDelta Nt Ns x)) := by
+  rw [wickConstantAsym]
+  calc
+    (a ^ 2 : ℝ)⁻¹ *
+        ((1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) *
+          ∑ k : AsymLatticeSites Nt Ns, (massEigenvaluesAsym Nt Ns a mass k)⁻¹)
+      = (a ^ 2 : ℝ)⁻¹ *
+          @inner ℝ ell2' _
+            (spectralLatticeCovarianceAsym Nt Ns a mass ha hmass (asymLatticeDelta Nt Ns x))
+            (spectralLatticeCovarianceAsym Nt Ns a mass ha hmass (asymLatticeDelta Nt Ns x)) := by
+              congr 1
+              exact (spectralVarianceAsym_inner_eq_massEigenvalue_average
+                Nt Ns a mass ha hmass x).symm
+    _ = @inner ℝ ell2' _
+          (latticeCovarianceAsymGJ Nt Ns a mass ha hmass (asymLatticeDelta Nt Ns x))
+          (latticeCovarianceAsymGJ Nt Ns a mass ha hmass (asymLatticeDelta Nt Ns x)) := by
+            symm
+            exact latticeCovarianceAsymGJ_inner_eq_inv_a_sq_spectral
+              Nt Ns a mass ha hmass (asymLatticeDelta Nt Ns x)
 
 /-- **Hermite orthogonality for the heterogeneous lattice Gaussian measure.** Wick monomials
 `:x^n:_c` of order `n ≥ 1` have zero mean under the GFF, with `c = wickConstantAsym` matching the
