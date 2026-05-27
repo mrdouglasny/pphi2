@@ -1,5 +1,21 @@
 # Cylinder S¹×ℝ φ⁴₂ — master plan & progress tracker
 
+> **STATUS UPDATE (2026-05-27) — superseded by the isotropic redesign.** The construction below
+> was rebuilt on an **isotropic `Z_Nt × Z_Ns` lattice** (single spacing `a`, periods `Lt=Nt·a`,
+> `Ls=Ns·a`) to fix a metric inconsistency in the original square-via-geometric-mean approach.
+> Current state on branch `cylinder-isotropic-lattice` (Phases 1b/2/3 **complete**):
+> `cylinderIso_OS_of_RP_OS2` (`Pphi2/AsymTorus/AsymContinuumLimit.lean`) gives cylinder
+> **OS0/OS1/OS2/OS3**, resting on **2 vetted isotropic axioms** —
+> `asymChaosCutoffDecomposition` (UV Nelson chaos) and `asymInteracting_expMoment_volume_uniform`
+> (the CYL-1a Lₜ-uniform moment bound, now a vetted axiom) — plus the two hypotheses `hRP` (OS3) and
+> `hOS2`. **`MeasureHasGreenMomentBound` is a theorem** (the crux the old route never produced), and
+> `wickConstantAsym_eq_variance` was discharged to a theorem (2026-05-27). pphi2 branch: 21 raw / 19
+> real axioms, 0 sorries. Current docs: `cylinder-isotropic-lattice-redesign.md` +
+> `…-implementation.md` (construction), `cylinder-conditional-inputs-provability.md` (input map),
+> `cylinder-os3-discharge-plan.md` (OS3 plan). The CYL-1a / CYL-2a framing below is still the right
+> mental model (the two deep theorems = §4 moment bound + OS4 spectral gap); the workstream details
+> are reorganized in those newer docs.
+
 **Created:** 2026-05-22 (after the T² OS0–OS2 endpoint reached the bare Mathlib trio —
 see `docs/T2-master-plan.md`).
 **Reviewed:** 2026-05-22, Gemini deep-think (2 ultrareview passes + a strategy vetting) —

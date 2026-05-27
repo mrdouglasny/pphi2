@@ -154,8 +154,9 @@ obstruction is gone** (the eigenvalues are now the correct rectangular ones), an
 > - `Pphi2/GeneralResults/GaussianExpMoment.lean`: `GaussianField.gaussian_exp_abs_moment` —
 >   **generic** (covariance-agnostic) Gaussian exp-modulus MGF bound `∫ exp(t|ωg|) d(measure T) ≤
 >   2 exp(t²/2·∫(ωg)²)`, 0 axioms. Instantiates at any lattice covariance.
-> - `Pphi2/AsymTorus/AsymWickMean.lean`: the vetted axiom `wickConstantAsym_eq_variance` (site
->   variance = Wick constant; circulant translation invariance), then the proved chain
+> - `Pphi2/AsymTorus/AsymWickVariance.lean` (+ `AsymWickMean.lean`): `wickConstantAsym_eq_variance`
+>   (site variance = Wick constant; circulant translation invariance) — **a theorem** (discharged
+>   2026-05-27, algebraic circulant route; was an axiom), then the proved chain
 >   `wickMonomialAsym_latticeGaussian` → `wickPolynomialAsym_integral_eq_coeff_zero` →
 >   `interactionFunctionalAsym_mean_nonpos` → `partitionFunctionAsym_ge_one` (`Z_a ≥ 1`), and
 >   `density_transfer_bound_iso` (Cauchy–Schwarz density transfer).
@@ -233,15 +234,20 @@ Then re-derive on the new lattice (each is a port of its current form with `Nt,N
 >   it builds the full IR family (`Lt n = (n+1)·Ls → ∞`, rational-compatible; exactly-isotropic
 >   sequence `Ns_k = k+1`, `a_k = Ls/(k+1)`, `Nt_k = (n+1)(k+1)`) and proves
 >   `AsymTorusSequenceHasUniformGreenMomentBound` with the single constant `√(2 Knel)`.
-> - `routeBPrimeIso_cylinder_OS`: feeds `routeBPrime_cylinder_OS` to yield cylinder OS0/OS1/OS2/OS3,
->   conditional on (i) the volume-uniform Nelson bound `Knel`, (ii) OS3 reflection positivity,
->   (iii) OS2 symmetry — the three separate inputs.
+> - `routeBPrimeIso_cylinder_OS` (conditional) / `cylinderIso_OS_of_RP_OS2` (unconditional in §4):
+>   feed `routeBPrime_cylinder_OS` to yield cylinder OS0/OS1/OS2/OS3, conditional on (i) the
+>   volume-uniform interacting exp-moment, (ii) OS3 reflection positivity, (iii) OS2 symmetry.
 >
-> **The volume-uniformity** (a single `Knel` across all periods `Lt`) is the genuine remaining
-> analytic content (cluster-expansion-level, per `MomentBoundOS1.lean`'s docstring); it is taken as
-> an explicit hypothesis rather than axiomatized, so the assembly is **axiom-free** (depends only on
-> the two existing isotropic axioms + the standard trio; the cylinder-OS theorem also pulls the
-> pre-existing `GaussianField.embed_l2_uniform_bound` via `routeBPrime`).
+> **The volume-uniformity** (a single `K, C` across all periods `Lt`: `∫exp|ωf|dμ_int ≤ K·exp(C·σ²)`)
+> is the genuine deep analytic content (cluster-expansion / cylinder transfer-matrix-gap level). It
+> is now the deep-think-vetted **axiom** `asymInteracting_expMoment_volume_uniform`, so
+> `cylinderIso_OS_of_RP_OS2` is unconditional in §4 (only OS3/OS2 remain as hypotheses). **Axiom
+> tally (branch):** two isotropic axioms — `asymChaosCutoffDecomposition` (§2) and
+> `asymInteracting_expMoment_volume_uniform` (§4); `wickConstantAsym_eq_variance` was a third,
+> **discharged to a theorem 2026-05-27** (`AsymWickVariance.lean`). The cylinder-OS theorem also
+> pulls the pre-existing `GaussianField.embed_l2_uniform_bound` via `routeBPrime`. See
+> `docs/cylinder-conditional-inputs-provability.md` (provability map) and
+> `docs/cylinder-os3-discharge-plan.md` (OS3 plan).
 
 ```
 ∫ exp|ωf| dμ_{Nt,Ns} ≤ K·exp(σ²_{Nt,Ns}(f))     [Phase 2 cutoff bound, K uniform at fixed volume]
