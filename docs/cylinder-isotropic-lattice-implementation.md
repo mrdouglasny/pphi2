@@ -148,6 +148,30 @@ obstruction is gone** (the eigenvalues are now the correct rectangular ones), an
 
 ## Phase 2 — pphi2 `AsymTorus/` refactor
 
+> **Status (2026-05-26).** The measure-theoretic + embedding **foundation is DONE** on pphi2
+> branch `cylinder-isotropic-lattice` (gaussian-field pinned at `5bb35e8`, commit `13a600e`).
+> Two new files, all building clean:
+> - `Pphi2/AsymTorus/AsymLatticeMeasure.lean` (`f8de94c`, `6403b47`): `DyninMityaginSpace
+>   (AsymLatticeField Nt Ns)` instance (port of the square, Fintype-generic),
+>   `latticeGaussianMeasureAsym` (+`IsProbabilityMeasure`), and the full heterogeneous interacting
+>   measure — `wickConstantAsym` (`(a²)⁻¹·(1/(Nt·Ns))·Σ_k 1/λ_k` via `massEigenvaluesAsym`),
+>   `interactionFunctionalAsym` (+`_measurable`, +`_bounded_below`), `boltzmannWeightAsym`
+>   (+`_pos`, +`_integrable`), `partitionFunctionAsym` (+`_pos`), `interactingLatticeMeasureAsym`
+>   (+`_isProbability`).
+> - `Pphi2/AsymTorus/AsymTorusEmbeddingIso.lean` (`acb0393`): `evalAsymTorusAtSiteGJ` (GJ weight
+>   = `a`), `asymTorusEmbedLiftIso` (+`_measurable`), `asymLatticeTestFnIso` (+`_expand`),
+>   `asymTorusEmbedLiftIso_eval_eq`, `asymTorusInteractingMeasureIso` (pushforward).
+>
+> **Key normalisation (worked out):** the GJ weight `a` and the `(1/a)²` of `latticeCovarianceAsymGJ`
+> cancel, so the embedded second moment is `covariance (spectralLatticeCovarianceAsym)
+> (evalAsym f) (evalAsym g)` — *exactly* the form `lattice_green_tendsto_continuum_asym` converges
+> to `greenFunctionBilinear`. So `second_moment_eq_covariance` + the convergence is a short bridge.
+>
+> **Remaining (the analytic estimates, porting from `AsymTorusOS.lean`):** the **Nelson cutoff
+> exp-moment bound** on the iso lattice (largest piece), `second_moment_eq_covariance`
+> (σ² = covariance of the embedded Gaussian → the spectral form above), and the **uniform
+> second-moment** bounded by `asymTorusContinuumGreen` via Phase 1b. Then Phase 3.
+
 Replace the `N×N` + `asymGeomSpacing` layer:
 
 | Remove (current) | Add (isotropic) |
