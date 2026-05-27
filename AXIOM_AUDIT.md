@@ -60,6 +60,7 @@ Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 | Package | Axioms | Sorries | Pin |
 |---|---|---|---|
 | **pphi2** (active build) | 17 | 0 | — |
+| **pphi2** (`cylinder-isotropic-lattice` branch: +`asymChaosCutoffDecomposition`) | 18 | 0 | GaussianField `5bb35e8` |
 | **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
 | **gaussian-hilbert** (pinned, tracks `main`) | 1 *(was 4 in last audit; see 2026-05-{10,11} entries)* | 0 | `main` |
@@ -412,7 +413,7 @@ elementary inequality `x² ≤ 2 e^|x|` and a scaling optimization.
 eventual pullback RP predicate `CylinderMeasureSequenceEventuallyReflectionPositive`
 and proves the IR-limit OS3 transfer by characteristic-functional convergence.
 
-## Current pphi2 Axiom Inventory (19 active, 0 sorries)
+## Current pphi2 Axiom Inventory (20 active on `cylinder-isotropic-lattice`, 0 sorries)
 
 This table is generated from the current `./scripts/count_axioms.sh` result and
 is the source of truth for active pphi2 axioms in this audit. The Stage 1
@@ -446,6 +447,19 @@ the same Glimm–Jaffe Ch. 8 estimate.
 | `Pphi2/NelsonEstimate/NelsonEstimate.lean` | 1 | `nelson_exponential_estimate_lattice` |
 | **Subtotal** | **4** | |
 | **Total (this branch)** | **19** | |
+
+### Cylinder isotropic-lattice cohort (1 axiom — only on `cylinder-isotropic-lattice`)
+
+Heterogeneous-lattice analogue of the square Nelson dynamical-cutoff input, for the
+metric-correct `Z_Nt × Z_Ns` cylinder construction (Phase-2 #3, B-lean).
+
+| File | Active axioms | Names |
+|------|---------------|-------|
+| `Pphi2/AsymTorus/AsymNelson.lean` | 1 | `asymChaosCutoffDecomposition` |
+
+| Axiom | File:Line | Rating | Sources | Notes |
+|-------|-----------|--------|---------|-------|
+| `asymChaosCutoffDecomposition` | `AsymTorus/AsymNelson.lean:62` | Likely correct | DT | Existence of the Glimm–Jaffe dynamical-cutoff smooth/rough chaos decomposition on `Z_Nt × Z_Ns` with a `ψ` tail uniform in `(Nt,Ns,a)` at fixed volume `Lt·Ls`. Heterogeneous analogue of the **proved** square decomposition (`canonicalSmoothInteraction`/`canonicalRoughError` + the two `…_uniform` theorems); feeds the proved generic engine `bridgeAxiom_of_setup_real_generic` to give the theorem `asymNelson_exponential_estimate_iso`. Ref: Glimm–Jaffe Ch. 8; Simon *P(φ)₂* Thm V.12/V.15. deep-think-gemini (2026-05-27): **Standard / Likely correct** — uniformity at fixed volume confirmed (Simon V.12/V.15), UV singularity isotropic ⇒ rectangle adds no obstruction, mass gap controls IR. **Discharge plan**: port `FieldDecomposition`/`RoughErrorBound`/`CovarianceBoundsGJ` to `Z_Nt × Z_Ns` using the Phase-1b heterogeneous DFT (`gaussian-field AsymCovariance`). |
 
 ### Discharged in Phase 2 (no longer axioms)
 

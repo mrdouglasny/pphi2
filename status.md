@@ -19,7 +19,11 @@ Euclidean/Minkowski interfaces.
 **Current counter (`./scripts/count_axioms.sh`, 2026-05-22): 19 raw axioms (17 real — 15 public + 2
 `private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
 **+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
-`count_axioms.sh`). pphi2 also depends on markov-semigroups and gaussian-hilbert (axiom counts
+`count_axioms.sh`). On branch `cylinder-isotropic-lattice` (Phase-2 cylinder refactor): pphi2
+**18 real** (+ `asymChaosCutoffDecomposition`, the deep-think-vetted heterogeneous Nelson
+chaos-decomposition axiom in `AsymTorus/AsymNelson.lean`), gaussian-field **3** (the Phase-1b
+`AsymCovariance` convergence `lattice_green_tendsto_continuum_asym` added 0 axioms), with
+GaussianField pinned at `5bb35e8`. pphi2 also depends on markov-semigroups and gaussian-hilbert (axiom counts
 track `main` — see [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) and each repo's own
 `AXIOM_AUDIT.md`) for the upstream `polynomial_chaos_concentration` API used by Cluster A, and now
 on [`gibbs-variational`](https://github.com/mrdouglasny/gibbs-variational) (0 axioms, 1
