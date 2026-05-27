@@ -60,7 +60,7 @@ Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 | Package | Axioms | Sorries | Pin |
 |---|---|---|---|
 | **pphi2** (active build) | 17 | 0 | — |
-| **pphi2** (`cylinder-isotropic-lattice` branch: +`asymChaosCutoffDecomposition`) | 18 | 0 | GaussianField `5bb35e8` |
+| **pphi2** (`cylinder-isotropic-lattice` branch: +`asymChaosCutoffDecomposition`, +`wickConstantAsym_eq_variance`) | 19 | 0 | GaussianField `5bb35e8` |
 | **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
 | **gaussian-hilbert** (pinned, tracks `main`) | 1 *(was 4 in last audit; see 2026-05-{10,11} entries)* | 0 | `main` |
@@ -434,6 +434,17 @@ GJ-aligned cohort is in the lower block.
 | `Pphi2/TransferMatrix/SpectralGap.lean` | 2 | `spectral_gap_uniform`, `spectral_gap_lower_bound` |
 | **Subtotal** | **15** | |
 
+### Isotropic `Z_Nt × Z_Ns` cylinder redesign (2 axioms — only on `cylinder-isotropic-lattice`)
+
+The heterogeneous-lattice cylinder construction. Both are deep-think-vetted analytic inputs with
+clear discharge paths (port the proved square machinery to the rectangle).
+
+| File | Active axioms | Names |
+|------|---------------|-------|
+| `Pphi2/AsymTorus/AsymNelson.lean` | 1 | `asymChaosCutoffDecomposition` |
+| `Pphi2/AsymTorus/AsymWickMean.lean` | 1 | `wickConstantAsym_eq_variance` |
+| **Subtotal** | **2** | |
+
 ### Stage 1 GJ-aligned cohort (4 axioms — only on `fix/lattice-action-normalization`)
 
 These are the Cluster A Nelson dynamical-cutoff family — all four reduce to
@@ -456,10 +467,12 @@ metric-correct `Z_Nt × Z_Ns` cylinder construction (Phase-2 #3, B-lean).
 | File | Active axioms | Names |
 |------|---------------|-------|
 | `Pphi2/AsymTorus/AsymNelson.lean` | 1 | `asymChaosCutoffDecomposition` |
+| `Pphi2/AsymTorus/AsymWickMean.lean` | 1 | `wickConstantAsym_eq_variance` |
 
 | Axiom | File:Line | Rating | Sources | Notes |
 |-------|-----------|--------|---------|-------|
 | `asymChaosCutoffDecomposition` | `AsymTorus/AsymNelson.lean:62` | Likely correct | DT | Existence of the Glimm–Jaffe dynamical-cutoff smooth/rough chaos decomposition on `Z_Nt × Z_Ns` with a `ψ` tail uniform in `(Nt,Ns,a)` at fixed volume `Lt·Ls`. Heterogeneous analogue of the **proved** square decomposition (`canonicalSmoothInteraction`/`canonicalRoughError` + the two `…_uniform` theorems); feeds the proved generic engine `bridgeAxiom_of_setup_real_generic` to give the theorem `asymNelson_exponential_estimate_iso`. Ref: Glimm–Jaffe Ch. 8; Simon *P(φ)₂* Thm V.12/V.15. deep-think-gemini (2026-05-27): **Standard / Likely correct** — uniformity at fixed volume confirmed (Simon V.12/V.15), UV singularity isotropic ⇒ rectangle adds no obstruction, mass gap controls IR. **Discharge plan**: port `FieldDecomposition`/`RoughErrorBound`/`CovarianceBoundsGJ` to `Z_Nt × Z_Ns` using the Phase-1b heterogeneous DFT (`gaussian-field AsymCovariance`). |
+| `wickConstantAsym_eq_variance` | `AsymTorus/AsymWickMean.lean:71` | Likely correct | DT | The site variance `⟪T_GJ δ_x, T_GJ δ_x⟫` of the heterogeneous GFF equals `wickConstantAsym` at **every** site `x`. The spatial **average** already equals `wickConstantAsym` by eigenbasis orthonormality (`Σ_x e_k(x)² = 1`); the only content is site-**independence**, i.e. translation invariance of the diagonal of `(−Δ_a + m²)^{-1}`, which is circulant on the finite abelian group `Z_Nt × Z_Ns`. Heterogeneous analogue of the **proved** square `wickConstant_eq_variance`. Feeds the Wick mean-zero chain (`wickMonomialAsym_latticeGaussian` → `interactionFunctionalAsym_mean_nonpos` → `partitionFunctionAsym_ge_one`) and hence `density_transfer_bound_iso` and the iso cutoff exp-moment bound. deep-think-gemini (2026-05-27): **Standard / Likely correct** — circulant-matrix diagonal independence is unconditionally true; the `(a²)⁻¹` GJ normalization matches the `d = 2` lattice action; statement is exactly what Wick ordering requires (marginal `ω(δ_x) ∼ N(0, wickConstantAsym)`). **Discharge plan**: port the square translation-invariance (Lebesgue density representation + volume-preserving shift on `Z_Nt × Z_Ns → ℝ`), OR derive site-independence algebraically from the DFT shift identities (`cos_shift_sum`/`sin_shift_sum`). |
 
 ### Discharged in Phase 2 (no longer axioms)
 

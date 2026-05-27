@@ -148,7 +148,31 @@ obstruction is gone** (the eigenvalues are now the correct rectangular ones), an
 
 ## Phase 2 — pphi2 `AsymTorus/` refactor
 
-> **Status (2026-05-26).** The measure-theoretic + embedding **foundation is DONE** on pphi2
+> **Status (2026-05-27). Phase 2 COMPLETE** — measure + embedding + second moment + Nelson
+> estimate + cutoff exp-moment bound, all building clean, wired into `Pphi2.lean`. New since the
+> 05-26 foundation:
+> - `Pphi2/GeneralResults/GaussianExpMoment.lean`: `GaussianField.gaussian_exp_abs_moment` —
+>   **generic** (covariance-agnostic) Gaussian exp-modulus MGF bound `∫ exp(t|ωg|) d(measure T) ≤
+>   2 exp(t²/2·∫(ωg)²)`, 0 axioms. Instantiates at any lattice covariance.
+> - `Pphi2/AsymTorus/AsymWickMean.lean`: the vetted axiom `wickConstantAsym_eq_variance` (site
+>   variance = Wick constant; circulant translation invariance), then the proved chain
+>   `wickMonomialAsym_latticeGaussian` → `wickPolynomialAsym_integral_eq_coeff_zero` →
+>   `interactionFunctionalAsym_mean_nonpos` → `partitionFunctionAsym_ge_one` (`Z_a ≥ 1`), and
+>   `density_transfer_bound_iso` (Cauchy–Schwarz density transfer).
+> - `Pphi2/AsymTorus/AsymNelson.lean`: the vetted axiom `asymChaosCutoffDecomposition` + the
+>   proved heterogeneous Nelson estimate `asymNelson_exponential_estimate_iso` (B-lean engine).
+> - `Pphi2/AsymTorus/AsymCutoffBound.lean`:
+>   `asymTorusInteractingMeasureIso_exponentialMomentBound_cutoff` — `∫ exp|ωf| dμ̃_int ≤
+>   K·exp(σ²)` with `K` the uniform Nelson constant and `σ²` the heterogeneous lattice second
+>   moment. Depends only on `[propext, Classical.choice, Quot.sound, asymChaosCutoffDecomposition,
+>   wickConstantAsym_eq_variance]`.
+>
+> **Remaining: Phase 3** — assemble `MeasureHasGreenMomentBound` from this cutoff bound + the
+> Phase-1+2 second-moment→continuum-Green convergence (`second_moment_asym_tendsto`) + the
+> weak-limit transfer, feeding `AsymTorusSequenceHasUniformGreenMomentBound.of_forall_ge_one` →
+> `routeBPrime_cylinder_OS`.
+>
+> **Earlier status (2026-05-26).** The measure-theoretic + embedding **foundation** on pphi2
 > branch `cylinder-isotropic-lattice` (gaussian-field pinned at `5bb35e8`, commit `13a600e`).
 > Two new files, all building clean:
 > - `Pphi2/AsymTorus/AsymLatticeMeasure.lean` (`f8de94c`, `6403b47`): `DyninMityaginSpace

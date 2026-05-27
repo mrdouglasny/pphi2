@@ -52,6 +52,8 @@ import Pphi2.TorusContinuumLimit.TorusInteractingOS
 import Pphi2.AsymTorus.AsymTorusEmbedding
 import Pphi2.AsymTorus.AsymTorusInteractingLimit
 import Pphi2.AsymTorus.AsymTorusOS
+-- Isotropic Z_Nt × Z_Ns redesign (cylinder construction, in progress)
+import Pphi2.AsymTorus.AsymCutoffBound
 import Pphi2.IRLimit.CylinderEmbedding
 import Pphi2.IRLimit.GreenFunctionComparison
 import Pphi2.IRLimit.UniformExponentialMoment
