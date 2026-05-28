@@ -56,6 +56,7 @@ import Pphi2.AsymTorus.AsymTorusOS
 import Pphi2.AsymTorus.AsymCutoffBound
 import Pphi2.AsymTorus.AsymContinuumLimit
 import Pphi2.NelsonEstimate.AsymFieldDecomposition
+import Pphi2.NelsonEstimate.AsymCovarianceBoundsGJ
 import Pphi2.IRLimit.CylinderEmbedding
 import Pphi2.IRLimit.GreenFunctionComparison
 import Pphi2.IRLimit.UniformExponentialMoment
