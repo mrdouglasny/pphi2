@@ -2994,7 +2994,7 @@ theorem canonicalRoughCovariance_eq_sum_gamma_mul_gamma
                       latticeFourierProductNormSq N d m) := by
                         ring
 
-private theorem wickPower_two_site_pi_gaussianReal_eq_zero_of_ne
+theorem wickPower_two_site_pi_gaussianReal_eq_zero_of_ne
     {ι : Type*} [Fintype ι]
     (γ_x γ_y : ι → ℝ) {n m : ℕ} (hnm : n ≠ m) :
     ∫ ξ : ι → ℝ,
@@ -3103,7 +3103,7 @@ private theorem wickPower_two_site_pi_gaussianReal_eq_zero_of_ne
     exact False.elim (hnm hnm')
   · simp [hαβ, diagFac]
 
-private theorem wickPower_two_site_pi_gaussianReal_integrable
+theorem wickPower_two_site_pi_gaussianReal_integrable
     {ι : Type*} [Fintype ι]
     (γ_x γ_y : ι → ℝ) (n m : ℕ) :
     Integrable
@@ -3233,7 +3233,7 @@ private lemma sum_pow_eq_sum_multiIndices_generic
         exact_mod_cast (hspec.trans (by simp [hsum]))
   simp [hmult]
 
-private theorem wickPower_two_site_pi_gaussianReal_eq_diag
+theorem wickPower_two_site_pi_gaussianReal_eq_diag
     {ι : Type*} [Fintype ι]
     (γ_x γ_y : ι → ℝ) (n : ℕ) :
     ∫ ξ : ι → ℝ,
