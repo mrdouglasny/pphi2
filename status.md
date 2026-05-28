@@ -20,8 +20,11 @@ Euclidean/Minkowski interfaces.
 `private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
 **+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
 `count_axioms.sh`). On branch `cylinder-isotropic-lattice` (Phase-2/3 cylinder construction,
-isotropic files wired into `Pphi2.lean`): `count_axioms.sh` reports pphi2 **21 raw / 19 real**, 0
-sorries — the 17-real base plus two deep-think-vetted isotropic-redesign axioms:
+isotropic files wired into `Pphi2.lean`): `count_axioms.sh` reports pphi2 **21 raw / 19 real, 1
+documented sorry** (added 2026-05-28, the per-cross-term L² bound `asymCanonicalCrossTerm_l2_sq_le`
+in `NelsonEstimate/AsymRoughErrorVariance.lean:144` — the only remaining analytical gap in UNIT 5
+of the §2 port; the downstream `asymRoughError_variance` is proved on top of it) — the 17-real base
+plus two deep-think-vetted isotropic-redesign axioms:
 `asymChaosCutoffDecomposition` (`AsymTorus/AsymNelson.lean`, heterogeneous Nelson chaos
 decomposition) and `asymInteracting_expMoment_volume_uniform`
 (`AsymTorus/AsymContinuumLimit.lean`, the volume-uniform interacting exp-moment — the genuine

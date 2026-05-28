@@ -304,7 +304,7 @@ or a mechanical port of already-proved square-track material.
 **Status (2026-05-27):** §4 is the true interacting-moment form (★), a deep-think-vetted `axiom`
 `asymInteracting_expMoment_volume_uniform`; `cylinderIso_OS_of_RP_OS2` gives cylinder
 OS0/OS1/OS2/OS3 unconditional in §4 (only §5/§6 remain as hypotheses). **§1 has been discharged to a
-theorem.** pphi2 on the branch: **21 raw / 19 real axioms**, 0 sorries. The two remaining isotropic
+theorem.** pphi2 on the branch: **21 raw / 19 real axioms, 1 documented sorry** (the per-cross-term L² bound `asymCanonicalCrossTerm_l2_sq_le` in `NelsonEstimate/AsymRoughErrorVariance.lean:144` — the only remaining analytical gap in §2 UNIT 5). The two remaining isotropic
 axioms are §2 `asymChaosCutoffDecomposition` (port of proved square Nelson machinery) and §4 (the
 genuine cluster-expansion / transfer-matrix-gap result); plus the §5–§6 hypotheses (lattice RP +
 symmetry — see `cylinder-os3-discharge-plan.md`).

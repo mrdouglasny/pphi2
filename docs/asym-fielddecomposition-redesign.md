@@ -171,11 +171,11 @@ decomposition to the rectangular lattice:
 | **1** interaction defs | `RoughErrorBound.lean:80–103` | ✅ Done (`48b479e`) | `asymCanonicalSmoothInteraction`, `…FullInteractionJoint`, `…RoughError` |
 | **4** heat-kernel trace bounds | `HeatKernelBound.lean:251–1006` | ✅ Done (`48b479e`) | `asym_heat_kernel_trace_factorization`, `…_bound`, `…_bound_uniform`, **`asymSmoothWickConstant_le_log_uniform`** (the analytic gate; `#axioms = [propext, Classical.choice, Quot.sound]`) |
 | **3** rough-cov row sums — `pow_one` + `pow_two` | `CovarianceBoundsGJ.lean:709–1112` | ✅ Done (`014c598`) | `asymCanonicalRoughCovariance_pow_one_sum_le_uniform`, `…_pow_two_sum_le_uniform` (both `#axioms = [propext, Classical.choice, Quot.sound]`) |
-| **3** rough-cov `p≥3` (`of_three_le`) | `CovarianceBoundsGJ.lean:1297–1535` | ☐ Pending (~240 sq lines, rpow machinery) | `…_pow_sum_le_uniform_of_three_le` |
-| **2** smooth lower bound `V_S ≥ −M/2` | `RoughErrorBound.lean` | ☐ Pending | `asymCanonicalSmoothInteraction_lower_bound_…` |
-| **5** rough error variance | `RoughErrorBound.lean` (`rough_error_variance`) | ☐ Pending | `asymCanonicalRoughError_variance_le_…` |
-| **6** rough tail (`ChaosTailBridge`) | `RoughErrorBound.lean` | ☐ Pending | `asymCanonicalRoughError_…_tail` |
-| **7** bridge assembly | (uses `bridgeAxiom_of_setup_real_generic`) | ☐ Pending | `asymChaosCutoffDecomposition` ← discharged here |
+| **3** rough-cov `p≥3` (`of_three_le`) | `CovarianceBoundsGJ.lean:1297–1535` | ✅ Done (`b50014e`) | `asymCanonicalRoughCovariance_pow_sum_le_uniform_of_three_le` (Codex 15m 53s, `AsymRoughCovarianceHigherP.lean`; `#axioms = standard trio`) |
+| **2** smooth lower bound `V_S ≥ −M/2` | `RoughErrorBound.lean:164–376` | ✅ Done (`1495eb6`) | `asymCanonicalSmoothInteraction_lower_bound_{log_uniform, at_cutoff_uniform}` (`AsymSmoothLowerBound.lean`; `#axioms = standard trio`) |
+| **5** rough error variance | `RoughErrorBound.lean:1640–3800` (`rough_error_variance`) | ◐ Top theorem done; ONE documented sorry on `asymCanonicalCrossTerm_l2_sq_le` (the per-cross-term L² bound — the analytic core, mirrors the square `canonicalCrossTerm_l2_sq_le`) | `asymRoughError_variance` proved (`AsymRoughErrorVariance.lean:162`, `#axioms = [propext, sorryAx, Classical.choice, Quot.sound]`); the sorry at `:144` is the only remaining UNIT-5 analytical gap |
+| **6** rough tail (`ChaosTailBridge`) | `RoughErrorBound.lean` | ☐ Pending — engine is generic; mostly wiring | `asymCanonicalRoughError_…_tail` |
+| **7** bridge assembly | (uses `bridgeAxiom_of_setup_real_generic`) | ☐ Pending — discharge `asymChaosCutoffDecomposition` axiom | constructs `(ψ, V_S, E_R)`, feeds the generic engine |
 
 The rectangular-dispersion factorization (`λ_(m₁,m₂) = λ_1d(Nt,m₁) + λ_1d(Ns,m₂) + mass²`) makes the
 2D heat-kernel trace a product of two 1D `heat_kernel_1d_bound` factors, so the genuine analytic

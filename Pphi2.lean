@@ -59,6 +59,7 @@ import Pphi2.NelsonEstimate.AsymFieldDecomposition
 import Pphi2.NelsonEstimate.AsymCovarianceBoundsGJ
 import Pphi2.NelsonEstimate.AsymRoughCovarianceHigherP
 import Pphi2.NelsonEstimate.AsymSmoothLowerBound
+import Pphi2.NelsonEstimate.AsymRoughErrorVariance
 import Pphi2.IRLimit.CylinderEmbedding
 import Pphi2.IRLimit.GreenFunctionComparison
 import Pphi2.IRLimit.UniformExponentialMoment
