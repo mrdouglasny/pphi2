@@ -291,7 +291,7 @@ a hypothesis here because it is a separate (easy) development.
 | Input | Status | True? | Provability | Notes |
 |---|---|---|---|---|
 | §1 `wickConstantAsym_eq_variance` | **DISCHARGED → theorem** | ✅ | done | circulant diagonal; proved 2026-05-27 (`AsymWickVariance.lean`) |
-| §2 `asymChaosCutoffDecomposition` | axiom | ✅ | **Medium** | port 15.5K-line square Nelson machinery |
+| §2 `asymChaosCutoffDecomposition` | axiom (port in progress) | ✅ | **Medium** | port of square Nelson machinery; UNITs 1 + 4 + 3·{pow_one,pow_two} **done** (commits `ab6dcdb`/`48b479e`/`014c598`, `AsymFieldDecomposition.lean` + `AsymCovarianceBoundsGJ.lean`, both `#axioms = standard trio`); remaining: UNIT 3 `of_three_le`, UNITs 2/5/6/7 |
 | §3 `embed_l2_uniform_bound` | axiom (upstream) | ✅ | **High** | periodization, Stein–Weiss; pre-existing |
 | §4 volume-uniformity (★) | **axiom** `asymInteracting_expMoment_volume_uniform` | ✅ (form `K·e^{C·σ²}`) | **Deep** (the real one) | DT-vetted with `∃C`; cluster-expansion / mass-gap |
 | §5 `hRP` (OS3) | hypothesis | ✅ | Medium–High | lattice RP + weak-limit inheritance |

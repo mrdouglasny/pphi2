@@ -158,3 +158,25 @@ covariance computation (`asymCanonicalSumFieldFunction_covariance` = `(a²)⁻¹
 smooth lower bound + rough chaos tail) + `asymChaosCutoffDecomposition` itself — port by
 substitution against these definitions, reusing the generic engine (`bridgeAxiom_of_setup_real_generic`,
 `ChaosTailBridge`, layer-cake) unchanged.
+
+## Port progress (2026-05-27, cont.) — `AsymCovarianceBoundsGJ.lean`
+
+After `pushforward_eq_GFF`, the downstream port lives in
+`Pphi2/NelsonEstimate/AsymCovarianceBoundsGJ.lean` (wired into `Pphi2.lean`, 0 sorries, 0 custom
+axioms). Unit status, mapping the square's `HeatKernelBound`/`CovarianceBoundsGJ`/`RoughErrorBound`
+decomposition to the rectangular lattice:
+
+| Unit | Square template | Asym status | Top theorem(s) |
+|---|---|---|---|
+| **1** interaction defs | `RoughErrorBound.lean:80–103` | ✅ Done (`48b479e`) | `asymCanonicalSmoothInteraction`, `…FullInteractionJoint`, `…RoughError` |
+| **4** heat-kernel trace bounds | `HeatKernelBound.lean:251–1006` | ✅ Done (`48b479e`) | `asym_heat_kernel_trace_factorization`, `…_bound`, `…_bound_uniform`, **`asymSmoothWickConstant_le_log_uniform`** (the analytic gate; `#axioms = [propext, Classical.choice, Quot.sound]`) |
+| **3** rough-cov row sums — `pow_one` + `pow_two` | `CovarianceBoundsGJ.lean:709–1112` | ✅ Done (`014c598`) | `asymCanonicalRoughCovariance_pow_one_sum_le_uniform`, `…_pow_two_sum_le_uniform` (both `#axioms = [propext, Classical.choice, Quot.sound]`) |
+| **3** rough-cov `p≥3` (`of_three_le`) | `CovarianceBoundsGJ.lean:1297–1535` | ☐ Pending (~240 sq lines, rpow machinery) | `…_pow_sum_le_uniform_of_three_le` |
+| **2** smooth lower bound `V_S ≥ −M/2` | `RoughErrorBound.lean` | ☐ Pending | `asymCanonicalSmoothInteraction_lower_bound_…` |
+| **5** rough error variance | `RoughErrorBound.lean` (`rough_error_variance`) | ☐ Pending | `asymCanonicalRoughError_variance_le_…` |
+| **6** rough tail (`ChaosTailBridge`) | `RoughErrorBound.lean` | ☐ Pending | `asymCanonicalRoughError_…_tail` |
+| **7** bridge assembly | (uses `bridgeAxiom_of_setup_real_generic`) | ☐ Pending | `asymChaosCutoffDecomposition` ← discharged here |
+
+The rectangular-dispersion factorization (`λ_(m₁,m₂) = λ_1d(Nt,m₁) + λ_1d(Ns,m₂) + mass²`) makes the
+2D heat-kernel trace a product of two 1D `heat_kernel_1d_bound` factors, so the genuine analytic
+content (Glimm-Jaffe §8.5.2) reuses the proved square 1D primitives — that's the gate now landed.
