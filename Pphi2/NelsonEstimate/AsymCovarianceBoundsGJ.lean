@@ -827,4 +827,1115 @@ theorem asymSmoothWickConstant_le_log_uniform
             have hB_nonneg : 0 ≤ 2 * (Lt⁻¹ * Ls⁻¹) * C := by positivity
             nlinarith [abs_nonneg (Real.log T), hB_nonneg]
 
+/-- The asym rectangular dispersion has a strictly positive mass gap. -/
+private lemma asymCanonicalEigenvalue_pos
+    (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a mass : ℝ) (_ha : 0 < a) (hmass : 0 < mass)
+    (m : AsymCanonicalMode Nt Ns) :
+    0 < asymCanonicalEigenvalue Nt Ns a mass m := by
+  unfold asymCanonicalEigenvalue
+  have h1 := latticeEigenvalue1d_nonneg Nt a m.1
+  have h2 := latticeEigenvalue1d_nonneg Ns a m.2
+  nlinarith [sq_pos_of_pos hmass]
+
+/-- Rough covariance eigenvalue bound `(1 - e^{-T λ}) / λ ≤ T`. -/
+private lemma asymCanonicalRoughWeight_le_T
+    (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a mass T : ℝ) (_hT : 0 ≤ T) (m : AsymCanonicalMode Nt Ns)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    asymCanonicalRoughWeight Nt Ns a mass T m ≤ T := by
+  unfold asymCanonicalRoughWeight
+  have hev := asymCanonicalEigenvalue_pos Nt Ns a mass ha hmass m
+  rw [div_le_iff₀ hev]
+  have h := Real.add_one_le_exp (-(T * asymCanonicalEigenvalue Nt Ns a mass m))
+  have hexp :
+      Real.exp (-(T * asymCanonicalEigenvalue Nt Ns a mass m)) =
+        Real.exp (-T * asymCanonicalEigenvalue Nt Ns a mass m) := by
+    ring_nf
+  rw [hexp] at h
+  linarith
+
+/-- Rough covariance eigenvalue bound `(1 - e^{-T λ}) / λ ≤ λ⁻¹`. -/
+private lemma asymCanonicalRoughWeight_le_inv
+    (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a mass T : ℝ) (m : AsymCanonicalMode Nt Ns)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    asymCanonicalRoughWeight Nt Ns a mass T m ≤
+      (asymCanonicalEigenvalue Nt Ns a mass m)⁻¹ := by
+  unfold asymCanonicalRoughWeight
+  have hev := asymCanonicalEigenvalue_pos Nt Ns a mass ha hmass m
+  rw [inv_eq_one_div]
+  apply div_le_div_of_nonneg_right ?_ hev.le
+  linarith [Real.exp_nonneg (-T * asymCanonicalEigenvalue Nt Ns a mass m)]
+
+/-- Schwinger representation of the asym rough covariance eigenvalue. -/
+private lemma asymCanonicalRoughWeight_eq_integral_Icc
+    (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (T : ℝ) (hT : 0 < T) (m : AsymCanonicalMode Nt Ns) :
+    asymCanonicalRoughWeight Nt Ns a mass T m =
+      ∫ t in Set.Icc 0 T,
+        Real.exp (-t * asymCanonicalEigenvalue Nt Ns a mass m) := by
+  simpa [asymCanonicalRoughWeight] using
+    (schwinger_rough (asymCanonicalEigenvalue Nt Ns a mass m)
+      (asymCanonicalEigenvalue_pos Nt Ns a mass ha hmass m) T hT.le)
+
+/-- The asym rough covariance is a Schwinger integral of the spatial heat kernel. -/
+private lemma asymCanonicalRoughCovariance_eq_integral_Icc_heatKernel
+    (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (T : ℝ) (hT : 0 < T)
+    (x y : AsymLatticeSites Nt Ns) :
+    asymCanonicalRoughCovariance Nt Ns a mass T x y =
+      (a ^ 2 : ℝ)⁻¹ *
+        ∫ t in Set.Icc 0 T,
+          Real.exp (-t * mass ^ 2) *
+            asymHeatKernelMatrix Nt Ns a t x y := by
+  have h_int_coeff :
+      ∀ m₁ : Fin Nt, ∀ m₂ : Fin Ns,
+        IntegrableOn
+          (fun t : ℝ =>
+            (Real.exp (-t * mass ^ 2) *
+              Real.exp (-t * (latticeEigenvalue1d Nt a m₁ + latticeEigenvalue1d Ns a m₂))) *
+              (asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                asymCanonicalNormSq Nt Ns (m₁, m₂)))
+          (Set.Icc 0 T) := by
+    intro m₁ m₂
+    have hcont : Continuous (fun t : ℝ =>
+      (Real.exp (-t * mass ^ 2) *
+        Real.exp (-t * (latticeEigenvalue1d Nt a m₁ + latticeEigenvalue1d Ns a m₂))) *
+        (asymCanonicalBasis Nt Ns (m₁, m₂) x *
+          asymCanonicalBasis Nt Ns (m₁, m₂) y /
+          asymCanonicalNormSq Nt Ns (m₁, m₂))) := by
+      fun_prop
+    exact hcont.integrableOn_Icc
+  unfold asymCanonicalRoughCovariance
+  calc
+    (a ^ 2 : ℝ)⁻¹ *
+        ∑ m₁ : Fin Nt, ∑ m₂ : Fin Ns,
+          asymCanonicalRoughWeight Nt Ns a mass T (m₁, m₂) *
+            asymCanonicalBasis Nt Ns (m₁, m₂) x *
+            asymCanonicalBasis Nt Ns (m₁, m₂) y /
+            asymCanonicalNormSq Nt Ns (m₁, m₂)
+      = (a ^ 2 : ℝ)⁻¹ *
+          ∑ m₁ : Fin Nt, ∑ m₂ : Fin Ns,
+            ∫ t in Set.Icc 0 T,
+              (Real.exp (-t * mass ^ 2) *
+                Real.exp (-t * (latticeEigenvalue1d Nt a m₁ + latticeEigenvalue1d Ns a m₂))) *
+                (asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                  asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                  asymCanonicalNormSq Nt Ns (m₁, m₂)) := by
+            congr 1
+            refine Finset.sum_congr rfl ?_
+            intro m₁ hm₁
+            refine Finset.sum_congr rfl ?_
+            intro m₂ hm₂
+            calc
+              asymCanonicalRoughWeight Nt Ns a mass T (m₁, m₂) *
+                  asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                  asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                  asymCanonicalNormSq Nt Ns (m₁, m₂)
+                = (asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                    asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                    asymCanonicalNormSq Nt Ns (m₁, m₂)) *
+                    asymCanonicalRoughWeight Nt Ns a mass T (m₁, m₂) := by ring
+              _ = (asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                    asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                    asymCanonicalNormSq Nt Ns (m₁, m₂)) *
+                    ∫ t in Set.Icc 0 T,
+                      Real.exp (-t * asymCanonicalEigenvalue Nt Ns a mass (m₁, m₂)) := by
+                        rw [asymCanonicalRoughWeight_eq_integral_Icc Nt Ns a mass ha hmass T hT
+                          (m₁, m₂)]
+              _ = ∫ t in Set.Icc 0 T,
+                    (asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                      asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                      asymCanonicalNormSq Nt Ns (m₁, m₂)) *
+                      Real.exp (-t * asymCanonicalEigenvalue Nt Ns a mass (m₁, m₂)) := by
+                        rw [integral_const_mul]
+              _ = ∫ t in Set.Icc 0 T,
+                    (Real.exp (-t * mass ^ 2) *
+                      Real.exp (-t * (latticeEigenvalue1d Nt a m₁ +
+                        latticeEigenvalue1d Ns a m₂))) *
+                      (asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                        asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                        asymCanonicalNormSq Nt Ns (m₁, m₂)) := by
+                        apply integral_congr_ae
+                        filter_upwards with t
+                        rw [show -t * asymCanonicalEigenvalue Nt Ns a mass (m₁, m₂) =
+                            -t * mass ^ 2 +
+                              (-t * (latticeEigenvalue1d Nt a m₁ +
+                                latticeEigenvalue1d Ns a m₂)) by
+                              simp [asymCanonicalEigenvalue]; ring]
+                        rw [Real.exp_add]
+                        ring
+    _ = (a ^ 2 : ℝ)⁻¹ *
+          ∫ t in Set.Icc 0 T,
+            ∑ m₁ : Fin Nt, ∑ m₂ : Fin Ns,
+              (Real.exp (-t * mass ^ 2) *
+                Real.exp (-t * (latticeEigenvalue1d Nt a m₁ + latticeEigenvalue1d Ns a m₂))) *
+                (asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                  asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                  asymCanonicalNormSq Nt Ns (m₁, m₂)) := by
+              congr 1
+              symm
+              rw [MeasureTheory.integral_finset_sum Finset.univ]
+              · refine Finset.sum_congr rfl ?_
+                intro m₁ hm₁
+                rw [MeasureTheory.integral_finset_sum Finset.univ]
+                intro m₂ hm₂
+                exact h_int_coeff m₁ m₂
+              · intro m₁ hm₁
+                exact MeasureTheory.integrable_finset_sum Finset.univ
+                  (fun m₂ _ => h_int_coeff m₁ m₂)
+    _ = (a ^ 2 : ℝ)⁻¹ *
+          ∫ t in Set.Icc 0 T,
+            Real.exp (-t * mass ^ 2) *
+              ∑ m₁ : Fin Nt, ∑ m₂ : Fin Ns,
+                Real.exp (-t * (latticeEigenvalue1d Nt a m₁ + latticeEigenvalue1d Ns a m₂)) *
+                  (asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                    asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                    asymCanonicalNormSq Nt Ns (m₁, m₂)) := by
+              congr 1
+              apply integral_congr_ae
+              filter_upwards with t
+              rw [Finset.mul_sum]
+              refine Finset.sum_congr rfl ?_
+              intro m₁ hm₁
+              rw [Finset.mul_sum]
+              refine Finset.sum_congr rfl ?_
+              intro m₂ hm₂
+              ring
+    _ = (a ^ 2 : ℝ)⁻¹ *
+          ∫ t in Set.Icc 0 T,
+            Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y := by
+              congr 1
+              apply integral_congr_ae
+              filter_upwards with t
+              rw [asymHeatKernel_entry_eq_eigenvalue_average Nt Ns a (ne_of_gt ha) t x y]
+              congr 1
+              refine Finset.sum_congr rfl ?_
+              intro m₁ hm₁
+              refine Finset.sum_congr rfl ?_
+              intro m₂ hm₂
+              ring
+
+/-- The asym canonical rough covariance is entrywise nonnegative. -/
+private lemma asymCanonicalRoughCovariance_nonneg
+    (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a mass T : ℝ) (ha : 0 < a) (hmass : 0 < mass) (hT : 0 < T)
+    (x y : AsymLatticeSites Nt Ns) :
+    0 ≤ asymCanonicalRoughCovariance Nt Ns a mass T x y := by
+  rw [asymCanonicalRoughCovariance_eq_integral_Icc_heatKernel Nt Ns a mass ha hmass T hT x y]
+  apply mul_nonneg
+  · positivity
+  · refine MeasureTheory.integral_nonneg_of_ae ?_
+    filter_upwards [ae_restrict_mem measurableSet_Icc] with t htIcc
+    exact mul_nonneg (by positivity)
+      (asymHeatKernel_nonneg Nt Ns a ha t htIcc.1 x y)
+
+/-- Diagonal asym heat-kernel bound from the rectangular trace bound. -/
+private lemma asymHeatKernel_diagonal_mass_weighted_le_uniform
+    (mass Lt Ls : ℝ) (hLt : 0 < Lt) (hLs : 0 < Ls) (hmass : 0 < mass) :
+    ∃ C : ℝ, 0 < C ∧
+      ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (_ha : 0 < a),
+        (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
+        ∀ (u : ℝ), 0 < u → ∀ (x : AsymLatticeSites Nt Ns),
+          Real.exp (-u * mass ^ 2) * asymHeatKernelMatrix Nt Ns a u x x ≤
+            (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) *
+              (C * (1 + 1 / Real.sqrt u) ^ 2 * Real.exp (-u * mass ^ 2)) := by
+  obtain ⟨C, hC_pos, hC⟩ :=
+    asym_heat_kernel_trace_bound_uniform Lt Ls hLt hLs mass hmass
+  refine ⟨C, hC_pos, ?_⟩
+  intro Nt Ns hNt hNs a ha hvolt hvols u hu x
+  calc
+    Real.exp (-u * mass ^ 2) * asymHeatKernelMatrix Nt Ns a u x x
+      = (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) *
+          ∑ m₁ : Fin Nt, ∑ m₂ : Fin Ns,
+            Real.exp (-u * asymCanonicalEigenvalue Nt Ns a mass (m₁, m₂)) := by
+              simpa using
+                (asymHeatKernel_diagonal_mass_weighted_eq_eigenvalue_average
+                  Nt Ns a mass u ha x)
+    _ ≤ (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) *
+          (C * (1 + 1 / Real.sqrt u) ^ 2 * Real.exp (-u * mass ^ 2)) := by
+            gcongr
+            exact hC Nt Ns a ha hvolt hvols u hu
+
+private lemma integral_one_div_sqrt_eq_two :
+    (∫ u in (0 : ℝ)..1, (1 : ℝ) / Real.sqrt u) = 2 := by
+  calc
+    (∫ u in (0 : ℝ)..1, (1 : ℝ) / Real.sqrt u)
+      = ∫ u in (0 : ℝ)..1, u ^ ((-1 : ℝ) / 2) := by
+          apply intervalIntegral.integral_congr_ae
+          filter_upwards with u hu
+          have hu0 : 0 < u := by
+            simpa using hu.1
+          have hpow : (u ^ ((1 : ℝ) / 2))⁻¹ = u ^ (-((1 : ℝ) / 2)) := by
+            simpa using (Real.rpow_neg (le_of_lt hu0) ((1 : ℝ) / 2)).symm
+          have hneg : -((1 : ℝ) / 2) = ((-1 : ℝ) / 2) := by
+            ring
+          rw [show (1 / Real.sqrt u : ℝ) = (u ^ ((1 : ℝ) / 2))⁻¹ by
+            simp [one_div, Real.sqrt_eq_rpow], hpow, hneg]
+    _ = 2 := by
+          rw [integral_rpow]
+          · norm_num
+          · left
+            norm_num
+
+private lemma unitSquare_inv_add_integral_eq_two_log_two :
+    (∫ u in (0 : ℝ)..1, ∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v)) =
+      2 * Real.log 2 := by
+  have hinner : ∀ u ∈ Set.Ioc (0 : ℝ) 1,
+      (∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v)) = Real.log (u + 1) - Real.log u := by
+    intro u hu
+    have hshift := intervalIntegral.integral_comp_add_left
+      (f := fun x : ℝ => (1 : ℝ) / x) (a := (0 : ℝ)) (b := 1) u
+    have hshift' :
+        (∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v)) = ∫ x in u..u + 1, (1 : ℝ) / x := by
+      convert hshift using 1
+      simp
+    rw [hshift']
+    have hu1 : 0 < u + 1 := by
+      nlinarith [hu.1]
+    rw [integral_one_div_of_pos hu.1 hu1]
+    have hu_ne : u + 1 ≠ 0 := ne_of_gt hu1
+    rw [Real.log_div hu_ne hu.1.ne']
+  have hlogshift_int :
+      IntervalIntegrable (fun u : ℝ => Real.log (u + 1)) MeasureSpace.volume 0 1 := by
+    apply ContinuousOn.intervalIntegrable
+    have hcont : ContinuousOn (fun u : ℝ => u + 1) (Set.uIcc (0 : ℝ) 1) := by
+      fun_prop
+    refine Real.continuousOn_log.comp hcont ?_
+    intro u hu
+    have hu0 : 0 ≤ u := by
+      simpa using hu.1
+    have : 0 < u + 1 := by
+      nlinarith
+    exact ne_of_gt this
+  have hshiftlog :
+      (∫ u in (0 : ℝ)..1, Real.log (u + 1)) = ∫ x in (1 : ℝ)..2, Real.log x := by
+    convert
+      (intervalIntegral.integral_comp_add_left (f := Real.log) (a := (0 : ℝ)) (b := 1) 1) using 1
+    · ring_nf
+    · ring_nf
+  calc
+    (∫ u in (0 : ℝ)..1, ∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v))
+      = ∫ u in (0 : ℝ)..1, (Real.log (u + 1) - Real.log u) := by
+          apply intervalIntegral.integral_congr_ae'
+          · filter_upwards with u hu
+            exact hinner u hu
+          · simp
+    _ = (∫ u in (0 : ℝ)..1, Real.log (u + 1)) - ∫ u in (0 : ℝ)..1, Real.log u := by
+          rw [intervalIntegral.integral_sub hlogshift_int intervalIntegral.intervalIntegrable_log']
+    _ = (∫ x in (1 : ℝ)..2, Real.log x) - ∫ u in (0 : ℝ)..1, Real.log u := by
+          rw [hshiftlog]
+    _ = 2 * Real.log 2 := by
+          rw [integral_log, integral_log_from_zero]
+          ring_nf
+          simp
+
+private lemma unitSquare_inv_add_integral_le_two :
+    (∫ u in (0 : ℝ)..1, ∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v)) ≤ 2 := by
+  rw [unitSquare_inv_add_integral_eq_two_log_two]
+  have hlog2_le_one : Real.log 2 ≤ 1 := by
+    have h := Real.log_le_sub_one_of_pos (show (0 : ℝ) < 2 by norm_num)
+    linarith
+  nlinarith
+
+private lemma squareIntegral_inv_add_scale (T : ℝ) (hT : 0 < T) :
+    (∫ s in (0 : ℝ)..T, ∫ t in (0 : ℝ)..T, (1 : ℝ) / (s + t)) =
+      T * ∫ u in (0 : ℝ)..1, ∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v) := by
+  have hinner_scale : ∀ u : ℝ,
+      (∫ t in (0 : ℝ)..T, (1 : ℝ) / (T * u + t)) =
+        ∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v) := by
+    intro u
+    have h := intervalIntegral.smul_integral_comp_mul_left
+      (f := fun x : ℝ => (1 : ℝ) / (T * u + x)) (a := (0 : ℝ)) (b := 1) T
+    rw [smul_eq_mul] at h
+    have hscale :
+        (∫ t in (0 : ℝ)..T, (1 : ℝ) / (T * u + t)) =
+          T * ∫ v in (0 : ℝ)..1, (1 : ℝ) / (T * u + T * v) := by
+      convert h.symm using 1
+      simp [add_comm]
+    calc
+      (∫ t in (0 : ℝ)..T, (1 : ℝ) / (T * u + t))
+        = T * ∫ v in (0 : ℝ)..1, (1 : ℝ) / (T * u + T * v) := by
+            rw [hscale]
+      _ = ∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v) := by
+            rw [← intervalIntegral.integral_const_mul]
+            apply intervalIntegral.integral_congr_ae
+            filter_upwards with v hv
+            have hTv : T * (T * u + T * v)⁻¹ = (u + v)⁻¹ := by
+              field_simp [hT.ne']
+            simpa [one_div] using hTv
+  have houter := intervalIntegral.smul_integral_comp_mul_left
+    (f := fun x : ℝ => ∫ t in (0 : ℝ)..T, (1 : ℝ) / (x + t)) (a := (0 : ℝ)) (b := 1) T
+  rw [smul_eq_mul] at houter
+  calc
+    (∫ s in (0 : ℝ)..T, ∫ t in (0 : ℝ)..T, (1 : ℝ) / (s + t))
+      = T * ∫ u in (0 : ℝ)..1, (∫ t in (0 : ℝ)..T, (1 : ℝ) / (T * u + t)) := by
+          simpa [hT.le, add_comm] using houter.symm
+    _ = T * ∫ u in (0 : ℝ)..1, ∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v) := by
+          congr 1
+          apply intervalIntegral.integral_congr_ae
+          filter_upwards with u hu
+          exact hinner_scale u
+
+private lemma squareIntegral_inv_add_le_two_mul
+    (T : ℝ) (hT : 0 < T) :
+    (∫ s in (0 : ℝ)..T, ∫ t in (0 : ℝ)..T, (1 : ℝ) / (s + t)) ≤ 2 * T := by
+  rw [squareIntegral_inv_add_scale T hT]
+  calc
+    T * ∫ u in (0 : ℝ)..1, ∫ v in (0 : ℝ)..1, (1 : ℝ) / (u + v)
+      ≤ T * 2 := by
+          gcongr
+          exact unitSquare_inv_add_integral_le_two
+    _ = 2 * T := by ring
+
+private lemma squareIntegral_exp_neg_le_div
+    (μ T : ℝ) (hμ : 0 < μ) (hT : 0 < T) :
+    (∫ s in (0 : ℝ)..T, ∫ t in (0 : ℝ)..T, Real.exp (-(s + t) * μ)) ≤ T / μ := by
+  set A : ℝ := ∫ t in (0 : ℝ)..T, Real.exp (-t * μ)
+  have hA_nonneg : 0 ≤ A := by
+    dsimp [A]
+    exact intervalIntegral.integral_nonneg hT.le (fun t ht => by positivity)
+  have hA_le_inv : A ≤ 1 / μ := by
+    dsimp [A]
+    rw [← schwinger_rough_interval μ hμ T hT.le]
+    apply div_le_div_of_nonneg_right
+    · have hexp_nonneg : 0 ≤ Real.exp (-T * μ) := by positivity
+      linarith
+    · exact hμ.le
+  have hA_le_T : A ≤ T := by
+    dsimp [A]
+    have hleft : IntervalIntegrable (fun t : ℝ => Real.exp (-t * μ)) volume 0 T := by
+      exact (Real.continuous_exp.comp (continuous_neg.mul continuous_const)).intervalIntegrable _ _
+    have hright : IntervalIntegrable (fun _t : ℝ => (1 : ℝ)) volume 0 T := by
+      exact continuous_const.intervalIntegrable _ _
+    calc
+      (∫ t in (0 : ℝ)..T, Real.exp (-t * μ)) ≤ ∫ t in (0 : ℝ)..T, (1 : ℝ) := by
+        apply intervalIntegral.integral_mono_on hT.le hleft hright
+        intro t ht
+        have hnonneg : 0 ≤ t := ht.1
+        have hle_one : Real.exp (-t * μ) ≤ 1 := by
+          apply Real.exp_le_one_iff.mpr
+          nlinarith [hμ, hnonneg]
+        simpa using hle_one
+      _ = T := by simp
+  have hinner : ∀ s : ℝ,
+      (∫ t in (0 : ℝ)..T, Real.exp (-(s + t) * μ)) = Real.exp (-s * μ) * A := by
+    intro s
+    dsimp [A]
+    calc
+      (∫ t in (0 : ℝ)..T, Real.exp (-(s + t) * μ))
+        = ∫ t in (0 : ℝ)..T, Real.exp (-s * μ) * Real.exp (-t * μ) := by
+            apply intervalIntegral.integral_congr_ae
+            filter_upwards with t ht
+            rw [show -(s + t) * μ = -s * μ + -t * μ by ring, Real.exp_add]
+      _ = Real.exp (-s * μ) * ∫ t in (0 : ℝ)..T, Real.exp (-t * μ) := by
+            rw [intervalIntegral.integral_const_mul]
+  rw [show (∫ s in (0 : ℝ)..T, ∫ t in (0 : ℝ)..T, Real.exp (-(s + t) * μ))
+      = ∫ s in (0 : ℝ)..T, Real.exp (-s * μ) * A by
+      apply intervalIntegral.integral_congr_ae
+      filter_upwards with s hs
+      exact hinner s]
+  rw [intervalIntegral.integral_mul_const]
+  have hAexp : ∫ s in (0 : ℝ)..T, Real.exp (-s * μ) = A := by rfl
+  rw [hAexp]
+  calc
+    A * A ≤ A * (1 / μ) := by gcongr
+    _ ≤ T * (1 / μ) := by gcongr
+    _ = T / μ := by ring
+
+private lemma one_div_sqrt_integrableOn_Icc
+    (T : ℝ) (hT : 0 < T) :
+    IntegrableOn (fun s : ℝ => 1 / Real.sqrt s) (Set.Icc 0 T) volume := by
+  have hpow : IntegrableOn (fun s : ℝ => s ^ ((-1 : ℝ) / 2)) (Set.Icc 0 T) volume := by
+    rw [← intervalIntegrable_iff_integrableOn_Icc_of_le hT.le]
+    simpa using intervalIntegral.intervalIntegrable_rpow' (by norm_num : -1 < ((-1 : ℝ) / 2))
+  refine hpow.congr_fun ?_ measurableSet_Icc
+  intro s hs
+  have hs0 : 0 ≤ s := hs.1
+  by_cases hspos : 0 < s
+  · have hpow' : (s ^ ((1 : ℝ) / 2))⁻¹ = s ^ (-((1 : ℝ) / 2)) := by
+      simpa using (Real.rpow_neg hs0 ((1 : ℝ) / 2)).symm
+    have hneg : -((1 : ℝ) / 2) = ((-1 : ℝ) / 2) := by ring
+    have hsqrt : (1 / Real.sqrt s : ℝ) = s ^ ((-1 : ℝ) / 2) := by
+      rw [show (1 / Real.sqrt s : ℝ) = (s ^ ((1 : ℝ) / 2))⁻¹ by
+        simp [one_div, Real.sqrt_eq_rpow]]
+      rw [hpow', hneg]
+    simpa using hsqrt.symm
+  · have hs_eq : s = 0 := by linarith
+    simp [hs_eq]
+
+private lemma one_div_sqrt_integrable_Ioc
+    (T : ℝ) (hT : 0 < T) :
+    Integrable (fun s : ℝ => 1 / Real.sqrt s) (volume.restrict (Set.Ioc 0 T)) := by
+  simpa [IntegrableOn] using
+    (one_div_sqrt_integrableOn_Icc T hT).mono_set Set.Ioc_subset_Icc_self
+
+private lemma integrable_inv_add_Ioc
+    (T : ℝ) (hT : 0 < T) :
+    Integrable
+      (fun p : ℝ × ℝ => 1 / (p.1 + p.2 : ℝ))
+      ((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))) := by
+  have hdom : Integrable
+      (fun p : ℝ × ℝ => (1 / Real.sqrt p.1) * (1 / Real.sqrt p.2))
+      ((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))) := by
+    simpa using
+      Integrable.mul_prod
+        (one_div_sqrt_integrable_Ioc T hT)
+        (one_div_sqrt_integrable_Ioc T hT)
+  have hpos :
+      ∀ᵐ p : ℝ × ℝ ∂((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))),
+        0 < p.1 ∧ 0 < p.2 := by
+    have hpos_restrict :
+        ∀ᵐ p : ℝ × ℝ ∂((volume.prod volume).restrict (Set.Ioc 0 T ×ˢ Set.Ioc 0 T)),
+          0 < p.1 ∧ 0 < p.2 := by
+      filter_upwards [ae_restrict_mem (measurableSet_Ioc.prod measurableSet_Ioc)] with p hp
+      exact ⟨hp.1.1, hp.2.1⟩
+    simpa [Measure.prod_restrict] using hpos_restrict
+  refine Integrable.mono' hdom ?_ ?_
+  · simpa [one_div] using
+      (((measurable_fst.add measurable_snd :
+          Measurable fun p : ℝ × ℝ => p.1 + p.2).inv).aestronglyMeasurable)
+  · filter_upwards [hpos] with p hp
+    rcases p with ⟨s, t⟩
+    have hs : 0 < s := hp.1
+    have ht : 0 < t := hp.2
+    have hs0 : 0 ≤ s := hs.le
+    have ht0 : 0 ≤ t := ht.le
+    have hsum_pos : 0 < s + t := add_pos hs ht
+    have hAMGM : 2 * (Real.sqrt s * Real.sqrt t) ≤ s + t := by
+      nlinarith [sq_nonneg (Real.sqrt s - Real.sqrt t), Real.sq_sqrt hs0, Real.sq_sqrt ht0]
+    have hden_pos : 0 < 2 * (Real.sqrt s * Real.sqrt t) := by positivity
+    have hinv : 1 / (s + t) ≤ 1 / (2 * (Real.sqrt s * Real.sqrt t)) := by
+      exact one_div_le_one_div_of_le hden_pos hAMGM
+    have hhalf :
+        1 / (2 * (Real.sqrt s * Real.sqrt t)) ≤
+          (1 / Real.sqrt s) * (1 / Real.sqrt t) := by
+      have hsqrt_ne : Real.sqrt s ≠ 0 := by positivity
+      have htsqrt_ne : Real.sqrt t ≠ 0 := by positivity
+      have hA_nonneg : 0 ≤ (1 / Real.sqrt s) * (1 / Real.sqrt t) := by positivity
+      calc
+        1 / (2 * (Real.sqrt s * Real.sqrt t))
+            = (1 / 2) * ((1 / Real.sqrt s) * (1 / Real.sqrt t)) := by
+                field_simp [hsqrt_ne, htsqrt_ne]
+        _ ≤ (1 / Real.sqrt s) * (1 / Real.sqrt t) := by
+            nlinarith
+    rw [Real.norm_of_nonneg (one_div_nonneg.2 hsum_pos.le)]
+    exact hinv.trans hhalf
+
+private lemma integrable_inv_add_mul_exp_Ioc
+    (μ T : ℝ) (hμ : 0 ≤ μ) (hT : 0 < T) :
+    Integrable
+      (fun p : ℝ × ℝ => (1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * μ))
+      ((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))) := by
+  have hdom := integrable_inv_add_Ioc T hT
+  have hpos :
+      ∀ᵐ p : ℝ × ℝ ∂((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))),
+        0 < p.1 + p.2 := by
+    have hpos_restrict :
+        ∀ᵐ p : ℝ × ℝ ∂((volume.prod volume).restrict (Set.Ioc 0 T ×ˢ Set.Ioc 0 T)),
+          0 < p.1 + p.2 := by
+      filter_upwards [ae_restrict_mem (measurableSet_Ioc.prod measurableSet_Ioc)] with p hp
+      exact add_pos hp.1.1 hp.2.1
+    simpa [Measure.prod_restrict] using hpos_restrict
+  refine Integrable.mono' hdom ?_ ?_
+  · have hmeas :
+        AEStronglyMeasurable
+          (fun p : ℝ × ℝ => (p.1 + p.2)⁻¹ * Real.exp (-(p.1 + p.2) * μ))
+          ((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))) := by
+        have hmeas' : Measurable
+            (fun p : ℝ × ℝ => (p.1 + p.2)⁻¹ * Real.exp (-(p.1 + p.2) * μ)) :=
+          (((measurable_fst.add measurable_snd).inv).mul
+            ((((measurable_fst.add measurable_snd).neg).mul_const μ).exp))
+        exact hmeas'.aestronglyMeasurable
+    simpa [one_div] using hmeas
+  · filter_upwards [hpos] with p hp
+    have hexp_le : Real.exp (-(p.1 + p.2) * μ) ≤ 1 := by
+      apply Real.exp_le_one_iff.mpr
+      nlinarith
+    calc
+      ‖1 / (p.1 + p.2) * Real.exp (-(p.1 + p.2) * μ)‖
+        = (1 / (p.1 + p.2)) * Real.exp (-(p.1 + p.2) * μ) := by
+            rw [Real.norm_of_nonneg]
+            positivity
+      _ ≤ (1 / (p.1 + p.2)) * 1 := by gcongr
+      _ = 1 / (p.1 + p.2) := by ring
+
+private lemma ioc_prod_exp_integral_le
+    (μ T : ℝ) (hμ : 0 < μ) (hT : 0 < T) :
+    ∫ p, Real.exp (-(p.1 + p.2) * μ)
+      ∂((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T)))
+      ≤ T / μ := by
+  have hmeasure :
+      ((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))) =
+        ((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) := by
+    simp [restrict_Ioc_eq_restrict_Icc]
+  have hcont : Continuous (fun p : ℝ × ℝ => Real.exp (-(p.1 + p.2) * μ)) := by
+    fun_prop
+  have hOn : IntegrableOn (fun p : ℝ × ℝ => Real.exp (-(p.1 + p.2) * μ))
+      (Set.Icc 0 T ×ˢ Set.Icc 0 T) (volume.prod volume) := by
+    exact hcont.continuousOn.integrableOn_compact (isCompact_Icc.prod isCompact_Icc)
+  have hInt :
+      Integrable (fun p : ℝ × ℝ => Real.exp (-(p.1 + p.2) * μ))
+        ((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) := by
+    simpa [IntegrableOn, Measure.prod_restrict, Set.Icc_prod_Icc] using hOn
+  have hprod :
+      ∫ p, Real.exp (-(p.1 + p.2) * μ)
+        ∂((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) =
+      ∫ s in Set.Icc 0 T, ∫ t in Set.Icc 0 T, Real.exp (-(s + t) * μ) := by
+    simpa [Measure.prod_restrict, Set.Icc_prod_Icc, add_comm, add_left_comm, add_assoc] using
+      (MeasureTheory.integral_prod (fun p : ℝ × ℝ => Real.exp (-(p.1 + p.2) * μ)) hInt)
+  have hconvert :
+      (∫ s in Set.Icc 0 T, ∫ t in Set.Icc 0 T, Real.exp (-(s + t) * μ)) =
+        ∫ s in (0 : ℝ)..T, ∫ t in (0 : ℝ)..T, Real.exp (-(s + t) * μ) := by
+    rw [MeasureTheory.integral_Icc_eq_integral_Ioc, ← intervalIntegral.integral_of_le hT.le]
+    apply intervalIntegral.integral_congr_ae
+    filter_upwards with s hs
+    rw [MeasureTheory.integral_Icc_eq_integral_Ioc, ← intervalIntegral.integral_of_le hT.le]
+  rw [hmeasure, hprod, hconvert]
+  exact squareIntegral_exp_neg_le_div μ T hμ hT
+
+private lemma ioc_prod_inv_add_integral_le
+    (T : ℝ) (hT : 0 < T) :
+    ∫ p, (1 / (p.1 + p.2 : ℝ))
+      ∂((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T)))
+      ≤ 2 * T := by
+  have hmeasure :
+      ((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))) =
+        ((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) := by
+    simp [restrict_Ioc_eq_restrict_Icc]
+  have hInt :
+      Integrable (fun p : ℝ × ℝ => (1 / (p.1 + p.2 : ℝ)))
+        ((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))) := by
+    exact integrable_inv_add_Ioc T hT
+  have hInt' :
+      Integrable (fun p : ℝ × ℝ => (1 / (p.1 + p.2 : ℝ)))
+        ((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) := by
+    rw [← hmeasure]
+    exact hInt
+  have hprod :
+      ∫ p, (1 / (p.1 + p.2 : ℝ))
+        ∂((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) =
+      ∫ s in Set.Icc 0 T, ∫ t in Set.Icc 0 T, (1 / (s + t : ℝ)) := by
+    simpa [Measure.prod_restrict, Set.Icc_prod_Icc, add_comm] using
+      (MeasureTheory.integral_prod (fun p : ℝ × ℝ => (1 / (p.1 + p.2 : ℝ))) hInt')
+  have hconvert :
+      (∫ s in Set.Icc 0 T, ∫ t in Set.Icc 0 T, (1 / (s + t : ℝ))) =
+        ∫ s in (0 : ℝ)..T, ∫ t in (0 : ℝ)..T, (1 / (s + t : ℝ)) := by
+    rw [MeasureTheory.integral_Icc_eq_integral_Ioc, ← intervalIntegral.integral_of_le hT.le]
+    apply intervalIntegral.integral_congr_ae
+    filter_upwards with s hs
+    rw [MeasureTheory.integral_Icc_eq_integral_Ioc, ← intervalIntegral.integral_of_le hT.le]
+  rw [hmeasure, hprod, hconvert]
+  exact squareIntegral_inv_add_le_two_mul T hT
+
+private lemma ioc_prod_inv_add_mul_exp_integral_le
+    (μ T : ℝ) (hμ : 0 < μ) (hT : 0 < T) :
+    ∫ p, ((1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * μ))
+      ∂((volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T)))
+      ≤ 2 * T := by
+  let ν : Measure (ℝ × ℝ) :=
+    (volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))
+  have hIntF :
+      Integrable (fun p : ℝ × ℝ => (1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * μ)) ν := by
+    simpa [ν] using integrable_inv_add_mul_exp_Ioc μ T hμ.le hT
+  have hIntG :
+      Integrable (fun p : ℝ × ℝ => (1 / (p.1 + p.2 : ℝ))) ν := by
+    simpa [ν] using integrable_inv_add_Ioc T hT
+  have hpos :
+      ∀ᵐ p : ℝ × ℝ ∂ν, 0 < p.1 + p.2 := by
+    have hpos_restrict :
+        ∀ᵐ p : ℝ × ℝ ∂((volume.prod volume).restrict (Set.Ioc 0 T ×ˢ Set.Ioc 0 T)),
+          0 < p.1 + p.2 := by
+      filter_upwards [ae_restrict_mem (measurableSet_Ioc.prod measurableSet_Ioc)] with p hp
+      exact add_pos hp.1.1 hp.2.1
+    simpa [ν, Measure.prod_restrict] using hpos_restrict
+  have hmono :
+      (fun p : ℝ × ℝ => (1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * μ))
+        ≤ᵐ[ν]
+      (fun p : ℝ × ℝ => (1 / (p.1 + p.2 : ℝ))) := by
+    filter_upwards [hpos] with p hp
+    have hexp_le : Real.exp (-(p.1 + p.2) * μ) ≤ 1 := by
+      apply Real.exp_le_one_iff.mpr
+      nlinarith
+    calc
+      (1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * μ)
+        ≤ (1 / (p.1 + p.2 : ℝ)) * 1 := by gcongr
+      _ = (1 / (p.1 + p.2 : ℝ)) := by ring
+  calc
+    ∫ p, ((1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * μ)) ∂ν
+      ≤ ∫ p, (1 / (p.1 + p.2 : ℝ)) ∂ν := by
+          exact MeasureTheory.integral_mono_ae hIntF hIntG hmono
+    _ ≤ 2 * T := by
+          simpa [ν] using ioc_prod_inv_add_integral_le T hT
+
+private lemma asymCanonicalRoughCovariance_sq_row_sum_eq_double_integral
+    (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (T : ℝ) (hT : 0 < T)
+    (x : AsymLatticeSites Nt Ns) :
+    a ^ 2 * ∑ y : AsymLatticeSites Nt Ns,
+      (asymCanonicalRoughCovariance Nt Ns a mass T x y) ^ 2 =
+      (a ^ 2 : ℝ)⁻¹ *
+        ∫ s in Set.Icc 0 T,
+          ∫ t in Set.Icc 0 T,
+            Real.exp (-(s + t) * mass ^ 2) *
+              asymHeatKernelMatrix Nt Ns a (s + t) x x := by
+  let I : Set ℝ := Set.Icc 0 T
+  let F : AsymLatticeSites Nt Ns → ℝ → ℝ := fun y s =>
+    Real.exp (-s * mass ^ 2) * asymHeatKernelMatrix Nt Ns a s x y
+  have ha2_pos : (0 : ℝ) < a ^ 2 := pow_pos ha 2
+  have hCov :
+      ∀ y : AsymLatticeSites Nt Ns,
+        asymCanonicalRoughCovariance Nt Ns a mass T x y =
+          (a ^ 2 : ℝ)⁻¹ * ∫ s in I, F y s := by
+    intro y
+    simpa [I, F] using asymCanonicalRoughCovariance_eq_integral_Icc_heatKernel
+      Nt Ns a mass ha hmass T hT x y
+  have hprod :
+      ∀ y : AsymLatticeSites Nt Ns,
+        (∫ s in I, F y s) * ∫ t in I, F y t =
+          ∫ p in I ×ˢ I, F y p.1 * F y p.2 ∂(volume.prod volume) := by
+    intro y
+    symm
+    simpa [I, F] using
+      (MeasureTheory.setIntegral_prod_mul (μ := volume) (ν := volume) (f := F y) (g := F y) I I)
+  have hF_int :
+      ∀ y : AsymLatticeSites Nt Ns,
+        Integrable (F y) (volume.restrict I) := by
+    intro y
+    have hcont : Continuous (fun t : ℝ =>
+      Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y) := by
+      have hExp : Continuous (fun t : ℝ => Real.exp (-t * mass ^ 2)) := by
+        fun_prop
+      have hEntry : Continuous (fun t : ℝ => asymHeatKernelMatrix Nt Ns a t x y) := by
+        have hEq :
+            (fun t : ℝ => asymHeatKernelMatrix Nt Ns a t x y) =
+              (fun t : ℝ =>
+                ∑ m₁ : Fin Nt, ∑ m₂ : Fin Ns,
+                  Real.exp (-t * (latticeEigenvalue1d Nt a m₁ + latticeEigenvalue1d Ns a m₂)) *
+                    asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                    asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                    asymCanonicalNormSq Nt Ns (m₁, m₂)) := by
+          funext t
+          rw [asymHeatKernel_entry_eq_eigenvalue_average Nt Ns a (ne_of_gt ha) t x y]
+        rw [hEq]
+        refine continuous_finset_sum _ ?_
+        intro m₁ hm₁
+        refine continuous_finset_sum _ ?_
+        intro m₂ hm₂
+        have hMode :
+            Continuous
+              (fun t : ℝ =>
+                Real.exp (-t * (latticeEigenvalue1d Nt a m₁ + latticeEigenvalue1d Ns a m₂))) := by
+          fun_prop
+        have hConst :
+            Continuous
+              (fun _ : ℝ =>
+                asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                  asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                  asymCanonicalNormSq Nt Ns (m₁, m₂)) := continuous_const
+        simpa [mul_assoc, div_eq_mul_inv] using hMode.mul hConst
+      exact hExp.mul hEntry
+    simpa [I, F] using hcont.integrableOn_Icc
+  have hprod_int :
+      ∀ y : AsymLatticeSites Nt Ns,
+        Integrable
+          (fun p : ℝ × ℝ => F y p.1 * F y p.2)
+          ((volume.restrict I).prod (volume.restrict I)) := by
+    intro y
+    exact (hF_int y).mul_prod (hF_int y)
+  have hsum_int :
+      Integrable
+        (fun p : ℝ × ℝ => ∑ y : AsymLatticeSites Nt Ns, F y p.1 * F y p.2)
+        ((volume.restrict I).prod (volume.restrict I)) := by
+    exact integrable_finset_sum _ (fun y _ => hprod_int y)
+  have hcollapse :
+      (fun p : ℝ × ℝ => ∑ y : AsymLatticeSites Nt Ns, F y p.1 * F y p.2)
+        =ᵐ[((volume.restrict I).prod (volume.restrict I))]
+      (fun p : ℝ × ℝ =>
+        Real.exp (-(p.1 + p.2) * mass ^ 2) *
+          asymHeatKernelMatrix Nt Ns a (p.1 + p.2) x x) := by
+    filter_upwards [] with p
+    calc
+      ∑ y : AsymLatticeSites Nt Ns, F y p.1 * F y p.2
+        = ∑ y : AsymLatticeSites Nt Ns,
+            (Real.exp (-p.1 * mass ^ 2) * Real.exp (-p.2 * mass ^ 2)) *
+              (asymHeatKernelMatrix Nt Ns a p.1 x y *
+                asymHeatKernelMatrix Nt Ns a p.2 x y) := by
+                  refine Finset.sum_congr rfl ?_
+                  intro y hy
+                  simp [F]
+                  ring
+      _ = (Real.exp (-p.1 * mass ^ 2) * Real.exp (-p.2 * mass ^ 2)) *
+            ∑ y : AsymLatticeSites Nt Ns,
+              asymHeatKernelMatrix Nt Ns a p.1 x y *
+                asymHeatKernelMatrix Nt Ns a p.2 x y := by
+                  rw [Finset.mul_sum]
+      _ = (Real.exp (-p.1 * mass ^ 2) * Real.exp (-p.2 * mass ^ 2)) *
+            asymHeatKernelMatrix Nt Ns a (p.1 + p.2) x x := by
+                  rw [asymHeatKernel_row_pairing_eq_diagonal Nt Ns a p.1 p.2 x]
+      _ = Real.exp (-(p.1 + p.2) * mass ^ 2) *
+            asymHeatKernelMatrix Nt Ns a (p.1 + p.2) x x := by
+                  rw [← Real.exp_add]
+                  congr 1
+                  ring_nf
+  have hdiag_int :
+      Integrable
+        (fun p : ℝ × ℝ =>
+          Real.exp (-(p.1 + p.2) * mass ^ 2) *
+            asymHeatKernelMatrix Nt Ns a (p.1 + p.2) x x)
+        ((volume.restrict I).prod (volume.restrict I)) := by
+    exact hsum_int.congr hcollapse
+  calc
+    a ^ 2 * ∑ y : AsymLatticeSites Nt Ns,
+        (asymCanonicalRoughCovariance Nt Ns a mass T x y) ^ 2
+      = ∑ y : AsymLatticeSites Nt Ns,
+          a ^ 2 * (asymCanonicalRoughCovariance Nt Ns a mass T x y) ^ 2 := by
+            rw [Finset.mul_sum]
+    _ = ∑ y : AsymLatticeSites Nt Ns,
+          (a ^ 2 : ℝ)⁻¹ * ((∫ s in I, F y s) * ∫ t in I, F y t) := by
+            refine Finset.sum_congr rfl ?_
+            intro y hy
+            rw [hCov y]
+            field_simp [ne_of_gt ha2_pos]
+    _ = (a ^ 2 : ℝ)⁻¹ *
+          ∑ y : AsymLatticeSites Nt Ns, ((∫ s in I, F y s) * ∫ t in I, F y t) := by
+            rw [← Finset.mul_sum]
+    _ = (a ^ 2 : ℝ)⁻¹ *
+          ∑ y : AsymLatticeSites Nt Ns,
+            ∫ p in I ×ˢ I, F y p.1 * F y p.2 ∂(volume.prod volume) := by
+              congr 1
+              refine Finset.sum_congr rfl ?_
+              intro y hy
+              rw [hprod y]
+    _ = (a ^ 2 : ℝ)⁻¹ *
+          ∫ p,
+            ∑ y : AsymLatticeSites Nt Ns, F y p.1 * F y p.2
+          ∂((volume.restrict I).prod (volume.restrict I)) := by
+              congr 1
+              rw [← Measure.prod_restrict I I]
+              symm
+              rw [MeasureTheory.integral_finset_sum]
+              intro y hy
+              exact hprod_int y
+    _ = (a ^ 2 : ℝ)⁻¹ *
+          ∫ p,
+            Real.exp (-(p.1 + p.2) * mass ^ 2) *
+              asymHeatKernelMatrix Nt Ns a (p.1 + p.2) x x
+          ∂((volume.restrict I).prod (volume.restrict I)) := by
+              congr 1
+              exact MeasureTheory.integral_congr_ae hcollapse
+    _ = (a ^ 2 : ℝ)⁻¹ *
+          ∫ s in I,
+            ∫ t in I,
+              Real.exp (-(s + t) * mass ^ 2) *
+                asymHeatKernelMatrix Nt Ns a (s + t) x x := by
+                  congr 1
+                  exact MeasureTheory.integral_prod _ hdiag_int
+
+/-- The asym rough covariance row sum is `O(T)` uniformly at fixed `Lt = Nt*a`, `Ls = Ns*a`. -/
+theorem asymCanonicalRoughCovariance_pow_one_sum_le_uniform
+    (mass Lt Ls : ℝ) (_hLt : 0 < Lt) (_hLs : 0 < Ls) (hmass : 0 < mass) :
+    ∃ C1 : ℝ, 0 < C1 ∧ ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (_ha : 0 < a),
+      (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls → ∀ (T : ℝ), 0 < T → ∀ (x : AsymLatticeSites Nt Ns),
+        a ^ 2 * ∑ y : AsymLatticeSites Nt Ns, |asymCanonicalRoughCovariance Nt Ns a mass T x y| ≤
+          C1 * T := by
+  refine ⟨1, by positivity, ?_⟩
+  intro Nt Ns hNt hNs a ha hvolt hvols T hT x
+  have ha2_ne : (a ^ 2 : ℝ) ≠ 0 := by positivity
+  have h_abs :
+      a ^ 2 * ∑ y : AsymLatticeSites Nt Ns, |asymCanonicalRoughCovariance Nt Ns a mass T x y|
+        = a ^ 2 * ∑ y : AsymLatticeSites Nt Ns,
+            asymCanonicalRoughCovariance Nt Ns a mass T x y := by
+    congr 1
+    refine Finset.sum_congr rfl ?_
+    intro y hy
+    rw [abs_of_nonneg]
+    exact asymCanonicalRoughCovariance_nonneg Nt Ns a mass T ha hmass hT x y
+  have hEntryCont :
+      ∀ y : AsymLatticeSites Nt Ns,
+        Continuous (fun t : ℝ =>
+          Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y) := by
+    intro y
+    have hExp : Continuous (fun t : ℝ => Real.exp (-t * mass ^ 2)) := by
+      fun_prop
+    have hEntry : Continuous (fun t : ℝ => asymHeatKernelMatrix Nt Ns a t x y) := by
+      have hEq :
+          (fun t : ℝ => asymHeatKernelMatrix Nt Ns a t x y) =
+            (fun t : ℝ =>
+              ∑ m₁ : Fin Nt, ∑ m₂ : Fin Ns,
+                Real.exp (-t * (latticeEigenvalue1d Nt a m₁ + latticeEigenvalue1d Ns a m₂)) *
+                  asymCanonicalBasis Nt Ns (m₁, m₂) x *
+                  asymCanonicalBasis Nt Ns (m₁, m₂) y /
+                  asymCanonicalNormSq Nt Ns (m₁, m₂)) := by
+        funext t
+        rw [asymHeatKernel_entry_eq_eigenvalue_average Nt Ns a (ne_of_gt ha) t x y]
+      rw [hEq]
+      refine continuous_finset_sum _ ?_
+      intro m₁ hm₁
+      refine continuous_finset_sum _ ?_
+      intro m₂ hm₂
+      have hMode :
+          Continuous (fun t : ℝ =>
+            Real.exp (-t * (latticeEigenvalue1d Nt a m₁ + latticeEigenvalue1d Ns a m₂))) := by
+        fun_prop
+      have hConst :
+          Continuous (fun _ : ℝ =>
+            asymCanonicalBasis Nt Ns (m₁, m₂) x *
+              asymCanonicalBasis Nt Ns (m₁, m₂) y /
+              asymCanonicalNormSq Nt Ns (m₁, m₂)) := continuous_const
+      simpa [mul_assoc, div_eq_mul_inv] using hMode.mul hConst
+    exact hExp.mul hEntry
+  have hEntryInt :
+      ∀ y : AsymLatticeSites Nt Ns,
+        IntegrableOn
+          (fun t : ℝ => Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y)
+          (Set.Icc 0 T) := by
+    intro y
+    exact (hEntryCont y).integrableOn_Icc
+  have hsum :
+      a ^ 2 * ∑ y : AsymLatticeSites Nt Ns, asymCanonicalRoughCovariance Nt Ns a mass T x y
+        = ∫ t in Set.Icc 0 T,
+            Real.exp (-t * mass ^ 2) *
+              ∑ y : AsymLatticeSites Nt Ns, asymHeatKernelMatrix Nt Ns a t x y := by
+    calc
+      a ^ 2 * ∑ y : AsymLatticeSites Nt Ns, asymCanonicalRoughCovariance Nt Ns a mass T x y
+        = a ^ 2 * ∑ y : AsymLatticeSites Nt Ns,
+            ((a ^ 2 : ℝ)⁻¹ *
+              ∫ t in Set.Icc 0 T,
+                Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y) := by
+              congr 1
+              refine Finset.sum_congr rfl ?_
+              intro y hy
+              rw [asymCanonicalRoughCovariance_eq_integral_Icc_heatKernel
+                Nt Ns a mass ha hmass T hT x y]
+      _ = ∑ y : AsymLatticeSites Nt Ns,
+            ∫ t in Set.Icc 0 T,
+              Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y := by
+                rw [Finset.mul_sum]
+                refine Finset.sum_congr rfl ?_
+                intro y hy
+                have hscal : a ^ 2 * (a ^ 2 : ℝ)⁻¹ = 1 := by
+                  field_simp [ha2_ne]
+                calc
+                  a ^ 2 *
+                      ((a ^ 2 : ℝ)⁻¹ *
+                        ∫ t in Set.Icc 0 T,
+                          Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y)
+                    = (a ^ 2 * (a ^ 2 : ℝ)⁻¹) *
+                        ∫ t in Set.Icc 0 T,
+                          Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y := by
+                            ring
+                  _ = ∫ t in Set.Icc 0 T,
+                        Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y := by
+                            rw [hscal, one_mul]
+      _ = ∫ t in Set.Icc 0 T,
+            ∑ y : AsymLatticeSites Nt Ns,
+              Real.exp (-t * mass ^ 2) * asymHeatKernelMatrix Nt Ns a t x y := by
+                rw [MeasureTheory.integral_finset_sum]
+                intro y hy
+                exact hEntryInt y
+      _ = ∫ t in Set.Icc 0 T,
+            Real.exp (-t * mass ^ 2) *
+              ∑ y : AsymLatticeSites Nt Ns, asymHeatKernelMatrix Nt Ns a t x y := by
+                apply integral_congr_ae
+                filter_upwards with t
+                rw [Finset.mul_sum]
+  have hexp_int :
+      ∫ t in Set.Icc 0 T, Real.exp (-t * mass ^ 2)
+        = (1 - Real.exp (-T * mass ^ 2)) / (mass ^ 2) := by
+    symm
+    exact schwinger_rough (mass ^ 2) (by positivity) T hT.le
+  have hexp_le : ∫ t in Set.Icc 0 T, Real.exp (-t * mass ^ 2) ≤ T := by
+    rw [hexp_int]
+    have haux : 1 - Real.exp (-(T * mass ^ 2)) ≤ T * mass ^ 2 := by
+      linarith [Real.add_one_le_exp (-(T * mass ^ 2))]
+    have haux' : 1 - Real.exp (-T * mass ^ 2) ≤ T * mass ^ 2 := by
+      simpa using haux
+    have hmass2_pos : 0 < mass ^ 2 := by positivity
+    rw [div_le_iff₀ hmass2_pos]
+    exact haux'
+  rw [h_abs, hsum]
+  calc
+    ∫ t in Set.Icc 0 T, Real.exp (-t * mass ^ 2) *
+        ∑ y : AsymLatticeSites Nt Ns, asymHeatKernelMatrix Nt Ns a t x y
+      = ∫ t in Set.Icc 0 T, Real.exp (-t * mass ^ 2) * 1 := by
+          apply integral_congr_ae
+          filter_upwards with t
+          rw [asymHeatKernel_row_sum_eq_one Nt Ns a ha t x]
+    _ = ∫ t in Set.Icc 0 T, Real.exp (-t * mass ^ 2) := by simp
+    _ ≤ T := hexp_le
+    _ = 1 * T := by ring
+
+/-- The asym rough covariance square row sum is `O(T)` uniformly at fixed rectangular volume. -/
+theorem asymCanonicalRoughCovariance_pow_two_sum_le_uniform
+    (mass Lt Ls : ℝ) (hLt : 0 < Lt) (hLs : 0 < Ls) (hmass : 0 < mass) :
+    ∃ C2 : ℝ, 0 < C2 ∧ ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (_ha : 0 < a),
+      (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls → ∀ (T : ℝ), 0 < T → ∀ (x : AsymLatticeSites Nt Ns),
+        a ^ 2 * ∑ y : AsymLatticeSites Nt Ns,
+            |asymCanonicalRoughCovariance Nt Ns a mass T x y| ^ 2 ≤
+          C2 * T := by
+  obtain ⟨C, hC_pos, hCdiag⟩ :=
+    asymHeatKernel_diagonal_mass_weighted_le_uniform mass Lt Ls hLt hLs hmass
+  refine ⟨2 * (Lt⁻¹ * Ls⁻¹) * C * (1 / mass ^ 2 + 2), by positivity, ?_⟩
+  intro Nt Ns hNt hNs a ha hvolt hvols T hT x
+  have hsq_abs :
+      a ^ 2 * ∑ y : AsymLatticeSites Nt Ns, |asymCanonicalRoughCovariance Nt Ns a mass T x y| ^ 2
+        = a ^ 2 * ∑ y : AsymLatticeSites Nt Ns,
+            (asymCanonicalRoughCovariance Nt Ns a mass T x y) ^ 2 := by
+    congr 1
+    refine Finset.sum_congr rfl ?_
+    intro y hy
+    rw [sq_abs]
+  let f : ℝ × ℝ → ℝ := fun p =>
+    Real.exp (-(p.1 + p.2) * mass ^ 2) * asymHeatKernelMatrix Nt Ns a (p.1 + p.2) x x
+  let g : ℝ × ℝ → ℝ := fun p =>
+    2 * C * (1 + 1 / (p.1 + p.2)) * Real.exp (-(p.1 + p.2) * mass ^ 2)
+  let ν : Measure (ℝ × ℝ) :=
+    (volume.restrict (Set.Ioc 0 T)).prod (volume.restrict (Set.Ioc 0 T))
+  have hmeasure :
+      ((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) = ν := by
+    simp [ν, restrict_Ioc_eq_restrict_Icc]
+  have hf_cont : Continuous f := by
+    let card : ℝ := (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ)
+    have hEq :
+        f = fun p : ℝ × ℝ =>
+          card * ∑ m₁ : Fin Nt, ∑ m₂ : Fin Ns,
+            Real.exp (-(p.1 + p.2) * asymCanonicalEigenvalue Nt Ns a mass (m₁, m₂)) := by
+      funext p
+      simpa [card, f] using
+        (asymHeatKernel_diagonal_mass_weighted_eq_eigenvalue_average
+          Nt Ns a mass (p.1 + p.2) ha x)
+    have hCont :
+        Continuous (fun p : ℝ × ℝ =>
+          card * ∑ m₁ : Fin Nt, ∑ m₂ : Fin Ns,
+            Real.exp (-(p.1 + p.2) * asymCanonicalEigenvalue Nt Ns a mass (m₁, m₂))) := by
+      fun_prop
+    rw [hEq]
+    exact hCont
+  have hfOn :
+      IntegrableOn f (Set.Icc 0 T ×ˢ Set.Icc 0 T) (volume.prod volume) := by
+    exact hf_cont.continuousOn.integrableOn_compact (isCompact_Icc.prod isCompact_Icc)
+  have hfIntIcc :
+      Integrable f ((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) := by
+    simpa [IntegrableOn, Measure.prod_restrict, Set.Icc_prod_Icc] using hfOn
+  have hfInt : Integrable f ν := by
+    rw [← hmeasure]
+    exact hfIntIcc
+  have hprodIcc :
+      ∫ p, f p ∂((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) =
+        ∫ s in Set.Icc 0 T, ∫ t in Set.Icc 0 T, f (s, t) := by
+    simpa [Measure.prod_restrict, Set.Icc_prod_Icc, add_comm, add_left_comm, add_assoc] using
+      (MeasureTheory.integral_prod f hfIntIcc)
+  have hprod :
+      ∫ s in Set.Icc 0 T, ∫ t in Set.Icc 0 T, f (s, t) = ∫ p, f p ∂ν := by
+    rw [← hmeasure]
+    exact hprodIcc.symm
+  have hgExpInt :
+      Integrable (fun p : ℝ × ℝ => Real.exp (-(p.1 + p.2) * mass ^ 2)) ν := by
+    have hcont : Continuous (fun p : ℝ × ℝ => Real.exp (-(p.1 + p.2) * mass ^ 2)) := by
+      fun_prop
+    have hOn :
+        IntegrableOn (fun p : ℝ × ℝ => Real.exp (-(p.1 + p.2) * mass ^ 2))
+          (Set.Icc 0 T ×ˢ Set.Icc 0 T) (volume.prod volume) := by
+      exact hcont.continuousOn.integrableOn_compact (isCompact_Icc.prod isCompact_Icc)
+    have hIntIcc :
+        Integrable (fun p : ℝ × ℝ => Real.exp (-(p.1 + p.2) * mass ^ 2))
+          ((volume.restrict (Set.Icc 0 T)).prod (volume.restrict (Set.Icc 0 T))) := by
+      simpa [IntegrableOn, Measure.prod_restrict, Set.Icc_prod_Icc] using hOn
+    rw [← hmeasure]
+    exact hIntIcc
+  have hgInvExpInt :
+      Integrable (fun p : ℝ × ℝ =>
+        ((1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * mass ^ 2))) ν := by
+    simpa [ν] using integrable_inv_add_mul_exp_Ioc (mass ^ 2) T (by positivity) hT
+  have hgInt : Integrable g ν := by
+    have hsum :
+        Integrable (fun p : ℝ × ℝ =>
+          Real.exp (-(p.1 + p.2) * mass ^ 2) +
+            ((1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * mass ^ 2))) ν := by
+      exact hgExpInt.add hgInvExpInt
+    have hEq :
+        g = fun p : ℝ × ℝ =>
+          (2 * C) *
+            (Real.exp (-(p.1 + p.2) * mass ^ 2) +
+              ((1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * mass ^ 2))) := by
+      funext p
+      dsimp [g]
+      ring
+    rw [hEq]
+    exact hsum.const_mul (2 * C)
+  have hScaledInt :
+      Integrable (fun p : ℝ × ℝ => (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) * g p) ν := by
+    exact hgInt.const_mul _
+  have hpos :
+      ∀ᵐ p : ℝ × ℝ ∂ν, 0 < p.1 ∧ 0 < p.2 := by
+    have hpos_restrict :
+        ∀ᵐ p : ℝ × ℝ ∂((volume.prod volume).restrict (Set.Ioc 0 T ×ˢ Set.Ioc 0 T)),
+          0 < p.1 ∧ 0 < p.2 := by
+      filter_upwards [ae_restrict_mem (measurableSet_Ioc.prod measurableSet_Ioc)] with p hp
+      exact ⟨hp.1.1, hp.2.1⟩
+    simpa [ν, Measure.prod_restrict] using hpos_restrict
+  have hfg :
+      f ≤ᵐ[ν] (fun p : ℝ × ℝ => (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) * g p) := by
+    filter_upwards [hpos] with p hp
+    rcases p with ⟨s, t⟩
+    have hst : 0 < s + t := add_pos hp.1 hp.2
+    have hdiag := hCdiag Nt Ns a ha hvolt hvols (s + t) hst x
+    have hsqrt :
+        (1 + 1 / Real.sqrt (s + t)) ^ 2 ≤ 2 * (1 + 1 / (s + t)) :=
+      one_add_inv_sqrt_sq_le_two_mul_one_add_inv (s + t) hst
+    calc
+      f (s, t)
+        ≤ (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) *
+            (C * (1 + 1 / Real.sqrt (s + t)) ^ 2 * Real.exp (-(s + t) * mass ^ 2)) := by
+              simpa [f] using hdiag
+      _ ≤ (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) *
+            (C * (2 * (1 + 1 / (s + t))) * Real.exp (-(s + t) * mass ^ 2)) := by
+              gcongr
+      _ = (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) * g (s, t) := by
+            dsimp [g]
+            ring
+  have hgBound :
+      ∫ p, g p ∂ν ≤ 2 * C * (1 / mass ^ 2 + 2) * T := by
+    have hEq :
+        g = fun p : ℝ × ℝ =>
+          (2 * C) *
+            (Real.exp (-(p.1 + p.2) * mass ^ 2) +
+              ((1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * mass ^ 2))) := by
+      funext p
+      dsimp [g]
+      ring
+    rw [hEq, integral_const_mul, integral_add hgExpInt hgInvExpInt]
+    calc
+      (2 * C) *
+          (∫ p, Real.exp (-(p.1 + p.2) * mass ^ 2) ∂ν +
+            ∫ p, ((1 / (p.1 + p.2 : ℝ)) * Real.exp (-(p.1 + p.2) * mass ^ 2)) ∂ν)
+        ≤ (2 * C) * (T / mass ^ 2 + 2 * T) := by
+            gcongr
+            · simpa [ν] using ioc_prod_exp_integral_le (mass ^ 2) T (by positivity) hT
+            · simpa [ν] using ioc_prod_inv_add_mul_exp_integral_le (mass ^ 2) T (by positivity) hT
+      _ = 2 * C * (1 / mass ^ 2 + 2) * T := by ring
+  rw [hsq_abs,
+    asymCanonicalRoughCovariance_sq_row_sum_eq_double_integral Nt Ns a mass ha hmass T hT x]
+  rw [hprod]
+  calc
+    (a ^ 2 : ℝ)⁻¹ * ∫ p, f p ∂ν
+      ≤ (a ^ 2 : ℝ)⁻¹ * ∫ p, (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ) * g p ∂ν := by
+          apply mul_le_mul_of_nonneg_left
+            (MeasureTheory.integral_mono_ae hfInt hScaledInt hfg)
+          positivity
+    _ = (((a ^ 2 : ℝ)⁻¹) * (1 / Fintype.card (AsymLatticeSites Nt Ns) : ℝ)) * ∫ p, g p ∂ν := by
+          rw [integral_const_mul]
+          ring
+    _ = Lt⁻¹ * Ls⁻¹ * ∫ p, g p ∂ν := by
+          rw [prefactor_eq_rect_inv_area Lt Ls Nt Ns a ha hvolt hvols]
+    _ ≤ Lt⁻¹ * Ls⁻¹ * (2 * C * (1 / mass ^ 2 + 2) * T) := by
+          exact mul_le_mul_of_nonneg_left hgBound (by positivity)
+    _ = (2 * (Lt⁻¹ * Ls⁻¹) * C * (1 / mass ^ 2 + 2)) * T := by ring
+
 end Pphi2
