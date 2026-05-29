@@ -40,6 +40,7 @@ following the Glimm-Jaffe/Nelson lattice approach.
 > - [`docs/cylinder-isotropic-lattice-implementation.md`](docs/cylinder-isotropic-lattice-implementation.md) — phase-by-phase build plan (Phases 1a / 1b / 2 / 3)
 > - [`docs/asym-fielddecomposition-redesign.md`](docs/asym-fielddecomposition-redesign.md) — the §2 polynomial-chaos `FieldDecomposition` port with the unit-by-unit status table
 > - [`docs/asym-cross-term-l2-discharge-plan.md`](docs/asym-cross-term-l2-discharge-plan.md) — the cross-term L² Wick identity discharge plan (status: ✅ DONE 2026-05-29)
+> - [`docs/asym-chaos-cutoff-decomposition-discharge-plan.md`](docs/asym-chaos-cutoff-decomposition-discharge-plan.md) — UNIT 6 + UNIT 7 plan: promote `asymChaosCutoffDecomposition` axiom → theorem (~290–500 lines)
 > - [`docs/cylinder-conditional-inputs-provability.md`](docs/cylinder-conditional-inputs-provability.md) — provability vetting of every conditional input the cylinder OS theorem rests on
 > - [`docs/cylinder-os3-discharge-plan.md`](docs/cylinder-os3-discharge-plan.md) — the OS3 `hRP` hypothesis discharge plan
 
