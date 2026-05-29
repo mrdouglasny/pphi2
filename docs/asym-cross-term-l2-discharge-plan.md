@@ -1,5 +1,14 @@
 # Asym cross-term L² bound — discharge plan for the remaining UNIT-5 sorry
 
+> **STATUS 2026-05-29: ✅ DISCHARGED.** `asymCanonicalCrossTerm_l2_sq_le` is now a
+> THEOREM (`Pphi2/NelsonEstimate/AsymCrossTermL2Identity.lean`, commit `6136a92`)
+> with `#axioms = [propext, Classical.choice, Quot.sound]`. Branch state is
+> **21 raw / 19 real axioms, 0 sorries**. The discharge followed the §1–§8
+> staged plan below; the final scope was ~1845 lines in
+> `AsymCrossTermL2Identity.lean` (§1 manually seeded + §2–§4 + §5–§8 in two
+> focused Codex passes on the public `wickPower_two_site_pi_gaussianReal_*`
+> helpers). The plan below is kept for historical reference.
+
 *2026-05-28. Plan for proving `asymCanonicalCrossTerm_l2_sq_le`
 (`Pphi2/NelsonEstimate/AsymRoughErrorVariance.lean:144`), the only remaining
 documented sorry on the `cylinder-isotropic-lattice` branch (21 raw / 19 real
