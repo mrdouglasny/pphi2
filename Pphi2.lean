@@ -58,6 +58,7 @@ import Pphi2.AsymTorus.AsymContinuumLimit
 import Pphi2.NelsonEstimate.AsymFieldDecomposition
 import Pphi2.NelsonEstimate.AsymCovarianceBoundsGJ
 import Pphi2.NelsonEstimate.AsymRoughCovarianceHigherP
+import Pphi2.NelsonEstimate.AsymCrossTermL2Identity
 import Pphi2.NelsonEstimate.AsymSmoothLowerBound
 import Pphi2.NelsonEstimate.AsymRoughErrorVariance
 import Pphi2.IRLimit.CylinderEmbedding

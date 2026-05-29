@@ -14,7 +14,7 @@ The only remaining analytical gap is the per-cross-term L² estimate
 assembly is completed here.
 -/
 
-import Pphi2.NelsonEstimate.AsymRoughCovarianceHigherP
+import Pphi2.NelsonEstimate.AsymCrossTermL2Identity
 import Pphi2.NelsonEstimate.WickBinomial
 import Mathlib.MeasureTheory.Function.L2Space
 
@@ -25,20 +25,6 @@ open MeasureTheory
 open scoped BigOperators
 
 namespace Pphi2
-
-/-- The rough Wick subtraction constant for the smooth/rough asym split. -/
-private def asymCanonicalRoughWickConstant (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
-    (a mass T : ℝ) : ℝ :=
-  wickConstantAsym Nt Ns a mass - asymSmoothWickConstant Nt Ns a mass T
-
-/-- Per-`(k,j)` smooth/rough cross term in the asym rough-error expansion. -/
-def asymCanonicalCrossTerm (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
-    (a mass T : ℝ) (η : AsymCanonicalJoint Nt Ns) (k j : ℕ) : ℝ :=
-  a ^ 2 * ∑ x : AsymLatticeSites Nt Ns,
-    wickMonomial j (asymSmoothWickConstant Nt Ns a mass T)
-      (asymCanonicalSmoothFieldFunction Nt Ns a mass T η x) *
-    wickMonomial (k - j) (asymCanonicalRoughWickConstant Nt Ns a mass T)
-      (asymCanonicalRoughFieldFunction Nt Ns a mass T η x)
 
 /-- Pointwise binomial expansion of the asym rough error. -/
 lemma asymCanonicalRoughError_pointwise_decomposition
@@ -135,28 +121,6 @@ lemma asymCanonicalRoughError_eq_sum_over_cross_terms
     intro j hj
     simp only [mul_assoc, ← Finset.mul_sum]
     ring
-
-/-- Rectangular per-cross-term L² estimate.
-
-This is the only remaining analytical gap in UNIT 5. The proof should mirror
-`canonicalCrossTerm_l2_sq_le` from the square file, using the asym smooth-log
-bound and the asym rough-covariance row-sum bounds. -/
-theorem asymCanonicalCrossTerm_l2_sq_le
-    (mass Lt Ls : ℝ) (hLt : 0 < Lt) (hLs : 0 < Ls) (hmass : 0 < mass)
-    (k j : ℕ) (_hkj : 1 ≤ k - j) :
-    ∃ K : ℝ, 0 < K ∧
-      ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (_ha : 0 < a),
-        (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
-        ∀ (T : ℝ), 0 < T →
-        ∃ hf : MeasureTheory.MemLp
-            (fun η : AsymCanonicalJoint Nt Ns =>
-              asymCanonicalCrossTerm Nt Ns a mass T η k j)
-            2
-            (asymCanonicalJointMeasure Nt Ns),
-          ∫ η, (asymCanonicalCrossTerm Nt Ns a mass T η k j) ^ 2
-            ∂(asymCanonicalJointMeasure Nt Ns) ≤
-            K * T * (1 + |Real.log T|) ^ j := by
-  sorry
 
 /-- Uniform L² bound on the asym rough Wick interaction error. -/
 theorem asymRoughError_variance
