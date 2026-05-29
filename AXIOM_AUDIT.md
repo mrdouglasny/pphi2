@@ -413,7 +413,7 @@ elementary inequality `x² ≤ 2 e^|x|` and a scaling optimization.
 eventual pullback RP predicate `CylinderMeasureSequenceEventuallyReflectionPositive`
 and proves the IR-limit OS3 transfer by characteristic-functional convergence.
 
-## Current pphi2 Axiom Inventory (20 active on `cylinder-isotropic-lattice`, 0 sorries)
+## Current pphi2 Axiom Inventory (21 raw / 19 real on `cylinder-isotropic-lattice`, 0 sorries)
 
 This table is generated from the current `./scripts/count_axioms.sh` result and
 is the source of truth for active pphi2 axioms in this audit. The Stage 1
@@ -466,7 +466,7 @@ the same Glimm–Jaffe Ch. 8 estimate.
 | **Subtotal** | **4** | |
 | **Total (this branch)** | **19** | |
 
-### Cylinder isotropic-lattice cohort (1 axiom — only on `cylinder-isotropic-lattice`)
+### Cylinder isotropic-lattice cohort (2 axioms — only on `cylinder-isotropic-lattice`)
 
 Heterogeneous-lattice analogue of the square Nelson dynamical-cutoff input, for the
 metric-correct `Z_Nt × Z_Ns` cylinder construction (Phase-2 #3, B-lean).
