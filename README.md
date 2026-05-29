@@ -10,6 +10,39 @@ following the Glimm-Jaffe/Nelson lattice approach.
 > roadmap (Workstreams A, B, C + markov-semigroups Phase 2.5 / N1.b /
 > N1.c + Route A) with their branches, plans, and current state.
 
+> **🛠 You are on branch `cylinder-isotropic-lattice` — the cylinder
+> `S¹(L_s) × ℝ` `P(Φ)₂` construction on an isotropic `Z_{N_t} × Z_{N_s}`
+> heterogeneous lattice.** This is the successor to the T² endpoint:
+> adding **reflection positivity (OS3)** by leaving the compact torus
+> behind, on a path to **OS reconstruction → a Wightman QFT in 1+1d with
+> a positive mass gap**. The branch replaces the metric-inconsistent
+> square-via-geometric-mean cylinder with a single isotropic spacing `a`,
+> periods `L_t = N_t · a`, `L_s = N_s · a`, so the rectangle is exactly
+> isotropic at every refinement (no rationality obstruction in the
+> `cylinder` regime, where `a = L_s / N_s` is fixed and `N_t → ∞`).
+>
+> **Current state (2026-05-29):** `count_axioms.sh` → **21 raw / 19 real
+> axioms, 0 sorries**; `lake build` green. `cylinderIso_OS_of_RP_OS2`
+> (`Pphi2/AsymTorus/AsymContinuumLimit.lean`) gives the cylinder
+> **OS0/OS1/OS2/OS3** modulo two reflection-positivity / OS2-symmetry
+> hypotheses, on top of two deep-think-vetted analytic axioms
+> (`asymChaosCutoffDecomposition`, `asymInteracting_expMoment_volume_uniform`)
+> and the upstream `embed_l2_uniform_bound`. The §2 Nelson port toward
+> discharging `asymChaosCutoffDecomposition` is complete through UNIT 5
+> (cross-term L² identity discharged, branch is sorry-free); UNIT 6
+> (rough chaos tail via the generic `ChaosTailBridge`) + UNIT 7
+> (axiom-discharge assembly via `bridgeAxiom_of_setup_real_generic`)
+> remain.
+>
+> Roadmap docs:
+> - [`docs/cylinder-master-plan.md`](docs/cylinder-master-plan.md) — campaign master plan
+> - [`docs/cylinder-isotropic-lattice-redesign.md`](docs/cylinder-isotropic-lattice-redesign.md) — *why* the isotropic redesign (the metric-correctness diagnosis)
+> - [`docs/cylinder-isotropic-lattice-implementation.md`](docs/cylinder-isotropic-lattice-implementation.md) — phase-by-phase build plan (Phases 1a / 1b / 2 / 3)
+> - [`docs/asym-fielddecomposition-redesign.md`](docs/asym-fielddecomposition-redesign.md) — the §2 polynomial-chaos `FieldDecomposition` port with the unit-by-unit status table
+> - [`docs/asym-cross-term-l2-discharge-plan.md`](docs/asym-cross-term-l2-discharge-plan.md) — the cross-term L² Wick identity discharge plan (status: ✅ DONE 2026-05-29)
+> - [`docs/cylinder-conditional-inputs-provability.md`](docs/cylinder-conditional-inputs-provability.md) — provability vetting of every conditional input the cylinder OS theorem rests on
+> - [`docs/cylinder-os3-discharge-plan.md`](docs/cylinder-os3-discharge-plan.md) — the OS3 `hRP` hypothesis discharge plan
+
 The lattice-action normalisation diagnosed in early May 2026 (a missing
 `a^d` Riemann-sum prefactor on the kinetic term, identified by a
 Gemini-vetted scaling analysis) was resolved and merged into `main`;
