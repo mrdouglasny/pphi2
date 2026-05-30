@@ -797,7 +797,9 @@ private lemma wickMonomial_one_eq_hermiteEval (n : ℕ) (x : ℝ) :
       ((Polynomial.hermite n).map (Int.castRingHom ℝ)).eval x := by
   simpa using (wickMonomial_eq_hermite n 1 (by norm_num : (0 : ℝ) < 1) x)
 
-private lemma multiWickMonomial_eq_hermiteMultiEval
+/-- Exported for the asym chaos-membership port: product Wick monomials are Hermite
+multi-evaluations at unit covariance. -/
+lemma multiWickMonomial_eq_hermiteMultiEval
     {n : ℕ} (α : Fin n → ℕ) (ξ : Fin n → ℝ) :
     (∏ i, wickMonomial (α i) 1 (ξ i)) =
       GaussianHilbert.hermiteMultiEval α ξ := by
@@ -806,7 +808,8 @@ private lemma multiWickMonomial_eq_hermiteMultiEval
   intro i hi
   exact wickMonomial_one_eq_hermiteEval (α i) (ξ i)
 
-private theorem wickMonomial_eq_root_local : ∀ (n : ℕ) (c x : ℝ),
+/-- Exported for the asym chaos-membership port: local and root Wick monomial names agree. -/
+theorem wickMonomial_eq_root_local : ∀ (n : ℕ) (c x : ℝ),
     wickMonomial n c x = _root_.wickMonomial n c x
   | 0, _, _ => rfl
   | 1, _, _ => rfl
@@ -908,7 +911,9 @@ private theorem finite_wick_sum_mem_wienerChaosLE
     rw [multiWickMonomial_eq_hermiteMultiEval α ξ]
   exact finite_hermite_sum_mem_wienerChaosLE s c hdeg f h_eq hf
 
-private theorem finite_indexed_wick_sum_mem_wienerChaosLE
+/-- Exported for the asym chaos-membership port: finite indexed Wick sums of
+bounded total degree lie in the corresponding finite Wiener chaos filtration. -/
+theorem finite_indexed_wick_sum_mem_wienerChaosLE
     {ι : Type*} {n d : ℕ}
     (s : Finset ι) (β : ι → Fin n → ℕ) (c : ι → ℝ)
     (hdeg : ∀ i ∈ s, GaussianHilbert.MultiIndex.totalDegree (β i) ≤ d)
@@ -1093,7 +1098,8 @@ private lemma canonicalJointMultiIndexOfPair_wick_prod
       ξ (canonicalStdInrIndex d N m) := by
   rfl
 
-private def wickExpansionCoeff {ι : Type*} [Fintype ι]
+/-- Exported for the asym chaos-membership port: multinomial Wick expansion coefficient. -/
+def wickExpansionCoeff {ι : Type*} [Fintype ι]
     (k : ℕ) (γ : ι → ℝ) (α : ι → ℕ) : ℝ :=
   ((k.factorial : ℝ) / ∏ j, ((α j).factorial : ℝ)) *
     ∏ j, γ j ^ α j
@@ -1613,7 +1619,8 @@ lemma canonicalRoughError_eq_sum_over_cross_terms
     simp only [mul_assoc, ← Finset.mul_sum]
     ring
 
-private lemma wienerChaosLE_mono
+/-- Exported for the asym chaos-membership port: Wiener chaos filtrations are monotone. -/
+lemma wienerChaosLE_mono
     {n k l : ℕ} (hkl : k ≤ l) :
     GaussianHilbert.wienerChaosLE n k ≤
       GaussianHilbert.wienerChaosLE n l := by
