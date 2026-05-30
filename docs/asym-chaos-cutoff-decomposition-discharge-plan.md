@@ -78,32 +78,91 @@ itself stated over the joint measure and transferred via the pushforward).
 
 ## UNIT 6 — rough-tail bound
 
-Target:
+### Scoping correction (2026-05-30)
+
+The original plan assumed the asym side already had the chaos-membership
+stack analogous to the square's. **It does not.** A scan against
+`Pphi2/NelsonEstimate/RoughErrorBound.lean` (the square's reference
+template) found that only the L² variance bound (UNIT 5) is present;
+none of the `std`-pulled-back representatives, none of their
+chaos-`P.n` membership lemmas, and none of the
+`stdGaussianFin nStd`-shaped pushforward exist on the asym side. The
+existing `asymCanonicalJointMeasure_map_stdGaussianEuclidean`
+(`AsymFieldDecomposition.lean:133`) lands on
+`EuclideanSpace ℝ (AsymCanonicalJointSumIndex Nt Ns)`, not on
+`Fin nStd → ℝ`, which is what `chaos_neg_tail_bound_explicit` consumes.
+
+The plan-asset gap, by row:
+
+| Asset | Square (template) | Asym |
+|---|---|---|
+| Joint↔`Fin nStd → ℝ` measurable equiv | `canonicalJointStdGaussianMeasurableEquiv` (`FieldDecomposition.lean:72`) | **missing** |
+| Pushforward to `stdGaussianFin nStd` | `canonicalJointMeasure_map_stdGaussian` (`FieldDecomposition.lean:96`) | **missing** |
+| `…CrossTermStd` + `…CrossTermStd_eq` | `RoughErrorBound.lean:1628`, `:1635` | **missing** |
+| `…CrossTermStd_mem_wienerChaosLE` | `RoughErrorBound.lean:1640` (112 lines) | **missing** |
+| `…CrossTermLinearCombo_mem_wienerChaosLE` | `RoughErrorBound.lean:1752` (100 lines) | **missing** |
+| `…RoughErrorStd` + `_eq` + `_mem_wienerChaosLE` | `RoughErrorBound.lean:1854`, `:1863`, `:1876` (154 lines) | **missing** |
+| `_uniform_in_aN` wrapper | `RoughErrorBound.lean:3799` (127 lines) | **= UNIT 6 target** |
+| L² variance bound | (square) `rough_error_variance` | ✅ UNIT 5 `asymRoughError_variance` |
+
+The chaos-side proofs are dimension-symmetric — they only care about the
+size of the index set (`Fintype.card (AsymCanonicalJointSumIndex Nt Ns)`)
+and the existence of the Wick/Hermite decomposition, not about whether
+the lattice is `N × N` or `Nt × Ns`. Port is therefore mostly mechanical
+search-and-replace from the square stack, but the **volume** is what
+makes UNIT 6 a multi-day port rather than a wiring exercise.
+
+### Target wrapper (UNIT 6b)
 
 ```lean
 theorem asymCanonicalRoughError_neg_tail_uniform
-    (P) (mass Lt Ls : ℝ) (hLt hLs hmass) :
-    ∃ K_tail, ∀ Nt Ns a (ha) (hvolt hvols),
-      ∀ M > 0,
+    (P : InteractionPolynomial)
+    (mass Lt Ls : ℝ) (hLt : 0 < Lt) (hLs : 0 < Ls) (hmass : 0 < mass) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (_ha : 0 < a)
+        (_hvolt : (Nt : ℝ) * a = Lt) (_hvols : (Ns : ℝ) * a = Ls)
+        (T : ℝ) (_hT : 0 < T)
+        (t : ℝ) (_ht : 0 < t),
         (asymCanonicalJointMeasure Nt Ns)
-          { η | asymCanonicalRoughError Nt Ns a mass (T(M)) P η ≤ -(M/2) } ≤
-        ENNReal.ofReal (K_tail · M^{- (P.n / 2)})
+          {η | asymCanonicalRoughError Nt Ns a mass T P η ≤ -t} ≤
+            2 * ENNReal.ofReal
+              (Real.exp
+                (-(Pphi2.ChaosTailBridge.chaosTailConstant P.n) *
+                  (t /
+                    (2 * Real.sqrt
+                      (K * T * (1 + |Real.log T|) ^ (P.n - 1)))) ^
+                    ((2 : ℝ) / P.n)))
 ```
 
-(or whatever shape `chaos_neg_tail_bound_explicit` produces — read the
-square at `RoughErrorBound.lean:3799` for the exact constant form). Method:
-the generic `chaos_neg_tail_bound_explicit` (proved in
-`ChaosTailBridge.lean:438`) takes an L²-bound on a chaos-`d` element and
-returns a polynomial-power tail; `asymRoughError_variance` (UNIT 5)
-provides the L² bound, with `d = P.n` (the chaos degree of the rough
-error).
+Body method (mirror `canonicalRoughError_neg_tail_uniform_in_aN`):
+extract `K` from `asymRoughError_variance` (UNIT 5); build
+`F : Lp ℝ 2 (stdGaussianFin nStd)` from `asymCanonicalRoughErrorStd`
+via the missing pushforward; transfer the L² bound to a norm bound on
+`F`; close with `chaos_neg_tail_bound_explicit`.
 
-Estimated scope: **~80–150 lines**. The generic engine does all the work;
-this is wrapping it with the asym names. Square has 4 versions
-(`of_stdGaussian`, `of_stdGaussian_explicit`,
-`of_stdGaussian_explicit_ae`, `uniform_in_aN`) at `RoughErrorBound.lean`
-:580, :650, :723, :3799 — the asym port mirrors the `_uniform_in_aN`
-shape.
+### UNIT 6a — chaos-membership infrastructure (~400 lines)
+
+Mechanical port from the square's `RoughErrorBound.lean` lines
+**1620 – 2006** (and `FieldDecomposition.lean` lines **72 – 130**),
+specialized to `AsymCanonicalJoint Nt Ns` and
+`AsymCanonicalJointSumIndex Nt Ns`. Outputs:
+
+* `asymCanonicalJointStdGaussianMeasurableEquiv`
+* `asymCanonicalJointMeasure_map_stdGaussian`
+* `asymCanonicalCrossTermStd` + `asymCanonicalCrossTermStd_eq`
+* `asymCanonicalCrossTermStd_mem_wienerChaosLE`
+* `asymCanonicalCrossTermLinearCombo_mem_wienerChaosLE`
+* `asymCanonicalRoughErrorStd` + `asymCanonicalRoughErrorStd_eq`
+* `asymCanonicalRoughErrorStd_mem_wienerChaosLE`
+
+### UNIT 6b — the wrapper (~120 lines)
+
+Mirror of square `RoughErrorBound.lean:3799–3919`, with `2 N` → `Nt Ns`
+and the (single) variance hypothesis switched to UNIT 5.
+
+**Revised UNIT 6 total: ~500–600 lines** (was ~80–150). Still smaller
+than the cross-term L² port (1845 lines); execution risk is low because
+the square is a line-by-line template.
 
 ## UNIT 7 — axiom discharge assembly
 
@@ -137,28 +196,43 @@ theorem asymChaosCutoffDecomposition_proof
 Estimated scope: **~150–250 lines** (the joint-split + pushforward bridge
 is the longer part; the existential assembly itself is short).
 
-## Total estimate
+## Total estimate (revised 2026-05-30)
 
-* UNIT 6: ~80–150 lines
-* UNIT 7: ~150–250 lines
+* UNIT 6a (chaos-membership infrastructure port from square): ~400 lines
+* UNIT 6b (`asymCanonicalRoughError_neg_tail_uniform` wrapper): ~120 lines
+* UNIT 7 (axiom-discharge existential assembly): ~150–250 lines
 * Joint-split helper `asymJointSplitOf` + pushforward-bridge lemmas: ~60–100 lines
 
-**Total: ~290–500 lines.** Smaller than the cross-term L² port (~1845 lines) and
-*much* more wiring-oriented — the analytical content is already proved (UNITs 2, 5;
-generic `chaos_neg_tail_bound_explicit`; pushforward identity).
+**Revised total: ~700–900 lines.** Larger than the original ~290–500
+estimate because UNIT 6 has to port the entire chaos-membership stack
+from the square (not just wire a generic engine). Still meaningfully
+smaller than the cross-term L² port (~1845 lines), and execution risk
+is low — the square's `RoughErrorBound.lean` is a line-by-line
+template, so most of UNIT 6 is mechanical search-and-replace.
 
-## Recommended strategy
+## Recommended strategy (revised 2026-05-30)
 
-Same playbook that worked for the cross-term L² discharge:
+Same playbook that worked for the cross-term L² discharge, with the
+UNIT 6 step split into the mechanical port (6a) and the wrapper (6b):
 
-1. Quickly check `chaos_neg_tail_bound_explicit`'s exact signature + the
-   square's `canonicalRoughError_neg_tail_uniform_in_aN` proof pattern.
-2. Decide whether `asymJointSplitOf` needs to be constructive (likely
+1. ✅ DONE — recon `chaos_neg_tail_bound_explicit` + the square's
+   `canonicalRoughError_neg_tail_uniform_in_aN` and chaos-membership
+   stack; identified the missing asym infrastructure (see Asset gap
+   table above).
+2. **Launch focused Codex pass on UNIT 6a** — mechanical port of the
+   square's chaos-membership stack (`RoughErrorBound.lean:1620–2006`
+   and `FieldDecomposition.lean:72–130`) to the asym namespace. Likely
+   target file: `Pphi2/NelsonEstimate/AsymRoughErrorChaosStd.lean`
+   (new). Commit, verify.
+3. Launch focused Codex pass on UNIT 6b — the
+   `asymCanonicalRoughError_neg_tail_uniform` wrapper, mirroring the
+   square at `RoughErrorBound.lean:3799–3919`. Commit, verify.
+4. Decide whether `asymJointSplitOf` needs to be constructive (likely
    yes, via the `evalMap`/`evalMapInv` already proved in
    `AsymFieldDecomposition.lean`) or can be measure-theoretic only.
-3. Launch one focused Codex pass on UNIT 6 (the wiring), commit, verify.
-4. Launch a second focused pass on UNIT 7 + the joint-split, commit, verify.
-5. Update counts (21/19 → 20/18) and AXIOM_AUDIT.
+5. Launch focused Codex pass on UNIT 7 + the joint-split. Commit,
+   verify.
+6. Update counts (21/19 → 20/18) and AXIOM_AUDIT.
 
 After this discharge, the only project-introduced axiom on the branch
 toward cylinder OS0/OS1/OS2/OS3 is
