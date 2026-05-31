@@ -63,6 +63,7 @@ import Pphi2.NelsonEstimate.AsymSmoothLowerBound
 import Pphi2.NelsonEstimate.AsymRoughErrorVariance
 import Pphi2.NelsonEstimate.AsymRoughErrorChaosStd
 import Pphi2.AsymTorus.AsymL2Operator
+import Pphi2.AsymTorus.AsymJentzsch
 import Pphi2.IRLimit.CylinderEmbedding
 import Pphi2.IRLimit.GreenFunctionComparison
 import Pphi2.IRLimit.UniformExponentialMoment
