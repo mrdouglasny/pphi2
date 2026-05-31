@@ -210,7 +210,7 @@ smaller than the cross-term L² port (~1845 lines), and execution risk
 is low — the square's `RoughErrorBound.lean` is a line-by-line
 template, so most of UNIT 6 is mechanical search-and-replace.
 
-## Recommended strategy (revised 2026-05-30)
+## Recommended strategy (revised 2026-05-31)
 
 Same playbook that worked for the cross-term L² discharge, with the
 UNIT 6 step split into the mechanical port (6a) and the wrapper (6b):
@@ -219,19 +219,25 @@ UNIT 6 step split into the mechanical port (6a) and the wrapper (6b):
    `canonicalRoughError_neg_tail_uniform_in_aN` and chaos-membership
    stack; identified the missing asym infrastructure (see Asset gap
    table above).
-2. **Launch focused Codex pass on UNIT 6a** — mechanical port of the
-   square's chaos-membership stack (`RoughErrorBound.lean:1620–2006`
-   and `FieldDecomposition.lean:72–130`) to the asym namespace. Likely
-   target file: `Pphi2/NelsonEstimate/AsymRoughErrorChaosStd.lean`
-   (new). Commit, verify.
-3. Launch focused Codex pass on UNIT 6b — the
-   `asymCanonicalRoughError_neg_tail_uniform` wrapper, mirroring the
-   square at `RoughErrorBound.lean:3799–3919`. Commit, verify.
+2. ✅ DONE (commit `32f9484`) — UNIT 6a mechanical port of the square's
+   chaos-membership stack (`RoughErrorBound.lean:1620–2006` and
+   `FieldDecomposition.lean:72–130`) to the asym namespace, in
+   `Pphi2/NelsonEstimate/AsymRoughErrorChaosStd.lean` (786 lines, all
+   10 deliverables). The asym gamma stack was reused from
+   `AsymCrossTermL2Identity.lean` (UNIT 5 territory).
+3. ✅ DONE — UNIT 6b wrapper. Added two theorems to
+   `AsymRoughErrorChaosStd.lean`:
+   * `asymCanonicalRoughError_neg_tail_of_stdGaussian_explicit_ae`
+     (line 791): generic helper that transfers a chaos-tail bound on a
+     standard-Gaussian `Lp` representative back to the joint measure.
+   * `asymCanonicalRoughError_neg_tail_uniform` (line 871): packages
+     UNIT 5 (variance) + UNIT 6a (chaos membership) + the generic
+     helper into the dimension-independent polynomial-chaos
+     concentration bound.
 4. Decide whether `asymJointSplitOf` needs to be constructive (likely
    yes, via the `evalMap`/`evalMapInv` already proved in
    `AsymFieldDecomposition.lean`) or can be measure-theoretic only.
-5. Launch focused Codex pass on UNIT 7 + the joint-split. Commit,
-   verify.
+5. Launch focused pass on UNIT 7 + the joint-split. Commit, verify.
 6. Update counts (21/19 → 20/18) and AXIOM_AUDIT.
 
 After this discharge, the only project-introduced axiom on the branch

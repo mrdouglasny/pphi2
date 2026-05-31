@@ -783,4 +783,209 @@ theorem asymCanonicalRoughErrorStd_mem_wienerChaosLE
   rw [h_toLp]
   exact Submodule.add_mem _ hLeadChaos hPerChaos
 
+/-- Asym analogue of `canonicalRoughError_neg_tail_of_stdGaussian_explicit_ae`:
+given a standard-Gaussian `L²` representative `F` of the asym rough error
+(only ae-equal to it under the joint↔std pushforward), with `‖F‖ ≤ K` and
+`F ∈ wienerChaosLE _ m`, the polynomial-chaos concentration bound transfers
+back to the joint measure. -/
+theorem asymCanonicalRoughError_neg_tail_of_stdGaussian_explicit_ae
+    {Nt Ns : ℕ} [NeZero Nt] [NeZero Ns] (a mass T : ℝ) (P : InteractionPolynomial)
+    (m : ℕ) (hm : 1 ≤ m) :
+    ∀ (F : MeasureTheory.Lp ℝ 2
+        (GaussianHilbert.stdGaussianFin
+          (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)))),
+      F ∈ GaussianHilbert.wienerChaosLE
+            (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)) m →
+      ∀ (K : ℝ), 0 < K → ‖F‖ ≤ K →
+      (∀ᵐ η ∂(asymCanonicalJointMeasure Nt Ns),
+        (F : (Fin (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)) → ℝ) → ℝ)
+          (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns η) =
+            asymCanonicalRoughError Nt Ns a mass T P η) →
+      ∀ (t : ℝ), 0 < t →
+        (asymCanonicalJointMeasure Nt Ns)
+          {η | asymCanonicalRoughError Nt Ns a mass T P η ≤ -t} ≤
+            2 * ENNReal.ofReal
+              (Real.exp
+                (-(Pphi2.ChaosTailBridge.chaosTailConstant m) *
+                  (t / (2 * K)) ^ ((2 : ℝ) / m))) := by
+  intro F hF_chaos K hK_pos hF_norm hrepr t ht
+  have hset_ae :
+      {η | asymCanonicalRoughError Nt Ns a mass T P η ≤ -t}
+        =ᵐ[asymCanonicalJointMeasure Nt Ns]
+        (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns) ⁻¹'
+          {ω |
+            (F : (Fin (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)) → ℝ) → ℝ) ω ≤ -t} := by
+    filter_upwards [hrepr] with η hη
+    change
+      (asymCanonicalRoughError Nt Ns a mass T P η ≤ -t) =
+        (((F : (Fin (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)) → ℝ) → ℝ)
+          (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns η)) ≤ -t)
+    rw [← hη]
+  have hset_meas :
+      MeasurableSet
+        {ω |
+          (F : (Fin (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)) → ℝ) → ℝ) ω ≤ -t} := by
+    simpa [Set.preimage, Set.setOf_mem_eq] using
+      (MeasureTheory.Lp.stronglyMeasurable F).measurable
+        (isClosed_Iic.measurableSet : MeasurableSet (Set.Iic (-t)))
+  calc
+    (asymCanonicalJointMeasure Nt Ns)
+          {η | asymCanonicalRoughError Nt Ns a mass T P η ≤ -t}
+        =
+      (asymCanonicalJointMeasure Nt Ns)
+        ((asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns) ⁻¹'
+          {ω |
+            (F : (Fin (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)) → ℝ) → ℝ) ω ≤ -t}) := by
+          exact measure_congr hset_ae
+    _ =
+      (Measure.map
+        (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns)
+        (asymCanonicalJointMeasure Nt Ns))
+        {ω |
+          (F : (Fin (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)) → ℝ) → ℝ) ω ≤ -t} := by
+            symm
+            rw [Measure.map_apply
+              (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns).measurable]
+            exact hset_meas
+    _ =
+      (GaussianHilbert.stdGaussianFin
+        (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)))
+        {ω |
+          (F : (Fin (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)) → ℝ) → ℝ) ω ≤ -t} := by
+            rw [asymCanonicalJointMeasure_map_stdGaussian Nt Ns]
+    _ ≤
+      2 * ENNReal.ofReal
+        (Real.exp
+          (-(Pphi2.ChaosTailBridge.chaosTailConstant m) *
+            (t / (2 * K)) ^ ((2 : ℝ) / m))) :=
+      Pphi2.ChaosTailBridge.chaos_neg_tail_bound_explicit
+        (Fintype.card (AsymCanonicalJointSumIndex Nt Ns)) m hm
+        F hF_chaos K hK_pos hF_norm t ht
+
+/-- UNIT 6b — uniform asym joint rough negative tail from `asymRoughError_variance`.
+
+Packages the asym standard-Gaussian representative, its `wienerChaosLE`
+membership (UNIT 6a), and the L² variance estimate (UNIT 5) into the
+dimension-independent polynomial-chaos concentration bound. The constant
+`K` depends only on `(P, mass, Lt, Ls)` (not on `Nt`, `Ns`, or `a`). -/
+theorem asymCanonicalRoughError_neg_tail_uniform
+    (P : InteractionPolynomial)
+    (mass Lt Ls : ℝ) (hLt : 0 < Lt) (hLs : 0 < Ls) (hmass : 0 < mass) :
+    ∃ K : ℝ, 0 < K ∧
+      ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (_ha : 0 < a)
+        (_hvolt : (Nt : ℝ) * a = Lt) (_hvols : (Ns : ℝ) * a = Ls)
+        (T : ℝ) (_hT : 0 < T)
+        (t : ℝ) (_ht : 0 < t),
+        (asymCanonicalJointMeasure Nt Ns)
+          {η | asymCanonicalRoughError Nt Ns a mass T P η ≤ -t} ≤
+            2 * ENNReal.ofReal
+              (Real.exp
+                (-(Pphi2.ChaosTailBridge.chaosTailConstant P.n) *
+                  (t /
+                    (2 * Real.sqrt
+                      (K * T * (1 + |Real.log T|) ^ (P.n - 1)))) ^
+                    ((2 : ℝ) / P.n))) := by
+  obtain ⟨K, hK_pos, hvar⟩ :=
+    asymRoughError_variance P mass Lt Ls hLt hLs hmass
+  refine ⟨K, hK_pos, ?_⟩
+  intro Nt Ns _ _ a ha hvolt hvols T hT t ht
+  let nStd : ℕ := Fintype.card (AsymCanonicalJointSumIndex Nt Ns)
+  obtain ⟨hf, hF_chaos⟩ :=
+    asymCanonicalRoughErrorStd_mem_wienerChaosLE
+      Nt Ns a mass ha hmass T hT P
+  let F : MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin nStd) :=
+    hf.toLp (asymCanonicalRoughErrorStd Nt Ns a mass T P)
+  have hrepr_joint :
+      ∀ᵐ η ∂(asymCanonicalJointMeasure Nt Ns),
+        (F : (Fin nStd → ℝ) → ℝ)
+          (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns η) =
+            asymCanonicalRoughError Nt Ns a mass T P η := by
+    have hrepr_std :
+        ∀ᵐ ξ ∂(GaussianHilbert.stdGaussianFin nStd),
+          (F : (Fin nStd → ℝ) → ℝ) ξ =
+            asymCanonicalRoughErrorStd Nt Ns a mass T P ξ := by
+      simpa [F] using
+        (MemLp.coeFn_toLp hf :
+          (hf.toLp (asymCanonicalRoughErrorStd Nt Ns a mass T P) :
+              (Fin nStd → ℝ) → ℝ)
+            =ᵐ[GaussianHilbert.stdGaussianFin nStd]
+              asymCanonicalRoughErrorStd Nt Ns a mass T P)
+    have hrepr_map :
+        ∀ᵐ η ∂(asymCanonicalJointMeasure Nt Ns),
+          (F : (Fin nStd → ℝ) → ℝ)
+            (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns η) =
+              asymCanonicalRoughErrorStd Nt Ns a mass T P
+                (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns η) := by
+      have hrepr_std' :
+          ∀ᵐ ξ ∂((asymCanonicalJointMeasure Nt Ns).map
+            (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns)),
+            (F : (Fin nStd → ℝ) → ℝ) ξ =
+              asymCanonicalRoughErrorStd Nt Ns a mass T P ξ := by
+        simpa [nStd, asymCanonicalJointMeasure_map_stdGaussian Nt Ns] using hrepr_std
+      exact MeasureTheory.ae_of_ae_map
+        (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns).measurable.aemeasurable
+        hrepr_std'
+    filter_upwards [hrepr_map] with η hη
+    simpa using hη.trans
+      (asymCanonicalRoughErrorStd_eq Nt Ns a mass T P η)
+  have hF_norm_sq :
+      ‖F‖ ^ 2 =
+        ∫ ξ, (asymCanonicalRoughErrorStd Nt Ns a mass T P ξ) ^ 2
+          ∂(GaussianHilbert.stdGaussianFin nStd) := by
+    change
+      ‖hf.toLp (asymCanonicalRoughErrorStd Nt Ns a mass T P)‖ ^ 2 =
+        ∫ ξ, (asymCanonicalRoughErrorStd Nt Ns a mass T P ξ) ^ 2
+          ∂(GaussianHilbert.stdGaussianFin nStd)
+    rw [← real_inner_self_eq_norm_sq, MeasureTheory.L2.inner_def]
+    refine integral_congr_ae ?_
+    filter_upwards [MemLp.coeFn_toLp hf] with ξ hξ
+    simp [hξ, sq]
+  have hsq_integrable :
+      Integrable (fun ξ => (asymCanonicalRoughErrorStd Nt Ns a mass T P ξ) ^ 2)
+        (GaussianHilbert.stdGaussianFin nStd) := hf.integrable_sq
+  have hsq_integrable_map :
+      Integrable (fun ξ => (asymCanonicalRoughErrorStd Nt Ns a mass T P ξ) ^ 2)
+        ((asymCanonicalJointMeasure Nt Ns).map
+          (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns)) := by
+      simpa [nStd, asymCanonicalJointMeasure_map_stdGaussian Nt Ns] using hsq_integrable
+  have hstd_eq_joint :
+      ∫ ξ, (asymCanonicalRoughErrorStd Nt Ns a mass T P ξ) ^ 2
+          ∂(GaussianHilbert.stdGaussianFin nStd) =
+        ∫ η, (asymCanonicalRoughError Nt Ns a mass T P η) ^ 2
+          ∂(asymCanonicalJointMeasure Nt Ns) := by
+    rw [← asymCanonicalJointMeasure_map_stdGaussian Nt Ns]
+    rw [integral_map
+      (asymCanonicalJointStdGaussianMeasurableEquiv Nt Ns).measurable.aemeasurable
+      hsq_integrable_map.aestronglyMeasurable]
+    refine integral_congr_ae ?_
+    filter_upwards [Filter.Eventually.of_forall
+      (fun η : AsymCanonicalJoint Nt Ns =>
+        asymCanonicalRoughErrorStd_eq Nt Ns a mass T P η)] with η hη
+    simp [hη]
+  have hvar_bound :
+      ‖F‖ ^ 2 ≤ K * T * (1 + |Real.log T|) ^ (P.n - 1) := by
+    rw [hF_norm_sq, hstd_eq_joint]
+    exact hvar Nt Ns a ha hvolt hvols T hT
+  have hscale_pos :
+      0 <
+        Real.sqrt (K * T * (1 + |Real.log T|) ^ (P.n - 1)) := by
+    apply Real.sqrt_pos.2
+    positivity
+  have hscale_norm :
+      ‖F‖ ≤ Real.sqrt (K * T * (1 + |Real.log T|) ^ (P.n - 1)) := by
+    have hnonneg :
+        0 ≤ K * T * (1 + |Real.log T|) ^ (P.n - 1) := by positivity
+    have hsq :
+        ‖F‖ ^ 2 ≤
+          (Real.sqrt (K * T * (1 + |Real.log T|) ^ (P.n - 1))) ^ 2 := by
+      simpa [Real.sq_sqrt hnonneg] using hvar_bound
+    nlinarith [hsq, norm_nonneg F, Real.sqrt_nonneg (K * T * (1 + |Real.log T|) ^ (P.n - 1))]
+  exact
+    asymCanonicalRoughError_neg_tail_of_stdGaussian_explicit_ae
+      a mass T P P.n
+      (le_trans (by norm_num) P.hn_ge)
+      F hF_chaos
+      (Real.sqrt (K * T * (1 + |Real.log T|) ^ (P.n - 1)))
+      hscale_pos hscale_norm hrepr_joint t ht
+
 end Pphi2
