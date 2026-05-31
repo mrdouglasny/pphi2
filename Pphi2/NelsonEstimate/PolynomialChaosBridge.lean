@@ -583,7 +583,11 @@ theorem quarticPiecewiseTail_layerCake_lt_top
                           2 * M - A * Real.exp (s / 4) by ring
       _ ≤ ENNReal.ofReal (Real.exp (-M)) := ENNReal.ofReal_le_ofReal hreal_bound
 
-private lemma two_div_degree_eq_inv_cutoffPower (P : InteractionPolynomial) :
+/-- Exported for the asym `asymChaosCutoffDecomposition` discharge (UNIT 7):
+the chaos-bound exponent `2 / P.n` from the polynomial-chaos negative-tail
+bound coincides with the `1 / degreeCutoffPower P` exponent of
+`degreeCutoffTail`. Uses `P.n = 2 · degreeCutoffPower P`. -/
+lemma two_div_degree_eq_inv_cutoffPower (P : InteractionPolynomial) :
     ((2 : ℝ) / P.n) =
       (1 / (Pphi2.DynamicalCutoff.degreeCutoffPower P : ℝ)) := by
   obtain ⟨k, hk⟩ := P.hn_even
@@ -598,7 +602,10 @@ private lemma two_div_degree_eq_inv_cutoffPower (P : InteractionPolynomial) :
   field_simp [show (k : ℝ) ≠ 0 by exact_mod_cast (ne_of_gt hk_pos)]
   simp [two_mul]
 
-private def degreeCutoffTail
+/-- Exported for the asym `asymChaosCutoffDecomposition` discharge (UNIT 7):
+the explicit doubly-exponential rough negative-tail bound at the
+degree-adapted dynamical cutoff scale. Lattice-agnostic. -/
+def degreeCutoffTail
     (P : InteractionPolynomial) (K C : ℝ) (M : ℝ) : ENNReal :=
   ENNReal.ofReal
     (2 * Real.exp
@@ -699,7 +706,11 @@ theorem canonicalRoughError_cutoff_tail_uniform
       (M / 2) (by linarith)
   simpa [degreeCutoffTail, two_div_degree_eq_inv_cutoffPower P] using htail'
 
-private def degreePiecewiseTail
+/-- Exported for the asym `asymChaosCutoffDecomposition` discharge (UNIT 7):
+piecewise tail combining the trivial `1`-bound on `[0, 2C)` (where any
+probability measure is bounded by 1) with the `degreeCutoffTail` bound
+on `[2C, ∞)` (where the smooth lower bound takes effect). -/
+def degreePiecewiseTail
     (P : InteractionPolynomial) (K C : ℝ) (M : ℝ) : ENNReal :=
   if M < 2 * C then 1 else degreeCutoffTail P K C M
 
