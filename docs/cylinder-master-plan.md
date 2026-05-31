@@ -1,20 +1,45 @@
 # Cylinder S¹×ℝ φ⁴₂ — master plan & progress tracker
 
-> **STATUS UPDATE (2026-05-27) — superseded by the isotropic redesign.** The construction below
+> **STATUS UPDATE (2026-05-31) — isotropic redesign + one project axiom remaining.** The construction
 > was rebuilt on an **isotropic `Z_Nt × Z_Ns` lattice** (single spacing `a`, periods `Lt=Nt·a`,
 > `Ls=Ns·a`) to fix a metric inconsistency in the original square-via-geometric-mean approach.
 > Current state on branch `cylinder-isotropic-lattice` (Phases 1b/2/3 **complete**):
 > `cylinderIso_OS_of_RP_OS2` (`Pphi2/AsymTorus/AsymContinuumLimit.lean`) gives cylinder
-> **OS0/OS1/OS2/OS3**, resting on **2 vetted isotropic axioms** —
-> `asymChaosCutoffDecomposition` (UV Nelson chaos) and `asymInteracting_expMoment_volume_uniform`
-> (the CYL-1a Lₜ-uniform moment bound, now a vetted axiom) — plus the two hypotheses `hRP` (OS3) and
-> `hOS2`. **`MeasureHasGreenMomentBound` is a theorem** (the crux the old route never produced), and
-> `wickConstantAsym_eq_variance` was discharged to a theorem (2026-05-27). pphi2 branch: 21 raw / 19
-> real axioms, 0 sorries. Current docs: `cylinder-isotropic-lattice-redesign.md` +
+> **OS0/OS1/OS2/OS3**, resting on **1 remaining project-introduced axiom** —
+> `asymInteracting_expMoment_volume_uniform` (the CYL-1a Lₜ-uniform moment bound, deep-think-vetted
+> 2026-05-27) — plus the two hypotheses `hRP` (OS3) and `hOS2`.
+> `asymChaosCutoffDecomposition` (the UV Nelson chaos input) was **discharged 2026-05-31** (UNIT 7)
+> via the trivial-split + pushforward + UNIT 2 + UNIT 6 route; see
+> `asym-chaos-cutoff-decomposition-discharge-plan.md` and `Pphi2/AsymTorus/AsymNelson.lean`.
+> `wickConstantAsym_eq_variance` was discharged 2026-05-27.
+> **pphi2 branch: 20 raw / 18 real axioms, 0 sorries.**
+>
+> **Workstreams for the final axiom (parallel)** — see
+> `asym-interacting-expmoment-volume-uniform-discharge-plan.md` for the full architecture:
+>
+> 1. **lee-yang repo** (new, Mathlib-only) — Layer A: Newman MGF Gaussian-domination
+>    via Lee-Yang / Asano / Griffiths-Simon. Status: skeleton scaffolded at
+>    `~/Documents/GitHub/lee-yang/` (README + PLAN + stubs); discharge-architecture
+>    vet packet at `docs/asym-expmoment-discharge-via-lee-yang-vet-request.md`
+>    awaiting gemini review before commit. ~1500-2500 lines Phase 1.
+> 2. **pphi2 asym TM port** (this repo) — Layer B1: cylinder transfer matrix +
+>    Källén-Lehmann variance bound (at fixed `a, Ns`). Status: Phase 1 done
+>    2026-05-31 (`Pphi2/AsymTorus/AsymL2Operator.lean` — defs + compactness +
+>    self-adjointness). Phases 2-4 pending. Plan:
+>    `docs/asym-l2-operator-port-scoping.md`. ~900-1350 lines total.
+> 3. **(deferred)** Chessboard / reflection-positivity infrastructure — Layer B2:
+>    UV uniformity of the variance bound. Shares discharge path with the square's
+>    open `spectral_gap_uniform`; not on the immediate critical path. Likely
+>    home: new `reflection-positivity` repo eventually.
+>
+> Layer C (assembly, ~50 lines) glues Layers A + B2 once both land; discharges
+> the axiom to a theorem.
+>
+> Current docs: `cylinder-isotropic-lattice-redesign.md` +
 > `…-implementation.md` (construction), `cylinder-conditional-inputs-provability.md` (input map),
-> `cylinder-os3-discharge-plan.md` (OS3 plan). The CYL-1a / CYL-2a framing below is still the right
-> mental model (the two deep theorems = §4 moment bound + OS4 spectral gap); the workstream details
-> are reorganized in those newer docs.
+> `cylinder-os3-discharge-plan.md` (OS3 plan), and the per-axiom discharge plans cited above.
+> The CYL-1a / CYL-2a framing below is still the right mental model (the two deep theorems = §4
+> moment bound + OS4 spectral gap); the workstream details are reorganized in those newer docs.
 
 **Created:** 2026-05-22 (after the T² OS0–OS2 endpoint reached the bare Mathlib trio —
 see `docs/T2-master-plan.md`).
