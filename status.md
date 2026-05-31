@@ -16,12 +16,13 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-22): 19 raw axioms (17 real — 15 public + 2
+**Current counter (`./scripts/count_axioms.sh`, 2026-05-31): 19 raw axioms (17 real — 15 public + 2
 `private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
 **+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
 `count_axioms.sh`). On branch `cylinder-isotropic-lattice` (Phase-2/3 cylinder construction,
 isotropic files wired into `Pphi2.lean`): `count_axioms.sh` reports pphi2 **21 raw / 19 real, 0
-sorries** — the 17-real base
+sorries** (UNIT 6 complete: chaos-membership stack and rough-tail wrapper proved in
+`NelsonEstimate/AsymRoughErrorChaosStd.lean`; UNIT 7 axiom-discharge assembly remains) — the 17-real base
 plus two deep-think-vetted isotropic-redesign axioms:
 `asymChaosCutoffDecomposition` (`AsymTorus/AsymNelson.lean`, heterogeneous Nelson chaos
 decomposition) and `asymInteracting_expMoment_volume_uniform`

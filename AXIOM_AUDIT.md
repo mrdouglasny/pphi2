@@ -1,6 +1,31 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert
 
-**Last updated**: 2026-05-16.
+**Last updated**: 2026-05-31.
+
+## 2026-05-31 — UNIT 6 complete (asym chaos-membership + rough-tail wrapper)
+
+UNIT 6 of the `asymChaosCutoffDecomposition` discharge plan is complete
+without changing pphi2's axiom count:
+
+* **UNIT 6a** (commit `32f9484`): 786-line mechanical port of the square's
+  chaos-membership stack (`RoughErrorBound.lean:1620–2006` and
+  `FieldDecomposition.lean:72–130`) to the asym namespace in a new
+  `Pphi2/NelsonEstimate/AsymRoughErrorChaosStd.lean`. All 10 deliverables
+  present (`asymCanonicalJointStdGaussianMeasurableEquiv`,
+  `asymCanonicalJointMeasure_map_stdGaussian`, `asymCanonicalCrossTermStd`
+  + chaos membership, `asymCanonicalRoughErrorStd` + chaos membership).
+  Asym gamma stack reused from `AsymCrossTermL2Identity.lean` (UNIT 5).
+* **UNIT 6b** (commit `63c0cd2`): the
+  `asymCanonicalRoughError_neg_tail_uniform` wrapper (and its
+  `_of_stdGaussian_explicit_ae` helper) appended to the same file —
+  packages UNIT 5 (variance) + UNIT 6a (chaos membership) into the
+  dimension-independent polynomial-chaos negative-tail bound on the
+  asym joint measure.
+
+**Impact on pphi2 count:** unchanged at 19 real / 21 raw axioms, 0
+sorries. UNIT 7 (axiom-discharge assembly via the joint↔config
+pushforward bridge) is the only step left to drop the count to 18 real
+/ 20 raw.
 
 ## 2026-05-15 — Lp-carrier Phase 2 + gaussian-hilbert Phase 3 wire-in
 
