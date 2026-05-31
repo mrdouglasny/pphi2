@@ -2,6 +2,29 @@
 
 **Last updated**: 2026-05-31.
 
+## 2026-05-31 — UNIT 7 complete: `asymChaosCutoffDecomposition` axiom → theorem
+
+`asymChaosCutoffDecomposition` (`AsymTorus/AsymNelson.lean`, the heterogeneous
+Glimm–Jaffe dynamical-cutoff smooth/rough chaos decomposition) is now a
+**theorem** (commit `c5d91e7`). pphi2 on `cylinder-isotropic-lattice` drops
+to **20 raw / 18 real axioms, 0 sorries**.
+
+Proof (~100 lines): trivial split `V_S(M, ω) := -(M/2)`,
+`E_R(M, ω) := interactionFunctionalAsym ω + M/2`. C1 and C2 are then
+definitional; C3 uses the joint→config pushforward
+`asymCanonicalJointMeasure_map_sumConfig` (`AsymFieldDecomposition.lean:1692`)
+plus a new one-line naturality
+`interactionFunctionalAsym_asymCanonicalSumConfig_eq` plus UNIT 2's
+`asymCanonicalSmoothInteraction_lower_bound_at_cutoff_uniform` (subset
+`{full ≤ -M} ⊆ {rough ≤ -M/2}` for `M ≥ 2C`) plus UNIT 6's
+`asymCanonicalRoughError_neg_tail_uniform`. Witness `ψ` and integrability
+reused verbatim from the square's `degreePiecewiseTail` + `_layerCake_lt_top`
+(lattice-agnostic, three `private` defs widened to public).
+
+Only project-introduced axiom remaining on this branch:
+`asymInteracting_expMoment_volume_uniform` (`AsymTorus/AsymContinuumLimit.lean`,
+the volume-uniform interacting exp-moment — the genuine cluster-expansion input).
+
 ## 2026-05-31 — UNIT 6 complete (asym chaos-membership + rough-tail wrapper)
 
 UNIT 6 of the `asymChaosCutoffDecomposition` discharge plan is complete
@@ -85,7 +108,7 @@ Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 | Package | Axioms | Sorries | Pin |
 |---|---|---|---|
 | **pphi2** (active build) | 17 | 0 | — |
-| **pphi2** (`cylinder-isotropic-lattice` branch: +`asymChaosCutoffDecomposition`, +`asymInteracting_expMoment_volume_uniform`; `wickConstantAsym_eq_variance` **discharged** 2026-05-27) | 19 | 0 | GaussianField `5bb35e8` |
+| **pphi2** (`cylinder-isotropic-lattice` branch: +`asymInteracting_expMoment_volume_uniform`; `wickConstantAsym_eq_variance` **discharged** 2026-05-27, `asymChaosCutoffDecomposition` **discharged** 2026-05-31) | 18 | 0 | GaussianField `5bb35e8` |
 | **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
 | **gaussian-hilbert** (pinned, tracks `main`) | 1 *(was 4 in last audit; see 2026-05-{10,11} entries)* | 0 | `main` |
@@ -473,9 +496,8 @@ the diagonal is constant = the eigenvalue average; `#print axioms` clean).
 
 | File | Active axioms | Names |
 |------|---------------|-------|
-| `Pphi2/AsymTorus/AsymNelson.lean` | 1 | `asymChaosCutoffDecomposition` |
 | `Pphi2/AsymTorus/AsymContinuumLimit.lean` | 1 | `asymInteracting_expMoment_volume_uniform` |
-| **Subtotal** | **2** | |
+| **Subtotal** | **1** | (was 2; `asymChaosCutoffDecomposition` discharged 2026-05-31) |
 
 ### Stage 1 GJ-aligned cohort (4 axioms — only on `fix/lattice-action-normalization`)
 
@@ -491,17 +513,18 @@ the same Glimm–Jaffe Ch. 8 estimate.
 | **Subtotal** | **4** | |
 | **Total (this branch)** | **19** | |
 
-### Cylinder isotropic-lattice cohort (2 axioms — only on `cylinder-isotropic-lattice`)
+### Cylinder isotropic-lattice cohort (1 axiom — only on `cylinder-isotropic-lattice`)
 
 Heterogeneous-lattice analogue of the square Nelson dynamical-cutoff input, for the
 metric-correct `Z_Nt × Z_Ns` cylinder construction (Phase-2 #3, B-lean).
 
 | File | Active axioms | Names |
 |------|---------------|-------|
-| `Pphi2/AsymTorus/AsymNelson.lean` | 1 | `asymChaosCutoffDecomposition` |
 | `Pphi2/AsymTorus/AsymContinuumLimit.lean` | 1 | `asymInteracting_expMoment_volume_uniform` |
 
-(`wickConstantAsym_eq_variance` was here; **discharged → theorem** 2026-05-27, see below.)
+(`wickConstantAsym_eq_variance` was here; **discharged → theorem** 2026-05-27, see below.
+`asymChaosCutoffDecomposition` was here; **discharged → theorem** 2026-05-31 via the
+trivial-split + pushforward + UNIT 2 + UNIT 6 route described at the top of this audit.)
 
 | Axiom | File:Line | Rating | Sources | Notes |
 |-------|-----------|--------|---------|-------|

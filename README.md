@@ -21,21 +21,20 @@ following the Glimm-Jaffe/Nelson lattice approach.
 > isotropic at every refinement (no rationality obstruction in the
 > `cylinder` regime, where `a = L_s / N_s` is fixed and `N_t → ∞`).
 >
-> **Current state (2026-05-31):** `count_axioms.sh` → **21 raw / 19 real
+> **Current state (2026-05-31):** `count_axioms.sh` → **20 raw / 18 real
 > axioms, 0 sorries**; `lake build` green. `cylinderIso_OS_of_RP_OS2`
 > (`Pphi2/AsymTorus/AsymContinuumLimit.lean`) gives the cylinder
 > **OS0/OS1/OS2/OS3** modulo two reflection-positivity / OS2-symmetry
-> hypotheses, on top of two deep-think-vetted analytic axioms
-> (`asymChaosCutoffDecomposition`, `asymInteracting_expMoment_volume_uniform`)
-> and the upstream `embed_l2_uniform_bound`. The §2 Nelson port toward
-> discharging `asymChaosCutoffDecomposition` is complete through
-> **UNIT 6** (cross-term L² identity discharged, branch is sorry-free,
-> chaos-membership stack + polynomial-chaos negative-tail wrapper
-> proved on the asym side —
+> hypotheses, on top of **one** deep-think-vetted analytic axiom
+> (`asymInteracting_expMoment_volume_uniform` — the genuine
+> cluster-expansion input) and the upstream `embed_l2_uniform_bound`.
+> The §2 Nelson port is **COMPLETE**: `asymChaosCutoffDecomposition`
+> was discharged (axiom → theorem) in UNIT 7 (2026-05-31) via the
+> trivial split `V_S = -(M/2)`, `E_R = V_a + M/2`, using the
+> `asymCanonicalSumConfig` pushforward + UNIT 2's smooth lower bound
+> + UNIT 6's polynomial-chaos negative-tail wrapper
 > `asymCanonicalRoughError_neg_tail_uniform` in
-> `Pphi2/NelsonEstimate/AsymRoughErrorChaosStd.lean`); only **UNIT 7**
-> (axiom-discharge assembly via joint↔config pushforward bridge)
-> remains.
+> `Pphi2/NelsonEstimate/AsymRoughErrorChaosStd.lean`.
 >
 > Roadmap docs:
 > - [`docs/cylinder-master-plan.md`](docs/cylinder-master-plan.md) — campaign master plan

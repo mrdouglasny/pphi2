@@ -1,10 +1,17 @@
-# `asymChaosCutoffDecomposition` discharge plan (UNITs 6 + 7)
+# `asymChaosCutoffDecomposition` discharge plan (UNITs 6 + 7) — ✅ DONE 2026-05-31
 
 *2026-05-29. Plan for promoting `asymChaosCutoffDecomposition`
 (`Pphi2/AsymTorus/AsymNelson.lean:62`) from a deep-think-vetted axiom to a
 theorem. After this discharge, the branch goes to **20 raw / 18 real axioms,
 0 sorries** (was 21/19/0) and `asymNelson_exponential_estimate_iso`
 becomes axiom-free modulo Mathlib's standard trio.*
+
+**Update 2026-05-31**: DONE. UNIT 7 landed in commit `c5d91e7`. Counts:
+pphi2 21/0 → **20/0** (19 real → **18 real**). The trivial-split proof
+(V_S = -(M/2), E_R = V_a + M/2) came in at ~100 lines — much shorter than
+the 150-250 originally estimated — because the V_S/E_R "joint-split" can
+be avoided entirely (the pushforward + naturality do the work at the
+measure level, not pointwise on Configuration).
 
 ## Target — exact axiom
 
