@@ -16,7 +16,7 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-05-31): 19 raw axioms (17 real — 15 public + 2
+**Current counter (`./scripts/count_axioms.sh`, 2026-06-02): 19 raw axioms (17 real — 15 public + 2
 `private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
 **+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
 `count_axioms.sh`). On branch `cylinder-isotropic-lattice` (Phase-2/3 cylinder construction,
@@ -28,7 +28,11 @@ cluster-expansion input). [`wickConstantAsym_eq_variance` was a third isotropic 
 2026-05-27** → theorem in `AsymTorus/AsymWickVariance.lean`, algebraic circulant route.
 `asymChaosCutoffDecomposition` was the second, **discharged 2026-05-31** → theorem in
 `AsymTorus/AsymNelson.lean` via UNIT 7 (trivial split + pushforward + UNIT 2 smooth lower
-bound + UNIT 6 polynomial-chaos negative-tail wrapper).]
+bound + UNIT 6 polynomial-chaos negative-tail wrapper). **Layer B1 of the last-axiom
+discharge architecture** complete 2026-05-31: cylinder transfer matrix (`AsymL2Operator.lean`,
+`AsymJentzsch.lean`, `AsymPositivity.lean`) + Layer-B1 variance bound (`AsymVarianceBound.lean`).
+Remaining: Layer A (Newman MGF via new `lee-yang` repo, scaffolded), Layer B2
+(Lt-uniformity via chessboard, deferred), Layer C (~50-line assembly).]
 gaussian-field **3** (the Phase-1b `AsymCovariance` convergence
 `lattice_green_tendsto_continuum_asym` added 0 axioms), with GaussianField pinned at `5bb35e8`.
 Phase 3 produces `MeasureHasGreenMomentBound` as a theorem (per `Lt`) and, via the three axioms,

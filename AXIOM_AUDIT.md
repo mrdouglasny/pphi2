@@ -1,6 +1,32 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert
 
-**Last updated**: 2026-05-31.
+**Last updated**: 2026-06-02.
+
+## 2026-05-31 — Layer B1 (cylinder TM + variance bound) complete
+
+The cylinder transfer-matrix port for the `asymInteracting_expMoment_volume_uniform`
+discharge architecture is complete (4 phases, ~1000 lines):
+
+* **Phase 1** (commit `ec3a6f4`): `Pphi2/AsymTorus/AsymL2Operator.lean` —
+  asym cylinder transfer operator definition, compactness, self-adjointness.
+* **Phase 2** (`bce8c1e`): `AsymJentzsch.lean` — positivity-improving +
+  strictly PD + ground simple + spectral decomposition.
+* **Phase 3** (`2541f9c`): `AsymPositivity.lean` — energy levels +
+  `asymMassGap_pos`.
+* **Phase 4** (`8ca0f5c`): `AsymVarianceBound.lean` — Layer B1 variance
+  bound `Var_int(⟨ω,f⟩) ≤ C(Lt,Ls) · Var_free(⟨ω,f⟩)` uniform in
+  `(Nt, Ns, a)` at fixed `(Lt, Ls)`.
+
+Phase 4 discovery: `asymTorusIso_interacting_second_moment_density_transfer`
+in `AsymContinuumLimit.lean` ALREADY proves the variance bound via
+density-transfer + Gaussian-4th-moment + Nelson exp-moment (now
+unconditional after UNIT 7). Phases 1-3's transfer-matrix machinery is
+the **foundation for Layer B2** (Lt-uniformity, deferred — shares
+discharge path with the square's open `spectral_gap_uniform`).
+
+**Impact on counts**: no change — Layer B1 is infrastructure for the
+remaining axiom, which is still an axiom (pending Layers A + B2 + C).
+Branch still at 20 raw / 18 real axioms, 0 sorries.
 
 ## 2026-05-31 — UNIT 7 complete: `asymChaosCutoffDecomposition` axiom → theorem
 
