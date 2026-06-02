@@ -483,7 +483,10 @@ Should be converted to def once nuclear space API improves.
 
 ---
 
-### 43. `measure_determined_by_schwinger` (Bridge.lean)
+### 43. `measure_determined_by_schwinger` (Bridge.lean) — ✅ DISCHARGED (2026-06-02)
+
+**Status**: DONE — now a theorem in `Bridge.lean` via `MeasureUniqueness.measure_eq_of_moments`
+(finite exponential moments ⇒ entire MGF ⇒ equal moments force equal laws; Cramér–Wold). No new axioms/sorries.
 
 **Difficulty**: Medium
 **Statement**: Moment determinacy on S'(ℝ²) with exponential moments.

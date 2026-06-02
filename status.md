@@ -16,12 +16,13 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-06-02): 19 raw axioms (17 real — 15 public + 2
-`private`; the 2 extra raw hits are `axiom`-prefixed words in docstrings), 0 sorries** (pphi2)
-**+ 3 axioms, 0 sorries** (gaussian-field) = **20 real combined** (both verified via
-`count_axioms.sh`). On branch `cylinder-isotropic-lattice` (Phase-2/3 cylinder construction,
-isotropic files wired into `Pphi2.lean`): `count_axioms.sh` reports pphi2 **20 raw / 18 real, 0
-sorries** — the 17-real base plus one deep-think-vetted isotropic-redesign axiom:
+**Current counter (`./scripts/count_axioms.sh`, 2026-06-02): pphi2 22 raw axioms, 0 sorries;
+gaussian-field 3 axioms, 0 sorries** (both verified via `count_axioms.sh`, GaussianField pinned at
+`5bb35e8`). `main` now subsumes the former `cylinder-isotropic-lattice` branch (Phase-2/3 cylinder
+construction, isotropic files wired into `Pphi2.lean`), which is why the raw count is up from the
+pre-cylinder base. `measure_determined_by_schwinger` was **discharged 2026-06-02** (Bridge axiom →
+theorem via `MeasureUniqueness.measure_eq_of_moments`). The remaining genuinely-critical input is
+one deep-think-vetted isotropic-redesign axiom:
 `asymInteracting_expMoment_volume_uniform`
 (`AsymTorus/AsymContinuumLimit.lean`, the volume-uniform interacting exp-moment — the genuine
 cluster-expansion input). [`wickConstantAsym_eq_variance` was a third isotropic axiom, **discharged
@@ -668,7 +669,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`pphi2_nonGaussian`~~ | Main | **Proved** | Uses `pphi2_nonGaussianity` axiom. |
 | `pphi2_nontriviality` | Main | Hard | ∫ (ω f)² dμ > 0 for all f ≠ 0. Correlation inequalities (Griffiths, FKG). |
 | ~~`pphi2_nonGaussianity`~~ | Main | **PROVED** | Proved from `continuumLimit_nonGaussian` by providing a fixed sequence `aₙ = 1/(n+1)`. |
-| `measure_determined_by_schwinger` | Bridge | Medium | Moment determinacy on S'(ℝ²) with exponential (Fernique-type) moment bound. |
+| ~~`measure_determined_by_schwinger`~~ | Bridge | **PROVED** | Discharged 2026-06-02 → theorem via `MeasureUniqueness.measure_eq_of_moments` (finite exp-moments ⇒ entire MGF ⇒ Cramér–Wold). |
 | ~~`wick_constant_comparison`~~ | ~~Bridge~~ | — | **Removed** — duplicate of `wickConstant_log_divergence`, moved to Unused/. |
 | `same_continuum_measure` | Bridge | Medium | pphi2 and Phi4 constructions agree at weak coupling. Requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |
 | `os2_from_phi4` | Bridge | Medium | OS2 for Phi4 continuum limit. Requires `IsPhi4ContinuumLimit` hypothesis. |
@@ -896,7 +897,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `schwinger_agreement` | Bridge | Cluster expansion uniqueness (Guerra-Rosen-Simon). |
 | `same_continuum_measure` | Bridge | pphi2 and Phi4 agree at weak coupling. |
 | `os2_from_phi4` | Bridge | OS2 for Phi4 continuum limit. |
-| `measure_determined_by_schwinger` | Bridge | Moment determinacy on S'(ℝ²). |
+| ~~`measure_determined_by_schwinger`~~ | Bridge | **Discharged** to a theorem (see `MeasureUniqueness.measure_eq_of_moments`). |
 | `two_point_clustering_from_spectral_gap` | OS4_MassGap | 2-point clustering from mass gap with cyclic torus time separation. |
 | `general_clustering_from_spectral_gap` | OS4_MassGap | Bounded observables; `G` on `latticeConfigEuclideanTimeShift`, decay measured in `latticeEuclideanTimeSeparation`. |
 | `second_moment_uniform` | Tightness | Uniform second moments for interacting measure. |
