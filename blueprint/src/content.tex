@@ -1,0 +1,172 @@
+\chapter{Overview}
+
+This blueprint documents the constructive $P(\Phi)_2$ Euclidean quantum field
+theory in the \texttt{pphi2} repository together with the upstream results it
+uses from our own libraries (\texttt{gaussian-field}).
+
+\emph{Edges are extracted, not guessed.} Every \texttt{\textbackslash uses} edge
+below is computed from the \emph{actual} Lean dependency graph
+(\texttt{scripts/BlueprintDeps.lean} walks each declaration's transitive
+used-constant closure, restricted to our namespaces, then transitively reduces
+it). Green nodes have a formalized proof; the node flagged \textbf{axiom} is a
+Lean \texttt{axiom} (assumed, not proved). Nodes marked \textbf{(upstream)} live
+in \texttt{gaussian-field}.
+
+\emph{A structural finding.} The dependency closure of the headline theorem
+\texttt{pphi2\_exists} is in fact \emph{small}: it bottoms out in the OS-axiom
+inheritance lemmas and the clustering \textbf{axiom}. Several substantial
+\emph{proved} results --- tightness, the transfer-matrix mass gap,
+reflection positivity from the lattice, lattice translation invariance, and the
+Ward/anomaly analysis --- are developed in the repository but are \emph{not}
+(yet) part of \texttt{pphi2\_exists}'s proof closure. They appear here in
+Chapter~\ref{chap:supporting} as standalone components, which is the honest
+picture of the current formalization.
+
+\chapter{Main theorem and the OS axioms}
+
+\begin{definition}[Full OS axioms]\label{def:full-os}
+  \lean{Pphi2.SatisfiesFullOS}\leanok
+  Bundles OS0 (analyticity), OS1 (regularity), OS2 (Euclidean invariance),
+  OS3 (reflection positivity), OS4 (clustering + ergodicity).
+\end{definition}
+
+\begin{theorem}[Continuum exponential moments]\label{thm:expmom}
+  \lean{Pphi2.continuum_exponential_moments}\leanok
+  The continuum-limit measure has finite exponential moments.
+\end{theorem}
+
+\begin{theorem}[OS0 in the limit]\label{thm:os0}
+  \lean{Pphi2.os0_for_continuum_limit}\leanok\uses{thm:expmom}
+\end{theorem}
+\begin{theorem}[OS1 in the limit]\label{thm:os1}
+  \lean{Pphi2.os1_for_continuum_limit}\leanok\uses{thm:expmom}
+\end{theorem}
+
+\begin{theorem}[Real generating functional invariance]\label{thm:gfinv}
+  \lean{Pphi2.complex_gf_invariant_of_real_gf_invariant}\leanok
+  Real Euclidean invariance of the generating functional upgrades to the
+  complex statement (given exponential moments).
+\end{theorem}
+\begin{theorem}[Translation invariance (continuum)]\label{thm:transinv}
+  \lean{Pphi2.translation_invariance_continuum}\leanok
+\end{theorem}
+\begin{theorem}[Rotation invariance (continuum)]\label{thm:rotinv}
+  \lean{Pphi2.rotation_invariance_continuum}\leanok\uses{def:gff-measure}
+\end{theorem}
+\begin{theorem}[OS2 (Euclidean invariance) in the limit]\label{thm:os2}
+  \lean{Pphi2.os2_for_continuum_limit}\leanok
+  \uses{thm:gfinv, thm:expmom, thm:rotinv, thm:transinv}
+\end{theorem}
+
+\begin{theorem}[OS3 (reflection positivity) in the limit]\label{thm:os3}
+  \lean{Pphi2.os3_for_continuum_limit}\leanok
+\end{theorem}
+
+\begin{theorem}[Continuum exponential clustering \textbf{(axiom --- assumed)}]\label{ax:clustering}
+  \lean{Pphi2.continuum_exponential_clustering}\leanok
+  Exponential decay of the connected two-point function. \emph{Currently a Lean
+  \texttt{axiom}.}
+\end{theorem}
+\begin{theorem}[OS4 clustering in the limit]\label{thm:os4}
+  \lean{Pphi2.os4_for_continuum_limit}\leanok\uses{ax:clustering}
+\end{theorem}
+\begin{theorem}[Clustering $\Rightarrow$ ergodicity]\label{thm:os4-erg}
+  \lean{Pphi2.os4_clustering_implies_ergodicity}\leanok
+\end{theorem}
+
+\begin{theorem}[The limit satisfies OS0--OS4]\label{thm:limit-os}
+  \lean{Pphi2.continuumLimit_satisfies_fullOS}\leanok
+  \uses{def:full-os, thm:os0, thm:os1, thm:os2, thm:os3, thm:os4, thm:os4-erg}
+\end{theorem}
+
+\begin{theorem}[Continuum limit exists]\label{thm:limit-exists}
+  \lean{Pphi2.pphi2_limit_exists}\leanok
+  The lattice $P(\Phi)_2$ measures have a continuum-limit probability measure
+  (tightness + Prokhorov; the latter axiomatized in Mathlib terms).
+\end{theorem}
+
+\begin{theorem}[Existence of a $P(\Phi)_2$ OS measure]\label{thm:main}
+  \lean{Pphi2.pphi2_exists}\leanok\uses{thm:limit-os, thm:limit-exists}
+  For every interaction polynomial $P$ and mass $m>0$ there is a probability
+  measure on cylinder configurations satisfying the full OS axioms.
+\end{theorem}
+
+\chapter{Upstream Gaussian measure (\texttt{gaussian-field})}
+
+\begin{definition}[Gaussian field measure (upstream)]\label{def:gff-measure}
+  \lean{GaussianField.measure}\leanok
+  The centered Gaussian measure for a continuous linear map $T : E \to H$, from
+  its characteristic functional.
+\end{definition}
+\begin{definition}[Covariance form (upstream)]\label{def:gff-covariance}
+  \lean{GaussianField.covariance}\leanok
+  $C_T(f,g) = \langle Tf, Tg\rangle_H$.
+\end{definition}
+
+\chapter{Supporting proved results (not yet in the headline closure)}\label{chap:supporting}
+
+These are formalized (green) but are \emph{not} currently in the dependency
+closure of Theorem~\ref{thm:main}; wiring them in is future work.
+
+\section{Tightness}
+\begin{theorem}[Configuration tightness (upstream)]\label{thm:tight-upstream}
+  \lean{GaussianField.configuration_tight_of_uniform_second_moments}\leanok
+\end{theorem}
+\begin{theorem}[The lattice family is tight]\label{thm:tight}
+  \lean{Pphi2.continuumMeasures_tight}\leanok
+  \uses{thm:tight-upstream, def:gff-covariance, def:gff-measure}
+\end{theorem}
+
+\section{Transfer-matrix mass gap}
+\begin{theorem}[Energy gap]\label{thm:energygap}
+  \lean{Pphi2.energyLevel_gap}\leanok
+\end{theorem}
+\begin{theorem}[Lattice mass gap positive]\label{thm:massgap}
+  \lean{Pphi2.massGap_pos}\leanok\uses{thm:energygap}
+\end{theorem}
+\begin{theorem}[OS4 from the gap (lattice)]\label{thm:os4gap}
+  \lean{Pphi2.os4_lattice_from_gap}\leanok\uses{thm:massgap}
+\end{theorem}
+
+\section{Reflection positivity from the lattice}
+\begin{theorem}[Time reflection is an involution]\label{thm:timerefl}
+  \lean{Pphi2.timeReflection2D_involution}\leanok
+\end{theorem}
+\begin{theorem}[Action reflection decomposition]\label{thm:actiondecomp}
+  \lean{Pphi2.action_decomposition}\leanok\uses{thm:timerefl}
+\end{theorem}
+\begin{theorem}[RP closed under weak limits]\label{thm:rpweak}
+  \lean{Pphi2.rp_closed_under_weak_limit}\leanok
+\end{theorem}
+\begin{theorem}[Continuum RP from lattice RP]\label{thm:rpcont}
+  \lean{Pphi2.continuum_rp_from_lattice}\leanok\uses{thm:rpweak}
+\end{theorem}
+
+\section{Lattice translation invariance}
+\begin{theorem}[Mass operator commutes with translation]\label{thm:massop}
+  \lean{Pphi2.massOperator_translation_commute}\leanok
+\end{theorem}
+\begin{theorem}[Gaussian density translation invariant]\label{thm:gdens}
+  \lean{Pphi2.gaussianDensity_translation_invariant}\leanok\uses{thm:massop}
+\end{theorem}
+\begin{theorem}[Lattice action translation invariant]\label{thm:latact}
+  \lean{Pphi2.latticeAction_translation_invariant}\leanok
+\end{theorem}
+\begin{theorem}[Lattice measure translation invariant]\label{thm:latmeas}
+  \lean{Pphi2.latticeMeasure_translation_invariant}\leanok
+  \uses{def:gff-covariance, def:gff-measure, thm:gdens}
+\end{theorem}
+
+\section{Ward identity and anomaly}
+\begin{theorem}[Lattice Ward identity]\label{thm:ward}
+  \lean{Pphi2.ward_identity_lattice}\leanok\uses{def:gff-measure}
+\end{theorem}
+\begin{theorem}[Anomaly bound from super-renormalizability]\label{thm:anombound}
+  \lean{Pphi2.anomaly_bound_from_superrenormalizability}\leanok\uses{def:gff-measure}
+\end{theorem}
+\begin{theorem}[Rotational CF defect bound]\label{thm:cfdefect}
+  \lean{Pphi2.rotationCFDefect_le_pointwiseDefectIntegral}\leanok\uses{def:gff-measure}
+\end{theorem}
+\begin{theorem}[Anomaly vanishes]\label{thm:anomvanish}
+  \lean{Pphi2.anomaly_vanishes}\leanok\uses{thm:anombound}
+\end{theorem}
