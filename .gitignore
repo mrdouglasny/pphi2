@@ -12,3 +12,5 @@ error.log
 blueprint/web/
 blueprint/print/
 scripts/blueprint_deps_raw.txt
+scripts/blueprint_enum_stats.txt
+scripts/.gerr
