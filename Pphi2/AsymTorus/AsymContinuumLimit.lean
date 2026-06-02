@@ -597,7 +597,27 @@ spectral radius, not a spatial cluster expansion.
 `1` is false in infinite volume since the interacting susceptibility can exceed `2/m²`) the
 statement is **Standard / Likely correct**; uniformity in `L` and `a` confirmed via the Newman bound
 + mass-gap variance domination; fixed-`Ls` quasi-1D is the safe direction. See
-`docs/cylinder-conditional-inputs-provability.md` §4. -/
+`docs/cylinder-conditional-inputs-provability.md` §4.
+
+**Architecture closure verified 2026-06-02** (deep-think-vetted). This axiom is now
+provably dischargeable from two factored upstream-input axioms in
+`Pphi2/AsymTorus/AsymExpMomentDischarge.lean`:
+
+* **Layer A** `asymInteracting_mgf_gaussianDominated`: lattice-level Newman MGF
+  Gaussian-domination (upstream discharge: proposed `lee-yang` repo Phase 1 +
+  pphi2 adapter).
+* **Layer B2** `asymInteractingVariance_le_freeVariance_Lt_uniform`: Lt-uniform
+  interacting-vs-free variance bound (upstream discharge: proposed
+  `reflection-positivity` repo + the cylinder transfer-matrix infrastructure
+  in `Pphi2/AsymTorus/AsymL2Operator.lean`, `AsymJentzsch.lean`,
+  `AsymPositivity.lean`).
+
+The Layer C assembly `asymInteracting_expMoment_volume_uniform_proof` (in
+`AsymExpMomentDischarge.lean`) proves the exact statement of this axiom from
+Layers A + B2. This axiom is retained pro tem (cannot be deleted from this
+file without an import refactor, as `AsymExpMomentDischarge.lean` is downstream
+of this file via `AsymVarianceBound.lean`); the structural close is
+mathematically complete. -/
 axiom asymInteracting_expMoment_volume_uniform
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ K C : ℝ, 0 < K ∧ 0 < C ∧
