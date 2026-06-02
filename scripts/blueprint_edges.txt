@@ -1,0 +1,34 @@
+Pphi2.pphi2_exists -> Pphi2.continuumLimit_satisfies_fullOS Pphi2.pphi2_limit_exists
+Pphi2.pphi2_limit_exists -> 
+Pphi2.continuumLimit_satisfies_fullOS -> Pphi2.SatisfiesFullOS Pphi2.os0_for_continuum_limit Pphi2.os1_for_continuum_limit Pphi2.os2_for_continuum_limit Pphi2.os3_for_continuum_limit Pphi2.os4_clustering_implies_ergodicity Pphi2.os4_for_continuum_limit
+Pphi2.SatisfiesFullOS -> 
+Pphi2.os0_for_continuum_limit -> Pphi2.continuum_exponential_moments
+Pphi2.os1_for_continuum_limit -> Pphi2.continuum_exponential_moments
+Pphi2.os2_for_continuum_limit -> Pphi2.complex_gf_invariant_of_real_gf_invariant Pphi2.continuum_exponential_moments Pphi2.rotation_invariance_continuum Pphi2.translation_invariance_continuum
+Pphi2.os3_for_continuum_limit -> 
+Pphi2.os4_for_continuum_limit -> Pphi2.continuum_exponential_clustering
+Pphi2.os4_clustering_implies_ergodicity -> 
+Pphi2.translation_invariance_continuum -> 
+Pphi2.rotation_invariance_continuum -> GaussianField.measure
+Pphi2.continuum_exponential_moments -> 
+Pphi2.complex_gf_invariant_of_real_gf_invariant -> 
+Pphi2.latticeMeasure_translation_invariant -> GaussianField.covariance GaussianField.measure Pphi2.gaussianDensity_translation_invariant
+Pphi2.latticeAction_translation_invariant -> 
+Pphi2.massOperator_translation_commute -> 
+Pphi2.gaussianDensity_translation_invariant -> Pphi2.massOperator_translation_commute
+Pphi2.anomaly_vanishes -> Pphi2.anomaly_bound_from_superrenormalizability
+Pphi2.anomaly_bound_from_superrenormalizability -> GaussianField.measure
+Pphi2.rotationCFDefect_le_pointwiseDefectIntegral -> GaussianField.measure
+Pphi2.ward_identity_lattice -> GaussianField.measure
+Pphi2.continuum_rp_from_lattice -> Pphi2.rp_closed_under_weak_limit
+Pphi2.rp_closed_under_weak_limit -> 
+Pphi2.action_decomposition -> Pphi2.timeReflection2D_involution
+Pphi2.timeReflection2D_involution -> 
+Pphi2.continuumMeasures_tight -> GaussianField.configuration_tight_of_uniform_second_moments GaussianField.covariance GaussianField.measure
+Pphi2.os4_lattice_from_gap -> Pphi2.massGap_pos
+Pphi2.massGap_pos -> Pphi2.energyLevel_gap
+Pphi2.energyLevel_gap -> 
+Pphi2.continuum_exponential_clustering -> 
+GaussianField.measure -> 
+GaussianField.covariance -> 
+GaussianField.configuration_tight_of_uniform_second_moments -> 
