@@ -99,7 +99,7 @@ theorem asymTransferOperator_positivityImproving (P : InteractionPolynomial) (a 
         0 ≤ G t * (g : SpatialField Ns → ℝ) (x - t) := by
       have h_trans : ∀ᵐ t ∂volume, 0 ≤ (g : SpatialField Ns → ℝ) (x - t) := by
         rw [ae_iff] at hg_nonneg ⊢
-        exact le_antisymm (hg_nonneg ▸ h_mp.measure_preimage_le _) (zero_le _)
+        exact le_antisymm (hg_nonneg ▸ h_mp.measure_preimage_le _) (zero_le)
       filter_upwards [h_trans] with t ht
       exact mul_nonneg (le_of_lt (hG_pos t)) ht
     have h_integrand_int :

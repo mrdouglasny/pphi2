@@ -131,8 +131,7 @@ private lemma integrable_hermiteEval_sqrt_two_half (n : ℕ) :
         (halfGaussianDensity x : ℝ) * hermiteEval n (Real.sqrt 2 * x)
     have hpdf :
         (halfGaussianDensity x : ℝ) =
-          ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x := by
-      simp [halfGaussianDensity]
+          ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x := rfl
     rw [hpdf, gaussianPDFReal_zero_half]
     ring
   rw [ProbabilityTheory.gaussianReal_of_var_ne_zero
@@ -144,7 +143,7 @@ private lemma integrable_hermiteEval_sqrt_two_half (n : ℕ) :
           fun x : ℝ =>
             Real.toNNReal (ProbabilityTheory.gaussianPDFReal (0 : ℝ) halfVariance x) := by
       funext x
-      simp [halfGaussianDensity, Real.toNNReal_of_nonneg, ProbabilityTheory.gaussianPDFReal_nonneg]
+      exact (Real.toNNReal_of_nonneg (ProbabilityTheory.gaussianPDFReal_nonneg _ _ x)).symm
     rw [hdef]
     exact (ProbabilityTheory.measurable_gaussianPDFReal _ _).real_toNNReal
   have hdens :
@@ -212,7 +211,9 @@ private lemma half_gaussian_map_sqrt_two :
       congr 1
       · ring
       · apply NNReal.coe_injective
-        norm_num [Real.sq_sqrt two_pos.le]
+        show Real.sqrt 2 ^ 2 * ((1 / 2 : ℝ≥0) : ℝ) = ((1 : ℝ≥0) : ℝ)
+        rw [Real.sq_sqrt two_pos.le]
+        norm_num
 
 private lemma continuous_hermiteEval (n : ℕ) : Continuous (hermiteEval n) := by
   simpa [hermiteEval] using (((Polynomial.hermite n).map (Int.castRingHom ℝ)).continuous)
@@ -264,7 +265,9 @@ private lemma gaussianReal_map_sqrt_variance (σ_sq : ℝ) (hσ : 0 < σ_sq) :
       congr 1
       · ring
       · apply NNReal.coe_injective
-        simp [Real.sq_sqrt hσ.le, Real.coe_toNNReal σ_sq hσ.le]
+        show Real.sqrt σ_sq ^ 2 * ((1 : ℝ≥0) : ℝ) = (σ_sq.toNNReal : ℝ)
+        rw [Real.sq_sqrt hσ.le, Real.coe_toNNReal σ_sq hσ.le, NNReal.coe_one]
+        ring
 
 private lemma wickMonomial_sqrt_mul_eq (n : ℕ) (σ_sq : ℝ) (hσ : 0 < σ_sq) (x : ℝ) :
     wickMonomial n σ_sq (Real.sqrt σ_sq * x) =

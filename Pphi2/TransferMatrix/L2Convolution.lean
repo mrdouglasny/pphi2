@@ -99,7 +99,7 @@ private lemma lintegral_mul_sq_le {α : Type*} [MeasurableSpace α] {μ : Measur
   calc (∫⁻ x, w x * a x ∂μ) ^ (2 : ℕ)
       ≤ ((∫⁻ x, w x ∂μ) ^ ((2 : ℝ)⁻¹) *
          (∫⁻ x, w x * a x ^ (2 : ℝ) ∂μ) ^ ((2 : ℝ)⁻¹)) ^ (2 : ℕ) :=
-        pow_le_pow_left₀ (zero_le _) hH 2
+        pow_le_pow_left₀ (zero_le) hH 2
     _ = (∫⁻ x, w x ∂μ) * ∫⁻ x, w x * a x ^ (2 : ℝ) ∂μ := by
         rw [mul_pow]
         congr 1 <;> {
@@ -172,7 +172,7 @@ private theorem young_eLpNorm_bound
     intro x
     calc ‖realConv μ g' f' x‖ₑ ^ (2 : ℕ)
         ≤ (∫⁻ t, ‖g' t‖ₑ * ‖f' (x - t)‖ₑ ∂μ) ^ (2 : ℕ) :=
-          pow_le_pow_left₀ (zero_le _) (h_triangle x) 2
+          pow_le_pow_left₀ (zero_le) (h_triangle x) 2
       _ ≤ (∫⁻ t, ‖g' t‖ₑ ∂μ) *
           ∫⁻ t, ‖g' t‖ₑ * ‖f' (x - t)‖ₑ ^ (2 : ℝ) ∂μ :=
           lintegral_mul_sq_le henorm_g.aemeasurable

@@ -162,7 +162,7 @@ theorem transferOperator_positivityImproving (P : InteractionPolynomial) (a mass
       have h_trans : ∀ᵐ t ∂volume, 0 ≤ (g : SpatialField Ns → ℝ) (x - t) := by
         rw [ae_iff] at hg_nonneg ⊢
         -- volume {t | ¬0 ≤ g(x-t)} = volume (f⁻¹'S) ≤ volume S = 0
-        exact le_antisymm (hg_nonneg ▸ h_mp.measure_preimage_le _) (zero_le _)
+        exact le_antisymm (hg_nonneg ▸ h_mp.measure_preimage_le _) (zero_le)
       filter_upwards [h_trans] with t ht
       exact mul_nonneg (le_of_lt (hG_pos t)) ht
     -- Step 2b: the integrand is integrable (L² × L² → L¹ by Cauchy-Schwarz)

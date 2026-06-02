@@ -56,7 +56,7 @@ import Mathlib.MeasureTheory.Group.Prod
 import Mathlib.MeasureTheory.Measure.Haar.Basic
 import Mathlib.MeasureTheory.Measure.Haar.Unique
 import Mathlib.MeasureTheory.Measure.Prod
-import Mathlib.Analysis.Normed.Operator.Compact
+import Mathlib.Analysis.Normed.Operator.Compact.Basic
 
 namespace Pphi2.GeneralResults
 

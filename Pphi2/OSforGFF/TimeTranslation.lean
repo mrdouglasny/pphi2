@@ -9,7 +9,7 @@ import Mathlib.Analysis.Calculus.ContDiff.Basic
 import Mathlib.Analysis.Calculus.LineDeriv.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 import Mathlib.Tactic
-import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.Topology.Algebra.Module.Spaces.WeakDual
 
 -- Type aliases matching OSforGFF.Basic
 abbrev SpaceTime (d : ℕ) := EuclideanSpace ℝ (Fin d)

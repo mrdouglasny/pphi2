@@ -12,25 +12,25 @@ weak.linter.mathlibStandardSet = true
 name = "GaussianField"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gaussian-field.git"
-rev = "5bb35e8"
+rev = "dc2b3b8"
 
 [[require]]
 name = "bochner"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/bochner.git"
-rev = "main"
+rev = "34222bb"
 
 [[require]]
 name = "gaussian-hilbert"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gaussian-hilbert.git"
-rev = "main"
+rev = "56ee09f"
 
 [[require]]
 name = "GibbsVariational"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gibbs-variational.git"
-rev = "main"
+rev = "a7535d1"
 
 [[lean_lib]]
 name = "Pphi2"
