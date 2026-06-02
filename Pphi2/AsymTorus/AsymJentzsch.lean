@@ -248,7 +248,8 @@ theorem asymTransferOperator_ground_simple (P : InteractionPolynomial) (a mass :
           L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i)
       (_h_sum : ∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
           (asymTransferOperatorCLM Nt Ns P a mass ha hmass x)),
-      ∃ i₀ i₁ : ι, i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ := by
+      ∃ i₀ i₁ : ι, i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ ∧
+        (∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀) := by
   intro ι b eigenval h_eigen h_sum
   -- Reuse the square's nontriviality lemma — same underlying Hilbert space.
   have h_nt := l2SpatialField_hilbertBasis_nontrivial Ns b
@@ -269,7 +270,7 @@ theorem asymTransferOperator_ground_simple (P : InteractionPolynomial) (a mass :
   have hlt : eigenval i₁ < eigenval i₀ := by
     have := hgap i₁ hi₁_ne
     rwa [abs_of_pos (hall_pos i₁)] at this
-  exact ⟨i₀, i₁, hi₁_ne, hlt⟩
+  exact ⟨i₀, i₁, hi₁_ne, hlt, hgap⟩
 
 /-- Spectral data with distinguished ground and first excited levels for the
 asym transfer operator. -/
@@ -282,12 +283,13 @@ theorem asymTransferOperator_ground_simple_spectral
           L2SpatialField Ns →ₗ[ℝ] L2SpatialField Ns) (b i) = eigenval i • b i) ∧
       (∀ x, HasSum (fun i => (eigenval i * @inner ℝ _ _ (b i) x) • b i)
           (asymTransferOperatorCLM Nt Ns P a mass ha hmass x)) ∧
-      i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ := by
+      i₁ ≠ i₀ ∧ eigenval i₁ < eigenval i₀ ∧
+      (∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀) := by
   rcases asymTransferOperator_spectral Nt Ns P a mass ha hmass with
     ⟨ι, b, eigenval, h_eigen, h_sum⟩
   rcases asymTransferOperator_ground_simple Nt Ns P a mass ha hmass b eigenval h_eigen h_sum
-    with ⟨i₀, i₁, hi_ne, hlt⟩
-  exact ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt⟩
+    with ⟨i₀, i₁, hi_ne, hlt, htop⟩
+  exact ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt, htop⟩
 
 end Pphi2
 
