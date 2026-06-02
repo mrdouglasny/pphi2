@@ -497,7 +497,7 @@ GJ-aligned cohort is in the lower block.
 
 | File | Active axioms | Names |
 |------|---------------|-------|
-| `Pphi2/Bridge.lean` | 3 | `measure_determined_by_schwinger`, `schwinger_agreement`, `os2_from_phi4` |
+| `Pphi2/Bridge.lean` | 2 | `schwinger_agreement`, `os2_from_phi4` |
 | `Pphi2/ContinuumLimit/AxiomInheritance.lean` | 3 | `continuum_exponential_moment_bound`, `canonical_continuumMeasure_cf_tendsto`, `continuum_exponential_clustering` |
 | `Pphi2/ContinuumLimit/Convergence.lean` | 1 | `continuumLimit_nonGaussian` |
 | `Pphi2/GaussianContinuumLimit/PropagatorConvergence.lean` | 1 | `latticeGreenBilinear_basis_tendsto_continuum` |
@@ -682,7 +682,7 @@ inputs.
 | # | Name | File:Line | Rating | Verified | Notes |
 |---|------|----------|--------|----------|---------|
 | 33 | ~~`IsPphi2ContinuumLimit.toIsPphi2Limit`~~ | Bridge | ✅ **PROVED** | SA 2026-02-25 | Converted from axiom to `theorem`. Proof is `exact h` since `IsPphi2Limit` and `IsPphi2ContinuumLimit` have identical bodies (modulo type aliases). |
-| 34 | `measure_determined_by_schwinger` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Moment determinacy with exponential (Fernique-type) moment bound. |
+| 34 | ~~`measure_determined_by_schwinger`~~ | Bridge | ✅ **PROVED** | 2026-06-02 | Discharged to a theorem via `MeasureUniqueness.measure_eq_of_moments` (finite exp-moments ⇒ entire MGF ⇒ equal moments force equal laws; Cramér–Wold). No new axioms/sorries. |
 | 35 | `wick_constant_comparison` | Bridge | ✅ Standard | DT 2026-02-24 | Wick constant ≈ (2π)⁻¹ log(1/a) with bounded remainder. |
 | 36 | `schwinger_agreement` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | n-point Schwinger function equality at weak coupling. |
 | 37 | `same_continuum_measure` | Bridge | ⚠️ Likely correct | DT 2026-02-24 | Fixed: requires `IsPphi2ContinuumLimit`, `IsPhi4ContinuumLimit`, `IsWeakCoupling`. |

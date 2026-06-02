@@ -58,6 +58,7 @@ OS3 for Phi4, eliminating the hardest argument in each project.
 
 import Pphi2.OSAxioms
 import Pphi2.Main
+import Pphi2.TorusContinuumLimit.MeasureUniqueness
 
 noncomputable section
 
@@ -226,7 +227,7 @@ Hamburger moment problem on infinite-dimensional spaces requires
 exponential bounds to ensure moment determinacy.
 
 Reference: Dimock-Glimm (1974), Gel'fand-Vilenkin Ch. IV. -/
-axiom measure_determined_by_schwinger
+theorem measure_determined_by_schwinger
     (μ ν : @Measure FieldConfig instMeasurableSpaceConfiguration)
     (hμ : IsProbabilityMeasure μ) (hν : IsProbabilityMeasure ν)
     -- Both have finite exponential moments (Fernique-type bound)
@@ -238,7 +239,17 @@ axiom measure_determined_by_schwinger
     (h_moments : ∀ (n : ℕ) (f : Fin n → TestFun),
       ∫ ω : FieldConfig, ∏ i, ω (f i) ∂μ =
       ∫ ω : FieldConfig, ∏ i, ω (f i) ∂ν) :
-    μ = ν
+    μ = ν := by
+  haveI := hμ
+  haveI := hν
+  haveI : DyninMityaginSpace (ContinuumTestFunction 2) := schwartz_dyninMityaginSpace
+  refine GaussianField.measure_eq_of_moments μ ν ?_ ?_ h_moments
+  · intro f s
+    obtain ⟨t, ht, hint⟩ := hμ_exp f
+    exact GaussianField.integrable_exp_smul_of_integrable_exp_sq μ f ht hint s
+  · intro f s
+    obtain ⟨t, ht, hint⟩ := hν_exp f
+    exact GaussianField.integrable_exp_smul_of_integrable_exp_sq ν f ht hint s
 
 /-- **Schwinger function agreement.**
 

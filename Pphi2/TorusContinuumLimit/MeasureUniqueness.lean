@@ -661,6 +661,119 @@ theorem gaussian_measure_unique_of_covariance
     _ = μ₂ s := by
         rw [Measure.map_apply configBasisEval_measurable hT, ← hpre]
 
+/-! ## Moment determinacy for the *interacting* measure
+
+The Gaussian-specific steps above identify the 1D marginals from the covariance because the
+Gaussian MGF `exp(½σ²t²)` is determined by its second moment. For a non-Gaussian (interacting)
+measure the MGF has no closed form, but moment determinacy still holds *as long as the MGF is
+finite* (the Carleman / finite-exponential-moment condition): an entire MGF equals its Taylor
+series, whose coefficients are the moments, so equal moments force equal MGFs, hence equal laws.
+None of this uses Gaussianity — only finiteness of the exponential moments. -/
+
+omit hDM in
+/-- A quadratic (Fernique-type) exponential bound `∫ exp(t (ωf)²) < ∞` upgrades to a linear
+exponential bound `∫ exp(s ωf) < ∞` for *every* `s`, via `s·x ≤ s²/(4t) + t·x²`. Hence the MGF
+of `ω ↦ ω f` is entire (`integrableExpSet = univ`). -/
+theorem integrable_exp_smul_of_integrable_exp_sq
+    (μ : @Measure (Configuration E) instMeasurableSpaceConfiguration) (f : E)
+    {t : ℝ} (ht : 0 < t)
+    (h : Integrable (fun ω : Configuration E => Real.exp (t * (ω f) ^ 2)) μ) (s : ℝ) :
+    Integrable (fun ω : Configuration E => Real.exp (s * ω f)) μ := by
+  refine Integrable.mono' (h.const_mul (Real.exp (s ^ 2 / (4 * t))))
+    (((configuration_eval_measurable f).const_mul s).exp.aestronglyMeasurable) ?_
+  filter_upwards with ω
+  rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _), ← Real.exp_add, Real.exp_le_exp]
+  have h4t : (0 : ℝ) < 4 * t := by linarith
+  have key : s ^ 2 / (4 * t) + t * (ω f) ^ 2 - s * ω f = (s - 2 * t * (ω f)) ^ 2 / (4 * t) := by
+    field_simp; ring
+  nlinarith [div_nonneg (sq_nonneg (s - 2 * t * (ω f))) h4t.le, key]
+
+omit hDM in
+/-- **1D moment determinacy.** Two probability measures whose `ω ↦ ω f` marginal has all finite
+exponential moments and equal integer moments `∫ (ωf)ⁿ` have equal `f`-marginals. The MGF is the
+analytic interpolant of the moments; finiteness makes it entire, so equal moments ⟹ equal MGF
+(identity theorem) ⟹ equal complex MGF ⟹ equal law. -/
+theorem eval_map_eq_of_moments
+    (μ₁ μ₂ : @Measure (Configuration E) instMeasurableSpaceConfiguration)
+    [IsProbabilityMeasure μ₁] [IsProbabilityMeasure μ₂] (f : E)
+    (hexp₁ : ∀ s : ℝ, Integrable (fun ω : Configuration E => Real.exp (s * ω f)) μ₁)
+    (hexp₂ : ∀ s : ℝ, Integrable (fun ω : Configuration E => Real.exp (s * ω f)) μ₂)
+    (hmom : ∀ n : ℕ, ∫ ω : Configuration E, (ω f) ^ n ∂μ₁
+      = ∫ ω : Configuration E, (ω f) ^ n ∂μ₂) :
+    μ₁.map (fun ω : Configuration E => ω f) = μ₂.map (fun ω : Configuration E => ω f) := by
+  have hXmeas : Measurable (fun ω : Configuration E => ω f) := configuration_eval_measurable f
+  have hU₁ : integrableExpSet (fun ω : Configuration E => ω f) μ₁ = Set.univ := by
+    ext s; simp only [Set.mem_univ, iff_true, integrableExpSet, Set.mem_setOf_eq]; exact hexp₁ s
+  have hU₂ : integrableExpSet (fun ω : Configuration E => ω f) μ₂ = Set.univ := by
+    ext s; simp only [Set.mem_univ, iff_true, integrableExpSet, Set.mem_setOf_eq]; exact hexp₂ s
+  have hint₁ : interior (integrableExpSet (fun ω : Configuration E => ω f) μ₁) = Set.univ := by
+    rw [hU₁, interior_univ]
+  have hint₂ : interior (integrableExpSet (fun ω : Configuration E => ω f) μ₂) = Set.univ := by
+    rw [hU₂, interior_univ]
+  have h0₁ : (0 : ℝ) ∈ interior (integrableExpSet (fun ω : Configuration E => ω f) μ₁) := by
+    rw [hint₁]; trivial
+  have h0₂ : (0 : ℝ) ∈ interior (integrableExpSet (fun ω : Configuration E => ω f) μ₂) := by
+    rw [hint₂]; trivial
+  have hps₁ := hasFPowerSeriesAt_mgf (X := fun ω : Configuration E => ω f) (μ := μ₁) h0₁
+  have hps₂ := hasFPowerSeriesAt_mgf (X := fun ω : Configuration E => ω f) (μ := μ₂) h0₂
+  -- the two power series coincide: coefficient n is (n-th moment)/n!
+  have hser : FormalMultilinearSeries.ofScalars ℝ
+        (fun n => (μ₁[fun ω => (fun ω : Configuration E => ω f) ω ^ n
+          * Real.exp (0 * (fun ω : Configuration E => ω f) ω)] : ℝ) / Nat.factorial n)
+      = FormalMultilinearSeries.ofScalars ℝ
+        (fun n => (μ₂[fun ω => (fun ω : Configuration E => ω f) ω ^ n
+          * Real.exp (0 * (fun ω : Configuration E => ω f) ω)] : ℝ) / Nat.factorial n) := by
+    congr 1
+    funext n
+    simp only [zero_mul, Real.exp_zero, mul_one]
+    rw [hmom n]
+  rw [hser] at hps₁
+  have heq0 : mgf (fun ω : Configuration E => ω f) μ₁ =ᶠ[nhds 0]
+      mgf (fun ω : Configuration E => ω f) μ₂ := by
+    filter_upwards [hps₁.eventually_hasSum_sub, hps₂.eventually_hasSum_sub] with y hy₁ hy₂
+    simpa using hy₁.unique hy₂
+  have hmgf : mgf (fun ω : Configuration E => ω f) μ₁ = mgf (fun ω : Configuration E => ω f) μ₂ := by
+    refine AnalyticOnNhd.eq_of_eventuallyEq (𝕜 := ℝ) ?_ ?_ heq0
+    · rw [← hint₁]; exact analyticOnNhd_mgf
+    · rw [← hint₂]; exact analyticOnNhd_mgf
+  have hcx : complexMGF (fun ω : Configuration E => ω f) μ₁
+      = complexMGF (fun ω : Configuration E => ω f) μ₂ := by
+    have hstrip : {z : ℂ | z.re ∈ interior (integrableExpSet (fun ω : Configuration E => ω f) μ₁)}
+        = Set.univ := by rw [hint₁]; ext z; simp
+    have heqon := eqOn_complexMGF_of_mgf (X := fun ω : Configuration E => ω f)
+      (μ := μ₁) (Y := fun ω : Configuration E => ω f) (μ' := μ₂) hmgf
+    rw [hstrip] at heqon
+    exact funext fun z => heqon (Set.mem_univ z)
+  exact Measure.ext_of_complexMGF_eq hXmeas.aemeasurable hXmeas.aemeasurable hcx
+
+/-- **Moment determinacy on `Configuration E` (interacting).** Two probability measures with all
+finite exponential moments and equal multilinear Schwinger functions are equal. Discharges the
+`measure_determined_by_schwinger` axiom: the `f`-marginals agree by `eval_map_eq_of_moments`
+(specialising the Schwinger agreement to constant tuples), then Cramér–Wold + Kolmogorov
+(`pushforward_eq_of_eval_eq`) lift to the full measure. -/
+theorem measure_eq_of_moments
+    (μ₁ μ₂ : @Measure (Configuration E) instMeasurableSpaceConfiguration)
+    [IsProbabilityMeasure μ₁] [IsProbabilityMeasure μ₂]
+    (hexp₁ : ∀ (f : E) (s : ℝ), Integrable (fun ω : Configuration E => Real.exp (s * ω f)) μ₁)
+    (hexp₂ : ∀ (f : E) (s : ℝ), Integrable (fun ω : Configuration E => Real.exp (s * ω f)) μ₂)
+    (hmom : ∀ (n : ℕ) (g : Fin n → E),
+      ∫ ω : Configuration E, ∏ i, ω (g i) ∂μ₁ = ∫ ω : Configuration E, ∏ i, ω (g i) ∂μ₂) :
+    μ₁ = μ₂ := by
+  have h_eval : ∀ f : E,
+      μ₁.map (fun ω : Configuration E => ω f) = μ₂.map (fun ω : Configuration E => ω f) := by
+    intro f
+    refine eval_map_eq_of_moments μ₁ μ₂ f (hexp₁ f) (hexp₂ f) (fun n => ?_)
+    have hm := hmom n (fun _ => f)
+    simpa [Finset.prod_const, Finset.card_univ, Fintype.card_fin] using hm
+  have h_push := pushforward_eq_of_eval_eq μ₁ μ₂ h_eval
+  ext s hs
+  rw [instMeasurableSpaceConfiguration_eq_comap] at hs
+  obtain ⟨T, hT, hpre⟩ := hs
+  calc μ₁ s = (μ₁.map configBasisEval) T := by
+        rw [Measure.map_apply configBasisEval_measurable hT, ← hpre]
+    _ = (μ₂.map configBasisEval) T := by rw [h_push]
+    _ = μ₂ s := by rw [Measure.map_apply configBasisEval_measurable hT, ← hpre]
+
 end GaussianField
 
 end
