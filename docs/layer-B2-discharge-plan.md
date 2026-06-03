@@ -202,7 +202,18 @@ trace-ratio limit (have the gap; need the limit lemma). Size estimate (from the 
 lines. Realistic wall-clock: **a few weeks** given gaussian-field + the done spectral
 side.
 
-### ⚠⚠ Codex review (2026-06-03): NORMALIZATION BUG CONFIRMED — fix before building
+### ✅ Normalization bug FIXED (2026-06-03, commit `bb4b86d`)
+
+The weight is corrected to `exp(−(a²/2)·spatialAction)` in `asymTransferWeight`
+(`AsymL2Operator.lean`); `gaussian_decay`/`_bound`/`_memLp_two` constants updated
+(`sq_nonneg a` added to the `nlinarith`). `lake build Pphi2.AsymTorus.AsymSpectralGap`
+succeeds (3238 jobs, warnings only); **`asymTransferNormalized_gap` re-proved**, no
+sorry/axiom. `asymTransferOperatorCLM` is now the genuine transfer operator of
+`latticeGaussianMeasureAsym` (the gap *value* shifts; its *existence* via
+Perron–Frobenius is unchanged). The square `TransferMatrix/` `transferWeight` shares the
+bug but is off B2's critical path (not fixed). Original analysis retained below.
+
+### ⚠⚠ Codex review (2026-06-03): NORMALIZATION BUG (now fixed — see above)
 
 **EMPIRICALLY CONFIRMED (2026-06-03).** A 2-slice (`Nt=2, Ns=1`) two-point computation
 (`scripts/normalization_check_2slice.py`, output `.out`) shows the transfer operator
