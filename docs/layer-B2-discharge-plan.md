@@ -103,42 +103,58 @@ bulk. Crystallized here as the live task.
 - **Step C — `susceptibility_le`:** `∑_{n<N} |⟨v, T̂ⁿ v⟩| ≤ ‖v‖²/(1−γ)`, **uniform in
   `N` (hence `Lt`)** — `asymTransfer_susceptibility_le` (`AsymGappedTransfer.lean:92`).
 - **B1 (`a`-uniform, per-`Lt`):** `asymInteractingVariance_le_freeVariance_lattice`
-  / `_torus` (`AsymVarianceBound.lean:101/208`), and the density-transfer lemma
-  `asymTorusIso_interacting_second_moment_density_transfer` (`AsymContinuumLimit.lean`)
-  — likely already half the bridge.
+  / `_torus` (`AsymVarianceBound.lean:101/208`).
 
-**The bridge lemma to build (Step B).** A measure↔transfer-operator dictionary on
-the cylinder, expressing the real-space second moment as a time-correlation sum:
+**⚠ FINDING (2026-06-03, opened the code): the operator and the measure are two
+DISJOINT halves with NO connecting lemma.**
+- `density_transfer_bound`'s asym wrapper `asymTorusIso_interacting_second_moment_density_transfer`
+  (`AsymContinuumLimit.lean:48`) is **pure B1** — Cauchy–Schwarz (`density_transfer_bound_iso`)
+  + Gaussian 4th-moment (`gaussian_hypercontractive`), constant `C = 3√K(Lt)` with `K`
+  the **volume-growing Nelson constant**. It NEVER touches the transfer operator. It
+  gives the *statement shape* and the `Lt`-growing constant — **nothing toward the bridge**.
+  (The earlier RECON guess that it "may supply the measure→operator half" was WRONG.)
+- `asymTransferOperatorCLM = M_w ∘L Conv_G ∘L M_w` (`AsymL2Operator.lean:276`,
+  `w = exp(−(a/2)·spatialAction)`, `Conv_G` the time-step Gaussian) lives on the
+  **spatial** `L2SpatialField Ns` (one time slice). It is referenced ONLY in the 5
+  spectral files (`AsymL2Operator`, `AsymJentzsch`, `AsymPositivity`, `AsymSpectralGap`,
+  `AsymGappedTransfer`) — **never in any measure file.**
+- `interactingLatticeMeasureAsym = (1/Z)·exp(−V)·dμ_GFF` (`AsymLatticeMeasure.lean:363`)
+  is the **global spacetime** Gibbs measure on `Configuration (AsymLatticeField Nt Ns)`.
+- **So the proved gap is for an operator not yet known to compute the measure's
+  correlations.** The bridge is the missing link between these halves.
 
-  `∫ (ω f)² dμ_int  =  ∑_{t,t' ∈ Z_Nt} f̃(t) f̃(t') ⟨v_f, T̂^{|t−t'|} v_f⟩`
+**The bridge lemma to build (Step B) — this is the Feynman–Kac time-slicing theorem.**
+The substantial, foundational, currently-unbuilt result: the global Gibbs measure's
+time-correlations equal transfer-operator products,
 
-where `T̂ = asymTransferNormalized`, `v_f ∈ L2SpatialField Ns` is the spatial vector
-of the test function `f` projected **off the vacuum** (the connected part), and `f̃`
-is `f`'s time profile. Mean-zero of the field (interaction `P` even) makes the
-disconnected/vacuum part vanish, so `v_f ⊥ vacuum` and `susceptibility_le` applies.
+  `∫ (ω f)² dμ_int  =  ∑_{t,t' ∈ Z_Nt} f̃(t) f̃(t') ⟨v_f, T̂^{|t−t'|} v_f⟩`,
 
-**Concrete sub-steps:**
-1. **Feynman–Kac identity.** Prove the second-moment-as-time-sum equality from
-   `asymTorusInteractingMeasureIso` / the transfer-operator construction. This is the
-   substantial analytic step (the deferred `transfer-operator-construction-todo`).
-   Check how much `asymTorusIso_interacting_second_moment_density_transfer` already
-   gives — it may supply the measure→operator half directly.
-2. **Vacuum projection.** Show `v_f ⊥ vacuum` from evenness (mean zero), so the
-   `t=t'` and connected terms are the ones `susceptibility_le` bounds.
-3. **Apply Step C** ⟹ `∑_{t,t'} … ≤ (‖f̃‖₁)² ‖v_f‖² / (1−γ)`, `Lt`-uniform.
-4. **Identify the RHS with `C · Var_free(f)`.** `‖v_f‖²` and `1/(1−γ)` versus the
-   free variance `∫(ω g)² dμ_free` (= the free covariance, `latticeCovarianceAsymGJ`).
+`T̂ = asymTransferNormalized`, `v_f ∈ L2SpatialField Ns` the spatial vector of `f` off
+the vacuum, `f̃` its time profile. This is NOT wiring — it is proving that the global
+spacetime path-integral **factorizes time-slice by time-slice** into the single-step
+kernel `M_w ∘ Conv_G ∘ M_w`. Mechanism: the global Gaussian splits into spatial slices
++ nearest-neighbour time coupling; the time coupling × spatial weight = the transfer
+kernel; a Gaussian-Fubini / Markov computation on the finite lattice. Bounded but real
+work (the concrete operator is manifestly bounded, so — unlike the abstract
+`reflection-positivity` route — the difficulty is NOT a-priori boundedness; it is the
+slice-factorization identity and the spatial-slice decomposition of `AsymLatticeField`).
 
-**Uniformity factorization (CONFIRMED by the code map, 2026-06-03):** the single `C`
-splits as **B1 (owns `a`-uniformity, at fixed `Lt`) ⊕ gap (owns `Lt`-uniformity, via
-`susceptibility_le`)**. `Ls` is fixed, so there is no spatial-infrared input needed
-(that is the parked FSS step). The one residual analytic need is the gap bounded
-below as `a→0`: the fixed-`Ls` convergence `m_a → m(Ls) > 0` (master-plan banner).
+**Downstream (mechanical once the bridge exists):**
+2. **Vacuum projection** `v_f ⊥ vacuum` from evenness (mean zero).
+3. **Apply Step C** ⟹ `≤ (‖f̃‖₁)² ‖v_f‖² / (1−γ)`, `Lt`-uniform.
+4. **Identify RHS with `C · Var_free(f)`** (free covariance `latticeCovarianceAsymGJ`),
+   watching the `1/a` cancellation (see `[[pphi2-b2-adapter-plan]]` memory: never
+   evaluate `1/(1−γ)` standalone — form the int/free ratio first).
 
-**Hardest part / risk:** sub-step 1 (the Feynman–Kac identity) — the genuine
-measure↔operator bridge. Everything downstream (2–4) is wiring of existing lemmas.
-Recommend a Codex second-implementation pass on sub-step 1 once the exact form of
-`asymTorusIso_interacting_second_moment_density_transfer` is pinned.
+**Uniformity factorization (CONFIRMED by the code map):** single `C` = **B1 (owns
+`a`-uniformity at fixed `Lt`) ⊕ gap (owns `Lt`-uniformity via `susceptibility_le`)**.
+`Ls` fixed ⟹ no spatial-infrared input (the parked FSS step). Residual: gap bounded
+below as `a→0`, i.e. `m_a → m(Ls) > 0` (master-plan banner).
+
+**Effort / risk:** the Feynman–Kac time-slicing identity is the real cost — it joins
+two halves of the development that have never met. Recommend a Codex deep
+root-cause/second-implementation pass to design the slice-factorization before
+committing to a proof path. This is a genuine sub-project, not a finishing touch.
 
 ---
 
