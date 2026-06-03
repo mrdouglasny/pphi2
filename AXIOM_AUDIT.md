@@ -61,19 +61,24 @@ the relative form bound `H_free ≤ C·H_int + c₂` (GJ Ch. 9). DEAD END record
 spectral-MEASURE domination `ρ_int ≤ C·ρ_free` is FALSE (`ρ_int`, `ρ_free` mutually
 singular — interaction shifts the mass pole + adds a multi-particle continuum).
 
-**Step-B atom RE-PINNED (Gemini deep-think, 2026-06-03).** Best-leverage citable axiom
-ranked #1 of A/B/C: the **Fröhlich–Simon–Spencer infrared bound / Gaussian domination**,
-`⟨φ̂(k)φ̂(−k)⟩_int ≤ 1/(2E(k))` (free kinetic form) for `k≠0` — `Lt`- and `a`-uniform,
-immune to the Wick negative bare mass (proof factors hopping off the single-site
-measure), applies to φ⁴₂ via lattice RP (Simon–Griffiths class). Controls `k≠0` only;
-the `k=0` zero mode/susceptibility comes from the **already-proved transfer-operator
-mass gap** (geometric-series sum), needing only fixed-`Ls` gap convergence
-`m_a → m(Ls) > 0`. Architecture: FSS (`k≠0`) ⊕ gap (`k=0`); B1 likely redundant for
-the variance bound itself (verify). Rating when introduced: **Likely correct**, sources
-`DT` + FSS 1976 / Glimm–Jaffe; flag the `a`-uniformity as the load-bearing content.
-DEAD ENDS confirmed: Brascamp–Lieb (non-convex Wick double well), `ρ_int ≤ C·ρ_free`.
-Fallback: GJ Ch. 9 form bound (continuum/cutoff ⇒ lattice impedance mismatch, demoted).
-See `docs/layer-B2-discharge-plan.md` → "Step B design".
+**Step-B atom (Gemini deep-think, 2026-06-03): FSS infrared bound** — ranked #1 of
+A/B/C for the general "interacting ≤ free two-point, uniform" question
+(`⟨φ̂(k)φ̂(−k)⟩_int ≤ 1/(2E(k))`, `k≠0`; applies to φ⁴₂ via lattice RP; `a`/`Lt`-uniform;
+immune to the Wick negative bare mass). DEAD ENDS confirmed: Brascamp–Lieb (non-convex
+Wick double well), `ρ_int ≤ C·ρ_free` (mutually singular). Fallback: GJ Ch. 9 form
+bound (continuum/cutoff ⇒ lattice impedance mismatch).
+
+**CORRECTION (2026-06-03, code map): FSS is NOT for B2 — it is parked for `Ls→∞`.**
+Reading the code (`AsymExpMomentDischarge.lean:206` + no Fourier layer in pphi2):
+B2 fixes `Ls`, sends `Lt→∞`, so the spatial infrared FSS controls is gapped by the
+box (`|k_s|≥2π/Ls`); the dangerous direction is time, owned by the **proved gap**
+(`susceptibility_le`), with **B1** owning the `a→0` UV uniformity. So **B2 = B1 ⊕ gap
+⊕ the Feynman–Kac measure↔operator bridge** — no new textbook axiom. The bridge is the
+deferred `transfer-operator-construction-todo`, scoped in
+`docs/layer-B2-discharge-plan.md` → "Feynman–Kac bridge — scoping". FSS's vetted
+statement + citation + drop-in Lean signature saved in `docs/fss-infrared-bound-spec.md`
+for the eventual `Ls→∞` step; **not added as an `axiom`** (no consumer; needs a Fourier
+layer). No new axioms enter the build from this round.
 
 **Impact on counts**: no change yet (no axiom added or removed; B2 stays an axiom
 pending the Piece-1 representation axiom + the Piece-2/3 proofs).

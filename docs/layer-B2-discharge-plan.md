@@ -34,40 +34,39 @@ but the live plan is B1 ⊕ gap (resolvent comparison). Older docs
 `asym-l2-operator-port-scoping.md`) use a yet-earlier split (B1 per-`a`, B2 = UV
 chessboard) that is itself superseded now that B1 is `a`-uniform.
 
-## Step B design — VETTED 2026-06-03 (Gemini deep-think): the atom is the FSS infrared bound
+## Step B design — CORRECTED 2026-06-03 (code map): B2 = B1 ⊕ gap ⊕ Feynman–Kac bridge
 
-**Pinned axiom (use this): the Fröhlich–Simon–Spencer infrared bound / Gaussian
-domination.** For the reflection-positive lattice φ⁴₂ measure (single-site
-`exp(−λφ⁴ + bφ²)dφ`, nearest-neighbour kinetic term),
+**The pinned B2 work is the Feynman–Kac measure↔transfer-operator bridge — NOT a new
+textbook axiom, and NOT FSS.** Reading the actual code (`AsymExpMomentDischarge.lean:206`,
+`AsymVarianceBound.lean`, the `ReflectionPositivity` dep) settles the architecture:
 
-  `⟨φ̂(k) φ̂(−k)⟩_int ≤ 1/(2 E(k))`  for every `k ≠ 0`,
+- **The B2 target is real-space, per-test-function**: `∫(ω f)² dμ_int ≤ C·∫(ω g)² dμ_free`
+  for arbitrary `f : AsymTorusTestFunction Lt Ls`, `C` uniform in `Lt`, `Ls` fixed.
+  pphi2 has **no momentum-space / Fourier layer** (`φ̂(k)` is not a random variable here).
+- **B2 fixes `Ls`, sends `Lt → ∞`.** At fixed `Ls` the spatial momenta are discrete and
+  gapped by the box (`|k_s| ≥ 2π/Ls > 0`) — **no spatial infrared problem**. The only
+  dangerous direction is **time** (`Lt`), controlled by the **already-proved
+  transfer-matrix mass gap** (`asymGappedTransfer'`, `susceptibility_le`, `Lt`-uniform).
+- So B2's two uniformity directions are exactly the established **B1 ⊕ gap** split:
+  **time (`Lt`) → proved gap**; **space/UV (`a→0` at fixed `Ls`) → B1 (already
+  `a`-uniform)**. No new textbook input is required.
 
-where `E(k)` is the lattice kinetic dispersion (the **free** kinetic form). Vetted
-properties (Gemini deep-think, 2026-06-03, ranked #1 of A/B/C):
-- **Applies to φ⁴₂.** The single-site even measure is in the Simon–Griffiths
-  (ferro-Ising-limit) class; lattice RP gives Gaussian domination. ✔
-- **Dominates by the FREE covariance** (the massless kinetic propagator), directly. ✔
-- **`Lt`-uniform AND `a`-uniform by construction** — the proof factors the hopping
-  expansion off the single-site measure, so the Wick log-divergence cancels out of
-  the inequality entirely; **immune to the negative bare mass** (no `b ≤ 0` /
-  convexity needed). ✔ This is exactly what kills Candidate A (see below).
-- **Limitation: controls `k ≠ 0` only.** It does NOT bound the `k = 0` zero mode /
-  susceptibility. ✔ (expected)
+**The genuine missing piece is the Feynman–Kac bridge** (the deferred
+`transfer-operator-construction-todo`): expressing `∫(ω f)² dμ_int` as the
+time-correlation sum `Σ_{t,t'} f̃(t) f̃(t') ⟨g, T̂^{|t−t'|} g⟩` (with `g ⊥ vacuum` the
+spatially-smeared field-excited vector, mean-zero by evenness) so the proved gap's
+`susceptibility_le` gives the `Lt`-uniform bound, and B1 supplies the `a`-uniform
+interacting-vs-free spatial comparison. See "Feynman–Kac bridge — scoping" below.
 
-**The clean decomposition (this is the architecture):**
-1. **`k ≠ 0`** — the FSS infrared bound axiom. `Lt`- and `a`-uniform, immune to Wick.
-2. **`k = 0` (zero mode / susceptibility)** — the **already-proved transfer-operator
-   mass gap**: spectral representation `⟨φ̂(0)φ̂(0)⟩ = Σ_t ⟨Ω, φ̂ T̂^t φ̂ Ω⟩ ≤
-   ‖φ̂Ω‖² Σ_t e^{−m_gap·t} ≤ C/m_gap²`. **No new textbook input** — reuses
-   `asymGappedTransfer'`. The one residual analytic need is `m_gap` bounded away
-   from `0` as `a→0` — i.e. the fixed-`Ls` gap convergence `m_a → m(Ls) > 0`
-   already flagged in the master plan ("structurally standard," per deep-think).
-3. **Synthesis** — piecewise: FSS for `k≠0`, geometric-series gap sum for `k=0`.
-
-**B1 may be REDUNDANT for B2 itself.** Deep-think: with FSS (`k≠0`, `a`+`Lt`-uniform)
-⊕ gap (`k=0`), the Nelson-hypercontractivity B1 is not needed for the *variance*
-bound — B1 remains essential for higher moments / the interaction picture. **Flag to
-verify before deleting any B1 dependency.**
+**FSS infrared bound is PARKED for the `Ls → ∞` step, not B2.** The Fröhlich–Simon–
+Spencer Gaussian-domination bound (`⟨φ̂(k)φ̂(−k)⟩_int ≤ 1/(2E(k))`, `k≠0`) is the right
+tool for the *spatial* infinite-volume limit, where small spatial momenta must be
+controlled. It is a momentum-space statement and pphi2 has no Fourier layer to host
+it. Full vetted statement + citation + drop-in Lean signature saved in
+**`docs/fss-infrared-bound-spec.md`**. (Gemini deep-think 2026-06-03 ranked it #1 for
+the general "interacting ≤ free two-point, uniform" question — correct, but that is
+the spatial-infrared problem, a *superset* of what B2 needs. Do not add a free-floating
+momentum-space axiom: it would have no consumer and would not discharge B2.)
 
 **Candidate C — Glimm–Jaffe Ch. 9 `N_τ` relative form bound (DEMOTED to fallback).**
 `H_free ≤ c₁H_int + c₂` + gap + operator-monotone inverse ⟹ `H_int⁻¹ ≤ C·H_free⁻¹`.
@@ -87,7 +86,59 @@ is *precisely* why φ⁴₂ variance bounds are hard, and what FSS sidesteps.)
 **Also considered & rejected** (deep-think): correlation inequalities
 (Lebowitz, Griffiths/GKS, Aizenman–Fröhlich) are for triviality / higher-point
 bounds, not for isolating a free *upper* bound under a double well. FSS is the
-definitive citable standard for this task.
+definitive citable standard for the *spatial-infrared* task (`Ls → ∞`).
+
+---
+
+## Feynman–Kac bridge — scoping (2026-06-03): the pinned next code task for B2
+
+This is the real remaining B2 work. It is the **Step B (Källén–Lehmann)** of the
+detailed plan in the `reflection-positivity` repo's `RECON.md` ("Op 1: pphi2
+Layer-B2 adapter") — Steps A and C there are already done/mechanical; Step B is the
+bulk. Crystallized here as the live task.
+
+**State already in place (do not re-derive):**
+- **Step A — `GappedTransfer` package:** `asymGappedTransfer'` (`AsymSpectralGap.lean:167`),
+  hypothesis-free, with the operator-norm gap `asymTransferNormalized_gap` proved.
+- **Step C — `susceptibility_le`:** `∑_{n<N} |⟨v, T̂ⁿ v⟩| ≤ ‖v‖²/(1−γ)`, **uniform in
+  `N` (hence `Lt`)** — `asymTransfer_susceptibility_le` (`AsymGappedTransfer.lean:92`).
+- **B1 (`a`-uniform, per-`Lt`):** `asymInteractingVariance_le_freeVariance_lattice`
+  / `_torus` (`AsymVarianceBound.lean:101/208`), and the density-transfer lemma
+  `asymTorusIso_interacting_second_moment_density_transfer` (`AsymContinuumLimit.lean`)
+  — likely already half the bridge.
+
+**The bridge lemma to build (Step B).** A measure↔transfer-operator dictionary on
+the cylinder, expressing the real-space second moment as a time-correlation sum:
+
+  `∫ (ω f)² dμ_int  =  ∑_{t,t' ∈ Z_Nt} f̃(t) f̃(t') ⟨v_f, T̂^{|t−t'|} v_f⟩`
+
+where `T̂ = asymTransferNormalized`, `v_f ∈ L2SpatialField Ns` is the spatial vector
+of the test function `f` projected **off the vacuum** (the connected part), and `f̃`
+is `f`'s time profile. Mean-zero of the field (interaction `P` even) makes the
+disconnected/vacuum part vanish, so `v_f ⊥ vacuum` and `susceptibility_le` applies.
+
+**Concrete sub-steps:**
+1. **Feynman–Kac identity.** Prove the second-moment-as-time-sum equality from
+   `asymTorusInteractingMeasureIso` / the transfer-operator construction. This is the
+   substantial analytic step (the deferred `transfer-operator-construction-todo`).
+   Check how much `asymTorusIso_interacting_second_moment_density_transfer` already
+   gives — it may supply the measure→operator half directly.
+2. **Vacuum projection.** Show `v_f ⊥ vacuum` from evenness (mean zero), so the
+   `t=t'` and connected terms are the ones `susceptibility_le` bounds.
+3. **Apply Step C** ⟹ `∑_{t,t'} … ≤ (‖f̃‖₁)² ‖v_f‖² / (1−γ)`, `Lt`-uniform.
+4. **Identify the RHS with `C · Var_free(f)`.** `‖v_f‖²` and `1/(1−γ)` versus the
+   free variance `∫(ω g)² dμ_free` (= the free covariance, `latticeCovarianceAsymGJ`).
+
+**Uniformity factorization (CONFIRMED by the code map, 2026-06-03):** the single `C`
+splits as **B1 (owns `a`-uniformity, at fixed `Lt`) ⊕ gap (owns `Lt`-uniformity, via
+`susceptibility_le`)**. `Ls` is fixed, so there is no spatial-infrared input needed
+(that is the parked FSS step). The one residual analytic need is the gap bounded
+below as `a→0`: the fixed-`Ls` convergence `m_a → m(Ls) > 0` (master-plan banner).
+
+**Hardest part / risk:** sub-step 1 (the Feynman–Kac identity) — the genuine
+measure↔operator bridge. Everything downstream (2–4) is wiring of existing lemmas.
+Recommend a Codex second-implementation pass on sub-step 1 once the exact form of
+`asymTorusIso_interacting_second_moment_density_transfer` is pinned.
 
 ---
 
