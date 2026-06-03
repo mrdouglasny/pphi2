@@ -80,6 +80,21 @@ statement + citation + drop-in Lean signature saved in `docs/fss-infrared-bound-
 for the eventual `Ls→∞` step; **not added as an `axiom`** (no consumer; needs a Fourier
 layer). No new axioms enter the build from this round.
 
+**Transfer-instantiation axiom vetting (Gemini 3.1-pro, 2026-06-03).** Considered two
+textbook helper axioms to discharge the `Pphi2AsymTTS` `TimeTranslatedSystem` sorries:
+- `Pphi2Asym_reflectionPositive` (asym lattice OS3 RP in abstract form): **vetted GREEN**
+  — correct, non-vacuous, dischargeable by porting the square `lattice_rp` + a density
+  adapter; asym `Nt≠Ns` is the same proof. Sources `GR` (Gemini), `LP` (GJ Ch 6.1 /
+  Simon III.3). Rating **Standard**. NOT YET in the build (held pending the reframe below).
+- A reflection-seminorm contraction axiom: **REJECTED — ill-posed.** Root cause: on a
+  finite PERIODIC torus the `τPos` field (positive-time preserved by the unit shift) is
+  FALSE (a strict half-region `{0<t<Nt/2}` is not shift-stable), so the transfer operator
+  `T:[f]↦[f∘τ]` is not well-defined on `H_phys`. ⟹ the finite-torus GNS `TimeTranslatedSystem`
+  instance is UNSOUND, not merely incomplete. Reframe required: (A) infinite cylinder
+  `Nt→∞` (positive-time `{t>0}`, B2's regime), or (B) the explicit slice transfer matrix
+  on `L²(ℝ^Ns)` (= pphi2's existing `asymTransferOperatorCLM` + gap). See
+  `docs/transfer-instantiation-plan.md` → "AXIOM VETTING".
+
 **Impact on counts**: no change yet (no axiom added or removed; B2 stays an axiom
 pending the Piece-1 representation axiom + the Piece-2/3 proofs).
 

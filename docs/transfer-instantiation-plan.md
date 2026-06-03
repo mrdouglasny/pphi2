@@ -9,9 +9,36 @@
 - [ ] M5. Variance connection: D3 sum ↔ `∫(ωf)²dμ_int`, identify with `C·Var_free` via `1/a` cancellation (B1 = a-uniformity)   status: blocked   deps: [M4]   note: needs M4's `GappedTransfer`
 
 **Loop checkpoint (2026-06-03):** scaffold landed (typed `Pphi2AsymTTS` + structural
-lemmas, committed `93ae9f0`); 5 analytic sorries + M4 + M5 remain — each substantial.
-Env Codex is flaky (1 crash). Pausing the autonomous loop here for direction on the
-heavy remainder rather than spinning.
+lemmas, committed `93ae9f0`); 5 analytic sorries + M4 + M5 remain.
+
+## ⚠⚠⚠ AXIOM VETTING (Gemini 3.1-pro, 2026-06-03): finite-torus GNS instance is UNSOUND
+
+Vetted two proposed textbook helper axioms for correctness AND later-provability:
+- **A_RP** (`Pphi2Asym_reflectionPositive`, OS3 RP in abstract form): **GREEN — correct,
+  canonical, non-vacuous, dischargeable.** Porting the square `lattice_rp` (V₊+V₀+V₋
+  chessboard) + a density adapter (mPos-`Lp` ↔ `PositiveTimeSupported` representatives,
+  via continuity) suffices; the asym `Nt≠Ns` case is the SAME proof. Cite GJ Ch 6.1 /
+  Simon III.3. KEEP.
+- **A_contract** (reflection-seminorm contraction): the inequality is true, but the axiom
+  is **ILL-POSED in the finite-torus GNS setting — REJECTED.** Root cause = the `τPos`
+  structural flaw is REAL: on a finite *periodic* torus no shift preserves a strict
+  positive-time half-region `{0<t<Nt/2}` (`+1` leaks the boundary), so `T:[f]↦[f∘τ]` is
+  **not a well-defined operator** on `H_phys`. ⟹ **`Pphi2AsymTTS` cannot be a valid
+  `TimeTranslatedSystem` on the finite torus** — the `τPos` field is FALSE, so M3/M4/M5
+  as built are a DEAD END. (The Codex scaffold sorried `τPos` precisely because it's false.)
+
+**Reframe (required) — two sound settings, pick one:**
+- **(A) Infinite cylinder** `ℤ × ZMod Ns` (`Nt→∞`): positive-time `= {t>0}`, the `+1` shift
+  preserves it ⟹ `τPos` holds, `T` well-defined, A_contract well-posed. Standard GJ
+  setting; matches B2's `Lt→∞` regime. Cost: build/relate the `Nt→∞` cylinder measure.
+- **(B) Slice transfer matrix** on `L²(ℝ^Ns)` with `Z = Tr(T^Nt)`, prove `RP ⟺ T`-positivity
+  + the correlation = trace dictionary on the finite torus. **This is what pphi2 ALREADY
+  has** (`asymTransferOperatorCLM` on `L2SpatialField` + the proved gap `asymGappedTransfer'`).
+  The abstract GNS bridge is NOT the right vehicle here; the missing piece is the
+  measure↔trace (Feynman–Kac) dictionary, sound on the finite torus.
+
+Status updates: M3 `τPos`/`contraction` and M4/M5 are **blocked: finite-torus GNS instance
+unsound — reframe to (A) or (B) (human decision)**. A_RP stays valid in both reframings.
 
 
 
