@@ -164,7 +164,7 @@ The main results:
 
 /-- Linear map on lattice field induced by a site permutation `σ`.
 Local copy of the private `latticeSitePermuteLM` from `TorusInteractingOS.lean`. -/
-private def asymLatticeSitePermuteLM (N : ℕ)
+def asymLatticeSitePermuteLM (N : ℕ)
     (σ : FinLatticeSites 2 N → FinLatticeSites 2 N) :
     FinLatticeField 2 N →ₗ[ℝ] FinLatticeField 2 N where
   toFun g := g ∘ σ
@@ -375,7 +375,7 @@ private theorem asymMassOperator_timeReflect_commute (N : ℕ) [NeZero N] (a mas
   linarith
 
 /-- The lattice time-reflection linear map: `(L_refl g)(x) = g(timeReflectSites x)`. -/
-private def asymLatticeTimeReflectLM (N : ℕ) :=
+def asymLatticeTimeReflectLM (N : ℕ) :=
   asymLatticeSitePermuteLM N (timeReflectSites N)
 
 /-- The interacting lattice measure with any spacing `a` is time-reflection invariant.
@@ -383,7 +383,7 @@ private def asymLatticeTimeReflectLM (N : ℕ) :=
 Proved by combining `asymInteractingLatticeMeasure_symmetry_invariant` with the
 time-reflection density preservation argument (mass operator commutes with reflection
 + involutivity of reflection + relabeling the Gaussian exponent sum). -/
-private theorem asymInteractingLatticeMeasure_timeReflection_invariant
+theorem asymInteractingLatticeMeasure_timeReflection_invariant
     (N : ℕ) [NeZero N] (P : InteractionPolynomial) (mass : ℝ)
     (a : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
