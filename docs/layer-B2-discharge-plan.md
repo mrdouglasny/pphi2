@@ -152,9 +152,44 @@ slice-factorization identity and the spatial-slice decomposition of `AsymLattice
 below as `a→0`, i.e. `m_a → m(Ls) > 0` (master-plan banner).
 
 **Effort / risk:** the Feynman–Kac time-slicing identity is the real cost — it joins
-two halves of the development that have never met. Recommend a Codex deep
-root-cause/second-implementation pass to design the slice-factorization before
-committing to a proof path. This is a genuine sub-project, not a finishing touch.
+two halves of the development that have never met. This is a genuine sub-project, not
+a finishing touch.
+
+### Factorization design (grounded in the code, 2026-06-03)
+
+**Nothing to port:** the *square* torus `Pphi2/TransferMatrix/` is also operator-side
+only (GaussianFourier/Jentzsch/Positivity/SpectralGap; its only measures are Lebesgue
+`volume` internal to building `T`). The bridge is unbuilt project-wide.
+
+**Building blocks that DO exist** (square `TransferMatrix.lean`, reused by the asym
+operator): `SpatialField Ns := Fin Ns → ℝ` (one time slice); `spatialAction P a mass c ψ`
+(`:86`) `= spatialKinetic + spatialPotential` (single-slice); `timeCoupling ψ ψ' =
+½Σ_x(ψx−ψ'x)²` (`:100`) (nearest-neighbour in time); `transferGaussian = exp(−timeCoupling)`
+(= `Conv_G`); `transferWeight = exp(−(a/2)·spatialAction)` (= `M_w`); and
+`T = M_w ∘ Conv_G ∘ M_w`.
+
+**The factorization to prove (chain of identities):**
+1. **Slice iso.** `Configuration (AsymLatticeField Nt Ns) ≃ (Fin Nt → SpatialField Ns)`
+   (spacetime config = `Nt` time-slices), measure-compatibly. Needs `AsymLatticeSites`
+   to factor as `Fin Nt × Fin Ns` (time × space) — VERIFY.
+2. **Action decomposition.** Global lattice action `= Σ_t (a·spatialAction(ψ_t)) +
+   Σ_t timeCoupling(ψ_t, ψ_{t+1})` (periodic in `t`). **Hardest sub-piece:** show the
+   GJ Gaussian covariance `latticeCovarianceAsymGJ` (defined via an operator inverse)
+   realizes exactly this quadratic form, so `dμ_int ∝ ∏_t [w(ψ_t)²·G(ψ_t−ψ_{t+1})]∏dψ_t`.
+   This is the Gaussian-factorization step; least sure of existing infra here.
+3. **Kernel composition (the core Fubini).** Integrating out intermediate slices
+   composes the kernel: `∫ ∏_{s<n} G(ψ_s−ψ_{s+1}) w(ψ_s)² dψ_s … = (Tⁿ)(ψ_0, ψ_n)`.
+   `T = M_w Conv_G M_w` is exactly one step. ⟹ `∫ A(ψ_0)B(ψ_n) dμ = Tr(M_A Tⁿ M_B T^{Nt−n})/Tr(T^{Nt})`.
+4. **Trace → ground projection.** As `Nt→∞`, `Tr(T^{Nt−n}·)/Tr(T^{Nt}) → ⟨vacuum, ·⟩`
+   (the proved gap ⟹ the top eigenvector dominates). Reduces the second moment to
+   `∑_{t,t'} f̃(t)f̃(t')⟨v_f, T̂^{|t−t'|}v_f⟩`; then `susceptibility_le` (Step C).
+
+Steps 1, 3 are mechanical-ish Fubini/iso wiring; **step 2 (Gaussian covariance =
+slice-decomposed action) is the crux**, and step 4 needs a Perron-Frobenius
+trace-ratio limit (have the gap; need the limit lemma). Size estimate (from the older
+`asym-interacting-expmoment-volume-uniform-discharge-plan.md`): Layer B ≈ 1500–3000
+lines. Realistic wall-clock: **a few weeks** given gaussian-field + the done spectral
+side. **Recommend a Codex strategy review of steps 2–4 before committing.**
 
 ---
 
