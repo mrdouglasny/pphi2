@@ -13,12 +13,16 @@
 >   `AsymGappedTransfer.lean` / `AsymSpectralGap.lean` (`asymGappedTransfer'`,
 >   `asymTransferNormalized_gap`); prereq `AsymTransferGroundExcitedData.htop` (Perron-Frobenius
 >   dominance) added. This supplies the `Lt` / IR uniformity (clustering; volume-independent).
-> - **Remaining hard step (target PINNED, vetted 2026-06-02):** the **relative form bound**
->   `H_free ≤ C·H_int + c₂` (Glimm–Jaffe Ch. 9) + the proved gap (`H_int ≥ m_phys`) ⟹
->   `H_int⁻¹ ≤ C·H_free⁻¹` (⇔ `I − T̂_int ≽ (1/C)(I − T̂_free)`) ⟹ variance domination,
->   `Lt`-uniform by construction, plus the fixed-`Ls` gap convergence `m_a → m(Ls) > 0`.
->   NB: the spectral-MEASURE domination `ρ_int ≤ C·ρ_free` is a DEAD END (Gemini 3.1:
->   `ρ_int`, `ρ_free` mutually singular — different mass poles). See `docs/layer-B2-discharge-plan.md`.
+> - **Remaining hard step (axiom PINNED, vetted 2026-06-03 Gemini deep-think):** the
+>   **Fröhlich–Simon–Spencer infrared bound / Gaussian domination** —
+>   `⟨φ̂(k)φ̂(−k)⟩_int ≤ 1/(2E(k))` (free kinetic form) for `k≠0`, `Lt`- AND `a`-uniform,
+>   immune to the Wick negative bare mass. Decomposition: **FSS for `k≠0` ⊕ the proved
+>   mass gap for the `k=0` zero mode** (geometric-series sum, needs fixed-`Ls` gap
+>   convergence `m_a → m(Ls) > 0`). B1 may then be redundant for the variance bound
+>   itself (verify). Demoted fallback: the GJ Ch. 9 relative form bound (continuum/cutoff
+>   ⇒ lattice impedance mismatch). DEAD ENDS: Brascamp–Lieb (non-convex double well),
+>   spectral-MEASURE domination `ρ_int ≤ C·ρ_free` (mutually singular). See
+>   `docs/layer-B2-discharge-plan.md` → "Step B design".
 >
 > **Two corrections to the older framing below (both vetted, Codex + Gemini-3.1, 2026-06-02):**
 > (1) **NO chessboard / FSS** — at fixed `Ls` the gap is uniform via compact-resolvent

@@ -34,18 +34,62 @@ but the live plan is B1 ⊕ gap (resolvent comparison). Older docs
 `asym-l2-operator-port-scoping.md`) use a yet-earlier split (B1 per-`a`, B2 = UV
 chessboard) that is itself superseded now that B1 is `a`-uniform.
 
-## Step B design — VETTED 2026-06-02 (Gemini 3.1): target is the relative FORM bound, not measure domination
+## Step B design — VETTED 2026-06-03 (Gemini deep-think): the atom is the FSS infrared bound
 
-**Live target (use this):** the **relative form bound** on the spatial Hamiltonians
-`H_free ≤ C·H_int + c₂` (Glimm–Jaffe *Quantum Physics* Ch. 9 — the Wick-ordered
-interaction estimate), with `c₂` absorbed via the **proved mass gap**
-(`H_int ≥ m_phys` on `vacuum^⊥`) to give `H_free ≤ C·H_int` on the complement;
-operator monotonicity of the inverse then gives
-**`H_int⁻¹ ≤ C·H_free⁻¹`** (equivalently, in transfer-matrix form,
-`I − T̂_int ≽ (1/C)(I − T̂_free)`). This bounds the interacting variance (= the
-resolvent quadratic form `⟨Q, H⁻¹ Q⟩`) by the free one **directly**, and is
-`Lt`-uniform by construction (an operator inequality, no `Lt`). This is the
-standard literature path. **This is the statement to aim a proof at.**
+**Pinned axiom (use this): the Fröhlich–Simon–Spencer infrared bound / Gaussian
+domination.** For the reflection-positive lattice φ⁴₂ measure (single-site
+`exp(−λφ⁴ + bφ²)dφ`, nearest-neighbour kinetic term),
+
+  `⟨φ̂(k) φ̂(−k)⟩_int ≤ 1/(2 E(k))`  for every `k ≠ 0`,
+
+where `E(k)` is the lattice kinetic dispersion (the **free** kinetic form). Vetted
+properties (Gemini deep-think, 2026-06-03, ranked #1 of A/B/C):
+- **Applies to φ⁴₂.** The single-site even measure is in the Simon–Griffiths
+  (ferro-Ising-limit) class; lattice RP gives Gaussian domination. ✔
+- **Dominates by the FREE covariance** (the massless kinetic propagator), directly. ✔
+- **`Lt`-uniform AND `a`-uniform by construction** — the proof factors the hopping
+  expansion off the single-site measure, so the Wick log-divergence cancels out of
+  the inequality entirely; **immune to the negative bare mass** (no `b ≤ 0` /
+  convexity needed). ✔ This is exactly what kills Candidate A (see below).
+- **Limitation: controls `k ≠ 0` only.** It does NOT bound the `k = 0` zero mode /
+  susceptibility. ✔ (expected)
+
+**The clean decomposition (this is the architecture):**
+1. **`k ≠ 0`** — the FSS infrared bound axiom. `Lt`- and `a`-uniform, immune to Wick.
+2. **`k = 0` (zero mode / susceptibility)** — the **already-proved transfer-operator
+   mass gap**: spectral representation `⟨φ̂(0)φ̂(0)⟩ = Σ_t ⟨Ω, φ̂ T̂^t φ̂ Ω⟩ ≤
+   ‖φ̂Ω‖² Σ_t e^{−m_gap·t} ≤ C/m_gap²`. **No new textbook input** — reuses
+   `asymGappedTransfer'`. The one residual analytic need is `m_gap` bounded away
+   from `0` as `a→0` — i.e. the fixed-`Ls` gap convergence `m_a → m(Ls) > 0`
+   already flagged in the master plan ("structurally standard," per deep-think).
+3. **Synthesis** — piecewise: FSS for `k≠0`, geometric-series gap sum for `k=0`.
+
+**B1 may be REDUNDANT for B2 itself.** Deep-think: with FSS (`k≠0`, `a`+`Lt`-uniform)
+⊕ gap (`k=0`), the Nelson-hypercontractivity B1 is not needed for the *variance*
+bound — B1 remains essential for higher moments / the interaction picture. **Flag to
+verify before deleting any B1 dependency.**
+
+**Candidate C — Glimm–Jaffe Ch. 9 `N_τ` relative form bound (DEMOTED to fallback).**
+`H_free ≤ c₁H_int + c₂` + gap + operator-monotone inverse ⟹ `H_int⁻¹ ≤ C·H_free⁻¹`.
+Mathematically valid, but deep-think rates it **low-faithfulness as a *lattice*
+axiom**: GJ Ch. 9 develops it in continuum Fock space with momentum cutoffs, so
+citing an `a`-uniform *lattice* form is an impedance mismatch (continuum statement)
+or a quiet self-translation (not a clean textbook citation) — and it still leaves
+the operator-monotone-inverse step to formalize. Keep only as a fallback if FSS
+fails to formalize. (Earlier "pinned target" — superseded by FSS on 2026-06-03.)
+
+**Candidate A — Brascamp–Lieb variance inequality: REFUTED.** `Var ≤ ⟨∇f,A⁻¹∇f⟩`
+needs `Hess S ≥ A > 0` globally, but `Hess S = −Δ + m₀² + 12λ diag(φ²)`; at `φ=0`
+this is `−Δ − |m₀²|` with negative low-`k` eigenvalues (double well). No finite-`a`
+regime makes it `≥` free. (Gemini deep-think confirms my refutation — this non-convexity
+is *precisely* why φ⁴₂ variance bounds are hard, and what FSS sidesteps.)
+
+**Also considered & rejected** (deep-think): correlation inequalities
+(Lebowitz, Griffiths/GKS, Aizenman–Fröhlich) are for triviality / higher-point
+bounds, not for isolating a free *upper* bound under a double well. FSS is the
+definitive citable standard for this task.
+
+---
 
 **DEAD END — spectral-MEASURE domination `ρ_int ≤ C·ρ_free` is FALSE.** (Gemini
 3.1, 2026-06-02.) `ρ_free` lives on the free single-particle dispersion
