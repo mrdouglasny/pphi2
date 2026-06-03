@@ -1,0 +1,28 @@
+==========================================================================
+2-slice (Nt=2, Ns=1) two-point: measure vs transfer operator
+==========================================================================
+
+--- a=0.5, m=1.0   (a^2 m^2=0.2500, a m^2=0.5000) ---
+  measure          <phi_0^2>=2.117647   <phi_0 phi_1>=1.882353
+  transfer coef=a  <phi_0^2>=1.111111   <phi_0 phi_1>=0.888889   match=False
+  transfer coef=a^2<phi_0^2>=2.117643   <phi_0 phi_1>=1.882349   match=True
+
+--- a=2.0, m=1.0   (a^2 m^2=4.0000, a m^2=2.0000) ---
+  measure          <phi_0^2>=0.187500   <phi_0 phi_1>=0.062500
+  transfer coef=a  <phi_0^2>=0.333333   <phi_0 phi_1>=0.166667   match=False
+  transfer coef=a^2<phi_0^2>=0.187500   <phi_0 phi_1>=0.062500   match=True
+
+--- a=1.0, m=1.0   (a^2 m^2=1.0000, a m^2=1.0000) ---
+  measure          <phi_0^2>=0.600000   <phi_0 phi_1>=0.400000
+  transfer coef=a  <phi_0^2>=0.600000   <phi_0 phi_1>=0.400000   match=True
+  transfer coef=a^2<phi_0^2>=0.600000   <phi_0 phi_1>=0.400000   match=True
+
+--- a=0.3, m=1.7   (a^2 m^2=0.2601, a m^2=0.8670) ---
+  measure          <phi_0^2>=2.039706   <phi_0 phi_1>=1.804969
+  transfer coef=a  <phi_0^2>=0.679434   <phi_0 phi_1>=0.473969   match=False
+  transfer coef=a^2<phi_0^2>=2.039703   <phi_0 phi_1>=1.804967   match=True
+
+==========================================================================
+VERDICT: coef=a^2 reproduces the measure; coef=a (the code) does not
+(they coincide only at a=1). The transfer weight should be exp(-(a^2/2)*S).
+==========================================================================

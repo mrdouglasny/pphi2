@@ -202,7 +202,22 @@ trace-ratio limit (have the gap; need the limit lemma). Size estimate (from the 
 lines. Realistic wall-clock: **a few weeks** given gaussian-field + the done spectral
 side.
 
-### ⚠⚠ Codex review (2026-06-03): VERIFY NORMALIZATION BEFORE BUILDING ANYTHING
+### ⚠⚠ Codex review (2026-06-03): NORMALIZATION BUG CONFIRMED — fix before building
+
+**EMPIRICALLY CONFIRMED (2026-06-03).** A 2-slice (`Nt=2, Ns=1`) two-point computation
+(`scripts/normalization_check_2slice.py`, output `.out`) shows the transfer operator
+reproduces `latticeGaussianMeasureAsym`'s two-point **iff** the weight exponent uses
+`a²`, not `a`: with `coef=a²`, `⟨φ₀²⟩`/`⟨φ₀φ₁⟩` match the measure to 5–6 digits for
+`a ∈ {0.5, 2.0, 0.3}`; the code's `coef=a` matches **only at `a=1`**. So
+`asymTransferWeight = exp(−(a/2)·spatialAction)` (`AsymL2Operator.lean:78,80`, square
+`transferWeight` too) is **wrong by a factor of `a`** — it should be
+`exp(−(a²/2)·spatialAction)`. **Consequence:** `asymTransferOperatorCLM` is NOT the
+transfer operator of the measure (except at `a=1`), so Part A's proved gap is for the
+wrong operator. **FIX FIRST:** correct the weight `a`-power in `transferWeight` /
+`asymTransferWeight`, re-run the (mechanical) Gaussian-decay/`memLp`/compactness/
+positivity lemmas (the corrected weight is still positive + Gaussian-decaying, so they
+survive; the gap *value* changes but its *existence* — Perron-Frobenius — does not), and
+re-verify `asymTransferNormalized_gap`. This touches the square `TransferMatrix/` too.
 
 Codex reviewed this against the actual code; **independently confirmed by derivation
 (2026-06-03).** The exact 2D lattice action factorizes as
