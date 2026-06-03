@@ -20,7 +20,7 @@ already and is reused as-is.
 
 ## Main declarations
 
-* `asymTransferWeight` — `w(ψ) = exp(-(a/2) · h_asym(ψ))`.
+* `asymTransferWeight` — `w(ψ) = exp(-(a²/2) · h_asym(ψ))`.
 * `asymTransferGaussian := transferGaussian Ns` (alias for clarity).
 * `asymTransferWeight_measurable`, `_bound`, `_memLp_two` — the
   hypotheses needed by `mulCLM` and `hilbert_schmidt_isCompact`.
@@ -60,7 +60,7 @@ private theorem continuous_wickMonomial_aux : ∀ (n : ℕ) (c : ℝ),
 
 /-! ## Asym transfer weight -/
 
-/-- The asym cylinder transfer weight `w(ψ) = exp(-(a/2) · h_asym(ψ))`,
+/-- The asym cylinder transfer weight `w(ψ) = exp(-(a²/2) · h_asym(ψ))`,
 where `h_asym = spatialAction Ns P a mass (wickConstantAsym Nt Ns a mass)`.
 The only difference from the square's `transferWeight` is the Wick
 constant — here we use the **joint** asym Wick constant
@@ -68,7 +68,7 @@ constant — here we use the **joint** asym Wick constant
 of the asym lattice and depends on `Nt`. -/
 def asymTransferWeight (P : InteractionPolynomial) (a mass : ℝ) :
     SpatialField Ns → ℝ :=
-  fun ψ => Real.exp (-(a / 2) *
+  fun ψ => Real.exp (-(a ^ 2 / 2) *
     spatialAction Ns P a mass (wickConstantAsym Nt Ns a mass) ψ)
 
 /-- Alias of `transferGaussian Ns` to make the asym call sites read
@@ -184,18 +184,18 @@ theorem asymTransferWeight_gaussian_decay
     (ha : 0 < a) (hmass : 0 < mass) :
     ∃ A : ℝ, 0 ≤ A ∧ ∀ ψ : SpatialField Ns,
       asymTransferWeight Nt Ns P a mass ψ ≤
-        Real.exp ((a / 2) * (↑Ns * A)) *
-          Real.exp (-(a * mass ^ 2 / 4) * (∑ x : Fin Ns, (ψ x) ^ 2)) := by
+        Real.exp ((a ^ 2 / 2) * (↑Ns * A)) *
+          Real.exp (-(a ^ 2 * mass ^ 2 / 4) * (∑ x : Fin Ns, (ψ x) ^ 2)) := by
   obtain ⟨A, hA_nonneg, hcoer⟩ :=
     asymSpatialAction_lower_bound_quadratic Nt Ns P a mass ha hmass
   refine ⟨A, hA_nonneg, fun ψ => ?_⟩
   unfold asymTransferWeight
   have hcoerψ := hcoer ψ
   have hlin :
-      -(a / 2) *
+      -(a ^ 2 / 2) *
           spatialAction Ns P a mass (wickConstantAsym Nt Ns a mass) ψ ≤
-        (a / 2) * (↑Ns * A) - (a * mass ^ 2 / 4) * (∑ x : Fin Ns, (ψ x) ^ 2) := by
-    nlinarith [hcoerψ, ha, sq_nonneg mass]
+        (a ^ 2 / 2) * (↑Ns * A) - (a ^ 2 * mass ^ 2 / 4) * (∑ x : Fin Ns, (ψ x) ^ 2) := by
+    nlinarith [hcoerψ, ha, sq_nonneg a, sq_nonneg mass]
   have hexp := Real.exp_le_exp.mpr hlin
   simpa [sub_eq_add_neg, add_comm, add_left_comm, add_assoc, Real.exp_add,
     mul_comm, mul_left_comm, mul_assoc] using hexp
@@ -212,7 +212,7 @@ theorem asymTransferWeight_bound (P : InteractionPolynomial) (a mass : ℝ)
       ∀ᵐ (x : SpatialField Ns) ∂volume,
         ‖asymTransferWeight Nt Ns P a mass x‖ ≤ C := by
   obtain ⟨B, hB⟩ := asymSpatialAction_lower_bound Nt Ns P a mass
-  refine ⟨Real.exp (a / 2 * B), Real.exp_pos _, ?_⟩
+  refine ⟨Real.exp (a ^ 2 / 2 * B), Real.exp_pos _, ?_⟩
   apply Filter.Eventually.of_forall
   intro ψ
   simp only [asymTransferWeight, Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
@@ -229,8 +229,8 @@ theorem asymTransferWeight_memLp_two (P : InteractionPolynomial) (a mass : ℝ)
     (asymTransferWeight_measurable Nt Ns P a mass).aestronglyMeasurable]
   obtain ⟨A, hA_nonneg, hbound⟩ :=
     asymTransferWeight_gaussian_decay Nt Ns P a mass ha hmass
-  set K := Real.exp ((a / 2) * (↑Ns * A))
-  set β := a * mass ^ 2 / 4
+  set K := Real.exp ((a ^ 2 / 2) * (↑Ns * A))
+  set β := a ^ 2 * mass ^ 2 / 4
   have hβ : 0 < β := by positivity
   set domFn : SpatialField Ns → ℝ :=
     fun ψ => K ^ 2 * ∏ x : Fin Ns, Real.exp (-(2 * β) * (ψ x) ^ 2)
