@@ -34,7 +34,35 @@ but the live plan is B1 ⊕ gap (resolvent comparison). Older docs
 `asym-l2-operator-port-scoping.md`) use a yet-earlier split (B1 per-`a`, B2 = UV
 chessboard) that is itself superseded now that B1 is `a`-uniform.
 
-## Step B design — spectral-measure reframe (2026-06-02; vetting pending)
+## Step B design — VETTED 2026-06-02 (Gemini 3.1): target is the relative FORM bound, not measure domination
+
+**Live target (use this):** the **relative form bound** on the spatial Hamiltonians
+`H_free ≤ C·H_int + c₂` (Glimm–Jaffe *Quantum Physics* Ch. 9 — the Wick-ordered
+interaction estimate), with `c₂` absorbed via the **proved mass gap**
+(`H_int ≥ m_phys` on `vacuum^⊥`) to give `H_free ≤ C·H_int` on the complement;
+operator monotonicity of the inverse then gives
+**`H_int⁻¹ ≤ C·H_free⁻¹`** (equivalently, in transfer-matrix form,
+`I − T̂_int ≽ (1/C)(I − T̂_free)`). This bounds the interacting variance (= the
+resolvent quadratic form `⟨Q, H⁻¹ Q⟩`) by the free one **directly**, and is
+`Lt`-uniform by construction (an operator inequality, no `Lt`). This is the
+standard literature path. **This is the statement to aim a proof at.**
+
+**DEAD END — spectral-MEASURE domination `ρ_int ≤ C·ρ_free` is FALSE.** (Gemini
+3.1, 2026-06-02.) `ρ_free` lives on the free single-particle dispersion
+`λ_free(k)=e^{−aω_free(k)}`; `ρ_int` lives on the **physical** pole
+`λ_phys(k)=e^{−aω_phys(k)}` (`m_phys ≠ m_free`, mass shift) **plus** a
+multi-particle continuum (Simon Ch. IX). The single-particle peaks sit at
+*different* `λ`, so the measures are **mutually singular** — no finite-`C`
+pointwise/measure domination, and band-limiting `h` cannot force it; the
+resolvent-weighted `dρ_int/dρ_free` is ill-defined (disjoint supports). The
+reframe below (kept for the record) was the wrong target: the resolvent FORM
+bound replaces it precisely because it bounds the *integral*, never the singular
+measures. The earlier finite-`Nt` claim that `ρ` is exactly `Lt`-independent also
+only holds in the `Lt→∞` limit (finite-`Nt` has thermal `Tr T̂^{Nt}` corrections).
+
+---
+
+### (Superseded) spectral-measure reframe — kept for the record
 
 The `Lt`-uniform comparison reduces to an **`Lt`-free spectral-measure domination**.
 

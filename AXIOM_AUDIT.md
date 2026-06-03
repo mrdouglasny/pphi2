@@ -56,6 +56,16 @@ covariance (physical/`B`-inner product) decides whether the objection bites — 
 this before writing any representation axiom. **Decision: do not introduce the
 representation axiom until this is settled.**
 
+**Step-B design vetted (Gemini 3.1, 2026-06-02).** Pinned the precise Step-B target:
+the **relative form bound** `H_free ≤ C·H_int + c₂` (Glimm–Jaffe Ch. 9) + the proved
+gap ⟹ `H_int⁻¹ ≤ C·H_free⁻¹` (⇔ `I − T̂_int ≽ (1/C)(I − T̂_free)`) ⟹ `Lt`-uniform
+variance domination (operator inequality, no `Lt`). DEAD END recorded: the
+spectral-MEASURE domination `ρ_int ≤ C·ρ_free` is FALSE (`ρ_int`, `ρ_free` mutually
+singular — interaction shifts the mass pole + adds a multi-particle continuum). The
+form bound bounds the integral, avoiding the singular measures. (Codex's parallel
+review crashed at launch; Gemini's correction is standard Glimm–Jaffe so taken as
+reliable.) See `docs/layer-B2-discharge-plan.md` → "Step B design".
+
 **Impact on counts**: no change yet (no axiom added or removed; B2 stays an axiom
 pending the Piece-1 representation axiom + the Piece-2/3 proofs).
 

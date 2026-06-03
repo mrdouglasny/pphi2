@@ -13,9 +13,12 @@
 >   `AsymGappedTransfer.lean` / `AsymSpectralGap.lean` (`asymGappedTransfer'`,
 >   `asymTransferNormalized_gap`); prereq `AsymTransferGroundExcitedData.htop` (Perron-Frobenius
 >   dominance) added. This supplies the `Lt` / IR uniformity (clustering; volume-independent).
-> - **Remaining hard step**: upgrade B1's `C(Lt)` to `Lt`-uniform `C ≈ m_free/m_int` via the
->   **interacting-vs-free resolvent / Toeplitz-form comparison** `⟨Q,(1−T̂_int)⁻¹Q⟩ ≤ C⟨Q,(1−T̂_free)⁻¹Q⟩`,
->   plus the fixed-`Ls` gap convergence `m_a → m(Ls) > 0`.
+> - **Remaining hard step (target PINNED, vetted 2026-06-02):** the **relative form bound**
+>   `H_free ≤ C·H_int + c₂` (Glimm–Jaffe Ch. 9) + the proved gap (`H_int ≥ m_phys`) ⟹
+>   `H_int⁻¹ ≤ C·H_free⁻¹` (⇔ `I − T̂_int ≽ (1/C)(I − T̂_free)`) ⟹ variance domination,
+>   `Lt`-uniform by construction, plus the fixed-`Ls` gap convergence `m_a → m(Ls) > 0`.
+>   NB: the spectral-MEASURE domination `ρ_int ≤ C·ρ_free` is a DEAD END (Gemini 3.1:
+>   `ρ_int`, `ρ_free` mutually singular — different mass poles). See `docs/layer-B2-discharge-plan.md`.
 >
 > **Two corrections to the older framing below (both vetted, Codex + Gemini-3.1, 2026-06-02):**
 > (1) **NO chessboard / FSS** — at fixed `Ls` the gap is uniform via compact-resolvent
