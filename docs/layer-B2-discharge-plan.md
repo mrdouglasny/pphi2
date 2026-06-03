@@ -34,6 +34,38 @@ but the live plan is B1 ⊕ gap (resolvent comparison). Older docs
 `asym-l2-operator-port-scoping.md`) use a yet-earlier split (B1 per-`a`, B2 = UV
 chessboard) that is itself superseded now that B1 is `a`-uniform.
 
+## Step B design — spectral-measure reframe (2026-06-02; vetting pending)
+
+The `Lt`-uniform comparison reduces to an **`Lt`-free spectral-measure domination**.
+
+**Reframe.** For fixed `(Ns, a)`, the time-2-point function is a spectral integral
+`S(d) = ⟨Q, T̂^{d} Q⟩ = ∫_{[−γ,γ]} λ^{d} dρ(λ)`, where `ρ` is the Källén–Lehmann
+spectral measure of `T̂` w.r.t. the field-excited state `Q = A·Ω ⊥ vacuum`.
+**`ρ` depends only on `(Ns, a)`, NOT on `Lt`** (`T̂`, `Q` are the one-time-step
+operator and the spatial ground state). Then
+`Var^{Nt}(f) = ∫ K_h^{Nt}(λ) dρ(λ)` with `K_h^{Nt}(λ) = (1/Z)Σ_{t,t'∈Z_{Nt}}
+h(t)h(t')(λ^{d}+λ^{N−d}) ≥ 0` (positive by RP; `Z = Tr T̂^{Nt}` bounded, `→1`).
+
+**Key simplification — `Lt`-uniformity is automatic.** Both sides are `∫K_h^{Nt}dρ`
+with the *same* `K_h^{Nt} ≥ 0`. So **IF** the `Lt`-free domination
+`ρ_int ≤ C·ρ_free` (measures on `[−γ,γ]`, `C` indep. of `Lt` and `a`) holds, then
+`Var_int^{Nt}(f) ≤ C·Var_free^{Nt}(f)` for **every** `Nt` — B2, `Lt`-uniform for
+free. **So the precise Step-B target is `ρ_int ≤ C·ρ_free`** (an `Lt`-free statement).
+
+**Not a free B1-bootstrap.** B1 gives, per `Nt`, the moment-matrix domination
+`G_{ρ_int}^{Nt} ≼ C(Nt)·G_{ρ_free}^{Nt}` (moments `∫λ^d dρ`, `d≤Nt`) with `C(Nt)`
+*growing*. Finite-`C` measure domination is strictly stronger; the gap
+(supp `ρ ⊆ [−γ,γ]`, compact, away from `1`) makes moments determine the measure,
+but the constant is not inherited.
+
+**The real crux (VET THIS).** Whether `ρ_int ≤ C·ρ_free` holds with finite `C`, and
+in what exact form: (i) full measure domination (possibly *false* — interacting KL
+weight, with one-particle peak at the physical mass + multi-particle continuum, may
+sit where `ρ_free` is thin); (ii) `k`-restricted / susceptibility-side comparison —
+suffices if B2's continuum test functions have band-limited `h` so `K_h` concentrates
+near `k≈0`; (iii) resolvent-weighted relative-boundedness `dρ_int/dρ_free ≤ C`.
+Pin the correct sufficient form before any code.
+
 ## ⚠ Vetting result (Codex, 2026-06-02): the 3-piece sketch below is FLAWED as written
 
 Verdict: **flawed but salvageable**. The idea (gap ⟹ Lt-uniform variance via the
