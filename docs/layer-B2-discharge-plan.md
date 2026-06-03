@@ -58,6 +58,61 @@ trace representation, (ii) mode-by-mode free-covariance domination (not a scalar
 lower bound), (iii) the cyclic Young lemma, (iv) the Z₂ zero-mean lemma, and
 (v) the explicit fixed-`Ls` gap input. (Codex full review: read-only, 2026-06-02.)
 
+## ⚠⚠ Second vetting (Gemini 3.1-pro, 2026-06-02): the corrected plan is STILL flawed — structural norm mismatch
+
+Even with the Codex corrections above, the transfer-matrix discharge does **not**
+close B2. A deeper, structural flaw:
+
+1. **NORM MISMATCH (the killer).** The target bounds `Var_int` by the **free
+   covariance** `Var_free = ⟨f, (−Δ_{2D}+m²)⁻¹ f⟩` — an `H⁻¹` space-*time* Sobolev
+   norm with spatial-gradient suppression `1/(p_s²+p_t²+m²)`. The transfer-matrix
+   route (two-arc trace + cyclic Young) yields the **time** gap `1/(1−γ)` times a
+   **spatial `L²`** norm of `f`'s slices. Since `L² ⊄ H⁻¹`, a 1D (time) spectral
+   gap cannot produce the spatial-gradient bound needed to match `Var_free`.
+   *"Without spatial/spacetime symmetry, a 1D transfer-matrix gap will never bound
+   a 2D Sobolev norm."* — the chain dies for lack of spatial control.
+
+   **NUANCE to settle (owner):** this objection assumes `‖Q_s‖²` is a raw spatial
+   `L²` norm. If `Q_s` lives in the physical Hilbert space with the
+   reflection/`B`-inner product, it may already carry spatial covariance structure
+   — which is exactly where the objection does or does not bite. **Pin down the
+   `Q_s` inner product before any axiom.**
+
+2. **Codex's Piece-2 fix (mode-by-mode domination) is FALSE.** If
+   `interacting connected covariance ≤ C·free covariance` held, you'd be done
+   immediately and the **entire transfer-matrix apparatus is redundant**. But it
+   is analytically false for Wick-ordered φ⁴₂ as `a→0`: Lebowitz/GRS bounds the
+   interacting theory by the free one with the **bare** mass
+   `m₀² = m_phys² − cλ·log(1/a) → −∞`, so the bounding covariance diverges;
+   Brascamp–Lieb needs log-concavity, destroyed by the `−log(1/a)·φ²` counterterm.
+   (Consistent with the earlier literature vetting: Wick ordering breaks the naive
+   comparison.)
+
+3. **What stands.** The **two-arc trace + `γʳ+γ^{Nt−r}` + cyclic Young** is correct
+   and sufficient for the **`Lt`-direction time-sum only**
+   (`‖γʳ+γ^{Nt−r}‖_{L¹(Z_{Nt})} ≤ 2/(1−γ)`). The periodized kernel is mandatory.
+
+4. **Salvage — Nelson symmetry.** To bridge time→space without the (forbidden)
+   chessboard, use **Nelson symmetry** (Euclidean rotation invariance of the
+   measure): the spatial transfer matrix behaves like the time one, reconstructing
+   the `1/(p_s²+p_t²+m²)` free covariance. Standard Glimm–Jaffe/Simon Route C uses
+   the **chessboard** (FSS) for exactly this rotation; Nelson symmetry is the
+   alternative.
+
+5. **Implication for the architecture.** pphi2's **B1 already achieves the
+   norm-match via Nelson** (the `asymNelson` exp-moment / density-transfer route).
+   So the discharge most likely must **combine** B1's Nelson-based norm-matching
+   (per-`Lt`) with the transfer-matrix gap supplying **`Lt`-uniformity** — NOT
+   represent `Var_int` directly as a transfer-matrix sum and compare to `Var_free`.
+   The transfer-matrix work (Part A + #1) provides the `Lt`-uniform time-decay; it
+   does not, by itself, provide the spatial/Sobolev match.
+
+**RECOMMENDATION: do not write any representation axiom until the norm-mismatch /
+`Q_s`-inner-product question is settled.** Two independent vettings (Codex,
+Gemini 3.1-pro) now flag the direct transfer-matrix-vs-`Var_free` route as
+broken; the viable path is the Nelson-symmetry bridge or a B1⊕(TM-`Lt`-uniformity)
+combination. This is an owner-level design decision.
+
 ## Target (the axiom to discharge)
 
 `asymInteractingVariance_le_freeVariance_Lt_uniform`

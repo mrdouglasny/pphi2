@@ -42,6 +42,20 @@ the double sum; (iv) add a **Z₂ zero-mean** lemma (raw vs connected 2nd moment
 gap-convergence `m_a → m(Ls) > 0` as an explicit input. See the plan doc's
 "⚠ Vetting result" section.
 
+**Second vetting (Gemini 3.1-pro, 2026-06-02): even the corrected plan is
+STRUCTURALLY flawed.** The target compares to `Var_free` (an `H⁻¹` space-*time*
+Sobolev norm); the transfer-matrix route yields only a *time* gap × *spatial `L²`*
+norm, and `L² ⊄ H⁻¹` — a 1D time gap cannot bound a 2D Sobolev norm (NORM
+MISMATCH; no spatial control). Codex's "mode-by-mode domination" fix is *false*
+(bare mass `m₀² → −∞` under Wick ordering; Brascamp–Lieb loses log-concavity).
+Salvage: **Nelson symmetry** to bridge space↔time (the alternative to chessboard),
+and/or combine B1's existing Nelson norm-match (per-`Lt`) with the TM gap for
+`Lt`-uniformity — NOT a direct `Var_int`-as-TM-sum vs `Var_free` comparison.
+**Open nuance:** whether `‖Q_s‖²` is raw spatial `L²` or already carries spatial
+covariance (physical/`B`-inner product) decides whether the objection bites — pin
+this before writing any representation axiom. **Decision: do not introduce the
+representation axiom until this is settled.**
+
 **Impact on counts**: no change yet (no axiom added or removed; B2 stays an axiom
 pending the Piece-1 representation axiom + the Piece-2/3 proofs).
 
