@@ -2,9 +2,9 @@
 
 ## Status machine (plan-loop; re-read every cycle)
 
-- [ ] M1. Asym lattice RP in abstract `IsReflectionPositive` form (port square `lattice_rp` + raw-fn→`lpMeas` adapter)   status: in_progress   deps: []   note: dispatched to Codex (M1–M3 instance build)
-- [ ] M2. `θ` involution + `mPos` on `Configuration` (expose private `asymInteractingLatticeMeasure_timeReflection_invariant`)   status: in_progress   deps: []   note: dispatched to Codex (M1–M3 instance build)
-- [ ] M3. Assemble `TimeTranslatedSystem` for the asym cylinder (τ, τmp, τθ, τPos, contraction)   status: in_progress   deps: [M1, M2]   note: dispatched to Codex (M1–M3 instance build)
+- [ ] M1. Asym lattice RP in abstract `IsReflectionPositive` form (port square `lattice_rp` + raw-fn→`lpMeas` adapter)   status: in_progress   deps: []   note: Codex retry #2 (first crashed during exploration). FINDING: the existing reflection-invariance lemma is square-side (`FinLatticeField 2 N`), so the asym measure likely routes via `asymTorusInteractingMeasureIso` to the square — reuse the square RP through the iso rather than re-port.
+- [ ] M2. `θ` involution + `mPos` on `Configuration` (route via `asymTorusInteractingMeasureIso`; reuse square `asymInteractingLatticeMeasure_timeReflection_invariant`, which is for `FinLatticeField 2 N`)   status: in_progress   deps: []   note: Codex retry #2
+- [ ] M3. Assemble `TimeTranslatedSystem` for the asym cylinder (τ, τmp, τθ, τPos, contraction)   status: in_progress   deps: [M1, M2]   note: Codex retry #2
 - [ ] M4. Operator-coincidence `H_phys`/`transferOperator` ≃ `L2SpatialField`/`asymTransferOperatorCLM`; transport gap to `GappedTransfer H_phys`   status: blocked   deps: [M3]   note: needs M3's `TimeTranslatedSystem`; the hard core (candidate for a dedicated Codex pass)
 - [ ] M5. Variance connection: D3 sum ↔ `∫(ωf)²dμ_int`, identify with `C·Var_free` via `1/a` cancellation (B1 = a-uniformity)   status: blocked   deps: [M4]   note: needs M4's `GappedTransfer`
 
