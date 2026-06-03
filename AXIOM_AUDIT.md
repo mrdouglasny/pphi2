@@ -2,6 +2,63 @@
 
 **Last updated**: 2026-06-02.
 
+## 2026-06-02 — Layer B2 transfer-matrix spectral gap PROVED; discharge plan refined (no chessboard)
+
+Operator side of the Layer-B2 (`asymInteractingVariance_le_freeVariance_Lt_uniform`)
+discharge is now built and sorry/axiom-free:
+
+* `reflection-positivity` (now a dep of pphi2, v4.30.0): `GappedTransfer` +
+  `GappedTransfer.susceptibility_le` (the `Lt`-uniform two-point-sum bound via
+  the geometric series).
+* `Pphi2/AsymTorus/AsymGappedTransfer.lean` + `AsymSpectralGap.lean`:
+  `asymTransferNormalized_gap` (operator-norm gap on the ground-orthogonal
+  complement) and `asymGappedTransfer'` (hypothesis-free `GappedTransfer`).
+* Prereq fix: `AsymTransferGroundExcitedData.htop` re-exposes jentzsch's
+  Perron-Frobenius dominance — the ground index was under-specified.
+
+**Framing correction.** The chessboard / FSS framing in the discharge plans of
+both `asymInteractingVariance_le_freeVariance_Lt_uniform` and
+`asymInteracting_expMoment_volume_uniform` (this file, the per-axiom table, and
+the axiom docstrings) is **SUPERSEDED**: at fixed `Ls` the cylinder mass gap is
+uniform via compact-resolvent convergence (`T_a → e^{−aH(Ls)}`, Simon Ch. VI),
+so **no chessboard is needed** (FSS is only for the thermodynamic `Ls → ∞`
+limit). See `reflection-positivity/docs/B2_UNIFORMITY_QUESTION.md` (expert-vetted).
+
+**Refined discharge plan** (`docs/layer-B2-discharge-plan.md`): a Källén-Lehmann/
+Feynman-Kac trace representation (the un-formalized measure↔operator bridge, a
+*more-fundamental* axiom-to-be replacing the high-level B2 axiom) + the int/free
+comparison via the proved gap. The operator-theoretic content (gap, geometric
+series) that was historically the hard part is now proved.
+
+**Codex vetting (2026-06-02): the naive 3-piece form is FLAWED but salvageable.**
+Corrections folded into the plan doc: (i) the interacting representation must be
+the periodic **two-arc trace** `⟨A Tᵗ A T^{Lt−t}⟩/⟨T^{Lt}⟩` (corollary factor
+`γ^r + γ^{Nt−r}`), not a single-`dist` kernel equality; (ii) the scalar free
+lower bound `Var_free ≳ 1/(1−γ_free)·Σ‖Q‖²` is likely FALSE for high temporal
+modes — replace with **mode-by-mode free-covariance domination**; (iii)
+`susceptibility_le` is single-vector, so a **cyclic Young** lemma is needed for
+the double sum; (iv) add a **Z₂ zero-mean** lemma (raw vs connected 2nd moment);
+(v) reconcile the GJ `a`-weight to avoid double-counting; (vi) add the fixed-`Ls`
+gap-convergence `m_a → m(Ls) > 0` as an explicit input. See the plan doc's
+"⚠ Vetting result" section.
+
+**Second vetting (Gemini 3.1-pro, 2026-06-02): even the corrected plan is
+STRUCTURALLY flawed.** The target compares to `Var_free` (an `H⁻¹` space-*time*
+Sobolev norm); the transfer-matrix route yields only a *time* gap × *spatial `L²`*
+norm, and `L² ⊄ H⁻¹` — a 1D time gap cannot bound a 2D Sobolev norm (NORM
+MISMATCH; no spatial control). Codex's "mode-by-mode domination" fix is *false*
+(bare mass `m₀² → −∞` under Wick ordering; Brascamp–Lieb loses log-concavity).
+Salvage: **Nelson symmetry** to bridge space↔time (the alternative to chessboard),
+and/or combine B1's existing Nelson norm-match (per-`Lt`) with the TM gap for
+`Lt`-uniformity — NOT a direct `Var_int`-as-TM-sum vs `Var_free` comparison.
+**Open nuance:** whether `‖Q_s‖²` is raw spatial `L²` or already carries spatial
+covariance (physical/`B`-inner product) decides whether the objection bites — pin
+this before writing any representation axiom. **Decision: do not introduce the
+representation axiom until this is settled.**
+
+**Impact on counts**: no change yet (no axiom added or removed; B2 stays an axiom
+pending the Piece-1 representation axiom + the Piece-2/3 proofs).
+
 ## 2026-05-31 — Layer B1 (cylinder TM + variance bound) complete
 
 The cylinder transfer-matrix port for the `asymInteracting_expMoment_volume_uniform`

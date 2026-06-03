@@ -1,5 +1,32 @@
 # Cylinder S¹×ℝ φ⁴₂ — master plan & progress tracker
 
+> **STATUS UPDATE (2026-06-02) — B2 route locked as B1 ⊕ gap; transfer-matrix gap now PROVED.**
+> The last project axiom `asymInteracting_expMoment_volume_uniform` reduces (Layer C, structural)
+> to **Layer B2** = `asymInteractingVariance_le_freeVariance_Lt_uniform`. The discharge route is
+> **B1 ⊕ gap** (authoritative; see `Pphi2/AsymTorus/AsymVarianceBound.lean`'s note and
+> `docs/layer-B2-discharge-plan.md`):
+> - **B1** (`asymInteractingVariance_le_freeVariance_torus`, **PROVED** via density-transfer /
+>   Nelson **hypercontractivity**): `Var_int ≤ C(Lt)·Var_free`, `a`-uniform and norm-correct, but
+>   **per-`Lt`**. This already supplies the UV / spatial-Sobolev matching.
+> - **gap** (**PROVED** 2026-06-02): the cylinder transfer operator's operator-norm spectral gap —
+>   `reflection-positivity` `GappedTransfer.susceptibility_le` + pphi2
+>   `AsymGappedTransfer.lean` / `AsymSpectralGap.lean` (`asymGappedTransfer'`,
+>   `asymTransferNormalized_gap`); prereq `AsymTransferGroundExcitedData.htop` (Perron-Frobenius
+>   dominance) added. This supplies the `Lt` / IR uniformity (clustering; volume-independent).
+> - **Remaining hard step**: upgrade B1's `C(Lt)` to `Lt`-uniform `C ≈ m_free/m_int` via the
+>   **interacting-vs-free resolvent / Toeplitz-form comparison** `⟨Q,(1−T̂_int)⁻¹Q⟩ ≤ C⟨Q,(1−T̂_free)⁻¹Q⟩`,
+>   plus the fixed-`Ls` gap convergence `m_a → m(Ls) > 0`.
+>
+> **Two corrections to the older framing below (both vetted, Codex + Gemini-3.1, 2026-06-02):**
+> (1) **NO chessboard / FSS** — at fixed `Ls` the gap is uniform via compact-resolvent
+> convergence; chessboard is only for the thermodynamic `Ls→∞` limit (see
+> `reflection-positivity/docs/B2_UNIFORMITY_QUESTION.md`). So the "Layer B2 = UV chessboard,
+> deferred" item in the 2026-05-31 banner is **superseded**. (2) The "fresh Källén-Lehmann
+> *representation* axiom + cyclic-Young" idea and "Nelson **symmetry** (90° rotation)" are
+> **dead ends** — spatial control is Nelson *hypercontractivity* (already in B1), not the rotation.
+> **Do not write a representation axiom**; the route is B1 ⊕ gap. Full record + dead-ends:
+> `docs/layer-B2-discharge-plan.md`.
+
 > **STATUS UPDATE (2026-05-31) — isotropic redesign + one project axiom remaining.** The construction
 > was rebuilt on an **isotropic `Z_Nt × Z_Ns` lattice** (single spacing `a`, periods `Lt=Nt·a`,
 > `Ls=Ns·a`) to fix a metric inconsistency in the original square-via-geometric-mean approach.
@@ -328,6 +355,8 @@ reconstruction additionally needs CYL-4a.
 - **M-cyl-4:** Wightman QFT (1+1d, mass gap) — package + `LinearGrowth` (CYL-4a) then OS reconstruction (CYL-4b).
 
 ## Reference docs
+- `docs/layer-B2-discharge-plan.md` — **the live B2 discharge plan (B1 ⊕ gap route)**, with the
+  full vetting record and the marked dead-ends (representation axiom, Nelson symmetry, chessboard).
 - `docs/T2-master-plan.md` — the completed torus OS0–OS2 construction (reusable infra + the
   axiom-free hypercontractivity chain).
 - `docs/axiom_audit.md`, `AXIOM_AUDIT.md` (sister repos) — axiom provenance/vetting format.

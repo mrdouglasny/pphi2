@@ -186,7 +186,23 @@ Simon, *The P(φ)₂ Euclidean QFT* (1974) Ch. V.
 variance bound from chessboard + cylinder mass gap (Källén-Lehmann
 sum rule) is the standard result; the cylinder shortcut (no full 2D
 cluster expansion needed) is mathematically sound and computationally
-tractable. -/
+tractable.
+
+**Discharge update (2026-06-02; see `docs/layer-B2-discharge-plan.md`).**
+The "chessboard / FSS … shares discharge path with the square's open
+`spectral_gap_uniform`" framing above is SUPERSEDED: at fixed `Ls` the
+cylinder mass gap is uniform via compact-resolvent convergence
+(`T_a → e^{−aH(Ls)}`, Simon Ch. VI), so **no chessboard is needed** (FSS is
+only for the thermodynamic `Ls → ∞` limit; see
+`reflection-positivity/docs/B2_UNIFORMITY_QUESTION.md`). The transfer-matrix
+spectral gap is now **proved**: `asymGappedTransfer'` /
+`susceptibility_le` (via `AsymGappedTransfer.lean` + `AsymSpectralGap.lean`
++ the `reflection-positivity` dep). The remaining discharge is the 3-piece
+plan: (1) the interacting Källén-Lehmann/Feynman-Kac representation
+(the un-formalized measure↔operator bridge — a more-fundamental axiom-to-be);
+(2) the free representation (provable, Gaussian); (3) the int/free ratio,
+whose `1/a` cancellation is essential — a naive `Var_int ≤ 1/(1−γ)·Var_free`
+is `a`-non-uniform and WRONG. -/
 axiom asymInteractingVariance_le_freeVariance_Lt_uniform
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (Ls : ℝ) [Fact (0 < Ls)] :
