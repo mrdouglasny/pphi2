@@ -4,6 +4,36 @@
 framing in the `asymInteractingVariance_le_freeVariance_Lt_uniform` docstring.
 The transfer-matrix spectral gap this plan rests on is now **proved**.*
 
+## RECONCILED ROUTE (read first): B1 ⊕ gap, not a fresh representation
+
+The authoritative plan is the **B1 ⊕ gap** route already stated in
+`Pphi2/AsymTorus/AsymVarianceBound.lean`'s architectural note: B1
+(`asymInteractingVariance_le_freeVariance_torus`, **proved** via density-transfer
+/ Nelson **hypercontractivity**) gives `Var_int ≤ C(Lt)·Var_free` — `a`-uniform,
+norm-correct, but **per-`Lt`**; B2 upgrades `C(Lt)` to a **`Lt`-uniform** constant
+using the now-proved transfer-matrix gap (`asymGappedTransfer'` / `susceptibility_le`).
+
+Why this is the right framing (session reasoning + two vettings, 2026-06-02):
+- **UV / spatial-Sobolev matching is already done by B1** (Nelson hypercontractivity),
+  *not* by a transfer-matrix representation and *not* by Nelson *symmetry* (the 90°
+  rotation is a red herring here — it relocates the problem to a swapped-extent
+  thermodynamic gap).
+- **The gap supplies only the `Lt`/IR uniformity** (clustering; volume-independent,
+  unlike B1's extensive Nelson constant).
+- The concrete remaining hard step is the **interacting-vs-free resolvent / Toeplitz-form
+  comparison** `⟨Q,(1−T̂_int)⁻¹Q⟩ ≤ C·⟨Q,(1−T̂_free)⁻¹Q⟩` that turns B1's `C(Lt)` into
+  a `Lt`-uniform `C ≈ m_free/m_int`. (The field-vectors `Q` carry the equal-time
+  `H^{−1/2}` covariance, so the naive `L²`-vs-`H⁻¹` mismatch is softened; the danger
+  is crudely Young-bounding the time sum and discarding the `p_t` structure.)
+
+**The "interacting Källén–Lehmann *representation* axiom + cyclic-Young" framing in
+the sections below was a DETOUR** — both Codex and Gemini-3.1 flagged it (norm
+mismatch; false mode-by-mode domination). Keep the sections for the vetting record,
+but the live plan is B1 ⊕ gap (resolvent comparison). Older docs
+(`asym-interacting-expmoment-volume-uniform-discharge-plan.md`,
+`asym-l2-operator-port-scoping.md`) use a yet-earlier split (B1 per-`a`, B2 = UV
+chessboard) that is itself superseded now that B1 is `a`-uniform.
+
 ## ⚠ Vetting result (Codex, 2026-06-02): the 3-piece sketch below is FLAWED as written
 
 Verdict: **flawed but salvageable**. The idea (gap ⟹ Lt-uniform variance via the
