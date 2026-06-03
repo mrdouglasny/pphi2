@@ -200,7 +200,55 @@ slice-decomposed action) is the crux**, and step 4 needs a Perron-Frobenius
 trace-ratio limit (have the gap; need the limit lemma). Size estimate (from the older
 `asym-interacting-expmoment-volume-uniform-discharge-plan.md`): Layer B ≈ 1500–3000
 lines. Realistic wall-clock: **a few weeks** given gaussian-field + the done spectral
-side. **Recommend a Codex strategy review of steps 2–4 before committing.**
+side.
+
+### ⚠⚠ Codex review (2026-06-03): VERIFY NORMALIZATION BEFORE BUILDING ANYTHING
+
+Codex reviewed this against the actual code; **independently confirmed by derivation
+(2026-06-03).** The exact 2D lattice action factorizes as
+`S = Σ_t [ timeCoupling(φ_t,φ_{t+1}) + a²·spatialAction(φ_t) ]`
+(since `a²·½(∂_tφ)² = ½(Δ_tφ)² = timeCoupling`; `a²·½(∂_sφ)² = a²·spatialKinetic`;
+`a²·(½m²φ²+:P:) = a²·spatialPotential`). So the correct slice weight is
+`exp(−(a²/2)·spatialAction)`. **The 4-step route is not sound as written — Step 2 is
+false as stated due to a factor-`a` mismatch in the weight exponent:**
+- Gibbs interaction `V = a²·Σ wickPolynomial` (`AsymLatticeMeasure.lean:257`); the
+  GFF precision is `a²·Q`, `Q = −finiteLaplacianAsym + mass²` (GaussianField
+  `AsymCovariance.lean:54,152,220`), matching the GJ convention `exp(−(aᵈ/2)φQφ)`,
+  `d=2 ⟹ a²` (square density bridge `SpectralCovariance.lean:569`, `Density.lean:1324`).
+- BUT the transfer weight is `asymTransferWeight = exp(−(a/2)·spatialAction)`
+  (`AsymL2Operator.lean:63`). A product around the time circle yields `a·spatialAction`,
+  **not** the `a²` the measure carries.
+- **⟹ the built `asymTransferOperatorCLM` may not be THE transfer operator of
+  `interactingLatticeMeasureAsym`** — and then Part A's proved gap, though a valid
+  theorem, is about the wrong operator. **This must be resolved first.** Likely fix:
+  re-derive the correct slice weight (probably `exp(−(a²/2)·spatialAction)`) and check
+  whether the gap proof survives the reweight, OR find the convention that reconciles
+  them (e.g. an absorbed time-spacing). Do NOT build the bridge until the two-point of
+  the measure is shown to equal the operator's (a 2-slice check suffices).
+
+Other Codex findings (route-I specific; see below for how the abstract route dodges them):
+- **No asym Gaussian density/precision bridge exists** (the square one does;
+  `Density.lean`). Route-I step 2 would need it. Easiest target: evaluated asym GFF has
+  Lebesgue density with precision `a²·massOperatorAsym` (precision-matrix equality, not
+  characteristic functions).
+- **No infinite-dim trace-class / Perron-Frobenius trace-asymptotics API** (Mathlib has
+  only finite-dim `InnerProductSpace.Trace`). Route-I step 4 would have to build it —
+  UNLESS one takes the **finite-`Nt` periodic-trace** route (Codex's recommendation,
+  question A), which `susceptibility_le` already supports. But the finite periodic-trace
+  formula is itself not formalized (`TransferMatrix.lean:175,188`).
+- No φ⁴₂-specific circularity — the issue is normalization + missing infrastructure.
+- Effort: **~3–6 weeks finite-`Nt`** (normalization fixed early); 6–10+ weeks if also
+  building trace-class asymptotics. ~1.5k–4k lines.
+
+**How the MAXIMUM-GENERALITY (abstract OS) route relates to these (see RECON.md +
+`docs/transfer-bridge-spec.md`):** the abstract D0–D3 deliverables **avoid** the missing
+density bridge, the trace formula, AND the trace-class asymptotics — D2 is a finite-`n`,
+gap-free, near-definitional identity and D3 uses only `susceptibility_le`. So Codex's
+risks 2 & 3 do **not** block the abstract bridge. **Risk 1 (normalization) still bites**,
+but it relocates to the single operator-coincidence lemma (abstract `H_phys`/`T` ≅
+`L2SpatialField`/`asymTransferOperatorCLM`): that unitary can only carry the proved gap
+if the operators actually match — i.e. the same normalization check. **Bottom line:
+resolve the `a`-power normalization first, regardless of route.**
 
 ---
 
