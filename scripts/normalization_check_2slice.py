@@ -52,8 +52,37 @@ def transfer_two_point(a, m, coef, grid_half=8.0, n=2001):
     cov = (phi[:, None] * phi[None, :] * T2).sum() / Z  # <phi_0 phi_1>
     return var, cov
 
+def cycle_laplacian(n):
+    """Graph Laplacian of the n-cycle: 2I - (P + P^{-1}), P = cyclic shift.
+    n=1 -> [[0]]; n=2 -> [[2,-2],[-2,2]] (double edge)."""
+    P = np.roll(np.eye(n), 1, axis=0)
+    return 2 * np.eye(n) - (P + P.T)
+
+def precision_check(Nt, Ns, a, m, coef):
+    """General (Nt,Ns) precision-matrix comparison (covers the spatialKinetic term).
+
+    Measure precision:  P_meas = L_t⊗I_s + I_t⊗L_s + a^2 m^2 I        (= a^2 Q).
+    Transfer precision: P_tr   = L_t⊗I_s + coef·(a^-2 I_t⊗L_s + m^2 I)
+       (time coupling: L_t⊗I_s, coeff 1; w^2 per slice: coef·(spatialKinetic+½m²)
+        Hessian = coef·(a^-2 L_s + m^2 I) per slice).
+    They are equal iff coef = a^2 (the spatial-kinetic AND mass coeffs both need a^2)."""
+    Lt, Ls = cycle_laplacian(Nt), cycle_laplacian(Ns)
+    It, Is = np.eye(Nt), np.eye(Ns)
+    L_t = np.kron(Lt, Is); L_s = np.kron(It, Ls); I = np.eye(Nt * Ns)
+    P_meas = L_t + L_s + (a * a * m * m) * I
+    P_tr = L_t + coef * ((1.0 / (a * a)) * L_s + m * m * I)
+    return np.allclose(P_meas, P_tr)
+
 def main():
     print("=" * 74)
+    print("General precision-matrix check (exercises spatialKinetic, Ns>=2)")
+    print("=" * 74)
+    for Nt, Ns, a, m in [(2, 2, 0.5, 1.0), (3, 2, 0.7, 1.3), (4, 3, 0.5, 1.0)]:
+        ok_a = precision_check(Nt, Ns, a, m, coef=a)
+        ok_a2 = precision_check(Nt, Ns, a, m, coef=a * a)
+        print(f"  Nt={Nt} Ns={Ns} a={a} m={m}:  coef=a match={ok_a}   "
+              f"coef=a^2 match={ok_a2}")
+    print("\n" + "=" * 74)
     print("2-slice (Nt=2, Ns=1) two-point: measure vs transfer operator")
     print("=" * 74)
     for a, m in [(0.5, 1.0), (2.0, 1.0), (1.0, 1.0), (0.3, 1.7)]:
