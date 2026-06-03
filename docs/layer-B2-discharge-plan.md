@@ -92,6 +92,17 @@ definitive citable standard for the *spatial-infrared* task (`Ls → ∞`).
 
 ## Feynman–Kac bridge — scoping (2026-06-03): the pinned next code task for B2
 
+> **PRIMARY ROUTE (owner decision 2026-06-03): build this in MAXIMUM GENERALITY in the
+> `reflection-positivity` library, NOT as the lattice Fubini below.** In the OS/GNS
+> framework the correlation identity `⟪[F],Tⁿ[G]⟫_phys = reflectionInnerProduct μ θ F
+> (G∘τⁿ)` is essentially definitional, so the hard lattice steps (action factorization,
+> kernel-composition Fubini, trace-ratio limit) **collapse**; the only φ⁴₂-specific work
+> left is one operator-coincidence lemma (abstract `H_phys`/`T` = pphi2's
+> `L2SpatialField`/`asymTransferOperatorCLM`) + free boundedness. Full design:
+> `reflection-positivity/RECON.md` → "The Feynman–Kac bridge in MAXIMUM GENERALITY".
+> The lattice-specific 4-step design below is kept as the concrete fallback / as the
+> content of the operator-coincidence lemma.
+
 This is the real remaining B2 work. It is the **Step B (Källén–Lehmann)** of the
 detailed plan in the `reflection-positivity` repo's `RECON.md` ("Op 1: pphi2
 Layer-B2 adapter") — Steps A and C there are already done/mechanical; Step B is the
