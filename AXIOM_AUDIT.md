@@ -2,6 +2,39 @@
 
 **Last updated**: 2026-06-02.
 
+## 2026-06-02 — Layer B2 transfer-matrix spectral gap PROVED; discharge plan refined (no chessboard)
+
+Operator side of the Layer-B2 (`asymInteractingVariance_le_freeVariance_Lt_uniform`)
+discharge is now built and sorry/axiom-free:
+
+* `reflection-positivity` (now a dep of pphi2, v4.30.0): `GappedTransfer` +
+  `GappedTransfer.susceptibility_le` (the `Lt`-uniform two-point-sum bound via
+  the geometric series).
+* `Pphi2/AsymTorus/AsymGappedTransfer.lean` + `AsymSpectralGap.lean`:
+  `asymTransferNormalized_gap` (operator-norm gap on the ground-orthogonal
+  complement) and `asymGappedTransfer'` (hypothesis-free `GappedTransfer`).
+* Prereq fix: `AsymTransferGroundExcitedData.htop` re-exposes jentzsch's
+  Perron-Frobenius dominance — the ground index was under-specified.
+
+**Framing correction.** The chessboard / FSS framing in the discharge plans of
+both `asymInteractingVariance_le_freeVariance_Lt_uniform` and
+`asymInteracting_expMoment_volume_uniform` (this file, the per-axiom table, and
+the axiom docstrings) is **SUPERSEDED**: at fixed `Ls` the cylinder mass gap is
+uniform via compact-resolvent convergence (`T_a → e^{−aH(Ls)}`, Simon Ch. VI),
+so **no chessboard is needed** (FSS is only for the thermodynamic `Ls → ∞`
+limit). See `reflection-positivity/docs/B2_UNIFORMITY_QUESTION.md` (expert-vetted).
+
+**Refined discharge plan** (`docs/layer-B2-discharge-plan.md`): three pieces —
+(1) the interacting Källén-Lehmann/Feynman-Kac representation (the un-formalized
+measure↔operator bridge; a *more-fundamental* axiom-to-be, replacing the
+high-level B2 axiom); (2) the free representation (provable, Gaussian);
+(3) the int/free ratio, whose `1/a` cancellation is essential — a naive
+`Var_int ≤ 1/(1−γ)·Var_free` is `a`-non-uniform and WRONG. The operator-theoretic
+content (gap, geometric series) that was historically the hard part is now proved.
+
+**Impact on counts**: no change yet (no axiom added or removed; B2 stays an axiom
+pending the Piece-1 representation axiom + the Piece-2/3 proofs).
+
 ## 2026-05-31 — Layer B1 (cylinder TM + variance bound) complete
 
 The cylinder transfer-matrix port for the `asymInteracting_expMoment_volume_uniform`
