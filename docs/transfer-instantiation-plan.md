@@ -2,11 +2,16 @@
 
 ## Status machine (plan-loop; re-read every cycle)
 
-- [ ] M1. Asym lattice RP in abstract `IsReflectionPositive` form (port square `lattice_rp` + raw-fn→`lpMeas` adapter)   status: in_progress   deps: []   note: Codex retry #2 (first crashed during exploration). FINDING: the existing reflection-invariance lemma is square-side (`FinLatticeField 2 N`), so the asym measure likely routes via `asymTorusInteractingMeasureIso` to the square — reuse the square RP through the iso rather than re-port.
-- [ ] M2. `θ` involution + `mPos` on `Configuration` (route via `asymTorusInteractingMeasureIso`; reuse square `asymInteractingLatticeMeasure_timeReflection_invariant`, which is for `FinLatticeField 2 N`)   status: in_progress   deps: []   note: Codex retry #2
-- [ ] M3. Assemble `TimeTranslatedSystem` for the asym cylinder (τ, τmp, τθ, τPos, contraction)   status: in_progress   deps: [M1, M2]   note: Codex retry #2
-- [ ] M4. Operator-coincidence `H_phys`/`transferOperator` ≃ `L2SpatialField`/`asymTransferOperatorCLM`; transport gap to `GappedTransfer H_phys`   status: blocked   deps: [M3]   note: needs M3's `TimeTranslatedSystem`; the hard core (candidate for a dedicated Codex pass)
+- [~] M1. Asym lattice RP in abstract `IsReflectionPositive` form   status: blocked   deps: []   note: SCAFFOLD DONE (93ae9f0) — field bundled; `Pphi2Asym_reflectionPositive` is SORRIED. Needs `lattice_rp`/`PositiveTimeSupported`→abstract `IsReflectionPositive` adapter (lpMeas representatives + `asymTorusInteractingMeasureIso` transport). Substantial.
+- [~] M2. `θ` involution + `mPos` on `Configuration`   status: blocked   deps: []   note: SCAFFOLD DONE (93ae9f0) — θ, involutive, mPos, le, measurability PROVED; `Pphi2AsymTheta_measurePreserving` (mp) is SORRIED (θ-invariance of the asym measure via the iso).
+- [~] M3. Assemble `TimeTranslatedSystem`   status: blocked   deps: [M1, M2]   note: TYPED INSTANCE `Pphi2AsymTTS` BUILT (93ae9f0); τ, τθ proved. SORRIED: `Pphi2AsymTau_measurePreserving` (τmp), `Pphi2AsymTauPos` (τPos — note: unit shift vs positive-time support on the periodic cylinder is subtle), `contraction`.
+- [ ] M4. Operator-coincidence `H_phys`/`transferOperator` ≃ `L2SpatialField`/`asymTransferOperatorCLM`; transport gap to `GappedTransfer H_phys`   status: blocked   deps: [M3]   note: structurally unblocked (typed instance exists) but the hard core (weeks); the `contraction` sorry ties here. Candidate for a dedicated Codex pass once the env Codex is stable / the M1-M3 sorries land.
 - [ ] M5. Variance connection: D3 sum ↔ `∫(ωf)²dμ_int`, identify with `C·Var_free` via `1/a` cancellation (B1 = a-uniformity)   status: blocked   deps: [M4]   note: needs M4's `GappedTransfer`
+
+**Loop checkpoint (2026-06-03):** scaffold landed (typed `Pphi2AsymTTS` + structural
+lemmas, committed `93ae9f0`); 5 analytic sorries + M4 + M5 remain — each substantial.
+Env Codex is flaky (1 crash). Pausing the autonomous loop here for direction on the
+heavy remainder rather than spinning.
 
 
 
