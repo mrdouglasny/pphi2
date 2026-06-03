@@ -24,13 +24,23 @@ uniform via compact-resolvent convergence (`T_a → e^{−aH(Ls)}`, Simon Ch. VI
 so **no chessboard is needed** (FSS is only for the thermodynamic `Ls → ∞`
 limit). See `reflection-positivity/docs/B2_UNIFORMITY_QUESTION.md` (expert-vetted).
 
-**Refined discharge plan** (`docs/layer-B2-discharge-plan.md`): three pieces —
-(1) the interacting Källén-Lehmann/Feynman-Kac representation (the un-formalized
-measure↔operator bridge; a *more-fundamental* axiom-to-be, replacing the
-high-level B2 axiom); (2) the free representation (provable, Gaussian);
-(3) the int/free ratio, whose `1/a` cancellation is essential — a naive
-`Var_int ≤ 1/(1−γ)·Var_free` is `a`-non-uniform and WRONG. The operator-theoretic
-content (gap, geometric series) that was historically the hard part is now proved.
+**Refined discharge plan** (`docs/layer-B2-discharge-plan.md`): a Källén-Lehmann/
+Feynman-Kac trace representation (the un-formalized measure↔operator bridge, a
+*more-fundamental* axiom-to-be replacing the high-level B2 axiom) + the int/free
+comparison via the proved gap. The operator-theoretic content (gap, geometric
+series) that was historically the hard part is now proved.
+
+**Codex vetting (2026-06-02): the naive 3-piece form is FLAWED but salvageable.**
+Corrections folded into the plan doc: (i) the interacting representation must be
+the periodic **two-arc trace** `⟨A Tᵗ A T^{Lt−t}⟩/⟨T^{Lt}⟩` (corollary factor
+`γ^r + γ^{Nt−r}`), not a single-`dist` kernel equality; (ii) the scalar free
+lower bound `Var_free ≳ 1/(1−γ_free)·Σ‖Q‖²` is likely FALSE for high temporal
+modes — replace with **mode-by-mode free-covariance domination**; (iii)
+`susceptibility_le` is single-vector, so a **cyclic Young** lemma is needed for
+the double sum; (iv) add a **Z₂ zero-mean** lemma (raw vs connected 2nd moment);
+(v) reconcile the GJ `a`-weight to avoid double-counting; (vi) add the fixed-`Ls`
+gap-convergence `m_a → m(Ls) > 0` as an explicit input. See the plan doc's
+"⚠ Vetting result" section.
 
 **Impact on counts**: no change yet (no axiom added or removed; B2 stays an axiom
 pending the Piece-1 representation axiom + the Piece-2/3 proofs).

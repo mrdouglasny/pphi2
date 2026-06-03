@@ -4,6 +4,60 @@
 framing in the `asymInteractingVariance_le_freeVariance_Lt_uniform` docstring.
 The transfer-matrix spectral gap this plan rests on is now **proved**.*
 
+## ⚠ Vetting result (Codex, 2026-06-02): the 3-piece sketch below is FLAWED as written
+
+Verdict: **flawed but salvageable**. The idea (gap ⟹ Lt-uniform variance via the
+ratio) is sound, but the *as-written* Pieces 1–3 have real gaps. Read the
+corrections here first; the sketch in the lower sections is the original, kept
+for context. **Required corrections:**
+
+1. **Piece-1 representation is WRONG as an equality.** On the periodic cylinder
+   the finite-volume 2-point object is a **two-arc trace**, `⟨A Tᵗ A T^{Lt−t}⟩ / ⟨T^{Lt}⟩`
+   (exactly as `reflection-positivity/ReflectionPositivity/VarianceBound.lean`'s
+   own docstring states), not `a²·Σ ⟪Q_s, T^{dist(s,t)} Q_t⟫`. The single-`dist`
+   kernel is at best a *bound*; the correct periodized factor is `γ^r + γ^{Nt−r}`,
+   `r = |s−t| mod Nt`. **Fix:** state Piece 1 as an exact **trace** representation
+   with insertion operators `A_s` and the periodic-trace denominator, then derive
+   the `γ^r + γ^{Nt−r}` corollary bound.
+
+2. **The free lower bound (Piece 2) is the biggest risk — likely false as stated.**
+   `Var_free ≳ (1/(1−γ_free))·Σ_s‖Q_s‖²` uses the *zero-mode* (low-frequency)
+   susceptibility scale for **all** test functions; it is not a valid uniform
+   lower spectral multiplier for time-dependent profiles with high temporal modes.
+   **Fix:** do NOT use a scalar free lower bound. Instead prove **mode-by-mode
+   operator domination** — the interacting *connected covariance form* `≤ C ·` the
+   *exact free covariance form* — so the comparison is against the true free
+   covariance, not a single susceptibility scale. (This also removes the need for
+   the `1/a` cancellation to be done "by hand".)
+
+3. **`susceptibility_le` is used beyond its proved scope.** It controls a *single*
+   vector (`∑_n |⟪v,Tⁿv⟫| ≤ ‖v‖²/(1−γ)`). The double sum `Σ_{s,t}⟪Q_s,T^d Q_t⟫`
+   needs a separate **mixed cyclic Young inequality**:
+   `Σ_{s,t<N} γ^{d(s,t)} ‖Q_s‖‖Q_t‖ ≤ (C/(1−γ))·Σ_s‖Q_s‖²` (with the periodic `d`).
+   This is a new lemma (candidate for `reflection-positivity`).
+
+4. **Connected vs raw second moment.** The target bounds the *raw* `∫(ωf)²`, but
+   the representation/gap argument controls the *connected* (ground-orthogonal)
+   part. Add a zero-/one-point lemma (Z₂/evenness of the measure) so raw 2nd
+   moment = covariance for these observables, or carry the disconnected term.
+
+5. **`a`-normalization double-counting.** `asymLatticeTestFnIso` already inserts a
+   GJ `a` weight (`evalAsymTorusAtSiteGJ_apply = a·…`, `AsymTorusEmbeddingIso.lean:47,76`).
+   Pin whether the spatial `a` lives in `A_s` or in the outer `a²`; do not hide it
+   in both.
+
+6. **fixed-`Ls` gap convergence is not yet in Lean.** `asymTransferNormalized_gap`
+   is per-lattice-parameter; `AsymPositivity.lean:135` puts `a→0` uniformity out of
+   scope. Add `m_a → m(Ls) > 0` (equiv. a uniform lower bound on `−log γ_a / a`
+   over `Ns·a = Ls`, finitely many coarse spacings handled separately) as an
+   explicit lemma/axiom.
+
+**Net:** replacing the black-box B2 axiom with a *correct* trace-representation
+axiom is still a genuine improvement, but the discharge needs (i) the two-arc
+trace representation, (ii) mode-by-mode free-covariance domination (not a scalar
+lower bound), (iii) the cyclic Young lemma, (iv) the Z₂ zero-mean lemma, and
+(v) the explicit fixed-`Ls` gap input. (Codex full review: read-only, 2026-06-02.)
+
 ## Target (the axiom to discharge)
 
 `asymInteractingVariance_le_freeVariance_Lt_uniform`
