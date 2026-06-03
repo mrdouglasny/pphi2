@@ -57,6 +57,10 @@ structure AsymTransferGroundExcitedData (P : InteractionPolynomial) (a mass : �
       (asymTransferOperatorCLM Nt Ns P a mass ha hmass x)
   hi_ne : i₁ ≠ i₀
   hlt : eigenval i₁ < eigenval i₀
+  /-- `i₀` is the Perron-Frobenius top: it strictly dominates every other
+  eigenvalue in absolute value, so the ground vector/eigenvalue are genuinely
+  the spectral top (not merely above one excited level). -/
+  htop : ∀ i, i ≠ i₀ → |eigenval i| < eigenval i₀
 
 /-- A noncomputable choice of asym spectral data with distinguished
 ground/first-excited indices. -/
@@ -66,7 +70,7 @@ noncomputable def asymTransferGroundExcitedData (P : InteractionPolynomial) (a m
   classical
   exact Classical.choice <| by
     rcases asymTransferOperator_ground_simple_spectral Nt Ns P a mass ha hmass with
-      ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt⟩
+      ⟨ι, b, eigenval, i₀, i₁, h_eigen, h_sum, hi_ne, hlt, htop⟩
     exact ⟨{
         ι := ι
         b := b
@@ -77,6 +81,7 @@ noncomputable def asymTransferGroundExcitedData (P : InteractionPolynomial) (a m
         h_sum := h_sum
         hi_ne := hi_ne
         hlt := hlt
+        htop := htop
       }⟩
 
 /-- Ground-state eigenvalue `λ₀` of the asym cylinder transfer operator. -/
