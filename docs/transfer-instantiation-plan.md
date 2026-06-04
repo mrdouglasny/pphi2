@@ -17,19 +17,23 @@ which IS the 4-step factorization already scoped in
 - [ ] B4. Apply `asymGappedTransfer'`.`susceptibility_le` ⟹ `Lt`-uniform bound on the time-summed correlator   status: blocked   deps: [B3]   note: mechanical given B3 + the proved gap.
 - [ ] B5. Identify with `C·Var_free` via the `1/a` cancellation; B1-Nelson = `a`-uniformity   status: blocked   deps: [B4]   note: discharges `asymInteractingVariance_le_freeVariance_Lt_uniform`.
 
-**PROGRESS 2026-06-04 (branch `transfer-instantiation`).** The abstract Feynman–Kac
-dictionary **B3 is DONE** in reflection-positivity (`TransferSystem.lean`,
-`partition_eq_trace` + `twoPoint_dictionary`, merged `61cd790`). pphi2 **B2 instantiation
-STARTED** (commit `fda6be7`): pin bumped; `asymTransferKernel x y = w(x)·G(x−y)·w(y)` and
-`asymTransferSystem : TransferSystem (SpatialField Ns)` built, with `k_symm`/`k_nonneg`/
-`k_meas`/`ν_sigmaFinite`/`pathDensity_measurable` PROVED. REMAINING for B2: (i) the two
-Gaussian-integrability sorries (`openChain_step_integrable`, `partition_integrable` — via
-`asymTransferWeight_gaussian_decay` + G decay); (ii) **the crux** — identify
-`interactingLatticeMeasureAsym` (pushed to the slice product `ZMod Nt → SpatialField Ns`)
-with the abstract `pathMeasure` of `asymTransferKernel`, plus the per-observable two-point
-integrability hyps. (`kPow asymTransferKernel` = the kernels of `asymTransferOperatorCLM`
-powers — the bridge to the proved gap. NB the B1a `asymSliceEquiv` brick lives on the
-unmerged `option-b-feynman-kac` branch; bring it over for the slice pushforward.)
+**PROGRESS 2026-06-04 (branch `transfer-instantiation`).** Abstract dictionary **B3 DONE**
+(reflection-positivity `TransferSystem.lean`, merged `61cd790`). pphi2 **B2 instantiation:
+`asymTransferSystem : TransferSystem (SpatialField Ns)` is now FULLY PROVED, sorry-free,
+axiom-clean** (`fda6be7` structural fields; `741c6aa` the two Gaussian-integrability fields
+via `transferGaussian_le_one` ⟹ `k ≤ w·w` ⟹ `openChainProduct ≤ w(x)w(y)∏w(qⱼ)²`,
+dominated by an integrable `∏w²`). So the dictionary (`partition_eq_trace`,
+`twoPoint_dictionary`) now applies to pphi2's cylinder off the shelf.
+
+**REMAINING for the B2 deliverable:**
+- **(crux) measure factorization** — identify `interactingLatticeMeasureAsym` (pushed to the
+  slice product `ZMod Nt → SpatialField Ns`) with `asymTransferSystem.pathMeasure`:
+  `latticeCovarianceAsymGJ` precision = slice-tridiagonal `time-coupling + a²·spatialAction`,
+  so `dμ_int ∝ ∏_t [w·G·w]`. Plus the per-observable two-point integrability hyps. (Needs the
+  B1a `asymSliceEquiv` brick — on the unmerged `option-b-feynman-kac` branch; bring it over.)
+- **B4** — `kPow asymTransferKernel d` = kernel of `asymTransferOperatorCLM`'s `d`-th power;
+  with `twoPoint_dictionary` + `susceptibility_le` (proved gap) ⟹ `Lt`-uniform correlator bound.
+- **B5** — identify with `C·Var_free` via the `1/a` cancellation; B1-Nelson = `a`-uniformity.
 
 ### Superseded (finite-torus GNS — DEAD END, kept for the record)
 - [x] M1/M2/M3 scaffold (`Pphi2AsymTTS`, `93ae9f0`) — UNSOUND (`τPos` false); not on the path. M4/M5 dropped.
