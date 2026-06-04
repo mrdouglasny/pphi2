@@ -12,8 +12,17 @@ which IS the 4-step factorization already scoped in
 `layer-B2-discharge-plan.md` → "Feynman–Kac bridge — scoping". Active plan = B1–B5:
 
 - [~] B1. Slice iso `Configuration (AsymLatticeField Nt Ns) ≃ (ZMod Nt → SpatialField Ns)`, measure-compatible   status: in_progress   deps: []   note: **B1a DONE** — `asymSliceEquiv` (test-space `≃ₗ`) + simp lemma, builds, no sorry (commit on `option-b-feynman-kac`). **B1b remaining**: dualize to a measurable `Configuration` equiv + push `interactingLatticeMeasureAsym` to the slice product (`WeakDual` + cylindrical σ-algebra) — substantial measure-theory. (Codex's B1 dispatch crashed during exploration; B1a built directly.)
-- [ ] B2. Measure factorization: `dμ_int ∝ ∏_t [w(ψ_t)·G(ψ_t−ψ_{t+1})·w(ψ_t)]` with `w = exp(−(a²/2)·spatialAction)` (corrected weight), `G = transferGaussian` — the Gaussian time-slicing. THE CRUX.   status: blocked   deps: [B1]   note: show `latticeCovarianceAsymGJ` = the slice-decomposed (time-coupling + a²·spatialAction) quadratic form.
-- [ ] B3. Trace dictionary: `∫ A(ψ_0)·B(ψ_n) dμ = Tr(M_A Tⁿ M_B T^{Nt−n})/Tr(T^{Nt})`; connected/vacuum-projected form `∑ ⟨v_f, T̂^{|t−t'|} v_f⟩`   status: blocked   deps: [B2]   note: `T = asymTransferOperatorCLM`.
+- [ ] B2. **Instantiate the abstract `TransferSystem` for pphi2** (now the crux, given B3 is done abstractly): provide `(ν, k)` with `k(x,y) = w(x)·G(x−y)·w(y)` (`w = exp(−(a²/2)·spatialAction)`, `G = transferGaussian`), and prove `interactingLatticeMeasureAsym` (pushed to the slice product via B1a `asymSliceEquiv`) equals the abstract `pathMeasure` — i.e. `latticeCovarianceAsymGJ` precision = slice-decomposed `time-coupling + a²·spatialAction`. THE CRUX. Plus the integrability side-conditions.   status: blocked   deps: [B1]   note: the Gaussian time-slicing factorization; `kPow` of this `k` = `asymTransferOperatorCLM` powers' kernels.
+- [x] B3. **Trace dictionary — DONE ABSTRACTLY** in reflection-positivity
+  (`ReflectionPositivity/TransferSystem.lean`, branch `transfer-system`, commit `8e0e5c2`):
+  `TransferSystem.twoPoint_dictionary` proves `∫ A(ψ₀)·B(ψ_t) dμ_n = Z_n⁻¹·∫∫ A·kPow_{t-1}·B·kPow_{n-t-1}`
+  (= `Tr(M_A Tᵗ M_B T^{n−t})/Tr(Tⁿ)`) and `partition_eq_trace` gives `Z_n = ∫ kPow(n-1) x x`,
+  both genuinely proved (two-arc Fubini peeling; axiom-clean; NO assumed-identity field —
+  caught + fixed a first Codex pass that had assumed it). **Fully general over any
+  `(S,ν,k)`.** ⟹ pphi2's B3 is now just *instantiating* this. Reframes B2: B2 = build the
+  `TransferSystem` instance for pphi2 (k = `w·G·w` with the `a²/2` weight; show
+  `interactingLatticeMeasureAsym` = its `pathMeasure`) + discharge the integrability
+  side-conditions (currently ∀A,B fields — may need refactor to per-test-function hyps).
 - [ ] B4. Apply `asymGappedTransfer'`.`susceptibility_le` ⟹ `Lt`-uniform bound on the time-summed correlator   status: blocked   deps: [B3]   note: mechanical given B3 + the proved gap.
 - [ ] B5. Identify with `C·Var_free` via the `1/a` cancellation; B1-Nelson = `a`-uniformity   status: blocked   deps: [B4]   note: discharges `asymInteractingVariance_le_freeVariance_Lt_uniform`.
 
