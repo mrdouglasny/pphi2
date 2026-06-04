@@ -25,7 +25,7 @@ summation-by-parts decomposition of `⟨φ, Q φ⟩` into nearest-neighbour bond
 * `massOperatorAsym_quadratic_form_bonds` — `⟨φ, Q φ⟩ = a⁻²·(time bonds + space bonds) + m²·‖φ‖²`.
 -/
 
-open MeasureTheory GaussianField
+open MeasureTheory GaussianField ReflectionPositivity
 open scoped BigOperators
 
 namespace Pphi2
@@ -255,5 +255,63 @@ theorem energy_exponent_factorization (P : InteractionPolynomial) (a mass : ℝ)
   simp only [spatialAction]
   rw [Finset.sum_add_distrib, mul_add, hsk, hpot]
   ring
+
+/-! ## Step 2 (exp level) — kernel product equals `exp(−action)`
+
+The remaining measure-level conclusion `μ_int.map sliceEquiv = pathMeasure` routes through the
+asym Gaussian-density bridge (crux-1); this exp-level identity is the last piece provable
+without it: the abstract `periodicPathDensity` of `asymTransferKernel` equals `exp(−S)` where
+`S` is the interacting lattice action. -/
+
+/-- The transfer kernel splits as `exp(−(a²/2)·spatialAction(x)) · exp(−timeCoupling(x,y)) ·
+exp(−(a²/2)·spatialAction(y))`. -/
+private lemma asymTransferKernel_eq_exp (P : InteractionPolynomial) (a mass : ℝ)
+    (x y : SpatialField Ns) :
+    asymTransferKernel Nt Ns P a mass x y =
+      Real.exp (-(a ^ 2 / 2) * spatialAction Ns P a mass (wickConstantAsym Nt Ns a mass) x)
+      * Real.exp (-timeCoupling Ns x y)
+      * Real.exp (-(a ^ 2 / 2) * spatialAction Ns P a mass (wickConstantAsym Nt Ns a mass) y) := by
+  unfold asymTransferKernel asymTransferWeight transferGaussian
+  have htc : timeCoupling Ns 0 (x - y) = timeCoupling Ns x y := by
+    unfold timeCoupling
+    congr 1
+    exact Finset.sum_congr rfl (fun s _ => by simp only [Pi.sub_apply, Pi.zero_apply]; ring)
+  rw [htc]
+
+/-- **Kernel product = `exp(−action)`.** The periodic path density of `asymTransferKernel`
+along the slices of `φ` equals `exp` of minus the interacting lattice action. Combined with
+`energy_exponent_factorization` (the `−log` identity); needs `a ≠ 0`. -/
+theorem periodicPathDensity_asymTransferKernel_eq_exp (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : a ≠ 0) (φ : AsymLatticeField Nt Ns) :
+    periodicPathDensity (asymTransferKernel Nt Ns P a mass) Nt (asymSliceEquiv Nt Ns φ) =
+      Real.exp (-((a ^ 2 / 2) * (∑ x, φ x * (massOperatorAsym Nt Ns a mass φ) x)
+        + a ^ 2 * ∑ x, wickPolynomial P (wickConstantAsym Nt Ns a mass) (φ x))) := by
+  rw [periodicPathDensity]
+  -- collapse each kernel factor into a single `exp`
+  have hker2 : ∀ t : ZMod Nt, asymTransferKernel Nt Ns P a mass
+        (asymSliceEquiv Nt Ns φ t) (asymSliceEquiv Nt Ns φ (t + 1)) =
+      Real.exp ((-(a ^ 2 / 2) * spatialAction Ns P a mass (wickConstantAsym Nt Ns a mass)
+            (asymSliceEquiv Nt Ns φ t))
+          + (-timeCoupling Ns (asymSliceEquiv Nt Ns φ t) (asymSliceEquiv Nt Ns φ (t + 1)))
+          + (-(a ^ 2 / 2) * spatialAction Ns P a mass (wickConstantAsym Nt Ns a mass)
+            (asymSliceEquiv Nt Ns φ (t + 1)))) := by
+    intro t
+    rw [asymTransferKernel_eq_exp, ← Real.exp_add, ← Real.exp_add]
+  simp_rw [hker2]
+  rw [← Real.exp_sum]
+  congr 1
+  rw [Finset.sum_add_distrib, Finset.sum_add_distrib]
+  -- reindex the `ψ (t+1)` spatial-action sum to a `ψ t` sum
+  have hshift' : (∑ t : ZMod Nt, -(a ^ 2 / 2) * spatialAction Ns P a mass
+        (wickConstantAsym Nt Ns a mass) (asymSliceEquiv Nt Ns φ (t + 1))) =
+      ∑ t : ZMod Nt, -(a ^ 2 / 2) * spatialAction Ns P a mass
+        (wickConstantAsym Nt Ns a mass) (asymSliceEquiv Nt Ns φ t) :=
+    Equiv.sum_comp (Equiv.addRight (1 : ZMod Nt))
+      (fun t => -(a ^ 2 / 2) * spatialAction Ns P a mass
+        (wickConstantAsym Nt Ns a mass) (asymSliceEquiv Nt Ns φ t))
+  rw [hshift', energy_exponent_factorization P a mass ha φ,
+    ← Finset.sum_add_distrib, ← Finset.sum_add_distrib]
+  conv_rhs => rw [neg_eq_neg_one_mul, Finset.mul_sum]
+  exact Finset.sum_congr rfl (fun t _ => by ring)
 
 end Pphi2
