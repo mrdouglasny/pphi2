@@ -51,11 +51,17 @@ The asym lattice (`AsymLatticeField`, `latticeCovarianceAsymGJ`) is a *separate 
   to `AsymLatticeField`/`latticeCovarianceAsymGJ`. Lands `interactingLatticeMeasureAsym` as a
   Lebesgue-density measure `(1/Z)·exp(−½⟨φ,Q_asym φ⟩−V_int) dλ` on the coordinate space. **The
   heaviest piece — a GaussianField (dependency) development.**
-- ⛏ **(crux-2) energy factorization** — pure linear algebra: through `asymSliceEquiv`,
-  `½⟨φ,Q_asym φ⟩ = Σ_t timeCoupling(ψ_t,ψ_{t+1}) + a²·Σ_t spatialAction₀(ψ_t)`, so the density
-  `·exp(−V_int) = ∏_t [w(ψ_t)·G(ψ_t−ψ_{t+1})·w(ψ_{t+1})]` (uses `w²` carrying `V_int`, shown).
-  ⟹ `interactingLatticeMeasureAsym (slice-pushed) = asymTransferSystem.pathMeasure`. Provable
-  from `finiteLaplacianAsym`'s time+space NN split; no measure theory. **Good Codex candidate.**
+- ✅ **(crux-2) energy factorization — DERIVED + VETTED** (Gemini deep-think, 2026-06-04; see
+  [`crux2-energy-factorization.md`](crux2-energy-factorization.md)). Result: `dμ_int/dλ =
+  (1/Z)∏_t k(ψ_t,ψ_{t+1})` **EXACTLY**, so `μ_int.map sliceEquiv = asymTransferSystem.pathMeasure`
+  as normalized measures with **no residual `a`-rescaling**. The pivotal `a`-power: the covariance
+  is supplied as the **square-root** operator (`covariance T f g = ⟨Tf,Tg⟩`, `T = a⁻¹Q^{−1/2}`),
+  so the free **precision is `a²Q`** (NOT `aQ`) — then the `a²/2` weight cancels `Δ_a`'s `a⁻²` to
+  give coefficient `1` on `timeCoupling` (the `a^{d−2}=a⁰` feature of `d=2`), and the interaction
+  `a²·Σ:P:` matches on both sides. **The `1/a` cancellation lives in B5's torus↔lattice
+  test-function map (`asymLatticeTestFnIso = a • evalAtSite`), not here.** Lean roadmap (in the
+  doc): (1) SBP slice lemma, (2) pointwise density identity `gaussianDensityAsym·exp(−V) = ∏k`,
+  (3) measure equality. Steps 1–2 are local & provable now; step 3 routes through crux-1.
 - **B3/B4** — `kPow asymTransferKernel d` = `asymTransferOperatorCLM`'s `d`-th power kernel;
   `(ω f)² = Σ_{t,s} ⟨f_t,ψ_t⟩⟨f_s,ψ_s⟩` ⟹ `twoPoint_dictionary` + `susceptibility_le` (proved
   gap) ⟹ `Lt`-uniform correlator bound. Mechanical given crux-1/2.
