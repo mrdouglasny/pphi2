@@ -25,14 +25,40 @@ via `transferGaussian_le_one` ⟹ `k ≤ w·w` ⟹ `openChainProduct ≤ w(x)w(y
 dominated by an integrable `∏w²`). So the dictionary (`partition_eq_trace`,
 `twoPoint_dictionary`) now applies to pphi2's cylinder off the shelf.
 
-**REMAINING for the B2 deliverable:**
-- **(crux) measure factorization** — identify `interactingLatticeMeasureAsym` (pushed to the
-  slice product `ZMod Nt → SpatialField Ns`) with `asymTransferSystem.pathMeasure`:
-  `latticeCovarianceAsymGJ` precision = slice-tridiagonal `time-coupling + a²·spatialAction`,
-  so `dμ_int ∝ ∏_t [w·G·w]`. Plus the per-observable two-point integrability hyps. (Needs the
-  B1a `asymSliceEquiv` brick — on the unmerged `option-b-feynman-kac` branch; bring it over.)
-- **B4** — `kPow asymTransferKernel d` = kernel of `asymTransferOperatorCLM`'s `d`-th power;
-  with `twoPoint_dictionary` + `susceptibility_le` (proved gap) ⟹ `Lt`-uniform correlator bound.
+**PROGRESS 2026-06-04 (cont.).** B1 slice iso landed: `asymSliceEquiv : AsymLatticeField Nt Ns
+≃ₗ (ZMod Nt → SpatialField Ns)` (`71fc7be`, sorry-free, pure Mathlib `LinearEquiv`).
+
+**The B2 "measure↔operator bridge" — CORRECTED decomposition (the key finding, 2026-06-04).**
+pphi2's own B2-axiom docstring calls this "the interacting Källén–Lehmann/Feynman–Kac
+representation — the un-formalized measure↔operator bridge — a more-fundamental axiom-to-be."
+It is NOT new-infrastructure-from-scratch: GaussianField **already has the analogous bridge
+for the SQUARE lattice** (`GaussianField/Density.lean`):
+  - `evalMapMeasurableEquiv` — the `Configuration (FinLatticeField) ≃ᵐ FinLatticeField`
+    (WeakDual↔coordinate) measurable equiv;
+  - `quadraticGaussianMeasure Q = volume.withDensity exp(−½⟨φ,Qφ⟩)` and
+    `normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure` — the abstract
+    `GaussianField.measure` **= Lebesgue-density Gaussian** identity;
+  - `gaussianDensity_eq_exp_spectral` / `SpectralCovariance` — the precision quadratic form.
+The asym lattice (`AsymLatticeField`, `latticeCovarianceAsymGJ`) is a *separate type* with
+**no** asym analogue yet (confirmed by grep). So the crux = a **bounded PORT**, not invention.
+
+**REMAINING sub-pieces (all that stands between here and the deliverable):**
+- ✅ **operator side** — proved abstract dictionary (`twoPoint_dictionary`) + sorry-free
+  `asymTransferSystem`; **DONE**.
+- ✅ **B1 slice iso** (`asymSliceEquiv`); **DONE**.
+- ⛏ **(crux-1) asym density bridge** — port `Density.lean`'s square-lattice
+  `evalMapMeasurableEquiv` + `normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure`
+  to `AsymLatticeField`/`latticeCovarianceAsymGJ`. Lands `interactingLatticeMeasureAsym` as a
+  Lebesgue-density measure `(1/Z)·exp(−½⟨φ,Q_asym φ⟩−V_int) dλ` on the coordinate space. **The
+  heaviest piece — a GaussianField (dependency) development.**
+- ⛏ **(crux-2) energy factorization** — pure linear algebra: through `asymSliceEquiv`,
+  `½⟨φ,Q_asym φ⟩ = Σ_t timeCoupling(ψ_t,ψ_{t+1}) + a²·Σ_t spatialAction₀(ψ_t)`, so the density
+  `·exp(−V_int) = ∏_t [w(ψ_t)·G(ψ_t−ψ_{t+1})·w(ψ_{t+1})]` (uses `w²` carrying `V_int`, shown).
+  ⟹ `interactingLatticeMeasureAsym (slice-pushed) = asymTransferSystem.pathMeasure`. Provable
+  from `finiteLaplacianAsym`'s time+space NN split; no measure theory. **Good Codex candidate.**
+- **B3/B4** — `kPow asymTransferKernel d` = `asymTransferOperatorCLM`'s `d`-th power kernel;
+  `(ω f)² = Σ_{t,s} ⟨f_t,ψ_t⟩⟨f_s,ψ_s⟩` ⟹ `twoPoint_dictionary` + `susceptibility_le` (proved
+  gap) ⟹ `Lt`-uniform correlator bound. Mechanical given crux-1/2.
 - **B5** — identify with `C·Var_free` via the `1/a` cancellation; B1-Nelson = `a`-uniformity.
 
 ### Superseded (finite-torus GNS — DEAD END, kept for the record)
