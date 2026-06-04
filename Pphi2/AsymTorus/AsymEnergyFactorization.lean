@@ -223,4 +223,37 @@ theorem asym_onsite_sum_slice (g : ℝ → ℝ) (φ : AsymLatticeField Nt Ns) :
   refine Finset.sum_congr rfl (fun i _ => ?_)
   rw [asymSliceEquiv_apply]
 
+/-! ## Step 1e — the energy exponent factorization (capstone of step 1) -/
+
+/-- **Energy exponent factorization.** The full interacting lattice action (relative to
+Lebesgue) factorizes through the slice iso as a sum over time of `timeCoupling + a²·spatialAction`:
+`(a²/2)·⟨φ,Qφ⟩ + a²·Σ_x :P:(φ(x)) = Σ_t [timeCoupling(ψ_t,ψ_{t+1}) + a²·spatialAction(ψ_t)]`.
+This is the `−log` form of `dμ_int/dλ = (1/Z)∏_t k(ψ_t,ψ_{t+1})`; the remaining `exp`/measure
+wrapping routes through the (asym) Gaussian-density bridge (crux-1). Needs `a ≠ 0`. -/
+theorem energy_exponent_factorization (P : InteractionPolynomial) (a mass : ℝ) (ha : a ≠ 0)
+    (φ : AsymLatticeField Nt Ns) :
+    (a ^ 2 / 2) * (∑ x, φ x * (massOperatorAsym Nt Ns a mass φ) x)
+      + a ^ 2 * ∑ x, wickPolynomial P (wickConstantAsym Nt Ns a mass) (φ x) =
+    ∑ t : ZMod Nt,
+      (timeCoupling Ns (asymSliceEquiv Nt Ns φ t) (asymSliceEquiv Nt Ns φ (t + 1))
+        + a ^ 2 * spatialAction Ns P a mass (wickConstantAsym Nt Ns a mass)
+            (asymSliceEquiv Nt Ns φ t)) := by
+  have htc := timeCoupling_sum_slice (Nt := Nt) (Ns := Ns) φ
+  have hsk := spatialKinetic_sum_slice (Nt := Nt) (Ns := Ns) a ha φ
+  have hq := massOperatorAsym_quadratic_form_slice (Nt := Nt) (Ns := Ns) a mass ha φ
+  have hwick := asym_onsite_sum_slice (Nt := Nt) (Ns := Ns)
+    (fun y => wickPolynomial P (wickConstantAsym Nt Ns a mass) y) φ
+  have hpot : a ^ 2 * ∑ t : ZMod Nt,
+        spatialPotential Ns P a mass (wickConstantAsym Nt Ns a mass) (asymSliceEquiv Nt Ns φ t) =
+      (a ^ 2 / 2) * mass ^ 2 * (∑ t : ZMod Nt, ∑ i : Fin Ns, (asymSliceEquiv Nt Ns φ t i) ^ 2)
+        + a ^ 2 * ∑ t : ZMod Nt, ∑ i : Fin Ns,
+            wickPolynomial P (wickConstantAsym Nt Ns a mass) (asymSliceEquiv Nt Ns φ t i) := by
+    simp only [spatialPotential, mul_add, Finset.mul_sum, Finset.sum_add_distrib]
+    congr 1 <;>
+      exact Finset.sum_congr rfl (fun t _ => Finset.sum_congr rfl (fun i _ => by ring))
+  rw [hq, hwick, Finset.sum_add_distrib, htc, ← Finset.mul_sum]
+  simp only [spatialAction]
+  rw [Finset.sum_add_distrib, mul_add, hsk, hpot]
+  ring
+
 end Pphi2
