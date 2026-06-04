@@ -2,11 +2,23 @@
 
 ## Status machine (plan-loop; re-read every cycle)
 
-- [~] M1. Asym lattice RP in abstract `IsReflectionPositive` form   status: blocked   deps: []   note: SCAFFOLD DONE (93ae9f0) — field bundled; `Pphi2Asym_reflectionPositive` is SORRIED. Needs `lattice_rp`/`PositiveTimeSupported`→abstract `IsReflectionPositive` adapter (lpMeas representatives + `asymTorusInteractingMeasureIso` transport). Substantial.
-- [~] M2. `θ` involution + `mPos` on `Configuration`   status: blocked   deps: []   note: SCAFFOLD DONE (93ae9f0) — θ, involutive, mPos, le, measurability PROVED; `Pphi2AsymTheta_measurePreserving` (mp) is SORRIED (θ-invariance of the asym measure via the iso).
-- [~] M3. Assemble `TimeTranslatedSystem`   status: blocked   deps: [M1, M2]   note: TYPED INSTANCE `Pphi2AsymTTS` BUILT (93ae9f0); τ, τθ proved. SORRIED: `Pphi2AsymTau_measurePreserving` (τmp), `Pphi2AsymTauPos` (τPos — note: unit shift vs positive-time support on the periodic cylinder is subtle), `contraction`.
-- [ ] M4. Operator-coincidence `H_phys`/`transferOperator` ≃ `L2SpatialField`/`asymTransferOperatorCLM`; transport gap to `GappedTransfer H_phys`   status: blocked   deps: [M3]   note: structurally unblocked (typed instance exists) but the hard core (weeks); the `contraction` sorry ties here. Candidate for a dedicated Codex pass once the env Codex is stable / the M1-M3 sorries land.
-- [ ] M5. Variance connection: D3 sum ↔ `∫(ωf)²dμ_int`, identify with `C·Var_free` via `1/a` cancellation (B1 = a-uniformity)   status: blocked   deps: [M4]   note: needs M4's `GappedTransfer`
+**DECISION 2026-06-03: Option B (slice transfer matrix), per the axiom-vetting verdict.**
+The finite-torus GNS instantiation (M1–M5 below) is a DEAD END (`τPos` false on the
+periodic torus — Gemini 3.1-pro). Option B keeps the finite torus and uses pphi2's
+EXISTING slice operator `asymTransferOperatorCLM` (correctly normalized, `bb4b86d`) +
+the proved gap (`asymGappedTransfer'`, `susceptibility_le`); the one missing theorem is
+the **Feynman–Kac trace dictionary** (measure correlations = transfer-operator traces),
+which IS the 4-step factorization already scoped in
+`layer-B2-discharge-plan.md` → "Feynman–Kac bridge — scoping". Active plan = B1–B5:
+
+- [ ] B1. Slice iso `Configuration (AsymLatticeField Nt Ns) ≃ (ZMod Nt → SpatialField Ns)`, measure-compatible   status: in_progress   deps: []   note: `AsymLatticeSites = ZMod Nt × ZMod Ns` ⟹ `Equiv.curry` + `ZMod Ns ≃ Fin Ns`; the content is pushing `interactingLatticeMeasureAsym` to the slice product.
+- [ ] B2. Measure factorization: `dμ_int ∝ ∏_t [w(ψ_t)·G(ψ_t−ψ_{t+1})·w(ψ_t)]` with `w = exp(−(a²/2)·spatialAction)` (corrected weight), `G = transferGaussian` — the Gaussian time-slicing. THE CRUX.   status: blocked   deps: [B1]   note: show `latticeCovarianceAsymGJ` = the slice-decomposed (time-coupling + a²·spatialAction) quadratic form.
+- [ ] B3. Trace dictionary: `∫ A(ψ_0)·B(ψ_n) dμ = Tr(M_A Tⁿ M_B T^{Nt−n})/Tr(T^{Nt})`; connected/vacuum-projected form `∑ ⟨v_f, T̂^{|t−t'|} v_f⟩`   status: blocked   deps: [B2]   note: `T = asymTransferOperatorCLM`.
+- [ ] B4. Apply `asymGappedTransfer'`.`susceptibility_le` ⟹ `Lt`-uniform bound on the time-summed correlator   status: blocked   deps: [B3]   note: mechanical given B3 + the proved gap.
+- [ ] B5. Identify with `C·Var_free` via the `1/a` cancellation; B1-Nelson = `a`-uniformity   status: blocked   deps: [B4]   note: discharges `asymInteractingVariance_le_freeVariance_Lt_uniform`.
+
+### Superseded (finite-torus GNS — DEAD END, kept for the record)
+- [x] M1/M2/M3 scaffold (`Pphi2AsymTTS`, `93ae9f0`) — UNSOUND (`τPos` false); not on the path. M4/M5 dropped.
 
 **Loop checkpoint (2026-06-03):** scaffold landed (typed `Pphi2AsymTTS` + structural
 lemmas, committed `93ae9f0`); 5 analytic sorries + M4 + M5 remain.
