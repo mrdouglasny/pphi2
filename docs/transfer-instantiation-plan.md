@@ -59,9 +59,12 @@ The asym lattice (`AsymLatticeField`, `latticeCovarianceAsymGJ`) is a *separate 
   so the free **precision is `a²Q`** (NOT `aQ`) — then the `a²/2` weight cancels `Δ_a`'s `a⁻²` to
   give coefficient `1` on `timeCoupling` (the `a^{d−2}=a⁰` feature of `d=2`), and the interaction
   `a²·Σ:P:` matches on both sides. **The `1/a` cancellation lives in B5's torus↔lattice
-  test-function map (`asymLatticeTestFnIso = a • evalAtSite`), not here.** Lean roadmap (in the
-  doc): (1) SBP slice lemma, (2) pointwise density identity `gaussianDensityAsym·exp(−V) = ∏k`,
-  (3) measure equality. Steps 1–2 are local & provable now; step 3 routes through crux-1.
+  test-function map (`asymLatticeTestFnIso = a • evalAtSite`), not here.**
+  **FORMALIZED (2026-06-04, `AsymEnergyFactorization.lean`, sorry-free, axiom-clean):** the
+  action/exp level — `energy_exponent_factorization` (the `−log` identity) and
+  `periodicPathDensity_asymTransferKernel_eq_exp` (`∏_t k = exp(−action)`). **Remaining = the
+  measure-level steps (asym Gaussian density `= exp(−(a²/2)⟨φ,Qφ⟩) dλ`, then `μ_int.map
+  sliceEquiv = pathMeasure`), which route through crux-1 — the where-to-develop fork.**
 - **B3/B4** — `kPow asymTransferKernel d` = `asymTransferOperatorCLM`'s `d`-th power kernel;
   `(ω f)² = Σ_{t,s} ⟨f_t,ψ_t⟩⟨f_s,ψ_s⟩` ⟹ `twoPoint_dictionary` + `susceptibility_le` (proved
   gap) ⟹ `Lt`-uniform correlator bound. Mechanical given crux-1/2.

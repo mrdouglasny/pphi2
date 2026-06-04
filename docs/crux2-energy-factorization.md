@@ -84,15 +84,27 @@ with `T ≈ e^{−aH_spatial}`.
 
 ## Formalization roadmap (the Lean target, now that the math is pinned)
 
-1. **SBP slice lemma** — `⟨φ, massOperatorAsym φ⟩ = a⁻²·2Σ_t timeCoupling(ψ_t,ψ_{t+1}) +
-   2Σ_t spatialKinetic(ψ_t) + m²Σ_t‖ψ_t‖²` through `asymSliceEquiv` (reuse
-   `asym_direction_sum_eq_neg_sq`; split the two directions; `ZMod`→slice translation).
-2. **Density identity** — `gaussianDensityAsym(φ)·exp(−V_int) = ∏_t k(ψ_t,ψ_{t+1})` pointwise
-   (pure `Real.exp` algebra from step 1 + the definitions). The asym `gaussianDensity` is the
-   `exp(−(a²/2)⟨φ,Qφ⟩)` Lebesgue density — needs **crux-1** (port `Density.lean`'s
-   `normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure` + `evalMapMeasurableEquiv`
-   to the asym lattice) to connect this density to the abstract `GaussianField.measure`.
-3. **Measure equality** — combine: `μ_int.map sliceEquiv = pathMeasure` (normalized; Jacobian 1).
+**FORMALIZED 2026-06-04** (`Pphi2/AsymTorus/AsymEnergyFactorization.lean`, all sorry-free,
+axiom-clean `[propext, Classical.choice, Quot.sound]`):
 
-So crux-2 step 1 (SBP) and step 2-algebra are local and provable now; the measure-level
-conclusion still routes through the crux-1 density-bridge port.
+1. ✅ **SBP slice lemma** — `asym_sbp_direction` (periodic SBP, re-proving the private
+   `asym_direction_sum_eq_neg_sq`) → `massOperatorAsym_quadratic_form_bonds` (bond form) →
+   `asym_{sq,timeBond,spaceBond}_sum_slice` (push through `asymSliceEquiv`, `finEquiv_succ` for
+   the spatial successor) → `massOperatorAsym_quadratic_form_slice` (free-action half) →
+   `timeCoupling_sum_slice` / `spatialKinetic_sum_slice` / `asym_onsite_sum_slice`.
+2. ✅ **Capstone (−log identity)** — `energy_exponent_factorization`:
+   `(a²/2)·⟨φ,Qφ⟩ + a²·Σ_x :P:(φx) = Σ_t [timeCoupling(ψ_t,ψ_{t+1}) + a²·spatialAction(ψ_t)]`.
+3. ✅ **Exp-level kernel identity** — `periodicPathDensity_asymTransferKernel_eq_exp`:
+   `∏_t k(ψ_t,ψ_{t+1}) = exp(−((a²/2)⟨φ,Qφ⟩ + a²Σ:P:))` — the complete kernel↔action bridge.
+
+**REMAINING — the measure-level step (needs crux-1, a fork):**
+
+4. ⛏ **Density identity** — `gaussianDensityAsym(φ)·exp(−V_int) = ∏_t k`. Needs the asym
+   `gaussianDensity` = `exp(−(a²/2)⟨φ,Qφ⟩)` Lebesgue density (step 3 supplies `∏k = exp(−…)`;
+   this just needs the density side in the same `exp(−(a²/2)⟨φ,Qφ⟩)` form).
+5. ⛏ **Measure equality** — `μ_int.map sliceEquiv = pathMeasure` (normalized; Jacobian 1).
+
+Steps 4–5 route through **crux-1**: port `Density.lean`'s square-lattice
+`normalizedGaussianDensityMeasure_eq_normalizedQuadraticGaussianMeasure` + `evalMapMeasurableEquiv`
+to the asym lattice/`latticeCovarianceAsymGJ`. That's the where-to-develop fork (GaussianField
+dependency vs. pphi2-local adapter). The action-level content of crux-2 (steps 1–3) is **done**.
