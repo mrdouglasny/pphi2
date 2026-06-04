@@ -40,6 +40,31 @@ namespace Pphi2
 
 variable (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
 
+/-! ## B1 — slice structure: a spacetime field is a time-indexed family of spatial fields -/
+
+/-- Currying a function on a product index into a function-of-functions, as a linear
+equivalence. `(α × β → ℝ) ≃ₗ (α → β → ℝ)`. -/
+def prodCurryLinearEquiv (α β : Type*) : (α × β → ℝ) ≃ₗ[ℝ] (α → β → ℝ) where
+  toFun f a b := f (a, b)
+  invFun g p := g p.1 p.2
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+/-- **B1 slice equivalence.** A spacetime lattice field on `ZMod Nt × ZMod Ns` is the same
+data as a time-indexed (`ZMod Nt`) family of spatial fields (`SpatialField Ns = Fin Ns → ℝ`).
+Curry the time/space product index, then reindex the spatial `ZMod Ns` to `Fin Ns`. -/
+noncomputable def asymSliceEquiv (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] :
+    AsymLatticeField Nt Ns ≃ₗ[ℝ] (ZMod Nt → SpatialField Ns) :=
+  (prodCurryLinearEquiv (ZMod Nt) (ZMod Ns)).trans
+    (LinearEquiv.piCongrRight fun _ =>
+      LinearEquiv.funCongrLeft ℝ ℝ (ZMod.finEquiv Ns).toEquiv)
+
+@[simp] theorem asymSliceEquiv_apply (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
+    (φ : AsymLatticeField Nt Ns) (t : ZMod Nt) (x : Fin Ns) :
+    asymSliceEquiv Nt Ns φ t x = φ (t, (ZMod.finEquiv Ns).toEquiv x) := rfl
+
 /-! ## The asym transfer kernel and its `TransferSystem`
 
 The single-time-slice state space is `SpatialField Ns = Fin Ns → ℝ` with Lebesgue `volume`;
