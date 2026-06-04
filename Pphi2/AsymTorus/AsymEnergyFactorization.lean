@@ -1,0 +1,111 @@
+/-
+Copyright (c) 2026 Michael R. Douglas. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael R. Douglas
+-/
+import Lattice.AsymCovariance
+import Pphi2.AsymTorus.AsymTransferInstantiation
+
+/-!
+# Crux-2: the energy / density factorization for the asym φ⁴₂ cylinder
+
+Towards the Layer-B2 measure↔operator bridge: the slice-pushforward of the interacting
+lattice measure equals the periodic path measure of the transfer kernel `k`. The analytic
+heart is the **energy factorization** — through the slice iso `asymSliceEquiv`, the mass
+operator's quadratic form `⟨φ, Q φ⟩` (`Q = massOperatorAsym = −Δ_a + m²`) splits into a
+time-coupling term + a per-slice spatial term, matching `∏_t k(ψ_t, ψ_{t+1})` exactly.
+
+The full `a`-power bookkeeping (and its Gemini-deep-think vetting, 2026-06-04) is in
+`docs/crux2-energy-factorization.md`. This file formalizes step 1 of that roadmap: the
+summation-by-parts decomposition of `⟨φ, Q φ⟩` into nearest-neighbour bond sums.
+
+## Main results
+
+* `asym_sbp_direction` — periodic summation by parts in one lattice direction.
+* `massOperatorAsym_quadratic_form_bonds` — `⟨φ, Q φ⟩ = a⁻²·(time bonds + space bonds) + m²·‖φ‖²`.
+-/
+
+open MeasureTheory GaussianField
+open scoped BigOperators
+
+namespace Pphi2
+
+variable {Nt Ns : ℕ} [NeZero Nt] [NeZero Ns]
+
+/-- The two unit lattice vectors: `e1` = one step in time, `e2` = one step in space. -/
+local notation "e1" => ((1 : ZMod Nt), (0 : ZMod Ns))
+local notation "e2" => ((0 : ZMod Nt), (1 : ZMod Ns))
+
+/-- **Periodic summation by parts** in one lattice direction `v`:
+`∑ₓ f(x)·(f(x+v)+f(x−v)−2f(x)) = −∑ₓ (f(x+v)−f(x))²`. Re-proves the (private)
+`asym_direction_sum_eq_neg_sq` of `GaussianField.Lattice.AsymCovariance` for local use. -/
+lemma asym_sbp_direction (f : AsymLatticeField Nt Ns) (v : AsymLatticeSites Nt Ns) :
+    ∑ x, f x * (f (x + v) + f (x - v) - 2 * f x) = -(∑ x, (f (x + v) - f x) ^ 2) := by
+  -- reindexing `x ↦ x + v` is measure-preserving on the finite additive group of sites
+  have reindex_sq : ∑ x, f (x + v) ^ 2 = ∑ x, f x ^ 2 :=
+    Fintype.sum_equiv (Equiv.addRight v) (fun x => f (x + v) ^ 2) (fun x => f x ^ 2)
+      (fun x => by simp)
+  have shift_bwd : ∑ x, f x * f (x - v) = ∑ x, f (x + v) * f x := by
+    rw [← Equiv.sum_comp (Equiv.addRight v) (fun x => f x * f (x - v))]
+    refine Finset.sum_congr rfl (fun x _ => ?_)
+    simp only [Equiv.coe_addRight, add_sub_cancel_right]
+  have comm_sum : ∑ x, f (x + v) * f x = ∑ x, f x * f (x + v) :=
+    Finset.sum_congr rfl (fun x _ => mul_comm _ _)
+  have lhs_eq : ∑ x, f x * (f (x + v) + f (x - v) - 2 * f x) =
+      (∑ x, f x * f (x + v)) + (∑ x, f x * f (x - v)) + (-2) * (∑ x, f x ^ 2) := by
+    have h1 : ∀ x, f x * (f (x + v) + f (x - v) - 2 * f x) =
+        f x * f (x + v) + f x * f (x - v) + (-2) * (f x ^ 2) := fun x => by ring
+    simp_rw [h1, Finset.sum_add_distrib, ← Finset.mul_sum]
+  rw [lhs_eq, shift_bwd, comm_sum]
+  have rhs_eq : -(∑ x, (f (x + v) - f x) ^ 2) =
+      -(∑ x, f (x + v) ^ 2) + 2 * (∑ x, f x * f (x + v)) + (-1) * (∑ x, f x ^ 2) := by
+    have h2 : ∀ x, (f (x + v) - f x) ^ 2 =
+        f (x + v) ^ 2 + (-2) * (f x * f (x + v)) + f x ^ 2 := fun x => by ring
+    simp_rw [h2, Finset.sum_add_distrib, ← Finset.mul_sum]; ring
+  rw [rhs_eq, reindex_sq]; ring
+
+/-- **Quadratic form of the mass operator in nearest-neighbour bond form.** Summation by
+parts turns `⟨φ, Q φ⟩` (`Q = −Δ_a + m²`) into `a⁻²·(time-bond sum + space-bond sum) + m²·‖φ‖²`.
+This is the lattice-side input to the energy factorization. -/
+theorem massOperatorAsym_quadratic_form_bonds (a mass : ℝ) (φ : AsymLatticeField Nt Ns) :
+    ∑ x, φ x * (massOperatorAsym Nt Ns a mass φ) x =
+      a⁻¹ ^ 2 * (∑ x, (φ (x + e1) - φ x) ^ 2)
+      + a⁻¹ ^ 2 * (∑ x, (φ (x + e2) - φ x) ^ 2)
+      + mass ^ 2 * ∑ x, φ x ^ 2 := by
+  -- pointwise value of `Q φ`
+  have hQ : ∀ x, (massOperatorAsym Nt Ns a mass φ) x =
+      -(finiteLaplacianAsymFun Nt Ns a φ x) + mass ^ 2 * φ x := by
+    intro x
+    simp only [massOperatorAsym, ContinuousLinearMap.add_apply, ContinuousLinearMap.neg_apply,
+      ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, Pi.add_apply, Pi.neg_apply,
+      Pi.smul_apply, smul_eq_mul]
+    rfl
+  simp only [hQ]
+  -- split the on-site sum into the Laplacian piece and the mass piece
+  have hsplit : ∀ x, φ x * (-(finiteLaplacianAsymFun Nt Ns a φ x) + mass ^ 2 * φ x) =
+      -(φ x * finiteLaplacianAsymFun Nt Ns a φ x) + mass ^ 2 * φ x ^ 2 := fun x => by ring
+  simp only [hsplit, Finset.sum_add_distrib, Finset.sum_neg_distrib, ← Finset.mul_sum]
+  -- the Laplacian quadratic form, via the two-direction split + SBP
+  have e1p : ∀ x : AsymLatticeSites Nt Ns, ((x.1 + 1, x.2) : AsymLatticeSites Nt Ns) = x + e1 := by
+    intro x; simp [Prod.ext_iff]
+  have e1m : ∀ x : AsymLatticeSites Nt Ns, ((x.1 - 1, x.2) : AsymLatticeSites Nt Ns) = x - e1 := by
+    intro x; simp [Prod.ext_iff]
+  have e2p : ∀ x : AsymLatticeSites Nt Ns, ((x.1, x.2 + 1) : AsymLatticeSites Nt Ns) = x + e2 := by
+    intro x; simp [Prod.ext_iff]
+  have e2m : ∀ x : AsymLatticeSites Nt Ns, ((x.1, x.2 - 1) : AsymLatticeSites Nt Ns) = x - e2 := by
+    intro x; simp [Prod.ext_iff]
+  have hlap : ∑ x, φ x * finiteLaplacianAsymFun Nt Ns a φ x =
+      a⁻¹ ^ 2 * (-(∑ x, (φ (x + e1) - φ x) ^ 2)) +
+      a⁻¹ ^ 2 * (-(∑ x, (φ (x + e2) - φ x) ^ 2)) := by
+    simp only [finiteLaplacianAsymFun]
+    simp_rw [e1p, e1m, e2p, e2m]
+    have expand : ∀ x : AsymLatticeSites Nt Ns,
+        φ x * (a⁻¹ ^ 2 * (φ (x + e1) + φ (x - e1) + φ (x + e2) + φ (x - e2) - 4 * φ x)) =
+        a⁻¹ ^ 2 * (φ x * (φ (x + e1) + φ (x - e1) - 2 * φ x)) +
+        a⁻¹ ^ 2 * (φ x * (φ (x + e2) + φ (x - e2) - 2 * φ x)) := fun x => by ring
+    simp_rw [expand, Finset.sum_add_distrib, ← Finset.mul_sum]
+    rw [asym_sbp_direction φ e1, asym_sbp_direction φ e2]
+  rw [hlap]
+  ring
+
+end Pphi2
