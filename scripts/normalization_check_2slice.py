@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Empirical 2-slice two-point check of the asym transfer-operator normalization.
 
-Question: does `asymTransferOperatorCLM` (weight exp(-(a/2)*spatialAction)) reproduce
-the two-point function of `latticeGaussianMeasureAsym`, or is the weight off by a
-factor of `a` (should it be exp(-(a^2/2)*spatialAction))?
+This check DROVE the fix in commit bb4b86d. The original question was: does
+`asymTransferOperatorCLM` reproduce the two-point function of `latticeGaussianMeasureAsym`
+with weight exp(-(a/2)*spatialAction), or is the weight off by a factor of `a` (should it
+be exp(-(a^2/2)*spatialAction))? ANSWER (confirmed below): it must be a^2 — the weight is
+now exp(-(a^2/2)*spatialAction) in the code. Below, "coef = a" is the OLD pre-fix weight
+and "coef = a^2" is the CORRECT one now in the code.
 
 Setup: FREE theory (P=0), Nt=2 time slices, Ns=1 spatial site. Then a single time
 slice is one real variable phi in R; the transfer operator acts on L^2(R, Lebesgue).
@@ -13,7 +16,7 @@ slice is one real variable phi in R; the transfer operator acts on L^2(R, Lebesg
       spatialPotential = sum_x (1/2 m^2 phi_x^2 + wickPoly) = 1/2 m^2 phi^2  (P=0).
     so spatialAction(phi) = (1/2) m^2 phi^2.
   - transferWeight     w(phi) = exp(-(coef/2) * spatialAction) = exp(-(coef*m^2/4) phi^2),
-    where coef = a in the CODE, coef = a^2 is the CLAIMED-correct value.
+    where coef = a is the OLD (pre-fix) weight and coef = a^2 is the CORRECT one (now in the code, bb4b86d).
   - transferGaussian   G(u)   = exp(-timeCoupling(0,u)) = exp(-(1/2) u^2).
   - transfer kernel     T(phi,phi') = w(phi) G(phi-phi') w(phi'),  on L^2(R, dphi).
 
@@ -87,8 +90,8 @@ def main():
     print("=" * 74)
     for a, m in [(0.5, 1.0), (2.0, 1.0), (1.0, 1.0), (0.3, 1.7)]:
         mv, mc = measure_two_point(a, m)
-        va, ca = transfer_two_point(a, m, coef=a)      # CODE weight: coef = a
-        v2, c2 = transfer_two_point(a, m, coef=a * a)  # CLAIMED-correct: coef = a^2
+        va, ca = transfer_two_point(a, m, coef=a)      # OLD (pre-fix) weight: coef = a
+        v2, c2 = transfer_two_point(a, m, coef=a * a)  # CORRECT (current code, bb4b86d): coef = a^2
         print(f"\n--- a={a}, m={m}   (a^2 m^2={a*a*m*m:.4f}, a m^2={a*m*m:.4f}) ---")
         print(f"  measure          <phi_0^2>={mv:.6f}   <phi_0 phi_1>={mc:.6f}")
         print(f"  transfer coef=a  <phi_0^2>={va:.6f}   <phi_0 phi_1>={ca:.6f}"
@@ -96,7 +99,7 @@ def main():
         print(f"  transfer coef=a^2<phi_0^2>={v2:.6f}   <phi_0 phi_1>={c2:.6f}"
               f"   match={np.allclose([v2,c2],[mv,mc],atol=1e-3)}")
     print("\n" + "=" * 74)
-    print("VERDICT: coef=a^2 reproduces the measure; coef=a (the code) does not")
+    print("VERDICT: coef=a^2 (current code, bb4b86d) reproduces the measure; coef=a (old pre-fix weight) does not")
     print("(they coincide only at a=1). The transfer weight should be exp(-(a^2/2)*S).")
     print("=" * 74)
 

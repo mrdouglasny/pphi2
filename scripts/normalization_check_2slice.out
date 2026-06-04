@@ -30,6 +30,6 @@ General precision-matrix check (exercises spatialKinetic, Ns>=2)
   transfer coef=a^2<phi_0^2>=2.039703   <phi_0 phi_1>=1.804967   match=True
 
 ==========================================================================
-VERDICT: coef=a^2 reproduces the measure; coef=a (the code) does not
+VERDICT: coef=a^2 (current code, bb4b86d) reproduces the measure; coef=a (old pre-fix weight) does not
 (they coincide only at a=1). The transfer weight should be exp(-(a^2/2)*S).
 ==========================================================================
