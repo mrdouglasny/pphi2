@@ -56,6 +56,45 @@ covariance (physical/`B`-inner product) decides whether the objection bites — 
 this before writing any representation axiom. **Decision: do not introduce the
 representation axiom until this is settled.**
 
+**Step-B design vetted (Gemini 3.1, 2026-06-02; superseded 2026-06-03).** First pinned
+the relative form bound `H_free ≤ C·H_int + c₂` (GJ Ch. 9). DEAD END recorded: the
+spectral-MEASURE domination `ρ_int ≤ C·ρ_free` is FALSE (`ρ_int`, `ρ_free` mutually
+singular — interaction shifts the mass pole + adds a multi-particle continuum).
+
+**Step-B atom (Gemini deep-think, 2026-06-03): FSS infrared bound** — ranked #1 of
+A/B/C for the general "interacting ≤ free two-point, uniform" question
+(`⟨φ̂(k)φ̂(−k)⟩_int ≤ 1/(2E(k))`, `k≠0`; applies to φ⁴₂ via lattice RP; `a`/`Lt`-uniform;
+immune to the Wick negative bare mass). DEAD ENDS confirmed: Brascamp–Lieb (non-convex
+Wick double well), `ρ_int ≤ C·ρ_free` (mutually singular). Fallback: GJ Ch. 9 form
+bound (continuum/cutoff ⇒ lattice impedance mismatch).
+
+**CORRECTION (2026-06-03, code map): FSS is NOT for B2 — it is parked for `Ls→∞`.**
+Reading the code (`AsymExpMomentDischarge.lean:206` + no Fourier layer in pphi2):
+B2 fixes `Ls`, sends `Lt→∞`, so the spatial infrared FSS controls is gapped by the
+box (`|k_s|≥2π/Ls`); the dangerous direction is time, owned by the **proved gap**
+(`susceptibility_le`), with **B1** owning the `a→0` UV uniformity. So **B2 = B1 ⊕ gap
+⊕ the Feynman–Kac measure↔operator bridge** — no new textbook axiom. The bridge is the
+deferred `transfer-operator-construction-todo`, scoped in
+`docs/layer-B2-discharge-plan.md` → "Feynman–Kac bridge — scoping". FSS's vetted
+statement + citation + drop-in Lean signature saved in `docs/fss-infrared-bound-spec.md`
+for the eventual `Ls→∞` step; **not added as an `axiom`** (no consumer; needs a Fourier
+layer). No new axioms enter the build from this round.
+
+**Transfer-instantiation axiom vetting (Gemini 3.1-pro, 2026-06-03).** Considered two
+textbook helper axioms to discharge the `Pphi2AsymTTS` `TimeTranslatedSystem` sorries:
+- `Pphi2Asym_reflectionPositive` (asym lattice OS3 RP in abstract form): **vetted GREEN**
+  — correct, non-vacuous, dischargeable by porting the square `lattice_rp` + a density
+  adapter; asym `Nt≠Ns` is the same proof. Sources `GR` (Gemini), `LP` (GJ Ch 6.1 /
+  Simon III.3). Rating **Standard**. NOT YET in the build (held pending the reframe below).
+- A reflection-seminorm contraction axiom: **REJECTED — ill-posed.** Root cause: on a
+  finite PERIODIC torus the `τPos` field (positive-time preserved by the unit shift) is
+  FALSE (a strict half-region `{0<t<Nt/2}` is not shift-stable), so the transfer operator
+  `T:[f]↦[f∘τ]` is not well-defined on `H_phys`. ⟹ the finite-torus GNS `TimeTranslatedSystem`
+  instance is UNSOUND, not merely incomplete. Reframe required: (A) infinite cylinder
+  `Nt→∞` (positive-time `{t>0}`, B2's regime), or (B) the explicit slice transfer matrix
+  on `L²(ℝ^Ns)` (= pphi2's existing `asymTransferOperatorCLM` + gap). See
+  `docs/transfer-instantiation-plan.md` → "AXIOM VETTING".
+
 **Impact on counts**: no change yet (no axiom added or removed; B2 stays an axiom
 pending the Piece-1 representation axiom + the Piece-2/3 proofs).
 

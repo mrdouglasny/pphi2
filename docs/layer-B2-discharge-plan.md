@@ -34,6 +34,297 @@ but the live plan is B1 ⊕ gap (resolvent comparison). Older docs
 `asym-l2-operator-port-scoping.md`) use a yet-earlier split (B1 per-`a`, B2 = UV
 chessboard) that is itself superseded now that B1 is `a`-uniform.
 
+## Step B design — CORRECTED 2026-06-03 (code map): B2 = B1 ⊕ gap ⊕ Feynman–Kac bridge
+
+**The pinned B2 work is the Feynman–Kac measure↔transfer-operator bridge — NOT a new
+textbook axiom, and NOT FSS.** Reading the actual code (`AsymExpMomentDischarge.lean:206`,
+`AsymVarianceBound.lean`, the `ReflectionPositivity` dep) settles the architecture:
+
+- **The B2 target is real-space, per-test-function**: `∫(ω f)² dμ_int ≤ C·∫(ω g)² dμ_free`
+  for arbitrary `f : AsymTorusTestFunction Lt Ls`, `C` uniform in `Lt`, `Ls` fixed.
+  pphi2 has **no momentum-space / Fourier layer** (`φ̂(k)` is not a random variable here).
+- **B2 fixes `Ls`, sends `Lt → ∞`.** At fixed `Ls` the spatial momenta are discrete and
+  gapped by the box (`|k_s| ≥ 2π/Ls > 0`) — **no spatial infrared problem**. The only
+  dangerous direction is **time** (`Lt`), controlled by the **already-proved
+  transfer-matrix mass gap** (`asymGappedTransfer'`, `susceptibility_le`, `Lt`-uniform).
+- So B2's two uniformity directions are exactly the established **B1 ⊕ gap** split:
+  **time (`Lt`) → proved gap**; **space/UV (`a→0` at fixed `Ls`) → B1 (already
+  `a`-uniform)**. No new textbook input is required.
+
+**The genuine missing piece is the Feynman–Kac bridge** (the deferred
+`transfer-operator-construction-todo`): expressing `∫(ω f)² dμ_int` as the
+time-correlation sum `Σ_{t,t'} f̃(t) f̃(t') ⟨g, T̂^{|t−t'|} g⟩` (with `g ⊥ vacuum` the
+spatially-smeared field-excited vector, mean-zero by evenness) so the proved gap's
+`susceptibility_le` gives the `Lt`-uniform bound, and B1 supplies the `a`-uniform
+interacting-vs-free spatial comparison. See "Feynman–Kac bridge — scoping" below.
+
+**FSS infrared bound is PARKED for the `Ls → ∞` step, not B2.** The Fröhlich–Simon–
+Spencer Gaussian-domination bound (`⟨φ̂(k)φ̂(−k)⟩_int ≤ 1/(2E(k))`, `k≠0`) is the right
+tool for the *spatial* infinite-volume limit, where small spatial momenta must be
+controlled. It is a momentum-space statement and pphi2 has no Fourier layer to host
+it. Full vetted statement + citation + drop-in Lean signature saved in
+**`docs/fss-infrared-bound-spec.md`**. (Gemini deep-think 2026-06-03 ranked it #1 for
+the general "interacting ≤ free two-point, uniform" question — correct, but that is
+the spatial-infrared problem, a *superset* of what B2 needs. Do not add a free-floating
+momentum-space axiom: it would have no consumer and would not discharge B2.)
+
+**Candidate C — Glimm–Jaffe Ch. 9 `N_τ` relative form bound (DEMOTED to fallback).**
+`H_free ≤ c₁H_int + c₂` + gap + operator-monotone inverse ⟹ `H_int⁻¹ ≤ C·H_free⁻¹`.
+Mathematically valid, but deep-think rates it **low-faithfulness as a *lattice*
+axiom**: GJ Ch. 9 develops it in continuum Fock space with momentum cutoffs, so
+citing an `a`-uniform *lattice* form is an impedance mismatch (continuum statement)
+or a quiet self-translation (not a clean textbook citation) — and it still leaves
+the operator-monotone-inverse step to formalize. Keep only as a fallback if FSS
+fails to formalize. (Earlier "pinned target" — superseded by FSS on 2026-06-03.)
+
+**Candidate A — Brascamp–Lieb variance inequality: REFUTED.** `Var ≤ ⟨∇f,A⁻¹∇f⟩`
+needs `Hess S ≥ A > 0` globally, but `Hess S = −Δ + m₀² + 12λ diag(φ²)`; at `φ=0`
+this is `−Δ − |m₀²|` with negative low-`k` eigenvalues (double well). No finite-`a`
+regime makes it `≥` free. (Gemini deep-think confirms my refutation — this non-convexity
+is *precisely* why φ⁴₂ variance bounds are hard, and what FSS sidesteps.)
+
+**Also considered & rejected** (deep-think): correlation inequalities
+(Lebowitz, Griffiths/GKS, Aizenman–Fröhlich) are for triviality / higher-point
+bounds, not for isolating a free *upper* bound under a double well. FSS is the
+definitive citable standard for the *spatial-infrared* task (`Ls → ∞`).
+
+---
+
+## Feynman–Kac bridge — scoping (2026-06-03): the pinned next code task for B2
+
+> **PRIMARY ROUTE (owner decision 2026-06-03): build this in MAXIMUM GENERALITY in the
+> `reflection-positivity` library, NOT as the lattice Fubini below.** In the OS/GNS
+> framework the correlation identity `⟪[F],Tⁿ[G]⟫_phys = reflectionInnerProduct μ θ F
+> (G∘τⁿ)` is essentially definitional, so the hard lattice steps (action factorization,
+> kernel-composition Fubini, trace-ratio limit) **collapse**; the only φ⁴₂-specific work
+> left is one operator-coincidence lemma (abstract `H_phys`/`T` = pphi2's
+> `L2SpatialField`/`asymTransferOperatorCLM`) + free boundedness. Full design:
+> `reflection-positivity/RECON.md` → "The Feynman–Kac bridge in MAXIMUM GENERALITY".
+> The lattice-specific 4-step design below is kept as the concrete fallback / as the
+> content of the operator-coincidence lemma.
+
+This is the real remaining B2 work. It is the **Step B (Källén–Lehmann)** of the
+detailed plan in the `reflection-positivity` repo's `RECON.md` ("Op 1: pphi2
+Layer-B2 adapter") — Steps A and C there are already done/mechanical; Step B is the
+bulk. Crystallized here as the live task.
+
+**State already in place (do not re-derive):**
+- **Step A — `GappedTransfer` package:** `asymGappedTransfer'` (`AsymSpectralGap.lean:167`),
+  hypothesis-free, with the operator-norm gap `asymTransferNormalized_gap` proved.
+- **Step C — `susceptibility_le`:** `∑_{n<N} |⟨v, T̂ⁿ v⟩| ≤ ‖v‖²/(1−γ)`, **uniform in
+  `N` (hence `Lt`)** — `asymTransfer_susceptibility_le` (`AsymGappedTransfer.lean:92`).
+- **B1 (`a`-uniform, per-`Lt`):** `asymInteractingVariance_le_freeVariance_lattice`
+  / `_torus` (`AsymVarianceBound.lean:101/208`).
+
+**⚠ FINDING (2026-06-03, opened the code): the operator and the measure are two
+DISJOINT halves with NO connecting lemma.**
+- `density_transfer_bound`'s asym wrapper `asymTorusIso_interacting_second_moment_density_transfer`
+  (`AsymContinuumLimit.lean:48`) is **pure B1** — Cauchy–Schwarz (`density_transfer_bound_iso`)
+  + Gaussian 4th-moment (`gaussian_hypercontractive`), constant `C = 3√K(Lt)` with `K`
+  the **volume-growing Nelson constant**. It NEVER touches the transfer operator. It
+  gives the *statement shape* and the `Lt`-growing constant — **nothing toward the bridge**.
+  (The earlier RECON guess that it "may supply the measure→operator half" was WRONG.)
+- `asymTransferOperatorCLM = M_w ∘L Conv_G ∘L M_w` (`AsymL2Operator.lean:276`,
+  `w = exp(−(a/2)·spatialAction)`, `Conv_G` the time-step Gaussian) lives on the
+  **spatial** `L2SpatialField Ns` (one time slice). It is referenced ONLY in the 5
+  spectral files (`AsymL2Operator`, `AsymJentzsch`, `AsymPositivity`, `AsymSpectralGap`,
+  `AsymGappedTransfer`) — **never in any measure file.**
+- `interactingLatticeMeasureAsym = (1/Z)·exp(−V)·dμ_GFF` (`AsymLatticeMeasure.lean:363`)
+  is the **global spacetime** Gibbs measure on `Configuration (AsymLatticeField Nt Ns)`.
+- **So the proved gap is for an operator not yet known to compute the measure's
+  correlations.** The bridge is the missing link between these halves.
+
+**The bridge lemma to build (Step B) — this is the Feynman–Kac time-slicing theorem.**
+The substantial, foundational, currently-unbuilt result: the global Gibbs measure's
+time-correlations equal transfer-operator products,
+
+  `∫ (ω f)² dμ_int  =  ∑_{t,t' ∈ Z_Nt} f̃(t) f̃(t') ⟨v_f, T̂^{|t−t'|} v_f⟩`,
+
+`T̂ = asymTransferNormalized`, `v_f ∈ L2SpatialField Ns` the spatial vector of `f` off
+the vacuum, `f̃` its time profile. This is NOT wiring — it is proving that the global
+spacetime path-integral **factorizes time-slice by time-slice** into the single-step
+kernel `M_w ∘ Conv_G ∘ M_w`. Mechanism: the global Gaussian splits into spatial slices
++ nearest-neighbour time coupling; the time coupling × spatial weight = the transfer
+kernel; a Gaussian-Fubini / Markov computation on the finite lattice. Bounded but real
+work (the concrete operator is manifestly bounded, so — unlike the abstract
+`reflection-positivity` route — the difficulty is NOT a-priori boundedness; it is the
+slice-factorization identity and the spatial-slice decomposition of `AsymLatticeField`).
+
+**Downstream (mechanical once the bridge exists):**
+2. **Vacuum projection** `v_f ⊥ vacuum` from evenness (mean zero).
+3. **Apply Step C** ⟹ `≤ (‖f̃‖₁)² ‖v_f‖² / (1−γ)`, `Lt`-uniform.
+4. **Identify RHS with `C · Var_free(f)`** (free covariance `latticeCovarianceAsymGJ`),
+   watching the `1/a` cancellation (see `[[pphi2-b2-adapter-plan]]` memory: never
+   evaluate `1/(1−γ)` standalone — form the int/free ratio first).
+
+**Uniformity factorization (CONFIRMED by the code map):** single `C` = **B1 (owns
+`a`-uniformity at fixed `Lt`) ⊕ gap (owns `Lt`-uniformity via `susceptibility_le`)**.
+`Ls` fixed ⟹ no spatial-infrared input (the parked FSS step). Residual: gap bounded
+below as `a→0`, i.e. `m_a → m(Ls) > 0` (master-plan banner).
+
+**Effort / risk:** the Feynman–Kac time-slicing identity is the real cost — it joins
+two halves of the development that have never met. This is a genuine sub-project, not
+a finishing touch.
+
+### Factorization design (grounded in the code, 2026-06-03)
+
+**Nothing to port:** the *square* torus `Pphi2/TransferMatrix/` is also operator-side
+only (GaussianFourier/Jentzsch/Positivity/SpectralGap; its only measures are Lebesgue
+`volume` internal to building `T`). The bridge is unbuilt project-wide.
+
+**Building blocks that DO exist** (square `TransferMatrix.lean`, reused by the asym
+operator): `SpatialField Ns := Fin Ns → ℝ` (one time slice); `spatialAction P a mass c ψ`
+(`:86`) `= spatialKinetic + spatialPotential` (single-slice); `timeCoupling ψ ψ' =
+½Σ_x(ψx−ψ'x)²` (`:100`) (nearest-neighbour in time); `transferGaussian = exp(−timeCoupling)`
+(= `Conv_G`); `transferWeight = exp(−(a/2)·spatialAction)` (= `M_w`); and
+`T = M_w ∘ Conv_G ∘ M_w`.
+
+**The factorization to prove (chain of identities):**
+1. **Slice iso.** `Configuration (AsymLatticeField Nt Ns) ≃ (Fin Nt → SpatialField Ns)`
+   (spacetime config = `Nt` time-slices), measure-compatibly. Needs `AsymLatticeSites`
+   to factor as `Fin Nt × Fin Ns` (time × space) — VERIFY.
+2. **Action decomposition.** Global lattice action `= Σ_t (a·spatialAction(ψ_t)) +
+   Σ_t timeCoupling(ψ_t, ψ_{t+1})` (periodic in `t`). **Hardest sub-piece:** show the
+   GJ Gaussian covariance `latticeCovarianceAsymGJ` (defined via an operator inverse)
+   realizes exactly this quadratic form, so `dμ_int ∝ ∏_t [w(ψ_t)²·G(ψ_t−ψ_{t+1})]∏dψ_t`.
+   This is the Gaussian-factorization step; least sure of existing infra here.
+3. **Kernel composition (the core Fubini).** Integrating out intermediate slices
+   composes the kernel: `∫ ∏_{s<n} G(ψ_s−ψ_{s+1}) w(ψ_s)² dψ_s … = (Tⁿ)(ψ_0, ψ_n)`.
+   `T = M_w Conv_G M_w` is exactly one step. ⟹ `∫ A(ψ_0)B(ψ_n) dμ = Tr(M_A Tⁿ M_B T^{Nt−n})/Tr(T^{Nt})`.
+4. **Trace → ground projection.** As `Nt→∞`, `Tr(T^{Nt−n}·)/Tr(T^{Nt}) → ⟨vacuum, ·⟩`
+   (the proved gap ⟹ the top eigenvector dominates). Reduces the second moment to
+   `∑_{t,t'} f̃(t)f̃(t')⟨v_f, T̂^{|t−t'|}v_f⟩`; then `susceptibility_le` (Step C).
+
+Steps 1, 3 are mechanical-ish Fubini/iso wiring; **step 2 (Gaussian covariance =
+slice-decomposed action) is the crux**, and step 4 needs a Perron-Frobenius
+trace-ratio limit (have the gap; need the limit lemma). Size estimate (from the older
+`asym-interacting-expmoment-volume-uniform-discharge-plan.md`): Layer B ≈ 1500–3000
+lines. Realistic wall-clock: **a few weeks** given gaussian-field + the done spectral
+side.
+
+### ✅ Normalization bug FIXED (2026-06-03, commit `bb4b86d`)
+
+The weight is corrected to `exp(−(a²/2)·spatialAction)` in `asymTransferWeight`
+(`AsymL2Operator.lean`); `gaussian_decay`/`_bound`/`_memLp_two` constants updated
+(`sq_nonneg a` added to the `nlinarith`). `lake build Pphi2.AsymTorus.AsymSpectralGap`
+succeeds (3238 jobs, warnings only); **`asymTransferNormalized_gap` re-proved**, no
+sorry/axiom. `asymTransferOperatorCLM` is now the genuine transfer operator of
+`latticeGaussianMeasureAsym` (the gap *value* shifts; its *existence* via
+Perron–Frobenius is unchanged). The square `TransferMatrix/` `transferWeight` shares the
+bug but is off B2's critical path (not fixed). Original analysis retained below.
+
+### ⚠⚠ Codex review (2026-06-03): NORMALIZATION BUG (now fixed — see above)
+
+**EMPIRICALLY CONFIRMED (2026-06-03).** A 2-slice (`Nt=2, Ns=1`) two-point computation
+(`scripts/normalization_check_2slice.py`, output `.out`) shows the transfer operator
+reproduces `latticeGaussianMeasureAsym`'s two-point **iff** the weight exponent uses
+`a²`, not `a`: with `coef=a²`, `⟨φ₀²⟩`/`⟨φ₀φ₁⟩` match the measure to 5–6 digits for
+`a ∈ {0.5, 2.0, 0.3}`; the code's `coef=a` matches **only at `a=1`**. So
+`asymTransferWeight = exp(−(a/2)·spatialAction)` (`AsymL2Operator.lean:78,80`, square
+`transferWeight` too) is **wrong by a factor of `a`** — it should be
+`exp(−(a²/2)·spatialAction)`. **Consequence:** `asymTransferOperatorCLM` is NOT the
+transfer operator of the measure (except at `a=1`), so Part A's proved gap is for the
+wrong operator. **FIX FIRST:** correct the weight `a`-power in `transferWeight` /
+`asymTransferWeight`, re-run the (mechanical) Gaussian-decay/`memLp`/compactness/
+positivity lemmas (the corrected weight is still positive + Gaussian-decaying, so they
+survive; the gap *value* changes but its *existence* — Perron-Frobenius — does not), and
+re-verify `asymTransferNormalized_gap`. This touches the square `TransferMatrix/` too.
+
+Codex reviewed this against the actual code; **independently confirmed by derivation
+(2026-06-03).** The exact 2D lattice action factorizes as
+`S = Σ_t [ timeCoupling(φ_t,φ_{t+1}) + a²·spatialAction(φ_t) ]`
+(since `a²·½(∂_tφ)² = ½(Δ_tφ)² = timeCoupling`; `a²·½(∂_sφ)² = a²·spatialKinetic`;
+`a²·(½m²φ²+:P:) = a²·spatialPotential`). So the correct slice weight is
+`exp(−(a²/2)·spatialAction)`. **The 4-step route is not sound as written — Step 2 is
+false as stated due to a factor-`a` mismatch in the weight exponent:**
+- Gibbs interaction `V = a²·Σ wickPolynomial` (`AsymLatticeMeasure.lean:257`); the
+  GFF precision is `a²·Q`, `Q = −finiteLaplacianAsym + mass²` (GaussianField
+  `AsymCovariance.lean:54,152,220`), matching the GJ convention `exp(−(aᵈ/2)φQφ)`,
+  `d=2 ⟹ a²` (square density bridge `SpectralCovariance.lean:569`, `Density.lean:1324`).
+- BUT the transfer weight is `asymTransferWeight = exp(−(a/2)·spatialAction)`
+  (`AsymL2Operator.lean:63`). A product around the time circle yields `a·spatialAction`,
+  **not** the `a²` the measure carries.
+- **⟹ the built `asymTransferOperatorCLM` may not be THE transfer operator of
+  `interactingLatticeMeasureAsym`** — and then Part A's proved gap, though a valid
+  theorem, is about the wrong operator. **This must be resolved first.** Likely fix:
+  re-derive the correct slice weight (probably `exp(−(a²/2)·spatialAction)`) and check
+  whether the gap proof survives the reweight, OR find the convention that reconciles
+  them (e.g. an absorbed time-spacing). Do NOT build the bridge until the two-point of
+  the measure is shown to equal the operator's (a 2-slice check suffices).
+
+Other Codex findings (route-I specific; see below for how the abstract route dodges them):
+- **No asym Gaussian density/precision bridge exists** (the square one does;
+  `Density.lean`). Route-I step 2 would need it. Easiest target: evaluated asym GFF has
+  Lebesgue density with precision `a²·massOperatorAsym` (precision-matrix equality, not
+  characteristic functions).
+- **No infinite-dim trace-class / Perron-Frobenius trace-asymptotics API** (Mathlib has
+  only finite-dim `InnerProductSpace.Trace`). Route-I step 4 would have to build it —
+  UNLESS one takes the **finite-`Nt` periodic-trace** route (Codex's recommendation,
+  question A), which `susceptibility_le` already supports. But the finite periodic-trace
+  formula is itself not formalized (`TransferMatrix.lean:175,188`).
+- No φ⁴₂-specific circularity — the issue is normalization + missing infrastructure.
+- Effort: **~3–6 weeks finite-`Nt`** (normalization fixed early); 6–10+ weeks if also
+  building trace-class asymptotics. ~1.5k–4k lines.
+
+**How the MAXIMUM-GENERALITY (abstract OS) route relates to these (see RECON.md +
+`docs/transfer-bridge-spec.md`):** the abstract D0–D3 deliverables **avoid** the missing
+density bridge, the trace formula, AND the trace-class asymptotics — D2 is a finite-`n`,
+gap-free, near-definitional identity and D3 uses only `susceptibility_le`. So Codex's
+risks 2 & 3 do **not** block the abstract bridge. **Risk 1 (normalization) still bites**,
+but it relocates to the single operator-coincidence lemma (abstract `H_phys`/`T` ≅
+`L2SpatialField`/`asymTransferOperatorCLM`): that unitary can only carry the proved gap
+if the operators actually match — i.e. the same normalization check. **Bottom line:
+resolve the `a`-power normalization first, regardless of route.**
+
+---
+
+**DEAD END — spectral-MEASURE domination `ρ_int ≤ C·ρ_free` is FALSE.** (Gemini
+3.1, 2026-06-02.) `ρ_free` lives on the free single-particle dispersion
+`λ_free(k)=e^{−aω_free(k)}`; `ρ_int` lives on the **physical** pole
+`λ_phys(k)=e^{−aω_phys(k)}` (`m_phys ≠ m_free`, mass shift) **plus** a
+multi-particle continuum (Simon Ch. IX). The single-particle peaks sit at
+*different* `λ`, so the measures are **mutually singular** — no finite-`C`
+pointwise/measure domination, and band-limiting `h` cannot force it; the
+resolvent-weighted `dρ_int/dρ_free` is ill-defined (disjoint supports). The
+reframe below (kept for the record) was the wrong target: the resolvent FORM
+bound replaces it precisely because it bounds the *integral*, never the singular
+measures. The earlier finite-`Nt` claim that `ρ` is exactly `Lt`-independent also
+only holds in the `Lt→∞` limit (finite-`Nt` has thermal `Tr T̂^{Nt}` corrections).
+
+---
+
+### (Superseded) spectral-measure reframe — kept for the record
+
+The `Lt`-uniform comparison reduces to an **`Lt`-free spectral-measure domination**.
+
+**Reframe.** For fixed `(Ns, a)`, the time-2-point function is a spectral integral
+`S(d) = ⟨Q, T̂^{d} Q⟩ = ∫_{[−γ,γ]} λ^{d} dρ(λ)`, where `ρ` is the Källén–Lehmann
+spectral measure of `T̂` w.r.t. the field-excited state `Q = A·Ω ⊥ vacuum`.
+**`ρ` depends only on `(Ns, a)`, NOT on `Lt`** (`T̂`, `Q` are the one-time-step
+operator and the spatial ground state). Then
+`Var^{Nt}(f) = ∫ K_h^{Nt}(λ) dρ(λ)` with `K_h^{Nt}(λ) = (1/Z)Σ_{t,t'∈Z_{Nt}}
+h(t)h(t')(λ^{d}+λ^{N−d}) ≥ 0` (positive by RP; `Z = Tr T̂^{Nt}` bounded, `→1`).
+
+**Key simplification — `Lt`-uniformity is automatic.** Both sides are `∫K_h^{Nt}dρ`
+with the *same* `K_h^{Nt} ≥ 0`. So **IF** the `Lt`-free domination
+`ρ_int ≤ C·ρ_free` (measures on `[−γ,γ]`, `C` indep. of `Lt` and `a`) holds, then
+`Var_int^{Nt}(f) ≤ C·Var_free^{Nt}(f)` for **every** `Nt` — B2, `Lt`-uniform for
+free. **So the precise Step-B target is `ρ_int ≤ C·ρ_free`** (an `Lt`-free statement).
+
+**Not a free B1-bootstrap.** B1 gives, per `Nt`, the moment-matrix domination
+`G_{ρ_int}^{Nt} ≼ C(Nt)·G_{ρ_free}^{Nt}` (moments `∫λ^d dρ`, `d≤Nt`) with `C(Nt)`
+*growing*. Finite-`C` measure domination is strictly stronger; the gap
+(supp `ρ ⊆ [−γ,γ]`, compact, away from `1`) makes moments determine the measure,
+but the constant is not inherited.
+
+**The real crux (VET THIS).** Whether `ρ_int ≤ C·ρ_free` holds with finite `C`, and
+in what exact form: (i) full measure domination (possibly *false* — interacting KL
+weight, with one-particle peak at the physical mass + multi-particle continuum, may
+sit where `ρ_free` is thin); (ii) `k`-restricted / susceptibility-side comparison —
+suffices if B2's continuum test functions have band-limited `h` so `K_h` concentrates
+near `k≈0`; (iii) resolvent-weighted relative-boundedness `dρ_int/dρ_free ≤ C`.
+Pin the correct sufficient form before any code.
+
 ## ⚠ Vetting result (Codex, 2026-06-02): the 3-piece sketch below is FLAWED as written
 
 Verdict: **flawed but salvageable**. The idea (gap ⟹ Lt-uniform variance via the

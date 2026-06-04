@@ -13,9 +13,21 @@
 >   `AsymGappedTransfer.lean` / `AsymSpectralGap.lean` (`asymGappedTransfer'`,
 >   `asymTransferNormalized_gap`); prereq `AsymTransferGroundExcitedData.htop` (Perron-Frobenius
 >   dominance) added. This supplies the `Lt` / IR uniformity (clustering; volume-independent).
-> - **Remaining hard step**: upgrade B1's `C(Lt)` to `Lt`-uniform `C ≈ m_free/m_int` via the
->   **interacting-vs-free resolvent / Toeplitz-form comparison** `⟨Q,(1−T̂_int)⁻¹Q⟩ ≤ C⟨Q,(1−T̂_free)⁻¹Q⟩`,
->   plus the fixed-`Ls` gap convergence `m_a → m(Ls) > 0`.
+> - **Remaining hard step (CORRECTED 2026-06-03 by the code map):** B2 = **B1 ⊕ gap ⊕
+>   the Feynman–Kac bridge** — NOT a new textbook axiom. B2 fixes `Ls`, sends `Lt→∞`;
+>   the only dangerous direction is time, owned by the **proved transfer-matrix gap**
+>   (`susceptibility_le`, `Lt`-uniform), with **B1** owning the `a→0` UV uniformity at
+>   fixed `Ls`. The genuine missing piece is the **measure↔transfer-operator
+>   (Feynman–Kac) bridge** writing `∫(ωf)²dμ_int` as the gap-controlled time-sum
+>   (deferred `transfer-operator-construction-todo`; scoped in
+>   `docs/layer-B2-discharge-plan.md` → "Feynman–Kac bridge — scoping"), plus the
+>   fixed-`Ls` gap convergence `m_a → m(Ls) > 0`.
+> - **FSS infrared bound is PARKED for the later `Ls→∞` step, not B2** — it controls
+>   the *spatial* infrared, which is gapped by the box at fixed `Ls`. Full vetted
+>   statement + citation in `docs/fss-infrared-bound-spec.md`. DEAD ENDS (vetted):
+>   Brascamp–Lieb (non-convex Wick double well), spectral-MEASURE domination
+>   `ρ_int ≤ C·ρ_free` (mutually singular), GJ Ch. 9 form bound (lattice impedance
+>   mismatch — fallback only).
 >
 > **Two corrections to the older framing below (both vetted, Codex + Gemini-3.1, 2026-06-02):**
 > (1) **NO chessboard / FSS** — at fixed `Ls` the gap is uniform via compact-resolvent
