@@ -108,4 +108,53 @@ theorem massOperatorAsym_quadratic_form_bonds (a mass : ℝ) (φ : AsymLatticeFi
   rw [hlap]
   ring
 
+/-! ## Step 1b — pushing the bond sums through the slice iso `asymSliceEquiv`
+
+Each lattice bond sum becomes a time-indexed family of spatial sums on the slices
+`ψ_t = asymSliceEquiv φ t : SpatialField Ns`. The spatial index `ZMod Ns` is reindexed to
+`Fin Ns` via the ring iso `ZMod.finEquiv`, which commutes with the successor (used for the
+spatial bonds). -/
+
+/-- `ZMod.finEquiv` (a ring iso) commutes with the successor: `finEquiv (i+1) = finEquiv i + 1`. -/
+private lemma finEquiv_succ (i : Fin Ns) :
+    (ZMod.finEquiv Ns).toEquiv (i + 1) = (ZMod.finEquiv Ns).toEquiv i + 1 := by
+  change (ZMod.finEquiv Ns) (i + 1) = (ZMod.finEquiv Ns) i + 1
+  rw [map_add, map_one]
+
+/-- Mass sum through the slice iso: `∑_x φ(x)² = ∑_t ∑_i ψ_t(i)²`. -/
+theorem asym_sq_sum_slice (φ : AsymLatticeField Nt Ns) :
+    ∑ x, φ x ^ 2 =
+      ∑ t : ZMod Nt, ∑ i : Fin Ns, (asymSliceEquiv Nt Ns φ t i) ^ 2 := by
+  rw [Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl (fun t _ => ?_)
+  rw [← Equiv.sum_comp (ZMod.finEquiv Ns).toEquiv (fun s => φ (t, s) ^ 2)]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  rw [asymSliceEquiv_apply]
+
+/-- Time-bond sum through the slice iso:
+`∑_x (φ(x+e1)−φ(x))² = ∑_t ∑_i (ψ_{t+1}(i)−ψ_t(i))²`. -/
+theorem asym_timeBond_sum_slice (φ : AsymLatticeField Nt Ns) :
+    ∑ x, (φ (x + e1) - φ x) ^ 2 =
+      ∑ t : ZMod Nt, ∑ i : Fin Ns,
+        (asymSliceEquiv Nt Ns φ (t + 1) i - asymSliceEquiv Nt Ns φ t i) ^ 2 := by
+  rw [Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl (fun t _ => ?_)
+  rw [← Equiv.sum_comp (ZMod.finEquiv Ns).toEquiv (fun s => (φ ((t, s) + e1) - φ (t, s)) ^ 2)]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  simp only [Prod.mk_add_mk, add_zero]
+  rw [asymSliceEquiv_apply, asymSliceEquiv_apply]
+
+/-- Space-bond sum through the slice iso:
+`∑_x (φ(x+e2)−φ(x))² = ∑_t ∑_i (ψ_t(i+1)−ψ_t(i))²` (uses `finEquiv_succ`). -/
+theorem asym_spaceBond_sum_slice (φ : AsymLatticeField Nt Ns) :
+    ∑ x, (φ (x + e2) - φ x) ^ 2 =
+      ∑ t : ZMod Nt, ∑ i : Fin Ns,
+        (asymSliceEquiv Nt Ns φ t (i + 1) - asymSliceEquiv Nt Ns φ t i) ^ 2 := by
+  rw [Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl (fun t _ => ?_)
+  rw [← Equiv.sum_comp (ZMod.finEquiv Ns).toEquiv (fun s => (φ ((t, s) + e2) - φ (t, s)) ^ 2)]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  simp only [Prod.mk_add_mk, add_zero]
+  rw [asymSliceEquiv_apply, asymSliceEquiv_apply, ← finEquiv_succ]
+
 end Pphi2
