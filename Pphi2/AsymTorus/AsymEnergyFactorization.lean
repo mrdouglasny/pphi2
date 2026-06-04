@@ -183,4 +183,44 @@ theorem massOperatorAsym_quadratic_form_slice (a mass : ℝ) (ha : a ≠ 0)
   set Q := ∑ t : ZMod Nt, ∑ i : Fin Ns, (asymSliceEquiv Nt Ns φ t i) ^ 2
   linear_combination ((T + S) / 2) * hcancel
 
+/-! ## Step 1d — identifying the slice double-sums with `timeCoupling` / `spatialKinetic`,
+and the generic on-site bridging. -/
+
+/-- The time-coupling double sum is the per-slice `timeCoupling` summed over time. -/
+theorem timeCoupling_sum_slice (φ : AsymLatticeField Nt Ns) :
+    ∑ t : ZMod Nt,
+        timeCoupling Ns (asymSliceEquiv Nt Ns φ t) (asymSliceEquiv Nt Ns φ (t + 1)) =
+      (1 / 2) * ∑ t : ZMod Nt, ∑ i : Fin Ns,
+        (asymSliceEquiv Nt Ns φ (t + 1) i - asymSliceEquiv Nt Ns φ t i) ^ 2 := by
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun t _ => ?_)
+  unfold timeCoupling
+  congr 1
+  exact Finset.sum_congr rfl (fun i _ => by ring)
+
+/-- The spatial-kinetic double sum is `a²·`(per-slice `spatialKinetic` summed over time);
+the `a²·a⁻²=1` cancellation needs `a ≠ 0`. -/
+theorem spatialKinetic_sum_slice (a : ℝ) (ha : a ≠ 0) (φ : AsymLatticeField Nt Ns) :
+    a ^ 2 * ∑ t : ZMod Nt, spatialKinetic Ns a (asymSliceEquiv Nt Ns φ t) =
+      (1 / 2) * ∑ t : ZMod Nt, ∑ i : Fin Ns,
+        (asymSliceEquiv Nt Ns φ t (i + 1) - asymSliceEquiv Nt Ns φ t i) ^ 2 := by
+  have hcancel : a ^ 2 * a⁻¹ ^ 2 = 1 := by
+    rw [inv_pow]; exact mul_inv_cancel₀ (pow_ne_zero 2 ha)
+  unfold spatialKinetic
+  simp only [Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun t _ => ?_)
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  linear_combination
+    ((asymSliceEquiv Nt Ns φ t (i + 1) - asymSliceEquiv Nt Ns φ t i) ^ 2 / 2) * hcancel
+
+/-- **Generic on-site bridging**: `∑_x g(φ(x)) = ∑_t ∑_i g(ψ_t(i))` for any `g : ℝ → ℝ`
+(covers the mass term `g = (·²)` and the Wick interaction). -/
+theorem asym_onsite_sum_slice (g : ℝ → ℝ) (φ : AsymLatticeField Nt Ns) :
+    ∑ x, g (φ x) = ∑ t : ZMod Nt, ∑ i : Fin Ns, g (asymSliceEquiv Nt Ns φ t i) := by
+  rw [Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl (fun t _ => ?_)
+  rw [← Equiv.sum_comp (ZMod.finEquiv Ns).toEquiv (fun s => g (φ (t, s)))]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  rw [asymSliceEquiv_apply]
+
 end Pphi2
