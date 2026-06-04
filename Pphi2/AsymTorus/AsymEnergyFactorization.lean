@@ -157,4 +157,30 @@ theorem asym_spaceBond_sum_slice (φ : AsymLatticeField Nt Ns) :
   simp only [Prod.mk_add_mk, add_zero]
   rw [asymSliceEquiv_apply, asymSliceEquiv_apply, ← finEquiv_succ]
 
+/-! ## Step 1c — assembly: the free-action half in slice form -/
+
+/-- **Slice form of the mass-operator quadratic form** (the free-action half of the energy
+factorization). Combining `massOperatorAsym_quadratic_form_bonds` with the slice-bridging
+lemmas, `(a²/2)·⟨φ,Qφ⟩` equals the time-coupling double sum `+` the spatial-kinetic double sum
+`+` the mass double sum over slices. The `a²·a⁻²=1` cancellation needs `a ≠ 0`. -/
+theorem massOperatorAsym_quadratic_form_slice (a mass : ℝ) (ha : a ≠ 0)
+    (φ : AsymLatticeField Nt Ns) :
+    (a ^ 2 / 2) * ∑ x, φ x * (massOperatorAsym Nt Ns a mass φ) x =
+      (1 / 2) * (∑ t : ZMod Nt, ∑ i : Fin Ns,
+          (asymSliceEquiv Nt Ns φ (t + 1) i - asymSliceEquiv Nt Ns φ t i) ^ 2)
+      + (1 / 2) * (∑ t : ZMod Nt, ∑ i : Fin Ns,
+          (asymSliceEquiv Nt Ns φ t (i + 1) - asymSliceEquiv Nt Ns φ t i) ^ 2)
+      + (a ^ 2 / 2) * mass ^ 2 * (∑ t : ZMod Nt, ∑ i : Fin Ns,
+          (asymSliceEquiv Nt Ns φ t i) ^ 2) := by
+  rw [massOperatorAsym_quadratic_form_bonds, asym_timeBond_sum_slice,
+    asym_spaceBond_sum_slice, asym_sq_sum_slice]
+  have hcancel : a ^ 2 * a⁻¹ ^ 2 = 1 := by
+    rw [inv_pow]; exact mul_inv_cancel₀ (pow_ne_zero 2 ha)
+  set T := ∑ t : ZMod Nt, ∑ i : Fin Ns,
+    (asymSliceEquiv Nt Ns φ (t + 1) i - asymSliceEquiv Nt Ns φ t i) ^ 2
+  set S := ∑ t : ZMod Nt, ∑ i : Fin Ns,
+    (asymSliceEquiv Nt Ns φ t (i + 1) - asymSliceEquiv Nt Ns φ t i) ^ 2
+  set Q := ∑ t : ZMod Nt, ∑ i : Fin Ns, (asymSliceEquiv Nt Ns φ t i) ^ 2
+  linear_combination ((T + S) / 2) * hcancel
+
 end Pphi2
