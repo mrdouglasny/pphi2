@@ -11,7 +11,7 @@ the **Feynman–Kac trace dictionary** (measure correlations = transfer-operator
 which IS the 4-step factorization already scoped in
 `layer-B2-discharge-plan.md` → "Feynman–Kac bridge — scoping". Active plan = B1–B5:
 
-- [ ] B1. Slice iso `Configuration (AsymLatticeField Nt Ns) ≃ (ZMod Nt → SpatialField Ns)`, measure-compatible   status: in_progress   deps: []   note: `AsymLatticeSites = ZMod Nt × ZMod Ns` ⟹ `Equiv.curry` + `ZMod Ns ≃ Fin Ns`; the content is pushing `interactingLatticeMeasureAsym` to the slice product.
+- [ ] B1. Slice iso `Configuration (AsymLatticeField Nt Ns) ≃ (ZMod Nt → SpatialField Ns)`, measure-compatible   status: todo   deps: []   note: `Configuration E = WeakDual ℝ E` (cylindrical σ-algebra), so this is a measurable pushforward on `WeakDual` (dualize a test-space iso `AsymLatticeField ≃ ZMod Nt × Fin Ns → ℝ` via `Equiv.curry` + `ZMod.finEquiv`), not a plain curry. Real but bounded.
 - [ ] B2. Measure factorization: `dμ_int ∝ ∏_t [w(ψ_t)·G(ψ_t−ψ_{t+1})·w(ψ_t)]` with `w = exp(−(a²/2)·spatialAction)` (corrected weight), `G = transferGaussian` — the Gaussian time-slicing. THE CRUX.   status: blocked   deps: [B1]   note: show `latticeCovarianceAsymGJ` = the slice-decomposed (time-coupling + a²·spatialAction) quadratic form.
 - [ ] B3. Trace dictionary: `∫ A(ψ_0)·B(ψ_n) dμ = Tr(M_A Tⁿ M_B T^{Nt−n})/Tr(T^{Nt})`; connected/vacuum-projected form `∑ ⟨v_f, T̂^{|t−t'|} v_f⟩`   status: blocked   deps: [B2]   note: `T = asymTransferOperatorCLM`.
 - [ ] B4. Apply `asymGappedTransfer'`.`susceptibility_le` ⟹ `Lt`-uniform bound on the time-summed correlator   status: blocked   deps: [B3]   note: mechanical given B3 + the proved gap.
@@ -19,6 +19,16 @@ which IS the 4-step factorization already scoped in
 
 ### Superseded (finite-torus GNS — DEAD END, kept for the record)
 - [x] M1/M2/M3 scaffold (`Pphi2AsymTTS`, `93ae9f0`) — UNSOUND (`τPos` false); not on the path. M4/M5 dropped.
+
+### Road ahead (honest sizing)
+B1–B5 = the finite-torus **Feynman–Kac trace dictionary**, the genuine hard core of B2.
+B3/B4/B5 are mechanical/short given B2 + the proved gap + B1-Nelson; **B2 (the Gaussian
+time-slicing factorization: `latticeCovarianceAsymGJ` = slice-decomposed
+time-coupling + `a²·spatialAction`) is the crux** — a multi-week formalization touching
+the `WeakDual` measure structure. Prereqs all in place: corrected weight (`bb4b86d`),
+proved gap (`asymGappedTransfer'`/`susceptibility_le`), `susceptibility_le` engine
+(reflection-positivity `0c3b961`). This is a dedicated effort, not a single pass; the
+env Codex is flaky for grinding it. Pickup-ready.
 
 **Loop checkpoint (2026-06-03):** scaffold landed (typed `Pphi2AsymTTS` + structural
 lemmas, committed `93ae9f0`); 5 analytic sorries + M4 + M5 remain.
