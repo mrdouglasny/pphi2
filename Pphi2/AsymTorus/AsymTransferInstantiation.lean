@@ -34,6 +34,7 @@ and the proved gap, and is the home for the B1–B5 trace dictionary.
 -/
 
 open MeasureTheory ReflectionPositivity GaussianField Real
+open scoped BigOperators
 
 namespace Pphi2
 
@@ -73,6 +74,237 @@ theorem asymTransferKernel_measurable (P : InteractionPolynomial) (a mass : ℝ)
       (measurable_fst.sub measurable_snd))).mul
     ((asymTransferWeight_measurable Nt Ns P a mass).comp measurable_snd)
 
+
+private theorem transferGaussian_le_one (z : SpatialField Ns) :
+    transferGaussian Ns z ≤ 1 := by
+  simpa [Real.norm_eq_abs, abs_of_pos (transferGaussian_pos Ns z)] using
+    transferGaussian_norm_le_one Ns z
+
+private theorem asymTransferKernel_le_weight_mul (P : InteractionPolynomial) (a mass : ℝ)
+    (x y : SpatialField Ns) :
+    asymTransferKernel Nt Ns P a mass x y ≤
+      asymTransferWeight Nt Ns P a mass x * asymTransferWeight Nt Ns P a mass y := by
+  have hG : transferGaussian Ns (x - y) ≤ 1 := transferGaussian_le_one Ns (x - y)
+  have hx : 0 ≤ asymTransferWeight Nt Ns P a mass x :=
+    (asymTransferWeight_pos Nt Ns P a mass x).le
+  have hy : 0 ≤ asymTransferWeight Nt Ns P a mass y :=
+    (asymTransferWeight_pos Nt Ns P a mass y).le
+  have h :=
+    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hG hx) hy
+  simpa [asymTransferKernel, mul_assoc] using h
+
+private theorem openChainDensity_asymTransferKernel_nonneg
+    (P : InteractionPolynomial) (a mass : ℝ) (m : ℕ)
+    (x y : SpatialField Ns) (q : Fin m → SpatialField Ns) :
+    0 ≤ openChainDensity (asymTransferKernel Nt Ns P a mass) m x y q := by
+  rw [← TransferSystem.openChainProduct_eq_density]
+  exact Finset.prod_nonneg (fun i _ =>
+    asymTransferKernel_nonneg Nt Ns P a mass
+      (openChainVertices m x y q i.castSucc)
+      (openChainVertices m x y q i.succ))
+
+private theorem openChainDensity_asymTransferKernel_le_weight_mul_prod
+    (P : InteractionPolynomial) (a mass : ℝ) :
+    ∀ (m : ℕ) (x y : SpatialField Ns) (q : Fin m → SpatialField Ns),
+      openChainDensity (asymTransferKernel Nt Ns P a mass) m x y q ≤
+        asymTransferWeight Nt Ns P a mass x *
+          asymTransferWeight Nt Ns P a mass y *
+          ∏ j : Fin m, asymTransferWeight Nt Ns P a mass (q j) ^ 2
+  | 0, x, y, q => by
+      simpa [openChainDensity] using
+        asymTransferKernel_le_weight_mul (Nt := Nt) (Ns := Ns) P a mass x y
+  | m + 1, x, y, q => by
+      let w := asymTransferWeight Nt Ns P a mass
+      have hden :=
+        openChainDensity_asymTransferKernel_le_weight_mul_prod P a mass m x
+          (q (Fin.last m)) (Fin.init q)
+      have hk :=
+        asymTransferKernel_le_weight_mul (Nt := Nt) (Ns := Ns) P a mass (q (Fin.last m)) y
+      have hk_nonneg :
+          0 ≤ asymTransferKernel Nt Ns P a mass (q (Fin.last m)) y :=
+        asymTransferKernel_nonneg Nt Ns P a mass (q (Fin.last m)) y
+      have hdom_nonneg :
+          0 ≤ w x * w (q (Fin.last m)) *
+            ∏ j : Fin m, w (Fin.init q j) ^ 2 := by
+        exact mul_nonneg
+          (mul_nonneg (asymTransferWeight_pos Nt Ns P a mass x).le
+            (asymTransferWeight_pos Nt Ns P a mass (q (Fin.last m))).le)
+          (Finset.prod_nonneg (fun j _ => sq_nonneg _))
+      have hmul := mul_le_mul hden hk hk_nonneg hdom_nonneg
+      calc
+        openChainDensity (asymTransferKernel Nt Ns P a mass) (m + 1) x y q
+            ≤ (w x * w (q (Fin.last m)) *
+                  ∏ j : Fin m, w (Fin.init q j) ^ 2) *
+                (w (q (Fin.last m)) * w y) := by
+              simpa [openChainDensity, w] using hmul
+        _ = w x * w y * ∏ j : Fin (m + 1), w (q j) ^ 2 := by
+              rw [Fin.prod_univ_castSucc]
+              simp [Fin.init, w]
+              ring
+
+private theorem openChain_step_asymTransferKernel_le_dom
+    (P : InteractionPolynomial) (a mass : ℝ) (m : ℕ)
+    (x y z : SpatialField Ns) (q : Fin m → SpatialField Ns) :
+    openChainDensity (asymTransferKernel Nt Ns P a mass) m x z q *
+        asymTransferKernel Nt Ns P a mass z y ≤
+      (asymTransferWeight Nt Ns P a mass x *
+          asymTransferWeight Nt Ns P a mass y) *
+        (asymTransferWeight Nt Ns P a mass z ^ 2 *
+          ∏ j : Fin m, asymTransferWeight Nt Ns P a mass (q j) ^ 2) := by
+  let w := asymTransferWeight Nt Ns P a mass
+  have hden :=
+    openChainDensity_asymTransferKernel_le_weight_mul_prod Nt Ns P a mass m x z q
+  have hk := asymTransferKernel_le_weight_mul (Nt := Nt) (Ns := Ns) P a mass z y
+  have hk_nonneg : 0 ≤ asymTransferKernel Nt Ns P a mass z y :=
+    asymTransferKernel_nonneg Nt Ns P a mass z y
+  have hdom_nonneg : 0 ≤ w x * w z * ∏ j : Fin m, w (q j) ^ 2 := by
+    exact mul_nonneg
+      (mul_nonneg (asymTransferWeight_pos Nt Ns P a mass x).le
+        (asymTransferWeight_pos Nt Ns P a mass z).le)
+      (Finset.prod_nonneg (fun j _ => sq_nonneg _))
+  have hmul := mul_le_mul hden hk hk_nonneg hdom_nonneg
+  calc
+    openChainDensity (asymTransferKernel Nt Ns P a mass) m x z q *
+        asymTransferKernel Nt Ns P a mass z y
+        ≤ (w x * w z * ∏ j : Fin m, w (q j) ^ 2) * (w z * w y) := hmul
+    _ = (w x * w y) * (w z ^ 2 * ∏ j : Fin m, w (q j) ^ 2) := by
+      ring
+
+private theorem openChainProduct_asymTransferKernel_le_dom
+    (P : InteractionPolynomial) (a mass : ℝ) (m : ℕ)
+    (x : SpatialField Ns) (q : Fin m → SpatialField Ns) :
+    openChainProduct (asymTransferKernel Nt Ns P a mass) m x x q ≤
+      asymTransferWeight Nt Ns P a mass x ^ 2 *
+        ∏ j : Fin m, asymTransferWeight Nt Ns P a mass (q j) ^ 2 := by
+  let w := asymTransferWeight Nt Ns P a mass
+  calc
+    openChainProduct (asymTransferKernel Nt Ns P a mass) m x x q =
+        openChainDensity (asymTransferKernel Nt Ns P a mass) m x x q :=
+          TransferSystem.openChainProduct_eq_density _ _ _ _ _
+    _ ≤ w x * w x * ∏ j : Fin m, w (q j) ^ 2 :=
+        openChainDensity_asymTransferKernel_le_weight_mul_prod Nt Ns P a mass
+          m x x q
+    _ = w x ^ 2 * ∏ j : Fin m, w (q j) ^ 2 := by
+        ring
+
+
+private theorem asymTransferKernel_measurable_apply
+    {α : Type*} [MeasurableSpace α] (P : InteractionPolynomial) (a mass : ℝ)
+    {f g : α → SpatialField Ns} (hf : Measurable f) (hg : Measurable g) :
+    Measurable (fun t => asymTransferKernel Nt Ns P a mass (f t) (g t)) := by
+  unfold asymTransferKernel
+  exact (((asymTransferWeight_measurable Nt Ns P a mass).comp hf).mul
+    ((continuous_transferGaussian Ns).measurable.comp (hf.sub hg))).mul
+    ((asymTransferWeight_measurable Nt Ns P a mass).comp hg)
+
+set_option maxHeartbeats 1000000 in
+-- The recursive proof builds nested measurable maps on finite pi spaces.
+private theorem openChainDensity_asymTransferKernel_measurable
+    (P : InteractionPolynomial) (a mass : ℝ) (m : ℕ) :
+    Measurable (fun p : SpatialField Ns × SpatialField Ns × (Fin m → SpatialField Ns) =>
+      openChainDensity (asymTransferKernel Nt Ns P a mass) m p.1 p.2.1 p.2.2) := by
+  induction m with
+  | zero =>
+      change Measurable
+        (fun p : SpatialField Ns × SpatialField Ns × (Fin 0 → SpatialField Ns) =>
+          asymTransferKernel Nt Ns P a mass p.1 p.2.1)
+      exact asymTransferKernel_measurable_apply (Nt := Nt) (Ns := Ns) P a mass
+        measurable_fst (measurable_fst.comp measurable_snd)
+  | succ m ih =>
+      have hq :
+          Measurable
+            (fun p : SpatialField Ns × SpatialField Ns × (Fin (m + 1) → SpatialField Ns) =>
+              p.2.2 (Fin.last m)) :=
+        (measurable_pi_apply (Fin.last m)).comp (measurable_snd.comp measurable_snd)
+      have hinit :
+          Measurable
+            (fun p : SpatialField Ns × SpatialField Ns × (Fin (m + 1) → SpatialField Ns) =>
+              Fin.init p.2.2) := by
+        exact measurable_pi_lambda _ (fun i =>
+          (measurable_pi_apply i.castSucc).comp (measurable_snd.comp measurable_snd))
+      have hprev :
+          Measurable
+            (fun p : SpatialField Ns × SpatialField Ns × (Fin (m + 1) → SpatialField Ns) =>
+              openChainDensity (asymTransferKernel Nt Ns P a mass) m
+                p.1 (p.2.2 (Fin.last m)) (Fin.init p.2.2)) :=
+        ih.comp (measurable_fst.prodMk (hq.prodMk hinit))
+      have hlast :
+          Measurable
+            (fun p : SpatialField Ns × SpatialField Ns × (Fin (m + 1) → SpatialField Ns) =>
+              asymTransferKernel Nt Ns P a mass (p.2.2 (Fin.last m)) p.2.1) :=
+        asymTransferKernel_measurable_apply (Nt := Nt) (Ns := Ns) P a mass hq
+          (measurable_fst.comp measurable_snd)
+      change Measurable
+        (fun p : SpatialField Ns × SpatialField Ns × (Fin (m + 1) → SpatialField Ns) =>
+          openChainDensity (asymTransferKernel Nt Ns P a mass) m
+              p.1 (p.2.2 (Fin.last m)) (Fin.init p.2.2) *
+            asymTransferKernel Nt Ns P a mass (p.2.2 (Fin.last m)) p.2.1)
+      exact hprev.mul hlast
+
+set_option maxHeartbeats 1000000 in
+-- This composes the recursive finite-pi measurability helper with product projections.
+private theorem openChain_step_asymTransferKernel_measurable
+    (P : InteractionPolynomial) (a mass : ℝ) (m : ℕ) (x y : SpatialField Ns) :
+    Measurable (fun p : SpatialField Ns × (Fin m → SpatialField Ns) =>
+      openChainDensity (asymTransferKernel Nt Ns P a mass) m x p.1 p.2 *
+        asymTransferKernel Nt Ns P a mass p.1 y) := by
+  have hden :
+      Measurable (fun p : SpatialField Ns × (Fin m → SpatialField Ns) =>
+        openChainDensity (asymTransferKernel Nt Ns P a mass) m x p.1 p.2) :=
+    (openChainDensity_asymTransferKernel_measurable (Nt := Nt) (Ns := Ns) P a mass m).comp
+      (measurable_const.prodMk (measurable_fst.prodMk measurable_snd))
+  have hlast :
+      Measurable (fun p : SpatialField Ns × (Fin m → SpatialField Ns) =>
+        asymTransferKernel Nt Ns P a mass p.1 y) :=
+    asymTransferKernel_measurable_apply (Nt := Nt) (Ns := Ns) P a mass
+      measurable_fst measurable_const
+  exact hden.mul hlast
+
+set_option maxHeartbeats 1000000 in
+-- This reuses the density measurability helper through `openChainProduct_eq_density`.
+private theorem openChainProduct_asymTransferKernel_measurable
+    (P : InteractionPolynomial) (a mass : ℝ) (m : ℕ) :
+    Measurable (fun p : SpatialField Ns × (Fin m → SpatialField Ns) =>
+      openChainProduct (asymTransferKernel Nt Ns P a mass) m p.1 p.1 p.2) := by
+  have hden :
+      Measurable (fun p : SpatialField Ns × (Fin m → SpatialField Ns) =>
+        openChainDensity (asymTransferKernel Nt Ns P a mass) m p.1 p.1 p.2) :=
+    (openChainDensity_asymTransferKernel_measurable (Nt := Nt) (Ns := Ns) P a mass m).comp
+      (measurable_fst.prodMk (measurable_fst.prodMk measurable_snd))
+  simpa only [TransferSystem.openChainProduct_eq_density] using hden
+
+private theorem asymTransferWeight_sq_prod_integrable (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) (m : ℕ) :
+    Integrable
+      (fun p : SpatialField Ns × (Fin m → SpatialField Ns) =>
+        asymTransferWeight Nt Ns P a mass p.1 ^ 2 *
+          ∏ j : Fin m, asymTransferWeight Nt Ns P a mass (p.2 j) ^ 2)
+      (volume.prod (Measure.pi (fun _ : Fin m => volume))) := by
+  let w := asymTransferWeight Nt Ns P a mass
+  have hw_sq : Integrable (fun x : SpatialField Ns => w x ^ 2) volume :=
+    (asymTransferWeight_memLp_two Nt Ns P a mass ha hmass).integrable_sq
+  have hq : Integrable
+      (fun q : Fin m → SpatialField Ns => ∏ j : Fin m, w (q j) ^ 2)
+      (Measure.pi (fun _ : Fin m => volume)) := by
+    exact MeasureTheory.Integrable.fintype_prod
+      (μ := fun _ : Fin m => volume)
+      (f := fun _ x => w x ^ 2)
+      (fun _ => hw_sq)
+  exact hw_sq.mul_prod hq
+
+private theorem asymTransferWeight_step_dom_integrable
+    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (m : ℕ) (x y : SpatialField Ns) :
+    Integrable
+      (fun p : SpatialField Ns × (Fin m → SpatialField Ns) =>
+        (asymTransferWeight Nt Ns P a mass x *
+          asymTransferWeight Nt Ns P a mass y) *
+          (asymTransferWeight Nt Ns P a mass p.1 ^ 2 *
+            ∏ j : Fin m, asymTransferWeight Nt Ns P a mass (p.2 j) ^ 2))
+      (volume.prod (Measure.pi (fun _ : Fin m => volume))) :=
+  (asymTransferWeight_sq_prod_integrable (Nt := Nt) (Ns := Ns) P a mass ha hmass m).const_mul
+    (asymTransferWeight Nt Ns P a mass x * asymTransferWeight Nt Ns P a mass y)
+
 /-- The asym φ⁴₂ cylinder packaged as a `TransferSystem` on the spatial slice space. -/
 noncomputable def asymTransferSystem (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) : TransferSystem (SpatialField Ns) where
@@ -83,12 +315,30 @@ noncomputable def asymTransferSystem (P : InteractionPolynomial) (a mass : ℝ)
   k_meas := asymTransferKernel_measurable Nt Ns P a mass
   ν_sigmaFinite := inferInstance
   openChain_step_integrable := by
-    -- TODO(integrability): the open-chain step integrand is integrable — Gaussian decay of
-    -- `w` (asymTransferWeight_gaussian_decay) + `G` makes the kernel products L¹.
-    sorry
+    intro m x y
+    refine (asymTransferWeight_step_dom_integrable (Nt := Nt) (Ns := Ns)
+      P a mass ha hmass m x y).mono_nonneg
+      (openChain_step_asymTransferKernel_measurable (Nt := Nt) (Ns := Ns)
+        P a mass m x y).aestronglyMeasurable
+      (ae_of_all _ (fun p => ?_)) (ae_of_all _ (fun p => ?_))
+    · exact mul_nonneg
+        (openChainDensity_asymTransferKernel_nonneg (Nt := Nt) (Ns := Ns)
+          P a mass m x p.1 p.2)
+        (asymTransferKernel_nonneg Nt Ns P a mass p.1 y)
+    · exact openChain_step_asymTransferKernel_le_dom (Nt := Nt) (Ns := Ns)
+        P a mass m x y p.1 p.2
   partition_integrable := by
-    -- TODO(integrability): closed-chain peeled integrand integrable (same Gaussian estimate).
-    sorry
+    intro m
+    refine (asymTransferWeight_sq_prod_integrable (Nt := Nt) (Ns := Ns)
+      P a mass ha hmass m).mono_nonneg
+      (openChainProduct_asymTransferKernel_measurable (Nt := Nt) (Ns := Ns)
+        P a mass m).aestronglyMeasurable
+      (ae_of_all _ (fun p => ?_)) (ae_of_all _ (fun p => ?_))
+    · rw [TransferSystem.openChainProduct_eq_density]
+      exact openChainDensity_asymTransferKernel_nonneg (Nt := Nt) (Ns := Ns)
+        P a mass m p.1 p.1 p.2
+    · exact openChainProduct_asymTransferKernel_le_dom (Nt := Nt) (Ns := Ns)
+        P a mass m p.1 p.2
   pathDensity_measurable := by
     intro n _
     unfold periodicPathDensity asymTransferKernel
