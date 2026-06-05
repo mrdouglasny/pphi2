@@ -9,11 +9,50 @@ Setting: **fixed** torus side `L` (compact, OS0–OS2 already proved here); latt
 `a = L/N → 0`; `P(φ) = λ:φ⁴:`, `λ > 0`, `m > 0`. Weak coupling (`λ` small) — see §Regime.
 
 ## Chosen route: perturbative leading order at weak coupling (NO cluster expansion)
-Rationale: at **fixed finite volume** the φ⁴₂ correlations are analytic in `λ` near `0`, **uniformly
-in the UV cutoff `a`**, purely from Nelson hypercontractivity (the Wick power `:φ⁴:` lies in every
-`Lᵖ(dμ_GFF,a)` with `a`-uniform norm in `d = 2`). The cluster expansion is needed **only** for the
+Rationale: at **fixed finite volume** the φ⁴₂ correlations admit a **one-sided asymptotic Taylor
+expansion** in `λ` at `0⁺`, with a remainder bound from Nelson hypercontractivity (the Wick power
+`:φ⁴:` lies in every `Lᵖ(dμ_GFF)` in `d = 2`). The cluster expansion is needed **only** for the
 infinite-volume `L → ∞` limit — which we do **not** take here. So the hard analytic input is a
-cutoff-uniform remainder bound, not a polymer expansion. This is the minimal formalizable route.
+remainder bound, not a polymer expansion. This is the minimal formalizable route.
+
+> ⚠️ **Gemini-reviewed correction (2026-06-05): do NOT claim analyticity.** `λ ↦ ⟨φ(f)ⁿ⟩_λ` is
+> **not analytic** at `λ=0` — the **Dyson instability** (`λ<0` ⟹ `−λφ⁴` unbounded below ⟹ the
+> partition function diverges) forces radius of convergence **zero**. What is true and sufficient is
+> an **asymptotic expansion from the right**: `u₄(λ) = −κλ∫(Cf)⁴ + R(λ)` with `|R(λ)| ≤ Kλ²` as
+> `λ→0⁺`. The remainder is controlled by Hölder + Nelson: the Taylor remainder is
+> `⟨φ(f)⁴·V²·e^{−λV}⟩/⟨e^{−λV}⟩`-type, split by Hölder into free-measure `Lᵖ` norms of `φ(f)⁴V²`
+> (finite, `d=2`) times `‖e^{−λV}‖_q` (Nelson). **No analyticity, no cluster expansion.**
+
+> 💡 **Gemini-reviewed simplification (consider): work in the continuum directly, drop the lattice.**
+> In `d=2` fixed volume the continuum interaction `V = ∫_{T²}:φ⁴: dz` is *already* a well-defined
+> `Lᵖ(dμ_GFF^{cont})` random variable (Wick ordering suffices; no UV cutoff needed for `V`). So one
+> can define `dμ = Z⁻¹e^{−λV}dμ_GFF^{cont}` directly on the continuum torus GFF and apply the
+> asymptotic expansion there — **bypassing the "uniform-in-`a`" steps III/IV entirely**. CAVEAT: the
+> genuine measure we currently have (`torusPphi2Limit_exists`) is the *lattice* Prokhorov limit; this
+> cleaner route needs either (a) identifying that limit with `Z⁻¹e^{−λV}dμ_GFF^{cont}`, or (b)
+> re-basing the construction on the direct continuum measure. **Check what the continuum torus GFF +
+> `:φ⁴:`-as-`Lᵖ` infra in pphi2 supports before choosing lattice-uniform vs continuum-direct.**
+
+## Dual review (Gemini deep-think + Codex, 2026-06-05) — verdict: SOUND-WITH-CAVEATS
+Both models independently agree: (i) leading term `−κλ∫(C_a f)⁴` is correct, negative,
+Wick-ordering-invariant; (ii) **NOT analytic** — use a one-sided `λ→0⁺` asymptotic Taylor remainder
+(Dyson instability / Borel-summable, radius 0); (iii) no cluster expansion at fixed `L`; (iv) hardest
+step is III; (v) the perturbative route is the standard/cleanest for strict `u₄<0`. Refinements
+folded into the steps below:
+- **κ is convention-dependent** (Codex): `λ∫:φ⁴:` ⟹ `κ=4!`; pphi2's `InteractionPolynomial` fixes a
+  `1/n` leading coefficient, so the Lean quartic likely gives **`κ=6`**. Pin against the repo
+  convention (`Polynomial.lean`, `InteractingMeasure/LatticeAction.lean`, `WickPolynomial.lean`'s
+  `x⁴−6cx²+3c²`) — step I/V.
+- **Step III needs more than Nelson `Lᵖ` on `:φ⁴:`** (Codex): also uniform `E₀[e^{−pλV_a}]`, a
+  partition-function lower bound `Z_λ ≥ c > 0`, and `V_a`-insertion moment bounds — all
+  cutoff-uniform. Mechanism (Gemini): the remainder `⟨φ(f)⁴V²e^{−λV}⟩/⟨e^{−λV}⟩` split by Hölder
+  into free `Lᵖ` norms × `‖e^{−λV}‖_q` (Nelson).
+- **[Global]** (Codex): the `TorusNontriviality.lean` predicates are for arbitrary `μ`/`P`; the
+  theorem must instantiate a specific `P_λ` (quartic) coupling family with `λ` small.
+- **Divergence:** Gemini suggests the continuum-direct route (below) may be cleaner; Codex judges the
+  lattice-perturbative route cleanest and does not endorse switching. Decide per available infra.
+- **Refs:** Simon *P(φ)₂* Thm V.3.1/V.3.3 (`e^{−λV}∈⋂ₚLᵖ`), Thm VIII.1.1 (asymptotic series);
+  Glimm–Jaffe *Quantum Physics* Ch. 8 §8.6 (Wick/Nelson), Ch. 19 §19.1 (P(φ)₂ setup).
 
 ## The structure
 `u₄^a(f; λ) = −κ·λ·∫_{T²} (C_a f)(z)⁴ dz + R_a(f; λ)`, where `C_a = (−Δ_a + m²)⁻¹` is the lattice
@@ -25,10 +64,13 @@ Since `∫(C_a f)⁴ > 0` strictly (4th power of a nonzero continuous function),
 - [ ] **I. Leading-order coefficient.** `d/dλ u₄^a|_{λ=0}(f) = −κ ∫_{T²}(C_a f)(z)⁴ dz` with `κ > 0`.
   Wick/Isserlis on the free GFF: the O(λ) connected part of `⟨φ(f)⁴⟩` is the single-vertex tree
   with all four external legs `C_a f` attached to one `:φ⁴(z):` vertex; the `4!`-fold leg matching
-  gives `κ = 4!` (with the `λ∫:φ⁴:` normalization; `κ = 1` with `λ/4!`). **Wick ordering does NOT
-  change this term** — the tadpole subtractions in `:φ⁴: = φ⁴ − 6cφ² + 3c²` only remove
-  self-contractions at the vertex, but the connected 4-point uses all four vertex fields on external
-  legs (no self-contraction), so they're untouched. Pin `κ` precisely during formalization.
+  gives `u₄'(0) = −κ∫(C_a f)⁴`. **Wick ordering does NOT change this term** — the tadpole subtractions
+  in `:φ⁴: = φ⁴ − 6cφ² + 3c²` only remove self-contractions at the vertex, but the connected 4-point
+  uses all four vertex fields on external legs (no self-contraction), so they're untouched.
+  ⚠️ **κ convention-dependent (pin it):** `λ∫:φ⁴:` ⟹ `κ=4!=24`; pphi2's `InteractionPolynomial` carries
+  a `1/n` leading coeff (`(1/4):φ⁴:`) ⟹ `κ=6` if `λ` scales the whole interaction. Read off from
+  `Polynomial.lean` / `InteractingMeasure/LatticeAction.lean` + `WickPolynomial.lean`; also fix the
+  lattice normalization (`a²∑_z` vs `∫`). Sign negative regardless (from `e^{−λV}`).
   *Infra:* pphi2 Wick machinery (`WickMultivariate.lean`, `gffMultiWickMonomial_*`, proved Wick
   orthogonality). **Difficulty ★★** (combinatorics; the connected/cumulant bookkeeping is the bulk).
 - [ ] **II. Strict positivity of the coefficient.** `∫_{T²}(C_a f)(z)⁴ dz > 0` for `f ≠ 0`. `C_a`
@@ -36,10 +78,13 @@ Since `∫(C_a f)⁴ > 0` strictly (4th power of a nonzero continuous function),
   where it's positive ⟹ integral `> 0`. *Infra:* `massOperatorAsym_pos_def` / the torus propagator
   positivity. **Difficulty ★** (positivity of a 4th power).
 - [ ] **III. Cutoff-uniform remainder bound.** `|R_a(f;λ)| ≤ K(f)·λ²` with `K(f)` independent of
-  `a`. **THE crux.** Route: analyticity of `λ ↦ ⟨φ(f)⁴⟩_λ` (and `⟨φ(f)²⟩_λ`) on a disk `|λ| < r₀`
-  with `r₀, K` uniform in `a`, from the convergent Wick-ordered perturbation series — bounded by
-  Nelson's hypercontractive estimates: `‖:φ⁴:(g)‖_{Lᵖ(μ_GFF,a)} ≤ C_p` uniformly in `a` (`d = 2`).
-  Equivalently a uniform 2nd-order Taylor bound on `u₄^a(·;λ)`. **No cluster expansion** (fixed `L`).
+  `a`, as `λ→0⁺`. **THE crux.** ⚠️ **NOT analyticity** (Dyson instability ⟹ radius 0; the series is
+  asymptotic/Borel, dual-review-confirmed): a **one-sided positive-λ 2nd-order Taylor remainder**.
+  Mechanism: the remainder is `⟨φ(f)⁴·V²·e^{−λV}⟩₀/⟨e^{−λV}⟩₀`-type; Hölder-split into free `Lᵖ`
+  norms of `φ(f)⁴V²` (finite/cutoff-uniform, `d=2`) times `‖e^{−λV}‖_q` (Nelson). Codex caveat —
+  beyond Nelson `Lᵖ` on `:φ⁴:`, the bound also needs: uniform `E₀[e^{−pλV_a}]`, a partition-function
+  **lower bound** `Z_λ ≥ c>0`, and `V_a`-insertion moment bounds, all cutoff-uniform. **No cluster
+  expansion** (fixed `L`; that's only for `L→∞`).
   *Infra:* `NelsonEstimate/` (hypercontractivity / polynomial-chaos) — currently aimed at the OS0
   exp-moment bound; the analyticity/Taylor-remainder use is **new work on the same estimates**.
   **Difficulty ★★★** (the genuine analytic core). *Cite:* Glimm–Jaffe *Quantum Physics* Ch. 8–9
@@ -61,10 +106,15 @@ strict lower bound is an alternative for step III, but formalizing the Lebowitz 
 currents / duplicated variables — is harder than the Nelson remainder bound. Prefer perturbative.)
 
 ## Hardest input / first action
-**Step III** (cutoff-uniform remainder). Before formalizing: a Gemini/Codex design pass to pin the
-exact cutoff-uniform analyticity statement and its minimal Nelson input (the prior deep-think on the
-`S₂` direction already validated the analogous `S₂''(0) = 96∫(Cf)C³(Cf)` second-order structure and
-the "fixed-volume ⟹ no cluster expansion" claim). Steps I, II are independently startable now.
+**Step III** (cutoff-uniform one-sided Taylor remainder). The dual design pass (Gemini deep-think +
+Codex, 2026-06-05) is **DONE** — verdict SOUND-WITH-CAVEATS, corrections folded in above (chiefly:
+no analyticity ⟹ one-sided remainder; κ convention; the extra `Z_λ`/`e^{−pλV}`/`V`-moment inputs for
+III). **First concrete actions:** (0) pin `κ` + the lattice normalization against
+`InteractionPolynomial`/`WickPolynomial` and instantiate the specific `P_λ` family in
+`TorusNontriviality.lean`; (1) step II (★ positivity); (2) step I (★★ Wick `O(λ)` coefficient). Then
+the step-III analytic core. Optionally evaluate Gemini's continuum-direct simplification first (it
+removes steps III/IV's "uniform-in-`a`" but needs the continuum-torus-GFF + `:φ⁴:`-as-`Lᵖ` infra and
+a limit-identification — check pphi2 support before committing).
 
 ## What this replaces
 The honest, measure-genuine version of axiom 9 `continuumLimit_nonGaussian` (currently `∃μ` on the
