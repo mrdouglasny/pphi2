@@ -111,4 +111,72 @@ theorem wickFourth_wickPolynomial_inner_quartic (a mass : ℝ) (ha : 0 < a) (hma
   push_cast
   ring
 
+/-- Integrability of `:φ(f)⁴: · wickPolynomial P (wickConstant) (φ_z)` under the lattice GFF — needed
+to pull the site integral through the interaction's sum over vertices. -/
+theorem integrable_wickFourth_wickPolynomial (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (z : FinLatticeSites d N) :
+    Integrable (fun ω => _root_.wickMonomial 4 (gffSmearedCovariance d N a mass f f) (ω f) *
+      wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z 1)))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  rw [← gffSmearedCovariance_single_single_eq_wickConstant d N a mass ha hmass z]
+  have hInt : ∀ k : ℕ, Integrable
+      (fun ω => _root_.wickMonomial 4 (gffSmearedCovariance d N a mass f f) (ω f) *
+        _root_.wickMonomial k (gffSmearedCovariance d N a mass (Pi.single z 1) (Pi.single z 1))
+          (ω (Pi.single z 1)))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+    intro k
+    rw [gffSmearedCovariance_self d N a mass f,
+        gffSmearedCovariance_self d N a mass (Pi.single z 1)]
+    exact integrable_wickMonomial_smeared_mul d N a mass ha hmass 4 k f (Pi.single z 1)
+  have hdist : (fun ω : Configuration (FinLatticeField d N) =>
+        _root_.wickMonomial 4 (gffSmearedCovariance d N a mass f f) (ω f) *
+        wickPolynomial P (gffSmearedCovariance d N a mass (Pi.single z 1) (Pi.single z 1))
+          (ω (Pi.single z 1))) =
+      (fun ω : Configuration (FinLatticeField d N) => (1 / (P.n : ℝ)) *
+          (_root_.wickMonomial 4 (gffSmearedCovariance d N a mass f f) (ω f) *
+            _root_.wickMonomial P.n
+              (gffSmearedCovariance d N a mass (Pi.single z 1) (Pi.single z 1)) (ω (Pi.single z 1)))
+        + ∑ m : Fin P.n, P.coeff m *
+            (_root_.wickMonomial 4 (gffSmearedCovariance d N a mass f f) (ω f) *
+              _root_.wickMonomial (m : ℕ)
+                (gffSmearedCovariance d N a mass (Pi.single z 1) (Pi.single z 1))
+                (ω (Pi.single z 1)))) := by
+    funext ω
+    rw [wickPolynomial]
+    simp only [wickMonomial_eq_root_local]
+    rw [mul_add, Finset.mul_sum]
+    congr 1
+    · ring
+    · exact Finset.sum_congr rfl fun m _ => by ring
+  rw [hdist]
+  exact ((hInt P.n).const_mul _).add
+    (integrable_finset_sum _ (fun (m : Fin P.n) _ => (hInt (m : ℕ)).const_mul (P.coeff m)))
+
+/-- **Pure-quartic connected four-point against the full interaction sum (u₄ step 2b).**
+`∫ :φ(f)⁴: · (a^d ∑_z wickPolynomial P (wickConstant) (φ_z)) dμ_GFF = 6·a^d·∑_z (C_a f)(z)⁴` for the
+`φ⁴` interaction (`P.n = 4`). This is `⟨:φ(f)⁴: · V⟩_free` with `V` the lattice interaction — the
+first-order coefficient `−u₄'(0) = 6∫(C_a f)⁴` of the weak-coupling four-point. -/
+theorem wickFourth_interaction_inner_quartic (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4) (f : FinLatticeField d N) :
+    ∫ ω, _root_.wickMonomial 4 (gffSmearedCovariance d N a mass f f) (ω f) *
+          (a ^ d * ∑ z, wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z 1)))
+        ∂(latticeGaussianMeasure d N a mass ha hmass) =
+    6 * a ^ d * ∑ z, (∑ x, f x * gffPositionCovariance d N a mass x z) ^ 4 := by
+  have hcongr : (fun ω : Configuration (FinLatticeField d N) =>
+        _root_.wickMonomial 4 (gffSmearedCovariance d N a mass f f) (ω f) *
+          (a ^ d * ∑ z, wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z 1)))) =
+      (fun ω : Configuration (FinLatticeField d N) => a ^ d *
+        ∑ z, (_root_.wickMonomial 4 (gffSmearedCovariance d N a mass f f) (ω f) *
+          wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z 1)))) := by
+    funext ω
+    rw [Finset.mul_sum, Finset.mul_sum]
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun z _ => by ring
+  rw [hcongr, integral_const_mul,
+      integral_finset_sum _
+        (fun z _ => integrable_wickFourth_wickPolynomial d N a mass ha hmass P f z)]
+  simp_rw [wickFourth_wickPolynomial_inner_quartic d N a mass ha hmass P hP f]
+  rw [← Finset.mul_sum]
+  ring
+
 end Pphi2
