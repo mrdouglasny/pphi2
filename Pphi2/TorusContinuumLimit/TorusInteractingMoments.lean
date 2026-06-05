@@ -279,7 +279,76 @@ theorem torus_interacting_eighth_moment_uniform
         mul_le_mul_of_nonneg_left h_16th_bound (Real.rpow_nonneg hK_pos.le _)
     _ = 15 ^ 4 * Real.sqrt K * Cg ^ 4 := by rw [hK_sqrt]; ring
 
+/-- **Power-integrability under the torus interacting measure.** `|ω f|^k` is integrable w.r.t.
+`torusInteractingMeasure` for every `k ≥ 1`. Mirrors the proved 2nd-moment integrability: push
+through the embedding, decompose `μ_int = Z⁻¹·μ_GFF.withDensity(bw)`, dominate `|ωg|^k·bw` by
+`|ωg|^k·e^B` (Boltzmann weight bounded), and use Gaussian `Lᵏ` integrability of the pairing. -/
+theorem torus_interacting_abs_pow_integrable (P : InteractionPolynomial) (mass : ℝ)
+    (hmass : 0 < mass) (f : TorusTestFunction L) (k : ℕ) (hk : 1 ≤ k) (N : ℕ) [NeZero N] :
+    Integrable (fun ω => |ω f| ^ k) (torusInteractingMeasure L N P mass hmass) := by
+  unfold torusInteractingMeasure
+  rw [integrable_map_measure
+    (((configuration_eval_measurable f).abs).pow_const k).aestronglyMeasurable
+    (torusEmbedLift_measurable L N).aemeasurable]
+  have h_eq : (fun ω => |ω f| ^ k) ∘ (torusEmbedLift L N) =
+      fun ω => |ω (latticeTestFn L N f)| ^ k := by
+    ext ω; simp [Function.comp, torusEmbedLift_eval_eq L N f ω]
+  rw [h_eq]
+  set g := latticeTestFn L N f
+  set μ_GFF := latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass
+  set bw := boltzmannWeight 2 N P (circleSpacing L N) mass
+  obtain ⟨B, hB⟩ := interactionFunctional_bounded_below 2 N P
+    (circleSpacing L N) mass (circleSpacing_pos L N) hmass
+  have hZ := partitionFunction_pos 2 N P (circleSpacing L N) mass (circleSpacing_pos L N) hmass
+  suffices h : Integrable (fun ω : Configuration (FinLatticeField 2 N) => |ω g| ^ k)
+      (μ_GFF.withDensity (fun ω => ENNReal.ofReal (bw ω))) by
+    unfold interactingLatticeMeasure
+    exact h.smul_measure (ENNReal.inv_ne_top.mpr ((ENNReal.ofReal_pos.mpr hZ).ne'))
+  have hf_meas : Measurable (fun ω : Configuration (FinLatticeField 2 N) =>
+      ENNReal.ofReal (bw ω)) :=
+    ENNReal.measurable_ofReal.comp
+      ((interactionFunctional_measurable 2 N P (circleSpacing L N) mass).neg.exp)
+  apply (integrable_withDensity_iff hf_meas
+    (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mpr
+  have hbw_simp : ∀ ω : Configuration (FinLatticeField 2 N),
+      (ENNReal.ofReal (bw ω)).toReal = bw ω :=
+    fun ω => ENNReal.toReal_ofReal (le_of_lt (boltzmannWeight_pos 2 N P (circleSpacing L N) mass ω))
+  simp_rw [hbw_simp]
+  -- Gaussian integrability of |ω g|^k
+  have h_gauss : Integrable (fun ω : Configuration (FinLatticeField 2 N) => |ω g| ^ k) μ_GFF := by
+    have hmem : MemLp (fun ω : Configuration (FinLatticeField 2 N) => ω g) (k : ENNReal) μ_GFF := by
+      exact_mod_cast pairing_memLp (latticeCovarianceGJ 2 N (circleSpacing L N) mass
+        (circleSpacing_pos L N) hmass) g k
+    have h := hmem.norm_rpow (p := (k : ENNReal))
+      (by exact_mod_cast Nat.one_le_iff_ne_zero.mp hk) (by simp)
+    rw [memLp_one_iff_integrable] at h
+    refine h.congr (Filter.Eventually.of_forall fun ω => ?_)
+    simp [ENNReal.toReal_natCast, Real.rpow_natCast, Real.norm_eq_abs]
+  apply (h_gauss.mul_const (Real.exp B)).mono
+  · exact (((configuration_eval_measurable g).abs).pow_const k).aestronglyMeasurable.mul
+      (Measurable.aestronglyMeasurable
+        (interactionFunctional_measurable 2 N P (circleSpacing L N) mass).neg.exp)
+  · refine Filter.Eventually.of_forall fun ω => ?_
+    simp only [Real.norm_eq_abs]
+    have h1 : 0 ≤ |ω g| ^ k := by positivity
+    have h2 : 0 < bw ω := boltzmannWeight_pos 2 N P (circleSpacing L N) mass ω
+    have h3 : bw ω ≤ Real.exp B := Real.exp_le_exp_of_le (by linarith [hB ω])
+    rw [abs_of_nonneg (mul_nonneg h1 h2.le),
+        abs_of_nonneg (mul_nonneg h1 (Real.exp_pos B).le)]
+    exact mul_le_mul_of_nonneg_left h3 h1
+
 /-! ## Step IV.b — moment convergence via weak convergence + uniform integrability -/
+
+/-- The uniform-integrability domination: `y − min(y, M) ≤ y²/M` for `y ≥ 0`, `M > 0`. With
+`y = (ωf)^{2k}` (so `y² = (ωf)^{4k}`) this is the `F − min(F,M) ≤ G/M` hypothesis of
+`moment_tendsto_of_uniform`. (Holds for all `y ≥ 0`: trivially when `y ≤ M`; when `y ≥ M`,
+`y − M ≤ y²/M ⇔ 0 ≤ y² − My + M²`, always true.) -/
+theorem sub_min_le_sq_div {y M : ℝ} (hy : 0 ≤ y) (hM : 0 < M) :
+    y - min y M ≤ y ^ 2 / M := by
+  rcases le_total y M with h | h
+  · rw [min_eq_left h, sub_self]; positivity
+  · rw [min_eq_right h, le_div_iff₀ hM]
+    nlinarith [sq_nonneg (y - M), mul_nonneg hy hM.le]
 
 /-- **Moment-convergence core (IV.b).** If `F ≥ 0` is continuous with the uniform-integrability
 domination `F − min(F,M) ≤ G/M` by a higher moment `G`, with `F, G` integrable under each `ν n` and
