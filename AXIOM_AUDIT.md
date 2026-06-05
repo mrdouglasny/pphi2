@@ -231,17 +231,22 @@ Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 |---|---|---|---|
 | **pphi2** (active build) | 18 | 0 | — |
 
-**New axiom 2026-06-05** (`+1`, active build): `torus_lattice_connectedFourPoint_uniform_strictNeg`
-(`TorusContinuumLimit/TorusInteractingResult.lean`) — the uniform strict lattice bound
-`u₄(torusInteractingMeasure L N P mass)(f) ≤ −c < 0` (∀N). The one analytic input behind the
-headline `torus_pphi2_isInteracting` (the genuine T² limit is interacting / non-Gaussian); everything
-else in that result is proved (`torusInteractingLimit_exists` + the axiom-clean step-IV moment
-convergence `torus_connectedFourPoint_tendsto`). **Rating: Likely correct** — standard `φ⁴₂`
-non-triviality (Lebowitz `u₄≤0` + uniform strict bound; `d=2` super-renormalizable ⟹ `u₄=O(λ)` no
-cancellation). **Sources: DT** (perturbative leading term `u₄'(0)=−6∫(C_a f)⁴<0`, Gemini-vetted
-2026-06-04/05), LP (Lebowitz 1974; Simon *P(φ)₂* Ch. V/VIII; Glimm–Jaffe Ch. 4,12–14). **(NOT
-VERIFIED)** — discharge via the perturbative route (field-redefinition development +
-`planning/torus-interacting-proof-plan.md`).
+**New axiom 2026-06-05** (`+1`, active build): `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
+(`TorusContinuumLimit/TorusInteractingResult.lean`) — **weak-coupling** uniform strict lattice bound:
+`∃ m₀>0, ∀ mass>m₀, ∃ f c>0, ∀N, u₄(torusInteractingMeasure L N P mass)(f) ≤ −c`. The one analytic
+input behind the headline `torus_pphi2_isInteracting_weakCoupling` (the genuine T² limit is
+interacting / non-Gaussian, **at weak coupling**); everything else is proved
+(`torusInteractingLimit_exists` + the axiom-clean step-IV moment convergence
+`torus_connectedFourPoint_tendsto`). **Restricted to weak coupling** (`mass > m₀` ⟺ dimensionless
+`g = 1/(4mass²) < g₀`), where the corrections are controlled — the regime non-triviality only needs.
+**Rating: Likely correct** — perturbative weak-coupling non-triviality: leading
+`u₄'(0)=−6∫(C_a f)⁴<0` strictly dominates the `O(g²)` remainder (Nelson hypercontractivity at fixed
+volume, **no cluster expansion**; uses `GaussianHilbert.polynomial_chaos_concentration` via
+`NelsonEstimate`). **Sources: DT** (leading term Gemini-vetted 2026-06-04/05, memory
+`pphi2-u4-proof-route`), LP (Simon *P(φ)₂* Ch. V/VIII; Glimm–Jaffe Ch. 8–9, 19). **(NOT VERIFIED)** —
+discharge via the perturbative route (`FieldRedefinition.lean` +
+`planning/{torus-interacting,lambda-coupling-family}-*.md`). (Strong coupling left out — `u₄<0` still
+holds there by Lebowitz, non-perturbatively, but non-triviality doesn't need it.)
 | **pphi2** (`cylinder-isotropic-lattice` branch: +`asymInteracting_expMoment_volume_uniform`; `wickConstantAsym_eq_variance` **discharged** 2026-05-27, `asymChaosCutoffDecomposition` **discharged** 2026-05-31) | 18 | 0 | GaussianField `5bb35e8` |
 | **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
