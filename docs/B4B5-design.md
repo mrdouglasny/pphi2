@@ -61,9 +61,31 @@ existing Nelson-estimate / Gaussian-domination infrastructure** (`AsymNelson.lea
 connection is the next thing to scope. The exact `a`-power bookkeeping deserves a dedicated
 derivation pass (Gemini deep-think) before formalizing, as in crux-2.
 
+## Route correction (2026-06-04, after starting B4): rank-1 projection, NOT eigenbasis
+
+Gemini's part-(1) derivation uses the **full eigenbasis** `T=Σλ_k|e_k⟩⟨e_k|`. But pphi2 only
+proves the **operator-norm gap** (`‖T̂v‖≤γ‖v‖` for `v⊥Ω`) + the ground vector `Ω` — *not* a full
+eigendecomposition (which would need Mathlib's compact-self-adjoint spectral theorem, unbuilt).
+The eigenbasis route is therefore the wrong target. **The correct route uses only the rank-1
+ground projection `P₀=|Ω⟩⟨Ω|` and the norm gap:**
+- `Ω` an eigenvector ⟹ `Ω^⊥` is `T`-invariant ⟹ with `T' := T(1−P₀)`, `P₀T'=T'P₀=0`, so
+  `Tʲ = λ₀ʲ P₀ + T'ʲ` (clean operator algebra, no eigenbasis), and `‖T'ʲ v‖ ≤ (γλ₀)ʲ‖v‖`.
+- The operator-power bound on `Ω^⊥`, `|⟪v,Tⁿv⟫| ≤ γⁿ‖v‖²` for `v⊥Ω`, **already exists** as
+  `ReflectionPositivity.GappedTransfer.abs_inner_T_pow_le` (used by `susceptibility_le`). Reuse it.
+- Trace split: `Tr(M_A Tᵗ M_B T^{Nt−t})/Tr(T^Nt)`, expand both `Tᵗ,T^{Nt−t}` via `λ₀ʲP₀+T'ʲ`. The
+  `P₀P₀` term is the disconnected `⟨Ω|M_A|Ω⟩⟨Ω|M_B|Ω⟩` (up to `O(γ^Nt)` finite-volume corrections
+  from `Tr(T'^Nt)`); the other three terms carry ≥1 factor `T'ʲ`, bounded by `γ^min(t,Nt−t)`.
+  `Tr(T^Nt) ≥ λ₀^Nt` (T' positive). Feeds `geom_wrap_sum_le`.
+
+The trace itself = pphi2's kernel-iterate `∫kPow(x,x)dx` (the sound finite-torus form). The
+remaining work is the **kernel-iterate trace-ratio connected split** in this rank-1 picture —
+which now needs no spectral theorem, only `P₀` + the existing power bound + the trace measure
+theory. (B4 engine `averaged_susceptibility_bound` is done; this is the operator→engine bridge.)
+
 ## Formalization plan
-1. **B4 (reflection-positivity):** the abstract averaged-susceptibility lemma (part 2). Needs the
-   spectral decomposition of a compact self-adjoint `T` + the trace as `Σλ^Nt` + the geometric sum.
+1. **B4 (reflection-positivity):** ✅ the geometric engine (`geom_wrap_sum_le`,
+   `averaged_susceptibility_bound`) is done. The remaining B4 piece is the rank-1 trace-split
+   bridge above (uses `abs_inner_T_pow_le` + the trace, NO spectral theorem).
 2. **B5a (pphi2):** the integral-operator form of `asymTransferOperatorCLM` (`(Tf) =ᵐ ∫k·f`, from
    `mulCLM_spec` + `convCLM_spec`) and `kPow asymTransferKernel = kernel of Tⁿ`, to feed the trace
    correlators into the abstract lemma.
