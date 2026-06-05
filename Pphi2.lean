@@ -19,6 +19,7 @@ import Pphi2.InteractingMeasure.LatticeAction
 import Pphi2.InteractingMeasure.LatticeMeasure
 import Pphi2.InteractingMeasure.Normalization
 import Pphi2.InteractingMeasure.FieldRedefinition
+import Pphi2.InteractingMeasure.SmearedWickVertex
 
 -- Phase 2: Transfer matrix and reflection positivity
 import Pphi2.TransferMatrix.TransferMatrix
