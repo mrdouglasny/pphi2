@@ -11,11 +11,17 @@ the **Feynman–Kac trace dictionary** (measure correlations = transfer-operator
 which IS the 4-step factorization already scoped in
 `layer-B2-discharge-plan.md` → "Feynman–Kac bridge — scoping". Active plan = B1–B5:
 
-- [ ] B1. Slice iso `Configuration (AsymLatticeField Nt Ns) ≃ (ZMod Nt → SpatialField Ns)`, measure-compatible   status: todo   deps: []   note: `Configuration E = WeakDual ℝ E` (cylindrical σ-algebra), so this is a measurable pushforward on `WeakDual` (dualize a test-space iso `AsymLatticeField ≃ ZMod Nt × Fin Ns → ℝ` via `Equiv.curry` + `ZMod.finEquiv`), not a plain curry. Real but bounded.
-- [ ] B2. Measure factorization: `dμ_int ∝ ∏_t [w(ψ_t)·G(ψ_t−ψ_{t+1})·w(ψ_t)]` with `w = exp(−(a²/2)·spatialAction)` (corrected weight), `G = transferGaussian` — the Gaussian time-slicing. THE CRUX.   status: blocked   deps: [B1]   note: show `latticeCovarianceAsymGJ` = the slice-decomposed (time-coupling + a²·spatialAction) quadratic form.
-- [ ] B3. Trace dictionary: `∫ A(ψ_0)·B(ψ_n) dμ = Tr(M_A Tⁿ M_B T^{Nt−n})/Tr(T^{Nt})`; connected/vacuum-projected form `∑ ⟨v_f, T̂^{|t−t'|} v_f⟩`   status: blocked   deps: [B2]   note: `T = asymTransferOperatorCLM`.
-- [ ] B4. Apply `asymGappedTransfer'`.`susceptibility_le` ⟹ `Lt`-uniform bound on the time-summed correlator   status: blocked   deps: [B3]   note: mechanical given B3 + the proved gap.
-- [ ] B5. Identify with `C·Var_free` via the `1/a` cancellation; B1-Nelson = `a`-uniformity   status: blocked   deps: [B4]   note: discharges `asymInteractingVariance_le_freeVariance_Lt_uniform`.
+> **⚠ STATUS SNAPSHOT (2026-06-04, branch `crux2-factorization`).** This B1–B5 machine is from the
+> original scoping and is kept for the record; the *live* status is below and the detailed
+> back-half design/feasibility is in [`B4B5-design.md`](B4B5-design.md). Net: every hard
+> *mathematical* input is proved; the only remaining piece is the Hilbert–Schmidt operator
+> trace-bridge infrastructure (NOT "mechanical" — see B4B5-design §"Feasibility assessment").
+
+- [x] B1. Slice iso `asymSliceEquiv` + measure-compatible pushforward   status: **done**   note: `asymSliceEquiv` (`AsymTransferInstantiation.lean`) + `measurePreserving_asymSliceEquiv` (`AsymMeasureFactorization.lean`).
+- [x] B2. Measure factorization `μ_int.map sliceEquiv = pathMeasure`   status: **done**   note: `interactingLatticeMeasureAsym_slice_pushforward_eq_pathMeasure` (sorry-free, axiom-clean), via crux-2 (`energy_exponent_factorization`, `periodicPathDensity_…_eq_exp`) + the GaussianField density bridge (crux-1, merged PR #3).
+- [~] B3. Trace dictionary   status: **entry done, rest pending**   note: abstract `twoPoint_dictionary` proved (merged); `interacting_second_moment_eq_pathMeasure` (`AsymVarianceDischarge.lean`) expresses the interacting 2nd moment over `pathMeasure`. The square expansion + per-pair dictionary application remains.
+- [~] B4. Gap ⟹ `Lt`-uniform correlator bound   status: **abstract engine done; trace bridge remaining (NOT mechanical)**   note: `AveragedSusceptibility` + `ConnectedTwoPoint` (reflection-positivity PR #3, merged) — `connected_susceptibility_le`, `averaged_susceptibility_bound`. Remaining: the **HS-norm/trace-CS layer** connecting the kernel-iterate trace to the operator (the corrected, non-mechanical core — see B4B5-design).
+- [~] B5. `C·Var_free` via `1/a` + single-slice stability   status: **B5a (operator↔kernel link) done; B5b pending**   note: B5a = `asymTransferOperatorCLM_apply` + `asymTransferKernel_kPow_apply` (`AsymTransferKernelOperator.lean`, sorry-free). B5b = single-slice stability (`‖P₁ΦΩ‖² ≤ C·Var_free,slice`, ≈ Nelson-per-slice) + the `1/a` cancellation → discharges `asymInteractingVariance_le_freeVariance_Lt_uniform`.
 
 **PROGRESS 2026-06-04 (branch `transfer-instantiation`).** Abstract dictionary **B3 DONE**
 (reflection-positivity `TransferSystem.lean`, merged `61cd790`). pphi2 **B2 instantiation:
@@ -73,15 +79,18 @@ The asym lattice (`AsymLatticeField`, `latticeCovarianceAsymGJ`) is a *separate 
 ### Superseded (finite-torus GNS — DEAD END, kept for the record)
 - [x] M1/M2/M3 scaffold (`Pphi2AsymTTS`, `93ae9f0`) — UNSOUND (`τPos` false); not on the path. M4/M5 dropped.
 
-### Road ahead (honest sizing)
-B1–B5 = the finite-torus **Feynman–Kac trace dictionary**, the genuine hard core of B2.
-B3/B4/B5 are mechanical/short given B2 + the proved gap + B1-Nelson; **B2 (the Gaussian
-time-slicing factorization: `latticeCovarianceAsymGJ` = slice-decomposed
-time-coupling + `a²·spatialAction`) is the crux** — a multi-week formalization touching
-the `WeakDual` measure structure. Prereqs all in place: corrected weight (`bb4b86d`),
-proved gap (`asymGappedTransfer'`/`susceptibility_le`), `susceptibility_le` engine
-(reflection-positivity `0c3b961`). This is a dedicated effort, not a single pass; the
-env Codex is flaky for grinding it. Pickup-ready.
+### Road ahead (honest sizing — UPDATED 2026-06-04)
+The original "B2 is the crux, B3/B4/B5 mechanical" sizing was **wrong on both counts**. The
+measure factorization (old "B2") turned out *tractable and is now DONE* (the GaussianField
+density bridge + the vetted `a`-normalization + the measure pushforward). Conversely **B4 is
+NOT mechanical**: the genuine hard core is the **trace bridge** — connecting the dictionary's
+kernel-iterate trace `(Z)⁻¹∫∫A·kPow·B·kPow` to the operator gap. Per
+[`B4B5-design.md`](B4B5-design.md) §"Feasibility assessment": Lt-uniformity is irreducibly the
+gap's job (B1's Nelson constant grows with volume), Mathlib has no infinite-dim trace-class, and
+the right tool is **Hilbert–Schmidt** (`|Tr(CD)|≤‖C‖_HS‖D‖_HS`, concrete `L²` kernel norms) — a
+bounded operator-infra layer on pphi2's existing HS-compactness, NOT new mathematics. The proved
+abstract B4 engine (reflection-positivity, merged) + B5a operator↔kernel link are in place; the
+HS-norm/trace-CS layer + the rank-1 split + B5b single-slice stability are the remaining tail.
 
 **Loop checkpoint (2026-06-03):** scaffold landed (typed `Pphi2AsymTTS` + structural
 lemmas, committed `93ae9f0`); 5 analytic sorries + M4 + M5 remain.
