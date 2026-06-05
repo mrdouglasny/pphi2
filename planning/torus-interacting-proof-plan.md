@@ -129,15 +129,20 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
        `integrable_pow_pairing_mul` (`(ω f)ⁿ(ω g)ᵐ`, AM–GM) → `integrable_powMul_wickMonomial`
        (`(ω f)ⁿ(ω δz)ˡ:（ω δz)ᵏ:`, **strong induction on Wick degree** with the `(ω δz)ˡ` factor
        carrying the recursion's `x·`) → `_wickPolynomial` → `_interaction`.
-    2. ⚠ **Moment derivative — the one-sided wall.** `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
-       (Mathlib) is **two-sided** (needs `s ∈ 𝓝 0`), but the bound `‖∂_g (ω f)ⁿe^{−gV}‖ = |(ω f)ⁿV|e^{−gV}`
-       is integrable-dominated **only for `g ≥ 0`**: `V→+∞` (quartic, bounded below not above) ⟹ for
-       `g<0` `e^{−gV}=e^{|g|V}` is unbounded (the Dyson instability). Mathlib has **no** one-sided/
-       `within`-at parametric-integral derivative. Two routes: (a) a one-sided diff-under-integral
-       (build a `HasDerivWithinAt` analogue, or restrict to a truncated `V_K` and limit), or (b) the
-       **explicit Taylor-with-integral-remainder** `e^{−gV}=1−gV+g²∫₀¹(1−t)V²e^{−tgV}dt` at the
-       integrand level (no derivative theorem; bound the `g²` remainder by Nelson on `g∈[0,g₀]`,
-       `tg∈[0,g₀]` so `e^{−tgV}≤e^{g₀A}`). **(b) likely cleaner** and merges with step III's remainder.
+    2. **Moment derivative — the one-sided wall: ENABLER DONE (2026-06-05).** The obstruction was that
+       Mathlib's `hasDerivAt_integral_of_dominated_loc_of_deriv_le` is two-sided, but `e^{−gV}` is
+       integrable-dominated only for `g≥0` (Dyson: `V→+∞`). ✅ **Resolved by a new general, axiom-clean,
+       Mathlib-upstreamable lemma** `MeasureTheory.hasDerivWithinAt_Ici_integral_of_dominated_of_deriv_le`
+       (`MathlibContrib/ParametricIntegralWithin.lean`): the **within-`Ici x₀` (right) derivative under
+       the integral**, domination required only on `Ici x₀ ∩ ball x₀ ε`. Proof reuses the existing
+       two-sided theorem via an **affine extension** of `F` across `x₀` (two-sided dominated), then
+       restricts. Self-contained (Mathlib imports only). **REMAINING (instantiation, mechanical)**:
+       apply it to `F g ω = (ω f)ⁿ e^{−gV(ω)}`, `F' g ω = −(ω f)ⁿ V e^{−gV}`, `x₀=0` — hypotheses:
+       measurability, `F 0` integrable (`∫(ω f)ⁿ`), bound `|F' g|≤e^{εA}|(ω f)ⁿV|` integrable
+       (**brick 1**, `integrable_powMul_interaction`, is exactly `F'` at `g=0`; `V≥−A` from
+       `latticeInteraction_bounded_below`), within-deriv `HasDerivWithinAt (g↦e^{−gV}) (−Ve^{−gV})`.
+       Gives `HasDerivWithinAt (g↦∫(ω f)ⁿe^{−gV}) (−∫(ω f)ⁿV) (Ici 0) 0`. Then bricks 3–5 (Z, quotient
+       rule, cumulant→Wick) use existing `HasDerivWithinAt` calculus.
     2. **Moment derivative** `d/dg ∫(ω f)ⁿ e^{−gV} dμ_GFF |_{g=0} = −∫(ω f)ⁿ V dμ` via Mathlib
        `hasDerivAt_integral_of_dominated_loc_of_deriv_le`: `∂_g = −(ω f)ⁿ V e^{−gV}`, dominated by
        `e^{g₀A}·|(ω f)ⁿ V|` using `V ≥ −A` (`latticeInteraction_bounded_below`) on `g∈[0,g₀]`.
