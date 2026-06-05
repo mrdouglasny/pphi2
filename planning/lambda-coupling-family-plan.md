@@ -90,6 +90,21 @@ At `λ=0`: free GFF. At `λ=1`: pphi2's current interacting measure. Weak coupli
 - No sign subtlety at O(λ): unlike `S₂` (where the Wick counterterm `−6cφ²` flips the direction),
   the O(λ) connected 4-point is counterterm-insensitive.
 
+## Progress (2026-06-05)
+- ✅ **Abstract core DONE** — `interactingMeasure_map_measurableEquiv`
+  (`Pphi2/InteractingMeasure/FieldRedefinition.lean`, sorry-free, **axiom-clean**):
+  `map S (interactingMeasure V μ) = interactingMeasure (V∘S.symm) (map S μ)` for any measurable
+  equiv `S`, `Z` preserved. This is the field-redefinition theorem at the general level. The broad
+  coupling-parameterized class **is** `interactingMeasure (λ • V) μ` (the existing `General.lean`
+  construction; fixed theory = `λ=1`).
+- ▶ **(A) GFF field-scaling NEXT** — `Measure.map (c•·) (GaussianField.measure T) = GaussianField.measure (c•T)`.
+  Route confirmed: both sides have `charFun … f = exp(−½·c²⟨Tf,Tf⟩)` (use `GaussianField.charFun`,
+  `(c•ω)f = c·ωf = ω(c•f)` via `map_smul`), so equal by Cramér–Wold uniqueness
+  (`GaussianField/CramerWold.lean`). The `covariance ×c²` part is SAFE (not the error-prone bit).
+- ⏳ **(C) φ⁴ specialization** — combine core + (A) with `V = λ•interactionFunctional` to relate
+  `(m,λ)↔(m',λ')`. **The exact `c`-powers / Wick-const rescaling / `d=2` `(m,λ)` correspondence is
+  the crux-2-style error-prone bit — vet (Codex pass running, + Gemini) before committing.**
+
 ## Step structure (revised for the λ-family)
 - [ ] **C0. Define the λ-family** — `interactionFunctionalScaled`/the scaled lattice & torus measures,
   `Z_{λ,N}`. Key economy: for `λ ∈ [0,1]`, `|λ·V| ≤ |V|`, so the existing Nelson / tightness / moment
