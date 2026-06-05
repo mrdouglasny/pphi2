@@ -166,12 +166,25 @@ IV first. This is a focused multi-day implementation, fully scoped & dual-vetted
   reusable ε/3 truncation lemma. Weak (bounded-cont) convergence + UI domination `F−min(F,M) ≤ G/M`
   + integrability + cutoff-uniform `∫G ≤ C` (both `νn` and `μ`) ⟹ `∫F ∂νn → ∫F ∂μ`. Tails `≤ C/M`
   uniform; middle converges weakly.
-- **IV.b INSTANTIATION next** — apply the core to `(F,G)=((ωf)²,(ωf)⁴)` and `((ωf)⁴,(ωf)⁸)`,
-  discharging: integrability of `(ωf)^k` under `torusInteractingMeasure` (`InteractingMeasure/
-  Normalization.lean:54`) and under `μ` (from `torusInteracting_exponentialMomentBound`: `(ωf)^p ≤
-  p!·e^{|ωf|}`); the pointwise domination `(ωf)^{2k} − min(·,M) ≤ (ωf)^{4k}/M` (nlinarith, holds ∀ω);
-  uniform `∫(ωf)^{4k} ≤ C` (IV.a 4th/8th moments); limit `∫(ωf)^{4k} ≤ C` (exp-moment). Yields
-  `⟨(ωf)²⟩_{μ_N}→⟨(ωf)²⟩_μ` and `⟨(ωf)⁴⟩_{μ_N}→⟨(ωf)⁴⟩_μ`, hence `u₄(μ)=lim u₄(μ_N)` for step V.
+- **IV.b INSTANTIATION DONE** — all in `TorusInteractingMoments.lean`, sorry-free & axiom-clean:
+  - `sub_min_le_sq_div` (the UI domination `y−min(y,M) ≤ y²/M`).
+  - `torus_interacting_abs_pow_integrable` (`|ωf|^k` integrable under `torusInteractingMeasure`).
+  - `limit_le_of_uniform_bound` (limit integrability + `∫F∂μ ≤ C` from a uniform bound — avoids the
+    `x^k ≤ k!e^x` detour; truncation+MCT, the "bound side").
+  - `torus_interacting_second_moment_tendsto`, `torus_interacting_fourth_moment_tendsto`
+    (`⟨(ωf)²⟩_{μ_N}→⟨(ωf)²⟩_μ`, `⟨(ωf)⁴⟩_{μ_N}→⟨(ωf)⁴⟩_μ`).
+  - `torus_connectedFourPoint_tendsto` (`u₄(μ_N) → u₄(μ)` — the step-IV⟹V bridge).
+
+## ✅ STEP IV COMPLETE (2026-06-05)
+The entire measure-theoretic foundation — moment access to the Prokhorov limit, the genuinely hard
+part flagged as the prerequisite for everything — is **proved, sorry-free, axiom-clean**. Any uniform
+strict lattice bound `u₄(μ_N) ≤ −c < 0` now passes to `u₄(μ) ≤ −c < 0` via
+`torus_connectedFourPoint_tendsto`, giving `TorusIsInteractingStrict μ`.
+
+**Remaining for `u₄ < 0`:** step I (Wick leading term `u₄'·(interaction) = −6∫(C_a f)⁴`) + step III
+(large-mass remainder ⟹ uniform `u₄(μ_N) ≤ −c < 0` for `m > m₀`) → step V (apply the bridge). I and
+III are independent of IV and of each other's measure theory (pure Wick combinatorics + Nelson
+large-mass control).
 
 ## What this replaces
 The honest, measure-genuine version of axiom 9 `continuumLimit_nonGaussian` (currently `∃μ` on the
