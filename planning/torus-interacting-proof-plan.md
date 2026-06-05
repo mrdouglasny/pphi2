@@ -103,11 +103,13 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
   Then step II (`∫(C_a f)⁴ > 0`) and the `a²∑_z = ∫` assembly. **Status: (1) smeared Wick kernel —
   the bottleneck — DONE & axiom-clean; (3) the `(C_a f)` covariance plumbing DONE via the public API.
   REMAINING (precise chain, in order):
-  - **(2a) `wickConstant`↔eigenbasis bridge** — `V`'s site Wick monomials use `wickConstant`
-    (operator form: `wickConstant_eq_variance` gives `= ⟨T_GJ δ_x, T_GJ δ_x⟩`), while the atom/kernel
-    use the eigenbasis `gffSmearedCovariance (δ_x)(δ_x) = gffPositionCovariance x x`. Need
-    `wickConstant = gffPositionCovariance x x` (both `= Var ω(δ_x)`) — a GJ↔eigenbasis covariance
-    bridge (likely a new GaussianField/pphi2 lemma). Gates plugging the atom into the actual `V`.
+  - ✅ **(2a) DONE (2026-06-05). `wickConstant`↔eigenbasis bridge.**
+    `GaussianField.gffPositionCovariance_eq_covarianceGJ`: `gffPositionCovariance x y =
+    covariance(latticeCovarianceGJ) δ_x δ_y` (both `= (a^d)⁻¹Σ_k λ_k⁻¹ e_k(x)e_k(y)`, via
+    `lattice_covariance_GJ_eq_spectral`), pushed to `gaussian-field` `2345d14`. pphi2-side
+    `Pphi2.wickConstant_eq_gffPositionCovariance` (`InteractingMeasure/WickConstantBridge.lean`):
+    `wickConstant = gffPositionCovariance x x`, combining the bridge with `wickConstant_eq_variance` +
+    `finLatticeDelta = Pi.single`. Both axiom-clean, umbrella green. The atom now plugs into `V`.
   - **(2b) V-sum evaluation** — `⟨:φ(f)⁴: V⟩_free = a^d·∑_z (quartic coeff)·⟨:φ(f)⁴::φ(δ_z)⁴:⟩` via the
     atom + Wick orthogonality killing `V`'s non-quartic terms (`wickPolynomial` structure;
     `gff_wickPower_two_smeared_inner` gives `if 4=m` so only `m=4` survives) `= 6·a^d∑_z(C_a f)(z)⁴`.
