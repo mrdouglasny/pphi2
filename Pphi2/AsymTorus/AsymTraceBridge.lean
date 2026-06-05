@@ -64,4 +64,38 @@ theorem asymTransferOperatorCLM_pow_groundVector (P : InteractionPolynomial) (a 
     rw [pow_succ', ContinuousLinearMap.mul_apply, ih, map_smul,
       asymTransferOperatorCLM_groundVector, smul_smul, ← pow_succ]
 
+/-- `T = λ₀ • T̂` (un-normalised = eigenvalue × normalised). -/
+theorem asymTransferOperatorCLM_eq_smul_normalized (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    asymTransferOperatorCLM Nt Ns P a mass ha hmass
+      = asymTransferGroundEigenvalue Nt Ns P a mass ha hmass •
+          asymTransferNormalized Nt Ns P a mass ha hmass := by
+  rw [asymTransferNormalized, smul_smul,
+    mul_inv_cancel₀ (ne_of_gt (asymTransferGroundEigenvalue_pos Nt Ns P a mass ha hmass)),
+    one_smul]
+
+/-- **Bricks 1+2 (decay).** On the vacuum-orthogonal complement, the un-normalised transfer
+operator's powers decay geometrically at rate `γλ₀`: `‖T^{m+1} v‖ ≤ (γλ₀)^{m+1}‖v‖` for `v ⊥ Ω`.
+This is the gap (`norm_T_pow_le` on the `GappedTransfer`) pushed through the `T = λ₀·T̂` rescaling —
+the operator-norm decay that controls the connected (`R`) part of the kernel-iterate trace. -/
+theorem asymTransferOperatorCLM_pow_norm_le_of_perp (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) (γ : ℝ) (hγ0 : 0 ≤ γ) (hγ1 : γ < 1)
+    (hnorm : ∀ v : L2SpatialField Ns,
+      @inner ℝ _ _ (asymGroundVector Nt Ns P a mass ha hmass) v = 0 →
+      ‖asymTransferNormalized Nt Ns P a mass ha hmass v‖ ≤ γ * ‖v‖)
+    (m : ℕ) (v : L2SpatialField Ns)
+    (hv : @inner ℝ _ _ (asymGroundVector Nt Ns P a mass ha hmass) v = 0) :
+    ‖((asymTransferOperatorCLM Nt Ns P a mass ha hmass) ^ (m + 1)) v‖
+      ≤ (γ * asymTransferGroundEigenvalue Nt Ns P a mass ha hmass) ^ (m + 1) * ‖v‖ := by
+  have hpos := asymTransferGroundEigenvalue_pos Nt Ns P a mass ha hmass
+  have hgap := (asymGappedTransfer Nt Ns P a mass ha hmass γ hγ0 hγ1 hnorm).norm_T_pow_le hv (m + 1)
+  rw [asymTransferOperatorCLM_eq_smul_normalized, smul_pow, ContinuousLinearMap.smul_apply,
+    norm_smul, Real.norm_eq_abs, abs_of_pos (pow_pos hpos _), mul_pow]
+  calc asymTransferGroundEigenvalue Nt Ns P a mass ha hmass ^ (m + 1) *
+          ‖((asymTransferNormalized Nt Ns P a mass ha hmass) ^ (m + 1)) v‖
+      ≤ asymTransferGroundEigenvalue Nt Ns P a mass ha hmass ^ (m + 1) * (γ ^ (m + 1) * ‖v‖) :=
+        mul_le_mul_of_nonneg_left hgap (le_of_lt (pow_pos hpos _))
+    _ = γ ^ (m + 1) * asymTransferGroundEigenvalue Nt Ns P a mass ha hmass ^ (m + 1) * ‖v‖ := by
+        ring
+
 end Pphi2
