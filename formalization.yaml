@@ -1,0 +1,178 @@
+# formalization.yaml — https://github.com/mathlib-initiative/formalization.yaml (v0.3)
+# Describes the `main` branch state of pphi2 at HEAD 9f2dcd6.
+# Built tree (Pphi2.lean + Common): 0 sorries, 19 real `axiom` declarations
+#   (17 public + 2 private). `scripts/count_axioms.sh` reports "22 raw" because
+#   it also matches 3 docstring lines that begin with the word "axiom".
+#   Legacy `ddj/` and parked `future/` are NOT part of the default build target.
+version: "v0.3"
+
+project:
+  name: "pphi2"
+  authors: ["Michael R. Douglas"]
+  license: "Apache-2.0"
+
+sources:
+  - title: "The P(φ)₂ Euclidean (Quantum) Field Theory"
+    authors: ["Barry Simon"]
+    id: "ISBN:978-0-691-08144-3"
+    type: "textbook"
+    license: "proprietary"
+  - title: "Quantum Physics: A Functional Integral Point of View"
+    authors: ["James Glimm", "Arthur Jaffe"]
+    id: "ISBN:978-0-387-96477-7"
+    type: "textbook"
+    license: "proprietary"
+  - title: "Construction of quantum fields from Markoff fields"
+    authors: ["Edward Nelson"]
+    id: "10.1016/0022-1236(73)90024-4"
+    type: "paper"
+    license: "proprietary"
+  - title: "The P(φ)₂ Euclidean quantum field theory as classical statistical mechanics"
+    authors: ["Francesco Guerra", "Lon Rosen", "Barry Simon"]
+    id: "10.2307/1970988"
+    type: "paper"
+    license: "proprietary"
+  - title: "Axioms for Euclidean Green's functions"
+    authors: ["Konrad Osterwalder", "Robert Schrader"]
+    id: "10.1007/BF01645738"
+    type: "paper"
+    license: "proprietary"
+    note: "OS reconstruction; the OS0–OS4 axiom system formalized as SatisfiesFullOS."
+
+status:
+  scope: >
+    A mid-construction Lean 4 formalization of the P(Φ)₂ Euclidean QFT via the
+    Glimm-Jaffe/Nelson lattice approach. The Osterwalder-Schrader axiom skeleton
+    (OS0 analyticity, OS1 regularity, OS2 Euclidean invariance, OS3 reflection
+    positivity, OS4 clustering, bundled as `Pphi2.SatisfiesFullOS`) is complete
+    and the default target builds with 0 sorries. The headline existence theorem
+    `Pphi2.pphi2_existence` (∃ μ on S'(ℝ²) satisfying all five OS axioms) is
+    assembled from the lattice construction + continuum limit, but is CONDITIONAL
+    on a set of named analytic axioms (uniform exponential moment bounds, uniform
+    spectral gap, clustering-from-spectral-gap, rotation/Ward-identity restoration,
+    propagator convergence, non-Gaussianity). These represent the standard but
+    not-yet-formalized analytic hard cores of the construction. The build target
+    is the `Pphi2` library (with `Common`); the legacy `ddj/` directory and the
+    parked `future/CylinderContinuumLimit/` directory are NOT in the build and
+    contain their own separate axioms/sorries that do not affect the main results.
+  sorry_count: 0                 # in the built Pphi2/ + Common tree
+  sorry_in_definitions: 0
+  axioms:                        # 19 real axiom declarations in the built Pphi2/ tree (17 public + 2 private)
+    - schwinger_agreement                                  # Bridge.lean:274
+    - os2_from_phi4                                        # Bridge.lean:345
+    - pphi2_nontriviality                                  # Main.lean:128
+    - continuum_exponential_moment_bound                   # ContinuumLimit/AxiomInheritance.lean:123
+    - canonical_continuumMeasure_cf_tendsto                # ContinuumLimit/AxiomInheritance.lean:327
+    - continuum_exponential_clustering                     # ContinuumLimit/AxiomInheritance.lean:354
+    - continuumLimit_nonGaussian                           # ContinuumLimit/Convergence.lean:256
+    - asymInteracting_expMoment_volume_uniform             # AsymTorus/AsymContinuumLimit.lean:621
+    - asymInteracting_mgf_gaussianDominated                # AsymTorus/AsymExpMomentDischarge.lean:127
+    - asymInteractingVariance_le_freeVariance_Lt_uniform   # AsymTorus/AsymExpMomentDischarge.lean:206
+    - asymTorusInteracting_exponentialMomentBound          # AsymTorus/AsymTorusOS.lean:852 (private)
+    - spectral_gap_uniform                                 # TransferMatrix/SpectralGap.lean:89
+    - spectral_gap_lower_bound                             # TransferMatrix/SpectralGap.lean:100
+    - rotation_cf_defect_polylog_bound                     # OSProofs/OS2_WardIdentity.lean:614
+    - two_point_clustering_from_spectral_gap               # OSProofs/OS4_MassGap.lean:137
+    - general_clustering_from_spectral_gap                 # OSProofs/OS4_MassGap.lean:160
+    - gaussian_rp_cov_perfect_square                       # OSProofs/OS3_RP_Lattice.lean:648 (private)
+    - nelson_exponential_estimate_master_bounded           # NelsonEstimate/PolynomialChaosBridge.lean:1321
+    - latticeGreenBilinear_basis_tendsto_continuum         # GaussianContinuumLimit/PropagatorConvergence.lean:103
+  main_results:
+    - declaration: "Pphi2.pphi2_existence"
+      file: "Pphi2/Main.lean"
+      sorry_count: 0
+      literature_dependencies:
+        - statement: "existence of a probability measure on S'(ℝ²) satisfying the OS0–OS4 axioms for P(Φ)₂; conditional on the named uniform-estimate / spectral-gap / clustering / rotation-restoration axioms"
+          source: "ISBN:978-0-691-08144-3"
+        - statement: "lattice construction and continuum limit of the P(Φ)₂ measure"
+          source: "ISBN:978-0-387-96477-7"
+    - declaration: "Pphi2.pphi2_main"
+      file: "Pphi2/Main.lean"
+      sorry_count: 0
+      literature_dependencies:
+        - statement: "a P(Φ)₂ continuum limit measure satisfies the full OS axiom bundle"
+          source: "10.1007/BF01645738"
+    - declaration: "Pphi2.pphi2_nonGaussianity"
+      file: "Pphi2/Main.lean"
+      sorry_count: 0
+      literature_dependencies:
+        - statement: "non-Gaussianity: the connected four-point function is nonzero (rests on the `continuumLimit_nonGaussian` axiom)"
+          source: "ISBN:978-0-691-08144-3"
+    - declaration: "Pphi2.pphi2_nontrivial"
+      file: "Pphi2/Main.lean"
+      sorry_count: 0
+      literature_dependencies:
+        - statement: "nontriviality of the two-point function S₂(f,f) > 0 (rests on the `pphi2_nontriviality` axiom; correlation-inequality lower bound)"
+          source: "10.2307/1970988"
+    - declaration: "Pphi2.cylinderIso_OS_of_RP_OS2"
+      file: "Pphi2/AsymTorus/AsymContinuumLimit.lean"
+      sorry_count: 0
+      literature_dependencies:
+        - statement: "cylinder S¹(Lₛ)×ℝ φ⁴₂ OS0–OS3 assembly, conditional on reflection positivity and OS2-symmetry inputs and the uniform exponential-moment axiom"
+          source: "ISBN:978-0-387-96477-7"
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["claude-opus-4-8"]
+      framework: "Claude Code"
+      prompting_notes: "Cycle-by-cycle proving with compiler-guided repair; multi-repo (depends on reflection-positivity, gaussian-field, bochner, gaussian-hilbert, gibbs-variational)."
+  notes: "Default build target is the `Pphi2` library (+ `Common`). The legacy `ddj/` directory and the parked `future/CylinderContinuumLimit/` directory are NOT imported by Pphi2.lean and are excluded from the build; their axioms/sorries do not bear on the main results."
+
+fidelity:
+  divergences: >
+    Active, mid-construction formalization: the Euclidean OS side is formalized,
+    NOT the OS reconstruction step itself (no Minkowski Wightman theory, Hilbert
+    space, or field operators are constructed; `massParameter_positive` is
+    bookkeeping over the input bare mass, not a derived physical mass gap). The
+    headline existence theorem is conditional on several named analytic axioms
+    (uniform exponential moments, uniform spectral gap, clustering, rotation
+    restoration, propagator/non-Gaussianity inputs) standing in for the
+    not-yet-formalized cluster-expansion / correlation-inequality content. Per
+    the project's own coherence analysis, `SatisfiesFullOS` is also satisfied by
+    the free field, and non-triviality / non-Gaussianity are separate existence
+    statements not yet conjoined with the OS measure into a single interacting
+    measure; the "weak-coupling uniqueness" keystone that would glue them is not
+    yet formalized. The lattice action uses the Glimm-Jaffe-aligned
+    S = (aᵈ/2)⟨φ, M_a φ⟩ normalization.
+
+review:
+  status: "self-assessed"
+  reviewers: []
+  notes: "0 sorries on the active build (main, HEAD 9f2dcd6); 19 named axioms remain in the built Pphi2/ tree. The headline existence/OS results are literature-dependencies resting on those axioms, not unconditional proofs. See status.md and AXIOM_AUDIT.md."
+
+alignment:
+  namespace: "Pphi2"
+  statements:
+    - source: "ISBN:978-0-691-08144-3"
+      lean: "Pphi2.pphi2_existence"
+      module: "Pphi2.Main"
+      status: "literature-dependency"
+      note: "OS0–OS4 existence; conditional on the named analytic axioms (uniform moments, spectral gap, clustering, rotation restoration)."
+    - source: "10.1007/BF01645738"
+      lean: "Pphi2.SatisfiesFullOS"
+      module: "Pphi2.OSAxioms"
+      status: "proved"
+      note: "the OS0–OS4 axiom bundle is fully formalized as a definition; `pphi2_main` shows a continuum limit satisfies it modulo the analytic axioms."
+    - source: "ISBN:978-0-691-08144-3"
+      lean: "Pphi2.pphi2_nonGaussianity"
+      module: "Pphi2.Main"
+      status: "literature-dependency"
+      note: "rests on the `continuumLimit_nonGaussian` axiom (u₄ ≠ 0)."
+    - source: "10.2307/1970988"
+      lean: "Pphi2.pphi2_nontrivial"
+      module: "Pphi2.Main"
+      status: "literature-dependency"
+      note: "rests on the `pphi2_nontriviality` axiom; correlation-inequality two-point lower bound."
+    - source: "10.1016/0022-1236(73)90024-4"
+      lean: "Pphi2.cylinderIso_OS_of_RP_OS2"
+      module: "Pphi2.AsymTorus.AsymContinuumLimit"
+      status: "literature-dependency"
+      note: "cylinder OS0–OS3 assembly via the Nelson Markov-field / transfer-matrix route; conditional on RP, OS2-symmetry, and the uniform exp-moment axiom."
+    - source: "ISBN:978-0-387-96477-7"
+      lean: "Pphi2.spectral_gap_uniform"
+      module: "Pphi2.TransferMatrix.SpectralGap"
+      status: "literature-dependency"
+      note: "uniform spectral gap of the transfer matrix; one of the genuine hard-core analytic axioms (GJ Ch. VI)."
+
+acknowledgements: ""
