@@ -337,7 +337,81 @@ theorem torus_interacting_abs_pow_integrable (P : InteractionPolynomial) (mass :
         abs_of_nonneg (mul_nonneg h1 (Real.exp_pos B).le)]
     exact mul_le_mul_of_nonneg_left h3 h1
 
-/-! ## Step IV.b — moment convergence via weak convergence + uniform integrability -/
+/-- **Limit moment bound + integrability from a uniform bound** (the "bound side"). For `F ≥ 0`
+continuous + measurable, integrable under each `ν n` with `∫F ∂(ν n) ≤ C`, and weak (bounded-cont)
+convergence `ν n ⇀ μ`, the limit satisfies `Integrable F μ` and `∫F ∂μ ≤ C`. Truncation + weak
+convergence (`∫min(F,M)∂μ ≤ C`) + monotone convergence. Mirrors
+`torusInteracting_exponentialMomentBound` with a constant bound. -/
+theorem limit_le_of_uniform_bound
+    {ν : ℕ → Measure (Configuration (TorusTestFunction L))}
+    {μ : Measure (Configuration (TorusTestFunction L))} [IsProbabilityMeasure μ]
+    {F : Configuration (TorusTestFunction L) → ℝ} {C : ℝ}
+    (hF_cont : Continuous F) (hF_meas : Measurable F) (hF_nn : ∀ ω, 0 ≤ F ω)
+    (hF_int_ν : ∀ n, Integrable F (ν n)) (hbound : ∀ n, ∫ ω, F ω ∂(ν n) ≤ C)
+    (hconv : ∀ (g : Configuration (TorusTestFunction L) → ℝ),
+      Continuous g → (∃ B, ∀ x, |g x| ≤ B) →
+      Tendsto (fun n => ∫ ω, g ω ∂(ν n)) atTop (nhds (∫ ω, g ω ∂μ))) :
+    Integrable F μ ∧ ∫ ω, F ω ∂μ ≤ C := by
+  have h_trunc : ∀ M : ℝ, 0 < M → ∫ ω, min (F ω) M ∂μ ≤ C := by
+    intro M hM
+    have h_cont : Continuous (fun ω => min (F ω) M) := hF_cont.min continuous_const
+    have h_bdd : ∃ B, ∀ ω, |min (F ω) M| ≤ B :=
+      ⟨M, fun ω => by rw [abs_of_nonneg (le_min (hF_nn ω) hM.le)]; exact min_le_right _ _⟩
+    have h_lim := hconv _ h_cont h_bdd
+    refine le_of_tendsto' h_lim (fun n => ?_)
+    calc ∫ ω, min (F ω) M ∂(ν n) ≤ ∫ ω, F ω ∂(ν n) :=
+          integral_mono_of_nonneg (ae_of_all _ fun ω => le_min (hF_nn ω) hM.le) (hF_int_ν n)
+            (ae_of_all _ fun ω => min_le_left _ _)
+      _ ≤ C := hbound n
+  have h_trunc_int : ∀ n : ℕ, Integrable (fun ω => min (F ω) (↑n : ℝ)) μ := fun n =>
+    Integrable.of_bound (hF_meas.min measurable_const).aestronglyMeasurable n
+      (ae_of_all _ fun ω => by
+        rw [Real.norm_eq_abs, abs_of_nonneg (le_min (hF_nn ω) (Nat.cast_nonneg n))]
+        exact min_le_right _ _)
+  have hC_nn : 0 ≤ C := le_trans (integral_nonneg fun ω => hF_nn ω) (hbound 0)
+  have h_trunc_nat : ∀ n : ℕ, ∫ ω, min (F ω) (↑n : ℝ) ∂μ ≤ C := by
+    intro n
+    rcases Nat.eq_zero_or_pos n with hn | hn
+    · subst hn
+      have h0 : ∫ ω, min (F ω) ((0 : ℕ) : ℝ) ∂μ = 0 := by
+        simp only [Nat.cast_zero]
+        rw [show (fun ω => min (F ω) (0 : ℝ)) = (fun _ => (0 : ℝ)) from
+          funext fun ω => min_eq_right (hF_nn ω)]
+        simp
+      rw [h0]; exact hC_nn
+    · exact h_trunc n (by exact_mod_cast hn)
+  have h_int : Integrable F μ := by
+    refine ⟨hF_meas.aestronglyMeasurable, ?_⟩
+    rw [hasFiniteIntegral_iff_ofReal (ae_of_all _ hF_nn)]
+    have h_lint_mono : ∀ᵐ ω ∂μ, Monotone
+        (fun n : ℕ => ENNReal.ofReal (min (F ω) (↑n : ℝ))) :=
+      ae_of_all _ fun ω n m hnm =>
+        ENNReal.ofReal_le_ofReal (min_le_min_left _ (Nat.cast_le.mpr hnm))
+    have h_lint_pw : ∀ᵐ ω ∂μ, Tendsto
+        (fun n : ℕ => ENNReal.ofReal (min (F ω) (↑n : ℝ))) atTop (nhds (ENNReal.ofReal (F ω))) :=
+      ae_of_all _ fun ω => (ENNReal.continuous_ofReal.tendsto _).comp
+        (tendsto_atTop_of_eventually_const (i₀ := ⌈F ω⌉₊) fun n hn => by
+          rw [min_eq_left]; exact le_trans (Nat.le_ceil _) (Nat.cast_le.mpr hn))
+    have h_lint_meas : ∀ n : ℕ, AEMeasurable
+        (fun ω => ENNReal.ofReal (min (F ω) (↑n : ℝ))) μ :=
+      fun n => (hF_meas.min measurable_const).ennreal_ofReal.aemeasurable
+    have h_lint_conv := lintegral_tendsto_of_tendsto_of_monotone h_lint_meas h_lint_mono h_lint_pw
+    have h_lint_bound : ∀ n : ℕ, ∫⁻ ω, ENNReal.ofReal (min (F ω) (↑n : ℝ)) ∂μ ≤
+        ENNReal.ofReal C := by
+      intro n
+      rw [← ofReal_integral_eq_lintegral_ofReal (h_trunc_int n)
+        (ae_of_all _ fun ω => le_min (hF_nn ω) (Nat.cast_nonneg n))]
+      exact ENNReal.ofReal_le_ofReal (h_trunc_nat n)
+    exact lt_of_le_of_lt (le_of_tendsto' h_lint_conv h_lint_bound) ENNReal.ofReal_lt_top
+  refine ⟨h_int, ?_⟩
+  have h_mono : ∀ᵐ ω ∂μ, Monotone (fun n : ℕ => min (F ω) (↑n : ℝ)) :=
+    ae_of_all _ fun ω n m hnm => min_le_min_left _ (Nat.cast_le.mpr hnm)
+  have h_pw : ∀ᵐ ω ∂μ, Tendsto (fun n : ℕ => min (F ω) (↑n : ℝ)) atTop (nhds (F ω)) :=
+    ae_of_all _ fun ω => tendsto_atTop_of_eventually_const (i₀ := ⌈F ω⌉₊) fun n hn => by
+      rw [min_eq_left]; exact le_trans (Nat.le_ceil _) (Nat.cast_le.mpr hn)
+  have h_mct : Tendsto (fun n : ℕ => ∫ ω, min (F ω) (↑n : ℝ) ∂μ) atTop (nhds (∫ ω, F ω ∂μ)) :=
+    integral_tendsto_of_tendsto_of_monotone h_trunc_int h_int h_mono h_pw
+  exact le_of_tendsto' h_mct h_trunc_nat
 
 /-- The uniform-integrability domination: `y − min(y, M) ≤ y²/M` for `y ≥ 0`, `M > 0`. With
 `y = (ωf)^{2k}` (so `y² = (ωf)^{4k}`) this is the `F − min(F,M) ≤ G/M` hypothesis of
