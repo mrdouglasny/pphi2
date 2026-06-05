@@ -114,3 +114,32 @@ deep theorem.**
 exists (plus `Spectrum.lean`, `Positive.lean`). Need to confirm it covers trace-class operators /
 traces of products (for the rank-1 `Tr` split), but it is not a total absence — the trace layer
 above the integral-operator form (B5a, in progress) is not starting from zero.
+
+## Feasibility assessment — the trace bridge is HS, not full trace-class (2026-06-04)
+
+After proving the operator↔kernel link (`asymTransferKernel_kPow_apply`), the trace bridge was
+scoped definitively:
+
+1. **Lt-uniformity is irreducibly the gap's job.** B1
+   (`asymTorusIso_interacting_second_moment_density_transfer`) sets `C = 3·√K` with `K =
+   asymNelson_exponential_estimate_iso` — the Nelson exp-moment over the **whole volume**, which
+   grows with `Lt`. No reordering/patch makes B1's `C` uniform: the uniformity must come from the
+   transfer-matrix gap (a geometric series in the time extent), so the trace bridge is necessary.
+2. **Mathlib has no infinite-dim trace-class.** `InnerProductSpace/Trace.lean` is
+   `[FiniteDimensional]` only (`LinearMap.trace`, `trace_eq_sum_inner`, `trace_rankOne`); our `T`
+   is on infinite-dim `L²(ℝ^Ns)`. No `Schatten`/`HilbertSchmidt`/`TraceClass` files in Mathlib.
+3. **Use Hilbert–Schmidt, not full trace-class.** The needed bound is `|Tr(C D)| ≤ ‖C‖_HS·‖D‖_HS`
+   with `‖·‖_HS` = the `L²` norm of the kernel (concrete; the Gaussian transfer kernel is HS). The
+   geometric decay then comes from `‖M_A T'^{a+1}‖_HS ≤ ‖M_A T'‖_HS·‖T'^a‖_op` with the gap
+   `‖T'^j‖_op ≤ (γλ₀)^j`. This avoids general trace-class entirely.
+4. **pphi2 has HS *compactness* but not the HS-norm/trace layer.** `GeneralResults/HilbertSchmidt`
+   provides `integral_operator_l2_kernel_compact` + `isCompactOperator_of_basis_norm_summable`
+   (used to build `T` and get `Ω` via Perron–Frobenius), but NOT `‖·‖_HS` as a norm with
+   `Tr(CD) ≤ ‖C‖_HS‖D‖_HS`. So the remaining trace bridge = **build that HS-norm + trace-CS layer**
+   on the existing HS infra, then the rank-1 split (`T = λ₀P₀ + T'`) + `connected_two_point_le` /
+   `geom_wrap_sum_le` close it.
+
+**Net remaining work for B2:** (i) HS-norm + trace-Cauchy–Schwarz layer (bounded, tractable —
+the kernels are explicit Gaussians); (ii) the rank-1 trace split feeding the proved B4 engine;
+(iii) B5b single-slice stability (≈ specialization of the existing Nelson estimate to one slice,
+`Ls`-fixed). All hard *mathematical* inputs are proved; this is the operator-infrastructure tail.
