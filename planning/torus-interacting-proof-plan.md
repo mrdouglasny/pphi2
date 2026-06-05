@@ -67,6 +67,28 @@ Since `∫(C_a f)⁴ > 0` strictly (4th power of a nonzero continuous function),
 `u₄^a(f;λ) ≤ −(κλ/2)∫(C_a f)⁴ < 0` uniformly in `a`; passing to the limit gives `u₄(f) < 0`.
 
 ## Steps (status-machine; each a lemma + its obligation)
+### Step I — Wick route pinned (2026-06-05), framework landed
+**Decisive simplification (the Wick-orthogonality route).** `u₄(f) = ⟨:φ(f)⁴:⟩` (4th cumulant =
+expectation of the Wick-ordered 4th power), so along the coupling family `μ_g`:
+`u₄'(0) = −⟨:φ(f)⁴: · V⟩_free` (the `⟨:φ(f)⁴:⟩_free = 0` and disconnected terms vanish by Wick
+orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴:`,
+`u₄'(0) = −(1/4)·a²∑_z ⟨:φ(f)⁴::φ(δ_z)⁴:⟩ = −(1/4)·a²∑_z 4!(C_a f)(z)⁴ = −6∫(C_a f)⁴`.
+- **Framework DONE** (`FieldRedefinition.lean`, sorry-free): the coupling family `μ_g`, `μ_0 = free`
+  (`interactingMeasure_zero{,_smul}`), and the baseline `u₄(μ_0) = 0`
+  (`connectedFourPoint_interactingMeasure_zero_smul`, composing the free-field anchor).
+- **Sub-lemmas remaining (the core):**
+  1. **Smeared Wick inner product** `⟨:φ(f)⁴::φ(g)⁴:⟩ = 4!·⟨φ(f)φ(g)⟩⁴` for general test functions
+     `f,g` — the Mehler/Wick kernel. GaussianField has only the **2-site** version
+     `gff_wickPower_two_site_inner` (`WickMultivariate.lean:865`, `= n!·C(x,y)ⁿ`); generalizing to
+     smeared fields (via the eigenbasis multinomial / `gffMultiWickMonomial_orthogonality`) is the
+     **decisive sub-project**.
+  2. **First-order coefficient** `u₄'(0) = −⟨:φ(f)⁴:·V⟩_free` — the explicit `e^{−gV}=1−gV+O(g²)`
+     expansion (algebraic; the `O(g²)` is step III) or `hasDerivAt_integral_of_dominated…`.
+  3. **The `(C_a f)` operator object** `(C_a f)(z) = ∑_x C_a(z,x)f(x)` — pphi2 has only the bilinear
+     form (`covariance T f g`/`greenFunctionBilinear`); the covariance-as-operator must be introduced.
+  Then step II (`∫(C_a f)⁴ > 0`) and the `a²∑_z = ∫` assembly. **The smeared Wick inner product (1)
+  is the hardest / first to prove.**
+
 - [ ] **I. Leading-order coefficient.** `d/dλ u₄^a|_{λ=0}(f) = −κ ∫_{T²}(C_a f)(z)⁴ dz` with `κ > 0`.
   Wick/Isserlis on the free GFF: the O(λ) connected part of `⟨φ(f)⁴⟩` is the single-vertex tree
   with all four external legs `C_a f` attached to one `:φ⁴(z):` vertex; the `4!`-fold leg matching
