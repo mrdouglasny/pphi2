@@ -64,22 +64,65 @@ noncomputable def torusTwoPoint (μ : Measure (Configuration (TorusTestFunction 
     (f : TorusTestFunction L) : ℝ :=
   ∫ ω, (ω f) ^ 2 ∂μ
 
-/-- The **connected four-point function** (fourth cumulant) `u₄(f) = ∫(ωf)⁴ − 3(∫(ωf)²)²`. For a
-Gaussian measure `∫(ωf)⁴ = 3(∫(ωf)²)²`, so `u₄ ≠ 0` witnesses non-Gaussianity (interaction). -/
+/-- The **general connected four-point (Ursell) function**
+`u₄(f₁,f₂,f₃,f₄) = ⟨φ₁φ₂φ₃φ₄⟩ − ⟨φ₁φ₂⟩⟨φ₃φ₄⟩ − ⟨φ₁φ₃⟩⟨φ₂φ₄⟩ − ⟨φ₁φ₄⟩⟨φ₂φ₃⟩`, the fourth
+joint cumulant. It vanishes identically iff the four-point Schwinger function factorizes into
+two-point functions — the defining property of a **Gaussian (free)** field (Isserlis/Wick). So
+`u₄ ≠ 0` for some arguments is *exactly* non-Gaussianity, i.e. interaction. -/
+noncomputable def torusUrsell4 (μ : Measure (Configuration (TorusTestFunction L)))
+    (f₁ f₂ f₃ f₄ : TorusTestFunction L) : ℝ :=
+  (∫ ω, (ω f₁) * (ω f₂) * (ω f₃) * (ω f₄) ∂μ)
+    - (∫ ω, (ω f₁) * (ω f₂) ∂μ) * (∫ ω, (ω f₃) * (ω f₄) ∂μ)
+    - (∫ ω, (ω f₁) * (ω f₃) ∂μ) * (∫ ω, (ω f₂) * (ω f₄) ∂μ)
+    - (∫ ω, (ω f₁) * (ω f₄) ∂μ) * (∫ ω, (ω f₂) * (ω f₃) ∂μ)
+
+/-- The **diagonal** connected four-point / fourth cumulant `u₄(f) = ∫(ωf)⁴ − 3(∫(ωf)²)²`. The
+computable special case of `torusUrsell4` used by the interacting test (`torusUrsell4_diag`). For a
+Gaussian measure `∫(ωf)⁴ = 3(∫(ωf)²)²`, so `u₄(f) ≠ 0` witnesses non-Gaussianity. It is
+scale-homogeneous of degree 4 (`u₄(c·f) = c⁴ u₄(f)`), and vanishes at `δ₀` (all moments zero), so
+the test below excludes both the free field (`u₄ = 0`) and the trivial measure. -/
 noncomputable def torusConnectedFourPoint (μ : Measure (Configuration (TorusTestFunction L)))
     (f : TorusTestFunction L) : ℝ :=
   (∫ ω, (ω f) ^ 4 ∂μ) - 3 * (∫ ω, (ω f) ^ 2 ∂μ) ^ 2
+
+/-- The diagonal cumulant is the diagonal restriction of the general Ursell function: the three
+Wick pairings all collapse to `⟨(ωf)²⟩²`. So the simple `torusConnectedFourPoint` test is genuinely
+a test of the full fourth-cumulant tensor (by polarization, `u₄ ≢ 0 ↔ ∃ f, u₄(f,f,f,f) ≠ 0`). -/
+theorem torusUrsell4_diag (μ : Measure (Configuration (TorusTestFunction L)))
+    (f : TorusTestFunction L) :
+    torusUrsell4 L μ f f f f = torusConnectedFourPoint L μ f := by
+  simp only [torusUrsell4, torusConnectedFourPoint]
+  have h4 : ∀ ω : Configuration (TorusTestFunction L),
+      (ω f) * (ω f) * (ω f) * (ω f) = (ω f) ^ 4 := fun ω => by ring
+  have h2 : ∀ ω : Configuration (TorusTestFunction L), (ω f) * (ω f) = (ω f) ^ 2 := fun ω => by ring
+  simp_rw [h4, h2]
+  ring
 
 /-- **Non-degeneracy** of `μ`: `S₂(f,f) > 0` for every `f ≠ 0` (the limit is not `δ₀`). NOTE: the
 free field satisfies this too — it is *not* the interacting criterion. -/
 def TorusIsNondegenerate (μ : Measure (Configuration (TorusTestFunction L))) : Prop :=
   ∀ f : TorusTestFunction L, f ≠ 0 → 0 < torusTwoPoint L μ f
 
-/-- **Interaction (non-Gaussianity)** of `μ`: the connected four-point function is nonzero for some
-test function. This — the **4-point** — is the criterion that the theory is genuinely interacting
-(not free/Gaussian). -/
+/-- **Interacting test (non-Gaussianity).** `μ` is interacting iff its connected four-point function
+is nonzero for some test function — equivalently (`torusUrsell4_diag` + polarization), the
+four-point Schwinger function does not factorize, so `μ` is not Gaussian. This — the **4-point** —
+is the criterion for genuine interaction; `S₂ > 0` (which the free field also has) is not. -/
 def TorusIsInteracting (μ : Measure (Configuration (TorusTestFunction L))) : Prop :=
   ∃ f : TorusTestFunction L, torusConnectedFourPoint L μ f ≠ 0
+
+/-- **Interacting test, sharp (Lebowitz sign).** For the repulsive (ferromagnetic, even) `φ⁴`
+interaction the **Lebowitz inequality** forces `u₄ ≤ 0`, so the genuine physical statement is
+strict negativity of the connected four-point for some test function. This is the form the proof
+plan delivers (a uniform strict lattice bound surviving `a → 0`); it implies `TorusIsInteracting`
+via `ne_of_lt`. -/
+def TorusIsInteractingStrict (μ : Measure (Configuration (TorusTestFunction L))) : Prop :=
+  ∃ f : TorusTestFunction L, torusConnectedFourPoint L μ f < 0
+
+/-- The sharp (Lebowitz) interacting test implies the bare non-Gaussianity test. -/
+theorem TorusIsInteractingStrict.toInteracting
+    {μ : Measure (Configuration (TorusTestFunction L))}
+    (h : TorusIsInteractingStrict L μ) : TorusIsInteracting L μ :=
+  let ⟨f, hf⟩ := h; ⟨f, ne_of_lt hf⟩
 
 /-- **The honest headline: an interacting P(φ)₂ theory exists on T².** A probability measure that
 (i) IS a genuine subsequential limit of the interacting torus family, (ii) is non-degenerate
