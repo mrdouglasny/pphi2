@@ -110,9 +110,16 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
     `Pphi2.wickConstant_eq_gffPositionCovariance` (`InteractingMeasure/WickConstantBridge.lean`):
     `wickConstant = gffPositionCovariance x x`, combining the bridge with `wickConstant_eq_variance` +
     `finLatticeDelta = Pi.single`. Both axiom-clean, umbrella green. The atom now plugs into `V`.
-  - **(2b) V-sum evaluation** — `⟨:φ(f)⁴: V⟩_free = a^d·∑_z (quartic coeff)·⟨:φ(f)⁴::φ(δ_z)⁴:⟩` via the
-    atom + Wick orthogonality killing `V`'s non-quartic terms (`wickPolynomial` structure;
-    `gff_wickPower_two_smeared_inner` gives `if 4=m` so only `m=4` survives) `= 6·a^d∑_z(C_a f)(z)⁴`.
+  - **(2b) V-sum evaluation** — `⟨:φ(f)⁴: V⟩_free = a^d·∑_z (quartic coeff)·⟨:φ(f)⁴::φ(δ_z)⁴:⟩ =
+    6·a^d∑_z(C_a f)(z)⁴` (for `n=4`). **Prerequisites ALL DONE (2026-06-05), axiom-clean & pushed:**
+    · per-term `Pphi2.wickFourth_smeared_site_inner`: `∫ :φ(f)⁴::φ(δ_z)ᵐ: = if 4=m then 24(C_a f)(z)⁴
+    else 0` (orthogonality kills `m≠4`); · site-constant `gffSmearedCovariance_single_single_eq_wickConstant`
+    (`V`'s `:φ(δ_z)ᵐ:_{wickConstant}` = the kernel's site factor); · integrability
+    `GaussianField.integrable_wickMonomial_smeared_mul` (pin `d9cdd5e`) for `∫Σ=Σ∫`.
+    **REMAINING = the assembly wiring**: expand `wickPolynomial = (1/n):xⁿ:+Σ_{m<n}coeff_m:xᵐ:`, pull
+    `∫` through (integrability ✓), apply the per-term lemma (only the degree-4 term survives), sum over
+    sites `z` with the `a^d` factor. Friction: the `∑_{m:Fin n}` degree-4 collapse + the `P.n=4`
+    dependent-type handling for the pure-quartic specialization (where the coeff is `1/4`, giving `κ=6`).
   - **(2c) the differentiation** `u₄'(0)=−⟨:φ(f)⁴:V⟩` — the hard one-sided-Taylor / ratio-derivative
     (dominated convergence with Nelson `Lᵖ` bounds). **Interface-defining; the hardest of step I.**
   - then **step II** positivity (`∑_z(C_a f)(z)⁴>0` from `C` positive-definiteness — needs
