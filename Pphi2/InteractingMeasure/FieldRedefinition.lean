@@ -136,6 +136,32 @@ theorem connectedFourPoint_interactingMeasure_field_rescale
   rw [h1, h2] at hcore
   rw [← hcore, connectedFourPoint_map_const_smul]
 
+/-! ## Perturbation framework: the coupling family at `g = 0` -/
+
+/-- **Zero potential gives the free measure.** `interactingMeasure 0 μ = μ`: the Boltzmann weight
+`exp(−0) = 1`, the partition function `Z = ∫1 = 1`. So the coupling family `μ_g = interactingMeasure
+(g • V) μ` starts at `μ_0 = μ` (the free measure) — the base point of the perturbative `u₄` expansion. -/
+theorem interactingMeasure_zero (μ : Measure (Configuration E)) [IsProbabilityMeasure μ] :
+    interactingMeasure (0 : Configuration E → ℝ) μ = μ := by
+  have hZ : interactingPartitionFunction (0 : Configuration E → ℝ) μ = 1 := by
+    unfold interactingPartitionFunction interactingBoltzmannWeight
+    simp [integral_const]
+  rw [interactingMeasure, hZ]
+  have hbw : (fun ω => ENNReal.ofReal (interactingBoltzmannWeight (0 : Configuration E → ℝ) ω))
+      = (1 : Configuration E → ENNReal) := by
+    funext ω
+    simp only [interactingBoltzmannWeight, Pi.zero_apply, neg_zero, Real.exp_zero,
+      ENNReal.ofReal_one, Pi.one_apply]
+  rw [hbw, withDensity_one]
+  simp
+
+/-- The coupling family `μ_g := interactingMeasure (g • V) μ` at `g = 0` is the free measure `μ`. -/
+theorem interactingMeasure_zero_smul (V : Configuration E → ℝ)
+    (μ : Measure (Configuration E)) [IsProbabilityMeasure μ] :
+    interactingMeasure (fun ω => (0 : ℝ) * V ω) μ = μ := by
+  have : (fun ω => (0 : ℝ) * V ω) = (0 : Configuration E → ℝ) := by funext ω; simp
+  rw [this, interactingMeasure_zero]
+
 /-! ## Free-field baseline: `u₄ = 0` (the `g = 0` anchor of the perturbation) -/
 
 section FreeBaseline
@@ -164,6 +190,14 @@ theorem connectedFourPoint_gaussianMeasure_eq_zero (T : E →L[ℝ] H) (f : E) :
       = 3 * (∫ ω, (ω f) ^ 2 ∂(GaussianField.measure T)) ^ 2 := by
     rw [e4, e2, hlaw, integral_pow4_gaussianReal, integral_sq_gaussianReal]
   simp only [connectedFourPoint, key]; ring
+
+/-- **The coupling family `μ_g = interactingMeasure (g • V) (free GFF)` has `u₄ = 0` at `g = 0`.** The
+perturbative baseline: `connectedFourPoint μ_0 f = 0`. The interacting `u₄` (for `g ≠ 0`) is the
+deviation from this; step I computes its leading slope `u₄'(0) = −6∫(C_a f)⁴`. -/
+theorem connectedFourPoint_interactingMeasure_zero_smul (V : Configuration E → ℝ)
+    (T : E →L[ℝ] H) (f : E) :
+    connectedFourPoint (interactingMeasure (fun ω => (0 : ℝ) * V ω) (GaussianField.measure T)) f = 0 := by
+  rw [interactingMeasure_zero_smul, connectedFourPoint_gaussianMeasure_eq_zero]
 
 end FreeBaseline
 
