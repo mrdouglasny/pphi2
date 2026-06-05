@@ -10,6 +10,22 @@ Status legend: `done` = proved/sorry-free · `in_progress` = actively being form
 `scoped` = discharge route designed, not started · `open` = route not yet pinned.
 Difficulty: `★` mechanical/short · `★★` real but bounded · `★★★` genuine hard analytic core.
 
+## ⚠ Cross-cutting coherence (read first) — [`planning/coherence-analysis.md`]
+
+The 17 axioms are individually sound but **do not currently assemble into "an *interacting* φ⁴₂
+QFT exists"**. Three architecture gaps (all fixed by one keystone — weak-coupling uniqueness):
+- **A.** `SatisfiesFullOS` (OS0–OS4) is satisfied by the **free field** too; non-triviality (11)
+  and non-Gaussianity (9) are **separate `∃μ`**, never conjoined with the OS measure. No theorem
+  says "the OS measure is interacting."
+- **B.** Gap (16/17) + non-Gaussianity (9) hold **only at weak coupling** (phase transition), but
+  `pphi2_exists` is stated for **all `P`** with no coupling hypothesis → over-claim. Must thread
+  `IsWeakCoupling` (already in `Bridge.lean`) up into the headline.
+- **C.** Keystone **missing from the 17**: **weak-coupling uniqueness of the limit** (cluster
+  expansion) — glues the separate `∃μ` into one, fixes the regime, and upgrades subsequence → limit.
+- [ ] **18. weak-coupling uniqueness** (NEW target) `—`   status: open   deps: [16/17 regime]   diff: ★★★
+  note: cluster expansion / Dobrushin uniqueness at weak coupling. The keystone for A+B+C. Then
+  restate the headline as `∃ μ, SatisfiesFullOS μ ∧ (∀f≠0,S₂>0) ∧ u₄≠0`. → `coherence-analysis.md`.
+
 ## The goal & geometry
 
 T² (compact torus) already has **OS0–OS2**. The **cylinder** `ℝ × S¹_{Ls}` (infinite Euclidean
