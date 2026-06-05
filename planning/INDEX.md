@@ -60,17 +60,24 @@ clustering, gating OS4). Master campaign doc: [`docs/cylinder-master-plan.md`].
 
 ## Cluster 2 — CYL-2a: uniform spectral gap → clustering (gates OS4)
 
-- [ ] **16. `spectral_gap_lower_bound`** `TransferMatrix/SpectralGap.lean:100`   status: scoped   deps: []   diff: ★★★
-  note: explicit lower bound on the cylinder mass gap, uniform in the continuum limit. Plan:
-  [`docs/transfer-matrix-and-mass-gap.md`], [`docs/cyl-2-scope.md`].
+**Full plan: [`planning/cyl-2a-spectral-gap.md`].** Key findings there: (i) the two clustering
+axioms **ride on the B2 trace bridge** — they reduce to the proved `connected_two_point_le`, so
+they discharge in the same PR as B2 (★★ given that bridge); (ii) `spectral_gap_uniform/lower_bound`
+as stated are **too strong** — φ⁴₂ has a phase transition where the gap closes, so they need a
+weak-coupling / single-phase hypothesis.
+
 - [ ] **17. `spectral_gap_uniform`** `TransferMatrix/SpectralGap.lean:89`   status: scoped   deps: []   diff: ★★★
-  note: the gap survives `a→0` / volume limit (THE other hard core; the asym finite-`a` gap
-  `asymGappedTransfer'` is PROVED — uniformity in the limit is what remains). Plans:
-  [`docs/cyl-2-scope.md`], [`docs/cylinder-conditional-inputs-provability.md`], [`docs/gemini_review.md`].
-- [ ] **14. `two_point_clustering_from_spectral_gap`** `OSProofs/OS4_MassGap.lean:137`   status: scoped   deps: [17]   diff: ★★
-  note: exponential clustering of the 2-pt function from the gap. Plan: [`docs/cyl-2-scope.md`].
-- [ ] **15. `general_clustering_from_spectral_gap`** `OSProofs/OS4_MassGap.lean:160`   status: scoped   deps: [17]   diff: ★★
-  note: OS4 clustering for general observables. Plan: [`docs/cyl-2-scope.md`].
+  note: gap survives `a→0` (finite-`a` gap `asymGappedTransfer'` PROVED; continuum uniformity
+  remains). **Regime-restricted** (phase transition). Route: `a→0` eigenvalue-gap limit /
+  perturbative. THE independent hard core of CYL-2a. → `planning/cyl-2a-spectral-gap.md`.
+- [ ] **16. `spectral_gap_lower_bound`** `TransferMatrix/SpectralGap.lean:100`   status: scoped   deps: []   diff: ★★★→★★
+  note: `c·mass ≤ massGap` — FALSE at criticality; weak-coupling `m_phys ≥ m − Cλ` via the existing
+  Nelson estimates. → `planning/cyl-2a-spectral-gap.md`.
+- [ ] **14. `two_point_clustering_from_spectral_gap`** `OSProofs/OS4_MassGap.lean:137`   status: scoped   deps: [3-bridge]   diff: ★★ (given B2 trace bridge)
+  note: = `connected_two_point_le` with `γ=e^{−massGap·a}` via `twoPoint_dictionary` +
+  `asymTransferKernel_kPow_apply` (proved). Do in the B2 trace-bridge PR. → `planning/cyl-2a-spectral-gap.md`.
+- [ ] **15. `general_clustering_from_spectral_gap`** `OSProofs/OS4_MassGap.lean:160`   status: scoped   deps: [3-bridge]   diff: ★★ (given B2 trace bridge)
+  note: same, bounded `F,G` → `M_F,M_G`. → `planning/cyl-2a-spectral-gap.md`.
 
 ## Cluster 3 — OS2 (rotation invariance)
 
@@ -96,13 +103,17 @@ clustering, gating OS4). Master campaign doc: [`docs/cylinder-master-plan.md`].
 
 ## Cluster 5 — non-triviality (the limit is genuinely interacting)
 
-- [ ] **9. `continuumLimit_nonGaussian`** `ContinuumLimit/Convergence.lean:256`   status: open   deps: []   diff: ★★★
-  note: the continuum limit is NOT Gaussian (non-vanishing connected 4-pt / Ursell function).
-  Essential — without it the construction yields the free field. Plan:
-  [`docs/lattice-action-normalization-fix.md`], [`docs/axiom_proof_plans.md`].
-- [ ] **11. `pphi2_nontriviality`** `Main.lean:128`   status: open   deps: [9]   diff: ★★★
-  note: top-level non-triviality of the φ⁴₂ theory. Plan:
-  [`docs/polynomial-chaos-concentration.md`], [`docs/axiom_proof_plans.md`].
+**Full plan: [`planning/non-triviality.md`].** The two are very different: 11 is *not*
+non-Gaussianity (only `S₂>0`, ★★ via correlation inequalities, all phases); 9 is the genuine
+interacting content (`u₄≠0`, ★★★, needs `λ>0`).
+
+- [ ] **11. `pphi2_nontriviality`** (`S₂(f,f)>0` for `f≠0`) `Main.lean:128`   status: scoped   deps: []   diff: ★★
+  note: limit ≠ δ₀. Free positivity `‖f‖²_{H⁻¹}>0` (have) + interacting ≥ free (Griffiths/FKG,
+  partly built `Lattice/FKG.lean`) + limit. All phases. → `planning/non-triviality.md`.
+- [ ] **9. `continuumLimit_nonGaussian`** (`S₄−3S₂²≠0`) `ContinuumLimit/Convergence.lean:256`   status: open   deps: [6]   diff: ★★★
+  note: connected 4-pt (`u₄`) ≠ 0 — the proof the theory is interacting. Lebowitz 4-pt inequality +
+  uniform strict lattice bound (`d=2` super-renormalizable ⟹ no cancellation) + moment convergence.
+  Even `P`, `λ>0`. THE non-triviality mountain. → `planning/non-triviality.md`.
 
 ## Cluster 6 — OS→Schwinger bridge
 
@@ -120,13 +131,19 @@ clustering, gating OS4). Master campaign doc: [`docs/cylinder-master-plan.md`].
 
 ---
 
-## The three genuine mountains (★★★, mostly independent)
+## The four genuine ★★★ mountains (mostly independent)
 
-1. **The exp-moment chain** (1←2←12, +3) — Layer A (Nelson/Lee–Yang) + Layer B2 (transfer gap, ours).
-2. **The uniform spectral gap + clustering** (16, 17 → 14, 15) — the OS4 mass gap surviving the limit.
-3. **Non-triviality** (9, 11) — the limit is interacting, not free.
-Plus **rotation restoration** (13) for OS2. Everything else (4, 5, 6, 7, 8, 10) is ★/★★
-"estimate-and-pass-to-limit" once the mountains land.
+1. **The exp-moment chain** (1 ← 2 ← 12, + 3) — Layer A (Nelson/Lee–Yang) + Layer B2 (transfer gap,
+   ours). Status: B2 mostly proved (HS trace-bridge tail); Layer A not started.
+2. **The uniform spectral gap** (16, 17) — the OS4 mass gap surviving `a→0`. **Regime-restricted**
+   (phase transition). *Independent of B2.* — Note: the **clustering** axioms (14, 15) are NOT a
+   separate mountain; they ride on the B2 trace bridge (= `connected_two_point_le`).
+3. **Non-Gaussianity** (9, `u₄≠0`) — the limit is genuinely interacting. *Needs `λ>0`.* — Note:
+   `pphi2_nontriviality` (11, `S₂>0`) is only ★★, NOT a mountain.
+4. **Rotation restoration** (13) for OS2 — the lattice→continuum rotation defect.
+
+Everything else (4, 5, 6, 7, 8, 10, 11, 14, 15) is ★/★★ "estimate-and-pass-to-limit" or rides on a
+mountain's infrastructure once it lands.
 
 ## Staleness flags
 Many `docs/*` plans predate the transfer-matrix pivot (several dated 2026-05-13). The CURRENT
