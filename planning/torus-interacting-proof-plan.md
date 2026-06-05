@@ -162,11 +162,16 @@ IV first. This is a focused multi-day implementation, fully scoped & dual-vetted
   (`∫(ωf)⁴dμ_{P,N} ≤ C`, for `u₄`) and `torus_interacting_eighth_moment_uniform`
   (`∫(ωf)⁸dμ_{P,N} ≤ C`, gives **uniform integrability of `(ωf)⁴`**). Template: Cauchy–Schwarz
   density transfer + Nelson exp estimate + Gaussian hypercontractivity (`∫(ωg)^{2p} ≤ (2p−1)^p(∫(ωg)²)^p`).
-- **IV.b NEXT** — `⟨(ωf)⁴⟩_{μ_N} → ⟨(ωf)⁴⟩_μ` (and 2nd moment): hand-rolled truncation/ε-argument
-  (weak bounded-cont convergence on `min((ωf)⁴, M)` + UI tail `∫_{(ωf)⁴>M}(ωf)⁴ ≤ C₈/M` from the
-  8th moment). ~100 lines; Mathlib's UniformIntegrable lemmas are for a.e./in-measure (not weak-of-
-  measures) so it's hand-rolled, but the truncation+weak+MCT pattern exists at
-  `TorusInteractingOS.lean:2340–2432` (bound side) to adapt to the full convergence (both directions).
+- **IV.b CORE DONE** — `moment_tendsto_of_uniform` (`TorusInteractingMoments.lean`, sorry-free): the
+  reusable ε/3 truncation lemma. Weak (bounded-cont) convergence + UI domination `F−min(F,M) ≤ G/M`
+  + integrability + cutoff-uniform `∫G ≤ C` (both `νn` and `μ`) ⟹ `∫F ∂νn → ∫F ∂μ`. Tails `≤ C/M`
+  uniform; middle converges weakly.
+- **IV.b INSTANTIATION next** — apply the core to `(F,G)=((ωf)²,(ωf)⁴)` and `((ωf)⁴,(ωf)⁸)`,
+  discharging: integrability of `(ωf)^k` under `torusInteractingMeasure` (`InteractingMeasure/
+  Normalization.lean:54`) and under `μ` (from `torusInteracting_exponentialMomentBound`: `(ωf)^p ≤
+  p!·e^{|ωf|}`); the pointwise domination `(ωf)^{2k} − min(·,M) ≤ (ωf)^{4k}/M` (nlinarith, holds ∀ω);
+  uniform `∫(ωf)^{4k} ≤ C` (IV.a 4th/8th moments); limit `∫(ωf)^{4k} ≤ C` (exp-moment). Yields
+  `⟨(ωf)²⟩_{μ_N}→⟨(ωf)²⟩_μ` and `⟨(ωf)⁴⟩_{μ_N}→⟨(ωf)⁴⟩_μ`, hence `u₄(μ)=lim u₄(μ_N)` for step V.
 
 ## What this replaces
 The honest, measure-genuine version of axiom 9 `continuumLimit_nonGaussian` (currently `∃μ` on the
