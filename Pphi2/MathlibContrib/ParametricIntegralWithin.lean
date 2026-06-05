@@ -22,8 +22,11 @@ We extend `F` across `x₀` by its affine first-order part below `x₀`,
 `G x a = if x₀ ≤ x then F x a else F x₀ a + (x − x₀) • F' x₀ a`,
 whose derivative bound is two-sided. The existing two-sided
 `hasDerivAt_integral_of_dominated_loc_of_deriv_le` gives `HasDerivAt (∫ G ·) (∫ F' x₀) x₀`, and since
-`G = F` on `Ici x₀` this restricts to the desired `HasDerivWithinAt`. Intended for upstreaming to
-`Mathlib/Analysis/Calculus/ParametricIntegral.lean`.
+`G = F` on `Ici x₀` this restricts to the desired `HasDerivWithinAt`.
+
+**Upstreamed as Mathlib PR [#40280](https://github.com/leanprover-community/mathlib4/pull/40280)** —
+retire this local copy in favour of
+`MeasureTheory.hasDerivWithinAt_Ici_integral_of_dominated_loc_of_deriv_le` once it merges.
 -/
 
 open MeasureTheory Filter Metric Set
