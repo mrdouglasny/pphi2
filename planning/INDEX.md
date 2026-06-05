@@ -123,9 +123,14 @@ weak-coupling / single-phase hypothesis.
 non-Gaussianity (only `S₂>0`, ★★ via correlation inequalities, all phases); 9 is the genuine
 interacting content (`u₄≠0`, ★★★, needs `λ>0`).
 
-- [ ] **11. `pphi2_nontriviality`** (`S₂(f,f)>0` for `f≠0`) `Main.lean:128`   status: scoped   deps: []   diff: ★★
-  note: limit ≠ δ₀. Free positivity `‖f‖²_{H⁻¹}>0` (have) + interacting ≥ free (Griffiths/FKG,
-  partly built `Lattice/FKG.lean`) + limit. All phases. → `planning/non-triviality.md`.
+- [~] **11. `pphi2_nontriviality`** (`S₂(f,f)>0` for `f≠0`) `Main.lean:128`   status: **MIS-FORMULATED → reformulated on T²**   deps: []   diff: ★★→★★★
+  note: The ℝ² axiom is `∃μ,S₂>0` with **P,mass unused** → free-field/δ₀ satisfy it (`IsPphi2Limit`
+  itself is δ₀-vacuous; see memory `pphi2-existence-vacuous-delta0`). **Honest version formulated on
+  the genuine (axiom-clean-existing) T² theory**: `TorusNontriviality.lean` —
+  `IsTorusPphi2Limit` + `torusPphi2Limit_exists` (PROVED), `TorusIsNondegenerate` (S₂>0). ⚠️ Route
+  **corrected** (Gemini-vetted, memory `pphi2-s2-domination-direction`): "Griffiths/FKG ⟹ ≥free" is
+  **wrong-direction** — continuum nondegeneracy needs short-distance singularity / cluster expansion
+  (★★★), not FKG. → `planning/non-triviality.md`.
 - [ ] **9. `continuumLimit_nonGaussian`** (`S₄−3S₂²≠0`) `ContinuumLimit/Convergence.lean:256`   status: open   deps: [6]   diff: ★★★
   note: connected 4-pt (`u₄`) ≠ 0 — the proof the theory is interacting. Lebowitz 4-pt inequality +
   uniform strict lattice bound (`d=2` super-renormalizable ⟹ no cancellation) + moment convergence.
