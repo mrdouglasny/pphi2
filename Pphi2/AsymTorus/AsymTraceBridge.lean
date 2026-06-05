@@ -24,15 +24,26 @@ are usable: (i) the **rank-1** route (`connected_two_point_le`, the HS bricks be
 `Σ_{k,l} |⟨b_k|M|b_l⟩|² λ_l^d λ_k^{Nt−d}`, fed to `averaged_susceptibility_bound` (proved). The norm
 gap gives `λ_i ≤ γλ₀` for `i ≠ 0` (each `b_i ⊥ Ω`). Pick per tractability of the trace-class sum.
 
-## Brick roadmap (this file) — rank-1/HS route
-0. **Eigen-power** `T^{m+1} Ω = λ₀^{m+1} Ω` (this file, proved) — the foundation of the rank-1 split.
-1. **Rank-1 kernel split** `kPow_m(x,y) = λ₀^{m+1}·Ω(x)Ω(y) + R_m(x,y)` (`R_m` = kernel of
-   `T'^{m+1}`, `T' = T(1−P₀)`).  ← next
-2. **R operator-norm decay** `‖T'^{m+1} f‖ ≤ (γλ₀)^{m+1}‖f‖` (= the proved gap, restated).
-3. **Kernel Cauchy–Schwarz** on `L²(vol×vol)`.
-4. **HS ≤ op·HS** for the `γ^a` geometric decay.
-5. **Mixed `P₀·R` terms** via `connected_two_point_le` (reflection-positivity, proved).
-6. **Assemble + normalize** → `geom_wrap_sum_le`.
+## Brick roadmap (this file) — operator-level rank-1 decay (bricks 0–2 PROVED)
+0. **Eigen-power** `T^{m+1} Ω = λ₀^{m+1} Ω` — `asymTransferOperatorCLM_pow_groundVector`. ✓
+1. **Rank-1 operator decay** `‖T^{m+1} v − λ₀^{m+1}⟪Ω,v⟫ Ω‖ ≤ (γλ₀)^{m+1}‖v‖` —
+   `asymTransferOperatorCLM_pow_sub_groundProj_norm_le` (with `‖Ω‖=1`,
+   `asymGroundVector_norm_eq_one`, and the contraction `norm_sub_groundProj_le`). ✓ This is the
+   operator `S_m = T^{m+1} − λ₀^{m+1}|Ω⟩⟨Ω|` with **op-norm** `≤ (γλ₀)^{m+1}`.
+2. **Perp decay** `‖T^{m+1} v‖ ≤ (γλ₀)^{m+1}‖v‖` for `v ⊥ Ω` —
+   `asymTransferOperatorCLM_pow_norm_le_of_perp` (the gap pushed through `T = λ₀·T̂`). ✓
+
+## Route decision for the trace bound (update 2026-06-04)
+Bricks 0–2 deliver the **operator-norm** decay of `S_m`. But the kernel-iterate *trace* needs
+Hilbert–Schmidt (or trace) control, and **op-norm ≤ HS-norm is the wrong direction** — so the
+literal "HS bricks 3–6" cannot get an HS bound from brick 1 alone; they need a separate L²-kernel
+estimate on `R_m`. The cleaner path the operator bricks now unlock is the **GNS/operator route**:
+express the lattice connected two-point via `twoPoint_dictionary` as the operator form
+`⟪Ω, M_A Tᵈ M_B Ω⟫ − ⟪Ω,M_AΩ⟫⟪Ω,M_BΩ⟫` and bound it directly by
+`ReflectionPositivity.GappedTransfer.connected_two_point_le` (**proved**) — which internally is
+exactly bricks 0–2 on the *normalised* `T̂`. Bricks 0–2 here are the un-normalised (λ₀-explicit)
+analogues the `kPow` integrals produce; next step is the dictionary↔operator identification feeding
+`connected_two_point_le` + `geom_wrap_sum_le`, NOT the kernel-HS Cauchy–Schwarz.
 -/
 
 open MeasureTheory
