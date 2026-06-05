@@ -67,6 +67,73 @@ theorem interactingMeasure_map_measurableEquiv
   refine lintegral_congr fun ω => ?_
   simp only [interactingBoltzmannWeight, Function.comp_apply, S.symm_apply_apply]
 
+/-! ## Field-scaling map and the moment-level field redefinition
+
+The full `Configuration`-measure identity `map (c•·) (GaussianField.measure T) = measure (c•T)`
+needs Cramér–Wold/Minlos uniqueness on the infinite-dimensional `Configuration` (only available
+post-pushforward-to-ℝ); it is deferred (possibly to be added as an axiom). What `u₄` actually
+consumes — the **moment / connected-four-point scaling** — is provable directly here. -/
+
+/-- The field rescaling `ω ↦ c • ω` is measurable (each evaluation `(c•ω) φ = c · ω φ`). -/
+theorem measurable_configuration_const_smul (c : ℝ) :
+    Measurable (fun ω : Configuration E => c • ω) := by
+  apply configuration_measurable_of_eval_measurable
+  intro φ
+  show Measurable (fun ω : Configuration E => c * ω φ)
+  exact measurable_const.mul (configuration_eval_measurable φ)
+
+/-- The field rescaling as a measurable equivalence (`c ≠ 0`), inverse `ω ↦ c⁻¹ • ω`. -/
+def fieldRescaleEquiv (c : ℝ) (hc : c ≠ 0) : Configuration E ≃ᵐ Configuration E where
+  toFun := fun ω => c • ω
+  invFun := fun ω => c⁻¹ • ω
+  left_inv := fun ω => by show c⁻¹ • (c • ω) = ω; rw [smul_smul, inv_mul_cancel₀ hc, one_smul]
+  right_inv := fun ω => by show c • (c⁻¹ • ω) = ω; rw [smul_smul, mul_inv_cancel₀ hc, one_smul]
+  measurable_toFun := measurable_configuration_const_smul c
+  measurable_invFun := measurable_configuration_const_smul c⁻¹
+
+@[simp] theorem fieldRescaleEquiv_apply (c : ℝ) (hc : c ≠ 0) (ω : Configuration E) :
+    fieldRescaleEquiv c hc ω = c • ω := rfl
+
+@[simp] theorem fieldRescaleEquiv_symm_apply (c : ℝ) (hc : c ≠ 0) (ω : Configuration E) :
+    (fieldRescaleEquiv c hc).symm ω = c⁻¹ • ω := rfl
+
+/-- **Moment scaling under field rescaling.** `∫ (ωf)ⁿ d((c•·)_* μ) = cⁿ · ∫ (ωf)ⁿ dμ`. -/
+theorem integral_pow_map_const_smul (c : ℝ) (μ : Measure (Configuration E)) (f : E) (n : ℕ) :
+    ∫ ω, (ω f) ^ n ∂(Measure.map (fun ω => c • ω) μ) = c ^ n * ∫ ω, (ω f) ^ n ∂μ := by
+  rw [integral_map (measurable_configuration_const_smul c).aemeasurable
+    ((configuration_eval_measurable f).pow_const n).aestronglyMeasurable]
+  simp_rw [show ∀ ω : Configuration E, (c • ω) f = c * ω f from fun _ => rfl, mul_pow]
+  rw [integral_const_mul]
+
+/-- The (diagonal) connected four-point `u₄(f) = ∫(ωf)⁴ − 3(∫(ωf)²)²` of a configuration measure. -/
+noncomputable def connectedFourPoint (μ : Measure (Configuration E)) (f : E) : ℝ :=
+  (∫ ω, (ω f) ^ 4 ∂μ) - 3 * (∫ ω, (ω f) ^ 2 ∂μ) ^ 2
+
+/-- **`u₄` scales by `c⁴` under field rescaling.** `u₄((c•·)_* μ; f) = c⁴ · u₄(μ; f)`. -/
+theorem connectedFourPoint_map_const_smul (c : ℝ) (μ : Measure (Configuration E)) (f : E) :
+    connectedFourPoint (Measure.map (fun ω => c • ω) μ) f = c ^ 4 * connectedFourPoint μ f := by
+  unfold connectedFourPoint
+  rw [integral_pow_map_const_smul c μ f 4, integral_pow_map_const_smul c μ f 2]
+  ring
+
+/-- **(A)+(C) at the moment level — the field-redefinition coupling translation.** Via the field
+redefinition `ω ↦ c•ω` (`c ≠ 0`), the connected four-point of the interacting theory with potential
+`V ∘ (c⁻¹•·)` over the rescaled free measure `(c•·)_* μ` equals `c⁴ ×` that of the original theory
+`(V, μ)`. Specializing `V = λ • interactionFunctional` and `μ = GaussianField.measure T` (whose
+rescaling `(c•·)_* μ` has covariance `c²` larger, i.e. a different mass), this is exactly the
+`(m,λ) ↔ (m',λ')` translation: `u₄ ≠ 0` is preserved (up to the `c⁴` factor) along the redefinition,
+so a strict `u₄ < 0` at one `(m,λ)` gives one at the translated parameters. -/
+theorem connectedFourPoint_interactingMeasure_field_rescale
+    (c : ℝ) (hc : c ≠ 0) (V : Configuration E → ℝ) (μ : Measure (Configuration E))
+    (hV_meas : Measurable V) (f : E) :
+    connectedFourPoint (interactingMeasure (V ∘ (fun ω => c⁻¹ • ω)) (Measure.map (fun ω => c • ω) μ)) f
+      = c ^ 4 * connectedFourPoint (interactingMeasure V μ) f := by
+  have hcore := interactingMeasure_map_measurableEquiv (fieldRescaleEquiv c hc) V μ hV_meas
+  have h1 : (⇑(fieldRescaleEquiv c hc)) = (fun ω : Configuration E => c • ω) := rfl
+  have h2 : (⇑(fieldRescaleEquiv c hc).symm) = (fun ω : Configuration E => c⁻¹ • ω) := rfl
+  rw [h1, h2] at hcore
+  rw [← hcore, connectedFourPoint_map_const_smul]
+
 end Pphi2
 
 end
