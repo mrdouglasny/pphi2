@@ -101,9 +101,19 @@ At `λ=0`: free GFF. At `λ=1`: pphi2's current interacting measure. Weak coupli
   Route confirmed: both sides have `charFun … f = exp(−½·c²⟨Tf,Tf⟩)` (use `GaussianField.charFun`,
   `(c•ω)f = c·ωf = ω(c•f)` via `map_smul`), so equal by Cramér–Wold uniqueness
   (`GaussianField/CramerWold.lean`). The `covariance ×c²` part is SAFE (not the error-prone bit).
-- ⏳ **(C) φ⁴ specialization** — combine core + (A) with `V = λ•interactionFunctional` to relate
-  `(m,λ)↔(m',λ')`. **The exact `c`-powers / Wick-const rescaling / `d=2` `(m,λ)` correspondence is
-  the crux-2-style error-prone bit — vet (Codex pass running, + Gemini) before committing.**
+- ✅ **(A)+(C) at the MOMENT level DONE** (`FieldRedefinition.lean`, sorry-free, axiom-clean) —
+  the `u₄`-relevant version, sidestepping Minlos:
+  - `fieldRescaleEquiv c hc` — `ω↦c•ω` as a `MeasurableEquiv` (`(c•ω)f = c·ωf` by `rfl`).
+  - `integral_pow_map_const_smul` — `∫(ωf)ⁿ d((c•·)_*μ) = cⁿ·∫(ωf)ⁿ dμ`.
+  - `connectedFourPoint_map_const_smul` — `u₄((c•·)_*μ) = c⁴·u₄(μ)`.
+  - `connectedFourPoint_interactingMeasure_field_rescale` — composing with the CORE:
+    `u₄(interactingMeasure (V∘(c⁻¹•·)) ((c•·)_*μ)) = c⁴·u₄(interactingMeasure V μ)`. The `(m,λ)↔(m',λ')`
+    translation at the `u₄` level: strict `u₄<0` at one parametrization ⟹ at the translated one.
+- ⏳ **Full Configuration measure-equality (A)** — `map(c•·)(measure T) = measure(c•T)` — DEFERRED
+  (needs Minlos uniqueness on the infinite-dim `Configuration`, or `adaptedONB(c•T)=adaptedONB T`).
+  GaussianField has charFun-uniqueness only post-pushforward-to-ℝ (`pairing_is_gaussian`). **Likely
+  to be added later as an axiom** (per owner) if the full measure identity is wanted; the moment-level
+  version above already supplies what the `u₄<0` proof consumes.
 
 ## Step structure (revised for the λ-family)
 - [ ] **C0. Define the λ-family** — `interactionFunctionalScaled`/the scaled lattice & torus measures,
