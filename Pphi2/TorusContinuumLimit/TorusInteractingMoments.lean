@@ -553,4 +553,70 @@ theorem torus_interacting_fourth_moment_tendsto (P : InteractionPolynomial) (mas
       rwa [show ((ω f) ^ 4) ^ 2 = (ω f) ^ 8 from by ring] at h)
     hF_int_ν hF_int_μ hG_int_ν hG_int_μ (fun n => hC8 (φ n + 1)) hG_μ hconv
 
+/-- **Step IV.b — 2nd-moment convergence.** `⟨(ωf)²⟩_{μ_N} → ⟨(ωf)²⟩_μ`. Same as the 4th-moment
+case with `F=(ωf)²`, `G=(ωf)⁴` (UI from the uniform 4th moment). Together with
+`torus_interacting_fourth_moment_tendsto` this gives `u₄(μ) = lim u₄(μ_N)` for step V. -/
+theorem torus_interacting_second_moment_tendsto (P : InteractionPolynomial) (mass : ℝ)
+    (hmass : 0 < mass) (f : TorusTestFunction L)
+    (μ : Measure (Configuration (TorusTestFunction L))) [IsProbabilityMeasure μ]
+    (φ : ℕ → ℕ) (hφ : StrictMono φ)
+    (hconv : ∀ (g : Configuration (TorusTestFunction L) → ℝ),
+      Continuous g → (∃ B, ∀ x, |g x| ≤ B) →
+      Tendsto (fun n => ∫ ω, g ω ∂(torusInteractingMeasure L (φ n + 1) P mass hmass)) atTop
+        (nhds (∫ ω, g ω ∂μ))) :
+    Tendsto (fun n => ∫ ω, (ω f) ^ 2 ∂(torusInteractingMeasure L (φ n + 1) P mass hmass)) atTop
+      (nhds (∫ ω, (ω f) ^ 2 ∂μ)) := by
+  obtain ⟨C2, _, hC2⟩ := torus_interacting_second_moment_uniform L P mass hmass f
+  obtain ⟨C4, _, hC4⟩ := torus_interacting_fourth_moment_uniform L P mass hmass f
+  have hF_cont : Continuous (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 2) :=
+    (WeakDual.eval_continuous f).pow 2
+  have hF_meas : Measurable (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 2) :=
+    (configuration_eval_measurable f).pow_const 2
+  have hG_cont : Continuous (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 4) :=
+    (WeakDual.eval_continuous f).pow 4
+  have hG_meas : Measurable (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 4) :=
+    (configuration_eval_measurable f).pow_const 4
+  have hF_nn : ∀ ω : Configuration (TorusTestFunction L), 0 ≤ (ω f) ^ 2 := fun ω => by positivity
+  have hG_nn : ∀ ω : Configuration (TorusTestFunction L), 0 ≤ (ω f) ^ 4 := fun ω => by positivity
+  have hF_eq : (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 2) =
+      (fun ω => |ω f| ^ 2) := by funext ω; exact (sq_abs (ω f)).symm
+  have hG_eq : (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 4) =
+      (fun ω => |ω f| ^ 4) := by
+    funext ω; rw [show |ω f| ^ 4 = (|ω f| ^ 2) ^ 2 from by ring, sq_abs]; ring
+  have hF_int_ν : ∀ n, Integrable (fun ω => (ω f) ^ 2)
+      (torusInteractingMeasure L (φ n + 1) P mass hmass) := fun n => by
+    rw [hF_eq]; exact torus_interacting_abs_pow_integrable L P mass hmass f 2 (by norm_num) (φ n + 1)
+  have hG_int_ν : ∀ n, Integrable (fun ω => (ω f) ^ 4)
+      (torusInteractingMeasure L (φ n + 1) P mass hmass) := fun n => by
+    rw [hG_eq]; exact torus_interacting_abs_pow_integrable L P mass hmass f 4 (by norm_num) (φ n + 1)
+  obtain ⟨hF_int_μ, -⟩ :=
+    limit_le_of_uniform_bound L hF_cont hF_meas hF_nn hF_int_ν (fun n => hC2 (φ n + 1)) hconv
+  obtain ⟨hG_int_μ, hG_μ⟩ :=
+    limit_le_of_uniform_bound L hG_cont hG_meas hG_nn hG_int_ν (fun n => hC4 (φ n + 1)) hconv
+  exact moment_tendsto_of_uniform (L := L) (G := fun ω => (ω f) ^ 4) (C := C4) hF_cont hF_meas hF_nn
+    (fun ω M hM => by
+      have h := sub_min_le_sq_div (show (0:ℝ) ≤ (ω f) ^ 2 from by positivity) hM
+      rwa [show ((ω f) ^ 2) ^ 2 = (ω f) ^ 4 from by ring] at h)
+    hF_int_ν hF_int_μ hG_int_ν hG_int_μ (fun n => hC4 (φ n + 1)) hG_μ hconv
+
+/-- **Step IV ⟹ V bridge: `u₄(μ) = lim u₄(μ_N)`.** The connected four-point of the interacting limit
+is the limit of the lattice connected four-points. Immediate from the 2nd- and 4th-moment
+convergences. Hence any uniform strict lattice bound `u₄(μ_N) ≤ −c < 0` (steps I + III) passes to the
+limit, giving `u₄(μ) ≤ −c < 0` and `TorusIsInteracting μ`. -/
+theorem torus_connectedFourPoint_tendsto (P : InteractionPolynomial) (mass : ℝ)
+    (hmass : 0 < mass) (f : TorusTestFunction L)
+    (μ : Measure (Configuration (TorusTestFunction L))) [IsProbabilityMeasure μ]
+    (φ : ℕ → ℕ) (hφ : StrictMono φ)
+    (hconv : ∀ (g : Configuration (TorusTestFunction L) → ℝ),
+      Continuous g → (∃ B, ∀ x, |g x| ≤ B) →
+      Tendsto (fun n => ∫ ω, g ω ∂(torusInteractingMeasure L (φ n + 1) P mass hmass)) atTop
+        (nhds (∫ ω, g ω ∂μ))) :
+    Tendsto (fun n =>
+        (∫ ω, (ω f) ^ 4 ∂(torusInteractingMeasure L (φ n + 1) P mass hmass)) -
+          3 * (∫ ω, (ω f) ^ 2 ∂(torusInteractingMeasure L (φ n + 1) P mass hmass)) ^ 2) atTop
+      (nhds ((∫ ω, (ω f) ^ 4 ∂μ) - 3 * (∫ ω, (ω f) ^ 2 ∂μ) ^ 2)) := by
+  have h4 := torus_interacting_fourth_moment_tendsto L P mass hmass f μ φ hφ hconv
+  have h2 := torus_interacting_second_moment_tendsto L P mass hmass f μ φ hφ hconv
+  exact h4.sub ((h2.pow 2).const_mul 3)
+
 end Pphi2
