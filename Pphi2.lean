@@ -47,6 +47,7 @@ import Pphi2.TorusContinuumLimit.TorusGaussianLimit
 import Pphi2.TorusContinuumLimit.TorusInteractingLimit
 import Pphi2.TorusContinuumLimit.TorusOSAxioms
 import Pphi2.TorusContinuumLimit.TorusInteractingOS
+import Pphi2.TorusContinuumLimit.TorusNontriviality
 
 -- Phase 4b': Asymmetric torus + IR limit (Route B')
 import Pphi2.AsymTorus.AsymTorusEmbedding
