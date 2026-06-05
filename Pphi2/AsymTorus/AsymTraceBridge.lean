@@ -15,7 +15,16 @@ machinery, the OS4 clustering axioms). With `asymTransferKernel_kPow_apply` (the
 link) in hand, this is **concrete Cauchy–Schwarz on explicit kernels**, not abstract trace-class
 theory — see `docs/B4B5-design.md` §"HS trace-bridge — concrete construction".
 
-## Brick roadmap (this file)
+## Two viable routes (update 2026-06-04)
+pphi2 has **more spectral structure than the rank-1 picture needs**: `asymGroundVector` is a
+`HilbertBasis` vector (so **‖Ω‖ = 1**), and `AsymJentzsch.lean:200` provides the **full Jentzsch
+eigenbasis** — a complete `HilbertBasis ι ℝ (L2SpatialField Ns)` with eigenvalues. So BOTH engines
+are usable: (i) the **rank-1** route (`connected_two_point_le`, the HS bricks below); (ii) the
+**eigenbasis** route — `trace = Σ_{i:ι} ⟪b_i, · b_i⟫`, the spectral two-point expansion
+`Σ_{k,l} |⟨b_k|M|b_l⟩|² λ_l^d λ_k^{Nt−d}`, fed to `averaged_susceptibility_bound` (proved). The norm
+gap gives `λ_i ≤ γλ₀` for `i ≠ 0` (each `b_i ⊥ Ω`). Pick per tractability of the trace-class sum.
+
+## Brick roadmap (this file) — rank-1/HS route
 0. **Eigen-power** `T^{m+1} Ω = λ₀^{m+1} Ω` (this file, proved) — the foundation of the rank-1 split.
 1. **Rank-1 kernel split** `kPow_m(x,y) = λ₀^{m+1}·Ω(x)Ω(y) + R_m(x,y)` (`R_m` = kernel of
    `T'^{m+1}`, `T' = T(1−P₀)`).  ← next
