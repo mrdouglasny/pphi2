@@ -116,7 +116,15 @@ automation:
     - method: "agent"
       models: ["claude-opus-4-8"]
       framework: "Claude Code"
-      prompting_notes: "Cycle-by-cycle proving with compiler-guided repair; multi-repo (depends on reflection-positivity, gaussian-field, bochner, gaussian-hilbert, gibbs-variational)."
+      prompting_notes: "Primary prover: cycle-by-cycle proving with compiler-guided repair; multi-repo (depends on reflection-positivity, gaussian-field, bochner, gaussian-hilbert, gibbs-variational)."
+    - method: "agent"
+      models: ["gpt-5-codex"]
+      framework: "Codex"
+      prompting_notes: "Auxiliary proving (per commit co-author trailers + docs)."
+    - method: "other"
+      models: ["gemini-3.1-pro"]
+      framework: "Gemini (deep-think)"
+      prompting_notes: "Cross-vetting of analytic estimates / axiom soundness (heavily referenced in status docs)."
   notes: "Default build target is the `Pphi2` library (+ `Common`). The legacy `ddj/` directory and the parked `future/CylinderContinuumLimit/` directory are NOT imported by Pphi2.lean and are excluded from the build; their axioms/sorries do not bear on the main results."
 
 fidelity:
