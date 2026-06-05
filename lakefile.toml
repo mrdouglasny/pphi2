@@ -18,7 +18,7 @@ rev = "e6759db"
 name = "GaussianField"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/gaussian-field.git"
-rev = "2498e1a"
+rev = "0145126"
 
 [[require]]
 name = "bochner"
