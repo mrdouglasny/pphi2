@@ -93,3 +93,24 @@ theory. (B4 engine `averaged_susceptibility_bound` is done; this is the operator
    exact `a`-cancellation — scope against the Nelson/chessboard infra; vet the `a`-powers first.
 4. Assemble + the torus→lattice pushforward (`asymTorusInteractingMeasureIso`) → discharge
    `asymInteractingVariance_le_freeVariance_Lt_uniform`.
+
+## Parallel-investigation findings (2026-06-04, while B5a foundation builds)
+
+**B5b (single-slice stability) is likely reachable from existing infrastructure — not a new
+deep theorem.**
+- The existing **B1** bound `asymTorusIso_interacting_second_moment_density_transfer`
+  (`AsymContinuumLimit.lean`) already has the **exact same shape** as the B2 axiom
+  (`∫(ωf)²dμ_int ≤ C·∫(ωg)²dμ_free`). The *only* difference is quantifier order: B1 fixes `Lt`
+  then chooses `C = C(Lt)` (the Nelson/Gaussian-domination route, volume-dependent); B2 needs `C`
+  chosen before `Lt` (uniform). The uniformity is exactly what the transfer-gap route supplies.
+- The Nelson engine `asymNelson_exponential_estimate_iso` (`∃K, ∀ Nt Ns a, ∫exp(−2V)² ≤ K`) is
+  **already uniform in `Nt`** (Gaussian domination / hypercontractivity). The single-slice
+  stability `‖P₁ΦΩ‖² ≤ C·Var_free,slice` is the **`Ls`-fixed, single-time-slice specialization**
+  (no `Lt` at all — one slice), so its constant is `Lt`-independent essentially by construction;
+  `‖P₁ΦΩ‖² = Var_Ω(Φ)` is the variance in the ground-state (`|Ω|²`) measure, a fixed-volume
+  spatial-`φ⁴` problem. Plan: specialize the Nelson/chessboard estimate to one slice.
+
+**Trace bridge has Mathlib support to build on.** `Mathlib/Analysis/InnerProductSpace/Trace.lean`
+exists (plus `Spectrum.lean`, `Positive.lean`). Need to confirm it covers trace-class operators /
+traces of products (for the rank-1 `Tr` split), but it is not a total absence — the trace layer
+above the integral-operator form (B5a, in progress) is not starting from zero.
