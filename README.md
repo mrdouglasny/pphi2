@@ -3,38 +3,33 @@
 Formal construction of the P(Φ)₂ Euclidean quantum field theory in Lean 4,
 following the Glimm-Jaffe/Nelson lattice approach.
 
-> **📍 For the live status of the T²_L OS0–OS2 endpoint campaign and
-> the full multi-repo plan to reach a fully axiom-free construction,
-> see [`docs/T2-master-plan.md`](docs/T2-master-plan.md).**
-> That document is the single source of truth for the five-workstream
-> roadmap (Workstreams A, B, C + markov-semigroups Phase 2.5 / N1.b /
-> N1.c + Route A) with their branches, plans, and current state.
+> **📍 The master status of the remaining-axiom discharge is
+> [`planning/INDEX.md`](planning/INDEX.md)** (current). The earlier T²_L OS0–OS2 endpoint campaign
+> and its five-workstream roadmap are recorded in
+> [`docs/T2-master-plan.md`](docs/T2-master-plan.md) (historical).
 
-> **🛠 You are on branch `cylinder-isotropic-lattice` — the cylinder
-> `S¹(L_s) × ℝ` `P(Φ)₂` construction on an isotropic `Z_{N_t} × Z_{N_s}`
-> heterogeneous lattice.** This is the successor to the T² endpoint:
-> adding **reflection positivity (OS3)** by leaving the compact torus
-> behind, on a path to **OS reconstruction → a Wightman QFT in 1+1d with
-> a positive mass gap**. The branch replaces the metric-inconsistent
-> square-via-geometric-mean cylinder with a single isotropic spacing `a`,
-> periods `L_t = N_t · a`, `L_s = N_s · a`, so the rectangle is exactly
-> isotropic at every refinement (no rationality obstruction in the
-> `cylinder` regime, where `a = L_s / N_s` is fixed and `N_t → ∞`).
+> **🛠 Active workstream — the cylinder `S¹(L_s) × ℝ` φ⁴₂ construction** on an isotropic
+> `Z_{N_t} × Z_{N_s}` lattice (single spacing `a`, `L_s = N_s·a` fixed, `N_t → ∞`): leaving the
+> compact torus behind to gain **reflection positivity (OS3)** and the **mass gap / clustering
+> (OS4)**, on the path to **OS reconstruction → a Wightman QFT in 1+1d**.
+> `cylinderIso_OS_of_RP_OS2` (`AsymTorus/AsymContinuumLimit.lean`) assembles the cylinder
+> **OS0–OS3** modulo the remaining project axioms. Build green, **0 sorries**; the debt is the
+> project axioms.
 >
-> **Current state (2026-06-02):** `count_axioms.sh` → **20 raw / 18 real
-> axioms, 0 sorries**; `lake build` green (3926 jobs).
-> `cylinderIso_OS_of_RP_OS2` (`Pphi2/AsymTorus/AsymContinuumLimit.lean`)
-> gives the cylinder **OS0/OS1/OS2/OS3** modulo two
-> reflection-positivity / OS2-symmetry hypotheses, on top of **one**
-> deep-think-vetted analytic axiom
-> (`asymInteracting_expMoment_volume_uniform` — the genuine
-> cluster-expansion input) and the upstream `embed_l2_uniform_bound`.
+> **📋 Master status of the remaining axioms → [`planning/INDEX.md`](planning/INDEX.md)** — a
+> plan-loop status machine over all 17 axioms, grouped by OS-program cluster, with the dependency
+> DAG, difficulty ratings, and a discharge plan for each. The four genuine hard cores: the
+> `Lt`-uniform exponential-moment chain (Layer A + Layer B2, the latter mostly proved this cycle),
+> the uniform spectral gap, non-Gaussianity (`u₄≠0`), and rotation restoration.
 >
-> **UNIT 7 (`asymChaosCutoffDecomposition`)** was discharged
-> (axiom → theorem) 2026-05-31 via the trivial split `V_S = -(M/2)`,
-> `E_R = V_a + M/2`, using the `asymCanonicalSumConfig` pushforward
-> + UNIT 2's smooth lower bound + UNIT 6's polynomial-chaos
-> negative-tail wrapper (`AsymRoughErrorChaosStd.lean`).
+> **⚠ Read [`planning/coherence-analysis.md`](planning/coherence-analysis.md) first.** The axioms
+> are individually sound but **do not yet compose into "an *interacting* φ⁴₂ QFT exists"**:
+> `SatisfiesFullOS` is satisfied by the free field too, and non-triviality / non-Gaussianity are
+> *separate* existence statements never conjoined with the OS measure. The keystone — **weak-coupling
+> uniqueness** ([`planning/weak-coupling-uniqueness.md`](planning/weak-coupling-uniqueness.md)) —
+> glues them into one measure, propagates the (necessary) weak-coupling regime, and upgrades the
+> Prokhorov subsequence to a genuine limit. The honest headline is the *conjoined* theorem
+> `∃ μ, SatisfiesFullOS μ ∧ (∀ f≠0, S₂>0) ∧ u₄≠0`.
 >
 > **Layer B1** of the remaining-axiom discharge architecture (cylinder
 > transfer matrix → variance bound) is **complete** 2026-05-31:
