@@ -98,4 +98,67 @@ theorem asymTransferOperatorCLM_pow_norm_le_of_perp (P : InteractionPolynomial) 
     _ = γ ^ (m + 1) * asymTransferGroundEigenvalue Nt Ns P a mass ha hmass ^ (m + 1) * ‖v‖ := by
         ring
 
+/-- The ground vector is a unit vector (it is a Jentzsch `HilbertBasis` vector). -/
+theorem asymGroundVector_norm_eq_one (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) :
+    ‖asymGroundVector Nt Ns P a mass ha hmass‖ = 1 :=
+  (asymTransferGroundExcitedData Nt Ns P a mass ha hmass).b.orthonormal.norm_eq_one _
+
+/-- The vacuum-orthogonal projection `v − ⟪Ω,v⟫Ω` is a contraction (`‖Ω‖ = 1`). -/
+theorem norm_sub_groundProj_le (P : InteractionPolynomial) (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) (v : L2SpatialField Ns) :
+    ‖v - (@inner ℝ _ _ (asymGroundVector Nt Ns P a mass ha hmass) v) •
+        asymGroundVector Nt Ns P a mass ha hmass‖ ≤ ‖v‖ := by
+  have hΩ := asymGroundVector_norm_eq_one (Nt := Nt) (Ns := Ns) P a mass ha hmass
+  set Ω := asymGroundVector Nt Ns P a mass ha hmass
+  have key : ‖v - (@inner ℝ _ _ Ω v) • Ω‖ ^ 2 = ‖v‖ ^ 2 - (@inner ℝ _ _ Ω v) ^ 2 := by
+    rw [norm_sub_sq_real, real_inner_smul_right, real_inner_comm v Ω, norm_smul, hΩ, mul_one,
+      Real.norm_eq_abs, sq_abs]
+    ring
+  have hsq : ‖v - (@inner ℝ _ _ Ω v) • Ω‖ ^ 2 ≤ ‖v‖ ^ 2 := by
+    rw [key]; nlinarith [sq_nonneg (@inner ℝ _ _ Ω v)]
+  calc ‖v - (@inner ℝ _ _ Ω v) • Ω‖
+      = Real.sqrt (‖v - (@inner ℝ _ _ Ω v) • Ω‖ ^ 2) := (Real.sqrt_sq (norm_nonneg _)).symm
+    _ ≤ Real.sqrt (‖v‖ ^ 2) := Real.sqrt_le_sqrt hsq
+    _ = ‖v‖ := Real.sqrt_sq (norm_nonneg _)
+
+/-- **Brick 1 — rank-1 operator decay.** `S_m := T^{m+1} − λ₀^{m+1} P₀` (P₀ = `|Ω⟩⟨Ω|`) has
+operator norm `≤ (γλ₀)^{m+1}`: `‖T^{m+1} v − λ₀^{m+1}⟪Ω,v⟫ Ω‖ ≤ (γλ₀)^{m+1}‖v‖`. Combines brick 0
+(the `P₀` part is exactly `λ₀^{m+1}⟪Ω,v⟫Ω`) with brick 2 (the perp part decays). `S_m` is the
+connected operator; its kernel `R_m` feeds the kernel Cauchy–Schwarz (brick 3). -/
+theorem asymTransferOperatorCLM_pow_sub_groundProj_norm_le (P : InteractionPolynomial)
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (γ : ℝ) (hγ0 : 0 ≤ γ) (hγ1 : γ < 1)
+    (hnorm : ∀ v : L2SpatialField Ns,
+      @inner ℝ _ _ (asymGroundVector Nt Ns P a mass ha hmass) v = 0 →
+      ‖asymTransferNormalized Nt Ns P a mass ha hmass v‖ ≤ γ * ‖v‖)
+    (m : ℕ) (v : L2SpatialField Ns) :
+    ‖((asymTransferOperatorCLM Nt Ns P a mass ha hmass) ^ (m + 1)) v
+        - (asymTransferGroundEigenvalue Nt Ns P a mass ha hmass ^ (m + 1) *
+            @inner ℝ _ _ (asymGroundVector Nt Ns P a mass ha hmass) v) •
+            asymGroundVector Nt Ns P a mass ha hmass‖
+      ≤ (γ * asymTransferGroundEigenvalue Nt Ns P a mass ha hmass) ^ (m + 1) * ‖v‖ := by
+  set Ω := asymGroundVector Nt Ns P a mass ha hmass with hΩdef
+  have hperp_inner : @inner ℝ _ _ Ω (v - (@inner ℝ _ _ Ω v) • Ω) = 0 := by
+    rw [inner_sub_right, inner_smul_right, real_inner_self_eq_norm_sq,
+      asymGroundVector_norm_eq_one]; ring
+  -- `T^{m+1} v − λ₀^{m+1}⟪Ω,v⟫ Ω = T^{m+1} (v − ⟪Ω,v⟫ Ω)`
+  have hid : ((asymTransferOperatorCLM Nt Ns P a mass ha hmass) ^ (m + 1)) v
+      - (asymTransferGroundEigenvalue Nt Ns P a mass ha hmass ^ (m + 1) *
+          @inner ℝ _ _ Ω v) • Ω
+      = ((asymTransferOperatorCLM Nt Ns P a mass ha hmass) ^ (m + 1))
+          (v - (@inner ℝ _ _ Ω v) • Ω) := by
+    rw [map_sub, map_smul, asymTransferOperatorCLM_pow_groundVector, smul_smul]
+    congr 2
+    ring
+  rw [hid]
+  calc ‖((asymTransferOperatorCLM Nt Ns P a mass ha hmass) ^ (m + 1))
+          (v - (@inner ℝ _ _ Ω v) • Ω)‖
+      ≤ (γ * asymTransferGroundEigenvalue Nt Ns P a mass ha hmass) ^ (m + 1) *
+          ‖v - (@inner ℝ _ _ Ω v) • Ω‖ :=
+        asymTransferOperatorCLM_pow_norm_le_of_perp P a mass ha hmass γ hγ0 hγ1 hnorm m _ hperp_inner
+    _ ≤ (γ * asymTransferGroundEigenvalue Nt Ns P a mass ha hmass) ^ (m + 1) * ‖v‖ :=
+        mul_le_mul_of_nonneg_left (norm_sub_groundProj_le P a mass ha hmass v)
+          (pow_nonneg (mul_nonneg hγ0
+            (le_of_lt (asymTransferGroundEigenvalue_pos Nt Ns P a mass ha hmass))) _)
+
 end Pphi2
