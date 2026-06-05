@@ -77,17 +77,26 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
   (`interactingMeasure_zero{,_smul}`), and the baseline `u₄(μ_0) = 0`
   (`connectedFourPoint_interactingMeasure_zero_smul`, composing the free-field anchor).
 - **Sub-lemmas remaining (the core):**
-  1. **Smeared Wick inner product** `⟨:φ(f)⁴::φ(g)⁴:⟩ = 4!·⟨φ(f)φ(g)⟩⁴` for general test functions
-     `f,g` — the Mehler/Wick kernel. GaussianField has only the **2-site** version
-     `gff_wickPower_two_site_inner` (`WickMultivariate.lean:865`, `= n!·C(x,y)ⁿ`); generalizing to
-     smeared fields (via the eigenbasis multinomial / `gffMultiWickMonomial_orthogonality`) is the
-     **decisive sub-project**.
+  1. ✅ **DONE (2026-06-05). Smeared Wick inner product** `⟨:φ(f)ⁿ::φ(g)ᵐ:⟩ = δₘₙ·n!·⟨φfφg⟩ⁿ` for
+     arbitrary smeared lattice fields — the Mehler/Wick kernel. Proved as
+     `GaussianField.gff_wickPower_two_smeared_inner` (branch `smeared-wick-inner` in the
+     `gaussian-field` checkout), **axiom-clean** (`propext, Classical.choice, Quot.sound`). Key
+     realization (from the user's "2-D Gaussian subspace" framing): the heavy lifting
+     `wickMonomial_pow_sum_expansion_of_totalDegree` is *already* general, so this is just an
+     `ω`-linearity generalization of `gff_wickPower_two_site_inner` (`γⱼ(x)↦Γⱼ(f)=Σₓ f(x)γⱼ(x)`),
+     **not** a from-scratch Mehler proof. `n=m=4` gives `4!⟨φfφg⟩⁴`. Added helpers: `gffSmearedCoeff`,
+     `gffSmearedCovariance`, `omega_eval_smeared_eq_sum_gamma_xi`, `wickMonomial_at_smeared_eq_eigen_sum`.
+     ⚠ **PERSISTENCE TODO** (outward-facing — owner's call): push `smeared-wick-inner` to
+     `gaussian-field` + re-pin in pphi2's `lake-manifest.json`; currently a local checkout edit that a
+     `lake update` would wipe.
   2. **First-order coefficient** `u₄'(0) = −⟨:φ(f)⁴:·V⟩_free` — the explicit `e^{−gV}=1−gV+O(g²)`
      expansion (algebraic; the `O(g²)` is step III) or `hasDerivAt_integral_of_dominated…`.
   3. **The `(C_a f)` operator object** `(C_a f)(z) = ∑_x C_a(z,x)f(x)` — pphi2 has only the bilinear
      form (`covariance T f g`/`greenFunctionBilinear`); the covariance-as-operator must be introduced.
-  Then step II (`∫(C_a f)⁴ > 0`) and the `a²∑_z = ∫` assembly. **The smeared Wick inner product (1)
-  is the hardest / first to prove.**
+  Then step II (`∫(C_a f)⁴ > 0`) and the `a²∑_z = ∫` assembly. **The smeared Wick inner product (1) —
+  the bottleneck — is now DONE; (2) the first-order coefficient and (3) the `(C_a f)` operator are the
+  remaining step-I pieces, both more mechanical.** Note `∑_j Γⱼ(f)Γⱼ(δ_z) = (C_a f)(z)` connects (1)'s
+  `gffSmearedCovariance f (Pi.single z 1)` directly to the position-space `(C_a f)(z)` of piece (3).
 
 - [ ] **I. Leading-order coefficient.** `d/dλ u₄^a|_{λ=0}(f) = −κ ∫_{T²}(C_a f)(z)⁴ dz` with `κ > 0`.
   Wick/Isserlis on the free GFF: the O(λ) connected part of `⟨φ(f)⁴⟩` is the single-vertex tree
