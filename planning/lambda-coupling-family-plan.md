@@ -28,6 +28,49 @@ theorem** `φ → c·φ` to translate the **existing, already-tunable `m` parame
   crux-2 covariance-`a`-power lesson, memory `gaussianfield-covariance-sqrt-convention`). **Vet the
   precise scaling with Gemini/Codex before committing.**
 
+## Draft statements (for review, 2026-06-05) — NOT yet proved
+
+**(A) Foundational: GFF field-scaling pushforward** (confident; the clean primitive).
+Scaling the field by `c` scales the covariance by `c²`, i.e. the sqrt operator `T ↦ c•T`:
+```lean
+theorem gaussianMeasure_field_rescale {E} [DyninMityaginSpace E] (T : E →L[ℝ] H) (c : ℝ) :
+    Measure.map (fun ω : Configuration E => c • ω) (GaussianField.measure T)
+      = GaussianField.measure (c • T)
+```
+Provable from the characteristic functional: `Z[c•T](f) = exp(−½‖(c•T)f‖²) = exp(−½c²‖Tf‖²)`, and
+`(c•ω) f = c·(ω f)` (`map_smul`). Stated at the **abstract covariance level** (`GaussianField`),
+NOT the `(a,mass)`-parameterized `latticeGaussianMeasure`, because `c²·cov(a,m) = cov(a',m')` would
+require an RG rescaling of `(a,m)` — see ⚠ below.
+
+**(B) Interacting measure under field rescaling** (needs a coupling-parameterized interaction).
+```lean
+-- with Vλ ω := λ • interactionFunctional ... ω   (coupling-scaled; NOT an InteractionPolynomial,
+-- whose quartic coeff is hardwired to 1/n)
+theorem interactingMeasure_field_rescale (c : ℝ) (hc : 0 < c) :
+    Measure.map (fun ω => c • ω) (interactingMeasure (GaussianField.measure T) (Vλ))
+      = interactingMeasure (GaussianField.measure (c • T)) (Vλ scaled: λ ↦ λ·c⁴, Wick-const ↦ c²·c)
+```
+⚠️ **STRUCTURAL POINT FOR YOU:** field rescaling sends the quartic coefficient `1/4 ↦ c⁴/4`, which
+the `InteractionPolynomial` type **cannot represent** (it fixes the quartic to `1/n`). So the
+field-redefinition theorem can only be stated by introducing a **coupling-parameterized interaction
+functional `Vλ`** (outside `InteractionPolynomial`). Is that the intended route, or did you have a
+formulation that stays inside `InteractionPolynomial` (e.g. absorbing `c⁴` into `(a,mass)` via a
+combined field+space RG rescaling, keeping the quartic at `1/n`)?
+
+**(C) Payoff: the `u₄` scaling relation** (the m↔λ translation).
+```lean
+-- schematic — exact powers TBD/vet
+u₄[GaussianField.measure T, coupling λ](f) = c^?  · u₄[GaussianField.measure (c•T), λc⁴](f or c⁻¹•f)
+```
+Choosing `c` to fix the coupling lets `u₄` at small effective coupling `g = λ/m²` (= **large m**, the
+regime pphi2's tunable `m` already reaches) be read off from the `m`-variation. This is the "easy
+translation."
+
+⚠️ **Exact-scaling vet required (crux-2 lesson, memory `gaussianfield-covariance-sqrt-convention`):**
+the powers of `c` in (A)/(B)/(C), the Wick-constant rescaling `c_a ↦ c²·c_a`, and the `d=2`
+`(m,λ)`↔`(m',λ')` correspondence (whether `c²·cov(a,m)` is `cov(a',m')` for a clean `(a',m')`, i.e.
+the field-vs-space scaling exponents). Vet with Gemini/Codex before proving.
+
 ## The family
 ```
 dμ_{λ,N} = Z_{λ,N}⁻¹ · exp(−λ · interactionFunctional 2 N P (circleSpacing L N) mass) dμ_{GFF,N},
