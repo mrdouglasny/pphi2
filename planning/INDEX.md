@@ -131,10 +131,14 @@ interacting content (`u₄≠0`, ★★★, needs `λ>0`).
   **corrected** (Gemini-vetted, memory `pphi2-s2-domination-direction`): "Griffiths/FKG ⟹ ≥free" is
   **wrong-direction** — continuum nondegeneracy needs short-distance singularity / cluster expansion
   (★★★), not FKG. → `planning/non-triviality.md`.
-- [ ] **9. `continuumLimit_nonGaussian`** (`S₄−3S₂²≠0`) `ContinuumLimit/Convergence.lean:256`   status: open   deps: [6]   diff: ★★★
-  note: connected 4-pt (`u₄`) ≠ 0 — the proof the theory is interacting. Lebowitz 4-pt inequality +
-  uniform strict lattice bound (`d=2` super-renormalizable ⟹ no cancellation) + moment convergence.
-  Even `P`, `λ>0`. THE non-triviality mountain. → `planning/non-triviality.md`.
+- [~] **9. `continuumLimit_nonGaussian`** (`u₄≠0`) `ContinuumLimit/Convergence.lean:256`   status: **reformulated on T² + proof plan written**   deps: [III: Nelson]   diff: ★★★
+  note: connected 4-pt `u₄ ≠ 0` — THE interacting criterion. **Honest T² version**:
+  `TorusIsInteracting` / `TorusIsInteractingStrict` (`∃f, u₄<0`) in `TorusNontriviality.lean`, about
+  the genuine (axiom-clean-existing) `μ`. **Full proof plan: `planning/torus-interacting-proof-plan.md`** —
+  perturbative leading order `u₄^a = −κλ∫(C_a f)⁴ + R_a`, `|R_a| ≤ Kλ²` uniform in `a` (Nelson, **no
+  cluster expansion at fixed volume L**), `∫(Cf)⁴>0`, + 4th-moment convergence. Hardest = step III
+  (cutoff-uniform remainder via Nelson). Weak coupling. Steps I (Wick O(λ)) + II (positivity)
+  startable now. (ℝ² version additionally needs the `L→∞` cluster expansion — out of scope.)
 
 ## Cluster 6 — OS→Schwinger bridge
 
