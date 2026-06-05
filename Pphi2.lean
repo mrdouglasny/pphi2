@@ -22,6 +22,7 @@ import Pphi2.InteractingMeasure.FieldRedefinition
 import Pphi2.InteractingMeasure.SmearedWickVertex
 import Pphi2.InteractingMeasure.WickConstantBridge
 import Pphi2.InteractingMeasure.InteractionFourPoint
+import Pphi2.InteractingMeasure.MomentIntegrability
 
 -- Phase 2: Transfer matrix and reflection positivity
 import Pphi2.TransferMatrix.TransferMatrix
