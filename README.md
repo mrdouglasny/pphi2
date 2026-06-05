@@ -47,8 +47,19 @@ following the Glimm-Jaffe/Nelson lattice approach.
 > - **Layer A** (Newman MGF via Lee-Yang): new `lee-yang` repo
 >   scaffolded at `~/Documents/GitHub/lee-yang/`, Phase 1 not yet
 >   implemented. See `lee-yang/PLAN.md`.
-> - **Layer B2** (Lt-uniformity via chessboard): deferred — shares
->   discharge path with the square's open `spectral_gap_uniform`.
+> - **Layer B2** (`asymInteractingVariance_le_freeVariance_Lt_uniform`,
+>   Lt-uniformity): now pursued via the **transfer-matrix Feynman–Kac
+>   route** (not chessboard). Much of it is **done & axiom-clean**
+>   (2026-06-04): the abstract trace dictionary (merged), the φ⁴₂
+>   `TransferSystem` instance (merged PR #36), the vetted energy
+>   factorization, the GaussianField asym density bridge (merged
+>   gaussian-field PR #3), the **measure factorization**
+>   `μ_int.map sliceEquiv = pathMeasure`, the abstract **B4
+>   susceptibility engine** (merged reflection-positivity PR #3), and
+>   the operator↔kernel link (`asymTransferKernel_kPow_apply`). Remaining
+>   tail: the **Hilbert–Schmidt trace-bridge layer** + single-slice
+>   stability. See [`docs/B4B5-design.md`](docs/B4B5-design.md) and
+>   [`docs/transfer-instantiation-plan.md`](docs/transfer-instantiation-plan.md).
 > - **Layer C** (assembly): ~50 lines, blocked on A + B2.
 >
 > Roadmap docs:
