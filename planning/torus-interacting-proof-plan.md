@@ -91,12 +91,21 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
      `lake update` would wipe.
   2. **First-order coefficient** `u₄'(0) = −⟨:φ(f)⁴:·V⟩_free` — the explicit `e^{−gV}=1−gV+O(g²)`
      expansion (algebraic; the `O(g²)` is step III) or `hasDerivAt_integral_of_dominated…`.
-  3. **The `(C_a f)` operator object** `(C_a f)(z) = ∑_x C_a(z,x)f(x)` — pphi2 has only the bilinear
-     form (`covariance T f g`/`greenFunctionBilinear`); the covariance-as-operator must be introduced.
-  Then step II (`∫(C_a f)⁴ > 0`) and the `a²∑_z = ∫` assembly. **The smeared Wick inner product (1) —
-  the bottleneck — is now DONE; (2) the first-order coefficient and (3) the `(C_a f)` operator are the
-  remaining step-I pieces, both more mechanical.** Note `∑_j Γⱼ(f)Γⱼ(δ_z) = (C_a f)(z)` connects (1)'s
-  `gffSmearedCovariance f (Pi.single z 1)` directly to the position-space `(C_a f)(z)` of piece (3).
+     **[REMAINING — the hard analysis piece.]**
+  3. ✅ **DONE (2026-06-05) via the public API.** The `(C_a f)(z) = ∑_x f(x) C(x,z)` operator object is
+     exactly `GaussianField.gffSmearedCovariance f (Pi.single z 1)`, proved equal to `∑_x f(x)·
+     gffPositionCovariance x z` by `gffSmearedCovariance_single_right` (pin `0145126`). The kernel's
+     value `gffSmearedCovariance f g` rewrites to `∑_{x,y} f(x)g(y) C(x,y)` via
+     `gffSmearedCovariance_eq_sum_position`, and the Wick constant `∑_j Γ_j(f)² = gffSmearedCovariance
+     f f` via `gffSmearedCovariance_self`. So the `(C_a f)`/covariance plumbing is in place.
+  Then step II (`∫(C_a f)⁴ > 0`) and the `a²∑_z = ∫` assembly. **Status: (1) smeared Wick kernel —
+  the bottleneck — DONE & axiom-clean; (3) the `(C_a f)` covariance plumbing DONE via the public API.
+  REMAINING: (2) the first-order coefficient `u₄'(0)=−⟨:φ(f)⁴:V⟩_free` (the hard differentiation /
+  one-sided Taylor piece — needs the `e^{−gV}` expansion + the `⟨:φ(f)⁴: V⟩` evaluation via the
+  kernel through `V`'s `:φ(δ_z)⁴:` vertex sum), then step II positivity (tractable: `∑_x (C_a f)(x)⁴
+  > 0` from `C` positive-definiteness), then step III Nelson remainder (the `O(g²)` bound — the
+  deepest piece).** The base measures match (`interactingLatticeMeasure` is built over
+  `latticeGaussianMeasure`, exactly the kernel's measure), so no measure bridge is needed.
 
 - [ ] **I. Leading-order coefficient.** `d/dλ u₄^a|_{λ=0}(f) = −κ ∫_{T²}(C_a f)(z)⁴ dz` with `κ > 0`.
   Wick/Isserlis on the free GFF: the O(λ) connected part of `⟨φ(f)⁴⟩` is the single-vertex tree
