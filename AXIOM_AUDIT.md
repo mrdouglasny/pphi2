@@ -229,7 +229,19 @@ Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 
 | Package | Axioms | Sorries | Pin |
 |---|---|---|---|
-| **pphi2** (active build) | 17 | 0 | — |
+| **pphi2** (active build) | 18 | 0 | — |
+
+**New axiom 2026-06-05** (`+1`, active build): `torus_lattice_connectedFourPoint_uniform_strictNeg`
+(`TorusContinuumLimit/TorusInteractingResult.lean`) — the uniform strict lattice bound
+`u₄(torusInteractingMeasure L N P mass)(f) ≤ −c < 0` (∀N). The one analytic input behind the
+headline `torus_pphi2_isInteracting` (the genuine T² limit is interacting / non-Gaussian); everything
+else in that result is proved (`torusInteractingLimit_exists` + the axiom-clean step-IV moment
+convergence `torus_connectedFourPoint_tendsto`). **Rating: Likely correct** — standard `φ⁴₂`
+non-triviality (Lebowitz `u₄≤0` + uniform strict bound; `d=2` super-renormalizable ⟹ `u₄=O(λ)` no
+cancellation). **Sources: DT** (perturbative leading term `u₄'(0)=−6∫(C_a f)⁴<0`, Gemini-vetted
+2026-06-04/05), LP (Lebowitz 1974; Simon *P(φ)₂* Ch. V/VIII; Glimm–Jaffe Ch. 4,12–14). **(NOT
+VERIFIED)** — discharge via the perturbative route (field-redefinition development +
+`planning/torus-interacting-proof-plan.md`).
 | **pphi2** (`cylinder-isotropic-lattice` branch: +`asymInteracting_expMoment_volume_uniform`; `wickConstantAsym_eq_variance` **discharged** 2026-05-27, `asymChaosCutoffDecomposition` **discharged** 2026-05-31) | 18 | 0 | GaussianField `5bb35e8` |
 | **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
