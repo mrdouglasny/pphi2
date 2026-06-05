@@ -161,6 +161,54 @@ interacting content (`u₄≠0`, ★★★, needs `λ>0`).
 Everything else (4, 5, 6, 7, 8, 10, 11, 14, 15) is ★/★★ "estimate-and-pass-to-limit" or rides on a
 mountain's infrastructure once it lands.
 
+## Plan-loop triage — cycle 2026-06-04 (the actionable-item sweep)
+
+This cycle investigated the four "cheap independent" candidates (4, 7, 10, 11) to find anything
+dischargeable now. **Result: all blocked on a substantial missing lemma** — none is a few-edit win.
+Precise blockers (so the next owner starts from the exact gap, not a re-investigation):
+
+- **4 `schwinger_agreement`** — BLOCKED on **keystone 18** (cluster expansion / weak-coupling
+  uniqueness). The axiom = "pphi2-lattice and Phi4-continuum Schwinger sequences agree", which is
+  exactly the interchange-of-limits the cluster expansion provides. Missing lemma:
+  `schwinger_pphi2_eq_phi4_of_weak_coupling`. The `measure_determined_by_schwinger` wrapper is
+  already a theorem (2026-06-02); only this agreement input is missing. → deps: [18].
+- **7 `canonical_continuumMeasure_cf_tendsto`** — BLOCKED + **needs-human**. Statement is sound in
+  form (already couples `N→∞`, `N·a→∞`), but proof needs a non-standard **lattice-realization**
+  lemma: *any* `IsPphi2Limit` measure is the weak limit of canonically-coupled `continuumMeasure`s
+  (a converse to the continuum limit — unusual; QFT texts only prove lattice→continuum). The
+  axiom's self-existential `(N,a)` is decoupled from the abstract limit witness — **review whether
+  the axiom should instead be a direct weak-convergence statement** before discharging.
+- **10 `latticeGreenBilinear_basis_tendsto_continuum`** — BLOCKED on an **IR-limit theorem**
+  (torus box `L→∞` → flat ℝ² Fourier Green). Proved sibling `second_moment_asym_tendsto` /
+  `lattice_green_tendsto_continuum_asym` is **torus→torus only**. Missing:
+  `ir_limit_continuum_green_tendsto : limₗ asymTorusContinuumGreen L = continuumGreenBilinear`.
+  Then dominated convergence + DM nuclear extension finishes. Flagged **not on the T² critical
+  path** (~3 wk standalone). → deps: [IR-limit].
+- **11 `pphi2_nontriviality` (S₂>0)** — **actionable cheaply, but a project-intent decision.**
+  Step 1 (free positivity) is **PROVED**: `gaussianContinuumLimit_nontrivial` (GaussianLimit.lean:102)
+  exhibits a free-field continuum-limit measure with `∀f≠0, S₂(f,f)>0` — which **already witnesses
+  the axiom as literally stated** (`∃μ, …`). So the axiom is dischargeable NOW via the free field.
+  BUT that conflicts with intent (coherence Gap A: we want S₂>0 for the *interacting* μ). The
+  genuine route (step 2, Griffiths/FKG `S₂^int ≥ S₂^free`) is **missing** — FKG infra exists
+  (`Lattice/FKG.lean`, proved) but is not applied to two-point monotonicity-in-coupling; pphi2's
+  Nelson bound (`asymInteractingVariance_le_freeVariance_lattice`) is an *upper* bound (wrong
+  direction for a lower bound). → **human decision: cheap free-field discharge vs. keep open for
+  the interacting result.**
+
+**Clustering 14/15 reassessment** (was "★★ given the B2 trace bridge"): the B2 dictionary
+(`twoPoint_dictionary`) exists **only on the asym torus**; 14/15 are stated on the **square**
+`FinLatticeField 2 Ns`. The square lattice has transfer infra (`Pphi2/TransferMatrix/*`) but **no
+square `twoPoint_dictionary` and no square `GappedTransfer` packaging**. So 14/15 are BLOCKED on
+**building the square trace dictionary** (port the asym B2/B4 chain to the square, or prove
+asym↔square at `Nt=Ns`) — a substantial step, not a few edits. → deps: [square-trace-dictionary].
+
+**Net:** the lone genuinely-unblocked formalization thread is **item 3's own deliverable** (the asym
+variance bound) via the asym dictionary + the operator bricks 0–2 (proved this session) +
+`connected_susceptibility_le`. Everything else is blocked on one of: keystone 18 (cluster
+expansion), the IR-limit theorem, FKG two-point domination, the square trace dictionary, the
+Layer-A Nelson/Lee–Yang engine (2/12), the spectral-gap-uniformity (17), or a regime/intent human
+decision (11, 16/17/9, 7).
+
 ## Staleness flags
 Many `docs/*` plans predate the transfer-matrix pivot (several dated 2026-05-13). The CURRENT
 status for Layer B2 (3) and the transfer route is `docs/B4B5-design.md` +
