@@ -503,4 +503,54 @@ private lemma moment_tendsto_of_uniform
         add_lt_add_of_le_of_lt h1 (add_lt_add_of_lt_of_le hmid_n h3)
     _ = ε := by ring
 
+/-- **Step IV.b — 4th-moment convergence.** Along the Prokhorov subsequence, the interacting
+4th moment converges to that of the limit: `⟨(ωf)⁴⟩_{μ_N} → ⟨(ωf)⁴⟩_μ`. Assembles
+`moment_tendsto_of_uniform` with `F=(ωf)⁴`, `G=(ωf)⁸`: ν-integrability from
+`torus_interacting_abs_pow_integrable`, the uniform `∫(ωf)⁸ ≤ C` from IV.a, the limit
+integrability+bound from `limit_le_of_uniform_bound`, and the UI domination from `sub_min_le_sq_div`. -/
+theorem torus_interacting_fourth_moment_tendsto (P : InteractionPolynomial) (mass : ℝ)
+    (hmass : 0 < mass) (f : TorusTestFunction L)
+    (μ : Measure (Configuration (TorusTestFunction L))) [IsProbabilityMeasure μ]
+    (φ : ℕ → ℕ) (hφ : StrictMono φ)
+    (hconv : ∀ (g : Configuration (TorusTestFunction L) → ℝ),
+      Continuous g → (∃ B, ∀ x, |g x| ≤ B) →
+      Tendsto (fun n => ∫ ω, g ω ∂(torusInteractingMeasure L (φ n + 1) P mass hmass)) atTop
+        (nhds (∫ ω, g ω ∂μ))) :
+    Tendsto (fun n => ∫ ω, (ω f) ^ 4 ∂(torusInteractingMeasure L (φ n + 1) P mass hmass)) atTop
+      (nhds (∫ ω, (ω f) ^ 4 ∂μ)) := by
+  obtain ⟨C4, _, hC4⟩ := torus_interacting_fourth_moment_uniform L P mass hmass f
+  obtain ⟨C8, _, hC8⟩ := torus_interacting_eighth_moment_uniform L P mass hmass f
+  have hF_cont : Continuous (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 4) :=
+    (WeakDual.eval_continuous f).pow 4
+  have hF_meas : Measurable (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 4) :=
+    (configuration_eval_measurable f).pow_const 4
+  have hG_cont : Continuous (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 8) :=
+    (WeakDual.eval_continuous f).pow 8
+  have hG_meas : Measurable (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 8) :=
+    (configuration_eval_measurable f).pow_const 8
+  have hF_nn : ∀ ω : Configuration (TorusTestFunction L), 0 ≤ (ω f) ^ 4 := fun ω => by positivity
+  have hG_nn : ∀ ω : Configuration (TorusTestFunction L), 0 ≤ (ω f) ^ 8 := fun ω => by positivity
+  -- even-power |·| = (·) conversions for ν-side integrability
+  have hF_eq : (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 4) =
+      (fun ω => |ω f| ^ 4) := by
+    funext ω; rw [show |ω f| ^ 4 = (|ω f| ^ 2) ^ 2 from by ring, sq_abs]; ring
+  have hG_eq : (fun ω : Configuration (TorusTestFunction L) => (ω f) ^ 8) =
+      (fun ω => |ω f| ^ 8) := by
+    funext ω; rw [show |ω f| ^ 8 = (|ω f| ^ 2) ^ 4 from by ring, sq_abs]; ring
+  have hF_int_ν : ∀ n, Integrable (fun ω => (ω f) ^ 4)
+      (torusInteractingMeasure L (φ n + 1) P mass hmass) := fun n => by
+    rw [hF_eq]; exact torus_interacting_abs_pow_integrable L P mass hmass f 4 (by norm_num) (φ n + 1)
+  have hG_int_ν : ∀ n, Integrable (fun ω => (ω f) ^ 8)
+      (torusInteractingMeasure L (φ n + 1) P mass hmass) := fun n => by
+    rw [hG_eq]; exact torus_interacting_abs_pow_integrable L P mass hmass f 8 (by norm_num) (φ n + 1)
+  obtain ⟨hF_int_μ, -⟩ :=
+    limit_le_of_uniform_bound L hF_cont hF_meas hF_nn hF_int_ν (fun n => hC4 (φ n + 1)) hconv
+  obtain ⟨hG_int_μ, hG_μ⟩ :=
+    limit_le_of_uniform_bound L hG_cont hG_meas hG_nn hG_int_ν (fun n => hC8 (φ n + 1)) hconv
+  exact moment_tendsto_of_uniform (L := L) (G := fun ω => (ω f) ^ 8) (C := C8) hF_cont hF_meas hF_nn
+    (fun ω M hM => by
+      have h := sub_min_le_sq_div (show (0:ℝ) ≤ (ω f) ^ 4 from by positivity) hM
+      rwa [show ((ω f) ^ 4) ^ 2 = (ω f) ^ 8 from by ring] at h)
+    hF_int_ν hF_int_μ hG_int_ν hG_int_μ (fun n => hC8 (φ n + 1)) hG_μ hconv
+
 end Pphi2
