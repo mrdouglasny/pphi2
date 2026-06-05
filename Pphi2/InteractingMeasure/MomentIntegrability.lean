@@ -75,4 +75,85 @@ theorem integrable_pow_pairing_mul (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass
   nlinarith [two_mul_le_add_sq |(ω f) ^ n| |(ω g) ^ m|, sq_abs ((ω f) ^ n), sq_abs ((ω g) ^ m),
     abs_nonneg ((ω f) ^ n), abs_nonneg ((ω g) ^ m)]
 
+/-- `(ω f)ⁿ · (ω δ_z)ˡ · wickMonomial k c (ω δ_z)` is integrable, for all `k, n, l`. Proved by strong
+induction on the Wick degree `k` (the recursion `:xᵏ⁺²: = x:xᵏ⁺¹: − (k+1)c:xᵏ:`), with the extra
+`(ω δ_z)ˡ` factor carrying the `x·` of the recursion. The `l = 0` case gives integrability of
+`(ω f)ⁿ · wickMonomial k c (ω δ_z)` — the building block for `(ω f)ⁿ · wickPolynomial`. -/
+theorem integrable_powMul_wickMonomial (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ) :
+    ∀ (k n l : ℕ), Integrable (fun ω => (ω f) ^ n * (ω (Pi.single z 1)) ^ l *
+      wickMonomial k c (ω (Pi.single z 1))) (latticeGaussianMeasure d N a mass ha hmass)
+  | 0, n, l => by
+      simp only [wickMonomial_zero, mul_one]
+      exact integrable_pow_pairing_mul d N a mass ha hmass f (Pi.single z 1) n l
+  | 1, n, l => by
+      simp only [wickMonomial_one, mul_assoc, ← pow_succ]
+      exact integrable_pow_pairing_mul d N a mass ha hmass f (Pi.single z 1) n (l + 1)
+  | (k + 2), n, l => by
+      have IH1 := integrable_powMul_wickMonomial a mass ha hmass f z c (k + 1) n (l + 1)
+      have IH2 := integrable_powMul_wickMonomial a mass ha hmass f z c k n l
+      have heq : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+            (ω (Pi.single z 1)) ^ l * wickMonomial (k + 2) c (ω (Pi.single z 1))) =
+          (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+            (ω (Pi.single z 1)) ^ (l + 1) * wickMonomial (k + 1) c (ω (Pi.single z 1)))
+          - (fun ω : Configuration (FinLatticeField d N) => ((k : ℝ) + 1) * c *
+            ((ω f) ^ n * (ω (Pi.single z 1)) ^ l * wickMonomial k c (ω (Pi.single z 1)))) := by
+        funext ω
+        simp only [Pi.sub_apply, wickMonomial_succ_succ, pow_succ]
+        ring
+      rw [heq]
+      exact IH1.sub (IH2.const_mul _)
+
+/-- `(ω f)ⁿ · wickMonomial k c (ω δ_z)` is integrable (the `l = 0` case). -/
+theorem integrable_powMul_wickMonomial' (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ) (k n : ℕ) :
+    Integrable (fun ω => (ω f) ^ n * wickMonomial k c (ω (Pi.single z 1)))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have h := integrable_powMul_wickMonomial d N a mass ha hmass f z c k n 0
+  simpa using h
+
+/-- `(ω f)ⁿ · wickPolynomial P c (ω δ_z)` is integrable: a finite linear combination of the
+`(ω f)ⁿ · wickMonomial m c (ω δ_z)`. -/
+theorem integrable_powMul_wickPolynomial (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ)
+    (n : ℕ) :
+    Integrable (fun ω => (ω f) ^ n * wickPolynomial P c (ω (Pi.single z 1)))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have hdist : (fun ω : Configuration (FinLatticeField d N) =>
+        (ω f) ^ n * wickPolynomial P c (ω (Pi.single z 1))) =
+      (fun ω : Configuration (FinLatticeField d N) => (1 / (P.n : ℝ)) *
+          ((ω f) ^ n * wickMonomial P.n c (ω (Pi.single z 1)))
+        + ∑ m : Fin P.n, P.coeff m *
+            ((ω f) ^ n * wickMonomial (m : ℕ) c (ω (Pi.single z 1)))) := by
+    funext ω
+    rw [wickPolynomial, mul_add, Finset.mul_sum]
+    congr 1
+    · ring
+    · exact Finset.sum_congr rfl fun m _ => by ring
+  rw [hdist]
+  exact ((integrable_powMul_wickMonomial' d N a mass ha hmass f z c P.n n).const_mul _).add
+    (integrable_finset_sum _ (fun (m : Fin P.n) _ =>
+      (integrable_powMul_wickMonomial' d N a mass ha hmass f z c (m : ℕ) n).const_mul (P.coeff m)))
+
+/-- **Domination integrability for (2c).** `(ω f)ⁿ · V` is integrable, where
+`V = a^d ∑_z wickPolynomial P (wickConstant) (φ_z)` is the lattice interaction — the `g=0`
+integrand whose dominated derivative drives the differentiation of the Gibbs family. -/
+theorem integrable_powMul_interaction (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (n : ℕ) :
+    Integrable (fun ω => (ω f) ^ n *
+        (a ^ d * ∑ z, wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z 1))))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have hc : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+        (a ^ d * ∑ z, wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z 1)))) =
+      (fun ω : Configuration (FinLatticeField d N) => a ^ d *
+        ∑ z, ((ω f) ^ n * wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z 1)))) := by
+    funext ω
+    rw [show (ω f) ^ n * (a ^ d * ∑ z, wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z 1)))
+          = a ^ d * ((ω f) ^ n *
+            ∑ z, wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z 1))) from by ring,
+      Finset.mul_sum]
+  rw [hc]
+  exact (integrable_finset_sum _ (fun z _ =>
+    integrable_powMul_wickPolynomial d N a mass ha hmass P f z (wickConstant d N a mass) n)).const_mul _
+
 end Pphi2
