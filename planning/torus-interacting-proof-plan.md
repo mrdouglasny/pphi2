@@ -156,6 +156,18 @@ step IV** (4th-moment convergence `⟨(ωf)⁴⟩_{a_n} → ⟨(ωf)⁴⟩_μ`),
 (positivity) → III (large-mass remainder, the crux) → V (assemble). No step lands sorry-free without
 IV first. This is a focused multi-day implementation, fully scoped & dual-vetted; no quick increment.
 
+### Step IV progress (2026-06-05)
+- **IV.a DONE** — `TorusInteractingMoments.lean`, sorry-free & **axiom-clean**
+  (`propext/Classical.choice/Quot.sound` only): `torus_interacting_fourth_moment_uniform`
+  (`∫(ωf)⁴dμ_{P,N} ≤ C`, for `u₄`) and `torus_interacting_eighth_moment_uniform`
+  (`∫(ωf)⁸dμ_{P,N} ≤ C`, gives **uniform integrability of `(ωf)⁴`**). Template: Cauchy–Schwarz
+  density transfer + Nelson exp estimate + Gaussian hypercontractivity (`∫(ωg)^{2p} ≤ (2p−1)^p(∫(ωg)²)^p`).
+- **IV.b NEXT** — `⟨(ωf)⁴⟩_{μ_N} → ⟨(ωf)⁴⟩_μ` (and 2nd moment): hand-rolled truncation/ε-argument
+  (weak bounded-cont convergence on `min((ωf)⁴, M)` + UI tail `∫_{(ωf)⁴>M}(ωf)⁴ ≤ C₈/M` from the
+  8th moment). ~100 lines; Mathlib's UniformIntegrable lemmas are for a.e./in-measure (not weak-of-
+  measures) so it's hand-rolled, but the truncation+weak+MCT pattern exists at
+  `TorusInteractingOS.lean:2340–2432` (bound side) to adapt to the full convergence (both directions).
+
 ## What this replaces
 The honest, measure-genuine version of axiom 9 `continuumLimit_nonGaussian` (currently `∃μ` on the
 δ₀-vacuous ℝ² predicate). Here `μ` actually exists (T², axiom-clean), and the statement is about it.
