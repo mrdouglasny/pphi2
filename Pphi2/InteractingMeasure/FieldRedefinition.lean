@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas
 -/
 import Pphi2.InteractingMeasure.General
+import GaussianField.Properties
+import GaussianField.Hypercontractive
 
 /-!
 # Field redefinition for the general interacting measure
@@ -133,6 +135,37 @@ theorem connectedFourPoint_interactingMeasure_field_rescale
   have h2 : (⇑(fieldRescaleEquiv c hc).symm) = (fun ω : Configuration E => c⁻¹ • ω) := rfl
   rw [h1, h2] at hcore
   rw [← hcore, connectedFourPoint_map_const_smul]
+
+/-! ## Free-field baseline: `u₄ = 0` (the `g = 0` anchor of the perturbation) -/
+
+section FreeBaseline
+open ProbabilityTheory
+variable [DyninMityaginSpace E]
+variable {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] [CompleteSpace H]
+  [TopologicalSpace.SeparableSpace H]
+
+/-- **The free field has vanishing connected four-point** (Isserlis / Wick). For the Gaussian field
+`GaussianField.measure T`, `u₄(f) = ⟨φ(f)⁴⟩ − 3⟨φ(f)²⟩² = 0`: the 1D law of `ω ↦ ω f` is a centered
+Gaussian (`pairing_is_gaussian`), whose moments satisfy `⟨X⁴⟩ = 3⟨X²⟩²`. This is the `g = 0` baseline
+of the perturbative `u₄` expansion, and confirms the test classifies the free field as
+**non-interacting** (so a `TorusIsInteracting`-style test cannot be satisfied by the free field). -/
+theorem connectedFourPoint_gaussianMeasure_eq_zero (T : E →L[ℝ] H) (f : E) :
+    connectedFourPoint (GaussianField.measure T) f = 0 := by
+  have hlaw := GaussianField.pairing_is_gaussian (T := T) f
+  have e4 : ∫ ω, (ω f) ^ 4 ∂(GaussianField.measure T)
+      = ∫ x : ℝ, x ^ 4 ∂((GaussianField.measure T).map (fun ω : Configuration E => ω f)) :=
+    (integral_map (GaussianField.configuration_eval_measurable f).aemeasurable
+      ((continuous_pow 4).measurable.aestronglyMeasurable)).symm
+  have e2 : ∫ ω, (ω f) ^ 2 ∂(GaussianField.measure T)
+      = ∫ x : ℝ, x ^ 2 ∂((GaussianField.measure T).map (fun ω : Configuration E => ω f)) :=
+    (integral_map (GaussianField.configuration_eval_measurable f).aemeasurable
+      ((continuous_pow 2).measurable.aestronglyMeasurable)).symm
+  have key : ∫ ω, (ω f) ^ 4 ∂(GaussianField.measure T)
+      = 3 * (∫ ω, (ω f) ^ 2 ∂(GaussianField.measure T)) ^ 2 := by
+    rw [e4, e2, hlaw, integral_pow4_gaussianReal, integral_sq_gaussianReal]
+  simp only [connectedFourPoint, key]; ring
+
+end FreeBaseline
 
 end Pphi2
 
