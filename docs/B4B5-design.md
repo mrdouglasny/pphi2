@@ -143,3 +143,47 @@ scoped definitively:
 the kernels are explicit Gaussians); (ii) the rank-1 trace split feeding the proved B4 engine;
 (iii) B5b single-slice stability (≈ specialization of the existing Nelson estimate to one slice,
 `Ls`-fixed). All hard *mathematical* inputs are proved; this is the operator-infrastructure tail.
+
+## HS trace-bridge — concrete construction (start, 2026-06-04)
+
+Key simplification: with `asymTransferKernel_kPow_apply` proved (`T^{m+1}` acts via the explicit
+kernel `kPow m`), the trace bound needs **no abstract trace-class / HS-operator theory** — it is
+**concrete Cauchy–Schwarz on explicit kernels over the product measure**. The "HS norm" is just the
+`L²` norm of a kernel, computed directly.
+
+### Target
+The dictionary two-point is `(Z)⁻¹ ∫∫ A(x)·kPow_a(x,y)·B(y)·kPow_b(y,x) dx dy = Tr(M_A T^{a+1} M_B
+T^{b+1})/Z` (`A = ⟨g_t,·⟩`, `B = ⟨g_{t'},·⟩` linear). Goal: the **connected** part `≤ γ^{a+b}·
+(HS-norms)`, uniform — feeding `connected_two_point_le` / `geom_wrap_sum_le`.
+
+### Brick sequence (each a concrete integral estimate)
+1. **Rank-1 kernel split.** `Ω` is the top eigenvector (`asymGroundVector`, eigenvalue `λ₀`).
+   Set `R_m(x,y) := kPow_m(x,y) − λ₀^{m+1} Ω(x)Ω(y)` (kernel of `T'^{m+1}`, `T' = T(1−P₀)`). Prove
+   `kPow_m = λ₀^{m+1} ΩΩ + R_m` from `asymTransferKernel_kPow_apply` + `T Ω = λ₀ Ω`.
+2. **Operator-norm decay of `R`.** `‖T'^{m+1} f‖₂ ≤ (γλ₀)^{m+1} ‖f‖₂` for the integral operator with
+   kernel `R_m`, from the proved gap (`asymTransferNormalized_gap`). (This is just the gap, restated
+   for the `R_m` integral operator via theorem 1.)
+3. **Kernel Cauchy–Schwarz.** For the doubly-connected term,
+   `|∫∫ A(x) R_a(x,y) B(y) R_b(y,x)| ≤ (∫∫ A(x)² R_a(x,y)² )^{1/2} (∫∫ B(y)² R_b(y,x)² )^{1/2}`
+   (Mathlib `MeasureTheory.integral_mul_le_L2_norm_mul_L2_norm` / `inner_mul_le_norm_mul_norm` on
+   `L²(volume×volume)`). Each factor `= ‖M_A R_a‖_HS`-type, finite by Gaussian decay of the kernel.
+4. **HS ≤ op·HS submultiplicativity (concrete).** `‖M_A R_a‖_HS = ‖M_A T'^{a+1}‖_HS ≤ ‖M_A T'‖_HS ·
+   ‖T'^a‖_op ≤ ‖M_A T'‖_HS·(γλ₀)^a` — gives the `γ^a` geometric decay. (Concrete: `∫ R_a(x,·)² =
+   ‖T'^{a+1} (R_1(x,·)-ish)‖²`, bound by op-norm iteration.)
+5. **The mixed `P₀·R` terms** (one disconnected leg): bounded by `λ₀^{a}·(stuff)·(γλ₀)^{b}` — the
+   `Ω`-projection of `M_A`, i.e. `⟨Ω, M_A Ω⟩` and `‖P₁ M_B Ω‖`, exactly the `connected_two_point_le`
+   shape; reuse it.
+6. **Assemble + normalize.** `Tr(T^{Nt}) ≥ λ₀^{Nt}` (T' positive). The connected two-point `≤
+   γ^{min(a,b)}·C(g_t,g_{t'})` with `C` an HS/`P₁`-norm; sum over `t,t'` via `geom_wrap_sum_le`.
+
+### What Mathlib/pphi2 supply
+- `MeasureTheory.Lp` `L²(volume×volume)` + Cauchy–Schwarz (brick 3) — Mathlib.
+- `asymTransferKernel_kPow_apply`, `asymGroundVector`, `asymTransferNormalized_gap`,
+  `transferGaussian` decay, `asymTransferWeight_memLp_two` (the kernels are `L²`) — pphi2, proved.
+- `GeneralResults/HilbertSchmidt` (`integral_operator_l2_kernel_compact`) — the `L²`-kernel↔operator
+  machinery to lean on for bricks 2/4.
+
+**Difficulty:** ★★ (concrete integral estimates, no new abstract theory). Bricks 1–2 are short;
+3–4 are the real work (the HS-decay via op-norm iteration); 5–6 reuse `connected_two_point_le`.
+Recommended first: bricks 1+2 (rank-1 kernel split + R decay) — self-contained, build on the proved
+operator↔kernel link.
