@@ -45,4 +45,24 @@ theorem wickFourth_smeared_vertex_inner (a mass : ℝ) (ha : 0 < a) (hmass : 0 <
       gffSmearedCovariance_single_right d N a mass f z]
   norm_num [Nat.factorial]
 
+/-- **General-degree per-vertex inner product.** For the external Wick fourth power and a site Wick
+monomial of arbitrary degree `m`, Wick orthogonality kills everything but `m = 4`:
+`∫ :φ(f)⁴: · :φ(δ_z)ᵐ: dμ_GFF = if 4 = m then 24·(C_a f)(z)⁴ else 0`. This is the per-term building
+block for evaluating `∫ :φ(f)⁴: · wickPolynomial P c (φ_z)`: only the quartic term of the
+interaction polynomial contributes to the connected four-point. -/
+theorem wickFourth_smeared_site_inner (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (m : ℕ) (f : FinLatticeField d N) (z : FinLatticeSites d N) :
+    ∫ ω, wickMonomial 4 (gffSmearedCovariance d N a mass f f) (ω f) *
+          wickMonomial m (gffSmearedCovariance d N a mass (Pi.single z 1) (Pi.single z 1))
+            (ω (Pi.single z 1))
+        ∂(latticeGaussianMeasure d N a mass ha hmass) =
+    if 4 = m then 24 * (∑ x, f x * gffPositionCovariance d N a mass x z) ^ 4 else 0 := by
+  rw [gffSmearedCovariance_self d N a mass f,
+      gffSmearedCovariance_self d N a mass (Pi.single z 1),
+      gff_wickPower_two_smeared_inner d N a mass ha hmass 4 m f (Pi.single z 1)]
+  split_ifs with h
+  · rw [gffSmearedCovariance_single_right d N a mass f z]
+    norm_num [Nat.factorial]
+  · rfl
+
 end Pphi2
