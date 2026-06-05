@@ -55,17 +55,28 @@ sites (126/142/164/239/254/330/357/375 + the forwards at 148/169/241/256/286/378
 `h_limit` into `continuum_exponential_moment_bound` / `…_moments` / `…_clustering` /
 `exponential_moment_schwartz_bound`. **No edits.** (The 3 destructure sites above are the only leaves.)
 
-## New obligations / axioms introduced
-- **One honest existence statement** replacing the δ₀ proof of `pphi2_limit_exists`: *there exists a
-  coupled `(N_k, a_k)` with `a_k→0, N_k→∞, N_k a_k→∞` such that the embedded interacting measures
-  `continuumMeasure 2 (N_k) P (a_k) mass` are tight and converge (moments/CF/bdd-cont, with RP & Z₂)
-  to a limit μ.* **Check first whether this is PROVABLE** from existing infra before axiomatizing:
-  `ContinuumLimit/Tightness.lean`, `ContinuumLimit/Convergence.lean`,
-  `ContinuumLimit/SobolevProkhorovPlan.lean`, and the `TorusContinuumLimit/*` family
-  (TorusTightness, TorusConvergence, TorusInteractingLimit, TorusInteractingOS) exist and may already
-  supply tightness + Prokhorov extraction. If complete → **0 new axioms** (honest proof). If gaps →
-  **1 clearly-labeled existence axiom** (honest debt, replacing a vacuous proof). **This is the one
-  thing to verify before implementing.**
+## New obligations / axioms introduced — CORRECTED (owner, 2026-06-04)
+The owner clarified the actual mathematical state, which overturns my first (over-optimistic) read:
+**the T² (compact-torus) theory genuinely exists; the cylinder (ℝ×S¹, OS3/OS4) and full ℝ² limit do
+NOT.** So strengthening `IsPphi2Limit` (the ℝ²/`FieldConfig2` predicate) does **not** enable a
+"0-axiom assembly" — it exposes a genuinely **OPEN** obligation:
+- Tightness IS proved (`continuumMeasures_tight`, sorry-free) — but **tightness ≠ the theory**.
+  Without the correct IR coupling the ℝ² limit *collapses to δ₀* (`(N·a)²→0` ⇒ CF→1 ⇒ δ₀; the
+  cf-tendsto finding). The non-trivial infinite-volume / cylinder limit is the open construction.
+- Therefore honest `pphi2_limit_exists` on `FieldConfig2` is **the open cylinder/ℝ² existence** — it
+  should become **1 clearly-labeled OPEN axiom** (or be **restricted to T²**, where the limit is
+  genuinely proved). The δ₀ "witness" was masking that the cylinder theory isn't built.
+- **Recommended:** state the honest existence on **T²** (proved) and keep the ℝ²/cylinder existence
+  as an explicitly-open target, rather than pretending `pphi2_existence` (ℝ²) holds via δ₀.
+
+## ⚠ Separately: S₂>0 is NOT the interacting criterion — the 4-point function is
+Strengthening `IsPphi2Limit` + restating `pphi2_nontriviality` (S₂>0) makes the existence honest
+but does **not** make the theory *interacting*. **Interacting ⟺ non-Gaussian ⟺ the connected
+4-point function `u₄ = S₄ − 3S₂² ≠ 0`** (the free field has `S₂>0` too). That is axiom **9
+`continuumLimit_nonGaussian`** (★★★, the genuine mountain — Lebowitz inequality + uniform strict
+lattice bound), NOT axiom 11. So the real "interacting φ⁴₂ exists" headline is gated on the
+**4-point function**, on a measure that genuinely exists (T²). The δ₀/S₂ strengthening is about
+*existence/non-degeneracy*; `u₄≠0` is about *interaction* — keep them distinct.
 
 ## Net effect
 - Headline `pphi2_existence` stops being witnessed by δ₀ → becomes meaningful.
