@@ -105,11 +105,25 @@ Since `∫(C_a f)⁴ > 0` strictly (4th power of a nonzero continuous function),
   `∫(C_{a_n}f)⁴ → ∫(Cf)⁴ > 0` (propagator convergence, cf. `second_moment_asym_tendsto`-style).
   Conclude `TorusIsInteractingStrict L μ`, hence `TorusIsInteracting`. **Difficulty ★** (glue).
 
-## Regime
-Weak coupling (`λ < λ₀(m,L)`). Honest and unavoidable: `u₄ ≠ 0` needs `λ > 0`, and the clean
-remainder control is perturbative. (Non-perturbative all-`λ` single-phase via Lebowitz + a uniform
-strict lower bound is an alternative for step III, but formalizing the Lebowitz inequality — random
-currents / duplicated variables — is harder than the Nelson remainder bound. Prefer perturbative.)
+## Regime — CORRECTED (step-0 infra finding 2026-06-05): weak coupling = LARGE MASS
+⚠️ pphi2 has **no tunable bare coupling**: `InteractionPolynomial.eval = (1/n)τⁿ + Σcoeffₘτᵐ` hardwires
+the quartic coefficient to `1/n = 1/4` (`Polynomial.lean:42`); `interactionFunctional` carries no `λ`
+(the `coupling` in `isPhi4` is unused/phantom). So the small-`λ` expansion is **not available on
+pphi2's measure as-is**. The weak-coupling regime is realized instead as **large mass `m`** (effective
+coupling `∼ 1/(4m²)`; `m` IS a free parameter): at large `m`, `C_a=(−Δ_a+m²)⁻¹` is small, the
+single-vertex term dominates, higher orders are suppressed by extra propagator powers. **This reuses
+`torusInteractingMeasure` (fixed coupling) — no new λ-family.** Note `u₄ → 0` as `m → ∞`, so the
+target is `u₄(f) < 0` (small but strictly negative) for `m > m₀(L,f)`.
+- **κ = 6 confirmed** from the encoding: leading term `= −4!·(1/4)·∫(C_a f)⁴ = −6∫(C_a f)⁴`.
+- The expansion parameter is the propagator size `‖C_a‖ ∼ 1/m²` (perturbation in the interaction
+  order, controlled by large `m`), NOT a bare `λ`. The leading single-vertex diagram is unchanged;
+  the step-III remainder bound is now "`|R| ≤ K·‖C_a‖²`-type, small for large `m`" — re-examine the
+  large-mass control (still Nelson + `Z` lower bound, but the small parameter is `1/m²`).
+- Alternative (more infra): introduce a genuine `λ`-scaled interaction family
+  `Z⁻¹exp(−λ·interactionFunctional)dμ_GFF` and prove for small `λ` — but that's a new measure family
+  (+ its own tightness/limit), so prefer the large-mass realization on the existing measure.
+- (Non-perturbative all-coupling via Lebowitz + uniform strict lower bound is the other alternative
+  for step III, but formalizing Lebowitz — random currents — is harder than the large-mass remainder.)
 
 ## Hardest input / first action
 **Step III** (cutoff-uniform one-sided Taylor remainder). The dual design pass (Gemini deep-think +
