@@ -49,8 +49,14 @@ folded into the steps below:
   into free `Lᵖ` norms × `‖e^{−λV}‖_q` (Nelson).
 - **[Global]** (Codex): the `TorusNontriviality.lean` predicates are for arbitrary `μ`/`P`; the
   theorem must instantiate a specific `P_λ` (quartic) coupling family with `λ` small.
-- **Divergence:** Gemini suggests the continuum-direct route (below) may be cleaner; Codex judges the
-  lattice-perturbative route cleanest and does not endorse switching. Decide per available infra.
+- **Divergence RESOLVED (infra check 2026-06-05): go LATTICE-UNIFORM.** Gemini floated a
+  continuum-direct construction; Codex preferred lattice. A code check settles it: pphi2 is
+  lattice-first — the interaction exists only as `interactionFunctional 2 N P (circleSpacing L N) mass`
+  (lattice size `N` + spacing), `torusInteractingMeasure = (torusEmbedLift)_*(interactingLatticeMeasure)`,
+  and there is **no continuum torus GFF measure / no continuum Wick `:φ⁴:` as an `Lᵖ` variable**.
+  Continuum-direct would require building all of that (the construction pphi2 avoided). So use the
+  lattice-uniform route — it reuses `torusInteractingMeasure`, `torusPphi2Limit_exists`, and the
+  `NelsonEstimate/` lattice bounds (already the cutoff-uniform estimates step III needs).
 - **Refs:** Simon *P(φ)₂* Thm V.3.1/V.3.3 (`e^{−λV}∈⋂ₚLᵖ`), Thm VIII.1.1 (asymptotic series);
   Glimm–Jaffe *Quantum Physics* Ch. 8 §8.6 (Wick/Nelson), Ch. 19 §19.1 (P(φ)₂ setup).
 
@@ -112,9 +118,8 @@ no analyticity ⟹ one-sided remainder; κ convention; the extra `Z_λ`/`e^{−p
 III). **First concrete actions:** (0) pin `κ` + the lattice normalization against
 `InteractionPolynomial`/`WickPolynomial` and instantiate the specific `P_λ` family in
 `TorusNontriviality.lean`; (1) step II (★ positivity); (2) step I (★★ Wick `O(λ)` coefficient). Then
-the step-III analytic core. Optionally evaluate Gemini's continuum-direct simplification first (it
-removes steps III/IV's "uniform-in-`a`" but needs the continuum-torus-GFF + `:φ⁴:`-as-`Lᵖ` infra and
-a limit-identification — check pphi2 support before committing).
+the step-III analytic core. (Route fork resolved: **lattice-uniform** — pphi2 has no continuum-direct
+infra; see the dual-review block.)
 
 ## What this replaces
 The honest, measure-genuine version of axiom 9 `continuumLimit_nonGaussian` (currently `∃μ` on the
