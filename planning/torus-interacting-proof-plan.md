@@ -122,9 +122,13 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
   - **(2c) the differentiation** `u₄'(0)=−⟨:φ(f)⁴:V⟩` — **the hardest of step I; pure hard analysis,
     almost no existing infrastructure** (only the `g=0` baseline in `FieldRedefinition.lean`; the
     field-rescale lemma is a *symmetry*, not a derivative). Precise discharge chain (2026-06-05 scope):
-    1. **Domination integrability** `Integrable (fun ω => (ω f)ⁿ · V(ω))` — `(ω f)ⁿ ∈ Lᵖ` (raw power,
-       via `pairing_memLp` + a `MemLp.pow`), `V ∈ Lᵠ` (polynomial in pairings), Hölder. (Analogue of
-       the 2b integrability, but raw powers not Wick.)
+    1. **Domination integrability** `Integrable (fun ω => (ω f)ⁿ · V(ω))`. ⏳ **IN PROGRESS
+       (2026-06-05)** — `InteractingMeasure/MomentIntegrability.lean`, axiom-clean:
+       · `pairing_memLp_lattice` (`ω f ∈ Lᵖ`, since `latticeGaussianMeasure = measure(latticeCovarianceGJ)`
+       by `rfl`); · `integrable_pow_pairing` (`(ω f)ⁿ` integrable, `‖·‖^n` route — sidesteps the missing
+       `MemLp.pow`); · `integrable_pow_pairing_mul` (`(ω f)ⁿ(ω g)ᵐ` integrable via AM–GM `|XY|≤½(X²+Y²)`).
+       **REMAINING for brick 1**: lift to `(ω f)ⁿ·V` — expand `V = a^d∑_z wickPolynomial(ω δ_z)` into
+       pairing-powers (`wickMonomial` → polynomial), then `integrable_pow_pairing_mul` + finite sums.
     2. **Moment derivative** `d/dg ∫(ω f)ⁿ e^{−gV} dμ_GFF |_{g=0} = −∫(ω f)ⁿ V dμ` via Mathlib
        `hasDerivAt_integral_of_dominated_loc_of_deriv_le`: `∂_g = −(ω f)ⁿ V e^{−gV}`, dominated by
        `e^{g₀A}·|(ω f)ⁿ V|` using `V ≥ −A` (`latticeInteraction_bounded_below`) on `g∈[0,g₀]`.
