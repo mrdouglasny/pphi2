@@ -247,8 +247,14 @@ volume, **no cluster expansion**; uses `GaussianHilbert.polynomial_chaos_concent
 discharge via the perturbative route (`FieldRedefinition.lean` +
 `planning/{torus-interacting,lambda-coupling-family}-*.md`). (Strong coupling left out — `u₄<0` still
 holds there by Lebowitz, non-perturbatively, but non-triviality doesn't need it.)
+**Discharge progress (2026-06-05):** the decisive analytic brick — the smeared Wick/Mehler kernel
+`∫ :φ(f)ⁿ::φ(g)ᵐ: dμ_GFF = δₘₙ·n!·⟨φfφg⟩ⁿ` — is now **proved axiom-clean** as
+`GaussianField.gff_wickPower_two_smeared_inner` (the `n=m=4` case gives the `4!⟨φfφg⟩⁴` connected
+kernel underlying `u₄'(0)=−6∫(C_a f)⁴`). Remaining for the discharge: the first-order coefficient
+`u₄'(0)=−⟨:φ(f)⁴:V⟩_free`, the `(C_a f)` operator object, step-II positivity, step-III Nelson
+remainder. See memory `smeared-wick-kernel-done`.
 | **pphi2** (`cylinder-isotropic-lattice` branch: +`asymInteracting_expMoment_volume_uniform`; `wickConstantAsym_eq_variance` **discharged** 2026-05-27, `asymChaosCutoffDecomposition` **discharged** 2026-05-31) | 18 | 0 | GaussianField `5bb35e8` |
-| **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
+| **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 3 | 0 | `2498e1a` (smeared Wick kernel added, axiom-clean) |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
 | **gaussian-hilbert** (pinned, tracks `main`) | 1 *(was 4 in last audit; see 2026-05-{10,11} entries)* | 0 | `main` |
 
