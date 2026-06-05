@@ -135,6 +135,27 @@ III). **First concrete actions:** (0) pin `κ` + the lattice normalization again
 the step-III analytic core. (Route fork resolved: **lattice-uniform** — pphi2 has no continuum-direct
 infra; see the dual-review block.)
 
+## Execution order — STEP IV IS THE FOUNDATION (step-0 finding 2026-06-05)
+The genuine limit `μ` (`torusPphi2Limit_exists`) is exposed only via **weak convergence
+(bounded-continuous test functions)** and a **t=1 MGF** (`IsTorusGaussianContinuumLimit.isGaussian`,
+`torusGaussianLimit_isGaussian` — both give only `∫e^{ωf}=e^{½∫(ωf)²}`, not the full law). But
+`u₄(f)` involves `∫(ωf)⁴` with `(ωf)⁴` **unbounded**. So **every moment statement is gated on
+step IV** (4th-moment convergence `⟨(ωf)⁴⟩_{a_n} → ⟨(ωf)⁴⟩_μ`), including even the free base case
+`u₄(free)=0`. ⟹ **Build step IV FIRST** — it is the shared prerequisite, not a late step.
+- Step IV inputs (confirmed available): uniform `⟨|φ(f)|^{4+ε}⟩_a ≤ C` from the Nelson exp-moment
+  bound (the OS0 estimate ⟹ all moments uniform) + Vitali/uniform-integrability ⟹ moment convergence.
+- Free base case route (if wanted as a validation lemma): `weakLimit_centered_gaussianReal` +
+  `pushforward_eval_gaussianReal` + `integral_pow4_gaussianReal` (`∫x⁴ dgaussianReal(0,v)=3v²`) —
+  but it concerns the *free* limit (a different measure), so it validates the test rather than
+  advancing the interacting `u₄<0`. Skip unless a sanity check is wanted.
+- Confirmed infra for the other steps: `gffMultiWickMonomial` + orthogonality (step I Wick `O(λ)`),
+  `second_moment_eq_covariance`/`lattice_second_moment_eq_inner` (the `C f` object, steps I/II/V),
+  `NelsonEstimate/` (steps III, IV). All present; each step is a substantial multi-step proof.
+
+**Revised order:** IV (moment access — foundation) → I (Wick leading term, free measure) → II
+(positivity) → III (large-mass remainder, the crux) → V (assemble). No step lands sorry-free without
+IV first. This is a focused multi-day implementation, fully scoped & dual-vetted; no quick increment.
+
 ## What this replaces
 The honest, measure-genuine version of axiom 9 `continuumLimit_nonGaussian` (currently `∃μ` on the
 δ₀-vacuous ℝ² predicate). Here `μ` actually exists (T², axiom-clean), and the statement is about it.
