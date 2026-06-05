@@ -119,8 +119,23 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
     `a^d·∑_z` out via `integrable_wickFourth_wickPolynomial`). Namespaces bridged via
     `wickMonomial_eq_root_local`. Prereqs all pushed/axiom-clean (incl.
     `GaussianField.integrable_wickMonomial_smeared_mul`, pin `d9cdd5e`).
-  - **(2c) the differentiation** `u₄'(0)=−⟨:φ(f)⁴:V⟩` — the hard one-sided-Taylor / ratio-derivative
-    (dominated convergence with Nelson `Lᵖ` bounds). **Interface-defining; the hardest of step I.**
+  - **(2c) the differentiation** `u₄'(0)=−⟨:φ(f)⁴:V⟩` — **the hardest of step I; pure hard analysis,
+    almost no existing infrastructure** (only the `g=0` baseline in `FieldRedefinition.lean`; the
+    field-rescale lemma is a *symmetry*, not a derivative). Precise discharge chain (2026-06-05 scope):
+    1. **Domination integrability** `Integrable (fun ω => (ω f)ⁿ · V(ω))` — `(ω f)ⁿ ∈ Lᵖ` (raw power,
+       via `pairing_memLp` + a `MemLp.pow`), `V ∈ Lᵠ` (polynomial in pairings), Hölder. (Analogue of
+       the 2b integrability, but raw powers not Wick.)
+    2. **Moment derivative** `d/dg ∫(ω f)ⁿ e^{−gV} dμ_GFF |_{g=0} = −∫(ω f)ⁿ V dμ` via Mathlib
+       `hasDerivAt_integral_of_dominated_loc_of_deriv_le`: `∂_g = −(ω f)ⁿ V e^{−gV}`, dominated by
+       `e^{g₀A}·|(ω f)ⁿ V|` using `V ≥ −A` (`latticeInteraction_bounded_below`) on `g∈[0,g₀]`.
+    3. **Partition function** `Z_g=∫e^{−gV}`, `Z_0=1` (prob. measure), `Z'(0)=−∫V`.
+    4. **Ratio (quotient rule, `Z_0=1`)** `d/dg⟨(ω f)ⁿ⟩_g|_0 = −∫(ω f)ⁿV+(∫(ω f)ⁿ)(∫V) =
+       −⟨(ω f)ⁿ;V⟩^c` (connected).
+    5. **Cumulant→Wick algebra** `u₄'(0)=−⟨φ⁴;V⟩^c+6⟨φ²⟩₀⟨φ²;V⟩^c = −⟨:φ(f)⁴:V⟩` — reduces to
+       Isserlis `⟨φ(f)⁴⟩_free=3⟨φ(f)²⟩²` (already have, `connectedFourPoint_gaussianMeasure_eq_zero`);
+       this is the bridge to **2b's** `⟨:φ(f)⁴:V⟩=6∫(C_a f)⁴`. Gives `u₄'(0)=−6∫(C_a f)⁴<0`.
+    Estimated ~300–500 lines; the genuinely hard analytic core, deserves dedicated focus (distinct from
+    the now-complete *algebraic* steps 1/2a/2b/3).
   - then **step II** positivity (`∑_z(C_a f)(z)⁴>0` from `C` positive-definiteness — needs
     `gffSiteVariance > 0`, currently not packaged in the eigenbasis; provable via `eigenbasis_completeness`
     or the `wickConstant>0` bridge) and **step III** the Nelson `O(g²)` remainder (deepest).** The base
