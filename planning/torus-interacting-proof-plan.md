@@ -86,9 +86,11 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
      `ω`-linearity generalization of `gff_wickPower_two_site_inner` (`γⱼ(x)↦Γⱼ(f)=Σₓ f(x)γⱼ(x)`),
      **not** a from-scratch Mehler proof. `n=m=4` gives `4!⟨φfφg⟩⁴`. Added helpers: `gffSmearedCoeff`,
      `gffSmearedCovariance`, `omega_eval_smeared_eq_sum_gamma_xi`, `wickMonomial_at_smeared_eq_eigen_sum`.
-     ⚠ **PERSISTENCE TODO** (outward-facing — owner's call): push `smeared-wick-inner` to
-     `gaussian-field` + re-pin in pphi2's `lake-manifest.json`; currently a local checkout edit that a
-     `lake update` would wipe.
+     ✅ **PERSISTED**: pushed to `gaussian-field` main `0145126` (kernel + public covariance API),
+     pphi2 re-pinned, full build green.
+     ✅ **pphi2-side atom landed**: `Pphi2.wickFourth_smeared_vertex_inner`
+     (`InteractingMeasure/SmearedWickVertex.lean`) — `∫ :φ(f)⁴::φ(δ_z)⁴: dμ_GFF = 24·(∑_x f(x) C(x,z))⁴`,
+     axiom-clean, in the umbrella build. The atom of the vertex sum.
   2. **First-order coefficient** `u₄'(0) = −⟨:φ(f)⁴:·V⟩_free` — the explicit `e^{−gV}=1−gV+O(g²)`
      expansion (algebraic; the `O(g²)` is step III) or `hasDerivAt_integral_of_dominated…`.
      **[REMAINING — the hard analysis piece.]**
@@ -100,11 +102,21 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
      f f` via `gffSmearedCovariance_self`. So the `(C_a f)`/covariance plumbing is in place.
   Then step II (`∫(C_a f)⁴ > 0`) and the `a²∑_z = ∫` assembly. **Status: (1) smeared Wick kernel —
   the bottleneck — DONE & axiom-clean; (3) the `(C_a f)` covariance plumbing DONE via the public API.
-  REMAINING: (2) the first-order coefficient `u₄'(0)=−⟨:φ(f)⁴:V⟩_free` (the hard differentiation /
-  one-sided Taylor piece — needs the `e^{−gV}` expansion + the `⟨:φ(f)⁴: V⟩` evaluation via the
-  kernel through `V`'s `:φ(δ_z)⁴:` vertex sum), then step II positivity (tractable: `∑_x (C_a f)(x)⁴
-  > 0` from `C` positive-definiteness), then step III Nelson remainder (the `O(g²)` bound — the
-  deepest piece).** The base measures match (`interactingLatticeMeasure` is built over
+  REMAINING (precise chain, in order):
+  - **(2a) `wickConstant`↔eigenbasis bridge** — `V`'s site Wick monomials use `wickConstant`
+    (operator form: `wickConstant_eq_variance` gives `= ⟨T_GJ δ_x, T_GJ δ_x⟩`), while the atom/kernel
+    use the eigenbasis `gffSmearedCovariance (δ_x)(δ_x) = gffPositionCovariance x x`. Need
+    `wickConstant = gffPositionCovariance x x` (both `= Var ω(δ_x)`) — a GJ↔eigenbasis covariance
+    bridge (likely a new GaussianField/pphi2 lemma). Gates plugging the atom into the actual `V`.
+  - **(2b) V-sum evaluation** — `⟨:φ(f)⁴: V⟩_free = a^d·∑_z (quartic coeff)·⟨:φ(f)⁴::φ(δ_z)⁴:⟩` via the
+    atom + Wick orthogonality killing `V`'s non-quartic terms (`wickPolynomial` structure;
+    `gff_wickPower_two_smeared_inner` gives `if 4=m` so only `m=4` survives) `= 6·a^d∑_z(C_a f)(z)⁴`.
+  - **(2c) the differentiation** `u₄'(0)=−⟨:φ(f)⁴:V⟩` — the hard one-sided-Taylor / ratio-derivative
+    (dominated convergence with Nelson `Lᵖ` bounds). **Interface-defining; the hardest of step I.**
+  - then **step II** positivity (`∑_z(C_a f)(z)⁴>0` from `C` positive-definiteness — needs
+    `gffSiteVariance > 0`, currently not packaged in the eigenbasis; provable via `eigenbasis_completeness`
+    or the `wickConstant>0` bridge) and **step III** the Nelson `O(g²)` remainder (deepest).** The base
+  measures match (`interactingLatticeMeasure` is built over
   `latticeGaussianMeasure`, exactly the kernel's measure), so no measure bridge is needed.
 
 - [ ] **I. Leading-order coefficient.** `d/dλ u₄^a|_{λ=0}(f) = −κ ∫_{T²}(C_a f)(z)⁴ dz` with `κ > 0`.
