@@ -122,13 +122,22 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
   - **(2c) the differentiation** `u₄'(0)=−⟨:φ(f)⁴:V⟩` — **the hardest of step I; pure hard analysis,
     almost no existing infrastructure** (only the `g=0` baseline in `FieldRedefinition.lean`; the
     field-rescale lemma is a *symmetry*, not a derivative). Precise discharge chain (2026-06-05 scope):
-    1. **Domination integrability** `Integrable (fun ω => (ω f)ⁿ · V(ω))`. ⏳ **IN PROGRESS
-       (2026-06-05)** — `InteractingMeasure/MomentIntegrability.lean`, axiom-clean:
-       · `pairing_memLp_lattice` (`ω f ∈ Lᵖ`, since `latticeGaussianMeasure = measure(latticeCovarianceGJ)`
-       by `rfl`); · `integrable_pow_pairing` (`(ω f)ⁿ` integrable, `‖·‖^n` route — sidesteps the missing
-       `MemLp.pow`); · `integrable_pow_pairing_mul` (`(ω f)ⁿ(ω g)ᵐ` integrable via AM–GM `|XY|≤½(X²+Y²)`).
-       **REMAINING for brick 1**: lift to `(ω f)ⁿ·V` — expand `V = a^d∑_z wickPolynomial(ω δ_z)` into
-       pairing-powers (`wickMonomial` → polynomial), then `integrable_pow_pairing_mul` + finite sums.
+    1. ✅ **Domination integrability DONE (2026-06-05), axiom-clean** —
+       `InteractingMeasure/MomentIntegrability.lean`: `integrable_powMul_interaction`
+       (`Integrable((ω f)ⁿ·V)`, `V=a^d∑_z wickPolynomial`). Chain: `pairing_memLp_lattice`
+       (`ω f∈Lᵖ`) → `integrable_pow_pairing` (`(ω f)ⁿ`, `‖·‖^n` route, no `MemLp.pow` needed) →
+       `integrable_pow_pairing_mul` (`(ω f)ⁿ(ω g)ᵐ`, AM–GM) → `integrable_powMul_wickMonomial`
+       (`(ω f)ⁿ(ω δz)ˡ:（ω δz)ᵏ:`, **strong induction on Wick degree** with the `(ω δz)ˡ` factor
+       carrying the recursion's `x·`) → `_wickPolynomial` → `_interaction`.
+    2. ⚠ **Moment derivative — the one-sided wall.** `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
+       (Mathlib) is **two-sided** (needs `s ∈ 𝓝 0`), but the bound `‖∂_g (ω f)ⁿe^{−gV}‖ = |(ω f)ⁿV|e^{−gV}`
+       is integrable-dominated **only for `g ≥ 0`**: `V→+∞` (quartic, bounded below not above) ⟹ for
+       `g<0` `e^{−gV}=e^{|g|V}` is unbounded (the Dyson instability). Mathlib has **no** one-sided/
+       `within`-at parametric-integral derivative. Two routes: (a) a one-sided diff-under-integral
+       (build a `HasDerivWithinAt` analogue, or restrict to a truncated `V_K` and limit), or (b) the
+       **explicit Taylor-with-integral-remainder** `e^{−gV}=1−gV+g²∫₀¹(1−t)V²e^{−tgV}dt` at the
+       integrand level (no derivative theorem; bound the `g²` remainder by Nelson on `g∈[0,g₀]`,
+       `tg∈[0,g₀]` so `e^{−tgV}≤e^{g₀A}`). **(b) likely cleaner** and merges with step III's remainder.
     2. **Moment derivative** `d/dg ∫(ω f)ⁿ e^{−gV} dμ_GFF |_{g=0} = −∫(ω f)ⁿ V dμ` via Mathlib
        `hasDerivAt_integral_of_dominated_loc_of_deriv_le`: `∂_g = −(ω f)ⁿ V e^{−gV}`, dominated by
        `e^{g₀A}·|(ω f)ⁿ V|` using `V ≥ −A` (`latticeInteraction_bounded_below`) on `g∈[0,g₀]`.
