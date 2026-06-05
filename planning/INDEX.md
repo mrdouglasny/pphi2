@@ -131,14 +131,19 @@ interacting content (`u₄≠0`, ★★★, needs `λ>0`).
   **corrected** (Gemini-vetted, memory `pphi2-s2-domination-direction`): "Griffiths/FKG ⟹ ≥free" is
   **wrong-direction** — continuum nondegeneracy needs short-distance singularity / cluster expansion
   (★★★), not FKG. → `planning/non-triviality.md`.
-- [~] **9. `continuumLimit_nonGaussian`** (`u₄≠0`) `ContinuumLimit/Convergence.lean:256`   status: **reformulated on T² + proof plan written**   deps: [III: Nelson]   diff: ★★★
-  note: connected 4-pt `u₄ ≠ 0` — THE interacting criterion. **Honest T² version**:
-  `TorusIsInteracting` / `TorusIsInteractingStrict` (`∃f, u₄<0`) in `TorusNontriviality.lean`, about
-  the genuine (axiom-clean-existing) `μ`. **Full proof plan: `planning/torus-interacting-proof-plan.md`** —
-  perturbative leading order `u₄^a = −κλ∫(C_a f)⁴ + R_a`, `|R_a| ≤ Kλ²` uniform in `a` (Nelson, **no
-  cluster expansion at fixed volume L**), `∫(Cf)⁴>0`, + 4th-moment convergence. Hardest = step III
-  (cutoff-uniform remainder via Nelson). Weak coupling. Steps I (Wick O(λ)) + II (positivity)
-  startable now. (ℝ² version additionally needs the `L→∞` cluster expansion — out of scope.)
+- [~] **9. `continuumLimit_nonGaussian`** (`u₄≠0`) — **T² version PROVED modulo 1 weak-coupling axiom**   deps: [u₄ step I+III]   diff: ★★★
+  note: **`torus_pphi2_isInteracting_weakCoupling`** (`TorusInteractingResult.lean`) is a THEOREM:
+  `∃ m₀, ∀ mass>m₀, the genuine T² limit μ is IsTorusPphi2Limit ∧ TorusIsInteracting`. Reduces to
+  **one** documented, Gemini-vetted, weak-coupling axiom `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
+  (uniform strict lattice `u₄≤−c<0` for `g<g₀`). **All scaffolding PROVED, axiom-clean:** step IV
+  moment convergence (`torus_connectedFourPoint_tendsto`, `TorusInteractingMoments.lean`);
+  field-redefinition (`interactingMeasure_map_measurableEquiv` + moment-level `u₄((c•·)_*μ)=c⁴u₄(μ)`,
+  `FieldRedefinition.lean`); the free baseline `connectedFourPoint_gaussianMeasure_eq_zero` (`u₄=0`,
+  the `g=0` anchor). **Remaining = discharge the 1 axiom** (perturbative `u₄`): step I (Wick
+  `u₄'(0)=−6∫(C_a f)⁴`, the connected-correlator derivative — coupled to the leading-term *operator*
+  setup `C_a f`), step II (`∫(C_a f)⁴>0`), step III (Nelson `O(g²)` remainder — the crux). The
+  multi-week analytic core; the anchor is its first landed brick. (ℝ² version additionally needs the
+  `L→∞` cluster expansion — out of scope.)
 
 ## Cluster 6 — OS→Schwinger bridge
 
@@ -217,6 +222,29 @@ variance bound) via the asym dictionary + the operator bricks 0–2 (proved this
 expansion), the IR-limit theorem, FKG two-point domination, the square trace dictionary, the
 Layer-A Nelson/Lee–Yang engine (2/12), the spectral-gap-uniformity (17), or a regime/intent human
 decision (11, 16/17/9, 7).
+
+## Plan-loop frontier — 2026-06-05 (post T²-interacting build-out)
+
+Major progress this session on the **non-triviality / interacting** axis (items 9, 11):
+`torus_pphi2_isInteracting_weakCoupling` is now a **theorem** (the T² φ⁴₂ theory is interacting at
+weak coupling) reducing to **one** documented weak-coupling axiom; all its scaffolding is proved &
+axiom-clean (step-IV moment convergence, the field-redefinition layer, the free-field `u₄=0` anchor).
+
+**The plan-loop has reached the research frontier.** Every remaining item is one of a small set of
+★★★ analytic mountains (each a multi-week formalization) or a human-judgement call — there are no
+cheap actionable increments left:
+- **u₄ perturbative discharge** (item 9's last axiom): steps I (Wick connected-correlator derivative
+  + leading-term operator setup) + III (Nelson cutoff-uniform remainder). Anchor landed; the rest is
+  the analytic core.
+- **S₂>0 continuum nondegeneracy** (item 11): short-distance singularity / cluster expansion (the
+  FKG route is wrong-direction, vetted).
+- **Spectral gap uniformity** (16/17), **clustering square dictionary** (14/15), **Nelson/Lee–Yang**
+  (2/12), **rotation defect** (13), **IR-limit** (10), **cluster-expansion keystone** (4/18) — all
+  ★★★ or human-gated, per the 2026-06-04 triage above (unchanged).
+
+Net: the architecture is complete and the remaining content is isolated into documented, vetted
+axioms; discharging any one of them is a standalone research-grade subproject. The plan-loop's
+incremental surface is exhausted — further progress = committing to one of these mountains.
 
 ## Staleness flags
 Many `docs/*` plans predate the transfer-matrix pivot (several dated 2026-05-13). The CURRENT
