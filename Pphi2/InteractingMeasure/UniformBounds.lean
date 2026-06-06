@@ -146,4 +146,43 @@ lemma expMoment_le_rpow (d N : ℕ) [NeZero N]
   have hjensen := hconc.le_map_integral hcont isClosed_Ici hmem hf_int hgf_int
   rwa [hsV_eq] at hjensen
 
+/-- **L4 pull-back (Cauchy–Schwarz).** For `X ∈ L²(μ_GFF)` and `t ≥ 0`,
+`∫ |X|·e^{-tV} ≤ (∫ X²)^{1/2}·(∫ e^{-2tV})^{1/2}`. Dividing by `Z_t ≥ 1` and using
+`∫ e^{-2tV} ≤ (∫ e^{-2V})^t ≤ K` (Nelson, uniform), this bounds the interacting moment
+`⟨|X|⟩_t = ∫|X|e^{-tV}/Z_t` by `‖X‖_{L²}·√K` — uniform in `N`, the corrected L4 mechanism. -/
+lemma boltzmann_cauchySchwarz (d N : ℕ) [NeZero N]
+    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (X : Configuration (FinLatticeField d N) → ℝ)
+    (hX : MemLp X 2 (latticeGaussianMeasure d N a mass ha hmass))
+    {t : ℝ} (ht : 0 ≤ t) :
+    ∫ ω, |X ω| * Real.exp (-(t * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass)
+      ≤ (∫ ω, (X ω) ^ 2 ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ (1 / 2 : ℝ) *
+        (∫ ω, Real.exp (-(2 * t * interactionFunctional d N P a mass ω))
+          ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ (1 / 2 : ℝ) := by
+  set μ := latticeGaussianMeasure d N a mass ha hmass with hμ
+  set V := interactionFunctional d N P a mass with hV
+  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability d N a mass ha hmass
+  have hVmeas : Measurable V := interactionFunctional_measurable d N P a mass
+  obtain ⟨B, hB⟩ := interactionFunctional_bounded_below d N P a mass ha hmass
+  have hg_memLp : MemLp (fun ω => Real.exp (-(t * V ω))) 2 μ := by
+    apply MemLp.of_bound ((hVmeas.const_mul t).neg.exp).aestronglyMeasurable (Real.exp (t * B))
+    exact Filter.Eventually.of_forall fun ω => by
+      rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
+      exact Real.exp_le_exp_of_le (by nlinarith [hB ω, ht])
+  have key := integral_mul_le_Lp_mul_Lq_of_nonneg (μ := μ) Real.HolderConjugate.two_two
+    (f := fun ω => |X ω|) (g := fun ω => Real.exp (-(t * V ω)))
+    (Filter.Eventually.of_forall fun ω => abs_nonneg (X ω))
+    (Filter.Eventually.of_forall fun ω => (Real.exp_pos _).le)
+    (by rw [ENNReal.ofReal_ofNat]; exact hX.abs)
+    (by rw [ENNReal.ofReal_ofNat]; exact hg_memLp)
+  refine le_trans key (le_of_eq ?_)
+  congr 1
+  · congr 1
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+    dsimp only; rw [Real.rpow_two, sq_abs]
+  · congr 1
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+    dsimp only; rw [Real.rpow_two, pow_two, ← Real.exp_add]; congr 1; ring
+
 end Pphi2
