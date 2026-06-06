@@ -10,21 +10,35 @@ difficulty** (my INDEX over-rated 11):
 This is **not** non-Gaussianity; it only says the limit measure is **not the delta at 0**: the
 two-point function `∫(ωf)² dμ > 0` for every nonzero test function. Clean route:
 
-1. **Free lower bound.** The free (GFF) two-point is `S₂^free(f,f) = ⟨f, (−Δ+m²)⁻¹ f⟩ = ‖f‖²_{H⁻¹}
-   > 0` for `f ≠ 0` — a positive-definite quadratic form (have the GFF covariance
-   `latticeCovarianceAsymGJ` / `GaussianField.covariance`; positivity from `massOperatorAsym_pos_def`
-   inverted, and `second_moment_asym_tendsto → asymTorusContinuumGreen` for the continuum value).
-2. **Interacting ≥ free.** For an **even** interaction (`:P(φ):`, `P` even — φ⁴ is), the Griffiths /
-   GKS correlation inequality gives `S₂^int ≥ S₂^free`. pphi2 **already has FKG infrastructure**
-   (GaussianField `Lattice/FKG.lean`, `gaussianDensity_fkg_lattice_condition`), which is the same
-   family of correlation inequalities — reuse/extend it for the two-point domination.
-3. Combine: `S₂^int(f,f) ≥ S₂^free(f,f) > 0`, and pass to the continuum limit (moment convergence,
-   already used for the existence axioms).
+⚠️ **ROUTE CORRECTED 2026-06-04 (Gemini deep-think vetting — see memory `pphi2-s2-domination-direction`).**
+The original route below (step 2: "Griffiths/FKG ⟹ `S₂^int ≥ S₂^free`") is **WRONG-DIRECTION** and
+must not be formalized:
+- **GKS/Griffiths does NOT give `S₂^int ≥ S₂^free`.** Adding a local `λφ⁴` term does not increase the
+  ferromagnetic cross-couplings `J_{xy}φ_xφ_y`; it narrows the single-site measure, which *decreases*
+  correlations. GKS II monotonicity is in the *cross-couplings*, not the single-site potential.
+- **The direction depends on Wick ordering.** Non-Wick-ordered φ⁴: `S₂^int ≤ S₂^free` (Lebowitz
+  monotone-decreasing in λ — Simon Cor IV.10). Wick-ordered at weak coupling: `S₂^int > S₂^free`
+  *strictly*, but via the **counterterm** `:φ⁴: = φ⁴ − 6cφ²` (the `−6cφ²` enhances fluctuations) —
+  `S₂''(0) = 96∫(Cf)C³(Cf) > 0` by Schur-product positivity of `C³`. **No global correlation
+  inequality** gives the comparison for all λ.
+- The proved `asymInteractingVariance_le_freeVariance` is the **upper** bound `S₂^int ≤ C·S₂^free`
+  (Glimm–Jaffe Thm 10.3.1) — the *wrong* direction for a lower bound; it cannot supply nondegeneracy.
 
-**Difficulty ★★:** the free positivity is essentially in hand; the only real work is the
-domination inequality (FKG/Griffiths, partly built) + the limit. No phase-transition or
-weak-coupling caveat — `S₂ > 0` holds in **all** phases. Discharge alongside the existence/OS0–OS2
-chain.
+**Corrected route for `S₂^int(f,f) > 0` (non-degeneracy):**
+1. **Free lower bound** (unchanged): `S₂^free(f,f) = ‖f‖²_{H⁻¹} > 0` for `f≠0` — in hand
+   (`massOperatorAsym_pos_def`, `second_moment_asym_tendsto → asymTorusContinuumGreen`).
+2. **Finite-lattice lower bound via GKS II decoupling**: drop the ferromagnetic kinetic couplings
+   `J_{xy}=1/a² ≥ 0` (GKS II ⟹ `⟨φ_x²⟩_int` decreases when `J→0`), giving `⟨φ_x²⟩_int ≥` the
+   *decoupled* single-site variance `v > 0`. Valid for `f ≥ 0`. **But `v → 0` as `a → 0`** — does not
+   survive the continuum limit by itself.
+3. **Continuum non-degeneracy** is genuinely hard — the constructive routes are (i) the
+   **short-distance singularity** `S₂(x,y) ∼ −(2π)⁻¹ log|x−y|` (super-renormalizable ⟹ same leading
+   singularity as free ⟹ not δ₀), or (ii) **Reeh–Schlieder** after the OS axioms via the **cluster
+   expansion** (Simon Thm VI.1.2, Ch VII).
+
+**Difficulty reassessed ★★ → ★★★** for the *continuum* lower bound (the finite-lattice/free parts are
+in hand, but the surviving-the-limit lower bound needs cluster-expansion-grade machinery, not FKG).
+Still holds in all phases (no weak-coupling caveat for non-degeneracy itself).
 
 ## 9. `continuumLimit_nonGaussian` — `S₄ − 3·S₂² ≠ 0` — ★★★ (the genuine mountain)
 

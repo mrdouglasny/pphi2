@@ -938,7 +938,7 @@ Wick polynomial under the lattice Gaussian.
 
 `∫ :P(ω(δ_x)):_c dμ_{GFF} = P.coeff₀` because all Wick monomials of
 order ≥ 1 have zero Gaussian mean, and `:x^0:_c = 1`. -/
-private lemma wickPolynomial_integral_eq_coeff_zero
+lemma wickPolynomial_integral_eq_coeff_zero
     (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (x : FinLatticeSites d N) :
     Integrable (fun ω : Configuration (FinLatticeField d N) =>

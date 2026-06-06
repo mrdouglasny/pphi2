@@ -229,9 +229,37 @@ Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 
 | Package | Axioms | Sorries | Pin |
 |---|---|---|---|
-| **pphi2** (active build) | 17 | 0 | — |
+| **pphi2** (active build) | 18 | 0 | — |
+
+**New axiom 2026-06-05** (`+1`, active build): `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
+(`TorusContinuumLimit/TorusInteractingResult.lean`) — **weak-coupling, pure-quartic** uniform strict
+lattice bound. Signature: `(P : InteractionPolynomial) (hP : P.n = 4)`, then
+`∃ m₀>0, ∀ mass>m₀, ∃ f c>0, ∀N, u₄(torusInteractingMeasure L N P mass)(f) ≤ −c`. **The `hP : P.n = 4`
+hypothesis** (added 2026-06-06) scopes the axiom to the pure quartic, matching the discharge route:
+`u₄'(0)=−6∫(C_a f)⁴` and step 2b (`wickFourth_interaction_inner_quartic`) are quartic-specific
+(leading Wick term `6=4!·¼`), so the axiom does not over-claim interaction for every
+`InteractionPolynomial`. The one analytic
+input behind the headline `torus_pphi2_isInteracting_weakCoupling` (the genuine T² limit is
+interacting / non-Gaussian, **at weak coupling**); everything else is proved
+(`torusInteractingLimit_exists` + the axiom-clean step-IV moment convergence
+`torus_connectedFourPoint_tendsto`). **Restricted to weak coupling** (`mass > m₀` ⟺ dimensionless
+`g = 1/(4mass²) < g₀`), where the corrections are controlled — the regime non-triviality only needs.
+**Rating: Likely correct** — perturbative weak-coupling non-triviality: leading
+`u₄'(0)=−6∫(C_a f)⁴<0` strictly dominates the `O(g²)` remainder (Nelson hypercontractivity at fixed
+volume, **no cluster expansion**; uses `GaussianHilbert.polynomial_chaos_concentration` via
+`NelsonEstimate`). **Sources: DT** (leading term Gemini-vetted 2026-06-04/05, memory
+`pphi2-u4-proof-route`), LP (Simon *P(φ)₂* Ch. V/VIII; Glimm–Jaffe Ch. 8–9, 19). **(NOT VERIFIED)** —
+discharge via the perturbative route (`FieldRedefinition.lean` +
+`planning/{torus-interacting,lambda-coupling-family}-*.md`). (Strong coupling left out — `u₄<0` still
+holds there by Lebowitz, non-perturbatively, but non-triviality doesn't need it.)
+**Discharge progress (2026-06-05):** the decisive analytic brick — the smeared Wick/Mehler kernel
+`∫ :φ(f)ⁿ::φ(g)ᵐ: dμ_GFF = δₘₙ·n!·⟨φfφg⟩ⁿ` — is now **proved axiom-clean** as
+`GaussianField.gff_wickPower_two_smeared_inner` (the `n=m=4` case gives the `4!⟨φfφg⟩⁴` connected
+kernel underlying `u₄'(0)=−6∫(C_a f)⁴`). Remaining for the discharge: the first-order coefficient
+`u₄'(0)=−⟨:φ(f)⁴:V⟩_free`, the `(C_a f)` operator object, step-II positivity, step-III Nelson
+remainder. See memory `smeared-wick-kernel-done`.
 | **pphi2** (`cylinder-isotropic-lattice` branch: +`asymInteracting_expMoment_volume_uniform`; `wickConstantAsym_eq_variance` **discharged** 2026-05-27, `asymChaosCutoffDecomposition` **discharged** 2026-05-31) | 18 | 0 | GaussianField `5bb35e8` |
-| **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 9 | 0 | `24b26efe` |
+| **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 3 | 0 | `d9cdd5e` (smeared Wick kernel + covariance API + eigenbasis↔GJ bridge + smeared-product integrability, axiom-clean) |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |
 | **gaussian-hilbert** (pinned, tracks `main`) | 1 *(was 4 in last audit; see 2026-05-{10,11} entries)* | 0 | `main` |
 

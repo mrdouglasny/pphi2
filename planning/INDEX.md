@@ -123,13 +123,27 @@ weak-coupling / single-phase hypothesis.
 non-Gaussianity (only `S₂>0`, ★★ via correlation inequalities, all phases); 9 is the genuine
 interacting content (`u₄≠0`, ★★★, needs `λ>0`).
 
-- [ ] **11. `pphi2_nontriviality`** (`S₂(f,f)>0` for `f≠0`) `Main.lean:128`   status: scoped   deps: []   diff: ★★
-  note: limit ≠ δ₀. Free positivity `‖f‖²_{H⁻¹}>0` (have) + interacting ≥ free (Griffiths/FKG,
-  partly built `Lattice/FKG.lean`) + limit. All phases. → `planning/non-triviality.md`.
-- [ ] **9. `continuumLimit_nonGaussian`** (`S₄−3S₂²≠0`) `ContinuumLimit/Convergence.lean:256`   status: open   deps: [6]   diff: ★★★
-  note: connected 4-pt (`u₄`) ≠ 0 — the proof the theory is interacting. Lebowitz 4-pt inequality +
-  uniform strict lattice bound (`d=2` super-renormalizable ⟹ no cancellation) + moment convergence.
-  Even `P`, `λ>0`. THE non-triviality mountain. → `planning/non-triviality.md`.
+- [~] **11. `pphi2_nontriviality`** (`S₂(f,f)>0` for `f≠0`) `Main.lean:128`   status: **MIS-FORMULATED → reformulated on T²**   deps: []   diff: ★★→★★★
+  note: The ℝ² axiom is `∃μ,S₂>0` with **P,mass unused** → free-field/δ₀ satisfy it (`IsPphi2Limit`
+  itself is δ₀-vacuous; see memory `pphi2-existence-vacuous-delta0`). **Honest version formulated on
+  the genuine (axiom-clean-existing) T² theory**: `TorusNontriviality.lean` —
+  `IsTorusPphi2Limit` + `torusPphi2Limit_exists` (PROVED), `TorusIsNondegenerate` (S₂>0). ⚠️ Route
+  **corrected** (Gemini-vetted, memory `pphi2-s2-domination-direction`): "Griffiths/FKG ⟹ ≥free" is
+  **wrong-direction** — continuum nondegeneracy needs short-distance singularity / cluster expansion
+  (★★★), not FKG. → `planning/non-triviality.md`.
+- [~] **9. `continuumLimit_nonGaussian`** (`u₄≠0`) — **T² version PROVED modulo 1 weak-coupling axiom**   deps: [u₄ step I+III]   diff: ★★★
+  note: **`torus_pphi2_isInteracting_weakCoupling`** (`TorusInteractingResult.lean`) is a THEOREM:
+  `∃ m₀, ∀ mass>m₀, the genuine T² limit μ is IsTorusPphi2Limit ∧ TorusIsInteracting`. Reduces to
+  **one** documented, Gemini-vetted, weak-coupling axiom `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
+  (uniform strict lattice `u₄≤−c<0` for `g<g₀`). **All scaffolding PROVED, axiom-clean:** step IV
+  moment convergence (`torus_connectedFourPoint_tendsto`, `TorusInteractingMoments.lean`);
+  field-redefinition (`interactingMeasure_map_measurableEquiv` + moment-level `u₄((c•·)_*μ)=c⁴u₄(μ)`,
+  `FieldRedefinition.lean`); the free baseline `connectedFourPoint_gaussianMeasure_eq_zero` (`u₄=0`,
+  the `g=0` anchor). **Remaining = discharge the 1 axiom** (perturbative `u₄`): step I (Wick
+  `u₄'(0)=−6∫(C_a f)⁴`, the connected-correlator derivative — coupled to the leading-term *operator*
+  setup `C_a f`), step II (`∫(C_a f)⁴>0`), step III (Nelson `O(g²)` remainder — the crux). The
+  multi-week analytic core; the anchor is its first landed brick. (ℝ² version additionally needs the
+  `L→∞` cluster expansion — out of scope.)
 
 ## Cluster 6 — OS→Schwinger bridge
 
@@ -160,6 +174,77 @@ interacting content (`u₄≠0`, ★★★, needs `λ>0`).
 
 Everything else (4, 5, 6, 7, 8, 10, 11, 14, 15) is ★/★★ "estimate-and-pass-to-limit" or rides on a
 mountain's infrastructure once it lands.
+
+## Plan-loop triage — cycle 2026-06-04 (the actionable-item sweep)
+
+This cycle investigated the four "cheap independent" candidates (4, 7, 10, 11) to find anything
+dischargeable now. **Result: all blocked on a substantial missing lemma** — none is a few-edit win.
+Precise blockers (so the next owner starts from the exact gap, not a re-investigation):
+
+- **4 `schwinger_agreement`** — BLOCKED on **keystone 18** (cluster expansion / weak-coupling
+  uniqueness). The axiom = "pphi2-lattice and Phi4-continuum Schwinger sequences agree", which is
+  exactly the interchange-of-limits the cluster expansion provides. Missing lemma:
+  `schwinger_pphi2_eq_phi4_of_weak_coupling`. The `measure_determined_by_schwinger` wrapper is
+  already a theorem (2026-06-02); only this agreement input is missing. → deps: [18].
+- **7 `canonical_continuumMeasure_cf_tendsto`** — BLOCKED + **needs-human**. Statement is sound in
+  form (already couples `N→∞`, `N·a→∞`), but proof needs a non-standard **lattice-realization**
+  lemma: *any* `IsPphi2Limit` measure is the weak limit of canonically-coupled `continuumMeasure`s
+  (a converse to the continuum limit — unusual; QFT texts only prove lattice→continuum). The
+  axiom's self-existential `(N,a)` is decoupled from the abstract limit witness — **review whether
+  the axiom should instead be a direct weak-convergence statement** before discharging.
+- **10 `latticeGreenBilinear_basis_tendsto_continuum`** — BLOCKED on an **IR-limit theorem**
+  (torus box `L→∞` → flat ℝ² Fourier Green). Proved sibling `second_moment_asym_tendsto` /
+  `lattice_green_tendsto_continuum_asym` is **torus→torus only**. Missing:
+  `ir_limit_continuum_green_tendsto : limₗ asymTorusContinuumGreen L = continuumGreenBilinear`.
+  Then dominated convergence + DM nuclear extension finishes. Flagged **not on the T² critical
+  path** (~3 wk standalone). → deps: [IR-limit].
+- **11 `pphi2_nontriviality` (S₂>0)** — **actionable cheaply, but a project-intent decision.**
+  Step 1 (free positivity) is **PROVED**: `gaussianContinuumLimit_nontrivial` (GaussianLimit.lean:102)
+  exhibits a free-field continuum-limit measure with `∀f≠0, S₂(f,f)>0` — which **already witnesses
+  the axiom as literally stated** (`∃μ, …`). So the axiom is dischargeable NOW via the free field.
+  BUT that conflicts with intent (coherence Gap A: we want S₂>0 for the *interacting* μ). The
+  genuine route (step 2, Griffiths/FKG `S₂^int ≥ S₂^free`) is **missing** — FKG infra exists
+  (`Lattice/FKG.lean`, proved) but is not applied to two-point monotonicity-in-coupling; pphi2's
+  Nelson bound (`asymInteractingVariance_le_freeVariance_lattice`) is an *upper* bound (wrong
+  direction for a lower bound). → **human decision: cheap free-field discharge vs. keep open for
+  the interacting result.**
+
+**Clustering 14/15 reassessment** (was "★★ given the B2 trace bridge"): the B2 dictionary
+(`twoPoint_dictionary`) exists **only on the asym torus**; 14/15 are stated on the **square**
+`FinLatticeField 2 Ns`. The square lattice has transfer infra (`Pphi2/TransferMatrix/*`) but **no
+square `twoPoint_dictionary` and no square `GappedTransfer` packaging**. So 14/15 are BLOCKED on
+**building the square trace dictionary** (port the asym B2/B4 chain to the square, or prove
+asym↔square at `Nt=Ns`) — a substantial step, not a few edits. → deps: [square-trace-dictionary].
+
+**Net:** the lone genuinely-unblocked formalization thread is **item 3's own deliverable** (the asym
+variance bound) via the asym dictionary + the operator bricks 0–2 (proved this session) +
+`connected_susceptibility_le`. Everything else is blocked on one of: keystone 18 (cluster
+expansion), the IR-limit theorem, FKG two-point domination, the square trace dictionary, the
+Layer-A Nelson/Lee–Yang engine (2/12), the spectral-gap-uniformity (17), or a regime/intent human
+decision (11, 16/17/9, 7).
+
+## Plan-loop frontier — 2026-06-05 (post T²-interacting build-out)
+
+Major progress this session on the **non-triviality / interacting** axis (items 9, 11):
+`torus_pphi2_isInteracting_weakCoupling` is now a **theorem** (the T² φ⁴₂ theory is interacting at
+weak coupling) reducing to **one** documented weak-coupling axiom; all its scaffolding is proved &
+axiom-clean (step-IV moment convergence, the field-redefinition layer, the free-field `u₄=0` anchor).
+
+**The plan-loop has reached the research frontier.** Every remaining item is one of a small set of
+★★★ analytic mountains (each a multi-week formalization) or a human-judgement call — there are no
+cheap actionable increments left:
+- **u₄ perturbative discharge** (item 9's last axiom): steps I (Wick connected-correlator derivative
+  + leading-term operator setup) + III (Nelson cutoff-uniform remainder). Anchor landed; the rest is
+  the analytic core.
+- **S₂>0 continuum nondegeneracy** (item 11): short-distance singularity / cluster expansion (the
+  FKG route is wrong-direction, vetted).
+- **Spectral gap uniformity** (16/17), **clustering square dictionary** (14/15), **Nelson/Lee–Yang**
+  (2/12), **rotation defect** (13), **IR-limit** (10), **cluster-expansion keystone** (4/18) — all
+  ★★★ or human-gated, per the 2026-06-04 triage above (unchanged).
+
+Net: the architecture is complete and the remaining content is isolated into documented, vetted
+axioms; discharging any one of them is a standalone research-grade subproject. The plan-loop's
+incremental surface is exhausted — further progress = committing to one of these mountains.
 
 ## Staleness flags
 Many `docs/*` plans predate the transfer-matrix pivot (several dated 2026-05-13). The CURRENT

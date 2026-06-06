@@ -18,6 +18,16 @@ import Pphi2.InteractingMeasure.General
 import Pphi2.InteractingMeasure.LatticeAction
 import Pphi2.InteractingMeasure.LatticeMeasure
 import Pphi2.InteractingMeasure.Normalization
+import Pphi2.InteractingMeasure.FieldRedefinition
+import Pphi2.InteractingMeasure.SmearedWickVertex
+import Pphi2.InteractingMeasure.WickConstantBridge
+import Pphi2.InteractingMeasure.InteractionFourPoint
+import Pphi2.InteractingMeasure.MomentIntegrability
+import Pphi2.InteractingMeasure.MomentDerivative
+import Pphi2.InteractingMeasure.ConnectedCorrelatorDerivative
+import Pphi2.InteractingMeasure.U4Derivative
+import Pphi2.InteractingMeasure.UniformBounds
+import Pphi2.MathlibContrib.ParametricIntegralWithin
 
 -- Phase 2: Transfer matrix and reflection positivity
 import Pphi2.TransferMatrix.TransferMatrix
@@ -47,6 +57,9 @@ import Pphi2.TorusContinuumLimit.TorusGaussianLimit
 import Pphi2.TorusContinuumLimit.TorusInteractingLimit
 import Pphi2.TorusContinuumLimit.TorusOSAxioms
 import Pphi2.TorusContinuumLimit.TorusInteractingOS
+import Pphi2.TorusContinuumLimit.TorusNontriviality
+import Pphi2.TorusContinuumLimit.TorusInteractingMoments
+import Pphi2.TorusContinuumLimit.TorusInteractingResult
 
 -- Phase 4b': Asymmetric torus + IR limit (Route B')
 import Pphi2.AsymTorus.AsymTorusEmbedding
