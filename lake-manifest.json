@@ -38,7 +38,7 @@
    "rev": "d9cdd5eff28ee219c1d0c7febd951785c0a9e841",
    "name": "GaussianField",
    "manifestFile": "lake-manifest.json",
-   "inputRev": "f2d03b7",
+   "inputRev": "d9cdd5e",
    "inherited": false,
    "configFile": "lakefile.lean"},
   {"url": "https://github.com/mrdouglasny/reflection-positivity.git",

@@ -35,6 +35,11 @@ variable (L : ℝ) [hL : Fact (0 < L)]
 /-- **Weak-coupling uniform strict negativity of the lattice connected four-point** (the analytic
 core, weak-coupling regime).
 
+**Pure quartic only (`hP : P.n = 4`).** The vetted discharge route — `u₄'(0) = −6∫(C_a f)⁴`
+(`U4Derivative.lean`) and step 2b (`wickFourth_interaction_inner_quartic`) — is quartic-specific
+(the leading Wick term `6 = 4!·(1/4)`), so the axiom is scoped to `P.n = 4` rather than every
+`InteractionPolynomial`, keeping the trust boundary aligned with what the route supports.
+
 There is a mass threshold `m₀ > 0` such that for every `mass > m₀` (equivalently, dimensionless
 coupling `g = 1/(4 mass²) < 1/(4 m₀²)`) there are a test function `f` and `c > 0` with
 `u₄(torusInteractingMeasure L N P mass)(f) ≤ −c` for **all** `N`. I.e. above the threshold the
@@ -51,7 +56,7 @@ Ch. 8–9, 19. Discharge route enabled by the field-redefinition development
 (`Pphi2/InteractingMeasure/FieldRedefinition.lean`). (NOT VERIFIED — to be proved; see
 `planning/torus-interacting-proof-plan.md`, `planning/lambda-coupling-family-plan.md`.) -/
 axiom torus_weakCoupling_lattice_connectedFourPoint_strictNeg
-    (P : InteractionPolynomial) :
+    (P : InteractionPolynomial) (hP : P.n = 4) :
     ∃ m₀ : ℝ, 0 < m₀ ∧ ∀ (mass : ℝ) (hmass : 0 < mass), m₀ < mass →
       ∃ (f : TorusTestFunction L) (c : ℝ), 0 < c ∧ ∀ (N : ℕ) [NeZero N],
         torusConnectedFourPoint L (torusInteractingMeasure L N P mass hmass) f ≤ -c
@@ -62,11 +67,11 @@ honest subsequential limit of the interacting torus measures (`IsTorusPphi2Limit
 non-Gaussian (`TorusIsInteracting`: the connected four-point is nonzero). Assembled from the
 weak-coupling uniform strict lattice bound (axiom) + the proved moment convergence
 `torus_connectedFourPoint_tendsto`. -/
-theorem torus_pphi2_isInteracting_weakCoupling (P : InteractionPolynomial) :
+theorem torus_pphi2_isInteracting_weakCoupling (P : InteractionPolynomial) (hP : P.n = 4) :
     ∃ m₀ : ℝ, 0 < m₀ ∧ ∀ (mass : ℝ) (hmass : 0 < mass), m₀ < mass →
       ∃ (μ : Measure (Configuration (TorusTestFunction L))) (_ : IsProbabilityMeasure μ),
         IsTorusPphi2Limit L μ P mass hmass ∧ TorusIsInteracting L μ := by
-  obtain ⟨m₀, hm₀, hbound⟩ := torus_weakCoupling_lattice_connectedFourPoint_strictNeg L P
+  obtain ⟨m₀, hm₀, hbound⟩ := torus_weakCoupling_lattice_connectedFourPoint_strictNeg L P hP
   refine ⟨m₀, hm₀, fun mass hmass hgt => ?_⟩
   obtain ⟨φ, μ, hmono, hprob, hconv⟩ := torusInteractingLimit_exists L P mass hmass
   obtain ⟨f, c, hc, hb⟩ := hbound mass hmass hgt
