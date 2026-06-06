@@ -156,9 +156,14 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
        `HasDerivWithinAt u₄ (−6·a^d·∑_z(C_a f)(z)⁴) (Ici 0) 0`. Combines brick 4 at `n=4,2` via the
        product rule, reduces via Isserlis (`connectedFourPoint_gaussianMeasure_eq_zero`) + variance bridge
        (`gff_wickPower_two_smeared_inner` at `n=m=1`), bridges to **2b**
-       (`wickFourth_interaction_inner_quartic`). **STEP 2c (bricks 1–5) COMPLETE: `u₄'(0)=−6∫(C_a f)⁴<0`.**
-       Remaining for the full axiom discharge: step II positivity (`∑_z(C_a f)(z)⁴>0`) and step III
-       (the `O(g²)` Nelson remainder) to conclude `u₄(g)<0` at small `g>0`.
+       (`wickFourth_interaction_inner_quartic`). **STEP 2c (bricks 1–5) COMPLETE: `u₄'(0)=−6∫(C_a f)⁴`.**
+       ✅ **STEP II DONE (2026-06-05), axiom-clean** (`U4Derivative.lean`): `quartic_kernel_sum_pos`
+       (`C_a f≢0 ⟹ 0<∑(C_a f)⁴`), `u4_slope_neg` (`0<a ∧ C_a f≢0 ⟹ u₄'(0)<0`), and a concrete witness
+       `exists_u4_slope_neg` (single-site `δ_{z₀}`, since `C_a δ_{z₀}(z₀)=gffPositionCovariance z₀ z₀
+       =wickConstant>0`). **Steps I+II compose ⟹ ∃ f, the weak-coupling slope `u₄'(0)<0` strictly.**
+       Remaining for the full axiom discharge: step III (the `O(g²)` Nelson remainder, cutoff-uniform)
+       to conclude `u₄(g)<0` at small `g>0`, then the torus/continuum + `N`-uniformity framing of
+       `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` itself.
     2. **Moment derivative** `d/dg ∫(ω f)ⁿ e^{−gV} dμ_GFF |_{g=0} = −∫(ω f)ⁿ V dμ` via Mathlib
        `hasDerivAt_integral_of_dominated_loc_of_deriv_le`: `∂_g = −(ω f)ⁿ V e^{−gV}`, dominated by
        `e^{g₀A}·|(ω f)ⁿ V|` using `V ≥ −A` (`latticeInteraction_bounded_below`) on `g∈[0,g₀]`.
