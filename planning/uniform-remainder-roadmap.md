@@ -20,6 +20,29 @@ needs only to feed **uniform-in-N** constants `s, K, g₀` into `deriv_affine_bo
 - **Worst term** in `u₄''`: `⟨φ(f)⁴V²⟩₀ ≤ ‖φ(f)‖_{L⁸}⁴·‖V‖_{L⁴}²` (Cauchy–Schwarz). Need `L⁸` for
   `φ(f)`, `L⁴` for `V` — both uniform.
 
+## Skeleton (2026-06-06): connective assembly PROVED; problem reduced to leaves
+
+The monolithic uniform axiom is now reduced to a small leaf set, with the **connective tissue proved**:
+- ✅ `exists_uniform_neg_of_uniform_affine_bound` (`UniformBounds.lean`) — `i`-uniform upgrade of
+  `deriv_affine_bound_neg`: `(∀i, φ_i 0=0) + (∀i, diff on [0,g₀]) + (∀i, φ_i'(t)≤−s+Kt)` ⟹
+  `∃ g c>0, ∀i, φ_i g ≤ −c`. Feed `φ_N = u₄` of the Gibbs family.
+- ✅ `integral_interaction_sq_eq_canonicalJoint` (`InteractionL2.lean`) — L1 bridge.
+
+**Remaining = the leaf hypotheses for `φ_N = u₄`** (each a bounded, mostly-mechanical job):
+1. **`h0`** `u₄_N(0)=0` — generalise `u4_at_zero` (Isserlis). EASY.
+2. **`hderiv`** `∀t∈[0,g₀], HasDerivAt u₄_N (u₄'_N t) t` — extend `MomentDerivative` from `g=0` to all `t`
+   (same one-sided parametric-integral machinery, now two-sided on the interior).
+3. **`hbound`** `u₄'_N(t) ≤ −s + Kt` uniform, which splits into the two textbook estimates:
+   - **leading slope `s`**: `u₄'_N(0) = −6a²∑(C_a f)⁴ ≤ −s` uniform (Riemann/low-mode; the `s`-leaf).
+   - **second-order `K`**: `u₄'_N(t) − u₄'_N(0) ≤ Kt`, i.e. `|u₄''_N| ≤ K` uniform — from the moment
+     bounds `⟨φ(f)ⁿV^k⟩` (L1 `‖V‖_{L²}` → L2 chaos-hypercontractivity → L3 Cauchy–Schwarz; `boltzmann_cauchySchwarz`+`partitionFn_ge_one`+`expMoment_le_rpow` done).
+4. **framing**: `torusConnectedFourPoint(map ι μ) = connectedFourPoint μ (ι*f)` + mass↔g
+   (`FieldRedefinition`) to land on `torusInteractingMeasure`.
+
+Each leaf is derivable (per the don't-axiomatize-the-derivable rule) — the deep analysis (covariance
+pow-sums) is already proved. Convert a leaf to a cited+vetted textbook axiom (Glimm–Jaffe Ch.8 / Simon
+V,VIII) only if it proves genuinely beyond reach.
+
 ## Lemma decomposition (with infra status)
 
 | # | Lemma | Statement | Status |
