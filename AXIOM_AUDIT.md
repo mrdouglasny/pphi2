@@ -232,8 +232,13 @@ Format and conventions for this audit doc: `~/.claude/AXIOM_AUDIT_FORMAT.md`.
 | **pphi2** (active build) | 18 | 0 | — |
 
 **New axiom 2026-06-05** (`+1`, active build): `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
-(`TorusContinuumLimit/TorusInteractingResult.lean`) — **weak-coupling** uniform strict lattice bound:
-`∃ m₀>0, ∀ mass>m₀, ∃ f c>0, ∀N, u₄(torusInteractingMeasure L N P mass)(f) ≤ −c`. The one analytic
+(`TorusContinuumLimit/TorusInteractingResult.lean`) — **weak-coupling, pure-quartic** uniform strict
+lattice bound. Signature: `(P : InteractionPolynomial) (hP : P.n = 4)`, then
+`∃ m₀>0, ∀ mass>m₀, ∃ f c>0, ∀N, u₄(torusInteractingMeasure L N P mass)(f) ≤ −c`. **The `hP : P.n = 4`
+hypothesis** (added 2026-06-06) scopes the axiom to the pure quartic, matching the discharge route:
+`u₄'(0)=−6∫(C_a f)⁴` and step 2b (`wickFourth_interaction_inner_quartic`) are quartic-specific
+(leading Wick term `6=4!·¼`), so the axiom does not over-claim interaction for every
+`InteractionPolynomial`. The one analytic
 input behind the headline `torus_pphi2_isInteracting_weakCoupling` (the genuine T² limit is
 interacting / non-Gaussian, **at weak coupling**); everything else is proved
 (`torusInteractingLimit_exists` + the axiom-clean step-IV moment convergence
