@@ -237,4 +237,34 @@ theorem exists_pos_u4_neg (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (P : In
     (u4_slope_neg d N a mass ha f hf)
     (u4_at_zero d N a mass ha hmass P f)
 
+/-! ## Quantitative uniform upgrade (interface for the `N`-uniform discharge)
+
+The qualitative `∃ g>0, u₄(g)<0` (above) does not control the threshold `g` uniformly in the lattice
+size `N`. The general lemma below is the quantitative interface: given a function `φ` with `φ 0 = 0`,
+a derivative obeying an **affine upper bound** `φ'(t) ≤ -s + K·t` on `[0, g₀]`, and any `g` with
+`K·g ≤ s/2`, one gets `φ g ≤ -(s/2)·g`. The point: if `s` (leading-slope strength), `K` (a uniform
+second-order/`O(g²)` constant), and `g₀` are all **uniform in `N`** — `s` from the leading term
+`6 a²∑(C_a f)⁴` bounded below, `K` from the Nelson chaos bounds on `⟨|(φf)ⁿ V^k|⟩₀` (`V ≥ -L²A`,
+`Z_g ≥ 1` uniform) — then `c := (s/2)·g` is uniform in `N`, which is exactly the headline axiom
+`torus_weakCoupling_lattice_connectedFourPoint_strictNeg`. -/
+
+/-- **Quantitative one-sided bound (MVT).** If `φ 0 = 0` and `φ'(t) ≤ -s + K·t` on `[0, g₀]`, then for
+any `g ∈ (0, g₀]` with `K·g ≤ s/2`, `φ g ≤ -(s/2)·g`. (No second-derivative/`C²` hypothesis — only an
+affine bound on the first derivative, which the Nelson remainder estimate supplies.) -/
+lemma deriv_affine_bound_neg {φ φ' : ℝ → ℝ} {s K g₀ : ℝ}
+    (h0 : φ 0 = 0) (hderiv : ∀ t ∈ Icc 0 g₀, HasDerivAt φ (φ' t) t)
+    (hbound : ∀ t ∈ Icc 0 g₀, φ' t ≤ -s + K * t) (hK : 0 ≤ K)
+    {g : ℝ} (hg : 0 < g) (hgg₀ : g ≤ g₀) (hKg : K * g ≤ s / 2) :
+    φ g ≤ -(s / 2) * g := by
+  obtain ⟨ξ, hξ, hξeq⟩ := exists_hasDerivAt_eq_slope φ φ' hg
+    (fun t ht => (hderiv t ⟨ht.1, ht.2.trans hgg₀⟩).continuousAt.continuousWithinAt)
+    (fun x hx => hderiv x ⟨le_of_lt hx.1, (le_of_lt hx.2).trans hgg₀⟩)
+  rw [h0, sub_zero, sub_zero] at hξeq
+  have hφg : φ g = φ' ξ * g := by rw [hξeq, div_mul_cancel₀ _ (ne_of_gt hg)]
+  have hξle : φ' ξ ≤ -s + K * ξ := hbound ξ ⟨le_of_lt hξ.1, (le_of_lt hξ.2).trans hgg₀⟩
+  have hKξ : K * ξ ≤ K * g := mul_le_mul_of_nonneg_left (le_of_lt hξ.2) hK
+  have : φ' ξ ≤ -(s / 2) := by linarith [hξle, hKξ, hKg]
+  rw [hφg]
+  exact mul_le_mul_of_nonneg_right this (le_of_lt hg)
+
 end Pphi2
