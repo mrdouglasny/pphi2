@@ -73,4 +73,26 @@ theorem u4_differentiableAt (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     ((moment_hasDerivAt d N a mass ha hmass P f 2 ht).div hZ hZne).differentiableAt
   exact hM4.sub ((hM2.pow 2).const_mul 3)
 
+/-- **`hcont` leaf: `u₄_N` is continuous on `[0,g₀]`.** Interior continuity from `u4_differentiableAt`;
+left-endpoint (`g=0`) continuity from the one-sided `u4_hasDerivWithinAt`. -/
+theorem u4_continuousOn (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4) (f : FinLatticeField d N) (g₀ : ℝ) :
+    ContinuousOn
+      (fun g =>
+        (∫ ω, (ω f) ^ 4 * Real.exp (-(g * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass)) /
+          (∫ ω, Real.exp (-(g * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass))
+        - 3 * ((∫ ω, (ω f) ^ 2 * Real.exp (-(g * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass)) /
+          (∫ ω, Real.exp (-(g * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass))) ^ 2)
+      (Set.Icc 0 g₀) := by
+  intro x hx
+  rcases eq_or_lt_of_le hx.1 with hx0 | hxpos
+  · subst hx0
+    exact (u4_hasDerivWithinAt d N a mass ha hmass P hP f).continuousWithinAt.mono
+      Set.Icc_subset_Ici_self
+  · exact (u4_differentiableAt d N a mass ha hmass P f hxpos).continuousAt.continuousWithinAt
+
 end Pphi2
