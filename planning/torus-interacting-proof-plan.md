@@ -161,9 +161,18 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
        (`C_a f≢0 ⟹ 0<∑(C_a f)⁴`), `u4_slope_neg` (`0<a ∧ C_a f≢0 ⟹ u₄'(0)<0`), and a concrete witness
        `exists_u4_slope_neg` (single-site `δ_{z₀}`, since `C_a δ_{z₀}(z₀)=gffPositionCovariance z₀ z₀
        =wickConstant>0`). **Steps I+II compose ⟹ ∃ f, the weak-coupling slope `u₄'(0)<0` strictly.**
-       Remaining for the full axiom discharge: step III (the `O(g²)` Nelson remainder, cutoff-uniform)
-       to conclude `u₄(g)<0` at small `g>0`, then the torus/continuum + `N`-uniformity framing of
-       `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` itself.
+       ✅ **STEP III DONE (2026-06-05), axiom-clean** (`U4Derivative.lean`): the qualitative
+       `u₄(g)<0` for small `g>0` needs only the **derivative sign** (the `o(g)` from
+       `HasDerivWithinAt`) — **no quantitative `O(g²)` Nelson bound** (that is required only for
+       `N`-uniformity). `exists_pos_lt_zero_of_hasDerivWithinAt_neg` (general: `φ 0=0 ∧ φ'(0)<0` on
+       `Ici 0` ⟹ `∃ g>0, φ g<0`), `u4_at_zero` (`u₄(0)=0`, Isserlis), `exists_pos_u4_neg`
+       (composes I+II+III). **Steps I–III = the complete fixed-`N` lattice weak-coupling non-triviality
+       of φ⁴₂, AXIOM-FREE.**
+       Remaining for the headline axiom `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`:
+       (a) the `O(g²)` Nelson remainder bound, cutoff-uniform (Nelson hypercontractivity, `Pphi2/
+       NelsonEstimate`), for a `g`-threshold **uniform in `N`**; (b) the torus/continuum framing
+       (`torusConnectedFourPoint`, `torusInteractingMeasure`, the `mass↔g` translation, uniform `c`,
+       `m₀`). The perturbative non-triviality core (I–III) is now fully formalized.
     2. **Moment derivative** `d/dg ∫(ω f)ⁿ e^{−gV} dμ_GFF |_{g=0} = −∫(ω f)ⁿ V dμ` via Mathlib
        `hasDerivAt_integral_of_dominated_loc_of_deriv_le`: `∂_g = −(ω f)ⁿ V e^{−gV}`, dominated by
        `e^{g₀A}·|(ω f)ⁿ V|` using `V ≥ −A` (`latticeInteraction_bounded_below`) on `g∈[0,g₀]`.
