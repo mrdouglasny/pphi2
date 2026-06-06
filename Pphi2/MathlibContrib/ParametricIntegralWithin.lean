@@ -56,7 +56,8 @@ theorem hasDerivWithinAt_Ici_integral_of_dominated_of_deriv_le (ε_pos : 0 < ε)
     (h_bound : ∀ᵐ a ∂μ, ∀ x ∈ Ici x₀ ∩ ball x₀ ε, ‖F' x a‖ ≤ bound a)
     (bound_integrable : Integrable bound μ)
     (h_diff : ∀ᵐ a ∂μ, ∀ x ∈ Ici x₀ ∩ ball x₀ ε, HasDerivWithinAt (F · a) (F' x a) (Ici x₀) x) :
-    HasDerivWithinAt (fun x => ∫ a, F x a ∂μ) (∫ a, F' x₀ a ∂μ) (Ici x₀) x₀ := by
+    Integrable (F' x₀) μ ∧
+      HasDerivWithinAt (fun x => ∫ a, F x a ∂μ) (∫ a, F' x₀ a ∂μ) (Ici x₀) x₀ := by
   classical
   set G : ℝ → α → E := fun x a => if x₀ ≤ x then F x a else F x₀ a + (x - x₀) • F' x₀ a with hGdef
   set G' : ℝ → α → E := fun x a => if x₀ ≤ x then F' x a else F' x₀ a with hG'def
@@ -111,12 +112,11 @@ theorem hasDerivWithinAt_Ici_integral_of_dominated_of_deriv_le (ε_pos : 0 < ε)
       refine (hasDerivAt_affine x₀ (F x₀ a) (F' x₀ a) x).congr_of_eventuallyEq ?_
       filter_upwards [Iio_mem_nhds hlt] with y hy using hG_lt y a (not_le.mpr hy)
   -- Two-sided theorem applied to `G`, then restricted to `Ici x₀`.
-  have key : HasDerivAt (fun x => ∫ a, G x a ∂μ) (∫ a, F' x₀ a ∂μ) x₀ := by
-    have := (hasDerivAt_integral_of_dominated_loc_of_deriv_le (s := ball x₀ ε)
-      (ball_mem_nhds x₀ ε_pos) hG_meas (hGx₀ ▸ hF_int) (hG'x₀ ▸ hF'_meas) hG_bound
-      bound_integrable hG_diff).2
-    rwa [hG'x₀] at this
-  refine (key.hasDerivWithinAt).congr (fun x hx => ?_) ?_
+  obtain ⟨hF'_int, key⟩ := hasDerivAt_integral_of_dominated_loc_of_deriv_le (s := ball x₀ ε)
+    (ball_mem_nhds x₀ ε_pos) hG_meas (hGx₀ ▸ hF_int) (hG'x₀ ▸ hF'_meas) hG_bound
+    bound_integrable hG_diff
+  rw [hG'x₀] at hF'_int key
+  refine ⟨hF'_int, (key.hasDerivWithinAt).congr (fun x hx => ?_) ?_⟩
   · exact integral_congr_ae (Eventually.of_forall fun a => (hG_ge x a hx).symm)
   · exact integral_congr_ae (Eventually.of_forall fun a => (hG_ge x₀ a le_rfl).symm)
 
