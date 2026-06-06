@@ -5,6 +5,8 @@ Authors: Michael R. Douglas
 -/
 import Pphi2.InteractingMeasure.U4Derivative
 import Pphi2.TorusContinuumLimit.TorusInteractingLimit
+import Mathlib.Analysis.Convex.SpecificFunctions.Pow
+import Mathlib.Analysis.Convex.Integral
 
 /-!
 # Uniform-in-N building blocks for the weak-coupling discharge
@@ -101,5 +103,47 @@ lemma partitionFn_ge_one (d N : ℕ) [NeZero N]
   rw [hlhs] at hmono
   have htV : t * ∫ ω, V ω ∂μ ≤ 0 := mul_nonpos_of_nonneg_of_nonpos ht hVnonpos
   linarith [hmono, htV]
+
+/-- **Exp-moment interpolation.** For `0 ≤ s ≤ 2`, `∫ e^{-s V} ≤ (∫ e^{-2 V})^{s/2}` (Jensen for the
+concave `x ↦ x^{s/2}` on `[0,∞)`). Combined with the Nelson estimate `∫ e^{-2V} ≤ K` (uniform in N)
+and `∫ e^{-2V} ≥ 1` (`partitionFn_ge_one`), this gives `∫ e^{-sV} ≤ K` uniformly — the exp-moment
+control the corrected L4 pull-back needs (since `V` is not uniformly bounded below). -/
+lemma expMoment_le_rpow (d N : ℕ) [NeZero N]
+    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    {s : ℝ} (hs0 : 0 ≤ s) (hs2 : s ≤ 2) :
+    ∫ ω, Real.exp (-(s * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass)
+      ≤ (∫ ω, Real.exp (-(2 * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ (s / 2) := by
+  set μ := latticeGaussianMeasure d N a mass ha hmass with hμ
+  set V := interactionFunctional d N P a mass with hV
+  haveI : IsProbabilityMeasure μ := latticeGaussianMeasure_isProbability d N a mass ha hmass
+  have hVmeas : Measurable V := interactionFunctional_measurable d N P a mass
+  obtain ⟨B, hB⟩ := interactionFunctional_bounded_below d N P a mass ha hmass
+  have ht0 : (0 : ℝ) ≤ s / 2 := by linarith
+  have ht1 : s / 2 ≤ 1 := by linarith
+  set f : Configuration (FinLatticeField d N) → ℝ := fun ω => Real.exp (-(2 * V ω)) with hf
+  have hf_int : Integrable f μ := by
+    apply Integrable.of_bound (C := Real.exp (2 * B))
+    · exact ((hVmeas.const_mul 2).neg.exp).aestronglyMeasurable
+    · exact Filter.Eventually.of_forall fun ω => by
+        rw [hf, Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
+        exact Real.exp_le_exp_of_le (by nlinarith [hB ω])
+  have hsV_eq : (fun ω => f ω ^ (s / 2)) = fun ω => Real.exp (-(s * V ω)) := by
+    funext ω; rw [hf, ← Real.exp_mul]; congr 1; ring
+  have hgf_int : Integrable (fun ω => f ω ^ (s / 2)) μ := by
+    rw [hsV_eq]
+    apply Integrable.of_bound (C := Real.exp (s * B))
+    · exact ((hVmeas.const_mul s).neg.exp).aestronglyMeasurable
+    · exact Filter.Eventually.of_forall fun ω => by
+        rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _)]
+        exact Real.exp_le_exp_of_le (by nlinarith [hB ω, hs0])
+  have hconc : ConcaveOn ℝ (Set.Ici 0) (fun x : ℝ => x ^ (s / 2)) := Real.concaveOn_rpow ht0 ht1
+  have hcont : ContinuousOn (fun x : ℝ => x ^ (s / 2)) (Set.Ici 0) :=
+    continuousOn_id.rpow_const (fun x _ => Or.inr ht0)
+  have hmem : ∀ᵐ ω ∂μ, f ω ∈ Set.Ici (0 : ℝ) :=
+    Filter.Eventually.of_forall fun ω => Set.mem_Ici.mpr (by rw [hf]; exact (Real.exp_pos _).le)
+  have hjensen := hconc.le_map_integral hcont isClosed_Ici hmem hf_int hgf_int
+  rwa [hsV_eq] at hjensen
 
 end Pphi2
