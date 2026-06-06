@@ -38,10 +38,12 @@ derivative + continuity. (`deriv_affine_bound_neg_of_continuousOn` is the per-`N
 1. **`h0`** `u₄_N(0)=0` — ✅ `u4_at_zero` (already proved per N).
 2. **`hcont`** `ContinuousOn u₄_N [0,g₀]` — NEW: continuity of the normalised moments
    `M_n(g)=∫(ωf)ⁿe^{-gV}/Z_g` in `g` (dominated convergence; `Z_g≥1>0` via `partitionFn_ge_one`).
-3. **`hderiv`** `∀t∈(0,g₀), HasDerivAt u₄_N (u₄'_N t) t` — NEW: re-do the differentiation chain
-   (bricks 2–5) at a general interior `t`, **two-sided** (`hasDerivAt_integral_of_dominated_loc_of_deriv_le`,
-   the standard Mathlib lemma; domination near `t` by `e^{(3t/2)|B|}|(ωf)ⁿV|`, brick 1). First sub-brick:
-   `moment_hasDerivAt` (general `t`) → `Z'_t` → `M_n'_t` (quotient) → `u₄'_t` (product).
+3. **`hderiv`** — ✅ **DONE** (`U4DerivativeInterior.lean`): `u4_differentiableAt` (`DifferentiableAt ℝ
+   u₄_N t` for `t>0`) ⟹ `(·).hasDerivAt : HasDerivAt u₄_N (deriv u₄_N t) t`, the form the assembly
+   consumes (use `φ' := deriv u₄_N`). Built from `moment_hasDerivAt` (Codex; general-`t` two-sided via
+   `hasDerivAt_integral_of_dominated_loc_of_deriv_le`) + `partitionFn_hasDerivAt` + `HasDerivAt.div`
+   (`Z_t≠0` from `partitionFn_ge_one`) + `DifferentiableAt.sub/.pow/.const_mul`. Used `DifferentiableAt`
+   (existence) instead of closed-form derivs — robust, no syntactic deriv-matching.
 3. **`hbound`** `u₄'_N(t) ≤ −s + Kt` uniform, which splits into the two textbook estimates:
    - **leading slope `s`**: `u₄'_N(0) = −6a²∑(C_a f)⁴ ≤ −s` uniform (Riemann/low-mode; the `s`-leaf).
    - **second-order `K`**: `u₄'_N(t) − u₄'_N(0) ≤ Kt`, i.e. `|u₄''_N| ≤ K` uniform — from the moment
