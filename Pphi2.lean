@@ -25,6 +25,7 @@ import Pphi2.InteractingMeasure.InteractionFourPoint
 import Pphi2.InteractingMeasure.MomentIntegrability
 import Pphi2.InteractingMeasure.MomentDerivative
 import Pphi2.InteractingMeasure.ConnectedCorrelatorDerivative
+import Pphi2.InteractingMeasure.U4Derivative
 import Pphi2.MathlibContrib.ParametricIntegralWithin
 
 -- Phase 2: Transfer matrix and reflection positivity

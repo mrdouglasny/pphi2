@@ -30,7 +30,7 @@ open scoped NNReal ENNReal
 variable (d N : ℕ) [NeZero N]
 
 /-- `interactionFunctional` written with `Pi.single` (matching the brick-1 integrand). -/
-private lemma interactionFunctional_eq_single (P : InteractionPolynomial) (a mass : ℝ)
+lemma interactionFunctional_eq_single (P : InteractionPolynomial) (a mass : ℝ)
     (ω : Configuration (FinLatticeField d N)) :
     interactionFunctional d N P a mass ω =
       a ^ d * ∑ z, wickPolynomial P (wickConstant d N a mass) (ω (Pi.single z (1 : ℝ))) := by
