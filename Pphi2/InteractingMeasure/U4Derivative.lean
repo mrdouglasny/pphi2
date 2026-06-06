@@ -169,4 +169,72 @@ lemma exists_u4_slope_neg (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
   rw [hval, ← wickConstant_eq_gffPositionCovariance d N a mass ha hmass z₀]
   exact ne_of_gt (wickConstant_pos d N a mass ha hmass)
 
+/-! ## Step III — first-order sign control: `u₄(g) < 0` just right of `g = 0` -/
+
+open Filter Topology in
+/-- **General one-sided first-order sign lemma.** A function with value `0` at `0` and a strictly
+negative right-derivative there is strictly negative just to the right of `0`. (The `o(g)` from
+`HasDerivWithinAt` is all that is needed — no quantitative remainder bound.) -/
+lemma exists_pos_lt_zero_of_hasDerivWithinAt_neg {φ : ℝ → ℝ} {D : ℝ}
+    (hderiv : HasDerivWithinAt φ D (Ici 0) 0) (hD : D < 0) (h0 : φ 0 = 0) :
+    ∃ g : ℝ, 0 < g ∧ φ g < 0 := by
+  have hslope : Tendsto (slope φ 0) (𝓝[Ici 0 \ {0}] 0) (𝓝 D) :=
+    hasDerivWithinAt_iff_tendsto_slope.mp hderiv
+  rw [Set.Ici_diff_left] at hslope
+  have hev : ∀ᶠ y in 𝓝[>] (0 : ℝ), φ y < 0 := by
+    have hslopeneg : ∀ᶠ y in 𝓝[>] (0 : ℝ), slope φ 0 y < 0 := hslope.eventually_lt_const hD
+    filter_upwards [hslopeneg, self_mem_nhdsWithin] with y hy hypos
+    have hypos' : (0 : ℝ) < y := hypos
+    rw [slope_def_field, h0, sub_zero, sub_zero] at hy
+    have := mul_neg_of_neg_of_pos hy hypos'
+    rwa [div_mul_cancel₀ _ (ne_of_gt hypos')] at this
+  obtain ⟨y, hyneg, hypos⟩ := (hev.and self_mem_nhdsWithin).exists
+  exact ⟨y, hypos, hyneg⟩
+
+/-- **`u₄(0) = 0`** (the free-field baseline / Isserlis): at `g = 0` the Gibbs family is the free
+GFF, whose connected four-point vanishes. -/
+theorem u4_at_zero (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (P : InteractionPolynomial)
+    (f : FinLatticeField d N) :
+    (∫ ω, (ω f) ^ 4 * Real.exp (-(0 * interactionFunctional d N P a mass ω))
+          ∂(latticeGaussianMeasure d N a mass ha hmass)) /
+        (∫ ω, Real.exp (-(0 * interactionFunctional d N P a mass ω))
+          ∂(latticeGaussianMeasure d N a mass ha hmass))
+      - 3 * ((∫ ω, (ω f) ^ 2 * Real.exp (-(0 * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass)) /
+          (∫ ω, Real.exp (-(0 * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass))) ^ 2 = 0 := by
+  have hZ : (∫ ω, Real.exp (-(0 * interactionFunctional d N P a mass ω))
+      ∂(latticeGaussianMeasure d N a mass ha hmass)) = 1 :=
+    partitionFn_zero d N a mass ha hmass P
+  have h4 : (∫ ω, (ω f) ^ 4 * Real.exp (-(0 * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass)) = ∫ ω, (ω f) ^ 4
+        ∂(latticeGaussianMeasure d N a mass ha hmass) := by
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_); simp
+  have h2 : (∫ ω, (ω f) ^ 2 * Real.exp (-(0 * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass)) = ∫ ω, (ω f) ^ 2
+        ∂(latticeGaussianMeasure d N a mass ha hmass) := by
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_); simp
+  rw [hZ, h4, h2, div_one, div_one, latticeFourthMoment_eq d N a mass ha hmass f]; ring
+
+/-- **Step III (lattice weak-coupling non-triviality).** For any test function with `C_a f ≢ 0`
+there is a coupling `g > 0` at which the Gibbs-family connected four-point is strictly negative:
+`u₄(g) < 0`. Combined with `exists_u4_slope_neg`, the interacting lattice theory is non-Gaussian at
+weak coupling. -/
+theorem exists_pos_u4_neg (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (P : InteractionPolynomial)
+    (hP : P.n = 4) (f : FinLatticeField d N)
+    (hf : ∃ z, (∑ x, f x * gffPositionCovariance d N a mass x z) ≠ 0) :
+    ∃ g : ℝ, 0 < g ∧
+      (∫ ω, (ω f) ^ 4 * Real.exp (-(g * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass)) /
+          (∫ ω, Real.exp (-(g * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass))
+        - 3 * ((∫ ω, (ω f) ^ 2 * Real.exp (-(g * interactionFunctional d N P a mass ω))
+              ∂(latticeGaussianMeasure d N a mass ha hmass)) /
+            (∫ ω, Real.exp (-(g * interactionFunctional d N P a mass ω))
+              ∂(latticeGaussianMeasure d N a mass ha hmass))) ^ 2 < 0 :=
+  exists_pos_lt_zero_of_hasDerivWithinAt_neg
+    (u4_hasDerivWithinAt d N a mass ha hmass P hP f)
+    (u4_slope_neg d N a mass ha f hf)
+    (u4_at_zero d N a mass ha hmass P f)
+
 end Pphi2
