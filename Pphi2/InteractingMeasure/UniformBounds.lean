@@ -188,11 +188,11 @@ lemma boltzmann_cauchySchwarz (d N : ℕ) [NeZero N]
 /-! ## Uniform assembly (the connective tissue: leaves ⟹ uniform negativity) -/
 
 /-- **Uniform-in-N negativity from a uniform affine derivative bound.** If a family `(φ_i)` (think
-`φ_N = u₄` of the Gibbs family at lattice size `N`) all vanish at `0`, are differentiable on `[0,g₀]`,
-and satisfy the **uniform** affine bound `φ_i'(t) ≤ -s + K·t` with `s,K,g₀` independent of `i`, then a
-**single** `g>0, c>0` works for ALL `i`: `φ_i g ≤ -c`. The `i`-uniform upgrade of
-`deriv_affine_bound_neg`; this is the connective lemma that turns the leaf estimates (uniform leading
-slope `s`, uniform second-order constant `K`) into the uniform strict bound the headline axiom needs. -/
+`φ_N = u₄` of the Gibbs family at lattice size `N`) all vanish at `0`, are differentiable on
+`[0,g₀]`, and satisfy the **uniform** affine bound `φ_i'(t) ≤ -s + K·t` with `s,K,g₀` independent of
+`i`, then a **single** `g>0, c>0` works for ALL `i`: `φ_i g ≤ -c`. The `i`-uniform upgrade of
+`deriv_affine_bound_neg`; the connective lemma turning the leaf estimates (uniform leading slope `s`,
+uniform second-order constant `K`) into the uniform strict bound the headline axiom needs. -/
 lemma exists_uniform_neg_of_uniform_affine_bound {ι : Type*} {φ φ' : ι → ℝ → ℝ} {s K g₀ : ℝ}
     (hs : 0 < s) (hK : 0 < K) (hg₀ : 0 < g₀)
     (h0 : ∀ i, φ i 0 = 0)
@@ -211,9 +211,9 @@ lemma exists_uniform_neg_of_uniform_affine_bound {ι : Type*} {φ φ' : ι → �
   linarith [this]
 
 /-- **MVT bound with the correct one-sided-at-`0` interface.** Same conclusion as
-`deriv_affine_bound_neg`, but only requires **continuity on `[0,g₀]`** and `HasDerivAt` on the **open**
-`(0,g₀)` — the right hypotheses for the Gibbs-family `u₄`, which has no two-sided derivative at `g=0`
-(`∫e^{-gV}` diverges for `g<0`). -/
+`deriv_affine_bound_neg`, but only requires **continuity on `[0,g₀]`** and `HasDerivAt` on the
+**open** `(0,g₀)` — the right hypotheses for the Gibbs-family `u₄`, which has no two-sided derivative
+at `g=0` (`∫e^{-gV}` diverges for `g<0`). -/
 lemma deriv_affine_bound_neg_of_continuousOn {φ φ' : ℝ → ℝ} {s K g₀ : ℝ}
     (h0 : φ 0 = 0) (hcont : ContinuousOn φ (Set.Icc 0 g₀))
     (hderiv : ∀ t ∈ Set.Ioo 0 g₀, HasDerivAt φ (φ' t) t)

@@ -12,8 +12,9 @@ Toward `⟨V²⟩_{μ_GFF} ≤ C` uniform in the lattice size `N` (`V = interact
 the `N`-uniform `u₄` remainder (`planning/L1-handoff.md`). The route reuses the Nelson smooth/rough
 decomposition rather than computing `a⁴∑_{z,w}C^m` from scratch:
 
-* **bridge** (this file): `∫ V² dμ_GFF = ∫ V_full² dμ_joint`, where `V_full = canonicalFullInteractionJoint`
-  is `V` evaluated on the canonical sum field `φ_S + φ_R` — the `F = (·)²` analogue of
+* **bridge** (this file): `∫ V² dμ_GFF = ∫ V_full² dμ_joint`, where
+  `V_full = canonicalFullInteractionJoint` is `V` on the canonical sum field `φ_S + φ_R` — the
+  `F = (·)²` analogue of
   `integral_exp_neg_interaction_sq_eq_canonicalJoint`.
 
 Then `V_full = V_smooth + V_rough` (`canonicalRoughError = full − smooth`), and
@@ -28,9 +29,10 @@ open MeasureTheory GaussianField
 
 variable (d N : ℕ) [NeZero N] (a mass : ℝ)
 
-/-- **L1 bridge.** The free `L²`-norm² of the interaction equals the joint integral of the full
-canonical interaction squared: `∫ V² dμ_GFF = ∫ V_full² dμ_joint`. (The `F = (·)²` analogue of
-`integral_exp_neg_interaction_sq_eq_canonicalJoint`; `V_full = canonicalFullInteractionJoint`.) -/
+/-- **L1 bridge.** The free integral of `V²` equals the joint integral of the full canonical
+interaction squared: `∫ V² dμ_GFF = ∫ V_full² dμ_joint` (this is `‖V‖_{L²}²` once `V ∈ L²` is
+established separately — not proved here). The `F = (·)²` analogue of
+`integral_exp_neg_interaction_sq_eq_canonicalJoint`; `V_full = canonicalFullInteractionJoint`. -/
 theorem integral_interaction_sq_eq_canonicalJoint
     (P : InteractionPolynomial) (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) :
     ∫ ω : Configuration (FinLatticeField d N),

@@ -73,8 +73,8 @@ theorem u4_differentiableAt (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     ((moment_hasDerivAt d N a mass ha hmass P f 2 ht).div hZ hZne).differentiableAt
   exact hM4.sub ((hM2.pow 2).const_mul 3)
 
-/-- **`hcont` leaf: `u₄_N` is continuous on `[0,g₀]`.** Interior continuity from `u4_differentiableAt`;
-left-endpoint (`g=0`) continuity from the one-sided `u4_hasDerivWithinAt`. -/
+/-- **`hcont` leaf: `u₄_N` is continuous on `[0,g₀]`.** Interior continuity from
+`u4_differentiableAt`; left-endpoint (`g=0`) continuity from the one-sided `u4_hasDerivWithinAt`. -/
 theorem u4_continuousOn (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (P : InteractionPolynomial) (hP : P.n = 4) (f : FinLatticeField d N) (g₀ : ℝ) :
     ContinuousOn
