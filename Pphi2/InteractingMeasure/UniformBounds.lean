@@ -185,4 +185,70 @@ lemma boltzmann_cauchySchwarz (d N : ℕ) [NeZero N]
     refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
     dsimp only; rw [Real.rpow_two, pow_two, ← Real.exp_add]; congr 1; ring
 
+/-! ## Uniform assembly (the connective tissue: leaves ⟹ uniform negativity) -/
+
+/-- **Uniform-in-N negativity from a uniform affine derivative bound.** If a family `(φ_i)` (think
+`φ_N = u₄` of the Gibbs family at lattice size `N`) all vanish at `0`, are differentiable on
+`[0,g₀]`, and satisfy the **uniform** affine bound `φ_i'(t) ≤ -s + K·t` with `s,K,g₀` independent of
+`i`, then a **single** `g>0, c>0` works for ALL `i`: `φ_i g ≤ -c`. The `i`-uniform upgrade of
+`deriv_affine_bound_neg`; the connective lemma turning the leaf estimates (uniform leading slope
+`s`, uniform second-order constant `K`) into the uniform strict bound the headline axiom needs. -/
+lemma exists_uniform_neg_of_uniform_affine_bound {ι : Type*} {φ φ' : ι → ℝ → ℝ} {s K g₀ : ℝ}
+    (hs : 0 < s) (hK : 0 < K) (hg₀ : 0 < g₀)
+    (h0 : ∀ i, φ i 0 = 0)
+    (hderiv : ∀ i, ∀ t ∈ Set.Icc 0 g₀, HasDerivAt (φ i) (φ' i t) t)
+    (hbound : ∀ i, ∀ t ∈ Set.Icc 0 g₀, φ' i t ≤ -s + K * t) :
+    ∃ g c : ℝ, 0 < g ∧ 0 < c ∧ ∀ i, φ i g ≤ -c := by
+  have hKne : K ≠ 0 := hK.ne'
+  have hg_pos : 0 < min g₀ (s / (2 * K)) := lt_min hg₀ (by positivity)
+  have hgg₀ : min g₀ (s / (2 * K)) ≤ g₀ := min_le_left _ _
+  have hKg : K * min g₀ (s / (2 * K)) ≤ s / 2 := by
+    have hle := mul_le_mul_of_nonneg_left (min_le_right g₀ (s / (2 * K))) hK.le
+    have heq : K * (s / (2 * K)) = s / 2 := by field_simp
+    rwa [heq] at hle
+  refine ⟨min g₀ (s / (2 * K)), (s / 2) * min g₀ (s / (2 * K)), hg_pos, by positivity, fun i => ?_⟩
+  have := deriv_affine_bound_neg (h0 i) (hderiv i) (hbound i) hK.le hg_pos hgg₀ hKg
+  linarith [this]
+
+/-- **MVT bound with the correct one-sided-at-`0` interface.** Same conclusion as
+`deriv_affine_bound_neg`, but only requires **continuity on `[0,g₀]`** and `HasDerivAt` on the
+**open** `(0,g₀)` — the right hypotheses for the Gibbs-family `u₄`, which has no two-sided
+derivative at `g=0` (`∫e^{-gV}` diverges for `g<0`). -/
+lemma deriv_affine_bound_neg_of_continuousOn {φ φ' : ℝ → ℝ} {s K g₀ : ℝ}
+    (h0 : φ 0 = 0) (hcont : ContinuousOn φ (Set.Icc 0 g₀))
+    (hderiv : ∀ t ∈ Set.Ioo 0 g₀, HasDerivAt φ (φ' t) t)
+    (hbound : ∀ t ∈ Set.Ioo 0 g₀, φ' t ≤ -s + K * t) (hK : 0 ≤ K)
+    {g : ℝ} (hg : 0 < g) (hgg₀ : g ≤ g₀) (hKg : K * g ≤ s / 2) :
+    φ g ≤ -(s / 2) * g := by
+  obtain ⟨ξ, hξ, hξeq⟩ := exists_hasDerivAt_eq_slope φ φ' hg
+    (hcont.mono (Set.Icc_subset_Icc le_rfl hgg₀))
+    (fun x hx => hderiv x ⟨hx.1, hx.2.trans_le hgg₀⟩)
+  rw [h0, sub_zero, sub_zero] at hξeq
+  have hφg : φ g = φ' ξ * g := by rw [hξeq, div_mul_cancel₀ _ (ne_of_gt hg)]
+  have hξle : φ' ξ ≤ -s + K * ξ := hbound ξ ⟨hξ.1, hξ.2.trans_le hgg₀⟩
+  have hKξ : K * ξ ≤ K * g := mul_le_mul_of_nonneg_left (le_of_lt hξ.2) hK
+  have : φ' ξ ≤ -(s / 2) := by linarith [hξle, hKξ, hKg]
+  rw [hφg]; exact mul_le_mul_of_nonneg_right this (le_of_lt hg)
+
+/-- **Uniform negativity, correct interface.** The `i`-uniform assembly using continuity on `[0,g₀]`
+and interior differentiability — the version actually usable for `φ_N = u₄` of the Gibbs family. -/
+lemma exists_uniform_neg_of_uniform_affine_bound' {ι : Type*} {φ φ' : ι → ℝ → ℝ} {s K g₀ : ℝ}
+    (hs : 0 < s) (hK : 0 < K) (hg₀ : 0 < g₀)
+    (h0 : ∀ i, φ i 0 = 0)
+    (hcont : ∀ i, ContinuousOn (φ i) (Set.Icc 0 g₀))
+    (hderiv : ∀ i, ∀ t ∈ Set.Ioo 0 g₀, HasDerivAt (φ i) (φ' i t) t)
+    (hbound : ∀ i, ∀ t ∈ Set.Ioo 0 g₀, φ' i t ≤ -s + K * t) :
+    ∃ g c : ℝ, 0 < g ∧ 0 < c ∧ ∀ i, φ i g ≤ -c := by
+  have hKne : K ≠ 0 := hK.ne'
+  have hg_pos : 0 < min g₀ (s / (2 * K)) := lt_min hg₀ (by positivity)
+  have hgg₀ : min g₀ (s / (2 * K)) ≤ g₀ := min_le_left _ _
+  have hKg : K * min g₀ (s / (2 * K)) ≤ s / 2 := by
+    have hle := mul_le_mul_of_nonneg_left (min_le_right g₀ (s / (2 * K))) hK.le
+    have heq : K * (s / (2 * K)) = s / 2 := by field_simp
+    rwa [heq] at hle
+  refine ⟨min g₀ (s / (2 * K)), (s / 2) * min g₀ (s / (2 * K)), hg_pos, by positivity, fun i => ?_⟩
+  have := deriv_affine_bound_neg_of_continuousOn (h0 i) (hcont i) (hderiv i) (hbound i) hK.le
+    hg_pos hgg₀ hKg
+  linarith [this]
+
 end Pphi2
