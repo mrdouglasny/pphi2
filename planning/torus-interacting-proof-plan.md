@@ -150,11 +150,15 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
        ✅ **brick 4 DONE** `normalizedMoment_hasDerivWithinAt` (`⟨φ(f)ⁿ⟩'(0)=−∫(ω f)ⁿV+(∫(ω f)ⁿ)(∫V)
        =−⟨(ω f)ⁿ;V⟩^c`, via `HasDerivWithinAt.div`+`Z 0=1`) — both axiom-clean
        (`InteractingMeasure/ConnectedCorrelatorDerivative.lean`). **Bricks 1–4 = the full differentiation
-       machinery, DONE.** REMAINING **brick 5** (the only piece left in 2c): the cumulant→Wick algebra
-       `u₄'(0) = M₄'(0)−6M₂(0)M₂'(0) = −⟨:φ(f)⁴:V⟩` — combine brick 4 at `n=4,2` via the product rule,
-       reduce via Isserlis `∫(ω f)⁴=3(∫(ω f)²)²` (`connectedFourPoint_gaussianMeasure_eq_zero`), and use
-       `∫(ω f)²=gffSmearedCovariance f f` to bridge to **2b** (`wickFourth_interaction_inner_quartic`)
-       ⟹ `u₄'(0)=−6∫(C_a f)⁴<0`.
+       machinery, DONE.**
+       ✅ **brick 5 DONE (2026-06-05), axiom-clean** — `u4_hasDerivWithinAt`
+       (`InteractingMeasure/U4Derivative.lean`): for the normalised-moment `u₄(g)=⟨φ(f)⁴⟩_g−3⟨φ(f)²⟩²_g`,
+       `HasDerivWithinAt u₄ (−6·a^d·∑_z(C_a f)(z)⁴) (Ici 0) 0`. Combines brick 4 at `n=4,2` via the
+       product rule, reduces via Isserlis (`connectedFourPoint_gaussianMeasure_eq_zero`) + variance bridge
+       (`gff_wickPower_two_smeared_inner` at `n=m=1`), bridges to **2b**
+       (`wickFourth_interaction_inner_quartic`). **STEP 2c (bricks 1–5) COMPLETE: `u₄'(0)=−6∫(C_a f)⁴<0`.**
+       Remaining for the full axiom discharge: step II positivity (`∑_z(C_a f)(z)⁴>0`) and step III
+       (the `O(g²)` Nelson remainder) to conclude `u₄(g)<0` at small `g>0`.
     2. **Moment derivative** `d/dg ∫(ω f)ⁿ e^{−gV} dμ_GFF |_{g=0} = −∫(ω f)ⁿ V dμ` via Mathlib
        `hasDerivAt_integral_of_dominated_loc_of_deriv_le`: `∂_g = −(ω f)ⁿ V e^{−gV}`, dominated by
        `e^{g₀A}·|(ω f)ⁿ V|` using `V ≥ −A` (`latticeInteraction_bounded_below`) on `g∈[0,g₀]`.
