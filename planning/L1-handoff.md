@@ -23,7 +23,26 @@ Do NOT build `⟨V²⟩₀ = a⁴∑_{z,w}C^m` from scratch. Instead reuse the N
 - Then `‖V_full‖_{L²} ≤ ‖V_smooth‖_{L²} + ‖V_rough‖_{L²}` (Minkowski; or `∫V_full² = ∫V_s² + 2∫V_sV_r + ∫V_r²`, and smooth⊥rough chaos may give `∫V_sV_r=0` via `integral_sum_mul_sum_eq_zero_of_orth` RoughErrorBound.lean:2093).
 - **`‖V_rough‖_{L²}` — CITABLE**: `canonicalRoughError_leading_l2_sq` (RoughErrorBound.lean:2422) + the rough-variance machinery; uniform in N at fixed cutoff `T`.
 - **`‖V_smooth‖_{L²}` — the one piece to BUILD**: `V_smooth = a²∑:P(φ_S):`, needs smooth-covariance summability `a⁴∑_{x,y}C_smooth(x,y)^m ≤ uniform`. Smooth covariance is `canonicalSmoothCovariance_eq_sum_gamma_mul_gamma` (FieldDecomposition.lean:2842, Gram form); needs a pow-sum bound (no smooth analog of `canonicalRoughCovariance_pow_sum_le_uniform_in_aN` yet — build it, or bound via `smoothWickConstant_le_log_uniform_in_aN` + row-sum).
-- **First concrete brick**: the bridge `∫V² dμ_GFF = ∫V_full² dμ_joint` (clean application of `integral_comp_canonicalSumConfig`, mirroring line 123). Then cite rough L², build smooth L².
+- **First concrete brick**: ✅ DONE — `integral_interaction_sq_eq_canonicalJoint` (`InteractionL2.lean`,
+  the bridge `∫V² dμ_GFF = ∫V_full² dμ_joint`, axiom-clean).
+
+### Remaining L1 assembly (2026-06-06 — all prerequisites located, both are cross-term Wick assemblies)
+On the joint measure `φ_S ⊥ φ_R` (independent), `⟨V_full²⟩ = a⁴∑_{x,y}∑_m coeff_m²·m!·` (block-diagonal
+Wick: smooth contractions give `C_smooth^{m-j}`, rough give `C_rough^j`). So both sides reduce to
+covariance pow-sums, all of which EXIST:
+- **rough `∫V_rough²`**: `canonicalRoughError_leading_l2_sq` (RoughErrorBound.lean:2422, the L²-sq
+  cross-term *identity*) + per-cross-term bound `∫ canonicalCrossTerm² ≤ uniform`, assembled from
+  `canonicalRoughCovariance_pow_one_sum_le_uniform_in_aN_proved` (CovarianceBoundsGJ.lean:709),
+  `_pow_two_sum_…:851`, `_pow_sum_…_of_three_le:1297`. The `∫crossTerm²` → pow-sum assembly is the work
+  (no single citable `∫crossTerm² ≤ C` for the symmetric torus — the asym track has it,
+  `AsymRoughErrorChaosStd.lean`; port or re-derive).
+- **smooth `∫V_smooth²`**: `smoothVariance_le_log_uniform` (CovarianceSplit.lean:112, the DIAGONAL
+  smooth covariance ≤ log, uniform) — need the smooth-covariance POW-SUM (row-sum) analogue, then the
+  same cross-term Wick assembly. Build the smooth pow-sum (parallel to the rough ones).
+- **assembly**: Minkowski `‖V_full‖ ≤ ‖V_s‖+‖V_r‖` (or `∫V_full² = ∫V_s²+2∫V_sV_r+∫V_r²`, with
+  `∫V_sV_r=0` from smooth⊥rough chaos orthogonality, `integral_sum_mul_sum_eq_zero_of_orth:2093`).
+- **Verdict**: deep but fully de-risked — the covariance pow-sum BOUNDS (the hard analytic core) are
+  proved; remaining = the cross-term Wick L² assembly tying them to `⟨V²⟩₀`. A focused fresh-context job.
 
 ## Three sub-steps (ORIGINAL from-scratch plan — superseded by the decomposition route above)
 
