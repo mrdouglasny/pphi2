@@ -146,9 +146,15 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
        (`InteractingMeasure/MomentDerivative.lean`): exactly that, for `V = interactionFunctional`
        (`= a^d∑_z wickPolynomial(ω δ_z)`, bounded below). The hard differentiation core of 2c is done.
        Then bricks 3–5 (Z, quotient rule, cumulant→Wick) use existing `HasDerivWithinAt` calculus:
-       · **brick 3** Z'(0)=−∫V is `moment_hasDerivWithinAt` at `n=0` (`(ω f)⁰=1`); · **brick 4** quotient
-       rule (`HasDerivWithinAt.div`, `Z 0=1`) ⟹ `⟨φ(f)ⁿ⟩'(0)=−⟨(ω f)ⁿ;V⟩^c`; · **brick 5** the
-       cumulant→Wick algebra `u₄'(0)=−⟨:φ(f)⁴:V⟩` (Isserlis) bridging to **2b**'s `6∫(C_a f)⁴`.
+       ✅ **brick 3 DONE** `partitionFn_hasDerivWithinAt` (`Z'(0)=−∫V`, `n=0` case; `Z 0=1`);
+       ✅ **brick 4 DONE** `normalizedMoment_hasDerivWithinAt` (`⟨φ(f)ⁿ⟩'(0)=−∫(ω f)ⁿV+(∫(ω f)ⁿ)(∫V)
+       =−⟨(ω f)ⁿ;V⟩^c`, via `HasDerivWithinAt.div`+`Z 0=1`) — both axiom-clean
+       (`InteractingMeasure/ConnectedCorrelatorDerivative.lean`). **Bricks 1–4 = the full differentiation
+       machinery, DONE.** REMAINING **brick 5** (the only piece left in 2c): the cumulant→Wick algebra
+       `u₄'(0) = M₄'(0)−6M₂(0)M₂'(0) = −⟨:φ(f)⁴:V⟩` — combine brick 4 at `n=4,2` via the product rule,
+       reduce via Isserlis `∫(ω f)⁴=3(∫(ω f)²)²` (`connectedFourPoint_gaussianMeasure_eq_zero`), and use
+       `∫(ω f)²=gffSmearedCovariance f f` to bridge to **2b** (`wickFourth_interaction_inner_quartic`)
+       ⟹ `u₄'(0)=−6∫(C_a f)⁴<0`.
     2. **Moment derivative** `d/dg ∫(ω f)ⁿ e^{−gV} dμ_GFF |_{g=0} = −∫(ω f)ⁿ V dμ` via Mathlib
        `hasDerivAt_integral_of_dominated_loc_of_deriv_le`: `∂_g = −(ω f)ⁿ V e^{−gV}`, dominated by
        `e^{g₀A}·|(ω f)ⁿ V|` using `V ≥ −A` (`latticeInteraction_bounded_below`) on `g∈[0,g₀]`.
