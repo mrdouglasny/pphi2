@@ -141,8 +141,14 @@ orthogonality — automatically connected). With `V = a²∑_z :(1/4)φ(δ_z)⁴
        measurability, `F 0` integrable (`∫(ω f)ⁿ`), bound `|F' g|≤e^{εA}|(ω f)ⁿV|` integrable
        (**brick 1**, `integrable_powMul_interaction`, is exactly `F'` at `g=0`; `V≥−A` from
        `latticeInteraction_bounded_below`), within-deriv `HasDerivWithinAt (g↦e^{−gV}) (−Ve^{−gV})`.
-       Gives `HasDerivWithinAt (g↦∫(ω f)ⁿe^{−gV}) (−∫(ω f)ⁿV) (Ici 0) 0`. Then bricks 3–5 (Z, quotient
-       rule, cumulant→Wick) use existing `HasDerivWithinAt` calculus.
+       Gives `HasDerivWithinAt (g↦∫(ω f)ⁿe^{−gV}) (−∫(ω f)ⁿV) (Ici 0) 0`.
+       ✅ **INSTANTIATION DONE (2026-06-06), axiom-clean** — `Pphi2.moment_hasDerivWithinAt`
+       (`InteractingMeasure/MomentDerivative.lean`): exactly that, for `V = interactionFunctional`
+       (`= a^d∑_z wickPolynomial(ω δ_z)`, bounded below). The hard differentiation core of 2c is done.
+       Then bricks 3–5 (Z, quotient rule, cumulant→Wick) use existing `HasDerivWithinAt` calculus:
+       · **brick 3** Z'(0)=−∫V is `moment_hasDerivWithinAt` at `n=0` (`(ω f)⁰=1`); · **brick 4** quotient
+       rule (`HasDerivWithinAt.div`, `Z 0=1`) ⟹ `⟨φ(f)ⁿ⟩'(0)=−⟨(ω f)ⁿ;V⟩^c`; · **brick 5** the
+       cumulant→Wick algebra `u₄'(0)=−⟨:φ(f)⁴:V⟩` (Isserlis) bridging to **2b**'s `6∫(C_a f)⁴`.
     2. **Moment derivative** `d/dg ∫(ω f)ⁿ e^{−gV} dμ_GFF |_{g=0} = −∫(ω f)ⁿ V dμ` via Mathlib
        `hasDerivAt_integral_of_dominated_loc_of_deriv_le`: `∂_g = −(ω f)ⁿ V e^{−gV}`, dominated by
        `e^{g₀A}·|(ω f)ⁿ V|` using `V ≥ −A` (`latticeInteraction_bounded_below`) on `g∈[0,g₀]`.
