@@ -14,7 +14,18 @@ theorem interaction_sq_integral_le_uniform (L mass) (hL : 0 < L) (hmass : 0 < ma
 ```
 i.e. `⟨V²⟩₀ ≤ C` uniform in `N`. (Equivalently `‖V‖_{L²} ≤ √C`; this feeds L3 → L4.)
 
-## Three sub-steps
+## ★ BETTER ROUTE (2026-06-06): reuse the Nelson smooth/rough decomposition
+
+Do NOT build `⟨V²⟩₀ = a⁴∑_{z,w}C^m` from scratch. Instead reuse the Nelson decomposition
+(`NelsonEstimate/RoughErrorBound.lean`, `FieldDecomposition.lean`):
+- `canonicalFullInteractionJoint = interactionFunctional` **exactly** (`canonicalFullInteractionJoint_eq_interactionFunctional`), `V = V_smooth + V_rough` (`canonicalRoughError = full − smooth`).
+- **Bridge** `integral_comp_canonicalSumConfig` (FieldDecomposition.lean:4221): `∫ F(V) dμ_GFF = ∫ F(V_full) dμ_joint` for measurable `F`. Mirror `integral_exp_neg_interaction_sq_eq_canonicalJoint` (RoughErrorBound.lean:123) with `F = (·)²` to get `∫ V² dμ_GFF = ∫ V_full² dμ_joint`.
+- Then `‖V_full‖_{L²} ≤ ‖V_smooth‖_{L²} + ‖V_rough‖_{L²}` (Minkowski; or `∫V_full² = ∫V_s² + 2∫V_sV_r + ∫V_r²`, and smooth⊥rough chaos may give `∫V_sV_r=0` via `integral_sum_mul_sum_eq_zero_of_orth` RoughErrorBound.lean:2093).
+- **`‖V_rough‖_{L²}` — CITABLE**: `canonicalRoughError_leading_l2_sq` (RoughErrorBound.lean:2422) + the rough-variance machinery; uniform in N at fixed cutoff `T`.
+- **`‖V_smooth‖_{L²}` — the one piece to BUILD**: `V_smooth = a²∑:P(φ_S):`, needs smooth-covariance summability `a⁴∑_{x,y}C_smooth(x,y)^m ≤ uniform`. Smooth covariance is `canonicalSmoothCovariance_eq_sum_gamma_mul_gamma` (FieldDecomposition.lean:2842, Gram form); needs a pow-sum bound (no smooth analog of `canonicalRoughCovariance_pow_sum_le_uniform_in_aN` yet — build it, or bound via `smoothWickConstant_le_log_uniform_in_aN` + row-sum).
+- **First concrete brick**: the bridge `∫V² dμ_GFF = ∫V_full² dμ_joint` (clean application of `integral_comp_canonicalSumConfig`, mirroring line 123). Then cite rough L², build smooth L².
+
+## Three sub-steps (ORIGINAL from-scratch plan — superseded by the decomposition route above)
 
 **(i) Product integrability** — `Integrable (fun ω => W_z ω * W_w ω) μ_GFF`, `W_z = wickPolynomial P c (ωδ_z)`.
 Cleanest route: AM–GM `|W_z W_w| ≤ ½(W_z² + W_w²)` (`mono'`), reduce to same-site `Integrable (W_z²)`.
