@@ -28,10 +28,20 @@ The monolithic uniform axiom is now reduced to a small leaf set, with the **conn
   `∃ g c>0, ∀i, φ_i g ≤ −c`. Feed `φ_N = u₄` of the Gibbs family.
 - ✅ `integral_interaction_sq_eq_canonicalJoint` (`InteractionL2.lean`) — L1 bridge.
 
+**Connective lemma (corrected interface, 2026-06-06):** `exists_uniform_neg_of_uniform_affine_bound'`
+(`UniformBounds.lean`) — uses **`ContinuousOn [0,g₀]` + `HasDerivAt` on the OPEN `(0,g₀)`** (NOT
+`HasDerivAt` on `Icc`). Reason: the `u₄` Gibbs family has no two-sided derivative at `g=0` —
+`∫e^{-gV}` diverges for `g<0` (Dyson). MVT (`exists_hasDerivAt_eq_slope`) only needs interior
+derivative + continuity. (`deriv_affine_bound_neg_of_continuousOn` is the per-`N` MVT step.)
+
 **Remaining = the leaf hypotheses for `φ_N = u₄`** (each a bounded, mostly-mechanical job):
-1. **`h0`** `u₄_N(0)=0` — generalise `u4_at_zero` (Isserlis). EASY.
-2. **`hderiv`** `∀t∈[0,g₀], HasDerivAt u₄_N (u₄'_N t) t` — extend `MomentDerivative` from `g=0` to all `t`
-   (same one-sided parametric-integral machinery, now two-sided on the interior).
+1. **`h0`** `u₄_N(0)=0` — ✅ `u4_at_zero` (already proved per N).
+2. **`hcont`** `ContinuousOn u₄_N [0,g₀]` — NEW: continuity of the normalised moments
+   `M_n(g)=∫(ωf)ⁿe^{-gV}/Z_g` in `g` (dominated convergence; `Z_g≥1>0` via `partitionFn_ge_one`).
+3. **`hderiv`** `∀t∈(0,g₀), HasDerivAt u₄_N (u₄'_N t) t` — NEW: re-do the differentiation chain
+   (bricks 2–5) at a general interior `t`, **two-sided** (`hasDerivAt_integral_of_dominated_loc_of_deriv_le`,
+   the standard Mathlib lemma; domination near `t` by `e^{(3t/2)|B|}|(ωf)ⁿV|`, brick 1). First sub-brick:
+   `moment_hasDerivAt` (general `t`) → `Z'_t` → `M_n'_t` (quotient) → `u₄'_t` (product).
 3. **`hbound`** `u₄'_N(t) ≤ −s + Kt` uniform, which splits into the two textbook estimates:
    - **leading slope `s`**: `u₄'_N(0) = −6a²∑(C_a f)⁴ ≤ −s` uniform (Riemann/low-mode; the `s`-leaf).
    - **second-order `K`**: `u₄'_N(t) − u₄'_N(0) ≤ Kt`, i.e. `|u₄''_N| ≤ K` uniform — from the moment
