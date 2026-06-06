@@ -129,4 +129,44 @@ theorem u4_hasDerivWithinAt (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
   simp only [Nat.cast_ofNat, Nat.reduceSub, pow_one]
   linear_combination hexp - (∫ ω, V ω ∂μ) * hIss
 
+/-! ## Step II — strict positivity of the quartic kernel sum -/
+
+/-- The quartic kernel sum `∑_z (C_a f)(z)⁴` is nonnegative (a sum of fourth powers); hence the
+first-order slope `u₄'(0) = −6 a^d · (this)` is `≤ 0`. -/
+lemma quartic_kernel_sum_nonneg (a mass : ℝ) (f : FinLatticeField d N) :
+    0 ≤ ∑ z, (∑ x, f x * gffPositionCovariance d N a mass x z) ^ 4 :=
+  Finset.sum_nonneg fun z _ => by positivity
+
+/-- **Step II (positivity).** If the smeared covariance `C_a f` is not identically zero, the quartic
+kernel sum is strictly positive. -/
+lemma quartic_kernel_sum_pos (a mass : ℝ) (f : FinLatticeField d N)
+    (hf : ∃ z, (∑ x, f x * gffPositionCovariance d N a mass x z) ≠ 0) :
+    0 < ∑ z, (∑ x, f x * gffPositionCovariance d N a mass x z) ^ 4 := by
+  obtain ⟨z₀, hz₀⟩ := hf
+  exact Finset.sum_pos' (fun z _ => by positivity) ⟨z₀, Finset.mem_univ z₀, by positivity⟩
+
+/-- **Step II (strict slope).** When `C_a f ≢ 0`, the first-order slope `u₄'(0) = −6 a^d · ∑(C_a f)⁴`
+is strictly negative (`0 < a`). -/
+lemma u4_slope_neg (a mass : ℝ) (ha : 0 < a) (f : FinLatticeField d N)
+    (hf : ∃ z, (∑ x, f x * gffPositionCovariance d N a mass x z) ≠ 0) :
+    -6 * a ^ d * ∑ z, (∑ x, f x * gffPositionCovariance d N a mass x z) ^ 4 < 0 := by
+  have hsum := quartic_kernel_sum_pos d N a mass f hf
+  have had : 0 < a ^ d := pow_pos ha d
+  nlinarith [hsum, had]
+
+/-- **Step II (witness).** There is a test function — the single-site `δ_{z₀}` — whose first-order
+slope is strictly negative: `C_a δ_{z₀}(z₀) = gffPositionCovariance z₀ z₀ = wickConstant > 0`. -/
+lemma exists_u4_slope_neg (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
+    ∃ f : FinLatticeField d N,
+      -6 * a ^ d * ∑ z, (∑ x, f x * gffPositionCovariance d N a mass x z) ^ 4 < 0 := by
+  classical
+  obtain ⟨z₀⟩ : Nonempty (FinLatticeSites d N) := inferInstance
+  refine ⟨fun x => if x = z₀ then (1 : ℝ) else 0, u4_slope_neg d N a mass ha _ ⟨z₀, ?_⟩⟩
+  show (∑ x, (if x = z₀ then (1 : ℝ) else 0) * gffPositionCovariance d N a mass x z₀) ≠ 0
+  have hval : (∑ x, (if x = z₀ then (1 : ℝ) else 0) * gffPositionCovariance d N a mass x z₀)
+      = gffPositionCovariance d N a mass z₀ z₀ := by
+    simp only [ite_mul, one_mul, zero_mul, Finset.sum_ite_eq', Finset.mem_univ, if_true]
+  rw [hval, ← wickConstant_eq_gffPositionCovariance d N a mass ha hmass z₀]
+  exact ne_of_gt (wickConstant_pos d N a mass ha hmass)
+
 end Pphi2
