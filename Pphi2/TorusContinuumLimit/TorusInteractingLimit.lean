@@ -120,7 +120,8 @@ theorem nelson_exponential_estimate
 
 /-- **L4t.** Uniform exp-moment in the form consumed by `interacting_moment_le_L2_of_expBound`:
 `∫ exp(-(2·V)) dμ_GFF ≤ K` with `K ≥ 1`, uniform in `N`, on the torus `a = L/N`. Repackages
-`nelson_exponential_estimate` (rewriting `(exp(-V))² = exp(-(2V))` and bumping the witness to `≥ 1`). -/
+`nelson_exponential_estimate` (rewriting `(exp(-V))² = exp(-(2V))` and bumping the witness
+to `≥ 1`). -/
 theorem expMoment_two_le_uniform
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ K : ℝ, 1 ≤ K ∧ ∀ (N : ℕ) [NeZero N],

@@ -190,7 +190,8 @@ exp-bound `∫ e^{-2V} ≤ K` (with `K ≥ 1`), the interacting moment is `L²`-
 `⟨|X|⟩_t = (∫|X|e^{-tV})/Z_t ≤ ‖X‖_{L²}·√K`. Composition of `boltzmann_cauchySchwarz`
 (Cauchy–Schwarz), `expMoment_le_rpow` (`∫e^{-2tV} ≤ (∫e^{-2V})^t ≤ K`), and `partitionFn_ge_one`
 (`Z_t ≥ 1`, so dividing only decreases). Uniform in `N` once `K` is (Nelson). This is the corrected
-L4 mechanism — `V` is not bounded below, so the control is via the exp-moment, not a pointwise bound. -/
+L4 mechanism — `V` is not *uniformly-in-N* bounded below (the 2D Wick constant log-diverges), so the
+control is via the exp-moment, not a pointwise bound. -/
 lemma interacting_moment_le_L2_of_expBound (d N : ℕ) [NeZero N]
     (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (X : Configuration (FinLatticeField d N) → ℝ)
