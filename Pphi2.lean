@@ -28,6 +28,7 @@ import Pphi2.InteractingMeasure.ConnectedCorrelatorDerivative
 import Pphi2.InteractingMeasure.U4Derivative
 import Pphi2.InteractingMeasure.UniformBounds
 import Pphi2.InteractingMeasure.InteractionL2
+import Pphi2.InteractingMeasure.InteractionVariance
 import Pphi2.InteractingMeasure.U4DerivativeInterior
 import Pphi2.InteractingMeasure.LeadingTerm
 import Pphi2.MathlibContrib.ParametricIntegralWithin

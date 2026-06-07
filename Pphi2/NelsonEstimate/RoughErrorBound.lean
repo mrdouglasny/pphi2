@@ -3924,6 +3924,25 @@ theorem canonicalRoughError_neg_tail_uniform_in_aN
       (Real.sqrt (K * T * (1 + |Real.log T|) ^ (P.n - 1)))
       hscale_pos hscale_norm hrepr_joint t ht
 
+/-- **`(canonicalRoughError)²` is integrable** on the canonical joint measure. Extracted from the
+`L²`/Wiener-chaos membership (`canonicalRoughErrorStd_mem_wienerChaosLE`): the std-Gaussian
+representative is `MemLp 2`, hence its square is integrable, and this transfers to the joint measure
+via the measurable equivalence (`canonicalRoughErrorStd_eq`). The exposed companion of
+`rough_error_variance` (which bounds the integral but keeps integrability internal). -/
+theorem canonicalRoughError_sq_integrable (ha : 0 < a) (hmass : 0 < mass)
+    (T : ℝ) (hT : 0 < T) (P : InteractionPolynomial) :
+    Integrable (fun η => (canonicalRoughError d N a mass T P η) ^ 2)
+      (canonicalJointMeasure d N) := by
+  obtain ⟨hf, _⟩ := canonicalRoughErrorStd_mem_wienerChaosLE
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT P
+  have hsq_map : Integrable (fun ξ => (canonicalRoughErrorStd d N a mass T P ξ) ^ 2)
+      ((canonicalJointMeasure d N).map (canonicalJointStdGaussianMeasurableEquiv d N)) := by
+    simpa [canonicalJointMeasure_map_stdGaussian (d := d) (N := N)] using hf.integrable_sq
+  have hcomp := (integrable_map_equiv (canonicalJointStdGaussianMeasurableEquiv d N)
+    (fun ξ => (canonicalRoughErrorStd d N a mass T P ξ) ^ 2)).mp hsq_map
+  refine hcomp.congr (Filter.Eventually.of_forall fun η => ?_)
+  simp [Function.comp]
+
 end Pphi2
 
 end

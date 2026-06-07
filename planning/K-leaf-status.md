@@ -28,7 +28,11 @@ for the `a≤1` interface in Hypercontractivity.lean is still axiomatic, but the
 route we use does NOT touch it.)
 ⟹ REASSESS: much of L1/L2 covariance-summability infra likely already exists inside NelsonEstimate/
 (CovarianceBoundsGJ, CovarianceSplit) + ContinuumLimit/Hypercontractivity.lean. Survey before rebuilding.
-- [ ] L1. uniform `⟨V²⟩₀ ≤ C(m,L)`. status: SCOPED, not blocked — THE remaining analytic core. deps: []
+- [x] L1. uniform `⟨V²⟩₀ ≤ C(m,L)`. status: ✅ DONE — `interaction_variance_le`
+      (InteractionVariance.lean), axiom-clean. Smooth variance (M2) +
+      `rough_error_variance` + bridge + (a+b)²≤2a²+2b² at T=1. Exposed
+      `canonicalRoughError_sq_integrable` (RoughErrorBound) + `canonicalSmoothInteraction_sq_integrable`.
+      [OLD scoping notes below, superseded.] deps: []
       ROUTING DECISION (2026-06-06): TWO routes.
       • Direct (gffPositionCovariance): ⟨V²⟩₀=∑_m c_m²m!·a^{2d}∑_{z,w}C(z,w)^m via
         gff_wickPower_two_smeared_inner, then full-cov row-sum→double via a^d·card=L^d. BLOCKED by a
