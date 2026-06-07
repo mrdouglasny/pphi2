@@ -14,6 +14,20 @@ with `s, K, g₀` **uniform in `N`**:
 So the ONLY remaining analytic content is `hbound`. NB `deriv u₄_N t` from `u4_differentiableAt`
 is *abstract* (`DifferentiableAt.deriv`), so `hbound` first needs a **closed form** for `u₄'(t)`.
 
+## STATUS (branch `l5-affine-bound`)
+
+Done + axiom-clean this branch:
+- `normalizedMoment_hasDerivAt` (L5a interior quotient rule), `partitionFn_hasDerivAt2` (Z'').
+- `abs_interacting_moment_le` (`|⟨X⟩_t| ≤ ‖X‖_{L²}√K`), `memLp_pairing_pow_mul_interaction_pow`
+  (`(ωf)ⁿVᵇ ∈ L²`) — the per-moment bound bricks.
+- **Closed forms `u4`, `u4Deriv`, `u4Deriv2`** (defs) + `u4_hasDerivAt`, `u4_hasDerivAt2` — `u₄ ∈ C²`
+  at interior `t` with explicit `u₄' = m₄'−6m₂m₂'`, `u₄'' = m₄''−6(m₂'²+m₂m₂'')`. `u4` unfolds
+  definitionally to the discharge's `M₄/Z−3(M₂/Z)²`.
+
+In progress (Codex): `u4Deriv2_abs_le_uniform` — `|u₄''(t)| ≤ K` uniform on `[0,1]`, by
+ratio-decomposing each `normalizedMoment*`/`normalizedMomentDeriv*` into `(∫(ωf)ⁿVᵇe^{-gV})/Z`
+ratios (`abs_interacting_moment_le` + L3 free bounds + Nelson), triangle inequality.
+
 ## L5(ii) brick sequence (the slog)
 
 Notation: `m_n(t) = ⟨(ωf)ⁿ⟩_t = M_n(t)/Z(t)`, `M_n(t) = ∫(ωf)ⁿe^{-tV}dμ_GFF`, `Z(t)=∫e^{-tV}`.
@@ -46,17 +60,26 @@ Notation: `m_n(t) = ⟨(ωf)ⁿ⟩_t = M_n(t)/Z(t)`, `M_n(t) = ∫(ωf)ⁿe^{-tV
   `(L^{3d}m⁸)⁻¹`), this is exactly `deriv u₄_N t ≤ -s + K·t`. (Alternatively bound
   `u₄'(t) - u₄'(0) ≤ K·t` directly via MVT on `u₄'` + `u₄'' ≤ K`.)
 
-## L6F — final discharge (short, once L5 lands)
+## L6F — final discharge (once the affine bound lands)
 
-1. `exists_uniform_neg_of_uniform_affine_bound'` with `s` (`leadingTerm_const_eq`, uniform),
-   `K` (L5c), `g₀` ⟹ `∃ g c>0, ∀N, u₄_N(g) ≤ -c`.
-2. **Torus framing.** `torusConnectedFourPoint L (torusInteractingMeasure L N P mass hmass) f`
-   pulls back through `torusEmbedLift`/`latticeTestFn` to the lattice `u₄_N(g)` of
-   `interactingLatticeMeasure` (mirror the second-moment pullback in `TorusInteractingMoments`),
-   with `f` = embedded normalised constant.
-3. **mass ↔ g.** `g = 1/(4 mass²)` (`FieldRedefinition`); `mass > m₀ ⟺ g < g₀ := 1/(4m₀²)`. Set
-   `m₀` from `g₀`. ⟹ `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
-   ⟹ `torus_pphi2_isInteracting_weakCoupling` is axiom-free.
+Remaining bricks (the affine bound itself + the framing):
+1. **Affine bound** `deriv u₄ t ≤ -s + K·t` on `(0,g₀)`: from `u4_hasDerivAt2` (u₄'') + the uniform
+   `u4Deriv2_abs_le_uniform` (|u₄''|≤K) via MVT/FTC on `u4Deriv`, plus `u4Deriv(0⁺) = -s` (connect
+   the interior `u4Deriv` to the within-derivative `u4_hasDerivWithinAt` value `-6a²∑(C_af)⁴`).
+2. `exists_uniform_neg_of_uniform_affine_bound'` with `s` (`leadingTerm_const_eq`, uniform `(L^{3d}m⁸)⁻¹`),
+   `K`, `g₀` ⟹ `∃ g c>0, ∀N, u₄_N(g) ≤ -c`. (`h0`/`hcont`/`hderiv` = `u4_at_zero`/`u4_continuousOn`/
+   `u4_differentiableAt`, all done.)
+3. **Torus framing.** `torusConnectedFourPoint L (torusInteractingMeasure L N P mass hmass) f`
+   `= connectedFourPoint (interactingLatticeMeasure ..) (latticeTestFn f)` via `torusEmbedLift`
+   pushforward (`torusInteractingMeasure = map torusEmbedLift (interactingLatticeMeasure)`; mirror the
+   second-moment pullback in `TorusInteractingMoments`). `connectedFourPoint(interactingLatticeMeasure)
+   = u4(..g=1)`.
+4. **mass ↔ g via field redefinition.** `connectedFourPoint_interactingMeasure_field_rescale`
+   (`FieldRedefinition.lean`): `u₄` scales by `c⁴` under `ω↦c•ω`, and rescaling the free measure
+   changes the mass (covariance `×c²`). So the mass-`m`/g=1 theory ≡ a reference theory at weak
+   coupling `g(m)→0` as `m→∞`; `mass>m₀ ⟺ g<g₀`. Set `m₀` from `g₀` ⟹
+   `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
+   ⟹ `torus_pphi2_isInteracting_weakCoupling` axiom-free.
 
 HONEST SCOPE: L5(ii) is several focused sessions (L5a closed form + L5c the big moment assembly are
 the bulk). L6F is short once `s` and `K` are in hand. All the analytic inputs (L1, L2-for-V, L3, L4,
