@@ -91,23 +91,23 @@ but NOT on the lattice size N:
 
   `∫ exp(-2·V_{L/N}(φ)) dμ_{GFF}(φ) ≤ K`   for all `N ≥ 1`
 
-The Wick constant `c_a ≤ mass⁻²` is bounded uniformly (proved in
-`wickConstant_le_inv_mass_sq`), so the Wick polynomial has a uniform
-lower bound. The difficulty is that the interaction `V = a² Σ_x :P(φ(x)):_c`
-sums over `N²` lattice sites, giving the naive bound `V ≥ -N²·A` and hence
-`exp(-2V) ≤ exp(2·N²·A)`. This blows up as N → ∞.
+**WARNING — there is NO uniform pointwise lower bound on `V`.** In 2D the Wick
+constant `c_a ∼ (1/2π)ln(1/a)` log-diverges as `a → 0`
+(`wickConstant_le_inv_mass_sq` gives only `c_a ≤ (a²)⁻¹·mass⁻²`, which blows up),
+so `:φ⁴:_c ≥ -6c_a²` and the naive `V ≥ -L²·A` are **false**. The estimate does
+NOT come from `exp(-2V) ≤ exp(2L²A)`.
 
-Nelson's estimate overcomes this by exploiting the Gaussian measure's
-correlation structure: the probability that many sites simultaneously have
-large negative Wick polynomial values is exponentially suppressed.
-
-**Proof methods** (not yet formalized):
-1. Nelson's symmetry + hypercontractivity of the OU semigroup (Simon §V.1-V.2)
-2. Cluster expansions (Glimm-Jaffe §19.1, Battle-Federbush)
+Nelson's estimate instead exploits the Gaussian correlation structure: the
+probability that many sites simultaneously have large negative Wick values is
+exponentially suppressed. The formalized proof (below) uses the smooth/rough
+decomposition — the *smooth* part is uniformly bounded below (smooth covariance
+has no log singularity) and the *rough* part is controlled in `L²`/tail via the
+polynomial-chaos layer-cake bound.
 
 References: Nelson (1966), Simon *P(φ)₂* Ch. V, Glimm-Jaffe §19.1-19.2. -/
--- PROVED: formerly an axiom. Proof: a²·N² = L² (physical volume fixed),
--- so V(ω) ≥ -L²·A gives exp(-2V) ≤ exp(2L²A) uniformly in N.
+-- PROVED (axiom-clean): delegates to `nelson_exponential_estimate_lattice` →
+-- `nelson_exponential_estimate_master` → `polynomial_chaos_exp_moment_bridge`
+-- (smooth lower bound + rough cutoff-tail layer-cake). NOT a pointwise `V ≥ -L²A`.
 theorem nelson_exponential_estimate
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (K : ℝ), 0 < K ∧
@@ -117,6 +117,24 @@ theorem nelson_exponential_estimate
         ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass
           (circleSpacing_pos L N) hmass) ≤ K := by
   exact nelson_exponential_estimate_lattice L P mass hmass
+
+/-- **L4t.** Uniform exp-moment in the form consumed by `interacting_moment_le_L2_of_expBound`:
+`∫ exp(-(2·V)) dμ_GFF ≤ K` with `K ≥ 1`, uniform in `N`, on the torus `a = L/N`. Repackages
+`nelson_exponential_estimate` (rewriting `(exp(-V))² = exp(-(2V))` and bumping the witness to `≥ 1`). -/
+theorem expMoment_two_le_uniform
+    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    ∃ K : ℝ, 1 ≤ K ∧ ∀ (N : ℕ) [NeZero N],
+      ∫ ω : Configuration (FinLatticeField 2 N),
+          Real.exp (-(2 * interactionFunctional 2 N P (circleSpacing L N) mass ω))
+          ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass
+            (circleSpacing_pos L N) hmass) ≤ K := by
+  obtain ⟨K, _, hbd⟩ := nelson_exponential_estimate L P mass hmass
+  refine ⟨max 1 K, le_max_left _ _, fun N _ => ?_⟩
+  have heq : ∀ ω, Real.exp (-(2 * interactionFunctional 2 N P (circleSpacing L N) mass ω))
+      = (Real.exp (-interactionFunctional 2 N P (circleSpacing L N) mass ω)) ^ 2 :=
+    fun ω => by rw [sq, ← Real.exp_add]; congr 1; ring
+  simp_rw [heq]
+  exact le_trans (hbd N) (le_max_right _ _)
 
 /-! ## Uniform second moment bounds for interacting measures -/
 

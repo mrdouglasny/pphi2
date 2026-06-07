@@ -13,8 +13,21 @@ uniform. There is **no second-derivative infra yet** — that (L5) is the slog.
 - [x] L4. `interacting_moment_le_L2_of_expBound` — pull-back: given `∫e^{−2V} ≤ K` (K≥1) and `t∈[0,1]`,
       `X∈L²`, then `⟨|X|⟩_t = ∫|X|e^{−tV}/Z_t ≤ ‖X‖_{L²}·√K`.
       status: DONE (UniformBounds.lean, axiom-clean). General in d,N,a,mass,P.
-- [ ] L4t. torus instantiation: feed `nelson_exponential_estimate` (∫e^{−2V}≤K, circleSpacing) into L4.
-      status: todo  deps: [L4]
+- [x] L4t. `expMoment_two_le_uniform` (TorusInteractingLimit.lean): `∃ K≥1, ∀N, ∫e^{−(2V)} ≤ K`
+      on the torus, axiom-clean. Repackages `nelson_exponential_estimate`. Feeds directly into L4.
+      status: DONE  deps: [L4]
+
+## ★ KEY FINDING (2026-06-06): Nelson is ALREADY PROVED, axiom-clean
+`nelson_exponential_estimate` (TorusInteractingLimit.lean:111) is sorry-free and depends only on the 3
+standard axioms — NOT the custom-axiom bridge. It routes nelson_exponential_estimate_lattice →
+nelson_exponential_estimate_master → polynomial_chaos_exp_moment_bridge (smooth lower-bound +
+rough cutoff-tail layer-cake), the LEGITIMATE Nelson argument (NOT the false `V ≥ −L²A` pointwise
+bound — that was a stale comment, now fixed). This DE-RISKS the K leaf: the deepest analytic input
+(∫e^{−2V}≤K uniform) is done. (Note: a SEPARATE `axiom nelson_exponential_estimate_master_bounded`
+for the `a≤1` interface in Hypercontractivity.lean is still axiomatic, but the fixed-volume torus
+route we use does NOT touch it.)
+⟹ REASSESS: much of L1/L2 covariance-summability infra likely already exists inside NelsonEstimate/
+(CovarianceBoundsGJ, CovarianceSplit) + ContinuumLimit/Hypercontractivity.lean. Survey before rebuilding.
 - [ ] L1. uniform `⟨V²⟩₀ ≤ C(m,L)`. ⟨V²⟩₀ = a^{2d}∑_{z,w}∑_m c_m² m! C(z,w)^m (gff_wickPower_two_smeared_inner,
       C = gffPositionCovariance FULL). Need full-cov double-sum `a^{2d}∑_{z,w}|C|^m ≤ uniform`.
       status: todo  deps: []  note: GAP — existing pow-sum bounds are ROW sums of canonicalRough
