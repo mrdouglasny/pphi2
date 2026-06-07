@@ -393,4 +393,26 @@ theorem interaction_moment_le (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
   rw [← Real.rpow_natCast C2 m]
   exact Real.rpow_le_rpow hvar_nn hvar (by positivity)
 
+/-- **L3a — `V ∈ Lᵖ` on the GFF** (`p ≥ 2`, per `N`). Transfers `canonicalFullInteractionJoint_memLp`
+from the joint measure to the lattice GFF via `canonicalJointMeasure_map_canonicalSumConfig` and
+`canonicalFullInteractionJoint_eq_interactionFunctional`. In particular `V^{2k} ∈ L²` (so the L3
+Cauchy–Schwarz applies). -/
+theorem interaction_memLp (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass) (P : InteractionPolynomial)
+    (p : ℝ) (hp : 2 ≤ p) (N : ℕ) [NeZero N] :
+    MeasureTheory.MemLp (fun ω => interactionFunctional 2 N P (circleSpacing L N) mass ω)
+      (ENNReal.ofReal p)
+      (latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass) := by
+  have ha : 0 < circleSpacing L N := circleSpacing_pos L N
+  have hVfull := canonicalFullInteractionJoint_memLp 2 N (circleSpacing L N) mass ha hmass 1 one_pos P p hp
+  rw [show latticeGaussianMeasure 2 N (circleSpacing L N) mass ha hmass
+      = (canonicalJointMeasure 2 N).map (canonicalSumConfig 2 N (circleSpacing L N) mass 1)
+      from (canonicalJointMeasure_map_canonicalSumConfig 2 N (circleSpacing L N) mass ha hmass
+        1 one_pos).symm,
+    memLp_map_measure_iff
+      (interactionFunctional_measurable 2 N P (circleSpacing L N) mass).aestronglyMeasurable
+      (canonicalSumConfig_measurable 2 N (circleSpacing L N) mass 1).aemeasurable]
+  refine hVfull.ae_eq ?_
+  filter_upwards with η
+  simp only [Function.comp_apply, canonicalFullInteractionJoint_eq_interactionFunctional]
+
 end Pphi2
