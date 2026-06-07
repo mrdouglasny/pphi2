@@ -122,25 +122,36 @@ lemma gffPositionCovariance_row_sum (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mas
         simp only [Pi.single_apply, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
           Finset.mem_univ, if_true]
 
+/-- **Leading-term closed form (`s` leaf, uniform-ready).** For the normalised-constant test
+function `f = (#sites)⁻¹·1`, the `u₄` leading coefficient evaluates to
+`a^d·∑_z(C_a f)(z)⁴ = ((a^d·#sites)³·m⁸)⁻¹`. On the torus `a^d·#sites = L^d` (`lattice_volume_eq`),
+so this equals `(L^{3d} m⁸)⁻¹` — manifestly independent of `N`, i.e. the uniform lower bound `s`
+consumed by `deriv_affine_bound_neg`. -/
+lemma leadingTerm_const_eq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
+    a ^ d * ∑ z : FinLatticeSites d N,
+        (∑ x, (fun _ : FinLatticeSites d N => (Fintype.card (FinLatticeSites d N) : ℝ)⁻¹) x *
+          gffPositionCovariance d N a mass x z) ^ 4
+      = ((a ^ d * (Fintype.card (FinLatticeSites d N) : ℝ)) ^ 3 * (mass ^ 2) ^ 4)⁻¹ := by
+  have hcard : (Fintype.card (FinLatticeSites d N) : ℝ) ≠ 0 := by
+    exact_mod_cast Fintype.card_pos.ne'
+  have had : (a ^ d : ℝ) ≠ 0 := (pow_pos ha d).ne'
+  have hmsq : (mass ^ 2 : ℝ) ≠ 0 := pow_ne_zero 2 hmass.ne'
+  have hval : ∀ z : FinLatticeSites d N,
+      (∑ x, (Fintype.card (FinLatticeSites d N) : ℝ)⁻¹ * gffPositionCovariance d N a mass x z)
+        = (Fintype.card (FinLatticeSites d N) : ℝ)⁻¹ * ((a ^ d : ℝ)⁻¹ * (mass ^ 2)⁻¹) := by
+    intro z; rw [← Finset.mul_sum, gffPositionCovariance_row_sum d N a mass ha hmass z]
+  rw [Finset.sum_congr rfl (fun z _ => by rw [hval z]), Finset.sum_const, Finset.card_univ,
+    nsmul_eq_mul]
+  field_simp
+
 /-- **Leading-term positivity (`s` leaf).** For the normalised-constant test function
-`f = (#sites)⁻¹·1`, the `u₄` leading coefficient `a^d·∑_z(C_a f)(z)⁴` is strictly positive
-(the closed value is `((a^d·#sites)³·m⁸)⁻¹ = (L^{3d} m⁸)⁻¹` on the torus, uniform in `N`). -/
+`f = (#sites)⁻¹·1`, the `u₄` leading coefficient `a^d·∑_z(C_a f)(z)⁴` is strictly positive. -/
 lemma leadingTerm_const_pos (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
     0 < a ^ d * ∑ z : FinLatticeSites d N,
       (∑ x, (fun _ : FinLatticeSites d N => (Fintype.card (FinLatticeSites d N) : ℝ)⁻¹) x *
         gffPositionCovariance d N a mass x z) ^ 4 := by
   have hcard : (0 : ℝ) < Fintype.card (FinLatticeSites d N) := by exact_mod_cast Fintype.card_pos
-  have hval : ∀ z : FinLatticeSites d N,
-      (∑ x, (Fintype.card (FinLatticeSites d N) : ℝ)⁻¹ * gffPositionCovariance d N a mass x z)
-        = (Fintype.card (FinLatticeSites d N) : ℝ)⁻¹ * ((a ^ d : ℝ)⁻¹ * (mass ^ 2)⁻¹) := by
-    intro z; rw [← Finset.mul_sum, gffPositionCovariance_row_sum d N a mass ha hmass z]
-  apply mul_pos (pow_pos ha d)
-  apply Finset.sum_pos
-  · intro z _
-    rw [hval z]
-    refine pow_pos (mul_pos (inv_pos.mpr hcard) (mul_pos ?_ ?_)) 4
-    · exact inv_pos.mpr (pow_pos ha d)
-    · exact inv_pos.mpr (pow_pos hmass 2)
-  · exact Finset.univ_nonempty
+  rw [leadingTerm_const_eq d N a mass ha hmass]
+  positivity
 
 end Pphi2
