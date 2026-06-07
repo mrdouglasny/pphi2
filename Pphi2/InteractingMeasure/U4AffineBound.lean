@@ -161,4 +161,28 @@ lemma continuousWithinAt_u4Deriv (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
   unfold u4Deriv
   exact (hcNMD 4).sub (((hcNM 2).mul (hcNMD 2)).const_mul 6)
 
+/-- **MVT affine bound on `u₄'`.** Given a uniform second-derivative bound `|u₄''| ≤ K` on `[0,1]`,
+the mean value theorem gives `u₄'(t) ≤ u₄'(0) + K·t` for `t ∈ (0,1]`. -/
+lemma u4Deriv_le_affine (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (P : InteractionPolynomial)
+    (f : FinLatticeField d N) {K : ℝ}
+    (hK : ∀ g : ℝ, 0 ≤ g → g ≤ 1 → |u4Deriv2 d N a mass ha hmass P f g| ≤ K)
+    {t : ℝ} (ht0 : 0 < t) (ht1 : t ≤ 1) :
+    u4Deriv d N a mass ha hmass P f t ≤ u4Deriv d N a mass ha hmass P f 0 + K * t := by
+  have hcont : ContinuousOn (u4Deriv d N a mass ha hmass P f) (Icc 0 t) := by
+    intro x hx
+    rcases eq_or_lt_of_le hx.1 with hx0 | hxpos
+    · subst hx0
+      exact (continuousWithinAt_u4Deriv d N a mass ha hmass P f).mono Icc_subset_Ici_self
+    · exact (u4_hasDerivAt2 d N a mass ha hmass P f hxpos).continuousAt.continuousWithinAt
+  obtain ⟨ξ, hξ, hξeq⟩ := exists_hasDerivAt_eq_slope (u4Deriv d N a mass ha hmass P f)
+    (u4Deriv2 d N a mass ha hmass P f) ht0 hcont
+    (fun x hx => u4_hasDerivAt2 d N a mass ha hmass P f hx.1)
+  rw [sub_zero] at hξeq
+  have hξK : u4Deriv2 d N a mass ha hmass P f ξ ≤ K :=
+    le_trans (le_abs_self _) (hK ξ hξ.1.le (le_trans hξ.2.le ht1))
+  have heq : u4Deriv d N a mass ha hmass P f t - u4Deriv d N a mass ha hmass P f 0
+      = u4Deriv2 d N a mass ha hmass P f ξ * t := by
+    rw [hξeq, div_mul_cancel₀ _ ht0.ne']
+  nlinarith [heq, hξK, ht0]
+
 end Pphi2
