@@ -80,8 +80,8 @@ theorem canonicalSmoothCovariance_pow_double_sum_le {d : ℕ} (hd : d = 2) (mass
 
 /-- **M2a — smooth interaction as a sum of diagonal cross-terms.** The smooth interaction is the
 `j=k` (pure-smooth) part of the Wick expansion: `V_smooth = (1/P.n)·crossTerm(P.n,P.n) +
-∑_m P.coeff m · crossTerm(m,m)`, where `canonicalCrossTerm k k = a^d ∑_x :φ_S(x)^k:` (the rough factor
-`:φ_R^0: = 1`). Mirrors `canonicalRoughError_eq_sum_over_cross_terms` (which excludes `j=k`). -/
+∑_m P.coeff m · crossTerm(m,m)`, where `canonicalCrossTerm k k = a^d ∑_x :φ_S(x)^k:` (the rough
+factor `:φ_R^0: = 1`). Mirrors `canonicalRoughError_eq_sum_over_cross_terms` (which excludes `j=k`). -/
 lemma canonicalSmoothInteraction_eq_sum_crossTerm_diag (d N : ℕ) [NeZero N] (a mass : ℝ)
     (T : ℝ) (P : InteractionPolynomial) (η : CanonicalJoint d N) :
     canonicalSmoothInteraction d N a mass T P η =
@@ -97,5 +97,42 @@ lemma canonicalSmoothInteraction_eq_sum_crossTerm_diag (d N : ℕ) [NeZero N] (a
     refine Finset.sum_congr rfl fun m _ => ?_
     simp only [mul_assoc, ← Finset.mul_sum]
     ring
+
+/-- **M2c — per-term diagonal cross-term L² bound.** `∫ (crossTerm(k,k))² ≤ k!·C·(1+|log T|)^k`
+uniform in `N`: the cross-term L² equals `(a^d)²·k!·∑_{x,y} C_smooth(x,y)^k`
+(`canonicalCrossTerm_l2_sq_eq_covSum` at `j=k`, the rough factor being `C_rough^0 = 1`), and the
+smooth double sum is bounded by M1. -/
+theorem canonicalCrossTerm_diag_l2_sq_le {d : ℕ} (hd : d = 2) (mass L : ℝ)
+    (hL : 0 < L) (hmass : 0 < mass) (k : ℕ) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+      (T : ℝ) (_hT : 0 < T),
+      ∫ η, (canonicalCrossTerm d N a mass T η k k) ^ 2 ∂(canonicalJointMeasure d N)
+        ≤ (k.factorial : ℝ) * C * (1 + |Real.log T|) ^ k := by
+  obtain ⟨C1, hC1, hM1⟩ := canonicalSmoothCovariance_pow_double_sum_le hd mass L hL hmass k
+  refine ⟨C1, hC1, ?_⟩
+  intro N _ a ha hvol T hT
+  rw [canonicalCrossTerm_l2_sq_eq_covSum d N a mass ha hmass T hT k k]
+  simp only [Nat.sub_self, Nat.factorial_zero, Nat.cast_one, mul_one, pow_zero]
+  -- goal: a^d * a^d * k! * ∑_{x,y} C_smooth^k ≤ k! * C1 * (1+u)^k
+  have habs : ∑ x : FinLatticeSites d N, ∑ y : FinLatticeSites d N,
+        canonicalSmoothCovariance d N a mass T x y ^ k
+      ≤ ∑ x : FinLatticeSites d N, ∑ y : FinLatticeSites d N,
+        |canonicalSmoothCovariance d N a mass T x y| ^ k := by
+    refine Finset.sum_le_sum fun x _ => Finset.sum_le_sum fun y _ => ?_
+    rw [← abs_pow]; exact le_abs_self _
+  have hkfac : (0 : ℝ) ≤ (k.factorial : ℝ) := by positivity
+  have hann : (0 : ℝ) ≤ a ^ d * a ^ d := by positivity
+  calc a ^ d * a ^ d * (k.factorial : ℝ)
+          * ∑ x : FinLatticeSites d N, ∑ y : FinLatticeSites d N,
+            canonicalSmoothCovariance d N a mass T x y ^ k
+      ≤ a ^ d * a ^ d * (k.factorial : ℝ)
+          * ∑ x : FinLatticeSites d N, ∑ y : FinLatticeSites d N,
+            |canonicalSmoothCovariance d N a mass T x y| ^ k :=
+        mul_le_mul_of_nonneg_left habs (by positivity)
+    _ = (k.factorial : ℝ) * (a ^ d * a ^ d * ∑ x : FinLatticeSites d N,
+            ∑ y : FinLatticeSites d N, |canonicalSmoothCovariance d N a mass T x y| ^ k) := by ring
+    _ ≤ (k.factorial : ℝ) * (C1 * (1 + |Real.log T|) ^ k) :=
+        mul_le_mul_of_nonneg_left (hM1 N a ha hvol T hT) hkfac
+    _ = (k.factorial : ℝ) * C1 * (1 + |Real.log T|) ^ k := by ring
 
 end Pphi2
