@@ -60,7 +60,16 @@ route we use does NOT touch it.)
       template MomentDerivative.lean:126-213 — set μ/V, B from interactionFunctional_bounded_below,
       F/F', hasDerivAt_integral_of_dominated_loc_of_deriv_le). BLOCKED on one sub-lemma:
       `integrable_powMul_interaction_sq` : Integrable ((ωf)ⁿ·V²). deps: [D2int]
-- [ ] D2int. `Integrable ((ω f)ⁿ · V²)`. status: THE remaining D2 piece, a real sub-build. V²=
+- [~] D2int. `Integrable ((ω f)ⁿ · V²)`. status: KERNEL DONE (branch uniform-discharge-D2), tail left.
+      DONE + axiom-clean (MomentIntegrability.lean): integrable_powMul_wickMonomial_mul (same-site
+      :x^{k₁}::x^{k₂}: by induction on k₂), _mulWickPoly (sum over wickPoly), _mul_self (wickPoly·wickPoly
+      same site), _sq ((ωf)ⁿ·wickPoly². TAIL (mechanical): (C) different-site
+      `(ωf)ⁿ·wickPoly(δ_z)·wickPoly(δ_w)` via AM-GM Integrable.mono' dominating by
+      ½(|ωf|ⁿwpz²+|ωf|ⁿwpw²) [use _sq + .abs; measurability via wickPolynomial_continuous₂
+      (WickPolynomial.lean:428) + configuration_eval_measurable; AM-GM two_mul_le_add_sq]; then (D)
+      `integrable_powMul_interaction_sq` = (ωf)ⁿV² via V²=a^{2d}∑_{z,w}wpz wpw (Finset.sum_mul_sum) +
+      integrable_finset_sum of C.
+      OLD note (routes) — superseded; the induction-kernel route above worked. V²=
       a^{2d}∑_{z,w}wickPoly(δ_z)wickPoly(δ_w) ⟹ need `(ωf)ⁿ·wickMon_{k₁}(δ_z)·wickMon_{k₂}(δ_w)`
       integrable = a 3-SITE pairing product (existing integrable_powMul_wickMonomial does only 2 sites
       f,z). Routes (all need a new sub-lemma): (a) double strong-induction on (k₁,k₂) mirroring

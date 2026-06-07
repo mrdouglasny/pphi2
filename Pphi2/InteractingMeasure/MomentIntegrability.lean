@@ -231,4 +231,49 @@ theorem integrable_powMul_wickMonomial_mulWickPoly (a mass : ℝ) (ha : 0 < a) (
       (integrable_powMul_wickMonomial_mul d N a mass ha hmass f z c k₁ (m : ℕ) n l).const_mul
         (P.coeff m)))
 
+/-- `(ω f)ⁿ · (ω δ_z)ˡ · wickPolynomial P c (ω δ_z) · wickPolynomial P c (ω δ_z)` is integrable
+(same site): expand the first `wickPolynomial` factor and sum `integrable_powMul_wickMonomial_mulWickPoly`. -/
+theorem integrable_powMul_wickPolynomial_mul_self (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ)
+    (n l : ℕ) :
+    Integrable (fun ω => (ω f) ^ n * (ω (Pi.single z 1)) ^ l *
+        wickPolynomial P c (ω (Pi.single z 1)) * wickPolynomial P c (ω (Pi.single z 1)))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have hdist : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+        (ω (Pi.single z 1)) ^ l * wickPolynomial P c (ω (Pi.single z 1)) *
+        wickPolynomial P c (ω (Pi.single z 1))) =
+      (fun ω : Configuration (FinLatticeField d N) => (1 / (P.n : ℝ)) *
+          ((ω f) ^ n * (ω (Pi.single z 1)) ^ l * wickMonomial P.n c (ω (Pi.single z 1)) *
+            wickPolynomial P c (ω (Pi.single z 1)))
+        + ∑ m : Fin P.n, P.coeff m *
+            ((ω f) ^ n * (ω (Pi.single z 1)) ^ l * wickMonomial (m : ℕ) c (ω (Pi.single z 1)) *
+              wickPolynomial P c (ω (Pi.single z 1)))) := by
+    funext ω
+    nth_rewrite 1 [wickPolynomial]
+    rw [mul_add, add_mul, Finset.mul_sum, Finset.sum_mul]
+    congr 1
+    · ring
+    · exact Finset.sum_congr rfl fun m _ => by ring
+  rw [hdist]
+  exact
+    ((integrable_powMul_wickMonomial_mulWickPoly d N a mass ha hmass P f z c P.n n l).const_mul _).add
+      (integrable_finset_sum _ (fun m _ =>
+        (integrable_powMul_wickMonomial_mulWickPoly d N a mass ha hmass P f z c (m : ℕ) n l).const_mul
+          (P.coeff m)))
+
+/-- `(ω f)ⁿ · (wickPolynomial P c (ω δ_z))²` is integrable (the `l = 0` square). -/
+theorem integrable_powMul_wickPolynomial_sq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ)
+    (n : ℕ) :
+    Integrable (fun ω => (ω f) ^ n * (wickPolynomial P c (ω (Pi.single z 1))) ^ 2)
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have h := integrable_powMul_wickPolynomial_mul_self d N a mass ha hmass P f z c n 0
+  have heq : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+        (ω (Pi.single z 1)) ^ 0 * wickPolynomial P c (ω (Pi.single z 1)) *
+        wickPolynomial P c (ω (Pi.single z 1))) =
+      (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+        (wickPolynomial P c (ω (Pi.single z 1))) ^ 2) := by
+    funext ω; rw [pow_zero, mul_one, sq]; ring
+  rwa [heq] at h
+
 end Pphi2
