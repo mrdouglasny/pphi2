@@ -55,10 +55,21 @@ route we use does NOT touch it.)
       (MomentIntegrability:141) `(ωf)ⁿ·V` integrable; `integrable_powMul_wickPolynomial` (:117);
       `wickMonomial_latticeGaussian` (Hypercontractivity:864) ⟨:wickₙ:⟩₀=0. Remaining: the uniform
       BOUND `⟨φ(f)^{2n}V^{2k}⟩₀ ≤ K₀` (Cauchy–Schwarz on top of L1 + L2), not just integrability.
-- [ ] D2. second-derivative infra: `moment_hasDerivAt2` / closed form `d²/dt²∫(ωf)ⁿe^{−tV} =
-      ∫(ωf)ⁿV²e^{−tV}`; partitionFn 2nd deriv; quotient-rule C² for the normalized moments and u₄.
-      status: todo  deps: []  note: NEW, no infra. Mirror moment_hasDerivAt (dominated, deriv under ∫).
-      Candidate for Codex (self-contained, like moment_hasDerivAt was).
+- [~] D2. second-derivative infra: `moment_mul_interaction_hasDerivAt` (d/dt ∫(ωf)ⁿVe^{−tV} =
+      −∫(ωf)ⁿV²e^{−tV}, t>0). status: DERIVATIVE PROOF DRAFTED (Codex, mirrors moment_hasDerivAt
+      template MomentDerivative.lean:126-213 — set μ/V, B from interactionFunctional_bounded_below,
+      F/F', hasDerivAt_integral_of_dominated_loc_of_deriv_le). BLOCKED on one sub-lemma:
+      `integrable_powMul_interaction_sq` : Integrable ((ωf)ⁿ·V²). deps: [D2int]
+- [ ] D2int. `Integrable ((ω f)ⁿ · V²)`. status: THE remaining D2 piece, a real sub-build. V²=
+      a^{2d}∑_{z,w}wickPoly(δ_z)wickPoly(δ_w) ⟹ need `(ωf)ⁿ·wickMon_{k₁}(δ_z)·wickMon_{k₂}(δ_w)`
+      integrable = a 3-SITE pairing product (existing integrable_powMul_wickMonomial does only 2 sites
+      f,z). Routes (all need a new sub-lemma): (a) double strong-induction on (k₁,k₂) mirroring
+      integrable_powMul_wickMonomial; (b) AM-GM wickMon(δ_z)wickMon(δ_w) ≤ ½(wickMon(δ_z)²+wickMon(δ_w)²)
+      → still need (ωf)ⁿwickMon_k(δ_z)² (single-site wickMon square); (c) MemLp route: MemLp(wickPoly) 3
+      ×3 → Hölder → L¹ (needs MemLp(wickMon) p, absent); (d) polynomial bound |wickMon_k(x)|≤C(1+|x|^k)
+      → integrable_pow_pairing(_mul) (needs the bound lemma). EASY foundation available:
+      integrable_pow_pairing_mul3 (3-pairing AM-GM, trivial mirror of integrable_pow_pairing_mul:61).
+      Recommend: focused Codex --resume or dedicated session on this one lemma.
 - [ ] L5. `u₄''(t) ≤ K` uniform: expand u₄''(t) as a moment polynomial in ⟨φ(f)ⁿV^k⟩_t, bound termwise
       via L4∘L3. status: todo  deps: [L3, D2, L4t]  note: the slog; hardest sub-lemma.
 - [ ] L6F. feed s (leadingTerm_const_eq) + K (L5) into exists_uniform_neg_of_uniform_affine_bound';
