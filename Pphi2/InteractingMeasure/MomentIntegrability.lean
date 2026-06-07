@@ -276,4 +276,41 @@ theorem integrable_powMul_wickPolynomial_sq (a mass : ℝ) (ha : 0 < a) (hmass :
     funext ω; rw [pow_zero, mul_one, sq]; ring
   rwa [heq] at h
 
+/-- `(ω f)ⁿ · wickPolynomial P c (ω δ_z) · wickPolynomial P c (ω δ_w)` is integrable for arbitrary
+sites `z, w` (the same- and cross-site cases together): AM–GM domination
+`|W_z W_w| ≤ ½(W_z² + W_w²)` reduces to the same-site squares `integrable_powMul_wickPolynomial_sq`. -/
+theorem integrable_powMul_wickPolynomial_mul (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (z w : FinLatticeSites d N) (c : ℝ)
+    (n : ℕ) :
+    Integrable (fun ω => (ω f) ^ n * wickPolynomial P c (ω (Pi.single z 1)) *
+        wickPolynomial P c (ω (Pi.single w 1)))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have hwp_meas : ∀ y : FinLatticeSites d N,
+      Measurable (fun ω : Configuration (FinLatticeField d N) =>
+        wickPolynomial P c (ω (Pi.single y 1))) := fun y =>
+    ((wickPolynomial_continuous₂ P).comp (continuous_const.prodMk continuous_id)).measurable.comp
+      (configuration_eval_measurable (Pi.single y 1))
+  have hz := (integrable_powMul_wickPolynomial_sq d N a mass ha hmass P f z c n).abs
+  have hw := (integrable_powMul_wickPolynomial_sq d N a mass ha hmass P f w c n).abs
+  refine (hz.add hw).mono'
+    ((((configuration_eval_measurable f).pow_const n).mul (hwp_meas z)).mul
+      (hwp_meas w)).aestronglyMeasurable (Filter.Eventually.of_forall fun ω => ?_)
+  rw [Real.norm_eq_abs]
+  simp only [Pi.add_apply]
+  have hz2 : |(ω f) ^ n * (wickPolynomial P c (ω (Pi.single z 1))) ^ 2|
+      = |(ω f) ^ n| * (wickPolynomial P c (ω (Pi.single z 1))) ^ 2 := by
+    rw [abs_mul, abs_of_nonneg (sq_nonneg (wickPolynomial P c (ω (Pi.single z 1))))]
+  have hw2 : |(ω f) ^ n * (wickPolynomial P c (ω (Pi.single w 1))) ^ 2|
+      = |(ω f) ^ n| * (wickPolynomial P c (ω (Pi.single w 1))) ^ 2 := by
+    rw [abs_mul, abs_of_nonneg (sq_nonneg (wickPolynomial P c (ω (Pi.single w 1))))]
+  rw [hz2, hw2, abs_mul, abs_mul]
+  nlinarith [two_mul_le_add_sq |wickPolynomial P c (ω (Pi.single z 1))|
+      |wickPolynomial P c (ω (Pi.single w 1))|,
+    sq_abs (wickPolynomial P c (ω (Pi.single z 1))),
+    sq_abs (wickPolynomial P c (ω (Pi.single w 1))),
+    abs_nonneg (wickPolynomial P c (ω (Pi.single z 1))),
+    abs_nonneg (wickPolynomial P c (ω (Pi.single w 1))), abs_nonneg ((ω f) ^ n),
+    mul_nonneg (abs_nonneg ((ω f) ^ n)) (abs_nonneg (wickPolynomial P c (ω (Pi.single z 1)))),
+    mul_nonneg (abs_nonneg ((ω f) ^ n)) (abs_nonneg (wickPolynomial P c (ω (Pi.single w 1))))]
+
 end Pphi2

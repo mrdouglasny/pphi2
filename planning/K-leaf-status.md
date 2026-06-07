@@ -55,12 +55,10 @@ route we use does NOT touch it.)
       (MomentIntegrability:141) `(ωf)ⁿ·V` integrable; `integrable_powMul_wickPolynomial` (:117);
       `wickMonomial_latticeGaussian` (Hypercontractivity:864) ⟨:wickₙ:⟩₀=0. Remaining: the uniform
       BOUND `⟨φ(f)^{2n}V^{2k}⟩₀ ≤ K₀` (Cauchy–Schwarz on top of L1 + L2), not just integrability.
-- [~] D2. second-derivative infra: `moment_mul_interaction_hasDerivAt` (d/dt ∫(ωf)ⁿVe^{−tV} =
-      −∫(ωf)ⁿV²e^{−tV}, t>0). status: DERIVATIVE PROOF DRAFTED (Codex, mirrors moment_hasDerivAt
-      template MomentDerivative.lean:126-213 — set μ/V, B from interactionFunctional_bounded_below,
-      F/F', hasDerivAt_integral_of_dominated_loc_of_deriv_le). BLOCKED on one sub-lemma:
-      `integrable_powMul_interaction_sq` : Integrable ((ωf)ⁿ·V²). deps: [D2int]
-- [~] D2int. `Integrable ((ω f)ⁿ · V²)`. status: KERNEL DONE (branch uniform-discharge-D2), tail left.
+- [x] D2. second-derivative primitive `moment_mul_interaction_hasDerivAt` (d/dt ∫(ωf)ⁿVe^{−tV} =
+      −∫(ωf)ⁿV²e^{−tV}, t>0). status: DONE + axiom-clean (MomentDerivative.lean). Mirrors
+      moment_hasDerivAt with an extra V factor; consumes integrable_powMul_interaction_sq.
+- [x] D2int. `Integrable ((ω f)ⁿ · V²)` = `integrable_powMul_interaction_sq` — DONE + axiom-clean.
       DONE + axiom-clean (MomentIntegrability.lean): integrable_powMul_wickMonomial_mul (same-site
       :x^{k₁}::x^{k₂}: by induction on k₂), _mulWickPoly (sum over wickPoly), _mul_self (wickPoly·wickPoly
       same site), _sq ((ωf)ⁿ·wickPoly². TAIL (mechanical): (C) different-site
