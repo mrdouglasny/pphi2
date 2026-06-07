@@ -185,6 +185,53 @@ lemma boltzmann_cauchySchwarz (d N : ℕ) [NeZero N]
     refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
     dsimp only; rw [Real.rpow_two, pow_two, ← Real.exp_add]; congr 1; ring
 
+/-- **L4 pull-back, assembled.** For `X ∈ L²(μ_GFF)`, `t ∈ [0,1]`, and a uniform Nelson
+exp-bound `∫ e^{-2V} ≤ K` (with `K ≥ 1`), the interacting moment is `L²`-controlled:
+`⟨|X|⟩_t = (∫|X|e^{-tV})/Z_t ≤ ‖X‖_{L²}·√K`. Composition of `boltzmann_cauchySchwarz`
+(Cauchy–Schwarz), `expMoment_le_rpow` (`∫e^{-2tV} ≤ (∫e^{-2V})^t ≤ K`), and `partitionFn_ge_one`
+(`Z_t ≥ 1`, so dividing only decreases). Uniform in `N` once `K` is (Nelson). This is the corrected
+L4 mechanism — `V` is not bounded below, so the control is via the exp-moment, not a pointwise bound. -/
+lemma interacting_moment_le_L2_of_expBound (d N : ℕ) [NeZero N]
+    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (X : Configuration (FinLatticeField d N) → ℝ)
+    (hX : MemLp X 2 (latticeGaussianMeasure d N a mass ha hmass))
+    {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤ 1) {K : ℝ} (hK1 : 1 ≤ K)
+    (hKbound : ∫ ω, Real.exp (-(2 * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K) :
+    (∫ ω, |X ω| * Real.exp (-(t * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass)) /
+      (∫ ω, Real.exp (-(t * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass))
+      ≤ (∫ ω, (X ω) ^ 2 ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ (1 / 2 : ℝ) *
+        K ^ (1 / 2 : ℝ) := by
+  set μ := latticeGaussianMeasure d N a mass ha hmass with hμ
+  set V := interactionFunctional d N P a mass with hV
+  have hnum_nonneg : 0 ≤ ∫ ω, |X ω| * Real.exp (-(t * V ω)) ∂μ :=
+    integral_nonneg fun ω => mul_nonneg (abs_nonneg _) (Real.exp_pos _).le
+  have hZ : (1 : ℝ) ≤ ∫ ω, Real.exp (-(t * V ω)) ∂μ :=
+    partitionFn_ge_one d N P a mass ha hmass ht0
+  have hdiv : (∫ ω, |X ω| * Real.exp (-(t * V ω)) ∂μ) /
+      (∫ ω, Real.exp (-(t * V ω)) ∂μ) ≤ ∫ ω, |X ω| * Real.exp (-(t * V ω)) ∂μ :=
+    div_le_self hnum_nonneg hZ
+  have hCS := boltzmann_cauchySchwarz d N P a mass ha hmass X hX ht0
+  have hexp : (∫ ω, Real.exp (-(2 * t * V ω)) ∂μ) ^ (1 / 2 : ℝ) ≤ K ^ (1 / 2 : ℝ) := by
+    refine Real.rpow_le_rpow (integral_nonneg fun ω => (Real.exp_pos _).le) ?_ (by norm_num)
+    calc ∫ ω, Real.exp (-(2 * t * V ω)) ∂μ
+        ≤ (∫ ω, Real.exp (-(2 * V ω)) ∂μ) ^ (2 * t / 2) :=
+          expMoment_le_rpow d N P a mass ha hmass (by linarith) (by linarith)
+      _ = (∫ ω, Real.exp (-(2 * V ω)) ∂μ) ^ t := by rw [show 2 * t / 2 = t by ring]
+      _ ≤ K ^ t := Real.rpow_le_rpow (integral_nonneg fun ω => (Real.exp_pos _).le) hKbound ht0
+      _ ≤ K := by
+          calc K ^ t ≤ K ^ (1 : ℝ) := Real.rpow_le_rpow_of_exponent_le hK1 ht1
+            _ = K := Real.rpow_one K
+  calc (∫ ω, |X ω| * Real.exp (-(t * V ω)) ∂μ) / (∫ ω, Real.exp (-(t * V ω)) ∂μ)
+      ≤ ∫ ω, |X ω| * Real.exp (-(t * V ω)) ∂μ := hdiv
+    _ ≤ (∫ ω, (X ω) ^ 2 ∂μ) ^ (1 / 2 : ℝ) *
+          (∫ ω, Real.exp (-(2 * t * V ω)) ∂μ) ^ (1 / 2 : ℝ) := hCS
+    _ ≤ (∫ ω, (X ω) ^ 2 ∂μ) ^ (1 / 2 : ℝ) * K ^ (1 / 2 : ℝ) :=
+        mul_le_mul_of_nonneg_left hexp
+          (Real.rpow_nonneg (integral_nonneg fun ω => sq_nonneg _) _)
+
 /-! ## Uniform assembly (the connective tissue: leaves ⟹ uniform negativity) -/
 
 /-- **Uniform-in-N negativity from a uniform affine derivative bound.** If a family `(φ_i)` (think
