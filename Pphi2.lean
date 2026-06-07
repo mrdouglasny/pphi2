@@ -36,6 +36,7 @@ import Pphi2.InteractingMeasure.U4SecondDerivBound
 import Pphi2.InteractingMeasure.U4AffineBound
 import Pphi2.InteractingMeasure.LeadingTerm
 import Pphi2.InteractingMeasure.FreeMomentBound
+import Pphi2.InteractingMeasure.CovariancePointwiseBound
 import Pphi2.MathlibContrib.ParametricIntegralWithin
 
 -- Phase 2: Transfer matrix and reflection positivity

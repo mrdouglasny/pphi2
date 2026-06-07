@@ -50,11 +50,17 @@ Hence `s(mass)/(2K(mass)) ~ mass²·const → ∞`, so for `mass > m₀` (some e
    (`TorusPropagatorConvergence.lean`): `∫(ωg)² dμ_GFF ≤ (a^d)⁻¹·mass⁻²·∑_x g(x)²` (uniform in `g`,
    modulo the GJ volume factor). This is the field-side `mass⁻²` decay the moment bounds consume.
    Axiom-clean.
-2. **`mass`-quantitative `u₄''` bound**: refine `u4Deriv2_abs_le_uniform` so the constant is
-   `K(mass) = O(mass⁻¹⁰)` (track the covariance powers through `torus_free_product_moment_uniform` /
-   `torus_normConst_field_moment_uniform` and the Nelson exp-moment — each free moment `∫(ωf)^{2n}V^{2k}`
-   scales with `‖C_mass‖`, and the `√K_Nelson` factor stays bounded). This is the bulk: a `mass`-graded
-   version of the L3 moment bounds.
+   - ✅ **Pointwise** version: `gffPositionCovariance_abs_le_mass_inv`
+     (`CovariancePointwiseBound.lean`): `|gffPositionCovariance x y| ≤ (a²)⁻¹·mass⁻²` (diagonal bound
+     + Cauchy–Schwarz). The atomic input for the V-moment covariance double-sums.
+2. **`mass`-quantitative `∫V²`** (the next wall, the bulk): mass-grade `interaction_variance_le`
+   to `∫V² ≤ C·mass⁻⁸` (or any `o(mass⁻⁸)`) by threading `gffPositionCovariance_abs_le_mass_inv`
+   through the L1 covariance double-sums (`canonicalSmoothCovariance_pow_double_sum_le`,
+   `rough_error_variance` — `⟨V²⟩ ~ a^{2d}∑_{x,y} C(x,y)⁴`, each `C` factor `~mass⁻²`; mind the
+   `a^d·#sites = L^d` volume bookkeeping so the constant stays `N`-uniform). Then `∫V^{2m} ≤
+   Cb·(∫V²)^m` (chaos, `interaction_moment_le`, mass-independent `Cb`) gives all V-moments graded,
+   and the L3 free products `∫(ωf)^{2n}V^{2k}` + `K(mass) = O(mass⁻¹⁰)` follow by composition with
+   item 1. (Field moments already graded by item 1; `√K_Nelson → 1` as `mass→∞` since `V→0`.)
 3. **Threshold + assembly**: pick `m₀` with `s(mass) ≥ 2K(mass)` for `mass>m₀`; instantiate the
    affine-bound core at `g=1` (`g₀=1`, `hKg : K·1 ≤ s/2`); combine with
    `torusConnectedFourPoint_eq_u4_one` ⟹ `(★)` ⟹ discharge. Also need the test-function match:
