@@ -185,4 +185,59 @@ lemma u4Deriv_le_affine (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (P : Inte
     rw [hξeq, div_mul_cancel₀ _ ht0.ne']
   nlinarith [heq, hξK, ht0]
 
+/-- **L5 capstone — uniform lattice negativity of `u₄`.** For the normalised-constant test function
+there exist `g, c > 0`, uniform in `N`, with `u₄_N(g) ≤ -c`. Assembles: uniform slope `s = u₄'(0)`
+(`u4Deriv_zero_eq` + `leadingTerm_const_eq` + `torus_volume_eq`), uniform `|u₄''| ≤ K`
+(`u4Deriv2_abs_le_uniform`), the affine bound (`u4Deriv_le_affine`), and the quantitative MVT
+(`deriv_affine_bound_neg_of_continuousOn`). -/
+theorem lattice_u4_neg_uniform (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4) :
+    ∃ g c : ℝ, 0 < g ∧ 0 < c ∧ ∀ (N : ℕ) [NeZero N],
+      u4 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass P
+          (fun _ : FinLatticeSites 2 N => (Fintype.card (FinLatticeSites 2 N) : ℝ)⁻¹) g ≤ -c := by
+  have hL : (0 : ℝ) < L := Fact.out
+  obtain ⟨K, hKpos, hKb⟩ := u4Deriv2_abs_le_uniform L mass hmass P
+  set s : ℝ := 6 * ((L ^ 2) ^ 3 * (mass ^ 2) ^ 4)⁻¹ with hs_def
+  have hs_pos : 0 < s := by rw [hs_def]; positivity
+  set g : ℝ := min 1 (s / (2 * K)) with hg_def
+  have hg_pos : 0 < g := lt_min one_pos (by positivity)
+  have hgg₀ : g ≤ 1 := min_le_left _ _
+  have hKg : K * g ≤ s / 2 := by
+    have hle := mul_le_mul_of_nonneg_left (min_le_right 1 (s / (2 * K))) hKpos.le
+    rwa [show K * (s / (2 * K)) = s / 2 by field_simp] at hle
+  refine ⟨g, s / 2 * g, hg_pos, by positivity, fun N _ => ?_⟩
+  have ha : 0 < circleSpacing L N := circleSpacing_pos L N
+  -- slope at 0 equals -s, uniformly
+  have hu0 : u4Deriv 2 N (circleSpacing L N) mass ha hmass P
+      (fun _ => (Fintype.card (FinLatticeSites 2 N) : ℝ)⁻¹) 0 = -s := by
+    rw [u4Deriv_zero_eq 2 N (circleSpacing L N) mass ha hmass P hP]
+    rw [show (-6 : ℝ) * (circleSpacing L N) ^ 2 * (∑ z, (∑ x,
+          (fun _ : FinLatticeSites 2 N => (Fintype.card (FinLatticeSites 2 N) : ℝ)⁻¹) x *
+            gffPositionCovariance 2 N (circleSpacing L N) mass x z) ^ 4)
+        = -6 * ((circleSpacing L N) ^ 2 * ∑ z, (∑ x,
+          (fun _ : FinLatticeSites 2 N => (Fintype.card (FinLatticeSites 2 N) : ℝ)⁻¹) x *
+            gffPositionCovariance 2 N (circleSpacing L N) mass x z) ^ 4) from by ring,
+      leadingTerm_const_eq 2 N (circleSpacing L N) mass ha hmass,
+      torus_volume_eq L 2 N]
+    rw [hs_def]; ring
+  -- the affine derivative bound `u₄'(t) ≤ -s + K t`
+  have hbound : ∀ t ∈ Set.Ioo (0 : ℝ) 1,
+      u4Deriv 2 N (circleSpacing L N) mass ha hmass P
+        (fun _ => (Fintype.card (FinLatticeSites 2 N) : ℝ)⁻¹) t ≤ -s + K * t := by
+    intro t ht
+    have h1 := u4Deriv_le_affine 2 N (circleSpacing L N) mass ha hmass P
+      (fun _ => (Fintype.card (FinLatticeSites 2 N) : ℝ)⁻¹) (hKb N) ht.1 ht.2.le
+    rwa [hu0] at h1
+  -- apply the quantitative MVT
+  have hmain := deriv_affine_bound_neg_of_continuousOn
+    (φ := u4 2 N (circleSpacing L N) mass ha hmass P
+      (fun _ => (Fintype.card (FinLatticeSites 2 N) : ℝ)⁻¹))
+    (φ' := u4Deriv 2 N (circleSpacing L N) mass ha hmass P
+      (fun _ => (Fintype.card (FinLatticeSites 2 N) : ℝ)⁻¹))
+    (u4_at_zero 2 N (circleSpacing L N) mass ha hmass P _)
+    (u4_continuousOn 2 N (circleSpacing L N) mass ha hmass P hP _ 1)
+    (fun t ht => u4_hasDerivAt 2 N (circleSpacing L N) mass ha hmass P _ ht.1)
+    hbound hKpos.le hg_pos hgg₀ hKg
+  linarith [hmain]
+
 end Pphi2
