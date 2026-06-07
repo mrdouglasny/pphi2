@@ -24,9 +24,13 @@ Done + axiom-clean this branch:
   at interior `t` with explicit `u₄' = m₄'−6m₂m₂'`, `u₄'' = m₄''−6(m₂'²+m₂m₂'')`. `u4` unfolds
   definitionally to the discharge's `M₄/Z−3(M₂/Z)²`.
 
-In progress (Codex): `u4Deriv2_abs_le_uniform` — `|u₄''(t)| ≤ K` uniform on `[0,1]`, by
-ratio-decomposing each `normalizedMoment*`/`normalizedMomentDeriv*` into `(∫(ωf)ⁿVᵇe^{-gV})/Z`
-ratios (`abs_interacting_moment_le` + L3 free bounds + Nelson), triangle inequality.
+**L5c DONE** (`U4SecondDerivBound.lean`, all axiom-clean): `ratio_l2_bound` (workhorse),
+`normalizedMoment_abs_le`, `normalizedMomentDeriv_abs_le`, `normalizedMomentDeriv2_abs_le`, and
+**`u4Deriv2_abs_le_uniform`** — `|u₄''(g)| ≤ K` uniform in `N`, `g∈[0,1]`. Technique: decompose each
+`m_n^{(k)}` at the *atom* level (`unfold; field_simp` with Gibbs defs as opaque atoms, never exposing
+`exp` args to `ring`), bound each Gibbs ratio via `ratio_l2_bound` + L3 + Nelson.
+
+`torusConnectedFourPoint_eq_lattice` (`TorusU4Pullback.lean`) — the L6F torus→lattice pull-back, done.
 
 ## L5(ii) brick sequence (the slog)
 
