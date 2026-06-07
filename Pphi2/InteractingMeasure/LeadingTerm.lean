@@ -124,7 +124,8 @@ lemma gffPositionCovariance_row_sum (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mas
 
 /-- **Leading-term closed form (`s` leaf, uniform-ready).** For the normalised-constant test
 function `f = (#sites)⁻¹·1`, the `u₄` leading coefficient evaluates to
-`a^d·∑_z(C_a f)(z)⁴ = ((a^d·#sites)³·m⁸)⁻¹`. On the torus `a^d·#sites = L^d` (`lattice_volume_eq`),
+`a^d·∑_z(C_a f)(z)⁴ = ((a^d·#sites)³·m⁸)⁻¹`. On the torus `a^d·#sites = L^d` (`torus_volume_eq`;
+`lattice_volume_eq` gives the intermediate `(a·N)^d`),
 so this equals `(L^{3d} m⁸)⁻¹` — manifestly independent of `N`, i.e. the uniform lower bound `s`
 consumed by `deriv_affine_bound_neg`. -/
 lemma leadingTerm_const_eq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) :
