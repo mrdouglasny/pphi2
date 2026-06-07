@@ -81,7 +81,7 @@ theorem canonicalSmoothCovariance_pow_double_sum_le {d : ℕ} (hd : d = 2) (mass
 /-- **M2a — smooth interaction as a sum of diagonal cross-terms.** The smooth interaction is the
 `j=k` (pure-smooth) part of the Wick expansion: `V_smooth = (1/P.n)·crossTerm(P.n,P.n) +
 ∑_m P.coeff m · crossTerm(m,m)`, where `canonicalCrossTerm k k = a^d ∑_x :φ_S(x)^k:` (the rough
-factor `:φ_R^0: = 1`). Mirrors `canonicalRoughError_eq_sum_over_cross_terms` (which excludes `j=k`). -/
+factor `:φ_R^0: = 1`). Mirrors `canonicalRoughError_eq_sum_over_cross_terms` (excludes `j=k`). -/
 lemma canonicalSmoothInteraction_eq_sum_crossTerm_diag (d N : ℕ) [NeZero N] (a mass : ℝ)
     (T : ℝ) (P : InteractionPolynomial) (η : CanonicalJoint d N) :
     canonicalSmoothInteraction d N a mass T P η =
@@ -134,5 +134,115 @@ theorem canonicalCrossTerm_diag_l2_sq_le {d : ℕ} (hd : d = 2) (mass L : ℝ)
     _ ≤ (k.factorial : ℝ) * (C1 * (1 + |Real.log T|) ^ k) :=
         mul_le_mul_of_nonneg_left (hM1 N a ha hvol T hT) hkfac
     _ = (k.factorial : ℝ) * C1 * (1 + |Real.log T|) ^ k := by ring
+
+/-- **M2 — smooth interaction variance, uniform.** `∫ (canonicalSmoothInteraction)² dμ_joint ≤
+C·(1+|log T|)^{P.n}` uniform in `N`. Via M2a (`V_s = (1/P.n)·crossTerm(P.n,P.n) + ∑_m coeff_m·
+crossTerm(m,m)`), pointwise `(a+b)² ≤ 2a²+2b²` and Cauchy–Schwarz `(∑cᵢgᵢ)² ≤ (∑cᵢ²)(∑gᵢ²)`, then
+the per-term bound M2c. No orthogonality needed. -/
+theorem canonicalSmoothInteraction_variance_le {d : ℕ} (hd : d = 2) (mass L : ℝ)
+    (hL : 0 < L) (hmass : 0 < mass) (P : InteractionPolynomial) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (N : ℕ) [NeZero N] (a : ℝ) (_ha : 0 < a) (_hvol : (N : ℝ) * a = L)
+      (T : ℝ) (_hT : 0 < T),
+      ∫ η, (canonicalSmoothInteraction d N a mass T P η) ^ 2 ∂(canonicalJointMeasure d N)
+        ≤ C * (1 + |Real.log T|) ^ P.n := by
+  obtain ⟨CL, hCLpos, hCLbd⟩ := canonicalCrossTerm_diag_l2_sq_le hd mass L hL hmass P.n
+  choose Cm hCmpos hCmbd using fun m : Fin P.n =>
+    canonicalCrossTerm_diag_l2_sq_le hd mass L hL hmass (m : ℕ)
+  have hsumCm : (0 : ℝ) ≤ ∑ m : Fin P.n, ((m : ℕ).factorial : ℝ) * Cm m :=
+    Finset.sum_nonneg fun m _ => mul_nonneg (by positivity) (hCmpos m).le
+  refine ⟨2 * (1 / P.n : ℝ) ^ 2 * ((P.n).factorial : ℝ) * CL
+      + 2 * (∑ m : Fin P.n, P.coeff m ^ 2) * (∑ m : Fin P.n, ((m : ℕ).factorial : ℝ) * Cm m) + 1,
+      ?_, ?_⟩
+  · have h1 : (0 : ℝ) ≤ 2 * (1 / P.n : ℝ) ^ 2 * ((P.n).factorial : ℝ) * CL := by positivity
+    have h2 : (0 : ℝ) ≤ 2 * (∑ m : Fin P.n, P.coeff m ^ 2)
+        * (∑ m : Fin P.n, ((m : ℕ).factorial : ℝ) * Cm m) :=
+      mul_nonneg (by positivity) hsumCm
+    linarith
+  intro N _ a ha hvol T hT
+  set μ := canonicalJointMeasure d N with hμ
+  set CT : ℕ → CanonicalJoint d N → ℝ := fun k η => canonicalCrossTerm d N a mass T η k k with hCT
+  set u := (1 + |Real.log T|) with hudef
+  have hu1 : (1 : ℝ) ≤ u := by rw [hudef]; nlinarith [abs_nonneg (Real.log T)]
+  have hu0 : (0 : ℝ) ≤ u := by linarith
+  have hCTsq_int : ∀ k, Integrable (fun η => (CT k η) ^ 2) μ := fun k => by
+    have h := canonicalCrossTerm_pair_integrable d N a mass ha hmass T hT k k k k
+    simpa [hCT, pow_two] using h
+  have hbound_int : Integrable (fun η => 2 * (1 / P.n : ℝ) ^ 2 * (CT P.n η) ^ 2
+      + 2 * (∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, (CT (m : ℕ) η) ^ 2) μ := by
+    apply Integrable.add
+    · exact (hCTsq_int P.n).const_mul _
+    · exact (integrable_finset_sum Finset.univ
+        (fun (m : Fin P.n) _ => hCTsq_int (m : ℕ))).const_mul _
+  have hptwise : ∀ η, (canonicalSmoothInteraction d N a mass T P η) ^ 2
+      ≤ 2 * (1 / P.n : ℝ) ^ 2 * (CT P.n η) ^ 2
+        + 2 * (∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, (CT (m : ℕ) η) ^ 2 := by
+    intro η
+    rw [canonicalSmoothInteraction_eq_sum_crossTerm_diag d N a mass T P η]
+    have hCS : (∑ m : Fin P.n, P.coeff m * CT (m : ℕ) η) ^ 2
+        ≤ (∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, (CT (m : ℕ) η) ^ 2 :=
+      Finset.sum_mul_sq_le_sq_mul_sq Finset.univ (fun m => P.coeff m) (fun m => CT (m : ℕ) η)
+    have hsplit : ((1 / P.n : ℝ) * CT P.n η + ∑ m : Fin P.n, P.coeff m * CT (m : ℕ) η) ^ 2
+        ≤ 2 * ((1 / P.n : ℝ) * CT P.n η) ^ 2
+          + 2 * (∑ m : Fin P.n, P.coeff m * CT (m : ℕ) η) ^ 2 := by
+      nlinarith [sq_nonneg ((1 / P.n : ℝ) * CT P.n η - ∑ m : Fin P.n, P.coeff m * CT (m : ℕ) η)]
+    have h2 : (2 : ℝ) * (∑ m : Fin P.n, P.coeff m * CT (m : ℕ) η) ^ 2
+        ≤ 2 * ((∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, (CT (m : ℕ) η) ^ 2) :=
+      by linarith [mul_le_mul_of_nonneg_left hCS (by norm_num : (0 : ℝ) ≤ 2)]
+    calc ((1 / P.n : ℝ) * CT P.n η + ∑ m : Fin P.n, P.coeff m * CT (m : ℕ) η) ^ 2
+        ≤ 2 * ((1 / P.n : ℝ) * CT P.n η) ^ 2
+            + 2 * (∑ m : Fin P.n, P.coeff m * CT (m : ℕ) η) ^ 2 := hsplit
+      _ ≤ 2 * (1 / P.n : ℝ) ^ 2 * (CT P.n η) ^ 2
+            + 2 * ((∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, (CT (m : ℕ) η) ^ 2) := by
+          have : 2 * ((1 / P.n : ℝ) * CT P.n η) ^ 2 = 2 * (1 / P.n : ℝ) ^ 2 * (CT P.n η) ^ 2 := by
+            ring
+          linarith [this, h2]
+      _ = _ := by ring
+  -- integrate the pointwise bound
+  have hmono : ∫ η, (canonicalSmoothInteraction d N a mass T P η) ^ 2 ∂μ
+      ≤ ∫ η, (2 * (1 / P.n : ℝ) ^ 2 * (CT P.n η) ^ 2
+          + 2 * (∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, (CT (m : ℕ) η) ^ 2) ∂μ :=
+    integral_mono_of_nonneg (Filter.Eventually.of_forall fun _ => sq_nonneg _) hbound_int
+      (Filter.Eventually.of_forall hptwise)
+  have hsplit_int : ∫ η, (2 * (1 / P.n : ℝ) ^ 2 * (CT P.n η) ^ 2
+        + 2 * (∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, (CT (m : ℕ) η) ^ 2) ∂μ
+      = 2 * (1 / P.n : ℝ) ^ 2 * (∫ η, (CT P.n η) ^ 2 ∂μ)
+        + 2 * (∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, ∫ η, (CT (m : ℕ) η) ^ 2 ∂μ := by
+    rw [integral_add ((hCTsq_int P.n).const_mul _)
+      ((integrable_finset_sum Finset.univ
+        (fun (m : Fin P.n) _ => hCTsq_int (m : ℕ))).const_mul _),
+      integral_const_mul, integral_const_mul,
+      integral_finset_sum Finset.univ (fun (m : Fin P.n) _ => hCTsq_int (m : ℕ))]
+  rw [hsplit_int] at hmono
+  refine hmono.trans ?_
+  -- bound each integral via M2c and u^k ≤ u^{P.n}
+  have hleadbd : ∫ η, (CT P.n η) ^ 2 ∂μ ≤ ((P.n).factorial : ℝ) * CL * u ^ P.n :=
+    hCLbd N a ha hvol T hT
+  have hmbd : ∀ m : Fin P.n, ∫ η, (CT (m : ℕ) η) ^ 2 ∂μ
+      ≤ ((m : ℕ).factorial : ℝ) * Cm m * u ^ P.n := by
+    intro m
+    refine (hCmbd m N a ha hvol T hT).trans ?_
+    have hpow : u ^ (m : ℕ) ≤ u ^ P.n := pow_le_pow_right₀ hu1 (le_of_lt m.2)
+    have : (0 : ℝ) ≤ ((m : ℕ).factorial : ℝ) * Cm m :=
+      mul_nonneg (by positivity) (hCmpos m).le
+    nlinarith [mul_le_mul_of_nonneg_left hpow this]
+  have hsum_m : (∑ m : Fin P.n, ∫ η, (CT (m : ℕ) η) ^ 2 ∂μ)
+      ≤ (∑ m : Fin P.n, ((m : ℕ).factorial : ℝ) * Cm m) * u ^ P.n := by
+    rw [Finset.sum_mul]
+    exact Finset.sum_le_sum fun m _ => hmbd m
+  have hcoeff_nn : (0 : ℝ) ≤ 2 * (∑ m : Fin P.n, P.coeff m ^ 2) := by positivity
+  have hupn : (0 : ℝ) ≤ u ^ P.n := by positivity
+  calc 2 * (1 / P.n : ℝ) ^ 2 * (∫ η, (CT P.n η) ^ 2 ∂μ)
+        + 2 * (∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, ∫ η, (CT (m : ℕ) η) ^ 2 ∂μ
+      ≤ 2 * (1 / P.n : ℝ) ^ 2 * (((P.n).factorial : ℝ) * CL * u ^ P.n)
+        + 2 * (∑ m : Fin P.n, P.coeff m ^ 2)
+            * ((∑ m : Fin P.n, ((m : ℕ).factorial : ℝ) * Cm m) * u ^ P.n) := by
+        gcongr
+    _ = (2 * (1 / P.n : ℝ) ^ 2 * ((P.n).factorial : ℝ) * CL
+          + 2 * (∑ m : Fin P.n, P.coeff m ^ 2)
+              * (∑ m : Fin P.n, ((m : ℕ).factorial : ℝ) * Cm m)) * u ^ P.n := by ring
+    _ ≤ (2 * (1 / P.n : ℝ) ^ 2 * ((P.n).factorial : ℝ) * CL
+          + 2 * (∑ m : Fin P.n, P.coeff m ^ 2)
+              * (∑ m : Fin P.n, ((m : ℕ).factorial : ℝ) * Cm m) + 1) * u ^ P.n := by
+        nlinarith [hupn]
 
 end Pphi2
