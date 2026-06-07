@@ -31,6 +31,7 @@ import Pphi2.InteractingMeasure.InteractionL2
 import Pphi2.InteractingMeasure.InteractionVariance
 import Pphi2.InteractingMeasure.U4DerivativeInterior
 import Pphi2.InteractingMeasure.U4DerivativeClosedForm
+import Pphi2.InteractingMeasure.InteractingMomentBound
 import Pphi2.InteractingMeasure.LeadingTerm
 import Pphi2.InteractingMeasure.FreeMomentBound
 import Pphi2.MathlibContrib.ParametricIntegralWithin
