@@ -77,8 +77,14 @@ route we use does NOT touch it.)
       → integrable_pow_pairing(_mul) (needs the bound lemma). EASY foundation available:
       integrable_pow_pairing_mul3 (3-pairing AM-GM, trivial mirror of integrable_pow_pairing_mul:61).
       Recommend: focused Codex --resume or dedicated session on this one lemma.
-- [ ] L5. `u₄''(t) ≤ K` uniform: expand u₄''(t) as a moment polynomial in ⟨φ(f)ⁿV^k⟩_t, bound termwise
-      via L4∘L3. status: todo  deps: [L3, D2, L4t]  note: the slog; hardest sub-lemma.
+- [~] L5. `u₄''(t) ≤ K` uniform. status: FOUNDATION STARTED, BOUND GATED ON L1. deps: [L3, D2, L4t]
+      DONE (U4DerivativeInterior.lean, axiom-clean): `moment_hasDerivAt2` (Mₙ''(t)=∫(ωf)ⁿV²e^{−tV},
+      so Mₙ∈C² on (0,∞)) — the second-derivative primitive, from D2/moment_mul_interaction_hasDerivAt.
+      REMAINING two halves: (i) STRUCTURE u₄∈C² (closed form / DifferentiableAt of deriv u₄ via quotient
+      rule on M₄/Z − 3(M₂/Z)² using moment_hasDerivAt2 + partitionFn second deriv (=moment_hasDerivAt2
+      n=0) + Z≠0) — L1-INDEPENDENT, mechanical-but-large; (ii) the uniform BOUND |u₄''(t)|≤K — this is
+      ⟨φⁿVᵏ⟩_t termwise via L4 (interacting_moment_le_L2_of_expBound) ∘ L3 (free ⟨φ^{2n}V^{2k}⟩₀≤K₀),
+      and L3 needs L1 (uniform ‖V‖_{L²}). ⟹ the BOUND half is GATED ON L1. Critical path: L1 → L3 → L5(ii).
 - [ ] L6F. feed s (leadingTerm_const_eq) + K (L5) into exists_uniform_neg_of_uniform_affine_bound';
       framing torusConnectedFourPoint pullback + mass↔g. status: todo  deps: [L5]
 
