@@ -132,4 +132,36 @@ theorem torus_free_product_moment_uniform (L mass : ℝ) [Fact (0 < L)] (hmass :
   · exact Real.rpow_nonneg hVn _
   · exact Real.rpow_nonneg hCf.le _
 
+/-- **`(ωf)ⁿ·Vᵇ ∈ L²(μ_GFF)`** (`b ≥ 1`). The building-block observable of the `u₄''` interacting
+moments lies in `L²`: `‖(ωf)ⁿVᵇ‖²_{L²} = ∫(ωf)^{2n}V^{2b}`, integrable as a product of the `L²`
+functions `(ωf)^{2n}` (`pairing_memLp`) and `V^{2b}` (`interaction_memLp`) via Hölder `(2,2,1)`.
+Provides the `MemLp` hypothesis of `abs_interacting_moment_le` for each `u₄''` moment. -/
+theorem memLp_pairing_pow_mul_interaction_pow [NeZero N] (a mass : ℝ) (ha : 0 < a)
+    (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField 2 N) (n b : ℕ) (hb : 1 ≤ b) :
+    MemLp (fun ω => (ω f) ^ n * (interactionFunctional 2 N P a mass ω) ^ b) 2
+      (latticeGaussianMeasure 2 N a mass ha hmass) := by
+  set μ := latticeGaussianMeasure 2 N a mass ha hmass with hμ
+  rw [memLp_two_iff_integrable_sq (((configuration_eval_measurable f).pow_const n).mul
+    ((interactionFunctional_measurable 2 N P a mass).pow_const b)).aestronglyMeasurable]
+  have h1 : MemLp (fun ω => (ω f) ^ (2 * n)) 2 μ := by
+    rw [memLp_two_iff_integrable_sq
+      ((configuration_eval_measurable f).pow_const (2 * n)).aestronglyMeasurable]
+    refine (integrable_pow_pairing 2 N a mass ha hmass f (4 * n)).congr
+      (Filter.Eventually.of_forall fun ω => ?_)
+    show (ω f) ^ (4 * n) = ((ω f) ^ (2 * n)) ^ 2
+    rw [← pow_mul]; congr 1; ring
+  have h2 : MemLp (fun ω => (interactionFunctional 2 N P a mass ω) ^ (2 * b)) 2 μ := by
+    rw [memLp_two_iff_integrable_sq
+      ((interactionFunctional_measurable 2 N P a mass).pow_const (2 * b)).aestronglyMeasurable]
+    refine (interactionFunctional_pow_integrable N a mass ha hmass P (4 * b) (by omega)).congr
+      (Filter.Eventually.of_forall fun ω => ?_)
+    show (interactionFunctional 2 N P a mass ω) ^ (4 * b)
+      = ((interactionFunctional 2 N P a mass ω) ^ (2 * b)) ^ 2
+    rw [← pow_mul]; congr 1; ring
+  refine (h1.integrable_mul h2).congr (Filter.Eventually.of_forall fun ω => ?_)
+  show (ω f) ^ (2 * n) * (interactionFunctional 2 N P a mass ω) ^ (2 * b)
+    = ((ω f) ^ n * (interactionFunctional 2 N P a mass ω) ^ b) ^ 2
+  rw [mul_pow, ← pow_mul, ← pow_mul]; ring_nf
+
 end Pphi2
