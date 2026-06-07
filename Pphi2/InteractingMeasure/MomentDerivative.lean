@@ -242,7 +242,8 @@ theorem integrable_powMul_interaction_sq (a mass : ℝ) (ha : 0 < a) (hmass : 0 
 /-- **Second-derivative primitive.** For `t > 0`, `g ↦ ∫ (ω f)ⁿ V e^{-g V} dμ_GFF` has derivative
 `-∫ (ω f)ⁿ V² e^{-t V} dμ_GFF` at `t`. Composed with `moment_hasDerivAt` (whose derivative is this
 integrand at `n`-shifted form) it yields `Mₙ''(g) = ∫ (ω f)ⁿ V² e^{-g V}` — the second derivative of
-the Gibbs moments needed for the `u₄''` bound. Mirrors `moment_hasDerivAt` with an extra `V` factor. -/
+the Gibbs moments needed for the `u₄''` bound. Mirrors `moment_hasDerivAt` with an extra `V`
+factor. -/
 theorem moment_mul_interaction_hasDerivAt (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (P : InteractionPolynomial) (f : FinLatticeField d N) (n : ℕ) {t : ℝ} (ht : 0 < t) :
     HasDerivAt

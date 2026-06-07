@@ -232,7 +232,8 @@ theorem integrable_powMul_wickMonomial_mulWickPoly (a mass : ℝ) (ha : 0 < a) (
         (P.coeff m)))
 
 /-- `(ω f)ⁿ · (ω δ_z)ˡ · wickPolynomial P c (ω δ_z) · wickPolynomial P c (ω δ_z)` is integrable
-(same site): expand the first `wickPolynomial` factor and sum `integrable_powMul_wickMonomial_mulWickPoly`. -/
+(same site): expand the first `wickPolynomial` factor and sum
+`integrable_powMul_wickMonomial_mulWickPoly`. -/
 theorem integrable_powMul_wickPolynomial_mul_self (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (P : InteractionPolynomial) (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ)
     (n l : ℕ) :
@@ -255,11 +256,11 @@ theorem integrable_powMul_wickPolynomial_mul_self (a mass : ℝ) (ha : 0 < a) (h
     · ring
     · exact Finset.sum_congr rfl fun m _ => by ring
   rw [hdist]
-  exact
-    ((integrable_powMul_wickMonomial_mulWickPoly d N a mass ha hmass P f z c P.n n l).const_mul _).add
-      (integrable_finset_sum _ (fun m _ =>
-        (integrable_powMul_wickMonomial_mulWickPoly d N a mass ha hmass P f z c (m : ℕ) n l).const_mul
-          (P.coeff m)))
+  have hlead := integrable_powMul_wickMonomial_mulWickPoly d N a mass ha hmass P f z c P.n n l
+  exact (hlead.const_mul _).add
+    (integrable_finset_sum _ (fun m _ =>
+      (integrable_powMul_wickMonomial_mulWickPoly d N a mass ha hmass P f z c (m : ℕ) n l).const_mul
+        (P.coeff m)))
 
 /-- `(ω f)ⁿ · (wickPolynomial P c (ω δ_z))²` is integrable (the `l = 0` square). -/
 theorem integrable_powMul_wickPolynomial_sq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
@@ -278,7 +279,8 @@ theorem integrable_powMul_wickPolynomial_sq (a mass : ℝ) (ha : 0 < a) (hmass :
 
 /-- `(ω f)ⁿ · wickPolynomial P c (ω δ_z) · wickPolynomial P c (ω δ_w)` is integrable for arbitrary
 sites `z, w` (the same- and cross-site cases together): AM–GM domination
-`|W_z W_w| ≤ ½(W_z² + W_w²)` reduces to the same-site squares `integrable_powMul_wickPolynomial_sq`. -/
+`|W_z W_w| ≤ ½(W_z² + W_w²)` reduces to the same-site squares
+`integrable_powMul_wickPolynomial_sq`. -/
 theorem integrable_powMul_wickPolynomial_mul (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (P : InteractionPolynomial) (f : FinLatticeField d N) (z w : FinLatticeSites d N) (c : ℝ)
     (n : ℕ) :
