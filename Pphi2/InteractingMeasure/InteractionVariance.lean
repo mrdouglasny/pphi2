@@ -335,4 +335,62 @@ theorem interaction_variance_le (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
         simp only [Real.log_one, abs_zero, add_zero, one_pow, mul_one] at h1 h2
         linarith
 
+/-- **L2-for-V — uniform even-moment bound.** `∃ K, ∀ N, ∫ V^{2m} dμ_GFF ≤ K` uniform on the torus
+(`m ≥ 1`). Via the bridge `∫V^{2m}dμ_GFF = ∫V_full^{2m}dμ_joint`, the full-interaction Bonami–Nelson
+moment bound `canonicalFullInteractionJoint_moment_le`, the `T=1` `∫V_full² = ∫V²dμ_GFF` bridge, and
+L1 (`interaction_variance_le`, `∫V² ≤ C`). This is what L3's Cauchy–Schwarz consumes. -/
+theorem interaction_moment_le (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
+    (P : InteractionPolynomial) (m : ℕ) (hm : 1 ≤ m) :
+    ∃ K : ℝ, 0 < K ∧ ∀ (N : ℕ) [NeZero N],
+      ∫ ω, (interactionFunctional 2 N P (circleSpacing L N) mass ω) ^ (2 * m)
+          ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass)
+        ≤ K := by
+  have hL : (0 : ℝ) < L := Fact.out
+  obtain ⟨C2, hC2pos, hC2⟩ := interaction_variance_le L mass hmass P
+  set q : ℝ := ((2 * m : ℕ) : ℝ) with hq
+  have hm' : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+  have hq2 : (2 : ℝ) ≤ q := by rw [hq]; push_cast; nlinarith [hm']
+  have hq1 : (1 : ℝ) ≤ q - 1 := by linarith
+  set Cb : ℝ := ((P.n : ℝ) + 1) * (q - 1) ^ ((P.n : ℝ) / 2) with hCb
+  have hCbpos : 0 < Cb := by rw [hCb]; positivity
+  refine ⟨Cb ^ q * C2 ^ m, mul_pos (Real.rpow_pos_of_pos hCbpos _) (pow_pos hC2pos m), ?_⟩
+  intro N _
+  have ha : 0 < circleSpacing L N := circleSpacing_pos L N
+  have hbridge :
+      ∫ ω, (interactionFunctional 2 N P (circleSpacing L N) mass ω) ^ (2 * m)
+          ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass ha hmass)
+        = ∫ η, (canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η) ^ (2 * m)
+            ∂(canonicalJointMeasure 2 N) := by
+    rw [← integral_comp_canonicalSumConfig (d := 2) (N := N) (a := circleSpacing L N)
+      (mass := mass) ha hmass 1 one_pos
+      (F := fun ω => (interactionFunctional 2 N P (circleSpacing L N) mass ω) ^ (2 * m))
+      ((interactionFunctional_measurable 2 N P (circleSpacing L N) mass).pow_const (2 * m))]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun η => ?_)
+    simp only [canonicalFullInteractionJoint_eq_interactionFunctional]
+  have heqpow :
+      (fun η => (canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η) ^ (2 * m))
+        = (fun η => |canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η| ^ q) := by
+    funext η; rw [hq, Real.rpow_natCast, (even_two_mul m).pow_abs]
+  rw [hbridge, heqpow]
+  have hmom := canonicalFullInteractionJoint_moment_le 2 N (circleSpacing L N) mass ha hmass
+    1 one_pos P q hq2
+  have hvar :
+      ∫ η, |canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η| ^ (2 : ℝ)
+          ∂(canonicalJointMeasure 2 N) ≤ C2 := by
+    have heq2 :
+        (fun η => |canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η| ^ (2 : ℝ))
+          = (fun η => (canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η) ^ 2) := by
+      funext η; rw [show (2 : ℝ) = ((2 : ℕ) : ℝ) by norm_num, Real.rpow_natCast, sq_abs]
+    rw [heq2,
+      ← integral_interaction_sq_eq_canonicalJoint 2 N (circleSpacing L N) mass P ha hmass 1 one_pos]
+    exact hC2 N
+  have hvar_nn :
+      0 ≤ ∫ η, |canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η| ^ (2 : ℝ)
+        ∂(canonicalJointMeasure 2 N) := integral_nonneg fun η => Real.rpow_nonneg (abs_nonneg _) _
+  refine hmom.trans ?_
+  rw [← hCb, show q / 2 = (m : ℝ) by rw [hq]; push_cast; ring]
+  refine mul_le_mul_of_nonneg_left ?_ (Real.rpow_nonneg hCbpos.le q)
+  rw [← Real.rpow_natCast C2 m]
+  exact Real.rpow_le_rpow hvar_nn hvar (by positivity)
+
 end Pphi2
