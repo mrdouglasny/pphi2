@@ -255,6 +255,30 @@ theorem covariance_inner_le_mass_inv_sq_norm_sq
         simp_rw [← sq] at hparseval ⊢
         linarith
 
+/-- **Field-variance mass decay** `∫(ωg)² dμ_GFF ≤ (a^d)⁻¹·mass⁻²·∑_x g(x)²`.
+The free second moment of the smeared field decays like `mass⁻²` (uniformly in the test function `g`,
+modulo the GJ volume factor `(a^d)⁻¹`). From `second_moment_eq_covariance`, the GJ↔bare relation
+`latticeCovariance_GJ_eq_inv_smul_bare`, and the spectral bound
+`covariance_inner_le_mass_inv_sq_norm_sq` (`λ_k ≥ mass²`). This is the covariance operator bound
+`‖C_mass‖ ≤ mass⁻²` in the form the moment estimates consume — the foundation for the large-mass
+weak-coupling discharge (`planning/L6F-mass-coupling-plan.md`). -/
+theorem lattice_second_moment_le_mass_inv (N : ℕ) [NeZero N] (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) (g : FinLatticeField 2 N) :
+    ∫ ω, (ω g) ^ 2 ∂(latticeGaussianMeasure 2 N a mass ha hmass)
+      ≤ (a ^ 2)⁻¹ * mass⁻¹ ^ 2 * ∑ x : FinLatticeSites 2 N, g x ^ 2 := by
+  show ∫ ω, (ω g) ^ 2 ∂(GaussianField.measure (latticeCovarianceGJ 2 N a mass ha hmass))
+      ≤ (a ^ 2)⁻¹ * mass⁻¹ ^ 2 * ∑ x : FinLatticeSites 2 N, g x ^ 2
+  rw [second_moment_eq_covariance (latticeCovarianceGJ 2 N a mass ha hmass) g]
+  have hb := covariance_inner_le_mass_inv_sq_norm_sq N a mass ha hmass g
+  calc @inner ℝ _ _ (latticeCovarianceGJ 2 N a mass ha hmass g)
+          (latticeCovarianceGJ 2 N a mass ha hmass g)
+      = (a ^ 2 : ℝ)⁻¹ * @inner ℝ _ _ (latticeCovariance 2 N a mass ha hmass g)
+          (latticeCovariance 2 N a mass ha hmass g) :=
+        latticeCovariance_GJ_eq_inv_smul_bare (d := 2) (N := N) a mass ha hmass g g
+    _ ≤ (a ^ 2 : ℝ)⁻¹ * (mass⁻¹ ^ 2 * ∑ x, g x ^ 2) :=
+        mul_le_mul_of_nonneg_left hb (by positivity)
+    _ = (a ^ 2)⁻¹ * mass⁻¹ ^ 2 * ∑ x, g x ^ 2 := by ring
+
 /-! ## Helper lemmas for the Riemann sum bound
 
 The following lemmas connect the DyninMityaginSpace structure (basis, coefficients)
