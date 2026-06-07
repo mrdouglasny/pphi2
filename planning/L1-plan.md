@@ -27,8 +27,19 @@ uniform in N (torus a=L/N), V = interactionFunctional 2 N P a mass. Feeds L3 →
   `canonicalSmoothCovariance_pow_double_sum_le`, axiom-clean): `a^{2d}∑_{x,y}|C_smooth(x,y)|^m ≤
   (L^{2d}(A+B)^m+1)·(1+|log T|)^m` uniform, from the pointwise bound + a^d·card=L^d.
 - **M2 smooth variance**: `∫ (canonicalSmoothInteraction)² dμ_joint ≤ K_s·(1+|log T|)^{P.n}` uniform.
-  Needs the smooth-field Wick L² formula (analogue of canonicalCrossTerm_l2_sq_eq_covSum for the pure
-  smooth interaction = ∑ of j=k crossTerms), then M1. The deep piece (mirrors rough machinery).
+  ROUTE B (de-risked, NO orthogonality/Pythagorean needed):
+  • **M2a** ✅ DONE (`canonicalSmoothInteraction_eq_sum_crossTerm_diag`, InteractionVariance.lean):
+    `V_s = (1/P.n)·crossTerm(P.n,P.n) + ∑_m coeff_m·crossTerm(m,m)` (diagonal cross-terms).
+  • **M2b** (the assembly, remaining): bound `∫V_s²` by **pointwise Cauchy–Schwarz**
+    `(∑ cᵢ gᵢ(η))² ≤ (∑cᵢ²)(∑gᵢ(η)²)` (`Finset.sum_mul_sq_le_sq_mul_sq`, used already in
+    abs_canonicalSmoothCovariance) under the integral — handle lead+∑ via `(a+b)²≤2a²+2b²` or a unified
+    index. Inputs: `canonicalCrossTerm_pair_integrable` (RoughErrorBound:2775, integrability) +
+    `integral_mono`/`integral_finset_sum`.
+  • **M2c** (per-term bound): `∫(crossTerm(k,k))² = (a^d)²·k!·∑_{x,y}C_smooth^k`
+    (`canonicalCrossTerm_l2_sq_eq_covSum` at j=k) `≤ k!·(M1 const)·(1+|log T|)^k`
+    (`canonicalSmoothCovariance_pow_double_sum_le` = M1). Sum over k (finite) ⟹ uniform.
+  This route AVOIDS the deep diagonal-orthogonality lemma (canonicalCrossTerm_inner_eq_zero needs
+  j<k, fails for j=k) — Cauchy–Schwarz is cruder but uniform, which is all L1 needs. ~80 focused lines.
 - **M3 cross vanishing**: `∫ V_smooth · V_rough dμ_joint = 0` (smooth⊥rough chaos), from the field
   orthogonality + chaos-layer argument.
 - **M4 assembly**: fix T=1 (kills log factors): ∫V_full²(T=1) = ∫V_s² + ∫V_r² (cross=0) ≤ K_s+K_r;

@@ -78,4 +78,24 @@ theorem canonicalSmoothCovariance_pow_double_sum_le {d : ℕ} (hd : d = 2) (mass
         rw [hLd, add_mul, one_mul, ← mul_assoc]
         exact le_add_of_nonneg_right (by positivity)
 
+/-- **M2a — smooth interaction as a sum of diagonal cross-terms.** The smooth interaction is the
+`j=k` (pure-smooth) part of the Wick expansion: `V_smooth = (1/P.n)·crossTerm(P.n,P.n) +
+∑_m P.coeff m · crossTerm(m,m)`, where `canonicalCrossTerm k k = a^d ∑_x :φ_S(x)^k:` (the rough factor
+`:φ_R^0: = 1`). Mirrors `canonicalRoughError_eq_sum_over_cross_terms` (which excludes `j=k`). -/
+lemma canonicalSmoothInteraction_eq_sum_crossTerm_diag (d N : ℕ) [NeZero N] (a mass : ℝ)
+    (T : ℝ) (P : InteractionPolynomial) (η : CanonicalJoint d N) :
+    canonicalSmoothInteraction d N a mass T P η =
+    (1 / P.n : ℝ) * canonicalCrossTerm d N a mass T η P.n P.n
+    + ∑ m : Fin P.n, P.coeff m * canonicalCrossTerm d N a mass T η (m : ℕ) (m : ℕ) := by
+  unfold canonicalSmoothInteraction canonicalCrossTerm
+  simp only [Nat.sub_self, wickMonomial_zero, mul_one, wickPolynomial]
+  rw [Finset.sum_add_distrib, mul_add]
+  refine congr_arg₂ (· + ·) ?_ ?_
+  · rw [← Finset.mul_sum]; ring
+  · simp only [Finset.mul_sum]
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun m _ => ?_
+    simp only [mul_assoc, ← Finset.mul_sum]
+    ring
+
 end Pphi2
