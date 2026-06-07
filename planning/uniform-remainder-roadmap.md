@@ -64,7 +64,7 @@ V,VIII) only if it proves genuinely beyond reach.
 | **L3** | free `L²` moment bound | `‖φ(f)ⁿV^k‖²_{L²(μ_GFF)} = ⟨φ(f)^{2n}V^{2k}⟩₀ ≤ K₀` (n≤4, k≤2, so up to `φ(f)⁸V⁴`) — Cauchy–Schwarz `≤ ‖φ(f)‖_{L^{4n}}^{2n}‖V‖_{L^{4k}}^{2k}` + L2 (uniform `L^{16}` of `φ(f)`, `L^8` of `V`) | **NEW** (combinational, on top of L1/L2) |
 | **L4** | interacting → free pull-back | `⟨\|X\|⟩_t = ∫\|X\|e^{−tV}/Z_t ≤ ‖X‖_{L²(μ_GFF)}·√(∫e^{−2tV})/Z_t ≤ ‖X‖_{L²}·√K` (`X = φ(f)ⁿV^k`), via **Cauchy–Schwarz + Nelson exp-estimate** and `Z_t ≥ 1` — NOT a pointwise `V ≥ −B` bound (that is false) | ✅ **DONE** (`UniformBounds.lean`): `interactionFunctional_integral_nonpos` (`⟨V⟩₀≤0`), `partitionFn_ge_one` (`Z_t≥1`), `expMoment_le_rpow` (`∫e^{−sV}≤(∫e^{−2V})^{s/2}`), `boltzmann_cauchySchwarz` (the pull-back). Remaining: a one-line composition of these + plumb `nelson_exponential_estimate` to the torus params (`∫e^{−2V}≤K`) for the final `⟨\|X\|⟩_t ≤ ‖X‖_{L²}·√K` |
 | **L5** | `u₄''` assembly (the slog) | expand `u₄''(t)` as a moment polynomial; apply L4 termwise ⟹ `sup_{[0,g₀]}\|u₄''(t)\| ≤ K`, uniform. Plus `∀ t∈[0,g₀], HasDerivAt u₄ (u₄' t) t` (extend `MomentDerivative` from `g=0` to general `t`) | **NEW** — largest piece; needs `u₄ ∈ C²` on `[0,g₀]` |
-| **s** | leading-term lower bound | `6·a²∑_z(C_a f)(z)⁴ ≥ s > 0` uniform: pick `f` = lowest non-zero `−Δ+m²` eigenmode on T²; `a²∑(C_a f)⁴ → ∫_{T²}(C f)⁴ > 0` (Riemann sum, `TorusPropagatorConvergence`) | **NEW** (self-contained; good independent start) |
+| **s** | leading-term lower bound | `a^d·∑_z(C_a f)(z)⁴ > 0` uniform for the normalised-constant `f = (#sites)⁻¹·1` (the zero/constant mode, not the lowest non-zero mode): closed value `(L^{3d} m⁸)⁻¹`, uniform in N | ✅ **DONE** (`LeadingTerm.lean`): `leadingTerm_const_pos`, via `spectralCov_massOperator_inner` (covariance inverts precision) + `gffPositionCovariance_row_sum` (`∑_x C(x,z) = (a^d m²)⁻¹`); axiom-clean |
 | **L6** | affine application | feed `s` (from `s`-lemma) and `K` (from L5) into `deriv_affine_bound_neg`; `g₀` any fixed positive, `g = min(g₀, s/(2K))` | **interface DONE** (`deriv_affine_bound_neg`) |
 | **F** | framing | field-rescaling `mass↔g` (commutes with N-uniformity — rescale depends on mass not N) + torus-embedding pullback `torusConnectedFourPoint (map ι μ) f = connectedFourPoint μ (ι*f)` ⟹ the axiom | **NEW** — bookkeeping via `FieldRedefinition.lean` |
 
@@ -78,7 +78,9 @@ Ch. VIII (Taylor / weak-coupling). Glimm–Jaffe Ch. 8.5 (quantitative polynomia
 (`φ⁴` functional-integration mechanics).
 
 ## Suggested order
-1. **`s`** (leading-term lower bound) — self-contained, validates the test-function choice.
+1. ✅ **`s`** (leading-term lower bound) — DONE (`LeadingTerm.lean`, `leadingTerm_const_pos`).
+   Used the normalised-constant (zero mode), which has a clean closed form `(L^{3d}m⁸)⁻¹`,
+   instead of the lowest non-zero eigenmode + Riemann-sum route originally sketched.
 2. **L1** (uniform `‖V‖_{L²}`) — reuses `gff_wickPower_two_smeared_inner`; the covariance-summability
    core.
 3. **L2/L3/L4** (the `Lᵖ` chain to `⟨|φ(f)ⁿV^k|⟩_t ≤ K`).
