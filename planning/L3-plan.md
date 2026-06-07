@@ -8,23 +8,23 @@ Branch: `k-leaf-l3` (off `main` post-#45). L2-for-V is merged (`interaction_mome
 discharge's test function `f`. Feeds L4 (`interacting_moment_le_L2_of_expBound`): `⟨|φⁿVᵏ|⟩_t ≤
 ‖φⁿVᵏ‖_{L²}·√K`, with `‖φⁿVᵏ‖_{L²}² = ⟨φ^{2n}V^{2k}⟩₀`.
 
-## Route (Cauchy–Schwarz) + the bricks
+## Route (Cauchy–Schwarz) + the bricks — ✅ DONE (all axiom-clean)
 `∫(ωf)^{2n}V^{2k} ≤ (∫(ωf)^{4n})^{1/2}·(∫V^{4k})^{1/2}` (`integral_mul_le_Lp_mul_Lq_of_nonneg`,
-Hölder 2,2). Then:
-- **∫V^{4k} ≤ K**: ✅ `interaction_moment_le` (m=2k), DONE.
-- **L3a — `interaction_memLp`** (the foundation, NEXT): `MemLp V p (μ_GFF)` for `p≥2`, so `V^{2k}∈L²`
-  (`memLp_two_iff_integrable_sq`). Route: `canonicalFullInteractionJointStd ∈ wienerChaosLE` (done,
-  RoughErrorBound) → bonami ⟹ eLpNorm finite ⟹ `MemLp …Std p (stdGaussianFin)` → transfer to
-  `MemLp V_full p (joint)` (`canonicalFullInteractionJointStd_eq` + MeasurePreserving equiv) →
-  transfer to `MemLp V p (μ_GFF)` (`canonicalJointMeasure_map_canonicalSumConfig` +
-  `memLp_map_measure_iff`/`MemLp.comp_measurePreserving`; `canonicalFullInteractionJoint_eq_interactionFunctional`).
-  Note: most of these `…Std` lemmas are PRIVATE in RoughErrorBound, so `interaction_memLp` (or
-  `MemLp V_full p joint`) should be EXPOSED there. ENNReal/transfer-fiddly, ~40-50 lines.
-- **L3b — uniform field moment** `∫(ωf)^{4n} ≤ K_f`: Gaussian even moment of the pairing,
-  `= (4n-1)!!·(∫(ωf)²)^{2n}`; `∫(ωf)²` = GFF variance of `ω(f)`, uniform for the discharge's `f`
-  (the normalised constant from the `s`-leaf: row-sum covariance `= 1/(a^d m²)`, uniform). Reuse
-  `gffSmearedCovariance`/`leadingTerm` machinery.
-- **L3c — assemble**: Cauchy–Schwarz + L3a (MemLp for the two factors) + ∫V^{4k}≤K + L3b ⟹ `⟨φ^{2n}V^{2k}⟩₀ ≤ K₀`.
+Hölder 2,2). All bricks landed:
+- **∫V^{4k} ≤ K**: ✅ `interaction_moment_le` (m=2k).
+- **L3a — `interaction_memLp`** ✅ (`InteractionVariance.lean`): `MemLp V p (μ_GFF)` for `p≥2`
+  (generalised to arbitrary `a>0`), via `canonicalFullInteractionJoint_memLp` (exposed in
+  RoughErrorBound) + bonami + the std-Gaussian MeasurePreserving transfer +
+  `canonicalJointMeasure_map_canonicalSumConfig`. Plus `interactionFunctional_pow_integrable`
+  (per-N integrability of `Vⁿ`, n≥2).
+- **L3b — field hypercontractivity** ✅ `field_pow_le_second_pow` (`InteractionVariance.lean`):
+  `∫(ωf)^{2m} ≤ (2m-1)^m·(∫(ωf)²)^m` for ALL m, direct from `gaussian_hypercontractive` (n=1,p=2m).
+  Variance closed form `normConst_second_moment` (`FreeMomentBound.lean`):
+  `∫(ωf)² = (a^d·#sites·m²)⁻¹` (variance bridge + covariance row-sum), `= (L²m²)⁻¹` on the torus.
+- **L3c — Cauchy–Schwarz** ✅ `free_product_moment_cauchy_schwarz` (`InteractionVariance.lean`),
+  assembled into the uniform-in-N `torus_free_product_moment_uniform` (`FreeMomentBound.lean`):
+  `∃K₀,∀N, ∫(ωf)^{2n}·V^{2k} dμ_GFF ≤ K₀` (k≥1). Field side uses
+  `torus_normConst_field_moment_uniform`.
 
 ## After L3 — the realistic remainder
 - **L5(ii)** — the flagged **slog**: `u₄''(t) ≤ K` uniform. Expand `u₄''(t)` (quotient rule twice on
@@ -35,6 +35,8 @@ Hölder 2,2). Then:
   (`torusConnectedFourPoint` pullback + mass↔g, `FieldRedefinition`) ⟹
   `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` ⟹ `torus_pphi2_isInteracting_weakCoupling`.
 
-HONEST SCOPE: L1 + L2-for-V (the two deepest analytic bricks) are DONE + axiom-clean. L3 is a bounded
-chain (Cauchy–Schwarz + the MemLp/field-moment foundations). L5(ii) is a genuine multi-session slog
-(the u₄'' C² assembly). Full discharge is still several focused sessions.
+HONEST SCOPE: L1 + L2-for-V + **L3** (all axiom-clean) are DONE. The remaining wall is **L5(ii)** —
+the genuine multi-session slog: `u₄'' ∈ C²` + the quotient-rule expansion of `u₄''(t)` into the
+interacting moments `⟨(ωf)^a V^b⟩_t` (a≤4, b≤2), each bounded by L4∘L3. Then **L6F** (short): feed
+`s` (`leadingTerm_const_eq`) + `K` (L5ii) into `exists_uniform_neg_of_uniform_affine_bound'` + torus
+framing ⟹ discharge `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`.
