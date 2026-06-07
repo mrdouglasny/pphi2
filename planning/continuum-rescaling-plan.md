@@ -49,7 +49,26 @@ i.e. **physical large-mass ≅ weak-coupling (`λ' = 1/m² → 0`) at unit mass 
 (`torus_connectedFourPoint_tendsto`); field-rescale `u₄`-scaling (`connectedFourPoint_map_const_smul`);
 covariance `mass⁻²` decay (`lattice_second_moment_le_mass_inv`, `gffPositionCovariance_abs_le_mass_inv`).
 
-## OPEN SUBTLETIES — to vet before committing
+## VETTING VERDICT (Gemini deep-think, 2026-06): SOUND — crux resolved
+- **Volume-uniformity holds via exponential clustering.** `u₄''(g) ∝ ⟨φ(f)⁴; V; V⟩_c` is *connected*;
+  at the image mass `m'=1` the propagator decays `~e^{−|x−y|}`, so the two integrated vertex
+  positions `z₁,z₂` are tied (by connectedness) to the fixed support of `f`. Hence
+  `∫∫ dz₁dz₂ |⟨…⟩_c| = O(1)`, and `K` depends only on the support/amplitude of `f`, **independent of
+  the torus volume `L'`** (once `L' >` supp `f`). Open subtlety 1 ⟹ resolved.
+- **The test function transforms (the real subtlety) — and it works in our favor.** Under `x↦x/s`
+  (`s=1/m`), `φ(f) = φ'(f')` with `f'(x') = m⁻²·f(x'/m)` (support area `∝ m²`, amplitude `∝ m⁻²`).
+  Then **both** the slope `s'(f') ∝ (area)(amplitude)⁴ = m²·m⁻⁸ = m⁻⁶` **and** the bound
+  `K'(f') ∝ m⁻⁶`. So the critical window `g'_crit = |s'|/(2K') ~ O(1)` is **constant in `m`**, while the
+  actual coupling `λ' = 1/m² → 0` falls inside it for large `m`. The affine argument transports
+  uniformly. Open subtlety 1 (residual) ⟹ resolved.
+- **Wick ordering is covariant; the limit commutes with dilation.** `C_m(x,y) = C_{m'=1}(mx,my)`
+  exactly (continuum), so `:φ⁴:_m ↦ :φ⁴:_{m'=1}` with **no** anomalous log-renormalization (we act on
+  the *continuum* GFF, not the lattice). Open subtleties 2,3 ⟹ resolved.
+- **Verdict:** "vastly superior to lattice mass-decay" — the continuum-scaling cleanly *factors* the
+  proof into UV (lattice→continuum, already done, `N`-uniform) and IR (scaling, exact), avoiding the
+  log-divergence nightmare of mass-grading `∫V²` on the lattice. No fatal gaps.
+
+## OPEN SUBTLETIES — (now resolved by the vetting above; kept for the record)
 1. **Scale-covariance of the quantitative bound / the large-torus image.** The image theory sits on
    `L' = mL → ∞` (infinite-volume direction). My lattice bound's constants `s = 6(L⁶m⁸)⁻¹`,
    `K(L,m)` are **not** dimensionless invariants; on the image (`m'=1`, `L'=mL`), a *crude* `|u₄''|`
