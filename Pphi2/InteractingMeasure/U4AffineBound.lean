@@ -114,4 +114,51 @@ lemma continuousWithinAt_weighted_exp (a mass : ℝ) (ha : 0 < a) (hmass : 0 < m
       (continuous_const.mul (Real.continuous_exp.comp
         ((continuous_id.mul continuous_const).neg))).continuousWithinAt
 
+/-- **Right-continuity at `0` of `u₄'`.** `u4Deriv` is `ContinuousWithinAt (Ici 0) 0` — every
+constituent Gibbs integral (`gibbsMoment`, `momentDeriv`, `partitionFn`, `partitionFnDeriv`) is, by
+`continuousWithinAt_weighted_exp`, and `Z(0)=1≠0` keeps the quotients continuous. The continuity
+input for the MVT affine bound. -/
+lemma continuousWithinAt_u4Deriv (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) :
+    ContinuousWithinAt (u4Deriv d N a mass ha hmass P f) (Ici 0) 0 := by
+  have hV_meas : Measurable (interactionFunctional d N P a mass) :=
+    interactionFunctional_measurable d N P a mass
+  have hf_meas : Measurable (fun ω : Configuration (FinLatticeField d N) => ω f) :=
+    configuration_eval_measurable f
+  -- integrabilities of the weights
+  have hint_powV : ∀ n : ℕ, Integrable (fun ω => (ω f) ^ n * interactionFunctional d N P a mass ω)
+      (latticeGaussianMeasure d N a mass ha hmass) := fun n =>
+    (integrable_powMul_interaction d N a mass ha hmass P f n).congr
+      (Filter.Eventually.of_forall fun ω => by simp only [interactionFunctional_eq_single])
+  have hint_V : Integrable (interactionFunctional d N P a mass)
+      (latticeGaussianMeasure d N a mass ha hmass) :=
+    (hint_powV 0).congr (Filter.Eventually.of_forall fun ω => by simp)
+  -- the four constituent continuities
+  have hcZ : ContinuousWithinAt (partitionFn d N a mass ha hmass P) (Ici 0) 0 := by
+    unfold partitionFn
+    simpa using continuousWithinAt_weighted_exp d N a mass ha hmass P (fun _ => 1)
+      measurable_const (integrable_const 1)
+  have hZ0 : partitionFn d N a mass ha hmass P 0 ≠ 0 := by
+    unfold partitionFn
+    exact (lt_of_lt_of_le one_pos (partitionFn_ge_one d N P a mass ha hmass le_rfl)).ne'
+  have hcGM : ∀ n : ℕ, ContinuousWithinAt (gibbsMoment d N a mass ha hmass P f n) (Ici 0) 0 :=
+    fun n => continuousWithinAt_weighted_exp d N a mass ha hmass P (fun ω => (ω f) ^ n)
+      (hf_meas.pow_const n) (integrable_pow_pairing d N a mass ha hmass f n)
+  have hcMD : ∀ n : ℕ, ContinuousWithinAt (momentDeriv d N a mass ha hmass P f n) (Ici 0) 0 :=
+    fun n => (continuousWithinAt_weighted_exp d N a mass ha hmass P
+      (fun ω => (ω f) ^ n * interactionFunctional d N P a mass ω)
+      ((hf_meas.pow_const n).mul hV_meas) (hint_powV n)).neg
+  have hcPD : ContinuousWithinAt (partitionFnDeriv d N a mass ha hmass P) (Ici 0) 0 :=
+    (continuousWithinAt_weighted_exp d N a mass ha hmass P (interactionFunctional d N P a mass)
+      hV_meas hint_V).neg
+  -- normalised moment + derivative continuity
+  have hcNM : ∀ n : ℕ, ContinuousWithinAt (normalizedMoment d N a mass ha hmass P f n) (Ici 0) 0 :=
+    fun n => by unfold normalizedMoment; exact (hcGM n).div hcZ hZ0
+  have hcNMD : ∀ n : ℕ,
+      ContinuousWithinAt (normalizedMomentDeriv d N a mass ha hmass P f n) (Ici 0) 0 := fun n => by
+    unfold normalizedMomentDeriv
+    exact (((hcMD n).mul hcZ).sub ((hcGM n).mul hcPD)).div (hcZ.pow 2) (pow_ne_zero 2 hZ0)
+  unfold u4Deriv
+  exact (hcNMD 4).sub (((hcNM 2).mul (hcNMD 2)).const_mul 6)
+
 end Pphi2
