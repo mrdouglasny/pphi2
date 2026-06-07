@@ -26,6 +26,27 @@ open MeasureTheory GaussianField
 
 variable (L : ℝ) [hL : Fact (0 < L)]
 
+/-- **Ratio `L²` bound (reusable).** For `X ∈ L²(μ_GFF)` with `∫X² ≤ C`, the Gibbs ratio
+`(∫ X e^{-gV})/Z` is bounded by `C^{1/2}·K^{1/2}` (`g ∈ [0,1]`, Nelson `K`). Thin wrapper over
+`abs_interacting_moment_le` + rpow monotonicity; the workhorse for every `u₄''` ratio. -/
+theorem ratio_l2_bound {N : ℕ} [NeZero N] (mass : ℝ) (hmass : 0 < mass) (P : InteractionPolynomial)
+    (X : Configuration (FinLatticeField 2 N) → ℝ)
+    (hX : MemLp X 2 (latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass))
+    (C : ℝ) (hC : ∫ ω, (X ω) ^ 2
+        ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass) ≤ C)
+    {g : ℝ} (hg0 : 0 ≤ g) (hg1 : g ≤ 1) {K : ℝ} (hK1 : 1 ≤ K)
+    (hKbd : ∫ ω, Real.exp (-(2 * interactionFunctional 2 N P (circleSpacing L N) mass ω))
+        ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass) ≤ K) :
+    |(∫ ω, X ω * Real.exp (-(g * interactionFunctional 2 N P (circleSpacing L N) mass ω))
+        ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass)) /
+      (∫ ω, Real.exp (-(g * interactionFunctional 2 N P (circleSpacing L N) mass ω))
+        ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass))|
+      ≤ C ^ (1 / 2 : ℝ) * K ^ (1 / 2 : ℝ) := by
+  refine le_trans (abs_interacting_moment_le 2 N P (circleSpacing L N) mass (circleSpacing_pos L N)
+    hmass X hX hg0 hg1 hK1 hKbd) ?_
+  refine mul_le_mul_of_nonneg_right ?_ (Real.rpow_nonneg (le_trans zero_le_one hK1) _)
+  exact Real.rpow_le_rpow (integral_nonneg fun ω => sq_nonneg _) hC (by norm_num)
+
 /-- **`|m_n(g)| ≤ B_n` uniform** (the `b=0` pattern-setter). The normalised moment
 `normalizedMoment n g = (∫(ωf_c)ⁿ e^{-gV})/Z` for the normalised-constant test function `f_c` is
 bounded uniformly in `N` and `g ∈ [0,1]` via `abs_interacting_moment_le` (with `X = (ωf_c)ⁿ`) and the
