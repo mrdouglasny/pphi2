@@ -44,10 +44,12 @@ Hence `s(mass)/(2K(mass)) ~ mass²·const → ∞`, so for `mass > m₀` (some e
 `s(mass) ≥ 2K(mass)`, giving `g₀ = min 1 (s/2K) = 1` and `u₄(1,mass) ≤ -(s/2) < 0`. Done.
 
 ## Remaining work (concrete, no new axioms)
-1. **Covariance operator bound** `‖C_mass‖_op ≤ mass⁻²`, equivalently the pointwise/`ℓ²` bound on
-   `gffPositionCovariance d N a mass` decaying like `mass⁻²` (and the smeared `(C_mass f)(z)` like
-   `mass⁻²`). Easy: `−Δ_a` PSD ⟹ `massEigenvalues ≥ mass²` ⟹ `massEigenvalues⁻¹ ≤ mass⁻²`
-   (the spectral machinery in `LeadingTerm.lean`/`TransferMatrix` already has the eigenvalues).
+1. **Covariance operator bound** `‖C_mass‖_op ≤ mass⁻²` — ✅ **DONE**. `massEigenvalues_ge_mass_sq`
+   (`mass² ≤ λ_k`, `−Δ_a` PSD) and `covariance_inner_le_mass_inv_sq_norm_sq` (`⟨Tg,Tg⟩ ≤ mass⁻²∑g²`)
+   already existed; surfaced as `lattice_second_moment_le_mass_inv`
+   (`TorusPropagatorConvergence.lean`): `∫(ωg)² dμ_GFF ≤ (a^d)⁻¹·mass⁻²·∑_x g(x)²` (uniform in `g`,
+   modulo the GJ volume factor). This is the field-side `mass⁻²` decay the moment bounds consume.
+   Axiom-clean.
 2. **`mass`-quantitative `u₄''` bound**: refine `u4Deriv2_abs_le_uniform` so the constant is
    `K(mass) = O(mass⁻¹⁰)` (track the covariance powers through `torus_free_product_moment_uniform` /
    `torus_normConst_field_moment_uniform` and the Nelson exp-moment — each free moment `∫(ωf)^{2n}V^{2k}`
