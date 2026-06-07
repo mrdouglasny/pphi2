@@ -28,15 +28,22 @@ for the `a≤1` interface in Hypercontractivity.lean is still axiomatic, but the
 route we use does NOT touch it.)
 ⟹ REASSESS: much of L1/L2 covariance-summability infra likely already exists inside NelsonEstimate/
 (CovarianceBoundsGJ, CovarianceSplit) + ContinuumLimit/Hypercontractivity.lean. Survey before rebuilding.
-- [ ] L1. uniform `⟨V²⟩₀ ≤ C(m,L)`. ⟨V²⟩₀ = a^{2d}∑_{z,w}∑_m c_m² m! C(z,w)^m (gff_wickPower_two_smeared_inner,
-      C = gffPositionCovariance FULL). Need full-cov double-sum `a^{2d}∑_{z,w}|C|^m ≤ uniform`.
-      status: todo  deps: []  note: GAP — existing pow-sum bounds are ROW sums of canonicalRough
-      (CovarianceBoundsGJ). Two sub-steps: (1a) row→double via a^d·#sites=L^d (torus_volume_eq);
-      (1b) full=smooth+rough binomial OR a full-C row-sum. The deep analytic part.
-- [ ] L2. hypercontractivity lift for V (degree-4 Wick): ‖V‖_{L⁴},‖φ(f)‖_{L⁸} uniform.
-      status: todo  deps: [L1]  note: gaussian_hypercontractivity_continuum exists for |ωf|; apply to V.
-- [ ] L3. free L² moment bound `⟨φ(f)^{2n}V^{2k}⟩₀ ≤ K₀` (n≤4,k≤2) via Cauchy–Schwarz + L2.
-      status: todo  deps: [L1, L2]
+- [ ] L1. uniform `⟨V²⟩₀ ≤ C(m,L)`. status: PARTIAL — THE remaining analytic piece. Bridge
+      `integral_interaction_sq_eq_canonicalJoint` (InteractionL2:36) reduces to the canonical joint;
+      rough row-sums `canonicalRoughCovariance_pow_{one,two}_sum_le_uniform_in_aN` (CovarianceBoundsGJ:
+      709,851) + smooth `smoothVariance_le_log` (CovarianceSplit:140) + rough-error L²-sq decomp
+      `canonicalRoughError_l2_sq_eq_lead_plus_perCoef_sq` (RoughErrorBound:2540) all EXIST. Missing =
+      the unified assembly tying them into a single N-uniform `⟨V²⟩₀ ≤ C`. deps: []
+- [~] L2. hypercontractivity / uniform Lᵖ. status: MOSTLY FOUND. `interacting_moment_bound`
+      (Hypercontractivity.lean:1218) `∫|ωf|^{pn}dμ_a ≤ C(2p−1)^{pn/2}(∫|ωf|^{2n}dμ_GFF)^{p/2}`;
+      `gaussian_hypercontractivity_continuum` (:112); `pairing_memLp_lattice` (MomentIntegrability:30)
+      `(ωf)∈Lᵖ ∀p`. CAVEAT: Hypercontractivity.lean route uses `exponential_moment_bound` (:923)
+      which depends on the `a≤1` AXIOM nelson_exponential_estimate_master_bounded — for axiom-clean
+      K leaf prefer the fixed-volume `expMoment_two_le_uniform` (L4t). Need: uniform Lᵖ of `V` itself.
+- [~] L3. moment-product integrability. status: FOUND (integrability). `integrable_powMul_interaction`
+      (MomentIntegrability:141) `(ωf)ⁿ·V` integrable; `integrable_powMul_wickPolynomial` (:117);
+      `wickMonomial_latticeGaussian` (Hypercontractivity:864) ⟨:wickₙ:⟩₀=0. Remaining: the uniform
+      BOUND `⟨φ(f)^{2n}V^{2k}⟩₀ ≤ K₀` (Cauchy–Schwarz on top of L1 + L2), not just integrability.
 - [ ] D2. second-derivative infra: `moment_hasDerivAt2` / closed form `d²/dt²∫(ωf)ⁿe^{−tV} =
       ∫(ωf)ⁿV²e^{−tV}`; partitionFn 2nd deriv; quotient-rule C² for the normalized moments and u₄.
       status: todo  deps: []  note: NEW, no infra. Mirror moment_hasDerivAt (dominated, deriv under ∫).
