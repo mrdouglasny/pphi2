@@ -73,6 +73,22 @@ theorem u4_differentiableAt (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     ((moment_hasDerivAt d N a mass ha hmass P f 2 ht).div hZ hZne).differentiableAt
   exact hM4.sub ((hM2.pow 2).const_mul 3)
 
+/-- **Second derivative of the moment integral** (`L5` foundation). The first derivative of
+`Mₙ(g) = ∫ (ωf)ⁿ e^{-gV}` is `g ↦ -∫ (ωf)ⁿ V e^{-gV}` (`moment_hasDerivAt`); its derivative at `t>0`
+is `Mₙ''(t) = ∫ (ωf)ⁿ V² e^{-tV}` (via `moment_mul_interaction_hasDerivAt`). So `Mₙ ∈ C²` on
+`(0,∞)`. -/
+theorem moment_hasDerivAt2 (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (n : ℕ) {t : ℝ} (ht : 0 < t) :
+    HasDerivAt
+      (fun g => -∫ ω, (ω f) ^ n * interactionFunctional d N P a mass ω *
+        Real.exp (-(g * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass))
+      (∫ ω, (ω f) ^ n * (interactionFunctional d N P a mass ω) ^ 2 *
+        Real.exp (-(t * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass))
+      t := by
+  simpa using (moment_mul_interaction_hasDerivAt d N a mass ha hmass P f n ht).neg
+
 /-- **`hcont` leaf: `u₄_N` is continuous on `[0,g₀]`.** Interior continuity from
 `u4_differentiableAt`; left-endpoint (`g=0`) continuity from the one-sided `u4_hasDerivWithinAt`. -/
 theorem u4_continuousOn (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)

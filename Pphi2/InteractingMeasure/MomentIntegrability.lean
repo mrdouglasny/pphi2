@@ -156,4 +156,163 @@ theorem integrable_powMul_interaction (a mass : ℝ) (ha : 0 < a) (hmass : 0 < m
   exact (integrable_finset_sum _ (fun z _ =>
     integrable_powMul_wickPolynomial d N a mass ha hmass P f z (wickConstant d N a mass) n)).const_mul _
 
+/-- `(ω f)ⁿ · (ω δ_z)ˡ · wickMonomial k₁ c (ω δ_z) · wickMonomial k₂ c (ω δ_z)` is integrable
+(both Wick factors at the **same** site `z`), for all `k₂, n, l`. Strong induction on the second
+degree `k₂` via the recursion `:xᵏ⁺²: = x:xᵏ⁺¹: − (k+1)c:xᵏ:`, with the first Wick factor
+`wickMonomial k₁` riding along inertly and the recursion's `x·` absorbed into `(ω δ_z)ˡ`. The base
+cases reduce to `integrable_powMul_wickMonomial`. -/
+theorem integrable_powMul_wickMonomial_mul (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ) (k₁ : ℕ) :
+    ∀ (k₂ n l : ℕ), Integrable (fun ω => (ω f) ^ n * (ω (Pi.single z 1)) ^ l *
+      wickMonomial k₁ c (ω (Pi.single z 1)) * wickMonomial k₂ c (ω (Pi.single z 1)))
+      (latticeGaussianMeasure d N a mass ha hmass)
+  | 0, n, l => by
+      have h := integrable_powMul_wickMonomial d N a mass ha hmass f z c k₁ n l
+      have heq : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+            (ω (Pi.single z 1)) ^ l * wickMonomial k₁ c (ω (Pi.single z 1)) *
+            wickMonomial 0 c (ω (Pi.single z 1))) =
+          (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+            (ω (Pi.single z 1)) ^ l * wickMonomial k₁ c (ω (Pi.single z 1))) := by
+        funext ω; simp only [wickMonomial_zero, mul_one]
+      rwa [heq]
+  | 1, n, l => by
+      have h := integrable_powMul_wickMonomial d N a mass ha hmass f z c k₁ n (l + 1)
+      have heq : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+            (ω (Pi.single z 1)) ^ (l + 1) * wickMonomial k₁ c (ω (Pi.single z 1))) =
+          (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+            (ω (Pi.single z 1)) ^ l * wickMonomial k₁ c (ω (Pi.single z 1)) *
+            wickMonomial 1 c (ω (Pi.single z 1))) := by
+        funext ω; simp only [wickMonomial_one, pow_succ]; ring
+      rwa [heq] at h
+  | (k₂ + 2), n, l => by
+      have IH1 := integrable_powMul_wickMonomial_mul a mass ha hmass f z c k₁ (k₂ + 1) n (l + 1)
+      have IH2 := integrable_powMul_wickMonomial_mul a mass ha hmass f z c k₁ k₂ n l
+      have heq : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+            (ω (Pi.single z 1)) ^ l * wickMonomial k₁ c (ω (Pi.single z 1)) *
+            wickMonomial (k₂ + 2) c (ω (Pi.single z 1))) =
+          (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+            (ω (Pi.single z 1)) ^ (l + 1) * wickMonomial k₁ c (ω (Pi.single z 1)) *
+            wickMonomial (k₂ + 1) c (ω (Pi.single z 1)))
+          - (fun ω : Configuration (FinLatticeField d N) => ((k₂ : ℝ) + 1) * c *
+            ((ω f) ^ n * (ω (Pi.single z 1)) ^ l * wickMonomial k₁ c (ω (Pi.single z 1)) *
+              wickMonomial k₂ c (ω (Pi.single z 1)))) := by
+        funext ω
+        simp only [Pi.sub_apply, wickMonomial_succ_succ, pow_succ]
+        ring
+      rw [heq]
+      exact IH1.sub (IH2.const_mul _)
+
+/-- `(ω f)ⁿ · (ω δ_z)ˡ · wickMonomial k₁ c (ω δ_z) · wickPolynomial P c (ω δ_z)` is integrable
+(same site): a finite linear combination of `integrable_powMul_wickMonomial_mul` over the Wick
+expansion of the second factor. -/
+theorem integrable_powMul_wickMonomial_mulWickPoly (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ)
+    (k₁ n l : ℕ) :
+    Integrable (fun ω => (ω f) ^ n * (ω (Pi.single z 1)) ^ l *
+        wickMonomial k₁ c (ω (Pi.single z 1)) * wickPolynomial P c (ω (Pi.single z 1)))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have hdist : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+        (ω (Pi.single z 1)) ^ l * wickMonomial k₁ c (ω (Pi.single z 1)) *
+        wickPolynomial P c (ω (Pi.single z 1))) =
+      (fun ω : Configuration (FinLatticeField d N) => (1 / (P.n : ℝ)) *
+          ((ω f) ^ n * (ω (Pi.single z 1)) ^ l * wickMonomial k₁ c (ω (Pi.single z 1)) *
+            wickMonomial P.n c (ω (Pi.single z 1)))
+        + ∑ m : Fin P.n, P.coeff m *
+            ((ω f) ^ n * (ω (Pi.single z 1)) ^ l * wickMonomial k₁ c (ω (Pi.single z 1)) *
+              wickMonomial (m : ℕ) c (ω (Pi.single z 1)))) := by
+    funext ω
+    rw [wickPolynomial, mul_add, Finset.mul_sum]
+    congr 1
+    · ring
+    · exact Finset.sum_congr rfl fun m _ => by ring
+  rw [hdist]
+  exact ((integrable_powMul_wickMonomial_mul d N a mass ha hmass f z c k₁ P.n n l).const_mul _).add
+    (integrable_finset_sum _ (fun m _ =>
+      (integrable_powMul_wickMonomial_mul d N a mass ha hmass f z c k₁ (m : ℕ) n l).const_mul
+        (P.coeff m)))
+
+/-- `(ω f)ⁿ · (ω δ_z)ˡ · wickPolynomial P c (ω δ_z) · wickPolynomial P c (ω δ_z)` is integrable
+(same site): expand the first `wickPolynomial` factor and sum
+`integrable_powMul_wickMonomial_mulWickPoly`. -/
+theorem integrable_powMul_wickPolynomial_mul_self (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ)
+    (n l : ℕ) :
+    Integrable (fun ω => (ω f) ^ n * (ω (Pi.single z 1)) ^ l *
+        wickPolynomial P c (ω (Pi.single z 1)) * wickPolynomial P c (ω (Pi.single z 1)))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have hdist : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+        (ω (Pi.single z 1)) ^ l * wickPolynomial P c (ω (Pi.single z 1)) *
+        wickPolynomial P c (ω (Pi.single z 1))) =
+      (fun ω : Configuration (FinLatticeField d N) => (1 / (P.n : ℝ)) *
+          ((ω f) ^ n * (ω (Pi.single z 1)) ^ l * wickMonomial P.n c (ω (Pi.single z 1)) *
+            wickPolynomial P c (ω (Pi.single z 1)))
+        + ∑ m : Fin P.n, P.coeff m *
+            ((ω f) ^ n * (ω (Pi.single z 1)) ^ l * wickMonomial (m : ℕ) c (ω (Pi.single z 1)) *
+              wickPolynomial P c (ω (Pi.single z 1)))) := by
+    funext ω
+    nth_rewrite 1 [wickPolynomial]
+    rw [mul_add, add_mul, Finset.mul_sum, Finset.sum_mul]
+    congr 1
+    · ring
+    · exact Finset.sum_congr rfl fun m _ => by ring
+  rw [hdist]
+  have hlead := integrable_powMul_wickMonomial_mulWickPoly d N a mass ha hmass P f z c P.n n l
+  exact (hlead.const_mul _).add
+    (integrable_finset_sum _ (fun m _ =>
+      (integrable_powMul_wickMonomial_mulWickPoly d N a mass ha hmass P f z c (m : ℕ) n l).const_mul
+        (P.coeff m)))
+
+/-- `(ω f)ⁿ · (wickPolynomial P c (ω δ_z))²` is integrable (the `l = 0` square). -/
+theorem integrable_powMul_wickPolynomial_sq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (z : FinLatticeSites d N) (c : ℝ)
+    (n : ℕ) :
+    Integrable (fun ω => (ω f) ^ n * (wickPolynomial P c (ω (Pi.single z 1))) ^ 2)
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have h := integrable_powMul_wickPolynomial_mul_self d N a mass ha hmass P f z c n 0
+  have heq : (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+        (ω (Pi.single z 1)) ^ 0 * wickPolynomial P c (ω (Pi.single z 1)) *
+        wickPolynomial P c (ω (Pi.single z 1))) =
+      (fun ω : Configuration (FinLatticeField d N) => (ω f) ^ n *
+        (wickPolynomial P c (ω (Pi.single z 1))) ^ 2) := by
+    funext ω; rw [pow_zero, mul_one, sq]; ring
+  rwa [heq] at h
+
+/-- `(ω f)ⁿ · wickPolynomial P c (ω δ_z) · wickPolynomial P c (ω δ_w)` is integrable for arbitrary
+sites `z, w` (the same- and cross-site cases together): AM–GM domination
+`|W_z W_w| ≤ ½(W_z² + W_w²)` reduces to the same-site squares
+`integrable_powMul_wickPolynomial_sq`. -/
+theorem integrable_powMul_wickPolynomial_mul (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (z w : FinLatticeSites d N) (c : ℝ)
+    (n : ℕ) :
+    Integrable (fun ω => (ω f) ^ n * wickPolynomial P c (ω (Pi.single z 1)) *
+        wickPolynomial P c (ω (Pi.single w 1)))
+      (latticeGaussianMeasure d N a mass ha hmass) := by
+  have hwp_meas : ∀ y : FinLatticeSites d N,
+      Measurable (fun ω : Configuration (FinLatticeField d N) =>
+        wickPolynomial P c (ω (Pi.single y 1))) := fun y =>
+    ((wickPolynomial_continuous₂ P).comp (continuous_const.prodMk continuous_id)).measurable.comp
+      (configuration_eval_measurable (Pi.single y 1))
+  have hz := (integrable_powMul_wickPolynomial_sq d N a mass ha hmass P f z c n).abs
+  have hw := (integrable_powMul_wickPolynomial_sq d N a mass ha hmass P f w c n).abs
+  refine (hz.add hw).mono'
+    ((((configuration_eval_measurable f).pow_const n).mul (hwp_meas z)).mul
+      (hwp_meas w)).aestronglyMeasurable (Filter.Eventually.of_forall fun ω => ?_)
+  rw [Real.norm_eq_abs]
+  simp only [Pi.add_apply]
+  have hz2 : |(ω f) ^ n * (wickPolynomial P c (ω (Pi.single z 1))) ^ 2|
+      = |(ω f) ^ n| * (wickPolynomial P c (ω (Pi.single z 1))) ^ 2 := by
+    rw [abs_mul, abs_of_nonneg (sq_nonneg (wickPolynomial P c (ω (Pi.single z 1))))]
+  have hw2 : |(ω f) ^ n * (wickPolynomial P c (ω (Pi.single w 1))) ^ 2|
+      = |(ω f) ^ n| * (wickPolynomial P c (ω (Pi.single w 1))) ^ 2 := by
+    rw [abs_mul, abs_of_nonneg (sq_nonneg (wickPolynomial P c (ω (Pi.single w 1))))]
+  rw [hz2, hw2, abs_mul, abs_mul]
+  nlinarith [two_mul_le_add_sq |wickPolynomial P c (ω (Pi.single z 1))|
+      |wickPolynomial P c (ω (Pi.single w 1))|,
+    sq_abs (wickPolynomial P c (ω (Pi.single z 1))),
+    sq_abs (wickPolynomial P c (ω (Pi.single w 1))),
+    abs_nonneg (wickPolynomial P c (ω (Pi.single z 1))),
+    abs_nonneg (wickPolynomial P c (ω (Pi.single w 1))), abs_nonneg ((ω f) ^ n),
+    mul_nonneg (abs_nonneg ((ω f) ^ n)) (abs_nonneg (wickPolynomial P c (ω (Pi.single z 1)))),
+    mul_nonneg (abs_nonneg ((ω f) ^ n)) (abs_nonneg (wickPolynomial P c (ω (Pi.single w 1))))]
+
 end Pphi2
