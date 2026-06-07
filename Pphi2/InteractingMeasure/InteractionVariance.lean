@@ -393,17 +393,55 @@ theorem interaction_moment_le (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
   rw [← Real.rpow_natCast C2 m]
   exact Real.rpow_le_rpow hvar_nn hvar (by positivity)
 
-/-- **L3a — `V ∈ Lᵖ` on the GFF** (`p ≥ 2`, per `N`). Transfers `canonicalFullInteractionJoint_memLp`
-from the joint measure to the lattice GFF via `canonicalJointMeasure_map_canonicalSumConfig` and
+/-- **L3b — free even-moment hypercontractivity.** For any lattice test function `f` and `m ≥ 1`,
+the GFF even moment is controlled by the variance:
+`∫(ωf)^{2m} dμ_GFF ≤ (2m-1)^m·(∫(ωf)² dμ_GFF)^m`. Direct from `gaussian_hypercontractive`
+(`n=1, p=2m`). Combined with a uniform variance bound it yields the uniform field moment consumed
+by the L3 Cauchy–Schwarz. -/
+theorem field_pow_le_second_pow {d N : ℕ} [NeZero N] (a mass : ℝ) (ha : 0 < a)
+    (hmass : 0 < mass)
+    (f : FinLatticeField d N) (m : ℕ) (hm : 1 ≤ m) :
+    ∫ ω, (ω f) ^ (2 * m) ∂(latticeGaussianMeasure d N a mass ha hmass)
+      ≤ ((2 * m : ℝ) - 1) ^ m
+        * (∫ ω, (ω f) ^ 2 ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ m := by
+  have hmR : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+  set T := latticeCovarianceGJ d N a mass ha hmass with hT
+  have hμ : latticeGaussianMeasure d N a mass ha hmass = GaussianField.measure T := rfl
+  have hp : (2 : ℝ) ≤ 2 * (m : ℝ) := by linarith
+  have h_hyper := gaussian_hypercontractive T f 1 (2 * (m : ℝ)) hp m hm (by push_cast; ring)
+  simp only [Nat.cast_one, mul_one] at h_hyper
+  rw [show (2 * (m : ℝ)) / 2 = (m : ℝ) by ring] at h_hyper
+  rw [hμ]
+  -- Convert the goal's `npow`/`(ωf)` integrands into the `rpow`/`|ωf|` form of `h_hyper`.
+  have key1 : ∫ ω, (ω f) ^ (2 * m) ∂(GaussianField.measure T)
+      = ∫ ω, |ω f| ^ (2 * (m : ℝ)) ∂(GaussianField.measure T) := by
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+    show (ω f) ^ (2 * m) = |ω f| ^ (2 * (m : ℝ))
+    rw [show (2 * (m : ℝ)) = ((2 * m : ℕ) : ℝ) by push_cast; ring, Real.rpow_natCast,
+      (even_two_mul m).pow_abs]
+  have key2 : ∫ ω, (ω f) ^ 2 ∂(GaussianField.measure T)
+      = ∫ ω, |ω f| ^ (2 : ℕ) ∂(GaussianField.measure T) := by
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+    show (ω f) ^ 2 = |ω f| ^ (2 : ℕ)
+    rw [sq_abs]
+  rw [key1, key2, ← Real.rpow_natCast ((2 : ℝ) * (m : ℝ) - 1) m,
+    ← Real.rpow_natCast (∫ ω, |ω f| ^ (2 : ℕ) ∂(GaussianField.measure T)) m]
+  exact h_hyper
+
+/-- **L3a — `V ∈ Lᵖ` on the GFF** (`p ≥ 2`, per `N`). Transfers
+`canonicalFullInteractionJoint_memLp` from the joint measure to the lattice GFF via
+`canonicalJointMeasure_map_canonicalSumConfig` and
 `canonicalFullInteractionJoint_eq_interactionFunctional`. In particular `V^{2k} ∈ L²` (so the L3
 Cauchy–Schwarz applies). -/
-theorem interaction_memLp (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass) (P : InteractionPolynomial)
+theorem interaction_memLp (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
+    (P : InteractionPolynomial)
     (p : ℝ) (hp : 2 ≤ p) (N : ℕ) [NeZero N] :
     MeasureTheory.MemLp (fun ω => interactionFunctional 2 N P (circleSpacing L N) mass ω)
       (ENNReal.ofReal p)
       (latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass) := by
   have ha : 0 < circleSpacing L N := circleSpacing_pos L N
-  have hVfull := canonicalFullInteractionJoint_memLp 2 N (circleSpacing L N) mass ha hmass 1 one_pos P p hp
+  have hVfull := canonicalFullInteractionJoint_memLp 2 N (circleSpacing L N) mass ha hmass
+    1 one_pos P p hp
   rw [show latticeGaussianMeasure 2 N (circleSpacing L N) mass ha hmass
       = (canonicalJointMeasure 2 N).map (canonicalSumConfig 2 N (circleSpacing L N) mass 1)
       from (canonicalJointMeasure_map_canonicalSumConfig 2 N (circleSpacing L N) mass ha hmass
