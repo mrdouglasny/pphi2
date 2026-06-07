@@ -6,6 +6,7 @@ Authors: Michael R. Douglas
 import Pphi2.NelsonEstimate.RoughErrorBound
 import Pphi2.NelsonEstimate.CovarianceBoundsGJ
 import Pphi2.InteractingMeasure.UniformBounds
+import Pphi2.InteractingMeasure.InteractionL2
 
 /-!
 # Uniform `L²` bound on the interaction (uniform-discharge brick L1) — smooth side
@@ -244,5 +245,94 @@ theorem canonicalSmoothInteraction_variance_le {d : ℕ} (hd : d = 2) (mass L : 
           + 2 * (∑ m : Fin P.n, P.coeff m ^ 2)
               * (∑ m : Fin P.n, ((m : ℕ).factorial : ℝ) * Cm m) + 1) * u ^ P.n := by
         nlinarith [hupn]
+
+/-- **`(canonicalSmoothInteraction)²` is integrable** on the joint measure: dominated by the M2b
+bound `2(1/P.n)²·CT(P.n,P.n)² + 2(∑coeff²)·∑_m CT(m,m)²` (integrable via
+`canonicalCrossTerm_pair_integrable`), with measurability from `canonicalSmoothFieldFunction`. -/
+theorem canonicalSmoothInteraction_sq_integrable (d N : ℕ) [NeZero N] (a mass : ℝ)
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (P : InteractionPolynomial) :
+    Integrable (fun η => (canonicalSmoothInteraction d N a mass T P η) ^ 2)
+      (canonicalJointMeasure d N) := by
+  set μ := canonicalJointMeasure d N with hμ
+  set CT : ℕ → CanonicalJoint d N → ℝ := fun k η => canonicalCrossTerm d N a mass T η k k with hCT
+  have hCTsq_int : ∀ k, Integrable (fun η => (CT k η) ^ 2) μ := fun k => by
+    have h := canonicalCrossTerm_pair_integrable d N a mass ha hmass T hT k k k k
+    simpa [hCT, pow_two] using h
+  have hbound_int : Integrable (fun η => 2 * (1 / P.n : ℝ) ^ 2 * (CT P.n η) ^ 2
+      + 2 * (∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, (CT (m : ℕ) η) ^ 2) μ := by
+    apply Integrable.add
+    · exact (hCTsq_int P.n).const_mul _
+    · exact (integrable_finset_sum Finset.univ
+        (fun (m : Fin P.n) _ => hCTsq_int (m : ℕ))).const_mul _
+  have hVs_meas : Measurable (fun η => canonicalSmoothInteraction d N a mass T P η) := by
+    unfold canonicalSmoothInteraction
+    refine measurable_const.mul (Finset.measurable_sum _ fun x _ => ?_)
+    exact ((wickPolynomial_continuous₂ P).comp
+      (continuous_const.prodMk continuous_id)).measurable.comp
+      (canonicalSmoothFieldFunction_pointwise_measurable d N a mass T x)
+  refine Integrable.mono' hbound_int (hVs_meas.pow_const 2).aestronglyMeasurable
+    (Filter.Eventually.of_forall fun η => ?_)
+  rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _),
+    canonicalSmoothInteraction_eq_sum_crossTerm_diag d N a mass T P η]
+  have hCS : (∑ m : Fin P.n, P.coeff m * CT (m : ℕ) η) ^ 2
+      ≤ (∑ m : Fin P.n, P.coeff m ^ 2) * ∑ m : Fin P.n, (CT (m : ℕ) η) ^ 2 :=
+    Finset.sum_mul_sq_le_sq_mul_sq Finset.univ (fun m => P.coeff m) (fun m => CT (m : ℕ) η)
+  nlinarith [sq_nonneg ((1 / P.n : ℝ) * CT P.n η - ∑ m : Fin P.n, P.coeff m * CT (m : ℕ) η),
+    mul_le_mul_of_nonneg_left hCS (by norm_num : (0 : ℝ) ≤ 2)]
+
+/-- **L1 — uniform `∫ V² dμ_GFF ≤ C`.** The K-leaf analytic core, uniform in `N` on the torus
+(`a = L/N`). Via the bridge `∫V² dμ_GFF = ∫V_full² dμ_joint` (at `T=1`),
+`V_full = V_smooth + V_rough`, the pointwise `(a+b)² ≤ 2a²+2b²`, and the smooth
+(`canonicalSmoothInteraction_variance_le`) and rough (`rough_error_variance`) variance bounds —
+the `(1+|log 1|)` factors vanish at `T=1`. No orthogonality needed. -/
+theorem interaction_variance_le (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
+    (P : InteractionPolynomial) :
+    ∃ C : ℝ, 0 < C ∧ ∀ (N : ℕ) [NeZero N],
+      ∫ ω, (interactionFunctional 2 N P (circleSpacing L N) mass ω) ^ 2
+          ∂(latticeGaussianMeasure 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass)
+        ≤ C := by
+  have hL : (0 : ℝ) < L := Fact.out
+  obtain ⟨Cs, hCspos, hCsbd⟩ :=
+    canonicalSmoothInteraction_variance_le (d := 2) rfl mass L hL hmass P
+  obtain ⟨Cr, hCrpos, hCrbd⟩ := rough_error_variance (d := 2) rfl P L mass hL hmass
+  refine ⟨2 * Cs + 2 * Cr, by positivity, ?_⟩
+  intro N _
+  have hN : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
+  have hvol : (N : ℝ) * circleSpacing L N = L := by rw [circleSpacing_eq]; field_simp
+  have hVs2 := canonicalSmoothInteraction_sq_integrable 2 N (circleSpacing L N) mass
+    (circleSpacing_pos L N) hmass 1 one_pos P
+  have hVr2 := canonicalRoughError_sq_integrable (d := 2) (N := N)
+    (a := circleSpacing L N) (mass := mass) (circleSpacing_pos L N) hmass 1 one_pos P
+  rw [integral_interaction_sq_eq_canonicalJoint 2 N (circleSpacing L N) mass P
+    (circleSpacing_pos L N) hmass 1 one_pos]
+  have hptwise : ∀ η, (canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η) ^ 2
+      ≤ 2 * (canonicalSmoothInteraction 2 N (circleSpacing L N) mass 1 P η) ^ 2
+        + 2 * (canonicalRoughError 2 N (circleSpacing L N) mass 1 P η) ^ 2 := by
+    intro η
+    have hfe : canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η
+        = canonicalSmoothInteraction 2 N (circleSpacing L N) mass 1 P η
+          + canonicalRoughError 2 N (circleSpacing L N) mass 1 P η := by
+      unfold canonicalRoughError; ring
+    rw [hfe]
+    nlinarith [sq_nonneg (canonicalSmoothInteraction 2 N (circleSpacing L N) mass 1 P η
+      - canonicalRoughError 2 N (circleSpacing L N) mass 1 P η)]
+  calc ∫ η, (canonicalFullInteractionJoint 2 N (circleSpacing L N) mass 1 P η) ^ 2
+          ∂(canonicalJointMeasure 2 N)
+      ≤ ∫ η, (2 * (canonicalSmoothInteraction 2 N (circleSpacing L N) mass 1 P η) ^ 2
+          + 2 * (canonicalRoughError 2 N (circleSpacing L N) mass 1 P η) ^ 2)
+          ∂(canonicalJointMeasure 2 N) :=
+        integral_mono_of_nonneg (Filter.Eventually.of_forall fun _ => sq_nonneg _)
+          ((hVs2.const_mul 2).add (hVr2.const_mul 2)) (Filter.Eventually.of_forall hptwise)
+    _ = 2 * (∫ η, (canonicalSmoothInteraction 2 N (circleSpacing L N) mass 1 P η) ^ 2
+          ∂(canonicalJointMeasure 2 N))
+        + 2 * (∫ η, (canonicalRoughError 2 N (circleSpacing L N) mass 1 P η) ^ 2
+          ∂(canonicalJointMeasure 2 N)) := by
+        rw [integral_add (hVs2.const_mul 2) (hVr2.const_mul 2), integral_const_mul,
+          integral_const_mul]
+    _ ≤ 2 * Cs + 2 * Cr := by
+        have h1 := hCsbd N (circleSpacing L N) (circleSpacing_pos L N) hvol 1 one_pos
+        have h2 := hCrbd N (circleSpacing L N) (circleSpacing_pos L N) hvol 1 one_pos
+        simp only [Real.log_one, abs_zero, add_zero, one_pow, mul_one] at h1 h2
+        linarith
 
 end Pphi2
