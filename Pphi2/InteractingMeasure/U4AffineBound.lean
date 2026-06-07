@@ -20,7 +20,7 @@ Assembles the affine bound `deriv u₄ t ≤ -s + K·t` on `(0,g₀)` — the fi
 
 namespace Pphi2
 
-open MeasureTheory GaussianField Set
+open MeasureTheory GaussianField Set Topology
 
 variable (d N : ℕ) [NeZero N]
 
@@ -73,5 +73,45 @@ lemma u4Deriv_zero_eq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
   have h2u := u4_hasDerivWithinAt d N a mass ha hmass P hP f
   have heq := (uniqueDiffWithinAt_Ici (0 : ℝ)).eq hu.hasFDerivWithinAt h2u.hasFDerivWithinAt
   simpa using heq
+
+/-- **Right-continuity at `0` of a weighted Gibbs integral.** For any integrable weight `w`,
+`g ↦ ∫ w·e^{-gV}` is continuous within `Ici 0` at `0`. Dominated convergence with bound
+`|w|·e^{B}` (`V ≥ -B`, so `e^{-gV} ≤ e^{B}` for `g ∈ [0,1]`); the integrand is continuous in `g`. -/
+lemma continuousWithinAt_weighted_exp (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (w : Configuration (FinLatticeField d N) → ℝ)
+    (hw_meas : Measurable w)
+    (hw_int : Integrable w (latticeGaussianMeasure d N a mass ha hmass)) :
+    ContinuousWithinAt
+      (fun g => ∫ ω, w ω * Real.exp (-(g * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass)) (Ici 0) 0 := by
+  set μ := latticeGaussianMeasure d N a mass ha hmass with hμ
+  have hV_meas : Measurable (interactionFunctional d N P a mass) :=
+    interactionFunctional_measurable d N P a mass
+  obtain ⟨B₀, hB₀⟩ := interactionFunctional_bounded_below d N P a mass ha hmass
+  set B := |B₀| with hB
+  have hB_nonneg : 0 ≤ B := abs_nonneg _
+  have hVlb : ∀ ω, -B ≤ interactionFunctional d N P a mass ω :=
+    fun ω => le_trans (neg_le_neg (le_abs_self B₀)) (by simpa using hB₀ ω)
+  have hg_ev : ∀ᶠ g in 𝓝[Ici 0] (0 : ℝ), 0 ≤ g ∧ g ≤ 1 := by
+    have h0 : ∀ᶠ g in 𝓝[Ici 0] (0 : ℝ), (0 : ℝ) ≤ g := by
+      filter_upwards [self_mem_nhdsWithin] with g hg using hg
+    have h1 : ∀ᶠ g in 𝓝[Ici 0] (0 : ℝ), g ≤ 1 :=
+      eventually_nhdsWithin_of_eventually_nhds
+        (eventually_le_nhds (by norm_num : (0 : ℝ) < 1))
+    filter_upwards [h0, h1] with g hg0 hg1 using ⟨hg0, hg1⟩
+  refine continuousWithinAt_of_dominated
+    (bound := fun ω => |w ω| * Real.exp B) ?_ ?_ ?_ ?_
+  · exact Filter.Eventually.of_forall fun g =>
+      (hw_meas.mul ((hV_meas.const_mul g).neg.exp)).aestronglyMeasurable
+  · filter_upwards [hg_ev] with g hg
+    refine Filter.Eventually.of_forall fun ω => ?_
+    have hexp : Real.exp (-(g * interactionFunctional d N P a mass ω)) ≤ Real.exp B :=
+      Real.exp_le_exp.mpr (by nlinarith [hVlb ω, hg.1, hg.2, hB_nonneg])
+    rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (Real.exp_pos _).le]
+    exact mul_le_mul_of_nonneg_left hexp (abs_nonneg _)
+  · exact hw_int.abs.mul_const _
+  · exact Filter.Eventually.of_forall fun ω =>
+      (continuous_const.mul (Real.continuous_exp.comp
+        ((continuous_id.mul continuous_const).neg))).continuousWithinAt
 
 end Pphi2
