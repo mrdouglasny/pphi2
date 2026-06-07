@@ -44,6 +44,7 @@ Quarantined to `CovarianceSplit.lean` once Codex hits the exact API needed.
 import Pphi2.NelsonEstimate.CovarianceBoundsGJ
 import Pphi2.NelsonEstimate.ChaosTailBridge
 import Pphi2.NelsonEstimate.LatticeBridge
+import Pphi2.NelsonEstimate.ChaosMoment
 import Pphi2.WickOrdering.WickPolynomial
 
 noncomputable section
@@ -2153,6 +2154,106 @@ private theorem canonicalSmoothInteractionStd_mem_wienerChaosLE
             simpa using (MeasureTheory.MemLp.toLp_add hfLead hfPer)
   rw [h_toLp]
   exact Submodule.add_mem _ hLeadChaos hPerChaos
+
+/-- **Smooth-interaction moment bound (Bonami–Nelson).** `∫ |V_smooth|^p ≤
+((P.n+1)(p-1)^{P.n/2})^p · (∫ |V_smooth|²)^{p/2}` on the joint measure (`p ≥ 2`). Combines the
+smooth chaos membership with `chaosLE_moment_le` (G1) and the measure-preserving std↔joint transfer. -/
+theorem canonicalSmoothInteraction_moment_le
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (P : InteractionPolynomial)
+    (p : ℝ) (hp : 2 ≤ p) :
+    ∫ η, |canonicalSmoothInteraction d N a mass T P η| ^ p ∂(canonicalJointMeasure d N)
+      ≤ (((P.n : ℝ) + 1) * (p - 1) ^ ((P.n : ℝ) / 2)) ^ p
+        * (∫ η, |canonicalSmoothInteraction d N a mass T P η| ^ (2 : ℝ)
+            ∂(canonicalJointMeasure d N)) ^ (p / 2) := by
+  classical
+  obtain ⟨hf, hchaos⟩ := canonicalSmoothInteractionStd_mem_wienerChaosLE
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT P
+  have hG1 := chaosLE_moment_le
+    (hf.toLp (canonicalSmoothInteractionStd d N a mass T P)) hchaos p hp
+  have hcoe := MemLp.coeFn_toLp hf
+  have hmp : MeasureTheory.MeasurePreserving (canonicalJointStdGaussianMeasurableEquiv d N)
+      (canonicalJointMeasure d N)
+      (GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N))) :=
+    ⟨(canonicalJointStdGaussianMeasurableEquiv d N).measurable,
+      canonicalJointMeasure_map_stdGaussian (d := d) (N := N)⟩
+  have htransfer : ∀ q : ℝ,
+      ∫ ξ, |canonicalSmoothInteractionStd d N a mass T P ξ| ^ q
+          ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N)))
+        = ∫ η, |canonicalSmoothInteraction d N a mass T P η| ^ q
+            ∂(canonicalJointMeasure d N) := by
+    intro q
+    rw [← hmp.integral_comp (canonicalJointStdGaussianMeasurableEquiv d N).measurableEmbedding
+      (fun ξ => |canonicalSmoothInteractionStd d N a mass T P ξ| ^ q)]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun η => ?_)
+    simp only [canonicalSmoothInteractionStd_eq]
+  have hp_eq : ∫ ξ, |((hf.toLp (canonicalSmoothInteractionStd d N a mass T P) :
+        MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N)))) :
+        (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ξ| ^ p
+      ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N)))
+      = ∫ ξ, |canonicalSmoothInteractionStd d N a mass T P ξ| ^ p
+          ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N))) :=
+    integral_congr_ae (hcoe.mono fun ξ h => by simp only [h])
+  have h2_eq : ∫ ξ, |((hf.toLp (canonicalSmoothInteractionStd d N a mass T P) :
+        MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N)))) :
+        (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ξ| ^ (2 : ℝ)
+      ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N)))
+      = ∫ ξ, |canonicalSmoothInteractionStd d N a mass T P ξ| ^ (2 : ℝ)
+          ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N))) :=
+    integral_congr_ae (hcoe.mono fun ξ h => by simp only [h])
+  rw [hp_eq, h2_eq, htransfer p, htransfer (2 : ℝ)] at hG1
+  exact hG1
+
+/-- **Rough-error moment bound (Bonami–Nelson).** `∫ |V_rough|^p ≤
+((P.n+1)(p-1)^{P.n/2})^p · (∫ |V_rough|²)^{p/2}` on the joint measure (`p ≥ 2`). Same as the smooth
+bound, using the rough chaos membership `canonicalRoughErrorStd_mem_wienerChaosLE`. -/
+theorem canonicalRoughError_moment_le
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (P : InteractionPolynomial)
+    (p : ℝ) (hp : 2 ≤ p) :
+    ∫ η, |canonicalRoughError d N a mass T P η| ^ p ∂(canonicalJointMeasure d N)
+      ≤ (((P.n : ℝ) + 1) * (p - 1) ^ ((P.n : ℝ) / 2)) ^ p
+        * (∫ η, |canonicalRoughError d N a mass T P η| ^ (2 : ℝ)
+            ∂(canonicalJointMeasure d N)) ^ (p / 2) := by
+  classical
+  obtain ⟨hf, hchaos⟩ := canonicalRoughErrorStd_mem_wienerChaosLE
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT P
+  have hG1 := chaosLE_moment_le
+    (hf.toLp (canonicalRoughErrorStd d N a mass T P)) hchaos p hp
+  have hcoe := MemLp.coeFn_toLp hf
+  have hmp : MeasureTheory.MeasurePreserving (canonicalJointStdGaussianMeasurableEquiv d N)
+      (canonicalJointMeasure d N)
+      (GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N))) :=
+    ⟨(canonicalJointStdGaussianMeasurableEquiv d N).measurable,
+      canonicalJointMeasure_map_stdGaussian (d := d) (N := N)⟩
+  have htransfer : ∀ q : ℝ,
+      ∫ ξ, |canonicalRoughErrorStd d N a mass T P ξ| ^ q
+          ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N)))
+        = ∫ η, |canonicalRoughError d N a mass T P η| ^ q
+            ∂(canonicalJointMeasure d N) := by
+    intro q
+    rw [← hmp.integral_comp (canonicalJointStdGaussianMeasurableEquiv d N).measurableEmbedding
+      (fun ξ => |canonicalRoughErrorStd d N a mass T P ξ| ^ q)]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun η => ?_)
+    simp only [canonicalRoughErrorStd_eq]
+  have hp_eq : ∫ ξ, |((hf.toLp (canonicalRoughErrorStd d N a mass T P) :
+        MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N)))) :
+        (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ξ| ^ p
+      ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N)))
+      = ∫ ξ, |canonicalRoughErrorStd d N a mass T P ξ| ^ p
+          ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N))) :=
+    integral_congr_ae (hcoe.mono fun ξ h => by simp only [h])
+  have h2_eq : ∫ ξ, |((hf.toLp (canonicalRoughErrorStd d N a mass T P) :
+        MeasureTheory.Lp ℝ 2 (GaussianHilbert.stdGaussianFin
+          (Fintype.card (CanonicalJointSumIndex d N)))) :
+        (Fin (Fintype.card (CanonicalJointSumIndex d N)) → ℝ) → ℝ) ξ| ^ (2 : ℝ)
+      ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N)))
+      = ∫ ξ, |canonicalRoughErrorStd d N a mass T P ξ| ^ (2 : ℝ)
+          ∂(GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N))) :=
+    integral_congr_ae (hcoe.mono fun ξ h => by simp only [h])
+  rw [hp_eq, h2_eq, htransfer p, htransfer (2 : ℝ)] at hG1
+  exact hG1
 
 /-! ## Generic L² Pythagoras (two functions)
 
