@@ -240,4 +240,50 @@ theorem lattice_u4_neg_uniform (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
     hbound hKpos.le hg_pos hgg₀ hKg
   linarith [hmain]
 
+/-- **Expectation against the interacting lattice measure** is the `g=1` normalised moment:
+`∫(ωf)ⁿ d(interactingLatticeMeasure) = ⟨(ωf)ⁿ⟩₁`. (`boltzmannWeight = e^{-V}`,
+`partitionFunction = Z(1)`.) -/
+lemma integral_pow_interactingLatticeMeasure (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (f : FinLatticeField d N) (n : ℕ) :
+    (∫ ω, (ω f) ^ n ∂(interactingLatticeMeasure d N P a mass ha hmass))
+      = normalizedMoment d N a mass ha hmass P f n 1 := by
+  have hZ_pos := partitionFunction_pos d N P a mass ha hmass
+  have hbw_meas : Measurable (fun ω => Real.toNNReal (boltzmannWeight d N P a mass ω)) :=
+    (interactionFunctional_measurable d N P a mass).neg.exp.real_toNNReal
+  have wd : ∫ ω, (ω f) ^ n ∂((latticeGaussianMeasure d N a mass ha hmass).withDensity
+        (fun ω => ENNReal.ofReal (boltzmannWeight d N P a mass ω)))
+      = ∫ ω, boltzmannWeight d N P a mass ω * (ω f) ^ n
+        ∂(latticeGaussianMeasure d N a mass ha hmass) := by
+    change ∫ ω, (ω f) ^ n ∂((latticeGaussianMeasure d N a mass ha hmass).withDensity
+      (fun ω => ↑(Real.toNNReal (boltzmannWeight d N P a mass ω)))) = _
+    rw [integral_withDensity_eq_integral_smul hbw_meas]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+    simp only [NNReal.smul_def, smul_eq_mul]
+    rw [Real.coe_toNNReal _ (boltzmannWeight_pos d N P a mass ω).le]
+  unfold interactingLatticeMeasure normalizedMoment gibbsMoment partitionFn
+  rw [integral_smul_measure, wd,
+    show ((ENNReal.ofReal (partitionFunction d N P a mass ha hmass))⁻¹).toReal
+        = (partitionFunction d N P a mass ha hmass)⁻¹ from by
+      rw [ENNReal.toReal_inv, ENNReal.toReal_ofReal hZ_pos.le], smul_eq_mul]
+  rw [show (partitionFunction d N P a mass ha hmass)
+      = ∫ ω, Real.exp (-(1 * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass) from by
+        unfold partitionFunction
+        refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+        simp only [boltzmannWeight, one_mul]]
+  rw [div_eq_inv_mul]
+  congr 1
+  refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+  simp only [boltzmannWeight, one_mul]; ring
+
+/-- **L6F bridge.** The connected four-point of the interacting lattice measure is `u₄` at full
+coupling `g=1`: `connectedFourPoint (interactingLatticeMeasure) f = u4 .. f 1`. Combined with
+`torusConnectedFourPoint_eq_lattice`, the discharge reduces to `u4(1,mass) ≤ -c` for `mass > m₀`. -/
+lemma connectedFourPoint_interactingLatticeMeasure_eq_u4_one (a mass : ℝ) (ha : 0 < a)
+    (hmass : 0 < mass) (P : InteractionPolynomial) (f : FinLatticeField d N) :
+    connectedFourPoint (interactingLatticeMeasure d N P a mass ha hmass) f
+      = u4 d N a mass ha hmass P f 1 := by
+  unfold connectedFourPoint u4
+  rw [integral_pow_interactingLatticeMeasure, integral_pow_interactingLatticeMeasure]
+
 end Pphi2
