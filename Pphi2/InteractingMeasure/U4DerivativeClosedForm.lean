@@ -53,4 +53,20 @@ theorem normalizedMoment_hasDerivAt (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mas
   exact (moment_hasDerivAt d N a mass ha hmass P f n ht).div
     (partitionFn_hasDerivAt d N a mass ha hmass P ht) hZne
 
+/-- **Partition-function second derivative at interior `t > 0`.** `Z''(t) = ∫ V² e^{-tV}` — the
+`n = 0` case of `moment_hasDerivAt2`. Together with `partitionFn_hasDerivAt` this gives `Z ∈ C²` on
+`(0,∞)`, an ingredient for the normalised-moment second derivative. -/
+theorem partitionFn_hasDerivAt2 (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) {t : ℝ} (ht : 0 < t) :
+    HasDerivAt
+      (fun g => -∫ ω, interactionFunctional d N P a mass ω *
+        Real.exp (-(g * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass))
+      (∫ ω, (interactionFunctional d N P a mass ω) ^ 2 *
+        Real.exp (-(t * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass))
+      t := by
+  have h := moment_hasDerivAt2 d N a mass ha hmass P (0 : FinLatticeField d N) 0 ht
+  simpa only [pow_zero, one_mul] using h
+
 end Pphi2
