@@ -39,10 +39,24 @@ uniform in N (torus a=L/N), V = interactionFunctional 2 N P a mass. Feeds L3 →
     M2c, collect the finitely many M2c constants (choose over Fin P.n) into one. ~100 lines.
   This route AVOIDS the deep diagonal-orthogonality lemma (canonicalCrossTerm_inner_eq_zero needs
   j<k, fails for j=k) — Cauchy–Schwarz is cruder but uniform, which is all L1 needs. ~80 focused lines.
-- **M3 cross vanishing**: `∫ V_smooth · V_rough dμ_joint = 0` (smooth⊥rough chaos), from the field
-  orthogonality + chaos-layer argument.
-- **M4 assembly**: fix T=1 (kills log factors): ∫V_full²(T=1) = ∫V_s² + ∫V_r² (cross=0) ≤ K_s+K_r;
-  bridge at T=1 ⟹ ∫V²dμ_GFF ≤ K_s+K_r. ⟹ `interaction_variance` uniform.
+- **M3 cross vanishing**: NOT NEEDED — use `(a+b)²≤2a²+2b²` instead of orthogonality:
+  `∫V_full² ≤ 2∫V_s² + 2∫V_r²`.
+- **M4 assembly** (NEXT, but BLOCKED on integrability): fix T=1 (kills log factors):
+  `∫V_full² ≤ 2∫V_s² + 2∫V_r²` (integral_mono_of_nonneg + pointwise (a+b)²≤2a²+2b²) ≤ 2C_s + 2C_r
+  (M2 `canonicalSmoothInteraction_variance_le` + `rough_error_variance`); bridge
+  `integral_interaction_sq_eq_canonicalJoint` ⟹ `∫V²dμ_GFF ≤ 2C_s+2C_r` uniform = L1.
+  ★ BLOCKER: `integral_mono_of_nonneg` needs `2V_s²+2V_r²` **integrable on canonicalJointMeasure**,
+  i.e. `Integrable (V_rough²)` and `Integrable (V_smooth²)`. NEITHER is exposed:
+  - `V_rough²` integrability lives ONLY inside `rough_error_variance`'s proof (RoughErrorBound.lean
+    ~3878 `hsq_integrable`), behind PRIVATE chaos lemmas (`canonicalCrossTermStd_mem_wienerChaosLE`
+    :1647, `canonicalCrossTermLinearCombo_mem_wienerChaosLE` :1759). NEXT STEP: add a public
+    `canonicalRoughError_sq_integrable` to RoughErrorBound.lean by extracting that ~15-line block
+    (or `canonicalRoughError_memLp_two`).
+  - `V_smooth²` integrability: derivable in InteractionVariance via `Integrable.mono'` with the M2b
+    bound function (V_s² ≤ bound, bound integrable from `canonicalCrossTerm_pair_integrable`) — needs
+    V_smooth AEStronglyMeasurable. Self-contained once attempted.
+  - (NOTE: `V²` IS integrable on the GFF side — `integrable_powMul_interaction_sq` at n=0 — but that's
+    the GFF measure, not the joint; doesn't directly give joint-side V_s²/V_r².)
 
 ## Order
 1. **M1** (smooth double-sum) — clean, self-contained. Build first.
