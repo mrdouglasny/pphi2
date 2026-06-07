@@ -393,4 +393,126 @@ theorem interaction_moment_le (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
   rw [← Real.rpow_natCast C2 m]
   exact Real.rpow_le_rpow hvar_nn hvar (by positivity)
 
+/-- **L3b — free even-moment hypercontractivity.** For any lattice test function `f` and `m ≥ 1`,
+the GFF even moment is controlled by the variance:
+`∫(ωf)^{2m} dμ_GFF ≤ (2m-1)^m·(∫(ωf)² dμ_GFF)^m`. Direct from `gaussian_hypercontractive`
+(`n=1, p=2m`). Combined with a uniform variance bound it yields the uniform field moment consumed
+by the L3 Cauchy–Schwarz. -/
+theorem field_pow_le_second_pow {d N : ℕ} [NeZero N] (a mass : ℝ) (ha : 0 < a)
+    (hmass : 0 < mass)
+    (f : FinLatticeField d N) (m : ℕ) (hm : 1 ≤ m) :
+    ∫ ω, (ω f) ^ (2 * m) ∂(latticeGaussianMeasure d N a mass ha hmass)
+      ≤ ((2 * m : ℝ) - 1) ^ m
+        * (∫ ω, (ω f) ^ 2 ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ m := by
+  have hmR : (1 : ℝ) ≤ (m : ℝ) := by exact_mod_cast hm
+  set T := latticeCovarianceGJ d N a mass ha hmass with hT
+  have hμ : latticeGaussianMeasure d N a mass ha hmass = GaussianField.measure T := rfl
+  have hp : (2 : ℝ) ≤ 2 * (m : ℝ) := by linarith
+  have h_hyper := gaussian_hypercontractive T f 1 (2 * (m : ℝ)) hp m hm (by push_cast; ring)
+  simp only [Nat.cast_one, mul_one] at h_hyper
+  rw [show (2 * (m : ℝ)) / 2 = (m : ℝ) by ring] at h_hyper
+  rw [hμ]
+  -- Convert the goal's `npow`/`(ωf)` integrands into the `rpow`/`|ωf|` form of `h_hyper`.
+  have key1 : ∫ ω, (ω f) ^ (2 * m) ∂(GaussianField.measure T)
+      = ∫ ω, |ω f| ^ (2 * (m : ℝ)) ∂(GaussianField.measure T) := by
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+    show (ω f) ^ (2 * m) = |ω f| ^ (2 * (m : ℝ))
+    rw [show (2 * (m : ℝ)) = ((2 * m : ℕ) : ℝ) by push_cast; ring, Real.rpow_natCast,
+      (even_two_mul m).pow_abs]
+  have key2 : ∫ ω, (ω f) ^ 2 ∂(GaussianField.measure T)
+      = ∫ ω, |ω f| ^ (2 : ℕ) ∂(GaussianField.measure T) := by
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+    show (ω f) ^ 2 = |ω f| ^ (2 : ℕ)
+    rw [sq_abs]
+  rw [key1, key2, ← Real.rpow_natCast ((2 : ℝ) * (m : ℝ) - 1) m,
+    ← Real.rpow_natCast (∫ ω, |ω f| ^ (2 : ℕ) ∂(GaussianField.measure T)) m]
+  exact h_hyper
+
+/-- **L3a — `V ∈ Lᵖ` on the GFF** (`p ≥ 2`, per `N`). Transfers
+`canonicalFullInteractionJoint_memLp` from the joint measure to the lattice GFF via
+`canonicalJointMeasure_map_canonicalSumConfig` and
+`canonicalFullInteractionJoint_eq_interactionFunctional`. In particular `V^{2k} ∈ L²` (so the L3
+Cauchy–Schwarz applies). -/
+theorem interaction_memLp (N : ℕ) [NeZero N] (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (p : ℝ) (hp : 2 ≤ p) :
+    MeasureTheory.MemLp (fun ω => interactionFunctional 2 N P a mass ω)
+      (ENNReal.ofReal p)
+      (latticeGaussianMeasure 2 N a mass ha hmass) := by
+  have hVfull := canonicalFullInteractionJoint_memLp 2 N a mass ha hmass 1 one_pos P p hp
+  rw [show latticeGaussianMeasure 2 N a mass ha hmass
+      = (canonicalJointMeasure 2 N).map (canonicalSumConfig 2 N a mass 1)
+      from (canonicalJointMeasure_map_canonicalSumConfig 2 N a mass ha hmass 1 one_pos).symm,
+    memLp_map_measure_iff
+      (interactionFunctional_measurable 2 N P a mass).aestronglyMeasurable
+      (canonicalSumConfig_measurable 2 N a mass 1).aemeasurable]
+  refine hVfull.ae_eq ?_
+  filter_upwards with η
+  simp only [Function.comp_apply, canonicalFullInteractionJoint_eq_interactionFunctional]
+
+/-- **Per-`N` integrability of `Vᵐ` powers** on the lattice GFF (`m ≥ 2`): since `V ∈ Lᵐ` for all
+`m ≥ 2`, the even power `V^{2k}` is `L²` (`k ≥ 1`) and `Vⁿ` is integrable (`n ≥ 2`). Direct from
+`interaction_memLp`. -/
+theorem interactionFunctional_pow_integrable (N : ℕ) [NeZero N] (a mass : ℝ) (ha : 0 < a)
+    (hmass : 0 < mass) (P : InteractionPolynomial) (n : ℕ) (hn : 2 ≤ n) :
+    MeasureTheory.Integrable (fun ω => (interactionFunctional 2 N P a mass ω) ^ n)
+      (latticeGaussianMeasure 2 N a mass ha hmass) := by
+  have hmem : MemLp (fun ω => interactionFunctional 2 N P a mass ω) (n : ENNReal)
+      (latticeGaussianMeasure 2 N a mass ha hmass) := by
+    have h := interaction_memLp N a mass ha hmass P (n : ℝ) (by exact_mod_cast hn)
+    rwa [ENNReal.ofReal_natCast] at h
+  have h := hmem.norm_rpow (p := (n : ENNReal)) (by exact_mod_cast (by omega : n ≠ 0)) (by simp)
+  rw [memLp_one_iff_integrable] at h
+  have hint_abs : Integrable (fun ω => |interactionFunctional 2 N P a mass ω| ^ n)
+      (latticeGaussianMeasure 2 N a mass ha hmass) :=
+    h.congr (Filter.Eventually.of_forall fun ω => by
+      simp [ENNReal.toReal_natCast, Real.rpow_natCast, Real.norm_eq_abs])
+  exact hint_abs.mono'
+    ((interactionFunctional_measurable 2 N P a mass).pow_const n).aestronglyMeasurable
+    (Filter.Eventually.of_forall fun ω => le_of_eq (by rw [Real.norm_eq_abs, abs_pow]))
+
+/-- **L3c — Cauchy–Schwarz split of the free product moment.** For `k ≥ 1`,
+`∫(ωf)^{2n}·V^{2k} dμ_GFF ≤ (∫(ωf)^{4n})^{1/2}·(∫V^{4k})^{1/2}` (Hölder with conjugate `2,2`). The
+field factor `(ωf)^{2n} ∈ L²` (`pairing_memLp`) and the interaction factor `V^{2k} ∈ L²`
+(`interaction_memLp`). Combined with `field_pow_le_second_pow` (field) and `interaction_moment_le`
+(`V`), this yields the uniform free moment `⟨φ^{2n}V^{2k}⟩₀ ≤ K₀` that L4 consumes. -/
+theorem free_product_moment_cauchy_schwarz {N : ℕ} [NeZero N] (P : InteractionPolynomial)
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass) (f : FinLatticeField 2 N) (n k : ℕ) (hk : 1 ≤ k) :
+    ∫ ω, (ω f) ^ (2 * n) * (interactionFunctional 2 N P a mass ω) ^ (2 * k)
+        ∂(latticeGaussianMeasure 2 N a mass ha hmass)
+      ≤ (∫ ω, (ω f) ^ (4 * n) ∂(latticeGaussianMeasure 2 N a mass ha hmass)) ^ (1 / 2 : ℝ)
+        * (∫ ω, (interactionFunctional 2 N P a mass ω) ^ (4 * k)
+            ∂(latticeGaussianMeasure 2 N a mass ha hmass)) ^ (1 / 2 : ℝ) := by
+  set μ := latticeGaussianMeasure 2 N a mass ha hmass with hμ
+  have hf_mem : MemLp (fun ω => (ω f) ^ (2 * n)) 2 μ := by
+    rw [memLp_two_iff_integrable_sq
+      ((configuration_eval_measurable f).pow_const (2 * n)).aestronglyMeasurable]
+    refine (integrable_pow_pairing 2 N a mass ha hmass f (4 * n)).congr
+      (Filter.Eventually.of_forall fun ω => ?_)
+    show (ω f) ^ (4 * n) = ((ω f) ^ (2 * n)) ^ 2
+    rw [← pow_mul]; congr 1; ring
+  have hg_mem : MemLp (fun ω => (interactionFunctional 2 N P a mass ω) ^ (2 * k)) 2 μ := by
+    rw [memLp_two_iff_integrable_sq
+      ((interactionFunctional_measurable 2 N P a mass).pow_const (2 * k)).aestronglyMeasurable]
+    refine (interactionFunctional_pow_integrable N a mass ha hmass P (4 * k) (by omega)).congr
+      (Filter.Eventually.of_forall fun ω => ?_)
+    show (interactionFunctional 2 N P a mass ω) ^ (4 * k)
+      = ((interactionFunctional 2 N P a mass ω) ^ (2 * k)) ^ 2
+    rw [← pow_mul]; congr 1; ring
+  have key := integral_mul_le_Lp_mul_Lq_of_nonneg (μ := μ) Real.HolderConjugate.two_two
+    (f := fun ω => (ω f) ^ (2 * n)) (g := fun ω => (interactionFunctional 2 N P a mass ω) ^ (2 * k))
+    (Filter.Eventually.of_forall fun ω => (even_two_mul n).pow_nonneg _)
+    (Filter.Eventually.of_forall fun ω => (even_two_mul k).pow_nonneg _)
+    (by rw [ENNReal.ofReal_ofNat]; exact hf_mem) (by rw [ENNReal.ofReal_ofNat]; exact hg_mem)
+  refine le_trans key (le_of_eq ?_)
+  congr 1
+  · congr 1
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+    show ((ω f) ^ (2 * n)) ^ (2 : ℝ) = (ω f) ^ (4 * n)
+    rw [Real.rpow_two, ← pow_mul]; congr 1; ring
+  · congr 1
+    refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
+    show ((interactionFunctional 2 N P a mass ω) ^ (2 * k)) ^ (2 : ℝ)
+      = (interactionFunctional 2 N P a mass ω) ^ (4 * k)
+    rw [Real.rpow_two, ← pow_mul]; congr 1; ring
+
 end Pphi2

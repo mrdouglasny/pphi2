@@ -2338,6 +2338,33 @@ theorem canonicalFullInteractionJoint_moment_le
   rw [hp_eq, h2_eq, htransfer p, htransfer (2 : ℝ)] at hG1
   exact hG1
 
+/-- **Full interaction ∈ Lᵖ on the joint measure** (`p ≥ 2`). From the chaos membership
+(`canonicalFullInteractionJointStd ∈ wienerChaosLE`) + Bonami–Nelson (`eLpNorm` finite), transferred
+to the joint via the measure-preserving std-Gaussian equivalence. -/
+theorem canonicalFullInteractionJoint_memLp
+    (ha : 0 < a) (hmass : 0 < mass) (T : ℝ) (hT : 0 < T) (P : InteractionPolynomial)
+    (p : ℝ) (hp : 2 ≤ p) :
+    MeasureTheory.MemLp (canonicalFullInteractionJoint d N a mass T P) (ENNReal.ofReal p)
+      (canonicalJointMeasure d N) := by
+  obtain ⟨hf, hchaos⟩ := canonicalFullInteractionJointStd_mem_wienerChaosLE
+    (d := d) (N := N) (a := a) (mass := mass) ha hmass T hT P
+  have hStd : MeasureTheory.MemLp (canonicalFullInteractionJointStd d N a mass T P)
+      (ENNReal.ofReal p)
+      (GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N))) := by
+    refine ⟨hf.aestronglyMeasurable, ?_⟩
+    have hb := GaussianHilbert.bonami_nelson_chaosLE _ P.n
+      (hf.toLp (canonicalFullInteractionJointStd d N a mass T P)) hchaos p hp
+    rw [← eLpNorm_congr_ae (MemLp.coeFn_toLp hf)]
+    exact lt_of_le_of_lt hb (ENNReal.mul_lt_top ENNReal.ofReal_lt_top (MeasureTheory.Lp.memLp _).2)
+  have hmp : MeasureTheory.MeasurePreserving (canonicalJointStdGaussianMeasurableEquiv d N)
+      (canonicalJointMeasure d N)
+      (GaussianHilbert.stdGaussianFin (Fintype.card (CanonicalJointSumIndex d N))) :=
+    ⟨(canonicalJointStdGaussianMeasurableEquiv d N).measurable,
+      canonicalJointMeasure_map_stdGaussian (d := d) (N := N)⟩
+  refine (hStd.comp_measurePreserving hmp).ae_eq ?_
+  filter_upwards with η
+  simp only [Function.comp_apply, canonicalFullInteractionJointStd_eq]
+
 /-! ## Generic L² Pythagoras (two functions)
 
 Reusable: when `∫ L · R = 0`, `∫ (L + R)² = ∫ L² + ∫ R²`. Pure

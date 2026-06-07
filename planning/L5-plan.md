@@ -1,0 +1,64 @@
+# L5(ii) + L6F — the affine derivative bound and the final discharge
+
+After L1 + L2-for-V + **L3** (all axiom-clean, PR #46), the remaining wall. The consumer is
+`exists_uniform_neg_of_uniform_affine_bound'` (`UniformBounds.lean`), which for `φ_N = u₄_N` needs,
+with `s, K, g₀` **uniform in `N`**:
+
+| Leaf | Statement | Status |
+|------|-----------|--------|
+| `h0` | `u₄_N(0) = 0` | ✅ `u4_at_zero` |
+| `hcont` | `ContinuousOn u₄_N [0,g₀]` | ✅ `u4_continuousOn` |
+| `hderiv` | `HasDerivAt u₄_N (deriv u₄_N t) t` on `(0,g₀)` | ✅ `u4_differentiableAt` (.hasDerivAt) |
+| `hbound` | `deriv u₄_N t ≤ -s + K·t` on `(0,g₀)`, **uniform** | ⬜ **L5(ii)** |
+
+So the ONLY remaining analytic content is `hbound`. NB `deriv u₄_N t` from `u4_differentiableAt`
+is *abstract* (`DifferentiableAt.deriv`), so `hbound` first needs a **closed form** for `u₄'(t)`.
+
+## L5(ii) brick sequence (the slog)
+
+Notation: `m_n(t) = ⟨(ωf)ⁿ⟩_t = M_n(t)/Z(t)`, `M_n(t) = ∫(ωf)ⁿe^{-tV}dμ_GFF`, `Z(t)=∫e^{-tV}`.
+`u₄(t) = m₄(t) − 3 m₂(t)²`. Free interacting moment of an observable `X`:
+`⟨X⟩_t = (∫ X e^{-tV})/Z(t)`.
+
+- **L5a — closed-form `u₄'(t)`.** General-`t` analog of `normalizedMoment_hasDerivWithinAt`
+  (currently only `g=0`). Via `moment_hasDerivAt` (`M_n'(t) = -∫(ωf)ⁿVe^{-tV}`) and
+  `partitionFn_hasDerivAt` (`Z'(t) = -∫Ve^{-tV}`), the quotient rule gives
+  `m_n'(t) = -⟨(ωf)ⁿV⟩_t + ⟨(ωf)ⁿ⟩_t⟨V⟩_t = -Cov_t((ωf)ⁿ, V)` (connected).
+  Then `u₄'(t) = m₄'(t) − 6 m₂(t) m₂'(t)`. Establish `deriv u₄_N t = ` this expression
+  (`HasDerivAt.deriv` on the `u4_differentiableAt` witness, matched to the product/quotient rule).
+  ~150–250 lines; mechanical but large.
+
+- **L5b — `u₄''(t)` closed form + `C²`.** Differentiate `u₄'(t)` again (using `moment_hasDerivAt2`,
+  `M_n''(t) = ∫(ωf)ⁿV²e^{-tV}`, plus product rule). `u₄''(t)` is a rational expression in the
+  unnormalised moments `∫(ωf)^a V^b e^{-tV}` (a≤4, b≤2) and `Z(t)`. Foundation: `moment_hasDerivAt2`
+  ✅ (done).
+
+- **L5c — uniform bound `u₄''(t) ≤ K`.** Each normalised moment `⟨(ωf)^a V^b⟩_t` (a≤4, b≤2) is
+  bounded uniformly in `N` and `t∈[0,g₀]` by **L4∘L3**:
+  `⟨|(ωf)^a V^b|⟩_t ≤ ‖(ωf)^a V^b‖_{L²(μ_GFF)}·√K_Nelson` (`interacting_moment_le_L2_of_expBound`),
+  and `‖(ωf)^a V^b‖²_{L²} = ∫(ωf)^{2a}V^{2b}dμ_GFF ≤ K₀` (`torus_free_product_moment_uniform`,
+  b≥1; `torus_normConst_field_moment_uniform` for b=0). `Z(t) ≥ 1` (`partitionFn_ge_one`) keeps the
+  denominators controlled. Assemble: finitely many uniformly-bounded moments ⟹ `u₄''(t) ≤ K`
+  uniform. The largest single assembly in the project.
+
+- **L5d — affine bound from `C²`.** `u₄'(t) = u₄'(0) + ∫₀ᵗ u₄''(r)dr ≤ u₄'(0) + K·t`. With
+  `u₄'(0) = -6a^d∑(C_af)⁴ = -s` (`u4_hasDerivWithinAt`; `s` uniform via `leadingTerm_const_eq` =
+  `(L^{3d}m⁸)⁻¹`), this is exactly `deriv u₄_N t ≤ -s + K·t`. (Alternatively bound
+  `u₄'(t) - u₄'(0) ≤ K·t` directly via MVT on `u₄'` + `u₄'' ≤ K`.)
+
+## L6F — final discharge (short, once L5 lands)
+
+1. `exists_uniform_neg_of_uniform_affine_bound'` with `s` (`leadingTerm_const_eq`, uniform),
+   `K` (L5c), `g₀` ⟹ `∃ g c>0, ∀N, u₄_N(g) ≤ -c`.
+2. **Torus framing.** `torusConnectedFourPoint L (torusInteractingMeasure L N P mass hmass) f`
+   pulls back through `torusEmbedLift`/`latticeTestFn` to the lattice `u₄_N(g)` of
+   `interactingLatticeMeasure` (mirror the second-moment pullback in `TorusInteractingMoments`),
+   with `f` = embedded normalised constant.
+3. **mass ↔ g.** `g = 1/(4 mass²)` (`FieldRedefinition`); `mass > m₀ ⟺ g < g₀ := 1/(4m₀²)`. Set
+   `m₀` from `g₀`. ⟹ `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
+   ⟹ `torus_pphi2_isInteracting_weakCoupling` is axiom-free.
+
+HONEST SCOPE: L5(ii) is several focused sessions (L5a closed form + L5c the big moment assembly are
+the bulk). L6F is short once `s` and `K` are in hand. All the analytic inputs (L1, L2-for-V, L3, L4,
+Nelson, leading term) are now proven and axiom-clean — L5 is *assembly + differentiation calculus*,
+not new hard analysis.
