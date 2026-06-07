@@ -28,12 +28,23 @@ for the `a≤1` interface in Hypercontractivity.lean is still axiomatic, but the
 route we use does NOT touch it.)
 ⟹ REASSESS: much of L1/L2 covariance-summability infra likely already exists inside NelsonEstimate/
 (CovarianceBoundsGJ, CovarianceSplit) + ContinuumLimit/Hypercontractivity.lean. Survey before rebuilding.
-- [ ] L1. uniform `⟨V²⟩₀ ≤ C(m,L)`. status: PARTIAL — THE remaining analytic piece. Bridge
-      `integral_interaction_sq_eq_canonicalJoint` (InteractionL2:36) reduces to the canonical joint;
-      rough row-sums `canonicalRoughCovariance_pow_{one,two}_sum_le_uniform_in_aN` (CovarianceBoundsGJ:
-      709,851) + smooth `smoothVariance_le_log` (CovarianceSplit:140) + rough-error L²-sq decomp
-      `canonicalRoughError_l2_sq_eq_lead_plus_perCoef_sq` (RoughErrorBound:2540) all EXIST. Missing =
-      the unified assembly tying them into a single N-uniform `⟨V²⟩₀ ≤ C`. deps: []
+- [ ] L1. uniform `⟨V²⟩₀ ≤ C(m,L)`. status: SCOPED, not blocked — THE remaining analytic core. deps: []
+      ROUTING DECISION (2026-06-06): TWO routes.
+      • Direct (gffPositionCovariance): ⟨V²⟩₀=∑_m c_m²m!·a^{2d}∑_{z,w}C(z,w)^m via
+        gff_wickPower_two_smeared_inner, then full-cov row-sum→double via a^d·card=L^d. BLOCKED by a
+        MISSING eigenbasis bridge: `gffPositionCovariance = canonicalSmooth+canonicalRough` does NOT
+        exist (gffPositionCovariance uses massEigenvectorBasis; canonical uses latticeFourierProductBasisFun
+        — two different eigenrepresentations; covariance_split (CovarianceSplit:52) is only eigenvalue-level
+        λ⁻¹=smoothEig+roughEig). Building that bridge is itself deep.
+      • Canonical-joint (INTENDED): use bridge `integral_interaction_sq_eq_canonicalJoint` (done) →
+        ∫V_full²dμ_joint, V_full=V_s+V_r (φ_S⊥φ_R indep) → ∫V_s²+2∫V_sV_r+∫V_r². Cross term via
+        smooth⊥rough chaos orthogonality (integral_sum_mul_sum_eq_zero_of_orth, RoughErrorBound:2093);
+        ∫V_r² via canonicalRoughError_l2_sq_eq_lead_plus_perCoef_sq (:2540) + rough row-sums; ∫V_s² via
+        abs_canonicalSmoothCovariance_le_smoothWickConstant (FieldDecomposition:3812) +
+        smoothWickConstant_le_log_uniform_in_aN (CovarianceBoundsGJ:1536) pointwise→row-sum.
+      VERDICT: buildable, all analytic inputs proved; remaining = intricate assembly in the Nelson
+      canonical-joint machinery (RoughErrorBound/FieldDecomposition). A focused dedicated job; the
+      deepest-unfamiliar-machinery piece of the K leaf. Good Codex/fresh-context candidate.
 - [~] L2. hypercontractivity / uniform Lᵖ. status: MOSTLY FOUND. `interacting_moment_bound`
       (Hypercontractivity.lean:1218) `∫|ωf|^{pn}dμ_a ≤ C(2p−1)^{pn/2}(∫|ωf|^{2n}dμ_GFF)^{p/2}`;
       `gaussian_hypercontractivity_continuum` (:112); `pairing_memLp_lattice` (MomentIntegrability:30)
