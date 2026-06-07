@@ -65,6 +65,7 @@ import Pphi2.TorusContinuumLimit.TorusInteractingLimit
 import Pphi2.TorusContinuumLimit.TorusOSAxioms
 import Pphi2.TorusContinuumLimit.TorusInteractingOS
 import Pphi2.TorusContinuumLimit.TorusNontriviality
+import Pphi2.TorusContinuumLimit.TorusU4Pullback
 import Pphi2.TorusContinuumLimit.TorusInteractingMoments
 import Pphi2.TorusContinuumLimit.TorusInteractingResult
 
