@@ -50,4 +50,28 @@ lemma normalizedMoment_zero (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
   simp only [zero_mul, neg_zero, Real.exp_zero, mul_one, integral_const, smul_eq_mul,
     probReal_univ, div_one]
 
+/-- **L5d — `u₄'(0) = -s`.** The closed-form first derivative at `g=0` equals the leading slope
+`-6 a^d ∑(C_af)⁴`. Proof: `u4Deriv 0` assembles (via the `g=0` evaluations) into the within-derivative
+of `u₄` at `0`, which `u4_hasDerivWithinAt` identifies as `-6 a^d ∑(C_af)⁴`; conclude by
+derivative-uniqueness on `Ici 0`. -/
+lemma u4Deriv_zero_eq (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4) (f : FinLatticeField d N) :
+    u4Deriv d N a mass ha hmass P f 0
+      = -6 * a ^ d * ∑ z, (∑ x, f x * gffPositionCovariance d N a mass x z) ^ 4 := by
+  haveI := latticeGaussianMeasure_isProbability d N a mass ha hmass
+  have h4 := normalizedMoment_hasDerivWithinAt d N a mass ha hmass P f 4
+  have h2 := normalizedMoment_hasDerivWithinAt d N a mass ha hmass P f 2
+  have hu : HasDerivWithinAt (u4 d N a mass ha hmass P f)
+      (u4Deriv d N a mass ha hmass P f 0) (Ici 0) 0 := by
+    have hcomb := h4.sub ((h2.pow 2).const_mul (3 : ℝ))
+    convert hcomb using 1
+    unfold u4Deriv
+    rw [normalizedMomentDeriv_zero, normalizedMomentDeriv_zero, normalizedMoment_zero]
+    simp only [zero_mul, neg_zero, Real.exp_zero, mul_one, integral_const, smul_eq_mul,
+      probReal_univ, div_one, pow_one]
+    ring
+  have h2u := u4_hasDerivWithinAt d N a mass ha hmass P hP f
+  have heq := (uniqueDiffWithinAt_Ici (0 : ℝ)).eq hu.hasFDerivWithinAt h2u.hasFDerivWithinAt
+  simpa using heq
+
 end Pphi2
