@@ -53,7 +53,7 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   `torusInteractingMeasureCoupling` (+`isProbability`), `latticeFourthMoment_sqrt_le` (g-free, factored),
   `nelson_exponential_estimate_coupling`, `torus_interacting_second_moment_uniform_coupling`,
   `torus_interacting_tightness_coupling`, `torusInteractingLimitCoupling_exists`.
-- [x] **A5. `g`-family 4-point convergence.**   status: todo   deps: [A3, A4]   diff: ★★★
+- [x] **A5. `g`-family 4-point convergence.**   status: done   deps: [A3, A4]   diff: ★★★
   Mirror `torus_connectedFourPoint_tendsto` for `μ_g`: `u₄(μ_{g,N}) → u₄(μ_{g,∞})`. **Reuse map**
   (`TorusInteractingMoments.lean`): the generic helpers `limit_le_of_uniform_bound`, `sub_min_le_sq_div`
   are measure-agnostic → **reuse as-is**. Need coupling versions of the measure-specific bounds:
@@ -63,14 +63,38 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   `(∫(ωg)^{2m})^{1/2} ≤ (2m-1)^{m/2}Cg^{m/2}` to keep them short). Then thin wrappers
   `torus_interacting_{fourth,second}_moment_tendsto_coupling` + `torus_connectedFourPoint_tendsto_coupling`
   (delegating to the generic UI lemma). ~300 lines, mechanical.
-- [ ] **A6. Restate the discharge as a THEOREM.**   status: todo   deps: [A2, A5]   diff: ★
-  `torus_weakCoupling_connectedFourPoint_strictNeg` (THEOREM, was axiom): from `lattice_u4_neg_uniform`
-  + A2, `∃ g₀ c > 0, ∀ N, torusConnectedFourPoint(μ_{g₀,N}) f₀ ≤ −c`.
+- [ ] **A6. Lattice negativity at a FIXED torus test function (the genuine remaining core, NOT
+  assembly).**   status: todo   deps: [A2, A5]   diff: ★★★
+  ⚠️ **Discovered 2026-06-07:** `lattice_u4_neg_uniform` is hardwired to the **N-dependent constant**
+  lattice test function `1/card` (both the slope `leadingTerm_const_eq` and the `K`
+  `u4Deriv2_abs_le_uniform` are stated only for it — chosen because `a^d·card = L²` makes the slope
+  `s = 6(L⁶m⁸)⁻¹` exactly N-uniform). That constant is **not** `latticeTestFn L N f` of any fixed
+  torus `f`, and A5's convergence needs a **fixed** torus `f`. This is the same fixed-test-function
+  gap the original axiom never closed.
+  **The tractable route (4-homogeneity).** `connectedFourPoint` (hence `u4`) is degree-4 homogeneous
+  in the test function: `u4(c•f, g) = c⁴·u4(f, g)` (because `ω(c•f) = c·(ω f)`). For the **constant
+  torus function** `f₀ ≡ c₀`, by symmetry `latticeTestFn L N f₀ = c_N • (fun _ => (card)⁻¹)`, so
+  `u4(latticeTestFn L N f₀, g₀) = c_N⁴ · u4((card)⁻¹, g₀) ≤ c_N⁴·(−c)`. Hence the discharge reduces to:
+  (i) the homogeneity lemma `u4 (c•f) g = c⁴·u4 f g` (easy: moment homogeneity); (ii)
+  `latticeTestFn L N f₀ = c_N • (card)⁻¹` for the constant `f₀` (symmetry of `evalTorusAtSiteGJ` on
+  constants); (iii) **`inf_N c_N > 0`** (so `c_N⁴·(−c) ≤ −c' < 0` uniformly) — a Riemann-sum /
+  `evalTorusAtSiteGJ`-of-constant lower bound, the one real analytic sub-leaf. Then
+  `torusConnectedFourPoint(μ_{g₀,N}) f₀ = u4(latticeTestFn f₀, g₀) ≤ −c'` uniformly (via the coupling
+  analog of `torusConnectedFourPoint_eq_lattice`, also needed).
 - [ ] **A7. New headline.**   status: todo   deps: [A5, A6]   diff: ★
   `torus_pphi2_isInteracting_weakCoupling'` : `∃ g₀ > 0, ∃ μ (continuum limit of μ_{g₀}),
-  IsTorusPphi2Limit … ∧ TorusIsInteracting`. Assemble from A6 + A5 (`u₄(μ) = lim u₄(μ_{g₀,N}) ≤ −c`).
+  IsTorusPphi2Limit … ∧ TorusIsInteracting`. Assemble from A6 + A5 (`u₄(μ) = lim u₄(μ_{g₀,N}) ≤ −c' < 0`).
   Retire the old axiom + the `mass`-parametrized headline (or keep the old as a corollary, NOT proved,
   marked Route B / open).
+
+## HONEST STATUS (2026-06-07)
+A1–A5 done + axiom-clean: the **entire continuum-limit machinery** for the weak-coupling family
+(lattice measure, bridge, Nelson/density transfer, tightness, existence, 4-point convergence). The
+remaining content is concentrated in **A6** — and A6 is genuinely the original non-triviality core
+(uniform lattice `u₄<0` at a *fixed* continuum test function), NOT mechanical assembly. The
+4-homogeneity reduction above shrinks it to one analytic sub-leaf (`inf_N c_N > 0` for the constant
+function's GJ-sampling) + two easy lemmas. Route A's value: it built all the surrounding
+infrastructure axiom-clean and isolated the irreducible hard step.
 
 ## Net
 A1/A2/A6/A7 are ★ (definitions + assembly). A3 is the one genuinely-new analytic lemma (Jensen
