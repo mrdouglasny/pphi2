@@ -1,11 +1,30 @@
-# Continuum rescaling-equivalence route to φ⁴₂ non-triviality
+# Continuum rescaling-equivalence route to φ⁴₂ non-triviality (a.k.a. "Route B")
 
-> ℹ️ **STATUS (2026-06-07): PROPOSED ALTERNATIVE, docs-only — not started.** This is route 2 of two
-> *competing* routes to axiom 9 (`torus_weakCoupling_lattice_connectedFourPoint_strictNeg`, u₄ < 0).
-> The **live** route with actual Lean code is route 1, the lattice affine-bound discharge on branch
-> `l5-affine-bound` (L5 complete, L6F reduction). This continuum route is Gemini-vetted SOUND (below)
-> but has no implementation. Don't pursue both — see [`../BRANCHES.md`](../BRANCHES.md) for the
-> route-1-vs-route-2 decision.
+> ⏸️ **DECISION (2026-06-07): DEFERRED — interesting, sound, but not now.**
+> Non-triviality is already **DONE** by Route A: `torus_pphi2_isInteractingStrict_weakCoupling`
+> (`Pphi2/TorusContinuumLimit/TorusCouplingResult.lean`, **axiom-free**) proves φ⁴₂ on T² is
+> non-Gaussian at weak coupling. This continuum-dilation route ("Route B") would only upgrade that to
+> the conventional **`λ=1` / large-mass normalization** — which Gemini confirmed is the *same*
+> statement (super-renormalizable; single dimensionless parameter `g/m²`), not more true.
+>
+> **Why deferred (it's harder than Route A and entangled with unbuilt machinery):**
+> 1. *Varying-torus dilation geometry* — measures on two tori `T²_L`, `T²_{mL}` + a configuration
+>    pushforward + continuum covariance scaling `C_m(x,y)=C_1(m(x−y))` (the codebase fixes `L` via
+>    `Fact (0<L)`). New, moderate (~weeks).
+> 2. *Commuting the dilation with the continuum (subsequential) limit* — the lattice is NOT
+>    scale-covariant, so the identity is purely continuum; for an interacting limit this borders on
+>    **uniqueness of the limit** (cluster-expansion keystone, INDEX item 18), open.
+> 3. *Volume-uniform weak-coupling `u₄<0`* on the growing image torus `mL→∞` = **exponential
+>    clustering** (claim 2's `K(f')=O(m⁻⁶)`), which is **not built** — INDEX items 8/14/15, gated on
+>    the uniform spectral gap (16/17, ★★★, regime-restricted by the phase transition).
+>
+> **Efficient order if ever pursued:** build clustering / uniform spectral gap *first* (needed for
+> OS4/mass-gap anyway, and is exactly claim 2's load-bearing input); then this dilation becomes a
+> short capstone. Doing Route B before clustering means building clustering anyway + the torus
+> geometry, for only a cosmetic normalization gain. See `route-A-weak-coupling-plan.md` for what's
+> done, and `../BRANCHES.md` for the route map.
+>
+> The math below (claims 1–2, Gemini-vetted Correct) is the design for that future capstone.
 
 A replacement for the lattice "mass-grade ∫V²" endgame (which is entangled with the 2D UV/log
 divergence). Idea: the rescaling that **fails on the lattice** (`−Δ_a` is not scale-covariant) is
