@@ -30,15 +30,15 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
 
 ## Bricks
 
-- [ ] **A1. Coupling-`g` torus measure + `isProbability`.**   status: todo   deps: []   diff: ★
-  `torusInteractingMeasureCoupling L N P mass g := map (torusEmbedLift) (interactingMeasure (g•V)
-  (latticeGaussianMeasure …))` (or the explicit `withDensity e^{−gV}` form matching `u4`'s defs).
-  Show `g=1` reduces to `torusInteractingMeasure` (defeq/rfl if possible). Probability measure for
-  any `g` (Boltzmann weight positive, normalized).
-- [ ] **A2. General-`g` lattice bridge.**   status: todo   deps: [A1]   diff: ★
-  `connectedFourPoint (interactingMeasureCoupling … g) f = u4(…,P,f,g)` — generalize
-  `connectedFourPoint_interactingLatticeMeasure_eq_u4_one` (currently `g=1`) to arbitrary `g`. The
-  proof is the same unfolding (`u4` is literally that connected 4-point at weight `e^{−gV}`).
+- [x] **A1. Coupling-`g` LATTICE measure + `isProbability`.**   status: done   deps: []   diff: ★
+  `interactingLatticeMeasureCoupling … g := Z(g)⁻¹ • withDensity(e^{−g·V})` (`Z(g) = partitionFn(g)`),
+  `CouplingMeasure.lean`. `interactingLatticeMeasureCoupling_isProbability` (g ≥ 0), plus helpers
+  `expNegCoupling_integrable`, `partitionFn_pos_of_nonneg`. Axiom-clean. (Torus-level pushforward is
+  folded into A4's measure def, not needed standalone.)
+- [x] **A2. General-`g` lattice bridge.**   status: done   deps: [A1]   diff: ★
+  `connectedFourPoint_interactingLatticeMeasureCoupling_eq_u4` (`= u4(…,g)`, g ≥ 0) +
+  `integral_pow_interactingLatticeMeasureCoupling` (`= normalizedMoment(…,n,g)`), `CouplingMeasure.lean`.
+  Axiom-clean. Generalizes the `g=1` `connectedFourPoint_interactingLatticeMeasure_eq_u4_one`.
 - [ ] **A3. `g`-family Nelson transfer (Jensen).**   status: todo   deps: []   diff: ★★
   `expMoment_two_le_uniform` and any higher exp-moment used by tightness/convergence, for `g ∈ (0,1]`,
   via `∫(e^{−2V})^g ≤ max(1, ∫e^{−2V})`. Mathlib: `inner_le_nnorm`/`Real.rpow` concavity or
