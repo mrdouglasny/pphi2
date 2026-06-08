@@ -192,7 +192,7 @@ there exist `g, c > 0`, uniform in `N`, with `u₄_N(g) ≤ -c`. Assembles: unif
 (`deriv_affine_bound_neg_of_continuousOn`). -/
 theorem lattice_u4_neg_uniform (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
     (P : InteractionPolynomial) (hP : P.n = 4) :
-    ∃ g c : ℝ, 0 < g ∧ 0 < c ∧ ∀ (N : ℕ) [NeZero N],
+    ∃ g c : ℝ, 0 < g ∧ 0 < c ∧ g ≤ 1 ∧ ∀ (N : ℕ) [NeZero N],
       u4 2 N (circleSpacing L N) mass (circleSpacing_pos L N) hmass P
           (fun _ : FinLatticeSites 2 N => (Fintype.card (FinLatticeSites 2 N) : ℝ)⁻¹) g ≤ -c := by
   have hL : (0 : ℝ) < L := Fact.out
@@ -205,7 +205,7 @@ theorem lattice_u4_neg_uniform (L mass : ℝ) [Fact (0 < L)] (hmass : 0 < mass)
   have hKg : K * g ≤ s / 2 := by
     have hle := mul_le_mul_of_nonneg_left (min_le_right 1 (s / (2 * K))) hKpos.le
     rwa [show K * (s / (2 * K)) = s / 2 by field_simp] at hle
-  refine ⟨g, s / 2 * g, hg_pos, by positivity, fun N _ => ?_⟩
+  refine ⟨g, s / 2 * g, hg_pos, by positivity, hgg₀, fun N _ => ?_⟩
   have ha : 0 < circleSpacing L N := circleSpacing_pos L N
   -- slope at 0 equals -s, uniformly
   have hu0 : u4Deriv 2 N (circleSpacing L N) mass ha hmass P
