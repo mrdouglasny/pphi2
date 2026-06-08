@@ -53,7 +53,7 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   `torusInteractingMeasureCoupling` (+`isProbability`), `latticeFourthMoment_sqrt_le` (g-free, factored),
   `nelson_exponential_estimate_coupling`, `torus_interacting_second_moment_uniform_coupling`,
   `torus_interacting_tightness_coupling`, `torusInteractingLimitCoupling_exists`.
-- [ ] **A5. `g`-family 4-point convergence.**   status: todo   deps: [A3, A4]   diff: ★★★
+- [x] **A5. `g`-family 4-point convergence.**   status: todo   deps: [A3, A4]   diff: ★★★
   Mirror `torus_connectedFourPoint_tendsto` for `μ_g`: `u₄(μ_{g,N}) → u₄(μ_{g,∞})`. **Reuse map**
   (`TorusInteractingMoments.lean`): the generic helpers `limit_le_of_uniform_bound`, `sub_min_le_sq_div`
   are measure-agnostic → **reuse as-is**. Need coupling versions of the measure-specific bounds:

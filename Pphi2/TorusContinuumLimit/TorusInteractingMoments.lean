@@ -432,7 +432,7 @@ under `μ`, cutoff-uniform `∫G ∂(ν n) ≤ C` and `∫G ∂μ ≤ C`, and we
 This is the ε/3 truncation argument: the two tails are `≤ C/M` (uniformly), the middle (a bounded
 continuous truncation) converges by weak convergence. Applied with `(F,G) = ((ωf)², (ωf)⁴)` and
 `((ωf)⁴, (ωf)⁸)` it gives convergence of the 2nd and 4th moments of the interacting limit. -/
-private lemma moment_tendsto_of_uniform
+lemma moment_tendsto_of_uniform
     {ν : ℕ → Measure (Configuration (TorusTestFunction L))}
     {μ : Measure (Configuration (TorusTestFunction L))}
     {F G : Configuration (TorusTestFunction L) → ℝ} {C : ℝ}
