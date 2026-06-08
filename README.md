@@ -3,97 +3,19 @@
 Formal construction of the P(Φ)₂ Euclidean quantum field theory in Lean 4,
 following the Glimm-Jaffe/Nelson lattice approach.
 
-> **📍 The master status of the remaining-axiom discharge is
-> [`planning/INDEX.md`](planning/INDEX.md)** (current). The earlier T²_L OS0–OS2 endpoint campaign
-> and its five-workstream roadmap are recorded in
-> [`docs/T2-master-plan.md`](docs/T2-master-plan.md) (historical).
-
-> **🛠 Active workstream — the cylinder `S¹(L_s) × ℝ` φ⁴₂ construction** on an isotropic
-> `Z_{N_t} × Z_{N_s}` lattice (single spacing `a`, `L_s = N_s·a` fixed, `N_t → ∞`): leaving the
-> compact torus behind to gain **reflection positivity (OS3)** and the **mass gap / clustering
-> (OS4)**, on the path to **OS reconstruction → a Wightman QFT in 1+1d**.
-> `cylinderIso_OS_of_RP_OS2` (`AsymTorus/AsymContinuumLimit.lean`) assembles the cylinder
-> **OS0–OS3** modulo the remaining project axioms. Build green, **0 sorries**; the debt is the
-> project axioms.
+> **Status at a glance.** Builds green (`lake build`), **0 sorries** — the remaining debt is a set of
+> documented project axioms. Most-developed line: the **T²_L torus** (OS0–OS2, axiom-free). The
+> **cylinder** adds OS3 (UV limit done; IR limit in progress); the full **ℝ²** OS0–OS4 target has its
+> remaining axioms concentrated in one Glimm–Jaffe Ch. 8 Nelson estimate. **Non-triviality** — that
+> the theory is genuinely interacting (`u₄ ≠ 0`) — is **proved axiom-free** on T² at weak coupling.
+> Per-route detail: [**Current status**](#current-status) below.
 >
-> **📋 Master status of the remaining axioms → [`planning/INDEX.md`](planning/INDEX.md)** — a
-> plan-loop status machine over all 17 axioms, grouped by OS-program cluster, with the dependency
-> DAG, difficulty ratings, and a discharge plan for each. The four genuine hard cores: the
-> `Lt`-uniform exponential-moment chain (Layer A + Layer B2, the latter mostly proved this cycle),
-> the uniform spectral gap, non-Gaussianity (`u₄≠0` — now proved axiom-free on T² at weak coupling),
-> and rotation restoration.
->
-> **⚠ Read [`planning/coherence-analysis.md`](planning/coherence-analysis.md) first.** The individual
-> results are sound, but the **conjoined** headline — a *single* measure that satisfies all five OS
-> axioms **and** is interacting — is not yet assembled. Progress on its legs: the OS axioms are proved
-> (OS0–OS2 on T², OS3 on the cylinder), and as of 2026-06 **non-Gaussianity is proved axiom-free** on
-> T² (`torus_pphi2_isInteractingStrict_weakCoupling`: `u₄ < 0` at weak coupling — see "Current status →
-> Non-triviality"). What's **not** yet done is gluing these onto one measure and closing the gaps:
-> `SatisfiesFullOS` is also satisfied by the *free* field, so non-triviality must be conjoined with the
-> **same** OS measure (they are still separate `∃` statements); full OS (OS0–OS4) needs the cylinder
-> (Routes B′/C), not T²; and the keystone — **weak-coupling uniqueness**
-> ([`planning/weak-coupling-uniqueness.md`](planning/weak-coupling-uniqueness.md)) — propagates the
-> (necessary) weak-coupling regime and upgrades the Prokhorov subsequence to a genuine limit. The
-> honest target remains the *conjoined* theorem `∃ μ, SatisfiesFullOS μ ∧ (∀ f≠0, S₂>0) ∧ u₄≠0`.
->
-> **Layer B1** of the remaining-axiom discharge architecture (cylinder
-> transfer matrix → variance bound) is **complete** 2026-05-31:
-> `AsymL2Operator.lean` (TM compactness + self-adjointness),
-> `AsymJentzsch.lean` (positivity-improving + ground simple),
-> `AsymPositivity.lean` (energy levels + mass gap pos),
-> `AsymVarianceBound.lean` (Layer B1 variance bound).
->
-> **Remaining workstreams** for the last axiom:
-> - **Layer A** (Newman MGF via Lee-Yang): new `lee-yang` repo
->   scaffolded at `~/Documents/GitHub/lee-yang/`, Phase 1 not yet
->   implemented. See `lee-yang/PLAN.md`.
-> - **Layer B2** (`asymInteractingVariance_le_freeVariance_Lt_uniform`,
->   Lt-uniformity): now pursued via the **transfer-matrix Feynman–Kac
->   route** (not chessboard). Much of it is **done & axiom-clean**
->   (2026-06-04): the abstract trace dictionary (merged), the φ⁴₂
->   `TransferSystem` instance (merged PR #36), the vetted energy
->   factorization, the GaussianField asym density bridge (merged
->   gaussian-field PR #3), the **measure factorization**
->   `μ_int.map sliceEquiv = pathMeasure`, the abstract **B4
->   susceptibility engine** (merged reflection-positivity PR #3), and
->   the operator↔kernel link (`asymTransferKernel_kPow_apply`). Remaining
->   tail: the **Hilbert–Schmidt trace-bridge layer** + single-slice
->   stability. See [`docs/B4B5-design.md`](docs/B4B5-design.md) and
->   [`docs/transfer-instantiation-plan.md`](docs/transfer-instantiation-plan.md).
-> - **Layer C** (assembly): ~50 lines, blocked on A + B2.
->
-> Roadmap docs:
-> - [`docs/cylinder-master-plan.md`](docs/cylinder-master-plan.md) — campaign master plan
-> - [`docs/cylinder-isotropic-lattice-redesign.md`](docs/cylinder-isotropic-lattice-redesign.md) — *why* the isotropic redesign (the metric-correctness diagnosis)
-> - [`docs/cylinder-isotropic-lattice-implementation.md`](docs/cylinder-isotropic-lattice-implementation.md) — phase-by-phase build plan (Phases 1a / 1b / 2 / 3)
-> - [`docs/asym-fielddecomposition-redesign.md`](docs/asym-fielddecomposition-redesign.md) — the §2 polynomial-chaos `FieldDecomposition` port with the unit-by-unit status table
-> - [`docs/asym-cross-term-l2-discharge-plan.md`](docs/asym-cross-term-l2-discharge-plan.md) — the cross-term L² Wick identity discharge plan (status: ✅ DONE 2026-05-29)
-> - [`docs/asym-chaos-cutoff-decomposition-discharge-plan.md`](docs/asym-chaos-cutoff-decomposition-discharge-plan.md) — UNIT 6 + UNIT 7 plan: promote `asymChaosCutoffDecomposition` axiom → theorem (~290–500 lines)
-> - [`docs/cylinder-conditional-inputs-provability.md`](docs/cylinder-conditional-inputs-provability.md) — provability vetting of every conditional input the cylinder OS theorem rests on
-> - [`docs/cylinder-os3-discharge-plan.md`](docs/cylinder-os3-discharge-plan.md) — the OS3 `hRP` hypothesis discharge plan
-
-The lattice-action normalisation diagnosed in early May 2026 (a missing
-`a^d` Riemann-sum prefactor on the kinetic term, identified by a
-Gemini-vetted scaling analysis) was resolved and merged into `main`;
-the historical fix branch is preserved as the
-[`archive/fix/lattice-action-normalization`](https://github.com/mrdouglasny/pphi2/releases/tag/archive%2Ffix%2Flattice-action-normalization)
-tag for reference. The Glimm–Jaffe-aligned action `S = (a^d/2) ⟨φ, M_a φ⟩`
-is now the project default, with `latticeCovarianceGJ` and the matching
-`gaussianDensity = exp(-(a^d/2)⟨φ, Qφ⟩)`. The OS0–OS4 chain in
-`Pphi2/Main.lean` proves theorems about the textbook GJ-aligned measure.
-The Stage 1 / Cluster A / Cluster B axiom inventory introduced for
-the genuine uniform bounds has since been substantially discharged via
-Workstream A (Phase B Glimm–Jaffe Fourier estimates, complete 2026-05-16;
-both `smoothWickConstant_le_log_uniform_in_aN` and
-`canonicalRoughCovariance_pow_sum_le_uniform_in_aN` are now theorems)
-and Workstream C (gaussian-hilbert OU/Mehler discharge, complete
-2026-05-15). The single remaining non-Mathlib axiom on the T²_L OS0–OS2
-critical path is `polynomial_chaos_exp_moment_bridge` (Workstream B,
-in flight; the last math blocker `wickPolynomial_lower_bound_general`
-resolved 2026-05-17). For per-axiom status, plans, and the full
-multi-repo roadmap, see [`docs/T2-master-plan.md`](docs/T2-master-plan.md);
-for the original lattice-action diagnosis see
-[`docs/lattice-action-normalization-fix.md`](docs/lattice-action-normalization-fix.md).
+> **Where to look:**
+> [`planning/INDEX.md`](planning/INDEX.md) — per-axiom master status (remaining axioms, dependency
+> DAG, a discharge plan for each) · [`BRANCHES.md`](BRANCHES.md) — git branch → axiom map ·
+> [`planning/coherence-analysis.md`](planning/coherence-analysis.md) — why the pieces don't *yet*
+> compose into the single conjoined "interacting φ⁴₂ QFT exists" theorem ·
+> [`docs/STATUS_HISTORY.md`](docs/STATUS_HISTORY.md) — dated discharge history.
 
 ## What this project proves
 

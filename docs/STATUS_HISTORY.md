@@ -78,3 +78,55 @@ the coupled canonical characteristic-functional bridge `continuumMeasure 2 (N n)
 (`a_n → 0`, `(N n)·a n → ∞`), the spectral-gap-to-clustering input, and the Ward-identity `N`-uniform
 polynomial-log `a²` bound for `rotationCFDefect` (the pointwise `rotationCFPointwiseDefect` API and
 `tendsto_zero_pow_mul_one_add_abs_log_pow` are proved support layers).
+
+---
+
+## README front-matter status (archived 2026-06-07)
+
+The README opening used to carry the in-flight workstream status verbatim; moved here so the README
+can lead with orientation. Live plans: [`../planning/INDEX.md`](../planning/INDEX.md);
+branch map: [`../BRANCHES.md`](../BRANCHES.md).
+
+**Active workstream (cylinder).** The cylinder `S¹(L_s) × ℝ` φ⁴₂ construction on an isotropic
+`Z_{N_t} × Z_{N_s}` lattice (single spacing `a`, `L_s = N_s·a` fixed, `N_t → ∞`) leaves the compact
+torus behind to gain OS3 (reflection positivity) and OS4 (mass gap / clustering), toward OS
+reconstruction → a Wightman QFT in 1+1d. `cylinderIso_OS_of_RP_OS2`
+(`AsymTorus/AsymContinuumLimit.lean`) assembles cylinder OS0–OS3 modulo the remaining project axioms
+(build green, 0 sorries).
+
+**Last-axiom discharge architecture (the `Lt`-uniform exp-moment chain).**
+- *Layer B1* complete 2026-05-31: cylinder transfer matrix → variance bound (`AsymL2Operator.lean`
+  TM compactness + self-adjointness; `AsymJentzsch.lean` positivity-improving + simple ground;
+  `AsymPositivity.lean` energy levels + mass-gap positivity; `AsymVarianceBound.lean`).
+- *Layer A* (Newman MGF via Lee–Yang): `lee-yang` repo scaffolded, Phase 1 not implemented.
+- *Layer B2* (`asymInteractingVariance_le_freeVariance_Lt_uniform`, `Lt`-uniformity): transfer-matrix
+  Feynman–Kac route. Much done & axiom-clean by 2026-06-04 (abstract trace dictionary; φ⁴₂
+  `TransferSystem` instance, PR #36; energy factorization; GaussianField asym density bridge,
+  gaussian-field PR #3; measure factorization `μ_int.map sliceEquiv = pathMeasure`; abstract B4
+  susceptibility engine, reflection-positivity PR #3; operator↔kernel link
+  `asymTransferKernel_kPow_apply`). Remaining tail: the Hilbert–Schmidt trace-bridge layer +
+  single-slice stability (`docs/B4B5-design.md`, `docs/transfer-instantiation-plan.md`). NB: the
+  earlier "Option B / B1–B5 slice transfer" framing on branch `option-b-feynman-kac` is SUPERSEDED
+  (see that doc's banner).
+- *Layer C* (assembly): ~50 lines, blocked on A + B2.
+
+**Lattice-action normalisation fix (early May 2026).** A missing `a^d` Riemann-sum prefactor on the
+kinetic term (Gemini-vetted scaling analysis) was resolved and merged to `main`; the fix branch is
+preserved as the `archive/fix/lattice-action-normalization` release tag. The Glimm–Jaffe-aligned
+action `S = (a^d/2)⟨φ, M_a φ⟩` is the project default (`latticeCovarianceGJ`,
+`gaussianDensity = exp(−(a^d/2)⟨φ, Qφ⟩)`); `Pphi2/Main.lean`'s OS0–OS4 chain proves theorems about
+this textbook GJ-aligned measure. The Stage-1 / Cluster-A / Cluster-B axiom inventory was substantially
+discharged via Workstream A (Phase-B Glimm–Jaffe Fourier estimates, complete 2026-05-16:
+`smoothWickConstant_le_log_uniform_in_aN`, `canonicalRoughCovariance_pow_sum_le_uniform_in_aN` now
+theorems) and Workstream C (gaussian-hilbert OU/Mehler, complete 2026-05-15). The remaining non-Mathlib
+axiom on the T²_L OS0–OS2 critical path was `polynomial_chaos_exp_moment_bridge` (Workstream B; last
+math blocker `wickPolynomial_lower_bound_general` resolved 2026-05-17).
+
+**Roadmap docs (cylinder campaign):** `cylinder-master-plan.md` (master plan);
+`cylinder-isotropic-lattice-redesign.md` (why the isotropic redesign);
+`cylinder-isotropic-lattice-implementation.md` (phase-by-phase build);
+`asym-fielddecomposition-redesign.md` (the §2 polynomial-chaos port);
+`asym-cross-term-l2-discharge-plan.md` (✅ 2026-05-29);
+`asym-chaos-cutoff-decomposition-discharge-plan.md` (UNIT 6+7);
+`cylinder-conditional-inputs-provability.md` (input provability vetting);
+`cylinder-os3-discharge-plan.md` (OS3 `hRP` discharge).
