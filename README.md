@@ -336,6 +336,10 @@ consistency checks:
 
 ## Current status
 
+> **Navigating in-flight work:** [`BRANCHES.md`](BRANCHES.md) maps the live git branches to the
+> axioms they discharge (and flags superseded/dormant ones); [`planning/INDEX.md`](planning/INDEX.md)
+> is the per-axiom master status machine.
+
 All six phases are structurally complete and the full project builds
 (`lake build`).
 

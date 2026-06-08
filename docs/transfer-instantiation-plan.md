@@ -1,5 +1,14 @@
 # pphi2-side instantiation of the abstract OS transfer bridge — plan (2026-06-03)
 
+> ⚠️ **SUPERSEDED (2026-06-07).** This B1–B5 "slice transfer matrix" framing lives on the dormant
+> `option-b-feynman-kac` branch, which is now **141 commits behind `main`**. `main` has since built
+> its own Layer-B2 transfer route — `Pphi2/AsymTorus/AsymTransferInstantiation.lean` +
+> `AsymEnergyFactorization`/`AsymMeasureFactorization`/`AsymVarianceDischarge`, B2 trace-bridge
+> bricks 0–2 and B5a proved — and **discarded this branch's `asymSliceEquiv` (B1a) prototype**.
+> The current state of this axiom (`asymInteractingVariance_le_freeVariance_Lt_uniform`) is tracked
+> by [`../planning/INDEX.md`](../planning/INDEX.md) item 3 + [`B4B5-design.md`](B4B5-design.md).
+> Do **not** resume the B1–B5 status machine below. Kept only as a record of the discarded framing.
+
 ## Status machine (plan-loop; re-read every cycle)
 
 **DECISION 2026-06-03: Option B (slice transfer matrix), per the axiom-vetting verdict.**

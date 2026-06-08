@@ -246,9 +246,18 @@ Net: the architecture is complete and the remaining content is isolated into doc
 axioms; discharging any one of them is a standalone research-grade subproject. The plan-loop's
 incremental surface is exhausted — further progress = committing to one of these mountains.
 
+## Branch map
+For which git branch carries the live code for each axiom (and which branches are
+superseded/dormant), see [`BRANCHES.md`](../BRANCHES.md) at the repo root. Quick pointers as of
+2026-06-07: axiom 3 (variance/Layer-B2) → `main`; axiom 9 (u₄ non-triviality) → `l5-affine-bound`
+(lattice route, LIVE). The `option-b-feynman-kac` branch and `docs/transfer-instantiation-plan.md`
+are SUPERSEDED; `planning/continuum-rescaling-plan.md` is a proposed (not-started) alternative to
+the lattice u₄ route.
+
 ## Staleness flags
 Many `docs/*` plans predate the transfer-matrix pivot (several dated 2026-05-13). The CURRENT
-status for Layer B2 (3) and the transfer route is `docs/B4B5-design.md` +
-`docs/transfer-instantiation-plan.md` (refreshed 2026-06-04). `docs/AXIOM_STATUS.md` and
-`docs/axiom_proof_plans.md` are the prior consolidation attempts — this index supersedes them as
-the master status machine; refresh those or fold them in.
+status for Layer B2 (3) and the transfer route is `docs/B4B5-design.md` (NB
+`docs/transfer-instantiation-plan.md` is now SUPERSEDED — see its banner). `docs/AXIOM_STATUS.md`
+and `docs/axiom_proof_plans.md` are the prior consolidation attempts — this index supersedes them as
+the master status machine; refresh those or fold them in. Dated hand-off/snapshot docs and the
+plans for the now-proved `rough_error_variance` axiom were moved to `docs/archive/` on 2026-06-07.
