@@ -66,13 +66,20 @@ clustering, gating OS4). Master campaign doc: [`docs/cylinder-master-plan.md`].
   status: scoped   deps: [12]   diff: ★★★
   note: Newman MGF via Gaussian domination / Lee–Yang. New `lee-yang` repo scaffolded, Phase 1 not
   implemented. Plan: [`docs/asym-expmoment-discharge-via-lee-yang-vet-request.md`].
-- [~] **3. `asymInteractingVariance_le_freeVariance_Lt_uniform`** (Layer B2) `AsymExpMomentDischarge.lean:206`
-  status: **in_progress (this session)**   deps: [17]   diff: ★★★
-  note: transfer-matrix Feynman–Kac route. DONE & axiom-clean: dictionary (merged), `TransferSystem`
-  instance (merged), energy factorization, GaussianField density bridge (merged), measure
-  factorization, abstract B4 engine (merged), operator↔kernel link. REMAINING: the Hilbert–Schmidt
-  trace-bridge layer + B5b single-slice stability. Plans: [`docs/B4B5-design.md`],
-  [`docs/transfer-instantiation-plan.md`], [`docs/layer-B2-discharge-plan.md`].
+- [~] **3. `asymInteractingVariance_le_freeVariance_Lt_uniform`** (Layer B2) `AsymExpMomentDischarge.lean:87`
+  status: **in_progress — machinery built (sorry-free on `main`), axiom not yet wired**   deps: [17]   diff: ★★★
+  note: transfer-matrix Feynman–Kac route. **Built & sorry-free on `main`** (`Pphi2/AsymTorus/Asym*`):
+  the rank-1 operator-decay bricks (`AsymTraceBridge`), the proved gap (`AsymGappedTransfer`,
+  `susceptibility_le`), the measure→path-measure bridge `interacting_second_moment_eq_pathMeasure`
+  (`AsymVarianceDischarge`, B3), the abstract B4 susceptibility engine, the operator↔kernel link
+  (`AsymTransferKernelOperator`). **REMAINING gap** (the axiom still stands): wire B3→B4→B5 — apply
+  the trace dictionary to the path-measure second moment, the Hilbert–Schmidt trace-class property,
+  and **B5b** single-slice stability + the `1/a` cancellation (`int/free` ratio). **Live plans:**
+  [`docs/B4B5-design.md`] (Källén–Lehmann + `1/a` cancellation, Gemini-pinned 2026-06-04) and
+  [`docs/layer-B2-discharge-plan.md`] (the "B1 ⊕ gap" route, 2026-06-02 — upgrades B1's per-`Lt`
+  `Var_int ≤ C(Lt)·Var_free` to `Lt`-uniform via the proved gap; both rest on the same proved gap and
+  may need reconciling into one path). SUPERSEDED: [`docs/transfer-instantiation-plan.md`] (see its
+  banner). Branch: work on `main` — `option-b-feynman-kac` is dormant (143 behind).
 
 ## Cluster 2 — CYL-2a: uniform spectral gap → clustering (gates OS4)
 
@@ -131,19 +138,19 @@ interacting content (`u₄≠0`, ★★★, needs `λ>0`).
   **corrected** (Gemini-vetted, memory `pphi2-s2-domination-direction`): "Griffiths/FKG ⟹ ≥free" is
   **wrong-direction** — continuum nondegeneracy needs short-distance singularity / cluster expansion
   (★★★), not FKG. → `planning/non-triviality.md`.
-- [~] **9. `continuumLimit_nonGaussian`** (`u₄≠0`) — **T² version PROVED modulo 1 weak-coupling axiom**   deps: [u₄ step I+III]   diff: ★★★
-  note: **`torus_pphi2_isInteracting_weakCoupling`** (`TorusInteractingResult.lean`) is a THEOREM:
-  `∃ m₀, ∀ mass>m₀, the genuine T² limit μ is IsTorusPphi2Limit ∧ TorusIsInteracting`. Reduces to
-  **one** documented, Gemini-vetted, weak-coupling axiom `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
-  (uniform strict lattice `u₄≤−c<0` for `g<g₀`). **All scaffolding PROVED, axiom-clean:** step IV
-  moment convergence (`torus_connectedFourPoint_tendsto`, `TorusInteractingMoments.lean`);
-  field-redefinition (`interactingMeasure_map_measurableEquiv` + moment-level `u₄((c•·)_*μ)=c⁴u₄(μ)`,
-  `FieldRedefinition.lean`); the free baseline `connectedFourPoint_gaussianMeasure_eq_zero` (`u₄=0`,
-  the `g=0` anchor). **Remaining = discharge the 1 axiom** (perturbative `u₄`): step I (Wick
-  `u₄'(0)=−6∫(C_a f)⁴`, the connected-correlator derivative — coupled to the leading-term *operator*
-  setup `C_a f`), step II (`∫(C_a f)⁴>0`), step III (Nelson `O(g²)` remainder — the crux). The
-  multi-week analytic core; the anchor is its first landed brick. (ℝ² version additionally needs the
-  `L→∞` cluster expansion — out of scope.)
+- [x] **9. `continuumLimit_nonGaussian`** (`u₄≠0`) — **T² non-Gaussianity DONE, AXIOM-FREE (Route A, 2026-06-07)**   deps: []   diff: ★★★
+  note: `torus_pphi2_isInteractingStrict_weakCoupling` (`TorusContinuumLimit/TorusCouplingResult.lean`)
+  is a THEOREM, `#print axioms ⟹ [propext, Classical.choice, Quot.sound]`: for some small coupling
+  `g₀∈(0,1]`, the continuum limit of the coupling-`g₀` interacting torus measures has
+  `torusConnectedFourPoint μ (torusOne) < 0` (`TorusIsInteractingStrict`, hence `TorusIsInteracting`).
+  The earlier axiom `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` is **NOT used** — Route A
+  discharged that content directly (coupling-family continuum limit `A1–A5` + 4-homogeneity `u4_smul`).
+  Branch `route-a-weak-coupling` (PR #48); design `planning/route-A-weak-coupling-plan.md`.
+  **Still open (separate):** (i) the conventional `λ=1`/large-mass *normalization* — Route B (continuum
+  dilation), DEFERRED, needs clustering (`planning/continuum-rescaling-plan.md`); (ii) the **ℝ²**
+  (infinite-volume) `continuumLimit_nonGaussian` axiom itself, which additionally needs `L→∞`
+  cluster expansion; (iii) conjoining `u₄≠0` with the *same* OS measure + full OS0–OS4 (keystone 18).
+  The T² non-Gaussianity *content* is now proved.
 
 ## Cluster 6 — OS→Schwinger bridge
 
@@ -223,36 +230,36 @@ expansion), the IR-limit theorem, FKG two-point domination, the square trace dic
 Layer-A Nelson/Lee–Yang engine (2/12), the spectral-gap-uniformity (17), or a regime/intent human
 decision (11, 16/17/9, 7).
 
-## Plan-loop frontier — 2026-06-05 (post T²-interacting build-out)
+## Plan-loop frontier — 2026-06-07 (post Route-A non-triviality)
 
-Major progress this session on the **non-triviality / interacting** axis (items 9, 11):
-`torus_pphi2_isInteracting_weakCoupling` is now a **theorem** (the T² φ⁴₂ theory is interacting at
-weak coupling) reducing to **one** documented weak-coupling axiom; all its scaffolding is proved &
-axiom-clean (step-IV moment convergence, the field-redefinition layer, the free-field `u₄=0` anchor).
+**Item 9 (non-Gaussianity, `u₄≠0`) is DONE on T², axiom-free** (Route A,
+`torus_pphi2_isInteractingStrict_weakCoupling`, PR #48). The earlier weak-coupling axiom is not used.
+That clears one of the four ★★★ mountains for the T² content and means **the cylinder no longer has to
+carry non-triviality** — its job is purely OS3/OS4.
 
-**The plan-loop has reached the research frontier.** Every remaining item is one of a small set of
-★★★ analytic mountains (each a multi-week formalization) or a human-judgement call — there are no
-cheap actionable increments left:
-- **u₄ perturbative discharge** (item 9's last axiom): steps I (Wick connected-correlator derivative
-  + leading-term operator setup) + III (Nelson cutoff-uniform remainder). Anchor landed; the rest is
-  the analytic core.
-- **S₂>0 continuum nondegeneracy** (item 11): short-distance singularity / cluster expansion (the
-  FKG route is wrong-direction, vetted).
-- **Spectral gap uniformity** (16/17), **clustering square dictionary** (14/15), **Nelson/Lee–Yang**
-  (2/12), **rotation defect** (13), **IR-limit** (10), **cluster-expansion keystone** (4/18) — all
-  ★★★ or human-gated, per the 2026-06-04 triage above (unchanged).
+**Active focus: the cylinder (Route B′), Layer B2 (item 3).** The transfer-matrix machinery is built
+and sorry-free on `main`; the remaining gap is wiring B3→B4→B5 (trace dictionary on the path-measure
+second moment + HS trace-class + B5b single-slice stability + the `1/a` cancellation). Live plan:
+[`docs/B4B5-design.md`]. This is the nearest concrete win.
 
-Net: the architecture is complete and the remaining content is isolated into documented, vetted
-axioms; discharging any one of them is a standalone research-grade subproject. The plan-loop's
-incremental surface is exhausted — further progress = committing to one of these mountains.
+Remaining ★★★ mountains / human-gated items (unchanged from the 2026-06-04 triage):
+- **Layer A** (`asymInteracting_mgf_gaussianDominated`, item 2) — Newman MGF via Lee–Yang; not started.
+- **Spectral gap uniformity** (16/17) — also feeds OS4 clustering (14/15) *and* the deferred Route B.
+- **S₂>0 continuum nondegeneracy** (item 11) — short-distance singularity / cluster expansion.
+- **Nelson/Lee–Yang** (12), **rotation defect** (13), **IR-limit** (10), **cluster-expansion
+  keystone** (4/18).
+
+Net: the architecture is complete; non-Gaussianity on T² is now a theorem. The incremental surface is
+the cylinder Layer-B2 wiring (item 3); everything else is a standalone research-grade subproject.
 
 ## Branch map
 For which git branch carries the live code for each axiom (and which branches are
 superseded/dormant), see [`BRANCHES.md`](../BRANCHES.md) at the repo root. Quick pointers as of
-2026-06-07: axiom 3 (variance/Layer-B2) → `main`; axiom 9 (u₄ non-triviality) → `l5-affine-bound`
-(lattice route, LIVE). The `option-b-feynman-kac` branch and `docs/transfer-instantiation-plan.md`
-are SUPERSEDED; `planning/continuum-rescaling-plan.md` is a proposed (not-started) alternative to
-the lattice u₄ route.
+2026-06-07: axiom 9 (u₄ non-Gaussianity) → **DONE, axiom-free** on `route-a-weak-coupling` (PR #48);
+axiom 3 (variance / Layer-B2, the cylinder's active item) → `main`. SUPERSEDED/dormant:
+`option-b-feynman-kac` + `docs/transfer-instantiation-plan.md` (transfer route, replaced by the
+`main` Asym* files + `docs/B4B5-design.md`); `l5-affine-bound` (the lattice u₄ route, subsumed by
+Route A); `planning/continuum-rescaling-plan.md` (Route B, deferred).
 
 ## Staleness flags
 Many `docs/*` plans predate the transfer-matrix pivot (several dated 2026-05-13). The CURRENT
