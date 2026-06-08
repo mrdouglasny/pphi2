@@ -39,18 +39,26 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   `connectedFourPoint_interactingLatticeMeasureCoupling_eq_u4` (`= u4(…,g)`, g ≥ 0) +
   `integral_pow_interactingLatticeMeasureCoupling` (`= normalizedMoment(…,n,g)`), `CouplingMeasure.lean`.
   Axiom-clean. Generalizes the `g=1` `connectedFourPoint_interactingLatticeMeasure_eq_u4_one`.
-- [ ] **A3. `g`-family Nelson transfer (Jensen).**   status: todo   deps: []   diff: ★★
-  `expMoment_two_le_uniform` and any higher exp-moment used by tightness/convergence, for `g ∈ (0,1]`,
-  via `∫(e^{−2V})^g ≤ max(1, ∫e^{−2V})`. Mathlib: `inner_le_nnorm`/`Real.rpow` concavity or
-  `MeasureTheory` Jensen (`integral_rpow_le`-style; check `convexOn`/`concaveOn` + `inner_le`).
-- [ ] **A4. `g`-family uniform 2nd moment + tightness.**   status: todo   deps: [A1, A3]   diff: ★★
-  Generalize `torus_interacting_second_moment_uniform` + `torus_interacting_tightness` to `μ_g`
-  (re-run with A3's bounds). Then `torusInteractingLimitCoupling_exists` from `prokhorov_configuration`
-  (generic) — mechanical mirror of `torusInteractingLimit_exists`.
+- [ ] **A3. `g`-family supporting-lemma chain (the real cost of A4/A5).**   status: todo   deps: []   diff: ★★
+  The g=1 second-moment/convergence proofs call a CHAIN of `g=1`-specific lemmas; each needs a
+  coupling-`g` analog (the genuinely-new work, all enabled by the Jensen bound `∫(e^{−sV})^? ` already
+  in `expMoment_le_rpow`/`partitionFn_ge_one`):
+  - `partitionFunction_ge_one` (g=1) → use `partitionFn_ge_one` (already general `t ≥ 0`) ✅ exists.
+  - `nelson_exponential_estimate` (g=1, `TorusInteractingLimit.lean:111`) → `…_coupling` (g ∈ (0,1]).
+    Bridge via `expMoment_le_rpow` (`∫e^{−sV} ≤ (∫e^{−2V})^{s/2} ≤ K`, already proved, N-uniform).
+  - `density_transfer_bound` (g=1) → `…_coupling`: `∫ X dμ_g ≤ (∫X² dμ_GFF)^{1/2}·√(∫e^{−2gV})/Z(g)`,
+    Cauchy–Schwarz with the `e^{−gV}` density; the `Z(g)≥1` + g-Nelson keep it N-uniform.
+  - higher-moment uniform inputs used by step-IV convergence (uniform integrability of `(ωf)⁴`).
+- [ ] **A4. `g`-family uniform 2nd moment + tightness + existence.**   status: todo   deps: [A1, A3]   diff: ★★
+  Mirror `torus_interacting_second_moment_uniform` (~70 lines) + `torus_interacting_tightness` for the
+  torus pushforward of `interactingLatticeMeasureCoupling … g`, swapping in A3's `…_coupling` lemmas.
+  Then `torusInteractingLimitCoupling_exists` from the generic `prokhorov_configuration` (mechanical
+  mirror of `torusInteractingLimit_exists`). NB also needs a torus-level `μ_g` =
+  `map torusEmbedLift (interactingLatticeMeasureCoupling)` def + `integral_pow` pushthrough
+  (mirror `torusConnectedFourPoint_eq_lattice`).
 - [ ] **A5. `g`-family 4-point convergence.**   status: todo   deps: [A3, A4]   diff: ★★★
-  Generalize `torus_connectedFourPoint_tendsto` to `μ_g`: `u₄(μ_{g,N}) → u₄(μ_{g,∞})`. Needs the
-  uniform-integrability / higher-moment inputs at general `g` (A3). The largest brick (mirror of the
-  existing step-IV proof, with `g` carried through).
+  Mirror `torus_connectedFourPoint_tendsto` (the step-IV proof) for `μ_g`: `u₄(μ_{g,N}) → u₄(μ_{g,∞})`,
+  threading `g` and using A3's uniform-integrability inputs. The largest brick (multi-day).
 - [ ] **A6. Restate the discharge as a THEOREM.**   status: todo   deps: [A2, A5]   diff: ★
   `torus_weakCoupling_connectedFourPoint_strictNeg` (THEOREM, was axiom): from `lattice_u4_neg_uniform`
   + A2, `∃ g₀ c > 0, ∀ N, torusConnectedFourPoint(μ_{g₀,N}) f₀ ≤ −c`.
