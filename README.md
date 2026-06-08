@@ -20,16 +20,21 @@ following the Glimm-Jaffe/Nelson lattice approach.
 > plan-loop status machine over all 17 axioms, grouped by OS-program cluster, with the dependency
 > DAG, difficulty ratings, and a discharge plan for each. The four genuine hard cores: the
 > `Lt`-uniform exponential-moment chain (Layer A + Layer B2, the latter mostly proved this cycle),
-> the uniform spectral gap, non-Gaussianity (`u₄≠0`), and rotation restoration.
+> the uniform spectral gap, non-Gaussianity (`u₄≠0` — now proved axiom-free on T² at weak coupling),
+> and rotation restoration.
 >
-> **⚠ Read [`planning/coherence-analysis.md`](planning/coherence-analysis.md) first.** The axioms
-> are individually sound but **do not yet compose into "an *interacting* φ⁴₂ QFT exists"**:
-> `SatisfiesFullOS` is satisfied by the free field too, and non-triviality / non-Gaussianity are
-> *separate* existence statements never conjoined with the OS measure. The keystone — **weak-coupling
-> uniqueness** ([`planning/weak-coupling-uniqueness.md`](planning/weak-coupling-uniqueness.md)) —
-> glues them into one measure, propagates the (necessary) weak-coupling regime, and upgrades the
-> Prokhorov subsequence to a genuine limit. The honest headline is the *conjoined* theorem
-> `∃ μ, SatisfiesFullOS μ ∧ (∀ f≠0, S₂>0) ∧ u₄≠0`.
+> **⚠ Read [`planning/coherence-analysis.md`](planning/coherence-analysis.md) first.** The individual
+> results are sound, but the **conjoined** headline — a *single* measure that satisfies all five OS
+> axioms **and** is interacting — is not yet assembled. Progress on its legs: the OS axioms are proved
+> (OS0–OS2 on T², OS3 on the cylinder), and as of 2026-06 **non-Gaussianity is proved axiom-free** on
+> T² (`torus_pphi2_isInteractingStrict_weakCoupling`: `u₄ < 0` at weak coupling — see "Current status →
+> Non-triviality"). What's **not** yet done is gluing these onto one measure and closing the gaps:
+> `SatisfiesFullOS` is also satisfied by the *free* field, so non-triviality must be conjoined with the
+> **same** OS measure (they are still separate `∃` statements); full OS (OS0–OS4) needs the cylinder
+> (Routes B′/C), not T²; and the keystone — **weak-coupling uniqueness**
+> ([`planning/weak-coupling-uniqueness.md`](planning/weak-coupling-uniqueness.md)) — propagates the
+> (necessary) weak-coupling regime and upgrades the Prokhorov subsequence to a genuine limit. The
+> honest target remains the *conjoined* theorem `∃ μ, SatisfiesFullOS μ ∧ (∀ f≠0, S₂>0) ∧ u₄≠0`.
 >
 > **Layer B1** of the remaining-axiom discharge architecture (cylinder
 > transfer matrix → variance bound) is **complete** 2026-05-31:
