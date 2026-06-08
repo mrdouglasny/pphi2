@@ -63,8 +63,12 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   `(∫(ωg)^{2m})^{1/2} ≤ (2m-1)^{m/2}Cg^{m/2}` to keep them short). Then thin wrappers
   `torus_interacting_{fourth,second}_moment_tendsto_coupling` + `torus_connectedFourPoint_tendsto_coupling`
   (delegating to the generic UI lemma). ~300 lines, mechanical.
-- [ ] **A6. Lattice negativity at a FIXED torus test function (the genuine remaining core, NOT
-  assembly).**   status: todo   deps: [A2, A5]   diff: ★★★
+- [x] **A6. Lattice negativity at a FIXED torus test function — DONE (axiom-clean).**   status: done   deps: [A2, A5]   diff: ★★★  (`TorusCouplingResult.lean`)
+  Resolved exactly via the 4-homogeneity route below: `u4_smul` (homogeneity), `circleOne`/`torusOne`
+  + `latticeTestFn_torusOne` (`= L² • (1/card)`, so `c_N = L²` *exactly*, no `inf` argument needed),
+  `torusConnectedFourPoint_coupling_eq_u4` (pull-back), giving
+  `torus_weakCoupling_connectedFourPoint_strictNeg`: `∀ N, torusConnectedFourPoint(μ_{g₀,N})(torusOne)
+  = L⁸·u4(1/card,g₀) ≤ −L⁸c`, uniform.
   ⚠️ **Discovered 2026-06-07:** `lattice_u4_neg_uniform` is hardwired to the **N-dependent constant**
   lattice test function `1/card` (both the slope `leadingTerm_const_eq` and the `K`
   `u4Deriv2_abs_le_uniform` are stated only for it — chosen because `a^d·card = L²` makes the slope
@@ -81,20 +85,21 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   `evalTorusAtSiteGJ`-of-constant lower bound, the one real analytic sub-leaf. Then
   `torusConnectedFourPoint(μ_{g₀,N}) f₀ = u4(latticeTestFn f₀, g₀) ≤ −c'` uniformly (via the coupling
   analog of `torusConnectedFourPoint_eq_lattice`, also needed).
-- [ ] **A7. New headline.**   status: todo   deps: [A5, A6]   diff: ★
-  `torus_pphi2_isInteracting_weakCoupling'` : `∃ g₀ > 0, ∃ μ (continuum limit of μ_{g₀}),
-  IsTorusPphi2Limit … ∧ TorusIsInteracting`. Assemble from A6 + A5 (`u₄(μ) = lim u₄(μ_{g₀,N}) ≤ −c' < 0`).
-  Retire the old axiom + the `mass`-parametrized headline (or keep the old as a corollary, NOT proved,
-  marked Route B / open).
+- [x] **A7. New headline — DONE (axiom-free).**   status: done   deps: [A5, A6]   diff: ★  (`TorusCouplingResult.lean`)
+  `torus_pphi2_isInteractingStrict_weakCoupling`: `∃ g₀ ∈ (0,1], ∃ μ` (continuum limit of `μ_{g₀}`)
+  `∧ TorusIsInteractingStrict μ` (so `TorusIsInteracting μ`). Assembled from A6 + A5 via
+  `le_of_tendsto` (`torusConnectedFourPoint μ (torusOne) = lim ≤ −c' < 0`).
+  **`#print axioms` ⟹ `[propext, Classical.choice, Quot.sound]` only.**
 
-## HONEST STATUS (2026-06-07)
-A1–A5 done + axiom-clean: the **entire continuum-limit machinery** for the weak-coupling family
-(lattice measure, bridge, Nelson/density transfer, tightness, existence, 4-point convergence). The
-remaining content is concentrated in **A6** — and A6 is genuinely the original non-triviality core
-(uniform lattice `u₄<0` at a *fixed* continuum test function), NOT mechanical assembly. The
-4-homogeneity reduction above shrinks it to one analytic sub-leaf (`inf_N c_N > 0` for the constant
-function's GJ-sampling) + two easy lemmas. Route A's value: it built all the surrounding
-infrastructure axiom-clean and isolated the irreducible hard step.
+## STATUS (2026-06-07): ROUTE A COMPLETE — AXIOM-FREE
+A1–A7 all done + axiom-clean. **φ⁴₂ on T² is proven non-Gaussian at weak coupling with NO project
+axioms** — `torus_pphi2_isInteractingStrict_weakCoupling` (`TorusCouplingResult.lean`) does not use
+`torus_weakCoupling_lattice_connectedFourPoint_strictNeg` and does not use the continuum dilation
+(Route B). The A6 fixed-test-function gap (the original non-triviality core) was closed cleanly: the
+constant `torusOne = 1⊗1` samples to `latticeTestFn = L²•(1/card)` *exactly* (`c_N = L²` constant),
+so 4-homogeneity (`u4_smul`) transports the engine's constant-test-function negativity with a fixed
+`L⁸` factor — no `inf_N` argument needed. The old `mass`-parametrized axiom/headline remain only as
+the Route-B (`λ=1`/large-mass) target, still open.
 
 ## Net
 A1/A2/A6/A7 are ★ (definitions + assembly). A3 is the one genuinely-new analytic lemma (Jensen
