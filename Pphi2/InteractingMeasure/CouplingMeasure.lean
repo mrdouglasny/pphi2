@@ -102,6 +102,126 @@ theorem integral_pow_interactingLatticeMeasureCoupling (a mass : ℝ) (ha : 0 < 
   refine integral_congr_ae (Filter.Eventually.of_forall fun ω => ?_)
   ring
 
+/-! ### A3 — `g`-family analytic inputs (Nelson + density transfer), reusing the general lemmas -/
+
+/-- **`g`-family Nelson bound (`0 ≤ g ≤ 1`).** From `∫ (e^{−V})² ≤ K` one gets `∫ (e^{−gV})² ≤ K`
+for `g ∈ [0,1]`: `(e^{−gV})² = e^{−(2g)V}`, then `expMoment_le_rpow` gives
+`∫ e^{−(2g)V} ≤ (∫ e^{−2V})^{g} ≤ ∫ e^{−2V} ≤ K` (base `≥ 1` by `partitionFn_ge_one`, exponent
+`≤ 1`). So the proven `g=1` uniform Nelson bound transfers to the whole weak-coupling family. -/
+theorem expMoment_two_coupling_le (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) {g K : ℝ} (hg0 : 0 ≤ g) (hg1 : g ≤ 1)
+    (hK : ∫ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+            ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K) :
+    ∫ ω, (Real.exp (-(g * interactionFunctional d N P a mass ω))) ^ 2
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
+  have h1 : ∀ ω, (Real.exp (-(g * interactionFunctional d N P a mass ω))) ^ 2
+      = Real.exp (-(2 * g * interactionFunctional d N P a mass ω)) := by
+    intro ω; rw [sq, ← Real.exp_add]; congr 1; ring
+  have h2 : ∀ ω, (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+      = Real.exp (-(2 * interactionFunctional d N P a mass ω)) := by
+    intro ω; rw [sq, ← Real.exp_add]; congr 1; ring
+  simp_rw [h1]
+  have hrpow := expMoment_le_rpow d N P a mass ha hmass (s := 2 * g) (by linarith) (by linarith)
+  have hbase_ge : (1 : ℝ) ≤ ∫ ω, Real.exp (-(2 * interactionFunctional d N P a mass ω))
+      ∂(latticeGaussianMeasure d N a mass ha hmass) :=
+    partitionFn_ge_one d N P a mass ha hmass (by norm_num : (0 : ℝ) ≤ 2)
+  have hbase_pow : (∫ ω, Real.exp (-(2 * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ (2 * g / 2)
+      ≤ ∫ ω, Real.exp (-(2 * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass) := by
+    calc (∫ ω, Real.exp (-(2 * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ (2 * g / 2)
+        ≤ (∫ ω, Real.exp (-(2 * interactionFunctional d N P a mass ω))
+            ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ (1 : ℝ) :=
+          Real.rpow_le_rpow_of_exponent_le hbase_ge (by linarith)
+      _ = _ := Real.rpow_one _
+  have hK' : ∫ ω, Real.exp (-(2 * interactionFunctional d N P a mass ω))
+      ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by simp_rw [← h2]; exact hK
+  calc ∫ ω, Real.exp (-(2 * g * interactionFunctional d N P a mass ω))
+        ∂(latticeGaussianMeasure d N a mass ha hmass)
+      ≤ _ := hrpow
+    _ ≤ _ := hbase_pow
+    _ ≤ K := hK'
+
+/-- **`g`-family density-transfer bound (Cauchy–Schwarz, `0 ≤ g`).** For `F ≥ 0` with `F² ∈ L¹(μ_GFF)`,
+`∫ F dμ_g ≤ K^{1/2}·(∫ F² dμ_GFF)^{1/2}` whenever `∫ (e^{−gV})² ≤ K`. Generalizes `density_transfer_bound`
+(`g=1`) to the coupling family. -/
+theorem density_transfer_bound_coupling (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) {g : ℝ} (hg : 0 ≤ g) (K : ℝ)
+    (hK : ∫ ω, (Real.exp (-(g * interactionFunctional d N P a mass ω))) ^ 2
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K)
+    (F : Configuration (FinLatticeField d N) → ℝ) (hF_nn : ∀ ω, 0 ≤ F ω)
+    (hF_meas : AEStronglyMeasurable F (latticeGaussianMeasure d N a mass ha hmass))
+    (hF_sq_int : Integrable (fun ω => F ω ^ 2) (latticeGaussianMeasure d N a mass ha hmass)) :
+    ∫ ω, F ω ∂(interactingLatticeMeasureCoupling d N P a mass ha hmass g) ≤
+    K ^ (1 / 2 : ℝ) *
+    (∫ ω, F ω ^ (2 : ℝ) ∂(latticeGaussianMeasure d N a mass ha hmass)) ^ (1 / 2 : ℝ) := by
+  set μ_GFF := latticeGaussianMeasure d N a mass ha hmass with hμ
+  set V := interactionFunctional d N P a mass with hVdef
+  set Z := partitionFn d N a mass ha hmass P g with hZdef
+  have hZ_pos : 0 < Z := partitionFn_pos_of_nonneg d N P a mass ha hmass hg
+  have hZ_ge : (1 : ℝ) ≤ Z := partitionFn_ge_one d N P a mass ha hmass hg
+  have hbw_meas : Measurable (fun ω => Real.exp (-(g * V ω))) :=
+    ((interactionFunctional_measurable d N P a mass).const_mul g).neg.exp
+  have hbw_nn_meas : Measurable (fun ω => Real.toNNReal (Real.exp (-(g * V ω)))) :=
+    Measurable.real_toNNReal hbw_meas
+  unfold interactingLatticeMeasureCoupling
+  rw [integral_smul_measure]
+  have wd_eq : ∫ ω, F ω ∂(μ_GFF.withDensity (fun ω => ENNReal.ofReal (Real.exp (-(g * V ω)))))
+      = ∫ ω, Real.exp (-(g * V ω)) * F ω ∂μ_GFF := by
+    change ∫ ω, F ω ∂(μ_GFF.withDensity
+      (fun ω => ↑(Real.toNNReal (Real.exp (-(g * V ω)))))) = _
+    rw [integral_withDensity_eq_integral_smul hbw_nn_meas]
+    congr 1; ext ω
+    simp only [NNReal.smul_def, smul_eq_mul]
+    rw [Real.coe_toNNReal _ (Real.exp_pos _).le]
+  rw [wd_eq]
+  have hc_real : ((ENNReal.ofReal Z)⁻¹).toReal = Z⁻¹ := by
+    simp [ENNReal.toReal_inv, ENNReal.toReal_ofReal hZ_pos.le]
+  rw [hc_real]
+  obtain ⟨B, hB⟩ := interactionFunctional_bounded_below d N P a mass ha hmass
+  have hbw_bound : ∀ ω, Real.exp (-(g * V ω)) ≤ Real.exp (g * B) := fun ω =>
+    Real.exp_le_exp_of_le (by nlinarith [hB ω, hg])
+  haveI : IsProbabilityMeasure μ_GFF := latticeGaussianMeasure_isProbability d N a mass ha hmass
+  have hbw_sq_int : Integrable (fun ω => Real.exp (-(g * V ω)) ^ 2) μ_GFF :=
+    Integrable.of_bound (hbw_meas.pow_const 2).aestronglyMeasurable (Real.exp (g * B) ^ 2)
+      (Filter.Eventually.of_forall fun ω => by
+        rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
+        exact sq_le_sq' (by linarith [Real.exp_pos (-(g * V ω)), Real.exp_pos (g * B)])
+          (hbw_bound ω))
+  have hbw_memLp : MemLp (fun ω => Real.exp (-(g * V ω))) 2 μ_GFF :=
+    (memLp_two_iff_integrable_sq hbw_meas.aestronglyMeasurable).mpr hbw_sq_int
+  have hF_memLp : MemLp F 2 μ_GFF := (memLp_two_iff_integrable_sq hF_meas).mpr hF_sq_int
+  have h_cs : ∫ ω, Real.exp (-(g * V ω)) * F ω ∂μ_GFF ≤
+      (∫ ω, Real.exp (-(g * V ω)) ^ (2:ℝ) ∂μ_GFF) ^ (1/2 : ℝ) *
+        (∫ ω, F ω ^ (2:ℝ) ∂μ_GFF) ^ (1/2 : ℝ) := by
+    have h_ofReal : ENNReal.ofReal (2 : ℝ) = (2 : ENNReal) := by norm_num
+    have hbw' : MemLp (fun ω => Real.exp (-(g * V ω))) (ENNReal.ofReal 2) μ_GFF :=
+      h_ofReal ▸ hbw_memLp
+    have hF' : MemLp F (ENNReal.ofReal 2) μ_GFF := h_ofReal ▸ hF_memLp
+    exact integral_mul_le_Lp_mul_Lq_of_nonneg Real.HolderConjugate.two_two
+      (ae_of_all _ (fun ω => (Real.exp_pos _).le)) (ae_of_all _ hF_nn) hbw' hF'
+  have hZinv_le : Z⁻¹ ≤ 1 := inv_le_one_of_one_le₀ hZ_ge
+  have hbw_sq_le : (∫ ω, Real.exp (-(g * V ω)) ^ (2:ℝ) ∂μ_GFF) ^ (1/2 : ℝ) ≤ K ^ (1/2 : ℝ) := by
+    apply Real.rpow_le_rpow (integral_nonneg (fun ω => Real.rpow_nonneg (Real.exp_pos _).le _))
+    · have hconv : ∫ ω, Real.exp (-(g * V ω)) ^ (2:ℝ) ∂μ_GFF
+          = ∫ ω, Real.exp (-(g * V ω)) ^ 2 ∂μ_GFF := by
+        congr 1; ext ω; exact Real.rpow_natCast _ 2
+      rw [hconv]; exact hK
+    · linarith
+  have hF_int_nn : 0 ≤ (∫ ω, F ω ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ) :=
+    Real.rpow_nonneg (integral_nonneg (fun ω => Real.rpow_nonneg (hF_nn ω) _)) _
+  have hbw_int_nn : 0 ≤ (∫ ω, Real.exp (-(g * V ω)) ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ) :=
+    Real.rpow_nonneg (integral_nonneg (fun ω => Real.rpow_nonneg (Real.exp_pos _).le _)) _
+  calc Z⁻¹ * ∫ ω, Real.exp (-(g * V ω)) * F ω ∂μ_GFF
+      ≤ Z⁻¹ * ((∫ ω, Real.exp (-(g * V ω)) ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ) *
+          (∫ ω, F ω ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ)) :=
+        mul_le_mul_of_nonneg_left h_cs (inv_pos.mpr hZ_pos).le
+    _ ≤ 1 * (K ^ (1/2:ℝ) * (∫ ω, F ω ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ)) := by
+        apply mul_le_mul hZinv_le _ (mul_nonneg hbw_int_nn hF_int_nn) (by linarith)
+        exact mul_le_mul_of_nonneg_right hbw_sq_le hF_int_nn
+    _ = K ^ (1/2:ℝ) * (∫ ω, F ω ^ (2:ℝ) ∂μ_GFF) ^ (1/2:ℝ) := one_mul _
+
 /-- **Route-A bridge.** The connected four-point of the coupling-`g` interacting lattice measure is
 `u₄` at coupling `g`: `connectedFourPoint μ_g f = u4(…,g)` (`g ≥ 0`). Generalizes
 `connectedFourPoint_interactingLatticeMeasure_eq_u4_one` from `g = 1` to arbitrary `g ≥ 0`, so that

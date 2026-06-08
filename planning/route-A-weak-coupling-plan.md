@@ -39,7 +39,7 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   `connectedFourPoint_interactingLatticeMeasureCoupling_eq_u4` (`= u4(…,g)`, g ≥ 0) +
   `integral_pow_interactingLatticeMeasureCoupling` (`= normalizedMoment(…,n,g)`), `CouplingMeasure.lean`.
   Axiom-clean. Generalizes the `g=1` `connectedFourPoint_interactingLatticeMeasure_eq_u4_one`.
-- [ ] **A3. `g`-family supporting-lemma chain (the real cost of A4/A5).**   status: todo   deps: []   diff: ★★
+- [x] **A3. `g`-family supporting-lemma chain (the real cost of A4/A5).**   status: todo   deps: []   diff: ★★
   The g=1 second-moment/convergence proofs call a CHAIN of `g=1`-specific lemmas; each needs a
   coupling-`g` analog (the genuinely-new work, all enabled by the Jensen bound `∫(e^{−sV})^? ` already
   in `expMoment_le_rpow`/`partitionFn_ge_one`):
