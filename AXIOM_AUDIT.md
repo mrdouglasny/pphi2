@@ -258,6 +258,15 @@ holds there by Lebowitz, non-perturbatively, but non-triviality doesn't need it.
 kernel underlying `u₄'(0)=−6∫(C_a f)⁴`). Remaining for the discharge: the first-order coefficient
 `u₄'(0)=−⟨:φ(f)⁴:V⟩_free`, the `(C_a f)` operator object, step-II positivity, step-III Nelson
 remainder. See memory `smeared-wick-kernel-done`.
+
+**SUPERSEDED by an axiom-free alternative (2026-06-07).** Route A now proves T² non-Gaussianity
+**without this axiom**: `torus_pphi2_isInteractingStrict_weakCoupling`
+(`TorusContinuumLimit/TorusCouplingResult.lean`, `#print axioms ⟹ [propext, Classical.choice,
+Quot.sound]`) gives `u₄ < 0` at weak coupling via a coupling-family continuum limit + 4-homogeneity,
+not the large-mass field redefinition. This axiom is still in the tree (only the *older* headline
+`torus_pphi2_isInteracting_weakCoupling` consumes it); it can be **retired** once that older headline
+is migrated to the Route-A theorem or removed. See `planning/route-A-weak-coupling-plan.md`.
+(Branch `route-a-weak-coupling`, PR #48.)
 | **pphi2** (`cylinder-isotropic-lattice` branch: +`asymInteracting_expMoment_volume_uniform`; `wickConstantAsym_eq_variance` **discharged** 2026-05-27, `asymChaosCutoffDecomposition` **discharged** 2026-05-31) | 18 | 0 | GaussianField `5bb35e8` |
 | **GaussianField** (pinned, in `.lake/packages/GaussianField/`) | 3 | 0 | `d9cdd5e` (smeared Wick kernel + covariance API + eigenbasis↔GJ bridge + smeared-product integrability, axiom-clean) |
 | **MarkovSemigroups** (pinned, in `.lake/packages/MarkovSemigroups/`) | 11 | 0 | `3cb482dc` |

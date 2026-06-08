@@ -1,5 +1,12 @@
 # Axiom Status Snapshot
 
+> ⚠️ **STALE (last refreshed 2026-05-22).** This snapshot predates both the `torus_weakCoupling_…`
+> axiom (added 2026-06-05) and **Route A** (2026-06-07, which proves T² non-Gaussianity axiom-free —
+> `continuumLimit_nonGaussian`'s T² content is no longer just a "Placeholder"). For the **current**
+> per-axiom status use [`../planning/INDEX.md`](../planning/INDEX.md) (the master status machine) and
+> [`axiom_audit.md`](axiom_audit.md) (historical log). This file is a prior consolidation kept for
+> reference; refresh or fold into INDEX before relying on its counts.
+
 *Current state of pphi2's axiom inventory. No history — see
 [`axiom_audit.md`](axiom_audit.md) for the historical log of audit
 passes and discharges. Last refreshed: 2026-05-22.*

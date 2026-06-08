@@ -1,5 +1,12 @@
 # L5(ii) + L6F — the affine derivative bound and the final discharge
 
+> ✅/⛔ **STATUS (2026-06-07): L5 complete and CONSUMED by Route A; the L6F endgame is SUBSUMED.**
+> `lattice_u4_neg_uniform` (the L5 deliverable) is proved and is now the engine Route A reuses to
+> prove T² non-Gaussianity **axiom-free** (`torus_pphi2_isInteractingStrict_weakCoupling`). Route A
+> bypassed the L6F large-mass endgame entirely (coupling-family continuum limit + 4-homogeneity), so
+> the "final discharge" planned here is no longer the path. See `route-A-weak-coupling-plan.md` and
+> `L6F-mass-coupling-plan.md` (subsumed banner). Kept for the L5 derivation record.
+
 After L1 + L2-for-V + **L3** (all axiom-clean, PR #46), the remaining wall. The consumer is
 `exists_uniform_neg_of_uniform_affine_bound'` (`UniformBounds.lean`), which for `φ_N = u₄_N` needs,
 with `s, K, g₀` **uniform in `N`**:

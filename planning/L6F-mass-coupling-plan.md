@@ -1,5 +1,13 @@
 # L6F endgame — large-mass weak coupling (the last step of the discharge)
 
+> ⛔ **SUBSUMED by Route A (2026-06-07) — do not pursue this large-mass endgame.** Non-Gaussianity on
+> T² is now proved **axiom-free** by Route A (`torus_pphi2_isInteractingStrict_weakCoupling`,
+> `TorusContinuumLimit/TorusCouplingResult.lean`), which does **not** use
+> `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` and does **not** need the large-mass step
+> this doc plans — it reused `lattice_u4_neg_uniform` directly via a coupling-family continuum limit +
+> 4-homogeneity. The `λ=1` normalization is Route B (continuum dilation), DEFERRED
+> (`continuum-rescaling-plan.md`). Kept for the record. See `route-A-weak-coupling-plan.md`.
+
 Branch `l5-affine-bound`. After L3 + L5 + the L6F **reduction**, the headline axiom
 `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` reduces (axiom-clean) to a single
 inequality. This doc plans the one remaining step.
