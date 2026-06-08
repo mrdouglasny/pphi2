@@ -49,16 +49,20 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   - `density_transfer_bound` (g=1) → `…_coupling`: `∫ X dμ_g ≤ (∫X² dμ_GFF)^{1/2}·√(∫e^{−2gV})/Z(g)`,
     Cauchy–Schwarz with the `e^{−gV}` density; the `Z(g)≥1` + g-Nelson keep it N-uniform.
   - higher-moment uniform inputs used by step-IV convergence (uniform integrability of `(ωf)⁴`).
-- [x] **A4. `g`-family uniform 2nd moment + tightness + existence.**   status: todo   deps: [A1, A3]   diff: ★★
-  Mirror `torus_interacting_second_moment_uniform` (~70 lines) + `torus_interacting_tightness` for the
-  torus pushforward of `interactingLatticeMeasureCoupling … g`, swapping in A3's `…_coupling` lemmas.
-  Then `torusInteractingLimitCoupling_exists` from the generic `prokhorov_configuration` (mechanical
-  mirror of `torusInteractingLimit_exists`). NB also needs a torus-level `μ_g` =
-  `map torusEmbedLift (interactingLatticeMeasureCoupling)` def + `integral_pow` pushthrough
-  (mirror `torusConnectedFourPoint_eq_lattice`).
+- [x] **A4. `g`-family uniform 2nd moment + tightness + existence.**   status: done   deps: [A1, A3]   diff: ★★  (`TorusCouplingLimit.lean`, axiom-clean)
+  `torusInteractingMeasureCoupling` (+`isProbability`), `latticeFourthMoment_sqrt_le` (g-free, factored),
+  `nelson_exponential_estimate_coupling`, `torus_interacting_second_moment_uniform_coupling`,
+  `torus_interacting_tightness_coupling`, `torusInteractingLimitCoupling_exists`.
 - [ ] **A5. `g`-family 4-point convergence.**   status: todo   deps: [A3, A4]   diff: ★★★
-  Mirror `torus_connectedFourPoint_tendsto` (the step-IV proof) for `μ_g`: `u₄(μ_{g,N}) → u₄(μ_{g,∞})`,
-  threading `g` and using A3's uniform-integrability inputs. The largest brick (multi-day).
+  Mirror `torus_connectedFourPoint_tendsto` for `μ_g`: `u₄(μ_{g,N}) → u₄(μ_{g,∞})`. **Reuse map**
+  (`TorusInteractingMoments.lean`): the generic helpers `limit_le_of_uniform_bound`, `sub_min_le_sq_div`
+  are measure-agnostic → **reuse as-is**. Need coupling versions of the measure-specific bounds:
+  `torus_interacting_fourth_moment_uniform_coupling`, `…_eighth_moment_uniform_coupling`,
+  `torus_interacting_abs_pow_integrable_coupling` (each = the exact pushforward+`density_transfer_bound_coupling`
+  +hypercontractivity pattern already used in A4; factor a general free-moment sqrt lemma
+  `(∫(ωg)^{2m})^{1/2} ≤ (2m-1)^{m/2}Cg^{m/2}` to keep them short). Then thin wrappers
+  `torus_interacting_{fourth,second}_moment_tendsto_coupling` + `torus_connectedFourPoint_tendsto_coupling`
+  (delegating to the generic UI lemma). ~300 lines, mechanical.
 - [ ] **A6. Restate the discharge as a THEOREM.**   status: todo   deps: [A2, A5]   diff: ★
   `torus_weakCoupling_connectedFourPoint_strictNeg` (THEOREM, was axiom): from `lattice_u4_neg_uniform`
   + A2, `∃ g₀ c > 0, ∀ N, torusConnectedFourPoint(μ_{g₀,N}) f₀ ≤ −c`.
