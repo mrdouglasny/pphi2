@@ -1,5 +1,12 @@
 # Continuum rescaling-equivalence route to φ⁴₂ non-triviality
 
+> ℹ️ **STATUS (2026-06-07): PROPOSED ALTERNATIVE, docs-only — not started.** This is route 2 of two
+> *competing* routes to axiom 9 (`torus_weakCoupling_lattice_connectedFourPoint_strictNeg`, u₄ < 0).
+> The **live** route with actual Lean code is route 1, the lattice affine-bound discharge on branch
+> `l5-affine-bound` (L5 complete, L6F reduction). This continuum route is Gemini-vetted SOUND (below)
+> but has no implementation. Don't pursue both — see [`../BRANCHES.md`](../BRANCHES.md) for the
+> route-1-vs-route-2 decision.
+
 A replacement for the lattice "mass-grade ∫V²" endgame (which is entangled with the 2D UV/log
 divergence). Idea: the rescaling that **fails on the lattice** (`−Δ_a` is not scale-covariant) is
 **clean in the continuum** (in 2D `φ` is dimensionless and `−Δ` is exactly scale-covariant). So prove
@@ -91,3 +98,64 @@ It relocates the hard step from "N-uniform mass-graded `∫V²` entangled with t
 weak-coupling engine the load-bearing core. The main genuinely-new work is brick 2 (continuum
 rescaling equivalence) and resolving open subtlety 1 (a `dimensionless`/clustering form of the
 weak-coupling bound).
+
+## REFINED ANALYSIS (2026-06-07) — the dilation is SOUND but mostly UNNECESSARY
+
+Re-examined against the actual code + a fresh Gemini deep-think vetting. Three claims, all vetted
+**Correct** (deep-think, 2026-06-07):
+
+1. **Dilation equivalence (pure scale-covariance, `c=1` in 2D).** Define `(Uφ)(x') = φ(x'/m)`,
+   `T²_L → T²_{mL}`. Then `U_* μ_{λ,m,L} = μ_{λ/m², 1, mL}` and, with `f'(x') = m⁻² f(x'/m)`,
+   `u₄(μ_{λ,m,L}; f) = u₄(μ_{λ/m², 1, mL}; f')`. Crux: in `d=2` the massive propagator is *exactly*
+   `C_m(x,y) = C_1(m(x−y))` (no `m^{d−2}` prefactor since `[φ]=0`), so `U_*GFF(m,L) = GFF(1,mL)`
+   with **no field-strength rescale**; the `dx = m⁻²dx'` Jacobian becomes the new coupling
+   `λ' = λ/m²`. Wick ordering intertwines exactly (the cutoff dilates with `U`, so the log-variance
+   subtraction matches — no anomalous term). The plan's separate "field-rescale generator" is `c=1`
+   here; the whole content is the dilation + the test-function transform.
+2. **The `λ'_crit ~ O(1)` miracle (only needed to reach the physical `λ=1`/large-mass point).**
+   Both `s(f') = 6∫(C₁f')⁴ = O(m⁻⁶)` and `K(f') = O(m⁻⁶)`, so `λ'_crit = 2s/K = O(1)` is bounded
+   below uniformly in `m`, while the image coupling `λ' = 1/m² → 0` falls deep inside the window.
+   `K` scaling via clustering: `|u₄''| ≤ C‖f'‖₁‖f'‖∞³` (the connected 6-point integrates to a
+   *volume-independent* `C` by exponential clustering at unit mass / weak coupling), and
+   `‖f'‖₁ = ‖f‖₁ = O(1)`, `‖f'‖∞ = m⁻²‖f‖∞`, so `K = O(m⁻⁶)`. Volume-independence (`L' = mL → ∞`)
+   is genuine, not bound-crudeness, because of clustering.
+3. **THE SHORTCUT — non-Gaussianity does NOT need the dilation at all.** "φ⁴₂ is non-Gaussian"
+   only needs **one** interacting continuum measure with `u₄ ≠ 0`. We already have, rigorously and
+   `N`-uniformly, the lattice weak-coupling negativity `lattice_u4_neg_uniform` (`u₄(μ_g) ≤ −c` for
+   a small coupling `g > 0`, `μ_g ∝ e^{−gV}`, on `l5-affine-bound`). With a lattice→continuum
+   4-point convergence for the `g`-family, the continuum `μ_{g, m, L}` (small `g`, **fixed** mass
+   and box) has `u₄ < 0` and is a legitimate interacting φ⁴₂ theory. Deep-think: this is a complete,
+   honest proof of non-triviality, mathematically on the same footing as the `λ=1` statement (they
+   are the *same measure* in different coordinates, super-renormalizable ⟹ `Z=1`, single
+   dimensionless parameter `g/m²`). **The dilation is needed ONLY to additionally phrase the result
+   at the conventional `λ=1` / large-mass normalization.**
+
+### The obstacle that makes this a real fork (not a free win)
+`InteractionPolynomial` hard-codes the leading coefficient `a_n = 1/n` (= 1/4 for φ⁴) — there is
+**no free `λ` in `P`**. That is *why* the current axiom
+`torus_weakCoupling_lattice_connectedFourPoint_strictNeg` and the headline
+`torus_pphi2_isInteracting_weakCoupling` are phrased over **`mass`** (`∀ mass > m₀`): with `λ` pinned
+at `1/4`, weak dimensionless coupling `g = λ/m² = 1/(4m²)` is reachable only via large mass. The
+free coupling knob that `lattice_u4_neg_uniform` actually uses is the **coupling family** parameter
+`g` in `μ_g ∝ e^{−gV}` (separate from `P`). So:
+
+### Two routes — a project-intent decision (the headline statement differs)
+- **Route A (cheap, reuses proven work).** Re-state the discharge over the coupling family: build the
+  continuum limit of `μ_{g₀}` (small `g₀`, fixed mass/box) and exhibit `u₄ < 0` from
+  `lattice_u4_neg_uniform` + a `g`-family 4-point convergence. **No dilation, no Wick-covariance, no
+  `K`-miracle.** Cost: generalize `torusInteractingMeasure`/`torusInteractingLimit_exists` to carry a
+  coupling `g ≤ 1` (the Nelson/tightness inputs are *easier* at `g < 1`), and re-phrase the axiom +
+  headline from `∀ mass > m₀` to `∃ g₀ > 0` (small coupling). Discharges non-Gaussianity outright.
+  **Changes the theorem statement** (weak coupling at fixed mass, not large mass) — needs the owner's
+  OK, but it is the standard non-triviality statement.
+- **Route B (full, keeps the current statement).** Formalize the continuum dilation equivalence
+  (claims 1–2) to bridge the proven weak-coupling `u₄ < 0` to the `λ=1`/large-mass axiom *as
+  currently stated*. Mathematically sound (vetted) but multi-week: configuration pushforward between
+  *different* tori `T²_L → T²_{mL}`, Wick-ordering covariance, the clustering `K = O(m⁻⁶)` bound, and
+  the `μ_{λ,m,L}` family construction. Also yields the structural `(λ,m,L)`-equivalence as a result.
+
+**Recommendation:** Route A for discharging non-Gaussianity (cheapest, honest, reuses the proven
+engine); treat Route B / the dilation equivalence as an optional structural enrichment pursued
+separately if the `λ=1` normalization or the full `(λ,m,L)` equivalence is wanted for its own sake.
+The owner decides whether the headline may be re-stated at weak coupling (Route A) or must stay at
+large mass / `λ=1` (Route B).
