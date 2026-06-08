@@ -39,7 +39,7 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   `connectedFourPoint_interactingLatticeMeasureCoupling_eq_u4` (`= u4(…,g)`, g ≥ 0) +
   `integral_pow_interactingLatticeMeasureCoupling` (`= normalizedMoment(…,n,g)`), `CouplingMeasure.lean`.
   Axiom-clean. Generalizes the `g=1` `connectedFourPoint_interactingLatticeMeasure_eq_u4_one`.
-- [x] **A3. `g`-family supporting-lemma chain (the real cost of A4/A5).**   status: todo   deps: []   diff: ★★
+- [x] **A3. `g`-family supporting-lemma chain (the real cost of A4/A5).**   status: done   deps: []   diff: ★★  (`expMoment_two_coupling_le`, `density_transfer_bound_coupling`, `CouplingMeasure.lean`)
   The g=1 second-moment/convergence proofs call a CHAIN of `g=1`-specific lemmas; each needs a
   coupling-`g` analog (the genuinely-new work, all enabled by the Jensen bound `∫(e^{−sV})^? ` already
   in `expMoment_le_rpow`/`partitionFn_ge_one`):
@@ -49,7 +49,7 @@ higher exp-moments transfer to the `g`-family with the SAME (or `max(1,·)`) con
   - `density_transfer_bound` (g=1) → `…_coupling`: `∫ X dμ_g ≤ (∫X² dμ_GFF)^{1/2}·√(∫e^{−2gV})/Z(g)`,
     Cauchy–Schwarz with the `e^{−gV}` density; the `Z(g)≥1` + g-Nelson keep it N-uniform.
   - higher-moment uniform inputs used by step-IV convergence (uniform integrability of `(ωf)⁴`).
-- [ ] **A4. `g`-family uniform 2nd moment + tightness + existence.**   status: todo   deps: [A1, A3]   diff: ★★
+- [x] **A4. `g`-family uniform 2nd moment + tightness + existence.**   status: todo   deps: [A1, A3]   diff: ★★
   Mirror `torus_interacting_second_moment_uniform` (~70 lines) + `torus_interacting_tightness` for the
   torus pushforward of `interactingLatticeMeasureCoupling … g`, swapping in A3's `…_coupling` lemmas.
   Then `torusInteractingLimitCoupling_exists` from the generic `prokhorov_configuration` (mechanical
