@@ -35,7 +35,7 @@ sorry/axiom-clean).
 | Faithfulness map | [`audit/FAITHFULNESS.md`](FAITHFULNESS.md) | informal↔formal correspondence (current scope: OS axioms + headline theorems). |
 | Acceptance / characterization | [`audit/VALIDATION.md`](VALIDATION.md) | The acceptance ladder; current rung + next rung. |
 | Project card | [`formalization.yaml`](../formalization.yaml) (top-level) | Per `FORMALIZATION_YAML.md` v0.3. |
-| Sorry allowlist | [`audit/sorry-allowlist.txt`](sorry-allowlist.txt) | Empty — the built tree is `0 sorries`. |
+| Sorry allowlist | [`audit/sorry-allowlist.txt`](sorry-allowlist.txt) | Built tree (`Pphi2/` + `Common/`) is `0 sorries`. Allowlist contains 6 pre-existing unbuilt scaffolding files under `ddj/` and `future/CylinderContinuumLimit/` — surfaced by the assurance gate's first run and explicitly captured. |
 | Live status machine | [`planning/INDEX.md`](../planning/INDEX.md) | Project-specific: per-axiom status + dependency clusters, the working roadmap. |
 
 ## Counts (single source of truth)
@@ -50,17 +50,24 @@ Current (2026-06-21): **22 raw / 19 real axioms, 0 sorries**.
 Per-route counts and the discharge story live in
 [`status.md`](../status.md) and [`README.md`](../README.md) "Current status".
 
-## CI gates (planned)
+## CI gates (live)
 
 The hub's shared workflow ([`assure.yml`](https://github.com/math-commons/formalization-assurance/blob/main/.github/workflows/assure.yml))
-is the intended adoption path. **Not wired in yet.** Next step is to drop
-[`templates/assurance.caller.yml`](https://github.com/math-commons/formalization-assurance/blob/main/templates/assurance.caller.yml)
-into `.github/workflows/assurance.yml` once the axiom-report generator is
-finalized.
+is wired via [`.github/workflows/assurance.yml`](../.github/workflows/assurance.yml)
+(one-line caller of the hub workflow). Reads `audit/vetting/policy.yml`
+for strictness.
 
-Once wired, at the current L1 strictness the gates will:
-- **warn** if `audit/axiom-report.txt` is out of sync with the kernel trace;
-- **warn** if a `sorry` appears outside `audit/sorry-allowlist.txt`;
-- **warn** if a new axiom lacks a vetting record in `audit/vetting/`.
+At the current **L1** strictness the gates run on every push/PR and:
+- **warn** if `audit/axiom-report.txt` is out of sync with the kernel trace
+  (regenerated via `lake env lean audit/axiom_report.lean` and `diff -u`);
+- **warn** if a `sorry` appears outside `audit/sorry-allowlist.txt`
+  (scans `git ls-files '*.lean'` with comment-stripping);
+- vetting-coverage enforcement (every axiom has a record in `audit/vetting/`)
+  is not yet in the reusable workflow — currently a manual gate at L2/L3.
 
-Raise to L2 once all 19 axioms have vetting records.
+Both checks emit `::error::` annotations and step-summary lines at L1 but
+exit 0, so the check status stays green. Raising to **L2** in
+`policy.yml` flips them to enforced (failures block).
+
+Coverage is already 19/19 (see [`vetting/README.md`](vetting/README.md)),
+so L2 is reachable as soon as the per-axiom metadata stabilizes.

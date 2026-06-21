@@ -10,11 +10,12 @@ statement_hash: null
 model: gemini + codex (Route A vetting)
 tool: mcp__gemini__deep_think_gemini
 source_code: DT, LP
-date: 2026-06-07 (Route A landed)
+date: 2026-06-07 (Route A vetting on PR #48)
 questions: [non-Gaussianity-route, weak-coupling-scope]
-verdict: SATISFIABLE (T² content axiom-free; ℝ² version still axiom)
+verdict: SATISFIABLE
 rating: Likely correct
-discharged: partial (T² done via Route A; ℝ² lift still open)
+discharged: false
+partial_discharge: "T² content axiom-free on PR #48 (route-a-weak-coupling, OPEN); ℝ² lift still open. Not yet on this branch."
 superseded_by: null
 ---
 ```
@@ -22,22 +23,27 @@ superseded_by: null
 **Statement form** (informal): `u₄ ≠ 0` for the continuum-limit measure
 — the limit is genuinely interacting (non-Gaussian).
 
-**Vetting source.** [`planning/route-A-weak-coupling-plan.md`](../../planning/route-A-weak-coupling-plan.md),
+**Vetting source.** `planning/route-A-weak-coupling-plan.md` (on branch
+`route-a-weak-coupling`, not yet merged — PR #48),
 [`planning/non-triviality.md`](../../planning/non-triviality.md), and
 the [`AXIOM_AUDIT.md`](../../AXIOM_AUDIT.md) Route A entry.
 
-**Status (2026-06-07):** **T² non-Gaussianity content is DONE,
-AXIOM-FREE** via Route A:
+**Status (2026-06-07):** **T² non-Gaussianity content is proved
+AXIOM-FREE via Route A on PR #48 (branch `route-a-weak-coupling`, currently
+OPEN — not on this branch / not on `main`):**
 
 > `torus_pphi2_isInteractingStrict_weakCoupling`
-> (`TorusContinuumLimit/TorusCouplingResult.lean`) is a THEOREM with
-> `#print axioms ⟹ [propext, Classical.choice, Quot.sound]`: for some
-> small coupling `g₀ ∈ (0, 1]`, the continuum limit of the coupling-`g₀`
-> interacting torus measures has `torusConnectedFourPoint μ (torusOne) < 0`
-> (`TorusIsInteractingStrict`, hence `TorusIsInteracting`). PR #48.
+> (`TorusContinuumLimit/TorusCouplingResult.lean`, on `route-a-weak-coupling`)
+> is a THEOREM with `#print axioms ⟹ [propext, Classical.choice, Quot.sound]`:
+> for some small coupling `g₀ ∈ (0, 1]`, the continuum limit of the
+> coupling-`g₀` interacting torus measures has
+> `torusConnectedFourPoint μ (torusOne) < 0` (`TorusIsInteractingStrict`,
+> hence `TorusIsInteracting`). PR #48.
 
 **The ℝ² (infinite-volume) `continuumLimit_nonGaussian` axiom itself
-remains** — the T² → ℝ² lift requires `L → ∞` cluster expansion.
+remains** on `main` and on this branch — the T² → ℝ² lift requires
+`L → ∞` cluster expansion. The Route-A T² result is a prerequisite for,
+not a replacement of, the ℝ² axiom.
 
 **Conditions / follow-ups:**
 
@@ -51,4 +57,5 @@ remains** — the T² → ℝ² lift requires `L → ∞` cluster expansion.
 
 - Status: [`../../planning/INDEX.md`](../../planning/INDEX.md) item 9.
 - Plans: [`../../planning/non-triviality.md`](../../planning/non-triviality.md),
-  [`../../planning/route-A-weak-coupling-plan.md`](../../planning/route-A-weak-coupling-plan.md).
+  `planning/route-A-weak-coupling-plan.md` (on PR #48 / branch
+  `route-a-weak-coupling`).

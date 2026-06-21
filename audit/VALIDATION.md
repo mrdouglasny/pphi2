@@ -33,8 +33,9 @@ sibling results — see [`audit/FAITHFULNESS.md`](FAITHFULNESS.md).
 the bundle as a faithful encoding of OS73/OS75. Property-pinning theorems
 that would close that loop:
 
-- `SatisfiesFullOS.os1_implies_translation_invariance` (already proved as
-  part of the bundle; verify it's named/exposed).
+- `SatisfiesFullOS.os2_implies_translation_invariance` and
+  `os2_implies_euclidean_invariance` (already proved as part of the bundle;
+  verify they're named/exposed).
 - `SatisfiesFullOS.os3_is_reflection_positivity` — the formal OS3
   predicate is **definitionally** the reflection-positivity matrix
   condition (rather than via a chain of intermediate `def`s).
@@ -80,10 +81,13 @@ becomes the natural rung-5 capstone.
   (item 3 in [`planning/INDEX.md`](../planning/INDEX.md)). This is the
   nearest concrete formalization win and tightens the cylinder side of
   the kernel certificate.
-- **Medium term.** Lay in the per-axiom vetting records under
-  `audit/vetting/` (one per architectural axiom; the format is the hub's
-  `templates/vetting-entry.md`). Raise `vetting_strictness` to L2 once
-  coverage is complete.
+- **Medium term.** Vetting coverage is at **19/19** as of 2026-06-21
+  (see [`vetting/README.md`](vetting/README.md)). Next step is to
+  raise `vetting_strictness` from L1 to L2 in
+  [`vetting/policy.yml`](vetting/policy.yml) once the per-record
+  metadata stabilizes (e.g. the `NEEDS_REVISION`-flagged records 7 and 11
+  are resolved). Subsequently raise to L3 by populating `statement_hash`
+  in each record.
 - **Long term.** The four ★★★ mountains in
   [`planning/INDEX.md`](../planning/INDEX.md): Lee–Yang/Newman MGF
   (Layer A); spectral-gap uniformity (CYL-2a); non-Gaussianity on ℝ²;

@@ -13,7 +13,10 @@ output is the kernel-authoritative axiom set: anything that does NOT appear
 in this trace cannot have leaked through the build, so this is the single
 source of truth for "what does the headline depend on".
 
-**Targets** (matching `formalization.yaml` → `main_results`):
+**Targets**: the five entries in `formalization.yaml` → `main_results`,
+plus one secondary regression target.
+
+`main_results` (5):
 
 * `Pphi2.pphi2_existence` — ∃ μ on S'(ℝ²) satisfying OS0–OS4 (conditional).
 * `Pphi2.pphi2_main` — a P(Φ)₂ continuum-limit measure satisfies the OS bundle.
@@ -21,8 +24,12 @@ source of truth for "what does the headline depend on".
 * `Pphi2.pphi2_nontrivial` — S₂(f,f) > 0 (rests on `pphi2_nontriviality`).
 * `Pphi2.cylinderIso_OS_of_RP_OS2` — cylinder OS0–OS3 assembly
   (conditional on RP + OS2-symmetry + the uniform exp-moment axiom).
-* `Pphi2.pphi2_exists_os_and_massParameter_positive` — secondary headline,
-  the variant carrying the (input) mass-parameter positivity.
+
+Secondary regression target (not in `formalization.yaml`):
+
+* `Pphi2.pphi2_exists_os_and_massParameter_positive` — the variant
+  carrying the (input) mass-parameter positivity; included here as a
+  regression check, not as a headline result.
 
 **Usage**:
 

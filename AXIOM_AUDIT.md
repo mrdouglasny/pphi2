@@ -1,6 +1,42 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert
 
-**Last updated**: 2026-06-02.
+**Last updated**: 2026-06-21.
+
+## 2026-06-21 — `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` removed; `audit/` scaffold landed
+
+* **Axiom removed.** The `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
+  axiom (`Pphi2/TorusContinuumLimit/TorusInteractingResult.lean`, added 2026-06-05)
+  and its sole consumer theorem `torus_pphi2_isInteracting_weakCoupling` were
+  **deleted on 2026-06-21**. Both were superseded by Route A's
+  `torus_pphi2_isInteractingStrict_weakCoupling` (PR #48,
+  branch `route-a-weak-coupling`, **open** — discharges the same content
+  axiom-free via the coupling-family continuum limit + 4-homogeneity). The
+  carrier file `TorusInteractingResult.lean` and its `import` in `Pphi2.lean`
+  were removed in the same commit. Build remains green (4024/4024).
+* **Counts:** pphi2 was 23 raw / 20 real → now **22 raw / 19 real** (the 3
+  docstring matches in `LatticeBridge.lean:21`, `LayerCake.lean:85`, and
+  `AsymExpMomentDischarge.lean:244` account for the raw → real reconciliation).
+  19 real = 17 architectural (per `planning/INDEX.md` items 1–17) + 2 private
+  scaffolding (`asymTorusInteracting_exponentialMomentBound`,
+  `gaussian_rp_cov_perfect_square`).
+* **`audit/` directory scaffolded** per
+  [`math-commons/formalization-assurance`](https://github.com/math-commons/formalization-assurance)
+  ADOPTION.md conventions: `audit/CONVENTIONS.md` (local settings),
+  `audit/axiom_report.lean` (generator) + `audit/axiom-report.txt` (golden
+  kernel trace), `audit/FAITHFULNESS.md` (informal↔formal correspondence),
+  `audit/VALIDATION.md` (acceptance ladder — pphi2 sits at rung 2),
+  `audit/vetting/` (per-axiom records, **19/19 covered**),
+  `audit/sorry-allowlist.txt` (6 entries — pre-existing scaffolding under
+  `ddj/` and `future/CylinderContinuumLimit/` flagged by the gate),
+  `.github/workflows/assurance.yml` (caller of the hub's shared workflow).
+  Strictness is **L1** (warn-only); the gate runs green on every push/PR.
+* **Notable kernel-trace finding** (`audit/axiom-report.txt`):
+  `Pphi2.pphi2_existence` rests on only **4 project axioms**
+  (`canonical_continuumMeasure_cf_tendsto`, `continuum_exponential_clustering`,
+  `continuum_exponential_moment_bound`, `rotation_cf_defect_polylog_bound`)
+  plus the 3 Lean kernel axioms. The other 13 architectural axioms are
+  dormant for this headline — load-bearing only for cylinder OS3,
+  non-Gaussianity, or two-point nondegeneracy.
 
 ## 2026-06-02 — Layer B2 transfer-matrix spectral gap PROVED; discharge plan refined (no chessboard)
 
@@ -620,7 +656,7 @@ elementary inequality `x² ≤ 2 e^|x|` and a scaling optimization.
 eventual pullback RP predicate `CylinderMeasureSequenceEventuallyReflectionPositive`
 and proves the IR-limit OS3 transfer by characteristic-functional convergence.
 
-## Current pphi2 Axiom Inventory (21 raw / 19 real on `cylinder-isotropic-lattice`, 0 sorries)
+## Current pphi2 Axiom Inventory (22 raw / 19 real on `main` as of 2026-06-21, 0 sorries)
 
 This table is generated from the current `./scripts/count_axioms.sh` result and
 is the source of truth for active pphi2 axioms in this audit. The Stage 1

@@ -20,11 +20,12 @@ canonical formulation:
 
 > A real Borel probability measure `μ` on `S'(ℝᵈ)` satisfies the **OS axioms**
 > if its generating functional `S[f] := ∫ e^{i⟨ω,f⟩} dμ(ω)` is:
-> **(OS0)** regular (analytic in real-vector directions); **(OS1)** Euclidean
-> covariant (`E(d)`-invariant Schwinger functions); **(OS2)** reflection-positive
-> (Schwinger functions on positive-time test functions yield PSD matrices);
-> **(OS3)** translation-clustering; with the technical regularity / boundedness
-> needed to apply OS reconstruction.
+> **(OS0)** analytic (entire in real-vector directions, with the factorial growth
+> bound); **(OS1)** regular (Schwinger functions exist and are tempered
+> distributions); **(OS2)** Euclidean covariant (`E(d)`-invariant Schwinger
+> functions); **(OS3)** reflection-positive (Schwinger functions on positive-time
+> test functions yield PSD matrices); **(OS4)** translation-clustering / ergodic;
+> with the technical regularity / boundedness needed to apply OS reconstruction.
 
 **Formal.** `Pphi2.SatisfiesFullOS μ` in `Pphi2/OSAxioms.lean`, bundling
 `OS0`, `OS1`, `OS2`, `OS3`, `OS4` as separate predicates on the measure.
@@ -94,9 +95,12 @@ The OS bundle for the canonical continuum-limit measure (same axiom basis as
 
 ### `Pphi2.pphi2_nonGaussianity`
 `u₄ ≠ 0` for the headline measure. Rests on `continuumLimit_nonGaussian`.
-**Status — Route A (PR #48, 2026-06-07):** the T² non-Gaussianity *content*
-(`torus_pphi2_isInteractingStrict_weakCoupling`) is **axiom-free** in the
-T² formalization; the remaining ℝ²-version axiom is the infinite-volume lift.
+**Status — Route A (PR #48, branch `route-a-weak-coupling`, OPEN /
+not on this branch / not on `main`):** the T² non-Gaussianity *content*
+(`torus_pphi2_isInteractingStrict_weakCoupling`) is **axiom-free** on
+PR #48 in the T² formalization. Once PR #48 merges, the T² version
+becomes part of `main`; the ℝ²-version axiom (this declaration)
+remains as the infinite-volume lift.
 
 ### `Pphi2.pphi2_nontrivial`
 `S₂(f,f) > 0` for `f ≠ 0`. Rests on `pphi2_nontriviality`. The free Gaussian

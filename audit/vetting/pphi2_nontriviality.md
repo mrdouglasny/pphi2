@@ -12,9 +12,10 @@ tool: mcp__gemini__deep_think_gemini
 source_code: DT, SA
 date: 2026-06-04
 questions: [statement-faithfulness, free-vs-interacting]
-verdict: NEEDS_REVISION (mis-formulated; reformulated on T²)
+verdict: NEEDS_REVISION
 rating: Needs review
-discharged: partial (T² version proved; ℝ² version stands)
+discharged: false
+partial_discharge: "T² version proved as TorusIsNondegenerate (TorusNontriviality.lean); ℝ² version (this axiom) still stands."
 superseded_by: null
 ---
 ```
