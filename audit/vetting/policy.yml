@@ -1,0 +1,13 @@
+# audit/vetting/policy.yml — per-project assurance settings (CI reads this).
+# See math-commons/formalization-assurance/VETTING.md for the strictness ladder.
+
+# Axiom-vetting coverage enforcement:
+#   L0 none | L1 warn | L2 gate(coverage) | L3 gate(coverage + statement-hash freshness)
+# Start at L1; raise to L2 once vetting records exist; L3 once statement_hashes are populated.
+vetting_strictness: L1
+
+# Kernel-authoritative axiom set + counts (generated; never hand-authored).
+axiom_report: audit/axiom-report.txt
+
+# Where per-axiom vetting records live.
+vetting_dir: audit/vetting

@@ -546,6 +546,17 @@ then `lake build`. Workflow YAML is checked with [actionlint](.github/workflows/
 - [AXIOM_AUDIT.md](AXIOM_AUDIT.md) — Self-audit of all axioms
   (pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert) with
   correctness ratings; format per `~/.claude/AXIOM_AUDIT_FORMAT.md`.
+- [audit/](audit/) — Assurance artifacts per the
+  [`math-commons/formalization-assurance`](https://github.com/math-commons/formalization-assurance)
+  hub conventions: local settings ([`audit/CONVENTIONS.md`](audit/CONVENTIONS.md)),
+  kernel axiom certificate ([`audit/axiom-report.txt`](audit/axiom-report.txt) generated
+  by [`audit/axiom_report.lean`](audit/axiom_report.lean)), faithfulness map
+  ([`audit/FAITHFULNESS.md`](audit/FAITHFULNESS.md)), acceptance ladder
+  ([`audit/VALIDATION.md`](audit/VALIDATION.md)), per-axiom vetting records
+  ([`audit/vetting/`](audit/vetting/)). Current strictness: L1 (warn).
+- [formalization.yaml](formalization.yaml) — Project card (per
+  [`FORMALIZATION_YAML.md`](https://github.com/math-commons/formalization-assurance/blob/main/FORMALIZATION_YAML.md)
+  v0.3): sources, status, axiom enumeration, headline-theorem alignment.
 - [docs/mathlib_candidates.md](docs/mathlib_candidates.md) — Standard results
   suitable for Mathlib contribution (~50 across pphi2 + gaussian-field)
 - [docs/gemini_review.md](docs/gemini_review.md) — External review of axioms

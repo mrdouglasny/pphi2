@@ -1,0 +1,11 @@
+# audit/sorry-allowlist.txt — .lean files permitted to contain `sorry`.
+#
+# One repo-relative path per line. Every .lean file NOT listed here must be
+# sorry-free; the assurance gate fails (at L2/L3) if a `sorry` appears elsewhere.
+#
+# pphi2 status (2026-06-21): the built tree is `0 sorries`. This file is
+# intentionally empty — adding a `sorry` anywhere in the built tree should be
+# caught by the gate at L2+.
+#
+# Note: `future/` and `ddj/` are NOT in the default build target (per
+# Pphi2.lean's import list). Their contents are out of scope for the gate.
