@@ -8,13 +8,28 @@ in the assurance hub.
 
 | Rung | Count | Notes |
 |---|---|---|
-| Vetting record landed | **1 / 19** | example: `asymInteracting_expMoment_volume_uniform.md` |
-| Stub (points to existing evidence) | **0 / 19** | TODO |
-| Not yet | **18 / 19** | tracked in [`../../planning/INDEX.md`](../../planning/INDEX.md) |
+| Vetting record landed (with detailed evidence) | **4 / 19** | items 1, 2, 3, 17 (the heaviest vetted) |
+| Vetting record landed (citation-form) | **13 / 19** | items 4–16 (excl. 17) — point at existing evidence in `docs/`, `AXIOM_AUDIT.md`, and `planning/INDEX.md` |
+| Private scaffolding | **2 / 19** | `asymTorusInteracting_exponentialMomentBound`, `gaussian_rp_cov_perfect_square` |
+| **Total covered** | **19 / 19** | all real axioms have a record |
+| Statement hashes populated | 0 / 19 | required for L3 strictness |
 
-Until each axiom has a record here, [`policy.yml`](policy.yml) stays at **L1**
-(warn). Raise to **L2** once all 17 architectural axioms (and ideally the 2
-private scaffolding axioms) have a record.
+All 19 real axioms now have a record (one file per axiom in this directory).
+Most are citation-form — they point at the existing vetting evidence in
+[`../../docs/gemini_review.md`](../../docs/gemini_review.md) (Feb 2026 group
+review), [`../../AXIOM_AUDIT.md`](../../AXIOM_AUDIT.md) (rolling log),
+per-axiom discharge plans in [`../../docs/`](../../docs/), and the live status
+machine [`../../planning/INDEX.md`](../../planning/INDEX.md).
+
+The detailed records (items 1, 2, 3, 17) capture verbatim verdict summaries
+where the vetting was rich enough to quote. The citation-form records assert
+the vetting happened, name the source doc, and carry forward the verdict; they
+do not reproduce the full verbatim transcript (which lives in the cited doc).
+
+**Strictness ladder.** [`policy.yml`](policy.yml) is at **L1** (warn). Now
+that coverage is at 19/19, the project is ready to raise to **L2**
+(coverage-enforce) once a CI gate reads this directory. Raising to **L3**
+additionally requires populating `statement_hash` in each record.
 
 ## Where the vetting evidence lives today
 
