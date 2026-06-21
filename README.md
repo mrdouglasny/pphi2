@@ -171,7 +171,23 @@ OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
 The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
-**17 axioms, 0 sorries** (pphi2 `main`; `count_axioms.sh` reports 19 axioms due to two `axiom`-prefixed words in docstrings) and **3 axioms, 0 sorries** (gaussian-field) — both verified via `count_axioms.sh`. On the `cylinder-isotropic-lattice` branch the isotropic `Z_Nt × Z_Ns` cylinder construction adds two deep-think-vetted analytic axioms (`asymChaosCutoffDecomposition`, `asymInteracting_expMoment_volume_uniform`) — `count_axioms.sh` reports **21 raw / 19 real, 0 sorries** there (`wickConstantAsym_eq_variance` and the per-cross-term L² bound `asymCanonicalCrossTerm_l2_sq_le` are now theorems, and `asymRoughError_variance` is proved on top of them); `MeasureHasGreenMomentBound` is a theorem and `cylinderIso_OS_of_RP_OS2` gives cylinder OS0/OS1/OS2/OS3 modulo the separate reflection-positivity and OS2-symmetry inputs. See [`docs/cylinder-conditional-inputs-provability.md`](docs/cylinder-conditional-inputs-provability.md) for the input provability map. The upstream sister deps markov-semigroups and gaussian-hilbert track `main` (axiom counts drift and are not re-verifiable from here; see each repo's `AXIOM_AUDIT.md` and the pinned figures in [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md)). The newly added [`gibbs-variational`](https://github.com/mrdouglasny/gibbs-variational) dependency (finite-dim Boué–Dupuis prerequisite for the cylinder CYL-1a Green-moment input) contributes **0 axioms** (1 off-critical-path `sorry`). The Phase B Glimm-Jaffe Fourier estimates are now theorems, and `#print axioms Pphi2.rough_error_variance` shows only `[propext, Classical.choice, Quot.sound]`. See [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) for the canonical inventory.
+**pphi2 main: 19 real / 22 raw axioms, 0 sorries** (rechecked 2026-06-21; raw → real
+reconciliation is 3 docstring matches of the word "axiom"). The `cylinder-isotropic-lattice`
+branch has been merged into `main`, so the cylinder `Z_Nt × Z_Ns` construction —
+including the deep-think-vetted `asymInteracting_expMoment_volume_uniform` (Layer C
+assembly point) — is part of the main count. `wickConstantAsym_eq_variance` and
+`asymChaosCutoffDecomposition` are now theorems; `MeasureHasGreenMomentBound` is a
+theorem; `cylinderIso_OS_of_RP_OS2` gives cylinder OS0/OS1/OS2/OS3 modulo the separate
+reflection-positivity and OS2-symmetry inputs (see
+[`docs/cylinder-conditional-inputs-provability.md`](docs/cylinder-conditional-inputs-provability.md)
+for the input-by-input provability map). Per-axiom status lives in
+[`planning/INDEX.md`](planning/INDEX.md) (the master status machine); per-dependency
+upstream counts (gaussian-field **3 axioms / 0 sorries**, gibbs-variational **0 axioms /
+1 off-critical-path sorry**, markov-semigroups + gaussian-hilbert tracking `main`) live
+in each repo's own `AXIOM_AUDIT.md` and are pinned in
+[`AXIOM_AUDIT.md`](AXIOM_AUDIT.md). The Phase B Glimm-Jaffe Fourier estimates are
+theorems, and `#print axioms Pphi2.rough_error_variance` shows only
+`[propext, Classical.choice, Quot.sound]`.
 Stage 1 lattice-action fix raised the count from 22 to 35; Phase 2
 partial discharge plus PR #14 (Route B′ IR-limit refactor +
 `fourierTransform_lp_eq_fourierIntegral` proof) brought it back to 24.
@@ -343,7 +359,39 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-- **pphi2:** 16 axioms (14 public + 2 `private`), **0 sorries** in the active build (rechecked 2026-05-22; `count_axioms.sh` reports 18 axioms due to two `axiom`-prefixed words in docstrings; canonical inventory in [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md)). `measure_determined_by_schwinger` was discharged to a theorem on 2026-05-22 (continuum-limit moment determinacy: finite exp-moment ⟹ entire MGF ⟹ equal moments force equal MGF ⟹ equal law; Cramér–Wold lift — `MeasureUniqueness.lean`, depends only on `[propext, Classical.choice, Quot.sound]`). Cluster B is complete, and the former Phase B Glimm-Jaffe Fourier placeholders are now theorems in `Pphi2/NelsonEstimate/CovarianceBoundsGJ.lean`. Cluster A is reduced to a single bridge axiom in `Pphi2/NelsonEstimate/PolynomialChaosBridge.lean` cross-referencing `gaussian-hilbert`'s `polynomial_chaos_concentration` (Janson 5.10). The Step 1 sub-discharge of that bridge axiom — `rough_error_variance` — is now fully theorem-derived; `#print axioms Pphi2.rough_error_variance` shows only `[propext, Classical.choice, Quot.sound]`. `continuumMeasures_tight` (Route A tightness on S'(ℝ^d)) is proved (Mitoma-Chebyshev + `interacting_moment_bound` + `gaussian_second_moment_uniform`). `cylinderIR_os0`, `analyticOn_generatingFunctionalC`, `continuum_exponential_moments`, `exponential_moment_schwartz_bound`, `complex_gf_invariant_of_real_gf_invariant`, and the final `os0_for_continuum_limit`/`os1_for_continuum_limit`/`os4_for_continuum_limit` wrappers are theorem-derived. The continuum-limit inheritance layer is split between `ContinuumLimit/AxiomInheritance.lean`, `ContinuumLimit/CharacteristicFunctional.lean`, and `ContinuumLimit/TimeReflection.lean`. The remaining analytic debt includes the mixed `L¹`/Green exponential-moment bridge `∫ exp(|ω f|) ≤ exp(c₁ ∫|f| + c₂ G(f,f))`, the coupled canonical characteristic-functional bridge `continuumMeasure 2 (N n) P (a n) mass → μ` with `a_n → 0` and `(N n : ℝ) * a n → ∞`, and the spectral-gap-to-clustering input. The remaining Ward-identity debt in `OS2_WardIdentity.lean` is the `N`-uniform polynomial-log `a²` bound for the canonical defect `rotationCFDefect`; the pointwise observable API `rotationCFPointwiseDefect` remains available as a proved support layer, and the log-decay prerequisite is handled by `tendsto_zero_pow_mul_one_add_abs_log_pow` for arbitrary natural powers `m ≥ 1`. Route C's 21 axioms remain preserved in `future/`
+- **pphi2:** **19 real axioms, 0 sorries** in the active build (rechecked 2026-06-21;
+  `count_axioms.sh` reports 22 because 3 lines are docstring matches of the word "axiom" at
+  `Pphi2/NelsonEstimate/LatticeBridge.lean:21`, `Pphi2/NelsonEstimate/LayerCake.lean:85`,
+  `Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`). The 19 real axioms break down as:
+  - **17 architectural** — enumerated and clustered by OS-program target in
+    [`planning/INDEX.md`](planning/INDEX.md), the master status machine. Highlights:
+    the **CYL-1a chain** (items 1, 2, 3, 12) gates OS0/OS1, with item 3 (Layer-B2 variance bound)
+    machinery built and sorry-free on `main` (remaining gap is wiring B3→B4→B5 per
+    [`docs/B4B5-design.md`](docs/B4B5-design.md)); the **CYL-2a chain** (items 16, 17, 14, 15)
+    gates OS4 mass-gap clustering, regime-restricted to weak coupling; **non-Gaussianity**
+    (item 9, `u₄≠0`) is **DONE on T² and AXIOM-FREE** as of 2026-06-07 via Route A
+    (`torus_pphi2_isInteractingStrict_weakCoupling`, PR #48 — clears one ★★★ mountain on the
+    T² front).
+  - **2 private scaffolding** — `asymTorusInteracting_exponentialMomentBound`
+    (`AsymTorus/AsymTorusOS.lean`), `gaussian_rp_cov_perfect_square` (`OSProofs/OS3_RP_Lattice.lean`).
+
+  The superseded-chain `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` axiom and
+  its sole consumer `torus_pphi2_isInteracting_weakCoupling` (carrier file
+  `TorusContinuumLimit/TorusInteractingResult.lean`) were **removed on 2026-06-21** after
+  Route A subsumed them.
+
+  - Per the cross-cutting **coherence analysis**
+    ([`planning/coherence-analysis.md`](planning/coherence-analysis.md)), the 17 axioms do not
+    yet assemble into "an *interacting* φ⁴₂ QFT exists" — the missing keystone is **18.
+    weak-coupling uniqueness** (cluster expansion); a new target carried alongside the 17.
+
+  Recent earlier discharges that the README used to detail individually (cluster B / Phase B
+  Glimm-Jaffe Fourier; `measure_determined_by_schwinger`; `rough_error_variance`;
+  `continuumMeasures_tight`; the `cylinderIR_os0` / `os0_for_continuum_limit` /
+  `os1_for_continuum_limit` / `os4_for_continuum_limit` wrappers; the inheritance-layer split;
+  `wickConstantAsym_eq_variance` and `asymChaosCutoffDecomposition`; cylinder TM + Layer-B1
+  variance bound) are recorded chronologically in [`AXIOM_AUDIT.md`](AXIOM_AUDIT.md). Route C's
+  21 axioms remain preserved in `future/`
 - **Route B (torus):** 0 axioms, 0 sorries — the most developed route
 - **Route B' IR limit:** 0 local axioms, 0 sorries — OS0 analyticity is proved from uniform exponential moments plus bounded-continuous weak convergence; OS2 uses the narrowed `AsymTorusSequenceHasCylinderOS2Symmetry` input, with a proved bridge from `AsymSatisfiesTorusOS`; OS3 is transferred from `CylinderMeasureSequenceEventuallyReflectionPositive`; the remaining nonlocal inputs are the eventual Green-moment bound `AsymTorusSequenceHasUniformGreenMomentBound` and eventual pullback RP for the concrete asymmetric-torus family
 - **Shared foundations layer:** `Common/QFT/Euclidean/Formulations.lean` and
@@ -498,6 +546,17 @@ then `lake build`. Workflow YAML is checked with [actionlint](.github/workflows/
 - [AXIOM_AUDIT.md](AXIOM_AUDIT.md) — Self-audit of all axioms
   (pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert) with
   correctness ratings; format per `~/.claude/AXIOM_AUDIT_FORMAT.md`.
+- [audit/](audit/) — Assurance artifacts per the
+  [`math-commons/formalization-assurance`](https://github.com/math-commons/formalization-assurance)
+  hub conventions: local settings ([`audit/CONVENTIONS.md`](audit/CONVENTIONS.md)),
+  kernel axiom certificate ([`audit/axiom-report.txt`](audit/axiom-report.txt) generated
+  by [`audit/axiom_report.lean`](audit/axiom_report.lean)), faithfulness map
+  ([`audit/FAITHFULNESS.md`](audit/FAITHFULNESS.md)), acceptance ladder
+  ([`audit/VALIDATION.md`](audit/VALIDATION.md)), per-axiom vetting records
+  ([`audit/vetting/`](audit/vetting/)). Current strictness: L1 (warn).
+- [formalization.yaml](formalization.yaml) — Project card (per
+  [`FORMALIZATION_YAML.md`](https://github.com/math-commons/formalization-assurance/blob/main/FORMALIZATION_YAML.md)
+  v0.3): sources, status, axiom enumeration, headline-theorem alignment.
 - [docs/mathlib_candidates.md](docs/mathlib_candidates.md) — Standard results
   suitable for Mathlib contribution (~50 across pphi2 + gaussian-field)
 - [docs/gemini_review.md](docs/gemini_review.md) — External review of axioms

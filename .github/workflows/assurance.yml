@@ -1,0 +1,19 @@
+# Calls the shared assurance gate from math-commons/formalization-assurance.
+# Runs build + axiom-report-in-sync + sorry-confinement; whether failing gates
+# BLOCK or merely WARN is driven by audit/vetting/policy.yml (vetting_strictness).
+# pphi2 is currently at L1 (warn-only).
+name: assurance
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  assure:
+    uses: math-commons/formalization-assurance/.github/workflows/assure.yml@main
+    # All inputs optional; defaults follow audit/CONVENTIONS.md.
+    # with:
+    #   axiom_report_lean:   audit/axiom_report.lean
+    #   axiom_report_golden: audit/axiom-report.txt
+    #   sorry_allowlist:     audit/sorry-allowlist.txt
+    #   policy:              audit/vetting/policy.yml

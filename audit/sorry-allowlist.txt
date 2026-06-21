@@ -1,0 +1,24 @@
+# audit/sorry-allowlist.txt — .lean files permitted to contain `sorry`.
+#
+# One repo-relative path per line. Every .lean file NOT listed here must be
+# sorry-free; the assurance gate fails (at L2/L3) if a `sorry` appears elsewhere.
+#
+# pphi2 status (2026-06-21): the built tree (Pphi2/ + Common/) is `0 sorries`.
+# The entries below are pre-existing scaffolding tracked by git but NOT
+# imported by Pphi2.lean — `git ls-files '*.lean'` picks them up so we
+# allowlist them explicitly. Surfaced by the assurance gate on its first
+# run (assurance check exercised on test/assurance-failures, 2026-06-21).
+#
+# Adding a `sorry` anywhere in the built tree should still be caught.
+
+# Legacy ddj/ directory — older Wightman/reconstruction prototypes.
+# Not imported by Pphi2.lean; preserved for reference.
+ddj/Basic.lean
+ddj/EuclideanInvariance/Invariance.lean
+ddj/FunctionSpaces/WeightedLp.lean
+ddj/Integrability/Regularity.lean
+ddj/ReflectionPositivity/RPPlane.lean
+
+# Parked future/CylinderContinuumLimit/ — superseded cylinder construction.
+# Not imported by Pphi2.lean; preserved alongside the live AsymTorus/ route.
+future/CylinderContinuumLimit/CylinderInteraction.lean
