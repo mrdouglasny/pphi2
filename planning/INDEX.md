@@ -254,23 +254,23 @@ the cylinder Layer-B2 wiring (item 3); everything else is a standalone research-
 
 ## Axioms beyond the 17 (sanity check vs `count_axioms.sh`)
 
-`count_axioms.sh` reports **23 raw axioms** on `main` (rechecked 2026-06-21);
+`count_axioms.sh` reports **22 raw axioms** on `main` (rechecked 2026-06-21);
 3 are docstring matches of the word "axiom" inside text continuations
 (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
 `Pphi2/NelsonEstimate/LayerCake.lean:85`,
-`Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`), leaving **20 real axioms**.
+`Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`), leaving **19 real axioms**.
 
-The 17 enumerated above account for the architectural debt. The remaining 3:
+The 17 enumerated above account for the architectural debt. The remaining 2:
 - **`asymTorusInteracting_exponentialMomentBound`** (`Pphi2/AsymTorus/AsymTorusOS.lean`,
   `private`) — torus-side scaffolding consumed only inside `AsymTorusOS`.
 - **`gaussian_rp_cov_perfect_square`** (`Pphi2/OSProofs/OS3_RP_Lattice.lean`,
   `private`) — covariance-perfect-square step inside lattice-RP.
-- **`torus_weakCoupling_lattice_connectedFourPoint_strictNeg`**
-  (`Pphi2/TorusContinuumLimit/TorusInteractingResult.lean`, added 2026-06-05) —
-  **superseded chain**: the axiom is consumed only by `torus_pphi2_isInteracting_weakCoupling`
-  in the same file, which itself is superseded by Route A's
-  `torus_pphi2_isInteractingStrict_weakCoupling` (2026-06-07, PR #48). Both should be
-  removed together in the next cleanup pass.
+
+The superseded-chain `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` axiom
+(added 2026-06-05) and its sole consumer `torus_pphi2_isInteracting_weakCoupling`
+(carrier file `Pphi2/TorusContinuumLimit/TorusInteractingResult.lean`) were **removed on
+2026-06-21** after Route A's `torus_pphi2_isInteractingStrict_weakCoupling`
+(2026-06-07, PR #48) subsumed them.
 
 ## Branch map
 For which git branch carries the live code for each axiom (and which branches are

@@ -16,19 +16,19 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-06-21): pphi2 23 raw / 20 real axioms,
+**Current counter (`./scripts/count_axioms.sh`, 2026-06-21): pphi2 22 raw / 19 real axioms,
 0 sorries; gaussian-field 3 axioms, 0 sorries** (both verified via `count_axioms.sh`,
-GaussianField pinned at `5bb35e8`). The 23 raw → 20 real reconciliation: 3 lines are docstring
+GaussianField pinned at `5bb35e8`). The 22 raw → 19 real reconciliation: 3 lines are docstring
 matches of the word "axiom" (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
 `Pphi2/NelsonEstimate/LayerCake.lean:85`, `Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`).
-The 20 real break down as **17 architectural** (the master status machine
-[`planning/INDEX.md`](planning/INDEX.md) enumerates them), **2 private scaffolding**
-(`asymTorusInteracting_exponentialMomentBound` in `AsymTorusOS.lean`,
-`gaussian_rp_cov_perfect_square` in `OS3_RP_Lattice.lean`), and **1 superseded-chain axiom**
-(`torus_weakCoupling_lattice_connectedFourPoint_strictNeg` in
-`TorusContinuumLimit/TorusInteractingResult.lean` — consumed only by
-`torus_pphi2_isInteracting_weakCoupling`, which is itself superseded by Route A on
-2026-06-07; axiom + dead theorem should be removed together). `main` now subsumes the former `cylinder-isotropic-lattice` branch
+The 19 real break down as **17 architectural** (enumerated by OS-program cluster in
+[`planning/INDEX.md`](planning/INDEX.md), the master status machine) and **2 private
+scaffolding** (`asymTorusInteracting_exponentialMomentBound` in `AsymTorusOS.lean`,
+`gaussian_rp_cov_perfect_square` in `OS3_RP_Lattice.lean`). The superseded-chain axiom
+`torus_weakCoupling_lattice_connectedFourPoint_strictNeg` (plus its dead consumer
+`torus_pphi2_isInteracting_weakCoupling` and the carrier file
+`TorusContinuumLimit/TorusInteractingResult.lean`) was **removed on 2026-06-21** after
+Route A's `torus_pphi2_isInteractingStrict_weakCoupling` (PR #48, 2026-06-07) subsumed it. `main` now subsumes the former `cylinder-isotropic-lattice` branch
 (Phase-2/3 cylinder construction, isotropic files wired into `Pphi2.lean`), which is why
 the raw count is up from the pre-cylinder base. `measure_determined_by_schwinger` was **discharged 2026-06-02** (Bridge axiom →
 theorem via `MeasureUniqueness.measure_eq_of_moments`). The remaining genuinely-critical input is

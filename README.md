@@ -171,7 +171,7 @@ OS axioms. See [ROUTES.md](ROUTES.md) for the detailed comparison.
 ### Route A: ℝ² (Euclidean plane) — OS0–OS4
 The full construction targets S'(ℝ²) and proves all five OS axioms.
 The continuum limit involves both UV (a → 0) and IR (volume → ∞) limits.
-**pphi2 main: 20 real / 23 raw axioms, 0 sorries** (rechecked 2026-06-21; raw → real
+**pphi2 main: 19 real / 22 raw axioms, 0 sorries** (rechecked 2026-06-21; raw → real
 reconciliation is 3 docstring matches of the word "axiom"). The `cylinder-isotropic-lattice`
 branch has been merged into `main`, so the cylinder `Z_Nt × Z_Ns` construction —
 including the deep-think-vetted `asymInteracting_expMoment_volume_uniform` (Layer C
@@ -359,10 +359,10 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-- **pphi2:** **20 real axioms, 0 sorries** in the active build (rechecked 2026-06-21;
-  `count_axioms.sh` reports 23 because 3 lines are docstring matches of the word "axiom" at
+- **pphi2:** **19 real axioms, 0 sorries** in the active build (rechecked 2026-06-21;
+  `count_axioms.sh` reports 22 because 3 lines are docstring matches of the word "axiom" at
   `Pphi2/NelsonEstimate/LatticeBridge.lean:21`, `Pphi2/NelsonEstimate/LayerCake.lean:85`,
-  `Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`). The 20 real axioms break down as:
+  `Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`). The 19 real axioms break down as:
   - **17 architectural** — enumerated and clustered by OS-program target in
     [`planning/INDEX.md`](planning/INDEX.md), the master status machine. Highlights:
     the **CYL-1a chain** (items 1, 2, 3, 12) gates OS0/OS1, with item 3 (Layer-B2 variance bound)
@@ -374,11 +374,12 @@ All six phases are structurally complete and the full project builds
     T² front).
   - **2 private scaffolding** — `asymTorusInteracting_exponentialMomentBound`
     (`AsymTorus/AsymTorusOS.lean`), `gaussian_rp_cov_perfect_square` (`OSProofs/OS3_RP_Lattice.lean`).
-  - **1 superseded-chain axiom** — `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
-    (`TorusContinuumLimit/TorusInteractingResult.lean`, added 2026-06-05): consumed only by
-    `torus_pphi2_isInteracting_weakCoupling` (same file), which is itself **superseded by
-    Route A's** `torus_pphi2_isInteractingStrict_weakCoupling` (2026-06-07, PR #48). Axiom +
-    dead theorem should be removed together in the next cleanup pass.
+
+  The superseded-chain `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` axiom and
+  its sole consumer `torus_pphi2_isInteracting_weakCoupling` (carrier file
+  `TorusContinuumLimit/TorusInteractingResult.lean`) were **removed on 2026-06-21** after
+  Route A subsumed them.
+
   - Per the cross-cutting **coherence analysis**
     ([`planning/coherence-analysis.md`](planning/coherence-analysis.md)), the 17 axioms do not
     yet assemble into "an *interacting* φ⁴₂ QFT exists" — the missing keystone is **18.

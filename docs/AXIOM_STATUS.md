@@ -12,22 +12,23 @@
 
 | Count | Value | Source |
 |---|---|---|
-| pphi2 axioms (real) | **20** | `count_axioms.sh` reports 23; 3 are docstring matches |
+| pphi2 axioms (real) | **19** | `count_axioms.sh` reports 22; 3 are docstring matches |
 | pphi2 sorries | **0** | `count_axioms.sh` |
 | gaussian-field axioms | **3** | `count_axioms.sh` |
 | gaussian-field sorries | **0** | `count_axioms.sh` |
 
-**Real-axiom breakdown (20 = 17 + 2 + 1):**
+**Real-axiom breakdown (19 = 17 + 2):**
 - **17 architectural** — enumerated by OS-program cluster in
   [`../planning/INDEX.md`](../planning/INDEX.md).
 - **2 private scaffolding** — `asymTorusInteracting_exponentialMomentBound`
   (`Pphi2/AsymTorus/AsymTorusOS.lean`), `gaussian_rp_cov_perfect_square`
   (`Pphi2/OSProofs/OS3_RP_Lattice.lean`).
-- **1 superseded-chain axiom** — `torus_weakCoupling_lattice_connectedFourPoint_strictNeg`
-  (`Pphi2/TorusContinuumLimit/TorusInteractingResult.lean`); consumed only by
-  `torus_pphi2_isInteracting_weakCoupling` in the same file, which is itself superseded
-  by Route A's `torus_pphi2_isInteractingStrict_weakCoupling` (2026-06-07, PR #48).
-  Axiom + dead theorem should be removed together in the next cleanup pass.
+
+The superseded-chain `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` axiom and
+its sole consumer `torus_pphi2_isInteracting_weakCoupling` (carrier file
+`Pphi2/TorusContinuumLimit/TorusInteractingResult.lean`) were **removed on 2026-06-21**
+after Route A's `torus_pphi2_isInteractingStrict_weakCoupling` (PR #48, 2026-06-07)
+subsumed them.
 
 **Docstring-match false positives** (`count_axioms.sh` regex catches the word
 "axiom" at start of line, including inside docstrings):
