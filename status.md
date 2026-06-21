@@ -16,11 +16,21 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-06-02): pphi2 22 raw axioms, 0 sorries;
-gaussian-field 3 axioms, 0 sorries** (both verified via `count_axioms.sh`, GaussianField pinned at
-`5bb35e8`). `main` now subsumes the former `cylinder-isotropic-lattice` branch (Phase-2/3 cylinder
-construction, isotropic files wired into `Pphi2.lean`), which is why the raw count is up from the
-pre-cylinder base. `measure_determined_by_schwinger` was **discharged 2026-06-02** (Bridge axiom →
+**Current counter (`./scripts/count_axioms.sh`, 2026-06-21): pphi2 23 raw / 20 real axioms,
+0 sorries; gaussian-field 3 axioms, 0 sorries** (both verified via `count_axioms.sh`,
+GaussianField pinned at `5bb35e8`). The 23 raw → 20 real reconciliation: 3 lines are docstring
+matches of the word "axiom" (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
+`Pphi2/NelsonEstimate/LayerCake.lean:85`, `Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`).
+The 20 real break down as **17 architectural** (the master status machine
+[`planning/INDEX.md`](planning/INDEX.md) enumerates them), **2 private scaffolding**
+(`asymTorusInteracting_exponentialMomentBound` in `AsymTorusOS.lean`,
+`gaussian_rp_cov_perfect_square` in `OS3_RP_Lattice.lean`), and **1 superseded-chain axiom**
+(`torus_weakCoupling_lattice_connectedFourPoint_strictNeg` in
+`TorusContinuumLimit/TorusInteractingResult.lean` — consumed only by
+`torus_pphi2_isInteracting_weakCoupling`, which is itself superseded by Route A on
+2026-06-07; axiom + dead theorem should be removed together). `main` now subsumes the former `cylinder-isotropic-lattice` branch
+(Phase-2/3 cylinder construction, isotropic files wired into `Pphi2.lean`), which is why
+the raw count is up from the pre-cylinder base. `measure_determined_by_schwinger` was **discharged 2026-06-02** (Bridge axiom →
 theorem via `MeasureUniqueness.measure_eq_of_moments`). The remaining genuinely-critical input is
 one deep-think-vetted isotropic-redesign axiom:
 `asymInteracting_expMoment_volume_uniform`
