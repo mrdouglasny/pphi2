@@ -4,6 +4,7 @@
  Pphi2.continuum_exponential_clustering,
  Pphi2.continuum_exponential_moment_bound,
  Pphi2.rotation_cf_defect_polylog_bound,
+ Pphi2.DELIBERATE_TEST_DRIFT_TO_BE_REVERTED,
  Quot.sound]
 'Pphi2.pphi2_main' depends on axioms: [propext,
  Classical.choice,
