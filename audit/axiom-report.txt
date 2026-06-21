@@ -1,0 +1,31 @@
+'Pphi2.pphi2_existence' depends on axioms: [propext,
+ Classical.choice,
+ Pphi2.canonical_continuumMeasure_cf_tendsto,
+ Pphi2.continuum_exponential_clustering,
+ Pphi2.continuum_exponential_moment_bound,
+ Pphi2.rotation_cf_defect_polylog_bound,
+ Quot.sound]
+'Pphi2.pphi2_main' depends on axioms: [propext,
+ Classical.choice,
+ Pphi2.canonical_continuumMeasure_cf_tendsto,
+ Pphi2.continuum_exponential_clustering,
+ Pphi2.continuum_exponential_moment_bound,
+ Pphi2.rotation_cf_defect_polylog_bound,
+ Quot.sound]
+'Pphi2.pphi2_nonGaussianity' depends on axioms: [propext,
+ Classical.choice,
+ Pphi2.continuumLimit_nonGaussian,
+ Quot.sound]
+'Pphi2.pphi2_nontrivial' depends on axioms: [propext, Classical.choice, Pphi2.pphi2_nontriviality, Quot.sound]
+'Pphi2.cylinderIso_OS_of_RP_OS2' depends on axioms: [propext,
+ Classical.choice,
+ GaussianField.embed_l2_uniform_bound,
+ Pphi2.asymInteracting_expMoment_volume_uniform,
+ Quot.sound]
+'Pphi2.pphi2_exists_os_and_massParameter_positive' depends on axioms: [propext,
+ Classical.choice,
+ Pphi2.canonical_continuumMeasure_cf_tendsto,
+ Pphi2.continuum_exponential_clustering,
+ Pphi2.continuum_exponential_moment_bound,
+ Pphi2.rotation_cf_defect_polylog_bound,
+ Quot.sound]
