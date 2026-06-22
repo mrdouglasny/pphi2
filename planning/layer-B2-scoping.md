@@ -24,9 +24,11 @@ quantifier — `Lt`-uniform. B1 supplies a per-`Lt` `C(Lt)` via
 Nelson/Gaussian-domination; B2 lifts it to `Lt`-independent via the
 transfer-matrix gap + a geometric series.
 
-**Live design**: [`../docs/B4B5-design.md`](../docs/B4B5-design.md)
-(gemini-3-pro pinned 2026-06-04, route-corrected 2026-06-04 after a
-codex+gemini double review).
+**Live design**: this file (Route A, gemini-vetted 2026-06-22, Round 3).
+The earlier kernel-side / HS-Cauchy-Schwarz design in
+[`../docs/B4B5-design.md`](../docs/B4B5-design.md) (2026-06-04) is
+**superseded** as the route plan; it remains useful as background on
+the proved infrastructure and the route-correction history.
 
 **Route correction noted**: the original "HS kernel Cauchy-Schwarz"
 six-brick plan was **abandoned 2026-06-04** (recorded in

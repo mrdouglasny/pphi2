@@ -108,9 +108,17 @@ lemma `norm_sq_proj_obsTrunc_omega_le`.
   matrix `AsymL2Operator.lean`, `AsymJentzsch.lean`, `AsymPositivity.lean`;
   spectral gap `AsymSpectralGap.lean`; gapped transfer `AsymGappedTransfer.lean`).
   See [`../../AXIOM_AUDIT.md`](../../AXIOM_AUDIT.md) 2026-06-02 entry.
-- **Remaining gap**: wire B3→B4→B5 — trace dictionary on the path-measure
-  second moment, HS trace-class, B5b single-slice stability + the `1/a`
-  cancellation. Active plan: [`docs/B4B5-design.md`](../../docs/B4B5-design.md).
+- **Remaining gap** (Route A blueprint, post-2026-06-22 pin): Pieces 2-5 —
+  apply `averaged_susceptibility_bound` at finite K (Piece 2, ~200-300
+  lines); `K → ∞` via dominated convergence (Piece 3, ~100-200 lines);
+  B5b single-slice stability + the `1/a` cancellation (Piece 4, ~200-400
+  lines; vet `a`-powers first); final assembly + torus→lattice pushforward
+  (Piece 5, ~50-100 lines). Active plan:
+  [`../../planning/layer-B2-scoping.md`](../../planning/layer-B2-scoping.md)
+  (the HS trace-class / kernel-Cauchy-Schwarz route in
+  [`../../docs/B4B5-design.md`](../../docs/B4B5-design.md) is **superseded**;
+  op-norm ≤ HS-norm is the wrong direction, so kernel-HS bricks cannot be
+  fed from the operator gap alone).
 - **Re-vet if strengthened**: the current axiom is the salvageable
   weaker form. Any change to the comparison constant or the variance
   functional requires fresh deep-think.

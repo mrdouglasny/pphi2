@@ -8,7 +8,7 @@ import Pphi2.AsymTorus.AsymTraceBridge
 /-!
 # Truncated slice observable + the `a`-cancellation lemma
 
-**Layer-B2 wiring, Piece 1 of 3** (Route A blueprint, gemini-vetted
+**Layer-B2 wiring, Piece 1 of 5** (Route A blueprint, gemini-vetted
 2026-06-22). See `planning/layer-B2-scoping.md` for the full route.
 
 The slice-pairing observable `A_g(ψ) := ⟨g, ψ⟩` is a linear functional
@@ -141,6 +141,14 @@ theorem asymSliceObsTruncMulCLM_coeFn (g : SpatialField Ns) {K : ℝ} (hK : 0 < 
   exact mulCLM_spec (asymSliceObsTrunc g K) (asymSliceObsTrunc_measurable g K)
     K hK (Filter.Eventually.of_forall (fun ψ => by
       rw [Real.norm_eq_abs]; exact asymSliceObsTrunc_abs_le_bound g hK.le ψ)) f
+
+/-- `asymSliceObsTruncMulCLM` is self-adjoint (the multiplication is by a real-valued
+function). Needed by Piece 2 to feed `connected_two_point_le`. -/
+theorem asymSliceObsTruncMulCLM_isSelfAdjoint (g : SpatialField Ns) {K : ℝ} (hK : 0 < K) :
+    IsSelfAdjoint (asymSliceObsTruncMulCLM g hK) :=
+  mulCLM_isSelfAdjoint (asymSliceObsTrunc g K) (asymSliceObsTrunc_measurable g K)
+    K hK (Filter.Eventually.of_forall (fun ψ => by
+      rw [Real.norm_eq_abs]; exact asymSliceObsTrunc_abs_le_bound g hK.le ψ))
 
 /-! ## The a-cancellation lemma
 
