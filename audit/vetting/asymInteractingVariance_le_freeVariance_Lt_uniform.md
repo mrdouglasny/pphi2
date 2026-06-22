@@ -78,9 +78,29 @@ slice rather than the full volume.
 (Källén–Lehmann + `1/a` cancellation, Gemini gemini-3-pro 2026-06-04).
 Both rest on the same proved gap and may need reconciling into one path.
 
-**Verdict (current):** the axiom **content** is sound but the **proof
-route** is under active design; do not formalize a stronger statement
-without re-vetting.
+### Round 3 (Gemini 3.1-pro, 2026-06-22): Route A pinned
+
+Route A — **bounded-cutoff approximation** — is overwhelmingly correct.
+Eliminates three alternative routes:
+- B (kernel rank-1 split) fails: `⟨g, ·⟩ ∉ L²(ν)` makes the R-term bound
+  `∞ · γ^t · ∞` undefined.
+- C (eigenbasis via the proved Jentzsch HilbertBasis) needs Mercer's
+  theorem (not in Mathlib, massive to formalize).
+- D (path-measure direct) would need Brascamp-Lieb on the path measure,
+  wasting the proved transfer-operator gap.
+
+Blueprint: truncate `A(ψ) = ⟨g, ψ⟩` to `A_K = clamp(-K, K, ⟨g, ψ⟩)`
+(bounded, so `M_{A_K}` is a CLM and `connected_two_point_le` applies),
+then take `K → ∞` via DCT. The **a-cancellation trick** decouples `K`
+from `a` by bounding the truncated norm by the *exact untruncated*
+vacuum variance before any limit. See
+[`../../planning/layer-B2-scoping.md`](../../planning/layer-B2-scoping.md).
+
+**Verdict (current):** axiom content sound; proof route pinned as
+Route A; **Piece 1 of 5 landed** 2026-06-22
+(`Pphi2/AsymTorus/AsymObsTrunc.lean`, 236 lines, 0 sorries, 0 new axioms)
+with the truncated-observable multiplication CLM and the a-cancellation
+lemma `norm_sq_proj_obsTrunc_omega_le`.
 
 **Conditions / follow-ups:**
 

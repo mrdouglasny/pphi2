@@ -66,20 +66,22 @@ clustering, gating OS4). Master campaign doc: [`docs/cylinder-master-plan.md`].
   status: scoped   deps: [12]   diff: ★★★
   note: Newman MGF via Gaussian domination / Lee–Yang. New `lee-yang` repo scaffolded, Phase 1 not
   implemented. Plan: [`docs/asym-expmoment-discharge-via-lee-yang-vet-request.md`].
-- [~] **3. `asymInteractingVariance_le_freeVariance_Lt_uniform`** (Layer B2) `AsymExpMomentDischarge.lean:87`
-  status: **in_progress — machinery built (sorry-free on `main`), axiom not yet wired**   deps: [17]   diff: ★★★
-  note: transfer-matrix Feynman–Kac route. **Built & sorry-free on `main`** (`Pphi2/AsymTorus/Asym*`):
+- [~] **3. `asymInteractingVariance_le_freeVariance_Lt_uniform`** (Layer B2) `AsymExpMomentDischarge.lean:206`
+  status: **in_progress — Route A blueprint pinned 2026-06-22, Piece 1 landed**   deps: [17]   diff: ★★★ (★★ with the route pinned)
+  note: transfer-matrix Feynman–Kac route, **Route A** (bounded-cutoff approximation, gemini-vetted
+  2026-06-22). **Built & sorry-free on `main`** (`Pphi2/AsymTorus/Asym*`):
   the rank-1 operator-decay bricks (`AsymTraceBridge`), the proved gap (`AsymGappedTransfer`,
   `susceptibility_le`), the measure→path-measure bridge `interacting_second_moment_eq_pathMeasure`
   (`AsymVarianceDischarge`, B3), the abstract B4 susceptibility engine, the operator↔kernel link
-  (`AsymTransferKernelOperator`). **REMAINING gap** (the axiom still stands): wire B3→B4→B5 — apply
-  the trace dictionary to the path-measure second moment, the Hilbert–Schmidt trace-class property,
-  and **B5b** single-slice stability + the `1/a` cancellation (`int/free` ratio). **Live plans:**
-  [`docs/B4B5-design.md`] (Källén–Lehmann + `1/a` cancellation, Gemini-pinned 2026-06-04) and
-  [`docs/layer-B2-discharge-plan.md`] (the "B1 ⊕ gap" route, 2026-06-02 — upgrades B1's per-`Lt`
-  `Var_int ≤ C(Lt)·Var_free` to `Lt`-uniform via the proved gap; both rest on the same proved gap and
-  may need reconciling into one path). SUPERSEDED: [`docs/transfer-instantiation-plan.md`] (see its
-  banner). Branch: work on `main` — `option-b-feynman-kac` is dormant (143 behind).
+  (`AsymTransferKernelOperator`), and **Piece 1 of the Route-A wiring**: the truncated-observable
+  multiplication CLM + the **a-cancellation lemma** `norm_sq_proj_obsTrunc_omega_le`
+  (`Pphi2/AsymTorus/AsymObsTrunc.lean`, landed 2026-06-22). **Live plan:**
+  [`planning/layer-B2-scoping.md`] (the Route-A blueprint; 5 pieces; ~600-1200 lines; ~1.5-3 weeks).
+  **REMAINING (per Route A blueprint):** Piece 2 — apply `averaged_susceptibility_bound` at finite K
+  (~200-300 lines); Piece 3 — `K → ∞` via DCT (~100-200 lines); Piece 4 (B5b) — single-slice
+  stability (~200-400 lines, vet `a`-powers first); Piece 5 — final assembly (~50-100 lines).
+  SUPERSEDED: [`docs/transfer-instantiation-plan.md`] (banner), the older 6-brick HS-Cauchy-Schwarz
+  plan in `docs/B4B5-design.md` (eliminated by Route A — op-norm ≤ HS-norm is the wrong direction).
 
 ## Cluster 2 — CYL-2a: uniform spectral gap → clustering (gates OS4)
 
