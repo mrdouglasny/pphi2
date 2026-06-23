@@ -16,11 +16,13 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-06-23): pphi2 29 raw / 26 real axioms,
+**Current counter (`./scripts/count_axioms.sh`, 2026-06-23): pphi2 28 raw / 26 real axioms,
 0 sorries; gaussian-field 3 axioms, 0 sorries** (both verified via `count_axioms.sh`,
-GaussianField pinned at `5bb35e8`). The 29 raw → 26 real reconciliation: 3 lines are docstring
+GaussianField pinned at `5bb35e8`). The 28 raw → 26 real reconciliation: 2 lines are docstring
 matches of the word "axiom" (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
-`Pphi2/NelsonEstimate/LayerCake.lean:85`, `Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`).
+`Pphi2/NelsonEstimate/LayerCake.lean:85`). The third match at
+`AsymExpMomentDischarge.lean:244` was removed when axiom 3 became a theorem
+(Layer-B2 Piece 5, PR #58, 2026-06-23).
 The 26 real break down as **24 architectural** (enumerated by OS-program cluster in
 [`planning/INDEX.md`](planning/INDEX.md), the master status machine) and **2 private
 scaffolding** (`asymTorusInteracting_exponentialMomentBound` in `AsymTorusOS.lean`,
