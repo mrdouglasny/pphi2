@@ -41,10 +41,13 @@ sorry/axiom-clean).
 ## Counts (single source of truth)
 
 The live raw counts come from `./scripts/count_axioms.sh`. The reconciled "real"
-count strips 3 docstring matches of the word "axiom" (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
-`Pphi2/NelsonEstimate/LayerCake.lean:85`, `Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`).
+count strips 2 docstring matches of the word "axiom"
+(`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
+`Pphi2/NelsonEstimate/LayerCake.lean:85`). The previous match at
+`AsymExpMomentDischarge.lean:244` was removed when axiom 3 became a
+theorem (Layer-B2 Piece 5, PR #58, 2026-06-23).
 
-Current (2026-06-23): **29 raw / 26 real axioms, 0 sorries**.
+Current (2026-06-23): **28 raw / 26 real axioms, 0 sorries**.
 26 real = **24 architectural** + **2 private scaffolding**.
 
 Per-route counts and the discharge story live in
