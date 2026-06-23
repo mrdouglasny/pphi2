@@ -256,18 +256,20 @@ the cylinder Layer-B2 wiring (item 3); everything else is a standalone research-
 
 ## Axioms beyond the 17 (sanity check vs `count_axioms.sh`)
 
-`count_axioms.sh` reports **28 raw axioms** on `layer-B2/piece-2` (rechecked 2026-06-23);
+`count_axioms.sh` reports **29 raw axioms** on `layer-B2/piece-4` (rechecked 2026-06-23);
 3 are docstring matches of the word "axiom" inside text continuations
 (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
 `Pphi2/NelsonEstimate/LayerCake.lean:85`,
-`Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`), leaving **25 real axioms**.
+`Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`), leaving **26 real axioms**.
 
-The 23 architectural axioms account for the current proof debt, including the
+The 24 architectural axioms account for the current proof debt, including the
 six Layer-B2 Route-A GNS bridge obligations in
 `Pphi2/AsymTorus/AsymBridgeInstance.lean`:
 `asymGroundStateRep_pos_ae`, `asymTransferNormalized_contract`,
 `asymGroundStateRep_eq_groundIsometry_one`, `asymGroundSemigroup_intertwines`,
-`asymPartition_ground_bound`, and `asymFinitePeriodicBridge_remainder_bound`.
+`asymPartition_ground_bound`, and `asymFinitePeriodicBridge_remainder_bound`,
+plus B5b `groundVariance_le_freeCovariance` in
+`Pphi2/AsymTorus/AsymB5bSingleSlice.lean`.
 The remaining 2:
 - **`asymTorusInteracting_exponentialMomentBound`** (`Pphi2/AsymTorus/AsymTorusOS.lean`,
   `private`) — torus-side scaffolding consumed only inside `AsymTorusOS`.

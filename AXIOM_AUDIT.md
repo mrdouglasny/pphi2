@@ -16,9 +16,22 @@
   `asymGroundSemigroup_intertwines`, `asymPartition_ground_bound`, and
   `asymFinitePeriodicBridge_remainder_bound`. Each has a docstring discharge
   plan in the Lean file and a per-axiom vetting record under `audit/vetting/`.
-* **Counts:** pphi2 is now **28 raw / 25 real axioms**, 0 sorries. The raw →
+* **Counts:** pphi2 is now **29 raw / 26 real axioms**, 0 sorries. The raw →
   real reconciliation remains the same 3 docstring matches; the new bridge
   axioms are all real architectural debt. `lake build` is green.
+
+## 2026-06-23 — Layer-B2 Piece 4 B5b single-slice interface landed
+
+* **New file:** `Pphi2/AsymTorus/AsymB5bSingleSlice.lean` adds the one-slice
+  free covariance bookkeeping, the `freeSingleSliceCovariance_smul` a-power
+  audit, summed B5b wrappers, and the Piece-3 handoff lemmas.
+* **New axiom (1):** `groundVariance_le_freeCovariance`, the narrow analytic
+  B5b input: fixed-`Ls` ground-state slice variance is bounded by the matching
+  one-slice free GJ covariance uniformly in `a`, `Nt`, and the slice.
+* **Discharge record:** `audit/vetting/groundVariance_le_freeCovariance.md`.
+  The later free-side assembly to full spacetime free variance remains an
+  explicit hypothesis in the Lean theorem to avoid the known standalone
+  `1/(1-γ)` a-nonuniform shortcut.
 
 ## 2026-06-21 — `torus_weakCoupling_lattice_connectedFourPoint_strictNeg` removed; `audit/` scaffold landed
 
@@ -674,13 +687,13 @@ elementary inequality `x² ≤ 2 e^|x|` and a scaling optimization.
 eventual pullback RP predicate `CylinderMeasureSequenceEventuallyReflectionPositive`
 and proves the IR-limit OS3 transfer by characteristic-functional convergence.
 
-## Current pphi2 Axiom Inventory (28 raw / 25 real on `layer-B2/piece-2` as of 2026-06-23, 0 sorries)
+## Current pphi2 Axiom Inventory (29 raw / 26 real as of 2026-06-23, 0 sorries)
 
 This table is generated from the current `./scripts/count_axioms.sh` result and
 is the source of truth for active pphi2 axioms in this audit. Historical branch
 cohorts are retained below for provenance only.
 
-### Main inventory (25 real axioms — present on `layer-B2/piece-2`)
+### Main inventory (26 real axioms — present on `layer-B2/piece-4`)
 
 | File | Active axioms | Names |
 |------|---------------|-------|
@@ -694,11 +707,12 @@ cohorts are retained below for provenance only.
 | `Pphi2/OSProofs/OS4_MassGap.lean` | 2 | `two_point_clustering_from_spectral_gap`, `general_clustering_from_spectral_gap` |
 | `Pphi2/TransferMatrix/SpectralGap.lean` | 2 | `spectral_gap_uniform`, `spectral_gap_lower_bound` |
 | `Pphi2/AsymTorus/AsymBridgeInstance.lean` | 6 | `asymGroundStateRep_pos_ae`, `asymTransferNormalized_contract`, `asymGroundStateRep_eq_groundIsometry_one`, `asymGroundSemigroup_intertwines`, `asymPartition_ground_bound`, `asymFinitePeriodicBridge_remainder_bound` |
+| `Pphi2/AsymTorus/AsymB5bSingleSlice.lean` | 1 | `groundVariance_le_freeCovariance` |
 | `Pphi2/AsymTorus/AsymContinuumLimit.lean` | 1 | `asymInteracting_expMoment_volume_uniform` |
 | `Pphi2/AsymTorus/AsymExpMomentDischarge.lean` | 2 | `asymInteracting_mgf_gaussianDominated`, `asymInteractingVariance_le_freeVariance_Lt_uniform` |
 | `Pphi2/NelsonEstimate/PolynomialChaosBridge.lean` | 1 | `nelson_exponential_estimate_master_bounded` |
 | `Pphi2/AsymTorus/AsymTorusOS.lean` | 1 | `asymTorusInteracting_exponentialMomentBound` (private) |
-| **Subtotal** | **25** | |
+| **Subtotal** | **26** | |
 
 ### Historical note: isotropic `Z_Nt × Z_Ns` cylinder redesign
 
