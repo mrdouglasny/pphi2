@@ -96,6 +96,7 @@ import Pphi2.AsymTorus.AsymMeasureFactorization
 import Pphi2.AsymTorus.AsymVarianceDischarge
 import Pphi2.AsymTorus.AsymTransferKernelOperator
 import Pphi2.AsymTorus.AsymObsTrunc
+import Pphi2.AsymTorus.AsymBridgeInstance
 import Pphi2.IRLimit.CylinderEmbedding
 import Pphi2.IRLimit.GreenFunctionComparison
 import Pphi2.IRLimit.UniformExponentialMoment
