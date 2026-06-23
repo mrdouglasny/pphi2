@@ -97,11 +97,11 @@ both vetted.
     — depends on the new
     [`lee-yang`](https://github.com/mrdouglasny/lee-yang) repo (Phase 1
     polynomial side done, measure side still to go).
-  - **Layer B2** = interacting variance dominated by free variance
-    (`asymInteractingVariance_le_freeVariance_Lt_uniform`, item 3) —
-    operator side built and sorry-free on `main`; remaining gap is
-    wiring B3→B4→B5 (Källén–Lehmann + 1/a cancellation), see
-    [`../../docs/B4B5-design.md`](../../docs/B4B5-design.md).
+  - **Layer B2** = interacting variance dominated by free variance. The
+    torus statement `asymInteractingVariance_le_freeVariance_Lt_uniform`
+    is now a theorem; active item 3 is the lattice Route-A input
+    `asymInteractingVariance_le_freeVariance_lattice_Lt_uniform`. The
+    remaining gap is the lattice Route-A finite-K/B5b/free-assembly closure.
   - **Layer C** = the ~50-line assembly here (this axiom).
 - *Re-vet if strengthened*: any tightening of `C` to a specific functional
   form (e.g. `C = 1/(2m²)`) requires a fresh deep-think + literature pass;

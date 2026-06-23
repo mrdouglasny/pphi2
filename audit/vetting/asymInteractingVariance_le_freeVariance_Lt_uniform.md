@@ -1,8 +1,8 @@
-# Vetting — `asymInteractingVariance_le_freeVariance_Lt_uniform`
+# Vetting — `asymInteractingVariance_le_freeVariance_Lt_uniform` (discharged axiom)
 
 Captured soundness-review records for
 `asymInteractingVariance_le_freeVariance_Lt_uniform`
-(`Pphi2/AsymTorus/AsymExpMomentDischarge.lean:206`). Linked from
+(`Pphi2/AsymTorus/AsymExpMomentDischarge.lean`, now a theorem). Linked from
 [`../../AXIOM_AUDIT.md`](../../AXIOM_AUDIT.md) and
 [`../../planning/INDEX.md`](../../planning/INDEX.md) item 3.
 
@@ -10,20 +10,35 @@ Captured soundness-review records for
 
 ```yaml
 ---
-axiom: asymInteractingVariance_le_freeVariance_Lt_uniform
-file: Pphi2/AsymTorus/AsymExpMomentDischarge.lean:206
+declaration: asymInteractingVariance_le_freeVariance_Lt_uniform
+file: Pphi2/AsymTorus/AsymExpMomentDischarge.lean
 statement_hash: null
 model: gemini-3-pro + codex (multi-pass)
 tool: mcp__gemini__deep_think_gemini + codex review
-source_code: DT, CX, LP
-date: 2026-06-02 (initial) / 2026-06-04 (route correction)
+source_code: DT, CX, LP, Lean
+date: 2026-06-02 (initial) / 2026-06-04 (route correction) / 2026-06-23 (axiom discharged)
 questions: [route-correctness, mode-by-mode-domination, scaling, norm-mismatch]
 verdict: SATISFIABLE (corrected form)
-rating: Needs review (route under active design)
-discharged: false
-superseded_by: null
+rating: Discharged as torus theorem; lattice Route-A input remains active
+discharged: true
+superseded_by: asymInteractingVariance_le_freeVariance_lattice_Lt_uniform
 ---
 ```
+
+## Discharge status (2026-06-23)
+
+This declaration is no longer an `axiom`. It is a theorem proved from the
+lattice Route-A input
+`asymInteractingVariance_le_freeVariance_lattice_Lt_uniform` plus the existing
+torus→lattice pushforward and pairing identities:
+
+- `asymTorusInteractingMeasureIso = (interactingLatticeMeasureAsym).map
+  asymTorusEmbedLiftIso`;
+- `asymTorusEmbedLiftIso_eval_eq`, rewriting `(asymTorusEmbedLiftIso ω) f`
+  as `ω (asymLatticeTestFnIso f)`.
+
+The active analytic debt has therefore moved to
+[`asymInteractingVariance_le_freeVariance_lattice_Lt_uniform.md`](asymInteractingVariance_le_freeVariance_lattice_Lt_uniform.md).
 
 **Statement form** (informal): the interacting two-point variance is bounded
 by the free variance times a constant **uniform in the temporal period `Lt`**

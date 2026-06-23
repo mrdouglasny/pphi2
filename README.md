@@ -229,11 +229,12 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-Current counter (`./scripts/count_axioms.sh`, 2026-06-23): pphi2 **29 raw /
-26 real axioms**, 0 sorries; gaussian-field **3 axioms**, 0 sorries. The seven
-new real Layer-B2 Route-A axioms are the six GNS bridge obligations isolated in
-`Pphi2/AsymTorus/AsymBridgeInstance.lean` plus B5b single-slice stability in
-`Pphi2/AsymTorus/AsymB5bSingleSlice.lean`.
+Current counter (`./scripts/count_axioms.sh`, 2026-06-23): pphi2 **28 raw /
+26 real axioms**, 0 sorries; gaussian-field **3 axioms**, 0 sorries. The eight
+real Layer-B2 Route-A axioms are the six GNS bridge obligations isolated in
+`Pphi2/AsymTorus/AsymBridgeInstance.lean`, B5b single-slice stability in
+`Pphi2/AsymTorus/AsymB5bSingleSlice.lean`, and the final lattice Route-A
+assembly input `asymInteractingVariance_le_freeVariance_lattice_Lt_uniform`.
 
 Detailed axiom/sorry inventory lives in the single sources of truth:
 [`planning/INDEX.md`](planning/INDEX.md) (per-axiom master status machine for the remaining axioms),

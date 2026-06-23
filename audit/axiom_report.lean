@@ -25,11 +25,15 @@ plus one secondary regression target.
 * `Pphi2.cylinderIso_OS_of_RP_OS2` — cylinder OS0–OS3 assembly
   (conditional on RP + OS2-symmetry + the uniform exp-moment axiom).
 
-Secondary regression target (not in `formalization.yaml`):
+Secondary regression targets (not in `formalization.yaml`):
 
 * `Pphi2.pphi2_exists_os_and_massParameter_positive` — the variant
   carrying the (input) mass-parameter positivity; included here as a
   regression check, not as a headline result.
+* `Pphi2.asymInteractingVariance_le_freeVariance_Lt_uniform` — the
+  Layer-B2 torus statement converted from axiom to theorem in Piece 5.
+* `Pphi2.asymInteracting_expMoment_volume_uniform_proof` — the Layer-C
+  assembly theorem consuming Layer A and Layer B2.
 
 **Usage**:
 
@@ -49,3 +53,5 @@ filename per the hub convention.
 #print axioms Pphi2.pphi2_nontrivial
 #print axioms Pphi2.cylinderIso_OS_of_RP_OS2
 #print axioms Pphi2.pphi2_exists_os_and_massParameter_positive
+#print axioms Pphi2.asymInteractingVariance_le_freeVariance_Lt_uniform
+#print axioms Pphi2.asymInteracting_expMoment_volume_uniform_proof

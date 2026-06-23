@@ -1,8 +1,8 @@
 # formalization.yaml — https://github.com/mathlib-initiative/formalization.yaml (v0.3)
-# Describes the `main` branch state of pphi2 at HEAD 9f2dcd6.
-# Built tree (Pphi2.lean + Common): 0 sorries, 19 real `axiom` declarations
-#   (17 public + 2 private). `scripts/count_axioms.sh` reports "22 raw" because
-#   it also matches 3 docstring lines that begin with the word "axiom".
+# Describes the `layer-B2/piece-5` branch state of pphi2.
+# Built tree (Pphi2.lean + Common): 0 sorries, 26 real `axiom` declarations
+#   (24 public + 2 private). `scripts/count_axioms.sh` reports "28 raw" because
+#   it also matches 2 docstring lines that begin with the word "axiom".
 #   Legacy `ddj/` and parked `future/` are NOT part of the default build target.
 version: "v0.3"
 
@@ -57,7 +57,7 @@ status:
     contain their own separate axioms/sorries that do not affect the main results.
   sorry_count: 0                 # in the built Pphi2/ + Common tree
   sorry_in_definitions: 0
-  axioms:                        # 19 real axiom declarations in the built Pphi2/ tree (17 public + 2 private)
+  axioms:                        # 26 real axiom declarations in the built Pphi2/ tree (24 public + 2 private)
     - schwinger_agreement                                  # Bridge.lean:274
     - os2_from_phi4                                        # Bridge.lean:345
     - pphi2_nontriviality                                  # Main.lean:128
@@ -67,7 +67,14 @@ status:
     - continuumLimit_nonGaussian                           # ContinuumLimit/Convergence.lean:256
     - asymInteracting_expMoment_volume_uniform             # AsymTorus/AsymContinuumLimit.lean:621
     - asymInteracting_mgf_gaussianDominated                # AsymTorus/AsymExpMomentDischarge.lean:127
-    - asymInteractingVariance_le_freeVariance_Lt_uniform   # AsymTorus/AsymExpMomentDischarge.lean:206
+    - asymInteractingVariance_le_freeVariance_lattice_Lt_uniform # AsymTorus/AsymExpMomentDischarge.lean:215
+    - asymGroundStateRep_pos_ae                            # AsymTorus/AsymBridgeInstance.lean:81
+    - asymTransferNormalized_contract                      # AsymTorus/AsymBridgeInstance.lean:128
+    - asymGroundStateRep_eq_groundIsometry_one             # AsymTorus/AsymBridgeInstance.lean:140
+    - asymPartition_ground_bound                           # AsymTorus/AsymBridgeInstance.lean:159
+    - asymFinitePeriodicBridge_remainder_bound             # AsymTorus/AsymBridgeInstance.lean:174
+    - asymGroundSemigroup_intertwines                      # AsymTorus/AsymBridgeInstance.lean:219
+    - groundVariance_le_freeCovariance                     # AsymTorus/AsymB5bSingleSlice.lean:162
     - asymTorusInteracting_exponentialMomentBound          # AsymTorus/AsymTorusOS.lean:852 (private)
     - spectral_gap_uniform                                 # TransferMatrix/SpectralGap.lean:89
     - spectral_gap_lower_bound                             # TransferMatrix/SpectralGap.lean:100
