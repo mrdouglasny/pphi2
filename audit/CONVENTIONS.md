@@ -44,8 +44,8 @@ The live raw counts come from `./scripts/count_axioms.sh`. The reconciled "real"
 count strips 3 docstring matches of the word "axiom" (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
 `Pphi2/NelsonEstimate/LayerCake.lean:85`, `Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`).
 
-Current (2026-06-21): **22 raw / 19 real axioms, 0 sorries**.
-19 real = **17 architectural** + **2 private scaffolding**.
+Current (2026-06-23): **28 raw / 25 real axioms, 0 sorries**.
+25 real = **23 architectural** + **2 private scaffolding**.
 
 Per-route counts and the discharge story live in
 [`status.md`](../status.md) and [`README.md`](../README.md) "Current status".

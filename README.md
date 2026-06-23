@@ -229,7 +229,12 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-Exact, always-current axiom/sorry counts live in the single sources of truth — not duplicated here:
+Current counter (`./scripts/count_axioms.sh`, 2026-06-23): pphi2 **28 raw /
+25 real axioms**, 0 sorries; gaussian-field **3 axioms**, 0 sorries. The six
+new real axioms are the Layer-B2 Route-A GNS bridge obligations isolated in
+`Pphi2/AsymTorus/AsymBridgeInstance.lean`.
+
+Detailed axiom/sorry inventory lives in the single sources of truth:
 [`planning/INDEX.md`](planning/INDEX.md) (per-axiom master status machine for the remaining axioms),
 [`docs/AXIOM_STATUS.md`](docs/AXIOM_STATUS.md) (axiom inventory), [`BRANCHES.md`](BRANCHES.md) (which
 git branch carries the live code for each axiom), and [`status.md`](status.md) (full inventory).
