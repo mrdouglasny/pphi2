@@ -8,13 +8,13 @@ in the assurance hub.
 
 | Rung | Count | Notes |
 |---|---|---|
-| Vetting record landed (with detailed evidence) | **4 / 25** | items 1, 2, 3, 17 (the heaviest vetted) |
-| Vetting record landed (citation-form) | **19 / 25** | items 4–16, 18–23 — point at existing evidence in `docs/`, `AXIOM_AUDIT.md`, `planning/INDEX.md`, and Route-A Layer-B2 plans |
-| Private scaffolding | **2 / 25** | `asymTorusInteracting_exponentialMomentBound`, `gaussian_rp_cov_perfect_square` |
-| **Total covered** | **25 / 25** | all real axioms have a record |
-| Statement hashes populated | 0 / 25 | required for L3 strictness |
+| Vetting record landed (with detailed evidence) | **5 / 26** | items 1, 2, 3, 17 plus B5b `groundVariance_le_freeCovariance` |
+| Vetting record landed (citation-form) | **19 / 26** | items 4–16, 18–23 — point at existing evidence in `docs/`, `AXIOM_AUDIT.md`, `planning/INDEX.md`, and Route-A Layer-B2 plans |
+| Private scaffolding | **2 / 26** | `asymTorusInteracting_exponentialMomentBound`, `gaussian_rp_cov_perfect_square` |
+| **Total covered** | **26 / 26** | all real axioms have a record |
+| Statement hashes populated | 0 / 26 | required for L3 strictness |
 
-All 25 real axioms now have a record (one file per axiom in this directory).
+All 26 real axioms now have a record (one file per axiom in this directory).
 Most are citation-form — they point at the existing vetting evidence in
 [`../../docs/gemini_review.md`](../../docs/gemini_review.md) (Feb 2026 group
 review), [`../../AXIOM_AUDIT.md`](../../AXIOM_AUDIT.md) (rolling log),
@@ -27,7 +27,7 @@ the vetting happened, name the source doc, and carry forward the verdict; they
 do not reproduce the full verbatim transcript (which lives in the cited doc).
 
 **Strictness ladder.** [`policy.yml`](policy.yml) is at **L1** (warn). Now
-that coverage is at 25/25, the project is ready to raise to **L2**
+that coverage is at 26/26, the project is ready to raise to **L2**
 (coverage-enforce) once a CI gate reads this directory. Raising to **L3**
 additionally requires populating `statement_hash` in each record.
 
@@ -65,7 +65,7 @@ the hub for the convention.
 
 ## Axiom inventory
 
-The 25 real axioms (23 architectural + 2 private scaffolding) are the
+The 26 real axioms (24 architectural + 2 private scaffolding) are the
 target population. For the canonical list with file:line locations see
 [`../../formalization.yaml`](../../formalization.yaml) and
 [`../../planning/INDEX.md`](../../planning/INDEX.md).

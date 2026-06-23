@@ -130,3 +130,24 @@ lemma `norm_sq_proj_obsTrunc_omega_le`.
 - Superseded: `docs/transfer-instantiation-plan.md` (banner-flagged).
 - Status: [`../../planning/INDEX.md`](../../planning/INDEX.md) item 3.
 - Downstream: [`asymInteracting_expMoment_volume_uniform.md`](asymInteracting_expMoment_volume_uniform.md) (Layer C).
+
+### Piece 4 status (2026-06-23)
+
+`Pphi2/AsymTorus/AsymB5bSingleSlice.lean` landed the formal B5b interface:
+
+- one-slice lift and free covariance bookkeeping via `singleSliceLatticeField`
+  and `freeSingleSliceCovariance`;
+- formal scaling audit `freeSingleSliceCovariance_smul`, recording the
+  `g_t = a • δ_site` `a²` factor in the GJ covariance convention;
+- narrow analytic axiom `groundVariance_le_freeCovariance`, with a dedicated
+  audit record in
+  [`groundVariance_le_freeCovariance.md`](groundVariance_le_freeCovariance.md);
+- summed wrapper `groundVariance_sum_le_freeCovariance_sum`;
+- Piece-3 handoff lemmas
+  `piece3_pathMeasure_bound_to_freeCovariance_sum` and
+  `interacting_second_moment_bound_to_lattice_free_covariance`.
+
+The final lattice-free-covariance theorem keeps the free-side assembly as an
+explicit hypothesis `hFreeAssemble`; this is deliberate because the known
+`1/(1-γ)` shortcut is `a`-non-uniform unless the free representation supplies
+the matching cancellation.
