@@ -29,3 +29,12 @@
  Pphi2.continuum_exponential_moment_bound,
  Pphi2.rotation_cf_defect_polylog_bound,
  Quot.sound]
+'Pphi2.asymInteractingVariance_le_freeVariance_Lt_uniform' depends on axioms: [propext,
+ Classical.choice,
+ Pphi2.asymInteractingVariance_le_freeVariance_lattice_Lt_uniform,
+ Quot.sound]
+'Pphi2.asymInteracting_expMoment_volume_uniform_proof' depends on axioms: [propext,
+ Classical.choice,
+ Pphi2.asymInteractingVariance_le_freeVariance_lattice_Lt_uniform,
+ Pphi2.asymInteracting_mgf_gaussianDominated,
+ Quot.sound]

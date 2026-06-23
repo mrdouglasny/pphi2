@@ -8,13 +8,15 @@ in the assurance hub.
 
 | Rung | Count | Notes |
 |---|---|---|
-| Vetting record landed (with detailed evidence) | **5 / 26** | items 1, 2, 3, 17 plus B5b `groundVariance_le_freeCovariance` |
+| Vetting record landed (with detailed evidence) | **5 / 26** | items 1, 2, active Layer-B2 lattice item 3, 17 plus B5b `groundVariance_le_freeCovariance` |
 | Vetting record landed (citation-form) | **19 / 26** | items 4–16, 18–23 — point at existing evidence in `docs/`, `AXIOM_AUDIT.md`, `planning/INDEX.md`, and Route-A Layer-B2 plans |
 | Private scaffolding | **2 / 26** | `asymTorusInteracting_exponentialMomentBound`, `gaussian_rp_cov_perfect_square` |
 | **Total covered** | **26 / 26** | all real axioms have a record |
 | Statement hashes populated | 0 / 26 | required for L3 strictness |
 
-All 26 real axioms now have a record (one file per axiom in this directory).
+All 26 active real axioms now have a record. The directory also retains the
+discharged torus-level record
+`asymInteractingVariance_le_freeVariance_Lt_uniform.md` for provenance.
 Most are citation-form — they point at the existing vetting evidence in
 [`../../docs/gemini_review.md`](../../docs/gemini_review.md) (Feb 2026 group
 review), [`../../AXIOM_AUDIT.md`](../../AXIOM_AUDIT.md) (rolling log),
@@ -65,7 +67,7 @@ the hub for the convention.
 
 ## Axiom inventory
 
-The 26 real axioms (24 architectural + 2 private scaffolding) are the
+The 26 active real axioms (24 architectural + 2 private scaffolding) are the
 target population. For the canonical list with file:line locations see
 [`../../formalization.yaml`](../../formalization.yaml) and
 [`../../planning/INDEX.md`](../../planning/INDEX.md).

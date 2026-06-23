@@ -12,13 +12,13 @@
 
 | Count | Value | Source |
 |---|---|---|
-| pphi2 axioms (real) | **19** | `count_axioms.sh` reports 22; 3 are docstring matches |
+| pphi2 axioms (real) | **26** | `count_axioms.sh` reports 28; 2 are docstring matches |
 | pphi2 sorries | **0** | `count_axioms.sh` |
 | gaussian-field axioms | **3** | `count_axioms.sh` |
 | gaussian-field sorries | **0** | `count_axioms.sh` |
 
-**Real-axiom breakdown (19 = 17 + 2):**
-- **17 architectural** — enumerated by OS-program cluster in
+**Real-axiom breakdown (26 = 24 + 2):**
+- **24 architectural** — enumerated by OS-program cluster in
   [`../planning/INDEX.md`](../planning/INDEX.md).
 - **2 private scaffolding** — `asymTorusInteracting_exponentialMomentBound`
   (`Pphi2/AsymTorus/AsymTorusOS.lean`), `gaussian_rp_cov_perfect_square`
@@ -34,7 +34,6 @@ subsumed them.
 "axiom" at start of line, including inside docstrings):
 - `Pphi2/NelsonEstimate/LatticeBridge.lean:21`
 - `Pphi2/NelsonEstimate/LayerCake.lean:85`
-- `Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`
 
 ## Where to look
 

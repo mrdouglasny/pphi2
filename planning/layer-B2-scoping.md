@@ -1,21 +1,23 @@
 # Layer B2 — wiring scope + PR plan
 
-**Target axiom.** `asymInteractingVariance_le_freeVariance_Lt_uniform`
-(`Pphi2/AsymTorus/AsymExpMomentDischarge.lean:206`):
+**Current target axiom.**
+`asymInteractingVariance_le_freeVariance_lattice_Lt_uniform`
+(`Pphi2/AsymTorus/AsymExpMomentDischarge.lean:215`). The former torus
+declaration `asymInteractingVariance_le_freeVariance_Lt_uniform` is now a
+theorem assembled from this lattice input plus the torus→lattice pushforward.
 
 ```lean
-axiom asymInteractingVariance_le_freeVariance_Lt_uniform
+axiom asymInteractingVariance_le_freeVariance_lattice_Lt_uniform
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
     (Ls : ℝ) [Fact (0 < Ls)] :
     ∃ C : ℝ, 0 < C ∧
       ∀ (Lt : ℝ) [Fact (0 < Lt)] (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
         (a : ℝ) (ha : 0 < a),
         (Nt : ℝ) * a = Lt → (Ns : ℝ) * a = Ls →
-        ∀ (f : AsymTorusTestFunction Lt Ls),
-          ∫ ω, (ω f) ^ 2
-            ∂(asymTorusInteractingMeasureIso Lt Ls Nt Ns a P mass ha hmass) ≤
-          C * ∫ ω,
-            (ω (asymLatticeTestFnIso Lt Ls Nt Ns a f)) ^ 2
+        ∀ (G : AsymLatticeField Nt Ns),
+          ∫ ω, (ω G) ^ 2
+            ∂(interactingLatticeMeasureAsym Nt Ns P a mass ha hmass) ≤
+          C * ∫ ω, (ω G) ^ 2
               ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)
 ```
 

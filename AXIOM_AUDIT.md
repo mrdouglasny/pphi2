@@ -2,6 +2,24 @@
 
 **Last updated**: 2026-06-23.
 
+## 2026-06-23 — Layer-B2 Piece 5 torus assembly landed
+
+* **Axiom-to-theorem conversion:** `asymInteractingVariance_le_freeVariance_Lt_uniform`
+  in `Pphi2/AsymTorus/AsymExpMomentDischarge.lean` is now a theorem. The proof is
+  the final torus assembly: pull `asymTorusInteractingMeasureIso` back as
+  `(interactingLatticeMeasureAsym).map asymTorusEmbedLiftIso`, rewrite
+  `(asymTorusEmbedLiftIso ω) f` as `ω (asymLatticeTestFnIso f)`, and apply the
+  lattice Route-A bound.
+* **Remaining active input:** the analytic debt is factored to the narrower lattice
+  axiom `asymInteractingVariance_le_freeVariance_lattice_Lt_uniform`. This is the
+  lattice-level final Route-A assembly target; it is where Piece 4's
+  `interacting_second_moment_bound_to_lattice_free_covariance`, the finite-K
+  time-family estimate, the `K → ∞` packaging, and the free-side assembly must close.
+* **Counts:** pphi2 is now **28 raw / 26 real axioms**, 0 sorries. The raw count
+  dropped by removing the stale `AsymExpMomentDischarge.lean` docstring false
+  positive; the real count is unchanged because the torus axiom was replaced by the
+  narrower lattice input rather than fully proved axiom-free.
+
 ## 2026-06-23 — Layer-B2 Route-A GNS bridge instantiated for asym transfer
 
 * **New bridge file:** `Pphi2/AsymTorus/AsymBridgeInstance.lean` wires Piece 1's
@@ -16,8 +34,8 @@
   `asymGroundSemigroup_intertwines`, `asymPartition_ground_bound`, and
   `asymFinitePeriodicBridge_remainder_bound`. Each has a docstring discharge
   plan in the Lean file and a per-axiom vetting record under `audit/vetting/`.
-* **Counts:** pphi2 is now **29 raw / 26 real axioms**, 0 sorries. The raw →
-  real reconciliation remains the same 3 docstring matches; the new bridge
+* **Counts:** pphi2 was **29 raw / 26 real axioms**, 0 sorries. The raw →
+  real reconciliation had 3 docstring matches at that point; the new bridge
   axioms are all real architectural debt. `lake build` is green.
 
 ## 2026-06-23 — Layer-B2 Piece 4 B5b single-slice interface landed
@@ -687,13 +705,13 @@ elementary inequality `x² ≤ 2 e^|x|` and a scaling optimization.
 eventual pullback RP predicate `CylinderMeasureSequenceEventuallyReflectionPositive`
 and proves the IR-limit OS3 transfer by characteristic-functional convergence.
 
-## Current pphi2 Axiom Inventory (29 raw / 26 real as of 2026-06-23, 0 sorries)
+## Current pphi2 Axiom Inventory (28 raw / 26 real as of 2026-06-23, 0 sorries)
 
 This table is generated from the current `./scripts/count_axioms.sh` result and
 is the source of truth for active pphi2 axioms in this audit. Historical branch
 cohorts are retained below for provenance only.
 
-### Main inventory (26 real axioms — present on `layer-B2/piece-4`)
+### Main inventory (26 real axioms — present on `layer-B2/piece-5`)
 
 | File | Active axioms | Names |
 |------|---------------|-------|
@@ -709,7 +727,7 @@ cohorts are retained below for provenance only.
 | `Pphi2/AsymTorus/AsymBridgeInstance.lean` | 6 | `asymGroundStateRep_pos_ae`, `asymTransferNormalized_contract`, `asymGroundStateRep_eq_groundIsometry_one`, `asymGroundSemigroup_intertwines`, `asymPartition_ground_bound`, `asymFinitePeriodicBridge_remainder_bound` |
 | `Pphi2/AsymTorus/AsymB5bSingleSlice.lean` | 1 | `groundVariance_le_freeCovariance` |
 | `Pphi2/AsymTorus/AsymContinuumLimit.lean` | 1 | `asymInteracting_expMoment_volume_uniform` |
-| `Pphi2/AsymTorus/AsymExpMomentDischarge.lean` | 2 | `asymInteracting_mgf_gaussianDominated`, `asymInteractingVariance_le_freeVariance_Lt_uniform` |
+| `Pphi2/AsymTorus/AsymExpMomentDischarge.lean` | 2 | `asymInteracting_mgf_gaussianDominated`, `asymInteractingVariance_le_freeVariance_lattice_Lt_uniform` |
 | `Pphi2/NelsonEstimate/PolynomialChaosBridge.lean` | 1 | `nelson_exponential_estimate_master_bounded` |
 | `Pphi2/AsymTorus/AsymTorusOS.lean` | 1 | `asymTorusInteracting_exponentialMomentBound` (private) |
 | **Subtotal** | **26** | |

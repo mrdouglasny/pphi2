@@ -66,8 +66,8 @@ clustering, gating OS4). Master campaign doc: [`docs/cylinder-master-plan.md`].
   status: scoped   deps: [12]   diff: ★★★
   note: Newman MGF via Gaussian domination / Lee–Yang. New `lee-yang` repo scaffolded, Phase 1 not
   implemented. Plan: [`docs/asym-expmoment-discharge-via-lee-yang-vet-request.md`].
-- [~] **3. `asymInteractingVariance_le_freeVariance_Lt_uniform`** (Layer B2) `AsymExpMomentDischarge.lean:206`
-  status: **in_progress — Route A blueprint pinned 2026-06-22, Piece 1 landed**   deps: [17]   diff: ★★★ (★★ with the route pinned)
+- [~] **3. `asymInteractingVariance_le_freeVariance_lattice_Lt_uniform`** (Layer B2 Route-A lattice input) `AsymExpMomentDischarge.lean:215`
+  status: **in_progress — torus axiom replaced by theorem 2026-06-23; lattice Route-A input remains**   deps: [17]   diff: ★★★ (★★ with the route pinned)
   note: transfer-matrix Feynman–Kac route, **Route A** (bounded-cutoff approximation, gemini-vetted
   2026-06-22). **Built & sorry-free on `main`** (`Pphi2/AsymTorus/Asym*`):
   the rank-1 operator-decay bricks (`AsymTraceBridge`), the proved gap (`AsymGappedTransfer`,
@@ -77,9 +77,12 @@ clustering, gating OS4). Master campaign doc: [`docs/cylinder-master-plan.md`].
   multiplication CLM + the **a-cancellation lemma** `norm_sq_proj_obsTrunc_omega_le`
   (`Pphi2/AsymTorus/AsymObsTrunc.lean`, landed 2026-06-22). **Live plan:**
   [`planning/layer-B2-scoping.md`] (the Route-A blueprint; 5 pieces; ~600-1200 lines; ~1.5-3 weeks).
-  **REMAINING (per Route A blueprint):** Piece 2 — apply `averaged_susceptibility_bound` at finite K
-  (~200-300 lines); Piece 3 — `K → ∞` via DCT (~100-200 lines); Piece 4 (B5b) — single-slice
-  stability (~200-400 lines, vet `a`-powers first); Piece 5 — final assembly (~50-100 lines).
+  **Piece 5 landed 2026-06-23:** `asymInteractingVariance_le_freeVariance_Lt_uniform`
+  is now a theorem from the lattice Route-A input plus
+  `asymTorusInteractingMeasureIso`/`asymTorusEmbedLiftIso_eval_eq`. **REMAINING
+  (per Route A blueprint):** discharge the lattice input by closing the finite-K
+  time-family estimate, the `K → ∞` packaging, B5b, and the free-side assembly
+  without introducing the known `1/(1-γ)` a-nonuniform shortcut.
   SUPERSEDED: [`docs/transfer-instantiation-plan.md`] (banner), the older 6-brick HS-Cauchy-Schwarz
   plan in `docs/B4B5-design.md` (eliminated by Route A — op-norm ≤ HS-norm is the wrong direction).
 
@@ -256,11 +259,10 @@ the cylinder Layer-B2 wiring (item 3); everything else is a standalone research-
 
 ## Axioms beyond the 17 (sanity check vs `count_axioms.sh`)
 
-`count_axioms.sh` reports **29 raw axioms** on `layer-B2/piece-4` (rechecked 2026-06-23);
-3 are docstring matches of the word "axiom" inside text continuations
+`count_axioms.sh` reports **28 raw axioms** on `layer-B2/piece-5` (rechecked 2026-06-23);
+2 are docstring matches of the word "axiom" inside text continuations
 (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
-`Pphi2/NelsonEstimate/LayerCake.lean:85`,
-`Pphi2/AsymTorus/AsymExpMomentDischarge.lean:244`), leaving **26 real axioms**.
+`Pphi2/NelsonEstimate/LayerCake.lean:85`), leaving **26 real axioms**.
 
 The 24 architectural axioms account for the current proof debt, including the
 six Layer-B2 Route-A GNS bridge obligations in
@@ -269,7 +271,8 @@ six Layer-B2 Route-A GNS bridge obligations in
 `asymGroundStateRep_eq_groundIsometry_one`, `asymGroundSemigroup_intertwines`,
 `asymPartition_ground_bound`, and `asymFinitePeriodicBridge_remainder_bound`,
 plus B5b `groundVariance_le_freeCovariance` in
-`Pphi2/AsymTorus/AsymB5bSingleSlice.lean`.
+`Pphi2/AsymTorus/AsymB5bSingleSlice.lean` and the lattice Route-A final
+assembly input `asymInteractingVariance_le_freeVariance_lattice_Lt_uniform`.
 The remaining 2:
 - **`asymTorusInteracting_exponentialMomentBound`** (`Pphi2/AsymTorus/AsymTorusOS.lean`,
   `private`) — torus-side scaffolding consumed only inside `AsymTorusOS`.
