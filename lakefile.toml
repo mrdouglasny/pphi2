@@ -12,7 +12,7 @@ weak.linter.mathlibStandardSet = true
 name = "reflection-positivity"
 scope = "mrdouglasny"
 git = "https://github.com/mrdouglasny/reflection-positivity.git"
-rev = "e6759db"
+rev = "2c74be3"
 
 [[require]]
 name = "GaussianField"

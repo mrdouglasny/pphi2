@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Michael R. Douglas
 -/
 import Pphi2.AsymTorus.AsymTraceBridge
+import ReflectionPositivity.MultiplicationCLM
 
 /-!
 # Truncated slice observable + the `a`-cancellation lemma
@@ -149,6 +150,20 @@ theorem asymSliceObsTruncMulCLM_isSelfAdjoint (g : SpatialField Ns) {K : ℝ} (h
   mulCLM_isSelfAdjoint (asymSliceObsTrunc g K) (asymSliceObsTrunc_measurable g K)
     K hK (Filter.Eventually.of_forall (fun ψ => by
       rw [Real.norm_eq_abs]; exact asymSliceObsTrunc_abs_le_bound g hK.le ψ))
+
+/-- **Instantiate the `MultiplicationCLMContract` for the truncated slice observable.**
+The contract is what the (forthcoming) GNS bridge in `reflection-positivity`
+consumes. This is Piece 1's deliverable for downstream Layer-B2 pieces. -/
+noncomputable def asymSliceObsTruncContract (g : SpatialField Ns) {K : ℝ} (hK : 0 < K) :
+    ReflectionPositivity.MultiplicationCLMContract
+      (volume : Measure (SpatialField Ns)) where
+  A := asymSliceObsTrunc g K
+  A_meas := asymSliceObsTrunc_measurable g K
+  A_bound := ⟨K, hK, Filter.Eventually.of_forall
+    (fun ψ => asymSliceObsTrunc_abs_le_bound g hK.le ψ)⟩
+  M := asymSliceObsTruncMulCLM g hK
+  spec := asymSliceObsTruncMulCLM_coeFn g hK
+  selfAdjoint := asymSliceObsTruncMulCLM_isSelfAdjoint g hK
 
 /-! ## The a-cancellation lemma
 
