@@ -11,8 +11,22 @@ exponential decay of correlations (mass gap / clustering).
 ## Main results
 
 - `spectral_gap_pos` — E₁ - E₀ > 0 (strict gap, from `massGap_pos`)
-- `spectral_gap_uniform` — the gap is bounded below uniformly in a
-- `spectral_gap_lower_bound` — m_phys ≥ c·m_bare
+
+## Removed axioms (2026-07-12)
+
+The former axioms `spectral_gap_uniform` and `spectral_gap_lower_bound` asserted a
+lower bound on `massGap Ns P a mass` **uniform in `a → 0` at fixed `Ns`**. That
+regime has shrinking physical volume `Ns·a → 0`, where the hard-coded 2D Wick
+constant is the wrong counterterm: its zero-mode contribution `(a²Ns²m²)⁻¹`
+diverges like `a⁻²`, the over-subtraction gives the spatial zero mode a symmetric
+double well (minima `~ a⁻¹`, barrier `~ a⁻³`), and the gap closes as a tunneling
+splitting `massGap ~ (1/a)·exp(−c/a²) → 0` — at every coupling. Both axioms were
+therefore **false as stated** and have been removed (they had no proof-term
+consumers; Main's OS4 rests on `continuum_exponential_clustering`). The corrected
+statement — the gap along a *coupled* sequence (fixed `L = N·a`, or `N·a → ∞`
+under weak coupling) — is recorded with its discharge route in
+`planning/cyl-2a-volume-scaling-addendum.md` and will be introduced only with its
+consumer (the OS4 campaign). See `AXIOM_AUDIT.md` (2026-07-12 entry).
 
 ## Mathematical background
 
@@ -66,41 +80,6 @@ theorem spectral_gap_pos (P : InteractionPolynomial) (a mass : ℝ)
     (ha : 0 < a) (hmass : 0 < mass) :
     0 < massGap Ns P a mass ha hmass :=
   massGap_pos Ns P a mass ha hmass
-
-/-! ## Uniform lower bound on the spectral gap
-
-The mass gap is bounded below uniformly in the lattice spacing a.
-This is crucial for transferring OS4 (clustering) to the continuum limit. -/
-
-/-- The spectral gap is bounded below uniformly in the lattice spacing.
-
-  `∃ m₀ > 0, ∀ a ∈ (0, a₀], massGap P a mass ≥ m₀`
-
-Proof outline: The confining potential V(ψ) grows as |ψ|^{2p} where
-p = deg(P)/2 ≥ 2. As a → 0:
-- The spatial kinetic term `a⁻² Σ (ψ(x+1) - ψ(x))²` grows, which
-  increases the gap (stronger confinement in the field space directions
-  transverse to the constant mode).
-- The on-site potential `Σ :P(ψ(x)):` provides a uniform lower bound
-  on the gap for the zero mode.
-
-The rigorous proof uses cluster expansion techniques
-(Glimm-Jaffe-Spencer) to control the perturbative corrections. -/
-axiom spectral_gap_uniform (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) :
-    ∃ m₀ : ℝ, 0 < m₀ ∧ ∃ a₀ : ℝ, 0 < a₀ ∧
-    ∀ (a : ℝ) (ha : 0 < a), a ≤ a₀ →
-    m₀ ≤ massGap Ns P a mass ha hmass
-
-/-- The spectral gap has an explicit lower bound in terms of the bare mass.
-
-For the free field (P = 0), the mass gap equals the bare mass m.
-For the interacting theory, the physical mass is shifted but remains
-positive: `m_phys ≥ c · m` for some constant c depending on P. -/
-axiom spectral_gap_lower_bound (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) :
-    ∃ c : ℝ, 0 < c ∧ ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-    c * mass ≤ massGap Ns P a mass ha hmass
 
 end Pphi2
 

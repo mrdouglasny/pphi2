@@ -94,13 +94,16 @@ they discharge in the same PR as B2 (★★ given that bridge); (ii) `spectral_g
 as stated are **too strong** — φ⁴₂ has a phase transition where the gap closes, so they need a
 weak-coupling / single-phase hypothesis.
 
-- [ ] **17. `spectral_gap_uniform`** `TransferMatrix/SpectralGap.lean:89`   status: scoped   deps: []   diff: ★★★
-  note: gap survives `a→0` (finite-`a` gap `asymGappedTransfer'` PROVED; continuum uniformity
-  remains). **Regime-restricted** (phase transition). Route: `a→0` eigenvalue-gap limit /
-  perturbative. THE independent hard core of CYL-2a. → `planning/cyl-2a-spectral-gap.md`.
-- [ ] **16. `spectral_gap_lower_bound`** `TransferMatrix/SpectralGap.lean:100`   status: scoped   deps: []   diff: ★★★→★★
-  note: `c·mass ≤ massGap` — FALSE at criticality; weak-coupling `m_phys ≥ m − Cλ` via the existing
-  Nelson estimates. → `planning/cyl-2a-spectral-gap.md`.
+- [x] **17. `spectral_gap_uniform`** — **REMOVED 2026-07-12 (FALSE as stated)**
+  note: was quantified at fixed `Ns` with `a→0` (shrinking volume `Ns·a → 0`), where the
+  hard-coded 2D Wick constant over-subtracts (zero mode `~ a⁻²`) and the gap closes as a
+  tunneling splitting `~ (1/a)e^{−c/a²}` at every coupling. No proof-term consumers (dead
+  branch; Main's OS4 = `continuum_exponential_clustering`). Corrected coupled-limit statement
+  (17a fixed-`L`, no regime; 17b volume-uniform, weak coupling) recorded in
+  `planning/cyl-2a-volume-scaling-addendum.md`; enters the build only with the OS4 campaign.
+- [x] **16. `spectral_gap_lower_bound`** — **REMOVED 2026-07-12 (FALSE as stated)**
+  note: same fixed-`Ns` mechanism as 17 (and additionally false at criticality even in the
+  coupled limit without weak coupling). Same addendum carries the replacement design.
 - [ ] **14. `two_point_clustering_from_spectral_gap`** `OSProofs/OS4_MassGap.lean:137`   status: scoped   deps: [3-bridge]   diff: ★★ (given B2 trace bridge)
   note: = `connected_two_point_le` with `γ=e^{−massGap·a}` via `twoPoint_dictionary` +
   `asymTransferKernel_kPow_apply` (proved). Do in the B2 trace-bridge PR. → `planning/cyl-2a-spectral-gap.md`.

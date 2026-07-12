@@ -835,8 +835,10 @@ Each axiom is proved from the lattice construction via a specific mechanism:
   making it RG-irrelevant with coefficient `O(a² |log a|^p)` in the
   super-renormalizable `P(Φ)₂` setting, hence still vanishing in the continuum limit.
 
-- **OS4 (Clustering):** The uniform spectral gap `m_phys ≥ m₀ > 0` from
-  `spectral_gap_uniform` gives exponential clustering on the lattice:
+- **OS4 (Clustering):** A spectral gap `m_phys ≥ m₀ > 0` uniform along the
+  coupled continuum-limit sequence (open target; the former fixed-`Ns` axiom
+  `spectral_gap_uniform` was removed as false, AXIOM_AUDIT.md 2026-07-12)
+  gives exponential clustering on the lattice:
   `|⟨F·G_R⟩ - ⟨F⟩⟨G⟩| ≤ C·exp(-m₀R)`. For bounded continuous observables,
   this transfers to the weak limit. The clustering bound on the characteristic
   functional `Z[f + T_a g] - Z[f]·Z[g]` follows from the exponential decay of

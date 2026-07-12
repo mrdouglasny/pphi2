@@ -11,7 +11,6 @@ of the transfer matrix Hamiltonian.
 
 - `two_point_clustering_lattice` — exponential decay of the connected 2-point function
 - `general_clustering_lattice` — exponential decay for general observables
-- `clustering_uniform` — decay rate is uniform in the lattice spacing
 
 ## Mathematical background
 
@@ -245,31 +244,14 @@ theorem general_clustering_lattice
   intro F G hF hG
   exact general_clustering_from_spectral_gap Ns P a mass ha hmass F G hF hG
 
-/-! ## Uniform clustering
+/-! ## Uniform clustering — REMOVED (2026-07-12)
 
-The exponential decay rate is bounded below uniformly in the lattice
-spacing a. This ensures OS4 transfers to the continuum limit. -/
-
-/-- **Uniform exponential clustering.**
-
-The mass gap (exponential decay rate) is bounded below uniformly in a:
-
-  `∃ m₀ > 0, ∀ a ∈ (0, a₀], mass gap ≥ m₀`
-
-Combined with `general_clustering_lattice`, for each fixed `N_s` this yields a bound
-of the form `|Cov(F, G∘τ_R)| ≤ C(F,G) · exp(-m₀ · d_cyc(R) · a)` uniformly for
-`a` in the spectral-gap window, where `d_cyc(R) = latticeEuclideanTimeSeparation Ns R`.
-In the continuum limit `a → 0`, the inherited OS4 statement is still phrased via
-the continuum clustering functional (see the continuum OS layer), not by the bare
-integer `R` alone.
-
-This is the key input from `spectral_gap_uniform`. -/
-theorem clustering_uniform (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) :
-    ∃ m₀ : ℝ, 0 < m₀ ∧ ∃ a₀ : ℝ, 0 < a₀ ∧
-    ∀ (a : ℝ) (ha : 0 < a), a ≤ a₀ →
-    m₀ ≤ massGap Ns P a mass ha hmass :=
-  spectral_gap_uniform Ns P mass hmass
+The former `clustering_uniform` (a restatement of the removed false axiom
+`spectral_gap_uniform`) asserted an `a`-uniform decay rate at **fixed `Ns`** — a
+shrinking-volume regime in which the gap in fact closes (wrong-counterterm
+double-well mechanism; see `planning/cyl-2a-volume-scaling-addendum.md` and the
+`AXIOM_AUDIT.md` 2026-07-12 entry). Uniform clustering along the coupled
+continuum-limit sequence will be introduced with the OS4 campaign. -/
 
 /-! ## Connected correlation functions
 

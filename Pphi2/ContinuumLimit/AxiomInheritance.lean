@@ -39,9 +39,10 @@ Since each Z_a satisfies this and Z_a → Z pointwise, the limit
 inherits the nonnegativity. (Proved in OS3_RP_Inheritance.lean.)
 
 ### OS4 (Clustering)
-The uniform mass gap `m_phys ≥ m₀ > 0` (from `spectral_gap_uniform`)
-gives uniform exponential clustering on the lattice. Weak convergence
-preserves the exponential bound.
+A uniform-along-the-coupled-sequence mass gap `m_phys ≥ m₀ > 0` (an open
+target — the former fixed-`Ns` axiom `spectral_gap_uniform` was removed as
+false, see AXIOM_AUDIT.md 2026-07-12) would give uniform exponential
+clustering on the lattice; weak convergence preserves the exponential bound.
 
 ### OS2 (Euclidean Invariance) — handled in Phase 5
 This is the hardest axiom. The lattice breaks E(2) symmetry, and its
