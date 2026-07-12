@@ -323,9 +323,12 @@ mechanisms:
   functional. Since the generating functional converges pointwise
   under weak convergence, the RP inequality passes to the limit.
 
-- **OS4:** The uniform spectral gap gives uniform exponential
-  clustering at each lattice spacing. Exponential decay of
-  correlations with a uniform rate transfers under weak convergence.
+- **OS4:** A spectral gap uniform along the coupled continuum-limit
+  sequence would give uniform exponential clustering at each lattice
+  spacing, and exponential decay with a uniform rate transfers under
+  weak convergence. (The former fixed-`Ns` uniform-gap axioms were
+  removed 2026-07-12 as false as stated; the coupled-limit statement
+  is an open target — see `planning/cyl-2a-volume-scaling-addendum.md`.)
 
 ## 6. Phase 5: Euclidean Invariance (OS2)
 
@@ -503,9 +506,10 @@ for a combined total of **19 axioms** across both projects.
 
 The axioms cluster into several thematic groups:
 
-- **Cluster expansions and uniform bounds** (spectral gap uniformity,
-  Nelson's full estimate on $\mathbb{R}^2$): These are the deepest
-  analytic results. On the torus, the physical volume identity gives
+- **Cluster expansions and uniform bounds** (the open coupled-limit
+  spectral-gap uniformity — the former axioms were removed 2026-07-12
+  as false as stated — and Nelson's full estimate on $\mathbb{R}^2$):
+  These are the deepest analytic results. On the torus, the physical volume identity gives
   the bound for free; on $\mathbb{R}^2$, cluster expansions
   (Glimm-Jaffe Ch. 8, Simon Ch. V) are needed to control the
   infinite-volume limit.
