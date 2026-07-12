@@ -253,7 +253,7 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 2 | `TransferMatrix/Positivity.lean` | 0 axioms (energy levels, mass gap) |
 | 2 | `OSProofs/OS3_RP_Lattice.lean` | 1 axiom (`gaussian_rp_cov_perfect_square`), 0 sorries |
 | 2 | `OSProofs/OS3_RP_Inheritance.lean` | 0 axioms, 0 sorries |
-| 3 | `TransferMatrix/SpectralGap.lean` | 2 axioms |
+| 3 | `TransferMatrix/SpectralGap.lean` | 0 axioms (2 removed 2026-07-12 as false; `spectral_gap_pos` proved) |
 | 3 | `OSProofs/OS4_MassGap.lean` | 2 axioms, 0 sorries |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def) |
@@ -779,7 +779,6 @@ The following theorems have complete proofs (no sorry):
 | `transferKernel_pos` | TransferMatrix | Transfer kernel > 0 (from exp_pos) |
 | `massGap_pos` | Positivity | Mass gap > 0 (from eigenvalue gap) |
 | `spectral_gap_pos` | SpectralGap | Spectral gap > 0 (from mass gap) |
-| `clustering_uniform` | OS4_MassGap | Uniform clustering (from uniform spectral gap) |
 | `os4_lattice_from_gap` | OS4_Ergodicity | OS4 from mass gap (assembly) |
 | `timeReflection2D_involution` | OS3_RP_Lattice | Time reflection is an involution |
 | `timeReflection2_involution` | OSAxioms | Θ² = id for continuum time reflection |

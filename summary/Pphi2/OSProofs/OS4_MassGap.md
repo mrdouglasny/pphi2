@@ -33,9 +33,6 @@ Exponential clustering of the two-point function on the lattice. Delegates to th
 ### `general_clustering_lattice`
 Exponential clustering for general observables with rate $m = m_{\mathrm{phys}}$. Fully proved (modulo axiom).
 
-### `clustering_uniform`
-Uniform clustering: the mass gap is bounded below uniformly in $a$. Delegates to `spectral_gap_uniform`. Fully proved (modulo that axiom).
-
 ### `connectedTwoPoint`
 ```lean
 def connectedTwoPoint (d N : N) [NeZero N] (P : InteractionPolynomial) (a mass : R)
