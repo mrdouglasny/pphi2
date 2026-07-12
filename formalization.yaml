@@ -88,7 +88,7 @@ status:
       file: "Pphi2/Main.lean"
       sorry_count: 0
       literature_dependencies:
-        - statement: "existence of a probability measure on S'(ℝ²) satisfying the OS0–OS4 axioms for P(Φ)₂; conditional on the named uniform-estimate / spectral-gap / clustering / rotation-restoration axioms"
+        - statement: "existence of a probability measure on S'(ℝ²) satisfying the OS0–OS4 axioms for P(Φ)₂; conditional on the named uniform-estimate / clustering / rotation-restoration axioms (the former uniform-spectral-gap axioms were removed 2026-07-12 as false as stated)"
           source: "ISBN:978-0-691-08144-3"
         - statement: "lattice construction and continuum limit of the P(Φ)₂ measure"
           source: "ISBN:978-0-387-96477-7"
@@ -140,9 +140,11 @@ fidelity:
     space, or field operators are constructed; `massParameter_positive` is
     bookkeeping over the input bare mass, not a derived physical mass gap). The
     headline existence theorem is conditional on several named analytic axioms
-    (uniform exponential moments, uniform spectral gap, clustering, rotation
-    restoration, propagator/non-Gaussianity inputs) standing in for the
-    not-yet-formalized cluster-expansion / correlation-inequality content. Per
+    (uniform exponential moments, clustering, rotation restoration,
+    propagator/non-Gaussianity inputs) standing in for the not-yet-formalized
+    cluster-expansion / correlation-inequality content. (The former
+    uniform-spectral-gap axioms were removed 2026-07-12 as false as stated;
+    see AXIOM_AUDIT.md.) Per
     the project's own coherence analysis, `SatisfiesFullOS` is also satisfied by
     the free field, and non-triviality / non-Gaussianity are separate existence
     statements not yet conjoined with the OS measure into a single interacting

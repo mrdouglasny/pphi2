@@ -180,9 +180,13 @@ interacting content (`u₄≠0`, ★★★, needs `λ>0`).
 
 1. **The exp-moment chain** (1 ← 2 ← 12, + 3) — Layer A (Nelson/Lee–Yang) + Layer B2 (transfer gap,
    ours). Status: B2 mostly proved (HS trace-bridge tail); Layer A not started.
-2. **The uniform spectral gap** (16, 17) — the OS4 mass gap surviving `a→0`. **Regime-restricted**
-   (phase transition). *Independent of B2.* — Note: the **clustering** axioms (14, 15) are NOT a
-   separate mountain; they ride on the B2 trace bridge (= `connected_two_point_le`).
+2. **The uniform spectral gap** — the OS4 mass gap surviving `a→0` along a coupled sequence.
+   The former axioms (16, 17) were **REMOVED 2026-07-12 as false as stated** (fixed-`Ns`
+   shrinking-volume regime — see the Cluster-2 rows above and AXIOM_AUDIT.md); the mountain
+   remains as the OPEN coupled-limit replacement (17a/17b,
+   `planning/cyl-2a-volume-scaling-addendum.md`), to be introduced with its consumer. — Note:
+   the **clustering** axioms (14, 15) are NOT a separate mountain; they ride on the B2 trace
+   bridge (= `connected_two_point_le`).
 3. **Non-Gaussianity** (9, `u₄≠0`) — the limit is genuinely interacting. *Needs `λ>0`.* — Note:
    `pphi2_nontriviality` (11, `S₂>0`) is only ★★, NOT a mountain.
 4. **Rotation restoration** (13) for OS2 — the lattice→continuum rotation defect.
@@ -235,8 +239,9 @@ asym↔square at `Nt=Ns`) — a substantial step, not a few edits. → deps: [sq
 variance bound) via the asym dictionary + the operator bricks 0–2 (proved this session) +
 `connected_susceptibility_le`. Everything else is blocked on one of: keystone 18 (cluster
 expansion), the IR-limit theorem, FKG two-point domination, the square trace dictionary, the
-Layer-A Nelson/Lee–Yang engine (2/12), the spectral-gap-uniformity (17), or a regime/intent human
-decision (11, 16/17/9, 7).
+Layer-A Nelson/Lee–Yang engine (2/12), the open coupled-limit spectral-gap replacement (17a/17b —
+the former axioms 16/17 were removed 2026-07-12 as false), or a regime/intent human
+decision (11, 9, 7).
 
 ## Plan-loop frontier — 2026-06-07 (post Route-A non-triviality)
 
