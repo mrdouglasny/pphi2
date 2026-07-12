@@ -1,5 +1,14 @@
 # Pphi2 discharge plan for `asymInteracting_expMoment_volume_uniform` via the proposed `lee-yang` repo — vet request
 
+> **Editorial note (2026-07-12).** References in this document to `spectral_gap_uniform`,
+> `spectral_gap_lower_bound`, or `clustering_uniform` as live declarations are historical:
+> those were **removed 2026-07-12 as false as stated** (fixed-`Ns` shrinking-volume regime;
+> see `AXIOM_AUDIT.md`, with the open coupled-limit replacement 17a/17b designed in
+> `planning/cyl-2a-volume-scaling-addendum.md`). The clustering axioms
+> `two_point_clustering_from_spectral_gap` / `general_clustering_from_spectral_gap` remain
+> in the tree.
+
+
 *Standalone vet packet. Reader assumed to have working knowledge of
 constructive P(φ)₂, Lee-Yang theory, transfer-matrix spectral theory,
 and Lean 4 / Mathlib formalization practice. No project-internal jargon

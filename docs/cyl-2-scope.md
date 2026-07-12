@@ -1,5 +1,14 @@
 # CYL-2 scope — OS4 (clustering / mass gap) for the cylinder S¹(Lₛ)×ℝ
 
+> **Editorial note (2026-07-12).** References in this document to `spectral_gap_uniform`,
+> `spectral_gap_lower_bound`, or `clustering_uniform` as live declarations are historical:
+> those were **removed 2026-07-12 as false as stated** (fixed-`Ns` shrinking-volume regime;
+> see `AXIOM_AUDIT.md`, with the open coupled-limit replacement 17a/17b designed in
+> `planning/cyl-2a-volume-scaling-addendum.md`). The clustering axioms
+> `two_point_clustering_from_spectral_gap` / `general_clustering_from_spectral_gap` remain
+> in the tree.
+
+
 *Code-grounded scope (2026-05-23), verified against the source — not the master plan (which was
 off on CYL-1a). Target: extend `routeBPrime_cylinder_OS` (currently OS0+OS2+OS3) to **OS4
 clustering**, giving `cylinder_satisfies_OS` and, via reconstruction, a 1+1d Wightman QFT with a

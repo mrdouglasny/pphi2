@@ -1,5 +1,14 @@
 # Cylinder S¹×ℝ φ⁴₂ — master plan & progress tracker
 
+> **Editorial note (2026-07-12).** References in this document to `spectral_gap_uniform`,
+> `spectral_gap_lower_bound`, or `clustering_uniform` as live declarations are historical:
+> those were **removed 2026-07-12 as false as stated** (fixed-`Ns` shrinking-volume regime;
+> see `AXIOM_AUDIT.md`, with the open coupled-limit replacement 17a/17b designed in
+> `planning/cyl-2a-volume-scaling-addendum.md`). The clustering axioms
+> `two_point_clustering_from_spectral_gap` / `general_clustering_from_spectral_gap` remain
+> in the tree.
+
+
 > **STATUS UPDATE (2026-06-02) — B2 route locked as B1 ⊕ gap; transfer-matrix gap now PROVED.**
 > The last project axiom `asymInteracting_expMoment_volume_uniform` reduces (Layer C, structural)
 > to **Layer B2** = `asymInteractingVariance_le_freeVariance_Lt_uniform`. The discharge route is

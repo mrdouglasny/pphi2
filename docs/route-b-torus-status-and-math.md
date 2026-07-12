@@ -1,5 +1,14 @@
 # Route B (Torus T²_L): Status + Math Walkthrough
 
+> **Editorial note (2026-07-12).** References in this document to `spectral_gap_uniform`,
+> `spectral_gap_lower_bound`, or `clustering_uniform` as live declarations are historical:
+> those were **removed 2026-07-12 as false as stated** (fixed-`Ns` shrinking-volume regime;
+> see `AXIOM_AUDIT.md`, with the open coupled-limit replacement 17a/17b designed in
+> `planning/cyl-2a-volume-scaling-addendum.md`). The clustering axioms
+> `two_point_clustering_from_spectral_gap` / `general_clustering_from_spectral_gap` remain
+> in the tree.
+
+
 *Updated 2026-05-08 (post Stage 1 lattice-action fix on
 `fix/lattice-action-normalization`; Route B′ IR limit refactored by
 PR #14). Companion to the existing

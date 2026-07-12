@@ -1,5 +1,14 @@
 # `asymInteracting_expMoment_volume_uniform` discharge plan
 
+> **Editorial note (2026-07-12).** References in this document to `spectral_gap_uniform`,
+> `spectral_gap_lower_bound`, or `clustering_uniform` as live declarations are historical:
+> those were **removed 2026-07-12 as false as stated** (fixed-`Ns` shrinking-volume regime;
+> see `AXIOM_AUDIT.md`, with the open coupled-limit replacement 17a/17b designed in
+> `planning/cyl-2a-volume-scaling-addendum.md`). The clustering axioms
+> `two_point_clustering_from_spectral_gap` / `general_clustering_from_spectral_gap` remain
+> in the tree.
+
+
 *2026-05-31. Scoping plan for the **last** project-introduced axiom on
 `cylinder-isotropic-lattice`. After UNIT 7 landed
 (`asymChaosCutoffDecomposition` axiom → theorem), this is the only

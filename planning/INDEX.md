@@ -39,12 +39,13 @@ clustering, gating OS4). Master campaign doc: [`docs/cylinder-master-plan.md`].
 ```
                                  nelson_exponential_estimate_master_bounded (12) ★★★
                                               │
-   spectral_gap_lower_bound (16) ──┐          ▼
-   spectral_gap_uniform (17) ──────┤    asymInteracting_mgf_gaussianDominated (2)  [Layer A]
-        │  (CYL-2a) ★★★            │          │
-        ▼                          │          ▼          asymInteractingVariance_le_
-   two_point_clustering (14) ★★    │   asymInteracting_expMoment_volume_uniform (1) ◄── freeVariance_Lt_uniform (3) [Layer B2, OURS] ★★★
-   general_clustering (15) ★★      │          │  [CYL-1a, Layer C assembly] ★
+   [gap 17a/17b — OPEN target;  ──┐          ▼
+    former axioms 16/17 REMOVED    │    asymInteracting_mgf_gaussianDominated (2)  [Layer A]
+    2026-07-12 as false]           │          │
+        │  (CYL-2a) ★★★            │          ▼          asymInteractingVariance_le_
+        ▼                          │   asymInteracting_expMoment_volume_uniform (1) ◄── freeVariance_Lt_uniform (3) [Layer B2, OURS] ★★★
+   two_point_clustering (14) ★★    │          │  [CYL-1a, Layer C assembly] ★
+   general_clustering (15) ★★      │          │
         │ (OS4)                    │          ▼
         ▼                          │   continuum_exponential_moment_bound (6) ★★ ──► OS0/OS1
    continuum_exponential_          │   canonical_continuumMeasure_cf_tendsto (7) ★★

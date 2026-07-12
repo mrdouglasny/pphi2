@@ -1,5 +1,14 @@
 # Vetting — `spectral_gap_lower_bound`
 
+> **⚠ AXIOM REMOVED (2026-07-12).** This vetting record is retained for provenance only.
+> The axiom was **removed as FALSE as stated**: at fixed `Ns` with `a → 0` the physical
+> volume shrinks and the hard-coded 2D Wick counterterm over-subtracts (zero-mode `~ a⁻²`),
+> giving the spatial zero mode a double well whose tunneling splitting closes the gap at
+> every coupling (hand computation + Gemini 3.1-pro verification; consumer trace confirmed
+> the axiom was a dead branch). Final rating: **FALSE / removed**. Replacement design:
+> `planning/cyl-2a-volume-scaling-addendum.md` (17a/17b). See `AXIOM_AUDIT.md` (2026-07-12).
+
+
 Captured soundness-review records for `spectral_gap_lower_bound`
 (`Pphi2/TransferMatrix/SpectralGap.lean:100`). Linked from
 [`../../AXIOM_AUDIT.md`](../../AXIOM_AUDIT.md) and
