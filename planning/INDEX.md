@@ -17,12 +17,12 @@ QFT exists"**. Three architecture gaps (all fixed by one keystone — weak-coupl
 - **A.** `SatisfiesFullOS` (OS0–OS4) is satisfied by the **free field** too; non-triviality (11)
   and non-Gaussianity (9) are **separate `∃μ`**, never conjoined with the OS measure. No theorem
   says "the OS measure is interacting."
-- **B.** Gap (16/17) + non-Gaussianity (9) hold **only at weak coupling** (phase transition), but
+- **B.** The gap (now the open 17b replacement — 16/17 removed 2026-07-12) + non-Gaussianity (9) hold **only at weak coupling** (phase transition), but
   `pphi2_exists` is stated for **all `P`** with no coupling hypothesis → over-claim. Must thread
   `IsWeakCoupling` (already in `Bridge.lean`) up into the headline.
 - **C.** Keystone **missing from the 17**: **weak-coupling uniqueness of the limit** (cluster
   expansion) — glues the separate `∃μ` into one, fixes the regime, and upgrades subsequence → limit.
-- [ ] **18. weak-coupling uniqueness** (NEW target) `—`   status: open   deps: [16/17 regime]   diff: ★★★
+- [ ] **18. weak-coupling uniqueness** (NEW target) `—`   status: open   deps: [17b regime]   diff: ★★★
   note: cluster expansion / Dobrushin uniqueness at weak coupling. The keystone for A+B+C. Then
   restate the headline as `∃ μ, SatisfiesFullOS μ ∧ (∀f≠0,S₂>0) ∧ u₄≠0`. → `coherence-analysis.md`.
 
@@ -257,7 +257,10 @@ second moment + HS trace-class + B5b single-slice stability + the `1/a` cancella
 
 Remaining ★★★ mountains / human-gated items (unchanged from the 2026-06-04 triage):
 - **Layer A** (`asymInteracting_mgf_gaussianDominated`, item 2) — Newman MGF via Lee–Yang; not started.
-- **Spectral gap uniformity** (16/17) — also feeds OS4 clustering (14/15) *and* the deferred Route B.
+- **Spectral gap uniformity** — the former axioms (16/17) were REMOVED 2026-07-12 as false as
+  stated; the mountain persists as the OPEN coupled-limit replacement (17a/17b,
+  `planning/cyl-2a-volume-scaling-addendum.md`) — still feeds OS4 clustering (14/15) *and* the
+  deferred Route B.
 - **S₂>0 continuum nondegeneracy** (item 11) — short-distance singularity / cluster expansion.
 - **Nelson/Lee–Yang** (12), **rotation defect** (13), **IR-limit** (10), **cluster-expansion
   keystone** (4/18).

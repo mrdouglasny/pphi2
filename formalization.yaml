@@ -155,7 +155,7 @@ fidelity:
 review:
   status: "self-assessed"
   reviewers: []
-  notes: "0 sorries on the active build (main, HEAD 9f2dcd6); 19 named axioms remain in the built Pphi2/ tree. The headline existence/OS results are literature-dependencies resting on those axioms, not unconditional proofs. See status.md and AXIOM_AUDIT.md."
+  notes: "0 sorries on the active build; 24 real axiom declarations remain in the built Pphi2/ tree (26 raw per count_axioms.sh; the former uniform-spectral-gap pair was removed 2026-07-12 as false as stated). The headline existence/OS results are literature-dependencies resting on those axioms, not unconditional proofs. See status.md and AXIOM_AUDIT.md."
 
 alignment:
   namespace: "Pphi2"
@@ -164,7 +164,7 @@ alignment:
       lean: "Pphi2.pphi2_existence"
       module: "Pphi2.Main"
       status: "literature-dependency"
-      note: "OS0–OS4 existence; conditional on the named analytic axioms (uniform moments, spectral gap, clustering, rotation restoration)."
+      note: "OS0–OS4 existence; conditional on the named analytic axioms (uniform moments, clustering, rotation restoration; the former spectral-gap axioms were removed 2026-07-12 as false as stated)."
     - source: "10.1007/BF01645738"
       lean: "Pphi2.SatisfiesFullOS"
       module: "Pphi2.OSAxioms"
