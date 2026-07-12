@@ -262,10 +262,11 @@ the cylinder Layer-B2 wiring (item 3); everything else is a standalone research-
 
 ## Axioms beyond the 17 (sanity check vs `count_axioms.sh`)
 
-`count_axioms.sh` reports **28 raw axioms** on `layer-B2/piece-5` (rechecked 2026-06-23);
-2 are docstring matches of the word "axiom" inside text continuations
+`count_axioms.sh` reports **26 raw axioms** (rechecked 2026-07-12, after the removal of the
+false `spectral_gap_uniform`/`spectral_gap_lower_bound` — see the AXIOM_AUDIT 2026-07-12
+entry); 2 are docstring matches of the word "axiom" inside text continuations
 (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
-`Pphi2/NelsonEstimate/LayerCake.lean:85`), leaving **26 real axioms**.
+`Pphi2/NelsonEstimate/LayerCake.lean:85`), leaving **24 real axioms**.
 
 The 24 architectural axioms account for the current proof debt, including the
 six Layer-B2 Route-A GNS bridge obligations in

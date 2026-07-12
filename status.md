@@ -503,8 +503,8 @@ All Phase 1 axioms have been proved or removed. `wickConstant_log_divergence`
 
 | Axiom | File | Difficulty | Description |
 |-------|------|-----------|-------------|
-| `spectral_gap_uniform` | SpectralGap | Hard | Mass gap bounded below uniformly in a. Key input: the interaction is a bounded perturbation of the free field in the sense of Kato-Rellich, and the free mass gap is m > 0. Needs careful control of the perturbation as a→0. |
-| `spectral_gap_lower_bound` | SpectralGap | Hard | m_phys ≥ c·m_bare. Quantitative bound on the physical mass. |
+| ~~`spectral_gap_uniform`~~ | SpectralGap | **REMOVED 2026-07-12** | False as stated (fixed-`Ns` shrinking-volume regime; wrong-counterterm double well closes the gap). Coupled-limit replacement designed in `planning/cyl-2a-volume-scaling-addendum.md` (17a/17b). |
+| ~~`spectral_gap_lower_bound`~~ | SpectralGap | **REMOVED 2026-07-12** | Same mechanism; see AXIOM_AUDIT.md 2026-07-12 entry. |
 | ~~`connectedTwoPoint_nonneg_delta`~~ | OS4_MassGap | ✅ **Proved** | Variance nonnegativity: direct proof via ∫(X-E[X])² ≥ 0. |
 | ~~`two_point_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Exponential decay bound using `finLatticeDelta`, `massGap`, and the cyclic torus time separation. |
 | ~~`general_clustering_lattice`~~ | OS4_MassGap | ✅ **Proved** | Bounded `F`, `G` with `G` on time-shifted config `latticeConfigEuclideanTimeShift N R ω`, decaying in `latticeEuclideanTimeSeparation N R`. |
@@ -748,7 +748,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 
 5. **Hypercontractivity** — `wickMonomial_latticeGaussian`, `wickConstant_eq_variance`, and `gaussian_hermite_zero_mean` are now **theorems**. The remaining work in this area is downstream analytic strengthening, not the Wick/GFF variance bridge. `wickConstant_eq_variance` is now proved generically via `GeneralResults/LatticeProductDFT.lean`. `wickPolynomial_uniform_bounded_below` proved. `exponential_moment_bound` proved from bounded-below + probability measure. `interactionFunctional_mean_nonpos` proved from `wickMonomial_latticeGaussian` + linearity + `P.coeff_zero_nonpos`. `partitionFunction_ge_one` / `interacting_moment_bound` as before.
 6. **`second_moment_uniform` + `continuumMeasures_tight`** — Tightness argument. Depends on Nelson.
-7. **`spectral_gap_uniform`** — Uniform mass gap. Kato-Rellich perturbation theory.
+7. ~~**`spectral_gap_uniform`**~~ — REMOVED 2026-07-12 (false as stated; coupled-limit replacement = `planning/cyl-2a-volume-scaling-addendum.md` 17a).
 8. **`ward_identity_lattice` + `anomaly_vanishes`** — Ward identity + power counting for rotation invariance.
 
 ### Tier 3: Medium-difficulty proofs
@@ -906,8 +906,8 @@ infrastructure. Assessment date: 2026-03-04.
 
 | Axiom | File | Strategy |
 |-------|------|----------|
-| `spectral_gap_uniform` | SpectralGap | Uniform mass gap. Central result of Glimm-Jaffe. |
-| `spectral_gap_lower_bound` | SpectralGap | Quantitative mass gap bound. |
+| ~~`spectral_gap_uniform`~~ | SpectralGap | REMOVED 2026-07-12 (false as stated; see AXIOM_AUDIT.md). |
+| ~~`spectral_gap_lower_bound`~~ | SpectralGap | REMOVED 2026-07-12 (same). |
 | `prokhorov_configuration_sequential` | Convergence | Sequential extraction on S'(ℝ²). Blocked by Mathlib nuclear space gap. (Not needed for torus path.) |
 | `continuumLimit_nonGaussian` | Convergence | Nonzero 4th cumulant via perturbation theory. |
 | `continuumLimit_nontrivial` | Convergence | Two-point function > 0. Correlation inequalities (Griffiths, FKG). |

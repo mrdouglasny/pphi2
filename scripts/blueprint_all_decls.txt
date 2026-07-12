@@ -1935,7 +1935,6 @@ thm Pphi2.Fsin.congr_simp
 thm Pphi2.connectedTwoPoint_symm
 thm GaussianField.greenFunctionBilinear_swap_invariant
 thm GaussianField.normalizedGaussianDensityMeasureAsym_eq_normalizedQuadraticGaussianMeasure
-axiom Pphi2.spectral_gap_lower_bound
 thm GaussianField.configBasisEval_measurable
 def Pphi2.EuclideanTimeStructure.reflectOnRealTestFunctions
 def Pphi2.fieldReflection2D
@@ -2328,7 +2327,6 @@ def Pphi2.asymCanonicalRoughModeCoeff
 thm Pphi2.asymCanonicalSumFieldFunction_covariance_eq_GJ
 thm GaussianField.negLaplacianMatrix_neg_invariant
 thm GaussianField.schwartzRapidDecayEquivNd_norm_summable
-axiom Pphi2.spectral_gap_uniform
 thm GaussianField.latticeCovariance.congr_simp
 def Pphi2.firstExcitedEnergyLevel
 def GaussianField.AsymLatticeSites
@@ -2459,7 +2457,6 @@ thm GaussianField.gaussianDensity_nonneg
 def Pphi2.MeasureHasGreenMomentBound
 thm GaussianField.schwartz_partial_hermiteCoeff_eq_1D
 thm GaussianField.cylinderGreen_timeTranslation_invariant
-thm Pphi2.clustering_uniform
 thm Pphi2.torusContinuumGreen_translation_invariant
 thm Pphi2.integrable_powMul_interaction_sq
 thm GaussianField.gaussianDensityNormConst_eq_lintegral

@@ -76,8 +76,6 @@ status:
     - asymGroundSemigroup_intertwines                      # AsymTorus/AsymBridgeInstance.lean:219
     - groundVariance_le_freeCovariance                     # AsymTorus/AsymB5bSingleSlice.lean:162
     - asymTorusInteracting_exponentialMomentBound          # AsymTorus/AsymTorusOS.lean:852 (private)
-    - spectral_gap_uniform                                 # TransferMatrix/SpectralGap.lean:89
-    - spectral_gap_lower_bound                             # TransferMatrix/SpectralGap.lean:100
     - rotation_cf_defect_polylog_bound                     # OSProofs/OS2_WardIdentity.lean:614
     - two_point_clustering_from_spectral_gap               # OSProofs/OS4_MassGap.lean:137
     - general_clustering_from_spectral_gap                 # OSProofs/OS4_MassGap.lean:160
@@ -184,10 +182,5 @@ alignment:
       module: "Pphi2.AsymTorus.AsymContinuumLimit"
       status: "literature-dependency"
       note: "cylinder OS0–OS3 assembly via the Nelson Markov-field / transfer-matrix route; conditional on RP, OS2-symmetry, and the uniform exp-moment axiom."
-    - source: "ISBN:978-0-387-96477-7"
-      lean: "Pphi2.spectral_gap_uniform"
-      module: "Pphi2.TransferMatrix.SpectralGap"
-      status: "literature-dependency"
-      note: "uniform spectral gap of the transfer matrix; one of the genuine hard-core analytic axioms (GJ Ch. VI)."
 
 acknowledgements: ""

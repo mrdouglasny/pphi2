@@ -12848,11 +12848,6 @@ available (otherwise the node shows its Lean name). Declarations flagged
   \uses{Pphi2-latticeEuclideanTimeSeparation, GaussianField-finLatticeDelta, GaussianField-FinLatticeSites, Pphi2-interactingLatticeMeasure, GaussianField-Configuration, Pphi2-two-point-clustering-from-spectral-gap, GaussianField-instMeasurableSpaceConfiguration, Pphi2-massGap, GaussianField-FinLatticeField}
   Exponential clustering of the two-point function on the lattice. Delegates to the axiom. Fully proved (modulo axiom).
 \end{theorem}
-\begin{theorem}[\texttt{clustering\_uniform}]\label{Pphi2-clustering-uniform}
-  \lean{Pphi2.clustering_uniform}\leanok
-  \uses{Pphi2-massGap, Pphi2-spectral-gap-uniform}
-  Uniform clustering: the mass gap is bounded below uniformly in $a$. Delegates to \texttt{spectral\_gap\_uniform}. Fully proved (modulo that axiom).
-\end{theorem}
 \begin{theorem}[\texttt{two\_point\_clustering\_from\_spectral\_gap} (axiom)]\label{Pphi2-two-point-clustering-from-spectral-gap}
   \lean{Pphi2.two_point_clustering_from_spectral_gap}\leanok
   \uses{Pphi2-latticeEuclideanTimeSeparation, GaussianField-finLatticeDelta, GaussianField-FinLatticeSites, Pphi2-interactingLatticeMeasure, GaussianField-Configuration, GaussianField-instMeasurableSpaceConfiguration, Pphi2-massGap, GaussianField-FinLatticeField}
@@ -13321,16 +13316,6 @@ available (otherwise the node shows its Lean name). Declarations flagged
   \texttt{Pphi2.integral\_interaction\_sq\_eq\_canonicalJoint}
 \end{theorem}
 \section{\texttt{Pphi2.TransferMatrix.SpectralGap}}
-\begin{theorem}[\texttt{spectral\_gap\_lower\_bound} (axiom)]\label{Pphi2-spectral-gap-lower-bound}
-  \lean{Pphi2.spectral_gap_lower_bound}\leanok
-  \uses{Pphi2-massGap}
-  $\exists c > 0,\, \forall a \le 1:\; m_{\mathrm{phys}} \ge c \cdot m_{\mathrm{bare}}$. Explicit lower bound in terms of the bare mass.
-\end{theorem}
-\begin{theorem}[\texttt{spectral\_gap\_uniform} (axiom)]\label{Pphi2-spectral-gap-uniform}
-  \lean{Pphi2.spectral_gap_uniform}\leanok
-  \uses{Pphi2-massGap}
-  $\exists m_0 > 0,\, \exists a_0 > 0,\, \forall a \in (0,a_0]:\; m_{\mathrm{phys}} \ge m_0$. The mass gap is bounded below uniformly in the lattice spacing. Proof requires cluster expansion (Glimm-Jaffe-Spencer).
-\end{theorem}
 \begin{theorem}[\texttt{spectral\_gap\_pos}]\label{Pphi2-spectral-gap-pos}
   \lean{Pphi2.spectral_gap_pos}\leanok
   \uses{Pphi2-massGap-pos, Pphi2-massGap}
