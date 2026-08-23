@@ -173,7 +173,7 @@
 ### ward_identity_lattice + scaling dimension argument
 - **Verdict**: CORRECT
 - **Super-renormalizability argument is valid**: Lattice Laplacian correction has dim=4 > d=2, giving O(a²) anomaly. In P(φ)₂, super-renormalizability means no log corrections (all Feynman diagrams finite after Wick ordering).
-- **References**: Symanzik (1983) "Continuum limit and improved action", Huebner et al. (2012) arXiv:1204.4146
+- **References**: Symanzik (1983) "Continuum limit and improved action", Davoudi-Savage, "Restoration of Rotational Symmetry in the Continuum Limit of Lattice Field Theories" (2012) arXiv:1204.4146
 
 ---
 

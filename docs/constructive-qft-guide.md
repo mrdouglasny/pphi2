@@ -122,12 +122,13 @@ field operators satisfying the Wightman axioms).
 
 ### Overviews and surveys
 
-- Simon, "Euclidean quantum mechanics and field theory: a 50 year love affair"
-  (2020, arXiv:2011.12335) — **Best single starting point.**
-- Kawahigashi-Tanimoto, "Constructive quantum field theory"
-  (2024, arXiv:2403.01886) — Recent broad survey.
-- Jaffe, "Quantum theory and relativity" (1999, hep-th/9907095) — Concise
-  overview by a founder of the field.
+- Simon, "Twelve Tales in Mathematical Physics: An Expanded Heineman Prize
+  Lecture" (2021, arXiv:2011.12335) — **Best single starting point.**
+- Summers, "A Perspective on Constructive Quantum Field Theory"
+  (2012, arXiv:1203.3991) — Broad survey of the programme.
+- Jaffe, "Quantum Theory and Relativity" (2008, Contemp. Math. 449, 209–245)
+  — Concise overview by a founder of the field. Not on arXiv; see
+  `refs/jaffe-quantum-theory-relativity-2008.pdf`.
 
 ### Classic textbooks
 
@@ -144,10 +145,11 @@ field operators satisfying the Wightman axioms).
 
 ### Modern approaches (stochastic quantization)
 
-- Hairer, "Singular SPDEs" (2016, arXiv:1612.08133) — Pedagogical
-  introduction to regularity structures and φ⁴₃.
-- Chandra-Chevyrev-Hairer-Shen, "Lecture notes on stochastic quantization"
-  (2018, arXiv:1801.06730) — Covers φ⁴₃ and Yang-Mills via SPDEs.
+- Chandra-Hairer, "An analytic BPHZ theorem for regularity structures"
+  (2016, arXiv:1612.08138) — The renormalisation theorem behind φ⁴₃.
+- **NEEDS RE-SOURCING**: a lecture-note treatment of stochastic quantization
+  covering φ⁴₃ and Yang-Mills. The ID previously cited here resolved to an
+  unrelated paper; the intended reference has not been identified.
 - Gubinelli, lecture notes (2025) — Modern treatment.
 - Barashkov-Gubinelli (2020, arXiv:2112.05562) — Variational approach to φ⁴₃.
 - Gubinelli-Hofmanova (2018, arXiv:1810.01700) — Global solutions for φ⁴₃.
@@ -155,8 +157,9 @@ field operators satisfying the Wightman axioms).
 ### The frontier
 
 - Chandra-Chevyrev-Hairer-Shen, "Stochastic quantisation of Yang-Mills-Higgs
-  in 3D" (2022, arXiv:2211.05436) — State of the art for gauge theories.
-- Aizenman-Duminil-Copin, "Triviality of φ⁴₄" (2021, arXiv:1912.07979) —
+  in 3D" (2022, arXiv:2201.03487) — State of the art for gauge theories.
+- Aizenman-Duminil-Copin, "Marginal triviality of the scaling limits of
+  critical 4D Ising and φ⁴₄ models" (2021, arXiv:1912.07973) —
   Why simple scalar theories can't be interacting in 4D.
 - Duch-Dybalski-Jahandideh (2023, arXiv:2311.04137) — Recent OS-related work.
 
@@ -164,8 +167,9 @@ field operators satisfying the Wightman axioms).
 
 - Osterwalder-Schrader, "Axioms for Euclidean Green's functions" (1973, 1975) —
   The original papers.
-- Jäkel, "The Osterwalder-Schrader theorem" (2005, math-ph/0504049) —
-  Clear pedagogical review.
+- **REMOVED**: an entry here cited a 2005 Jäkel review of the
+  Osterwalder-Schrader theorem at math-ph/0504049. That ID is an unrelated
+  paper and no such review could be located; the citation appears spurious.
 - Haag, *Local Quantum Physics* (1996, 2nd ed.) — Algebraic QFT perspective.
 
 ### Functional inequalities (foundation for hypercontractivity)

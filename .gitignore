@@ -14,3 +14,13 @@ blueprint/print/
 scripts/blueprint_deps_raw.txt
 scripts/blueprint_enum_stats.txt
 scripts/.gerr
+
+# refs/: JSTOR scans and full-text transcriptions of copyrighted journal
+# articles are kept locally but never published. See refs/README.md for the
+# manifest of what belongs here and where to obtain each item.
+refs/GRS1975.md
+refs/GRS1975-p2.md
+refs/Guerra-P2EuclideanQuantum-1975.pdf
+refs/guerra1975.pdf
+refs/simon1975.pdf
+refs/jaffe-quantum-theory-relativity-2008.pdf
