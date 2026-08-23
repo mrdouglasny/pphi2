@@ -16,11 +16,13 @@ and backend-independent reconstruction rules. This keeps the current scalar
 positive-measure construction explicit while opening a path to broader
 Euclidean/Minkowski interfaces.
 
-**Current counter (`./scripts/count_axioms.sh`, 2026-07-14): pphi2 29 raw / 27 real axioms,
+**Current counter (`./scripts/count_axioms.sh`, 2026-08-23): pphi2 27 axioms,
 0 sorries; gaussian-field 3 axioms, 0 sorries** (both verified via `count_axioms.sh`,
-GaussianField pinned at `5bb35e8`). The 29 raw → 27 real reconciliation: 2 lines are docstring
-matches of the word "axiom" (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
-`Pphi2/NelsonEstimate/LayerCake.lean:85`).
+GaussianField pinned at `5bb35e8`). The former raw/real split is gone: the counter now
+requires an `axiom` line's identifier to be followed by a binder opener or `:`, so the two
+docstring prose lines (`Pphi2/NelsonEstimate/LatticeBridge.lean:21`,
+`Pphi2/NelsonEstimate/LayerCake.lean:85`) are no longer counted, and axioms whose first
+binder is implicit (e.g. `GaussianField.hermiteGalerkinTrunc_tendsto_schwartz`) still are.
 **2026-07-13 (Phase 4.1, honest ℝ² headline — spec `planning/r2-honest-headline-spec.md`):**
 `IsPphi2Limit` strengthened with the coupled-lattice conjunct (`ν k = continuumMeasure 2 (N k)
 P (a k) mass`, `N k → ∞`, `N k·a k → ∞`) — the δ₀ vacuity is CLOSED; the former δ₀ "proof" of
@@ -101,8 +103,11 @@ the closure + density-extends after `Lt→∞` and drops `hRP`. `#print axioms`:
 `cylinderIso_OS_of_RP_OS2` = bare trio + `embed_l2_uniform_bound` +
 `asymInteracting_expMoment_volume_uniform` (NO new axioms). Full record:
 `planning/rp-adapter-phase2-plan.md`. **`hOS2` was also dropped** (`f5896f1`, heterogeneous Iso OS2
-gap filled in `Pphi2/AsymTorus/AsymIsoOS.lean`): `cylinderIso_OS_of_RP_OS2` now takes only
-`(P, mass, hmass)` — no external hypotheses. Verified `#print axioms` = `[propext, Classical.choice,
+gap filled in `Pphi2/AsymTorus/AsymIsoOS.lean`): `cylinderIso_OS_of_RP_OS2` takes
+`(P, hP : P.n = 4, mass, hmass)` — no external hypotheses beyond the quartic degree
+restriction added 2026-08-22, after a one-site sextic refuted the all-degree Layer-A
+`K = 2` Gaussian-domination contract (see `AXIOM_AUDIT.md`).
+Verified `#print axioms` = `[propext, Classical.choice,
 Quot.sound]` + `GaussianField.embed_l2_uniform_bound` + `Pphi2.asymInteracting_expMoment_volume_uniform`.
 So cylinder `S¹(Ls)×ℝ` OS0/OS1/OS2/OS3 now rests on exactly the CYL-1a volume-uniform exp-moment
 axiom plus the pre-existing `embed_l2_uniform_bound` — nothing else. Remaining cylinder streams:

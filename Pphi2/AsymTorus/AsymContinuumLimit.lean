@@ -820,7 +820,11 @@ theorem routeBPrimeIso_cylinder_OS
         ν hcf (fun k => hμ_noWrap (φ k)) K' C' hK' hC' q hq hExp)
     hμ_os2
 
-/-- **Volume-uniform interacting exponential moment for P(φ)₂ on the cylinder** (textbook axiom).
+/-- **Volume-uniform interacting exponential moment for quartic P(φ)₂ on the cylinder**.
+
+The axiom requires `P.n = 4`. The all-`InteractionPolynomial` type is false
+for the precise `K = 2` Layer-A bound, as shown by the one-site sextic family
+in `AXIOM_AUDIT.md` (2026-08-22).
 
 There exist constants `K, C > 0` (depending on `P`, `mass`, `Ls`, but **uniform in the time period
 `L` and in the lattice `(Nt, Ns, a)`**) such that every isotropic-lattice interacting measure
@@ -887,7 +891,7 @@ Layer C files are downstream of this file via `AsymVarianceBound.lean`).
     for signed `f` is unvetted post-sign-restriction; consumers (the routeBPrime
     `hUnif` chain) should migrate to the thresholded `|f|`-form theorem. -/
 axiom asymInteracting_expMoment_volume_uniform
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    (P : InteractionPolynomial) (hP : P.n = 4) (mass : ℝ) (hmass : 0 < mass) :
     ∃ K C : ℝ, 0 < K ∧ 0 < C ∧
       ∀ (L : ℝ) [Fact (0 < L)] (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
         (Nt : ℝ) * a = L → (Ns : ℝ) * a = Ls → ∀ f : AsymTorusTestFunction L Ls,
@@ -899,14 +903,14 @@ axiom asymInteracting_expMoment_volume_uniform
           (ω (asymLatticeTestFnIso L Ls Nt Ns a f)) ^ 2
           ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass))
 
-/-- **Cylinder OS0/OS1/OS2/OS3 for the isotropic P(φ)₂ construction.**
+/-- **Cylinder OS0/OS1/OS2/OS3 for the isotropic quartic P(φ)₂ construction.**
 
-The headline has no external hypotheses beyond `P`, `mass`, and `hmass`: the volume-uniform
-exp-moment is supplied by `asymInteracting_expMoment_volume_uniform`, OS2 is proved from the
+The headline takes `hP : P.n = 4`. Its volume-uniform exp-moment is supplied
+by `asymInteracting_expMoment_volume_uniform`, OS2 is proved from the
 heterogeneous lattice construction, and reflection positivity is carried through the no-wrap
 limit. The historical theorem name is retained for downstream compatibility. -/
 theorem cylinderIso_OS_of_RP_OS2
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    (P : InteractionPolynomial) (hP : P.n = 4) (mass : ℝ) (hmass : 0 < mass) :
     ∃ (ν : Measure (Configuration (CylinderTestFunction Ls))),
     IsProbabilityMeasure ν ∧
     (∀ (n : ℕ) (J : Fin n → CylinderTestFunction Ls),
@@ -927,7 +931,7 @@ theorem cylinderIso_OS_of_RP_OS2
           ↑(ω ((f i : CylinderTestFunction Ls) -
             cylinderTimeReflection Ls (f j : CylinderTestFunction Ls)))) ∂ν).re) := by
   obtain ⟨K, C, hK_pos, hC_pos, hUnif⟩ :=
-    asymInteracting_expMoment_volume_uniform Ls P mass hmass
+    asymInteracting_expMoment_volume_uniform Ls P hP mass hmass
   exact routeBPrimeIso_cylinder_OS Ls P mass hmass K C hK_pos hC_pos hUnif
 
 end Pphi2

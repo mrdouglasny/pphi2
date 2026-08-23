@@ -9,11 +9,10 @@ import Pphi2.AsymTorus.AsymExpMomentDischarge
 # Signed test functions via the `f = f₊ − f₋` split (Layer C recovery)
 
 The Layer A axiom `asymInteracting_mgf_gaussianDominated`
-(`AsymExpMomentDischarge.lean`) is sign-restricted: Newman/Lee-Yang Gaussian
-domination holds only for sitewise same-sign test functions (the unrestricted
-form is FALSE — 2-spin mixed-sign counterexample, Lebowitz-κ₄ mechanism; see
-`AXIOM_AUDIT.md`, 2026-07-12/13). This file recovers **signed** lattice test
-functions:
+(`AsymExpMomentDischarge.lean`) is restricted to quartic `P` and sitewise
+same-sign test functions. The explicit one-site sextic in `AXIOM_AUDIT.md`
+(2026-08-22) shows why the degree hypothesis survives the signed split.
+This file recovers **signed** lattice test functions:
 
 * **`asymInteracting_expMoment_of_signed`** — for any `f`, writing
   `f = f₊ − f₋` with `f₊ = max f 0`, `f₋ = max (−f) 0` (both sitewise `≥ 0`),
@@ -46,6 +45,8 @@ namespace Pphi2
 
 /-- **Signed test functions from the sign-restricted Newman bound.**
 
+This theorem inherits `hP : P.n = 4` from Layer A.
+
 For an arbitrary (mixed-sign) lattice test function `f`, split `f = f₊ − f₋`
 into its sitewise nonnegative and nonpositive parts. Then `|⟨ω,f⟩| ≤
 |⟨ω,f₊⟩| + |⟨ω,f₋⟩|`, and Cauchy-Schwarz together with the sign-restricted
@@ -57,7 +58,8 @@ This is the vetted Layer-C recovery of signed `f` (AXIOM_AUDIT.md,
 2026-07-12/13; Gemini 3.1-pro + Codex GPT-5.5). -/
 theorem asymInteracting_expMoment_of_signed
     (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) (a : ℝ) (ha : 0 < a)
+    (P : InteractionPolynomial) (hP : P.n = 4)
+    (mass : ℝ) (hmass : 0 < mass) (a : ℝ) (ha : 0 < a)
     (f : AsymLatticeField Nt Ns) :
     Integrable (fun ω => Real.exp (|ω f|))
       (interactingLatticeMeasureAsym Nt Ns P a mass ha hmass) ∧
@@ -100,9 +102,9 @@ theorem asymInteracting_expMoment_of_signed
     rw [map_smul, smul_eq_mul]
   -- Layer A (sign-restricted) at the doubled positive/negative parts
   obtain ⟨hint_p, hbound_p⟩ :=
-    asymInteracting_mgf_gaussianDominated P mass hmass Nt Ns a ha ((2 : ℝ) • fp) h2fp
+    asymInteracting_mgf_gaussianDominated P hP mass hmass Nt Ns a ha ((2 : ℝ) • fp) h2fp
   obtain ⟨hint_m, hbound_m⟩ :=
-    asymInteracting_mgf_gaussianDominated P mass hmass Nt Ns a ha ((2 : ℝ) • fm) h2fm
+    asymInteracting_mgf_gaussianDominated P hP mass hmass Nt Ns a ha ((2 : ℝ) • fm) h2fm
   -- exp|⟨ω,2f±⟩| is the square of exp|⟨ω,f±⟩|
   have hu_sq : ∀ ω : Configuration (AsymLatticeField Nt Ns),
       Real.exp (|ω ((2 : ℝ) • fp)|) = Real.exp (|ω fp|) ^ 2 := fun ω => by
@@ -231,7 +233,7 @@ theorem asymInteracting_expMoment_of_signed
 
 /-! ## Layer C: assembly theorem (moved from `AsymExpMomentDischarge.lean`) -/
 
-/-- **Layer C assembly**: combining Layer A (sign-restricted Newman MGF
+/-- **Layer C assembly**: combining Layer A (quartic, sign-restricted Newman MGF
 Gaussian-domination on the lattice, via the signed-split lemma
 `asymInteracting_expMoment_of_signed`) + Layer B2 (`Lt`-uniform
 interacting-vs-free variance bound) gives the volume-uniform exp-moment
@@ -264,7 +266,7 @@ restatement of the torus-level target — tracked in `AXIOM_AUDIT.md`
 (2026-07-13). -/
 theorem asymInteracting_expMoment_volume_uniform_proof
     (Ls : ℝ) [hLs : Fact (0 < Ls)]
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
+    (P : InteractionPolynomial) (hP : P.n = 4) (mass : ℝ) (hmass : 0 < mass) :
     ∃ K C : ℝ, 0 < K ∧ 0 < C ∧
       ∀ (L : ℝ) [Fact (0 < L)] (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
         (a : ℝ) (ha : 0 < a),
@@ -296,7 +298,7 @@ theorem asymInteracting_expMoment_volume_uniform_proof
     asymTorusEmbedLiftIso_eval_eq L Ls Nt Ns a f
   -- Signed-split Layer A bound at the lattice level
   obtain ⟨hA_int, hA_bound⟩ :=
-    asymInteracting_expMoment_of_signed Nt Ns P mass hmass a ha g
+    asymInteracting_expMoment_of_signed Nt Ns P hP mass hmass a ha g
   -- Pushforward μ_int_T = (μ_int_L).map ι and integrability transfer
   have h_pushforward : μ_int_T =
       Measure.map (asymTorusEmbedLiftIso L Ls Nt Ns a) μ_int_L := rfl

@@ -13,7 +13,7 @@ variance of a spectrally-high mode projection by `(1 + m²/κ²)` times its free
 
 - `fss_infrared_quadratic` (**axiom**, vetted) — on the zero-mode complement the interacting
   second moment is dominated by the massless free quadratic form, uniformly in `(a, Nt, Ns)`
-  and at all couplings.
+  for quartic `P`.
 - `asymHighModes_variance_le_freeVariance` (**theorem**) — for a mode set `S` with
   `mass² + κ² ≤ λ_k` on `S`, the interacting variance of `asymModeProj S G` is at most
   `(1 + mass²/κ²)` times its free variance.
@@ -98,7 +98,7 @@ theorem sum_asymModeProj_eq_zero (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
 /-- **Fröhlich–Simon–Spencer infrared bound / Gaussian domination, integrated form.**
 
 On the zero-mode complement (`∑ x, h x = 0`), the interacting second moment is dominated by
-the massless free quadratic form, uniformly in `(a, Nt, Ns)` and at all couplings. The
+the massless free quadratic form, uniformly in `(a, Nt, Ns)` for quartic `P`. The
 massless symbol is written `massEigenvaluesAsym … k − mass²` from the mass-`m` eigendata
 (the operators differ by `mass² • 1`, so the eigenbasis is shared); the `if` guard makes the
 zero mode's exclusion explicit rather than relying on `(0 : ℝ)⁻¹ = 0`.
@@ -112,7 +112,8 @@ zero mode's exclusion explicit rather than relying on `(0 : ℝ)⁻¹ = 0`.
     statement; discharge shares the Griffiths–Simon machinery with Layer A.) -/
 axiom fss_infrared_quadratic
     (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
-    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4)
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (h : AsymLatticeField Nt Ns) (hzero : ∑ x, h x = 0) :
     ∫ ω : Configuration (AsymLatticeField Nt Ns),
         (ω h) ^ 2 ∂(interactingLatticeMeasureAsym Nt Ns P a mass ha hmass) ≤
@@ -139,12 +140,14 @@ theorem inv_sub_le_one_add_div_mul_inv {lam mass κ : ℝ} (hκ : 0 < κ)
 /-- **High-branch variance comparison.** For a mode set `S` with all eigenvalues uniformly
 above `mass² + κ²`, the interacting variance of the spectral projection `asymModeProj S G`
 is at most `(1 + mass²/κ²)` times its free variance. Consumes `fss_infrared_quadratic` at
-`h = asymModeProj S G` (in the zero-mode complement by `sum_asymModeProj_eq_zero`), restricts
+`P.n = 4` and `h = asymModeProj S G` (in the zero-mode complement by
+`sum_asymModeProj_eq_zero`), restricts
 the massless mode sum to `S` via `asymModeCoeff_proj`, applies the denominator comparison
 mode-by-mode, and identifies the free side by `asymFreeVariance_eq_sum_modeCoeff_sq`. -/
 theorem asymHighModes_variance_le_freeVariance
     (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns]
-    (P : InteractionPolynomial) (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4)
+    (a mass : ℝ) (ha : 0 < a) (hmass : 0 < mass)
     (κ : ℝ) (hκ : 0 < κ)
     (S : Finset (AsymLatticeSites Nt Ns))
     (hS : ∀ k ∈ S, mass ^ 2 + κ ^ 2 ≤ massEigenvaluesAsym Nt Ns a mass k)
@@ -158,7 +161,7 @@ theorem asymHighModes_variance_le_freeVariance
           ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass) := by
   set h : AsymLatticeField Nt Ns := asymModeProj Nt Ns a mass S G with hh
   have hzero : ∑ x, h x = 0 := sum_asymModeProj_eq_zero Nt Ns a mass κ hκ S hS G
-  have hfss := fss_infrared_quadratic Nt Ns P a mass ha hmass h hzero
+  have hfss := fss_infrared_quadratic Nt Ns P hP a mass ha hmass h hzero
   have ha2 : (0 : ℝ) ≤ (a ^ 2)⁻¹ := by positivity
   have hC : (0 : ℝ) ≤ 1 + mass ^ 2 / κ ^ 2 := by positivity
   -- Mode-by-mode comparison of the massless sum against the massive (free) sum.

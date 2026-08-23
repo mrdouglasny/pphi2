@@ -14,7 +14,8 @@ import Pphi2.AsymTorus.AsymGroundIntegrability
 # Layer-B2 Stage C: master assembly (thresholded interacting ≤ free variance bound)
 
 The Stage-C master theorem
-`asymInteractingVariance_le_freeVariance_lattice_thresholded`: at fixed spatial
+`asymInteractingVariance_le_freeVariance_lattice_thresholded`, restricted to
+quartic `P` through its FSS high branch: at fixed spatial
 circumference `Ls`, there are `C, L₀, a₀ > 0` such that for every asymmetric torus lattice
 with `Ns·a = Ls`, `a ≤ a₀` and `Nt·a ≥ L₀`, and every lattice test vector `G`,
 
@@ -96,13 +97,14 @@ theorem mul_exp_neg_mul_sub_le {m₀ c Lt : ℝ} (hm₀ : 0 < m₀) (hc : 0 < c)
 /-! ## The Stage-C master theorem -/
 
 set_option maxHeartbeats 1600000 in
-/-- **B2, thresholded form (Stage C master assembly).**  At fixed spatial circumference
+/-- **B2, thresholded form (Stage C master assembly).** Restricted to
+`P.n = 4` because the high branch consumes `fss_infrared_quadratic`. At fixed spatial circumference
 `Ls = Ns·a`, there are constants `C, L₀, a₀ > 0` — depending only on `(P, mass, Ls)` —
 such that for every asymmetric torus lattice with `Ns·a = Ls`, spacing `a ≤ a₀` and
 temporal extent `Nt·a ≥ L₀`, the second moment of every lattice pairing under the
 interacting measure is bounded by `C` times its Gaussian (free) second moment. -/
 theorem asymInteractingVariance_le_freeVariance_lattice_thresholded
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4) (mass : ℝ) (hmass : 0 < mass)
     (Ls : ℝ) (hLs : 0 < Ls) :
     ∃ C L₀ a₀ : ℝ, 0 < C ∧ 0 < L₀ ∧ 0 < a₀ ∧
       ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
@@ -219,7 +221,7 @@ theorem asymInteractingVariance_le_freeVariance_lattice_thresholded
       (ω Gh) ^ 2 ∂(interactingLatticeMeasureAsym Nt Ns P a mass ha hmass) ≤
       C_high * ∫ ω : Configuration (AsymLatticeField Nt Ns),
         (ω Gh) ^ 2 ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass) :=
-    asymHighModes_variance_le_freeVariance Nt Ns P a mass ha hmass κ hκ Slowᶜ hShigh G
+    asymHighModes_variance_le_freeVariance Nt Ns P hP a mass ha hmass κ hκ Slowᶜ hShigh G
   -- LOW branch, step 1: slice-constancy and band-limitedness of the low projection.
   have hsc : sliceConstant Nt Ns Gl := by
     intro t s s'
@@ -482,7 +484,8 @@ theorem asymInteractingVariance_le_freeVariance_lattice_thresholded
 
 /-! ## Torus-level thresholded assembly (Piece-5 migration) -/
 
-/-- **B2 torus assembly, thresholded form.** The torus variance bound in the thresholded
+/-- **B2 torus assembly, thresholded form.** This inherits `P.n = 4` from
+the lattice master theorem. The torus variance bound in the thresholded
 (eventual) quantifier structure: there are `C, L₀, a₀ > 0` — depending only on
 `(P, mass, Ls)` — such that for every asymmetric torus with `Nt·a = Lt ≥ L₀`, `Ns·a = Ls`,
 `a ≤ a₀`, and every torus test function `f`, the interacting second moment of the torus
@@ -497,7 +500,7 @@ proved lattice **theorem** instead of the legacy all-`(Lt, a)` axiom
 `asymInteractingVariance_le_freeVariance_lattice_Lt_uniform`. Downstream consumers should
 migrate to this form (planning/b2-stageB-holes-spec.md §C4 design). -/
 theorem asymInteractingVariance_le_freeVariance_torus_thresholded
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4) (mass : ℝ) (hmass : 0 < mass)
     (Ls : ℝ) [Fact (0 < Ls)] :
     ∃ C L₀ a₀ : ℝ, 0 < C ∧ 0 < L₀ ∧ 0 < a₀ ∧
       ∀ (Lt : ℝ) [Fact (0 < Lt)]
@@ -510,7 +513,7 @@ theorem asymInteractingVariance_le_freeVariance_torus_thresholded
             (ω (asymLatticeTestFnIso Lt Ls Nt Ns a f)) ^ 2
               ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass) := by
   obtain ⟨C, L₀, a₀, hC_pos, hL₀, ha₀, hC_bound⟩ :=
-    asymInteractingVariance_le_freeVariance_lattice_thresholded P mass hmass Ls Fact.out
+    asymInteractingVariance_le_freeVariance_lattice_thresholded P hP mass hmass Ls Fact.out
   refine ⟨C, L₀, a₀, hC_pos, hL₀, ha₀, ?_⟩
   intro Lt _hLt Nt Ns _ _ a ha hvolt hvols haa hLta f
   have hLta' : L₀ ≤ (Nt : ℝ) * a := by rw [hvolt]; exact hLta

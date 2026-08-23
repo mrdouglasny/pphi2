@@ -15,14 +15,11 @@ them into the discharge of the project-level axiom
 States two clean, individually-vettable axioms:
 
 * **`asymInteracting_mgf_gaussianDominated`** — Layer A: Newman's MGF
-  Gaussian-domination of the lattice interacting measure, **sign-restricted
-  (2026-07-13)** to sitewise-nonnegative test functions (the unrestricted
-  form is FALSE for mixed-sign `f`; signed `f` is recovered by the
-  `f₊/f₋` split in `AsymSignedSplit.lean`). This is the pphi2-side
-  translation of what the proposed `lee-yang` repo will produce (Newman
-  MGF inequality applied to the asym Wick interacting measure via
-  `evenPolynomialWick_isLeeYang` + iterated Asano on the lattice graph +
-  the marginal-projection lemma).
+  Gaussian-domination of the lattice interacting measure, restricted to
+  quartic `P` and sitewise-nonnegative test functions. The former all-`P`
+  contract fails for an explicit one-site sextic family recorded in
+  `AXIOM_AUDIT.md` (2026-08-22). Signed `f` is recovered by the `f₊`/`f₋`
+  split in `AsymSignedSplit.lean`.
 
 * **`asymInteractingVariance_le_freeVariance_lattice_Lt_uniform`** —
   Layer B2 Route-A lattice output: the Lt-uniform interacting/free
@@ -68,8 +65,9 @@ discharged by their respective upstream workstreams.
   2026-06-02 (deep-think, see `docs/asym-expmoment-discharge-via-lee-yang-vet-request.md`
   for the architecture vet from 2026-05-31); **sign-restricted 2026-07-13**
   after the Gemini + Codex vet of 2026-07-12 found the unrestricted
-  quantifier FALSE (see `AXIOM_AUDIT.md` and
-  `planning/layer-a-lee-yang-scoping.md`).
+  test-function quantifier false, then **quartic-restricted 2026-08-22**
+  after an explicit one-site sextic counterexample to the all-`P` contract
+  (see `AXIOM_AUDIT.md`).
 * Layer B2 Route-A lattice axiom
   (`asymInteractingVariance_le_freeVariance_lattice_Lt_uniform`):
   factored 2026-06-23 as the remaining lattice assembly input.
@@ -97,40 +95,26 @@ namespace Pphi2
 
 /-- **Layer A: Newman's MGF Gaussian-domination of the asym interacting measure**.
 
-For every `(Nt, Ns, a, P, mass)` with the standard positivity constraints, the
-moment-generating function of the interacting measure
-`interactingLatticeMeasureAsym` for a linear functional `⟨ω, f⟩` is Gaussian-
-dominated by `2 · exp((1/2) · Var_int(⟨ω, f⟩))`. The `K = 2` constant is the
-universal `|·|`-form of Newman's inequality: `e^|x| ≤ e^x + e^{-x}` plus the
-two-sided Newman MGF bound at `t = ±1`.
+For quartic `P` and a sitewise nonnegative `f`, the moment-generating function
+of `interactingLatticeMeasureAsym` at `⟨ω, f⟩` is bounded by
+`2 · exp((1/2) · Var_int(⟨ω, f⟩))`. The `K = 2` constant comes from
+`e^|x| ≤ e^x + e^{-x}` and the two one-sided MGF estimates at `t = ±1`.
 
 **Mathematical content** (Newman 1975, Comm. Math. Phys. 41, Thm 3): if the
 joint distribution of `(ω(x))_{x ∈ Λ}` under the interacting measure lies in
-the **Lee-Yang class** (characteristic function has zeros confined to the
-imaginary axis), then for any real linear functional `S = ⟨ω, f⟩`,
+the **Lee-Yang class**, then for a same-sign linear functional `S = ⟨ω, f⟩`,
 `E[e^{tS}] ≤ exp(t² · Var(S) / 2)`. The hypothesis is satisfied for the
-P(φ)₂ Wick-ordered interacting measure on the asym lattice via the
-Griffiths-Simon Asano-Ising approximation of the single-site Wick measure
-`exp(-a²:P(φ):_{wickConstantAsym})` combined with iterated Asano on the
-nearest-neighbour coupling structure (which is ferromagnetic for even monic
-P with positive leading coefficient).
-
-**Upstream discharge plan**: this is the pphi2-side instantiation that the
-proposed `lee-yang` repo's Phase 1 (`Measure/Newman.lean` and
-`Measure/GriffithsSimon.lean`) plus a pphi2 adapter file
-(`AsymInteractingLeeYang.lean`, ~200-400 lines) will produce. See
-`docs/asym-expmoment-discharge-via-lee-yang-vet-request.md` for the full
-deep-think-vetted plan (2026-05-31).
+quartic Wick-ordered lattice model only after its single-site Lee-Yang input
+and the ferromagnetic closure have been supplied. This declaration keeps that
+mathematical input explicit.
 
 **Reference**: C. M. Newman, *Inequalities for Ising models and field
 theories which obey the Lee-Yang theorem*, Comm. Math. Phys. 41 (1975), 1-9,
 Theorem 3. T. D. Lee and C. N. Yang, *Statistical theory of equations of
 state and phase transitions II*, Phys. Rev. 87 (1952), 410-419.
 
-✅ Vetted: deep-think-gemini (2026-06-02) — confirmed the Newman MGF
-inequality for Lee-Yang interacting measures with the K=2 / Var_int form;
-the Griffiths-Simon-Asano discharge route is the standard one (Simon §VIII,
-Glimm-Jaffe Ch. 4).
+The cited Newman theorem supplies the conditional MGF inequality once the
+Lee-Yang hypothesis is available.
 
 **SIGN RESTRICTION (2026-07-12/13)**: Newman domination requires same-sign
 coefficients — the unrestricted form is FALSE (2-spin mixed-sign
@@ -139,9 +123,16 @@ form). Hence the hypothesis `hf : ∀ x, 0 ≤ f x` (sitewise nonnegative).
 Signed `f` is recovered via the `f₊`/`f₋` split (see
 `asymInteracting_expMoment_of_signed` in `AsymSignedSplit.lean`).
 Vet: Gemini 3.1-pro + Codex GPT-5.5, 2026-07-12 — `AXIOM_AUDIT.md` entry
-(restated 2026-07-13). -/
+(restated 2026-07-13).
+
+**DEGREE RESTRICTION (2026-08-22)**: the sitewise sign condition does not
+extend the contract to general even `P`. The explicit one-site sextic family
+in `AXIOM_AUDIT.md` converges to
+`(δ_{-1} + 16δ_0 + δ_1) / 18` and violates this precise `K = 2` bound at
+the nonnegative source `f(*) = 9`. The live axiom therefore requires
+`hP : P.n = 4`. -/
 axiom asymInteracting_mgf_gaussianDominated
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4) (mass : ℝ) (hmass : 0 < mass)
     (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a)
     (f : AsymLatticeField Nt Ns) (hf : ∀ x, 0 ≤ f x) :
     Integrable (fun ω => Real.exp (|ω f|))

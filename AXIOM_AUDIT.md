@@ -1,6 +1,67 @@
 # Comprehensive Axiom Audit: pphi2 + gaussian-field + markov-semigroups + gaussian-hilbert
 
-**Last updated**: 2026-07-14.
+**Last updated**: 2026-08-22.
+
+## 2026-08-22: Layer-A all-degree contract refuted by a one-site sextic
+
+The former type of `asymInteracting_mgf_gaussianDominated` allowed every
+`InteractionPolynomial`. Its sitewise hypothesis `hf : ∀ x, 0 ≤ f x` does
+not save degree six. Here is an explicit family in the normalization used by
+`interactingLatticeMeasureAsym`.
+
+For `q > 0`, take the one-site lattice `Nt = Ns = 1`, `mass = 1`, and
+`a = √q`. Its Wick constant is `c = 1/q`. Define the admissible sextic
+
+```text
+P_q(t) = t^6/6 + (-1/3 + 5/(2q)) t^4
+                  + (-1/3 + (log 8 - 2)/q + 15/(2q^2)) t^2.
+```
+
+Thus `P_q.n = 6`, the odd coefficients vanish, and its constant coefficient
+is zero. Using
+
+```text
+:x^2:_c = x^2 - c,
+:x^4:_c = x^4 - 6cx^2 + 3c^2,
+:x^6:_c = x^6 - 15cx^4 + 45c^2x^2 - 15c^3,
+```
+
+the Gaussian action plus the Wick interaction satisfies
+
+```text
+(q/2)x^2 + q :P_q(x):_{1/q}
+  = (q/6)x^2(x^2 - 1)^2 + (log 8)x^2 + C_q,
+```
+
+where `C_q` is independent of `x`. Standard multiwell Laplace asymptotics,
+applied to the normalizing integral and the two observables used below, give
+convergence of the normalized one-site laws and their relevant moments to
+
+```text
+ν = (δ_{-1} + 16δ_0 + δ_1) / 18.
+```
+
+The weights follow from the curvatures `1/3` at zero and `4/3` at the two
+outer wells, together with the factor `exp(-log 8)` at each outer well. For
+the sitewise nonnegative source `f(*) = 9`,
+
+```text
+E_ν[X^2]       = 1/9,
+E_ν[exp(9|X|)] = (e^9 + 8)/9  ≈ 901.232,
+2 exp((81/2) E_ν[X^2])         = 2e^(9/2) ≈ 180.034.
+```
+
+The strict gap persists for all sufficiently large finite `q`. Each such
+`P_q` is an exact one-site sextic counterexample to the Layer-A `K = 2`
+Gaussian-domination contract. This calculation concerns that precise bound.
+It does not rule out estimates with different constants or added coercive
+input.
+
+The live restriction is now `hP : P.n = 4`. It is threaded through Layer A,
+the FSS high branch, both thresholded assemblies, their exponential-moment
+consumers, the legacy cylinder input, and `cylinderIso_OS_of_RP_OS2`. The
+legacy Layer-B2 lattice axiom and its torus wrapper retain their all-`P`
+types because this counterexample does not address those statements.
 
 ## 2026-07-14 — Ground-isometry-one bridge PROVED (axiom discharged)
 

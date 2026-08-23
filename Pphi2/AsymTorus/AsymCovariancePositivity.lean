@@ -351,11 +351,13 @@ at fixed `Ls = Ns·a`, there are `C, L₀, a₀ > 0` such that for all lattices 
 
 `∫ e^{|⟨ω,f⟩|} dμ_int ≤ 2·exp(C·Var_free(|f|))`.
 
+This theorem inherits `P.n = 4` from the Layer A and FSS inputs.
+
 This is the honest `|f|`-seminorm form of the pre-2026-07-13 conclusion
 `C·Var_free(f)` — the split variances collapse into the single `|f|`-variance
 via `Var_free(f₊) + Var_free(f₋) ≤ Var_free(|f|)`. -/
 theorem asymInteracting_expMoment_absForm_thresholded
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4) (mass : ℝ) (hmass : 0 < mass)
     (Ls : ℝ) (hLs : 0 < Ls) :
     ∃ C L₀ a₀ : ℝ, 0 < C ∧ 0 < L₀ ∧ 0 < a₀ ∧
       ∀ (Nt Ns : ℕ) [NeZero Nt] [NeZero Ns] (a : ℝ) (ha : 0 < a),
@@ -371,11 +373,11 @@ theorem asymInteracting_expMoment_absForm_thresholded
               (ω (fun x => |f x|)) ^ 2
               ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)) := by
   obtain ⟨C, L₀, a₀, hC, hL₀, ha₀, hB⟩ :=
-    asymInteractingVariance_le_freeVariance_lattice_thresholded P mass hmass Ls hLs
+    asymInteractingVariance_le_freeVariance_lattice_thresholded P hP mass hmass Ls hLs
   refine ⟨C, L₀, a₀, hC, hL₀, ha₀, ?_⟩
   intro Nt Ns _ _ a ha hvols haa hLta f
   obtain ⟨hint, hbound⟩ :=
-    asymInteracting_expMoment_of_signed Nt Ns P mass hmass a ha f
+    asymInteracting_expMoment_of_signed Nt Ns P hP mass hmass a ha f
   refine ⟨hint, hbound.trans ?_⟩
   apply mul_le_mul_of_nonneg_left _ (by norm_num : (0 : ℝ) ≤ 2)
   apply Real.exp_le_exp.mpr
@@ -407,7 +409,8 @@ theorem asymInteracting_expMoment_absForm_thresholded
 
 /-! ## The torus-level `|f|`-form exp-moment (Piece-5 pushforward) -/
 
-/-- **Torus-level `|f|`-form exp-moment bound, thresholded.** The honest thresholded
+/-- **Torus-level `|f|`-form exp-moment bound, thresholded.** This inherits
+`P.n = 4` from the lattice theorem. The honest thresholded
 `|f|`-seminorm restatement of the legacy torus axiom
 `asymInteracting_expMoment_volume_uniform` (`AsymContinuumLimit.lean`): there are
 `K, C, L₀, a₀ > 0` — depending only on `(P, mass, Ls)`, uniform in the time period `Lt`
@@ -429,7 +432,7 @@ measure back along `asymTorusEmbedLiftIso` via `integral_map`/`integrable_map_me
 and rewrite the torus pairing as the lattice pairing against `asymLatticeTestFnIso`),
 applied to the exp-integrand instead of the square. -/
 theorem asymInteracting_expMoment_volume_uniform_absForm_thresholded
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
+    (P : InteractionPolynomial) (hP : P.n = 4) (mass : ℝ) (hmass : 0 < mass)
     (Ls : ℝ) [Fact (0 < Ls)] :
     ∃ K C L₀ a₀ : ℝ, 0 < K ∧ 0 < C ∧ 0 < L₀ ∧ 0 < a₀ ∧
       ∀ (Lt : ℝ) [Fact (0 < Lt)]
@@ -445,7 +448,7 @@ theorem asymInteracting_expMoment_volume_uniform_absForm_thresholded
             (ω (fun x => |asymLatticeTestFnIso Lt Ls Nt Ns a f x|)) ^ 2
             ∂(latticeGaussianMeasureAsym Nt Ns a mass ha hmass)) := by
   obtain ⟨C, L₀, a₀, hC, hL₀, ha₀, hLat⟩ :=
-    asymInteracting_expMoment_absForm_thresholded P mass hmass Ls Fact.out
+    asymInteracting_expMoment_absForm_thresholded P hP mass hmass Ls Fact.out
   refine ⟨2, C, L₀, a₀, by norm_num, hC, hL₀, ha₀, ?_⟩
   intro Lt _hLt Nt Ns _ _ a ha hvolt hvols haa hLtb f
   have hLta' : L₀ ≤ (Nt : ℝ) * a := by rw [hvolt]; exact hLtb
