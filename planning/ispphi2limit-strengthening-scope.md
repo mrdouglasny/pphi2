@@ -61,6 +61,8 @@ The owner clarified the actual mathematical state, which overturns my first (ove
 NOT.** So strengthening `IsPphi2Limit` (the ℝ²/`FieldConfig2` predicate) does **not** enable a
 "0-axiom assembly" — it exposes a genuinely **OPEN** obligation:
 - Tightness IS proved (`continuumMeasures_tight`, sorry-free) — but **tightness ≠ the theory**.
+  (UPDATE 2026-10-08: `continuumMeasures_tight` was REMOVED — fixed-`N` shrinking-volume regime,
+  proof rested on the false axiom `nelson_exponential_estimate_master_bounded`, issue #63.)
   Without the correct IR coupling the ℝ² limit *collapses to δ₀* (`(N·a)²→0` ⇒ CF→1 ⇒ δ₀; the
   cf-tendsto finding). The non-trivial infinite-volume / cylinder limit is the open construction.
 - Therefore honest `pphi2_limit_exists` on `FieldConfig2` is **the open cylinder/ℝ² existence** — it

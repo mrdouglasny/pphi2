@@ -284,8 +284,11 @@ consistency checks:
 All six phases are structurally complete and the full project builds
 (`lake build`).
 
-Current counter (`./scripts/count_axioms.sh`, 2026-07-14): pphi2 **29 raw /
-27 real axioms**, 0 sorries; gaussian-field **3 axioms**, 0 sorries. Net history: the
+Current counter (`./scripts/count_axioms.sh`, 2026-10-08): pphi2 **26 axioms**, 0 sorries;
+gaussian-field **3 axioms**, 0 sorries. On 2026-10-08 the wrapper axiom
+`nelson_exponential_estimate_master_bounded` was removed as false as stated (issue #63), together
+with the fixed-`N` tightness chain that rested on it; no headline theorem depended on it.
+Earlier history (counts as of 2026-07-14, 29 raw / 27 real): the
 post-B-I-cleanup base was 30 raw / 28 real; Phase 4.1 added `pphi2_limit_exists`
 (→ 31/29), and on 2026-07-13/14 two dormant GNS-bridge axioms were proved (`asymTransferNormalized_contract`,
 `asymGroundStateRep_eq_groundIsometry_one`; axiom → theorem, Codex), bringing it to 29/27. `pphi2_limit_exists`

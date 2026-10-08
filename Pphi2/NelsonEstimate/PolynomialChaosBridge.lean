@@ -40,7 +40,8 @@ wires up, the bridge is replaceable by a one-line `import + apply`.
 ## What this collapses
 
 - `nelson_exponential_estimate_lattice` (was `axiom`, now `theorem`)
-- `exponential_moment_bound` (was `axiom`, now `theorem`)
+- `exponential_moment_bound` (REMOVED 2026-10-08 together with the wrapper axiom
+  `nelson_exponential_estimate_master_bounded`: false as stated, issue #63)
 - `asymNelson_exponential_estimate` (was `axiom`, now `theorem`)
 
 The fourth Cluster A axiom (`asymTorusInteracting_exponentialMomentBound`
@@ -1314,17 +1315,5 @@ theorem nelson_exponential_estimate_master
           (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
           ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K :=
   polynomial_chaos_exp_moment_bridge (d := d) hd P mass L hL hmass
-
-/-- Compatibility wrapper preserving the pre-refactor `a ≤ 1` interface used by
-`Hypercontractivity.lean`. This remains axiomatic until the non-fixed-volume
-consumer is reworked onto the bounded-volume bridge. -/
-axiom nelson_exponential_estimate_master_bounded
-    (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass) :
-    ∃ (K : ℝ), 0 < K ∧
-    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-    ∀ (N : ℕ) [NeZero N],
-    ∫ ω : Configuration (FinLatticeField d N),
-        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K
 
 end Pphi2

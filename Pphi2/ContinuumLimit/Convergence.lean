@@ -10,7 +10,6 @@ from the tight family of continuum-embedded measures.
 ## Main results
 
 - `prokhorov` — tightness implies sequential compactness (axiomatized)
-- `continuumLimit` — existence of the P(Φ)₂ continuum measure
 - `schwinger_convergence` — Schwinger functions converge
 
 ## Mathematical background
@@ -24,11 +23,8 @@ The file contains:
 
 ### Application
 
-From `continuumMeasures_tight`, the family {ν_a}_{a>0} is tight.
-By `prokhorov_configuration_sequential`, any sequence ν_{a_n} with a_n → 0
-has a weakly convergent subsequence ν_{a_{n_k}} ⇀ ν.
-
-The limit ν is the P(Φ)₂ Euclidean measure on S'(ℝ²).
+`prokhorov_configuration_sequential` extracts a weakly convergent subsequence from any
+tight sequence of probability measures on `S'(ℝ^d)`.
 
 ### Schwinger functions
 
@@ -195,43 +191,12 @@ theorem prokhorov_configuration_sequential
   haveI : DyninMityaginSpace (ContinuumTestFunction d) := schwartz_dyninMityaginSpace
   exact prokhorov_configuration μ hμ_prob hμ_tight
 
-/-! ## The continuum limit -/
+/-! ## The continuum limit (REMOVED)
 
-/-- **Existence of the P(Φ)₂ continuum limit.**
-
-For any sequence of lattice spacings aₙ → 0, there exists a subsequence
-aₙₖ and a probability measure μ on S'(ℝ^d) such that:
-
-  `ν_{aₙₖ} ⇀ μ` weakly
-
-where `ν_a = (ι_a)_* μ_a` is the continuum-embedded interacting measure.
-
-The limit μ is the P(Φ)₂ Euclidean quantum field theory measure. -/
-theorem continuumLimit (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass)
-    -- A sequence of lattice spacings converging to 0
-    (a : ℕ → ℝ) (ha_pos : ∀ n, 0 < a n) (ha_le : ∀ n, a n ≤ 1)
-    (_ha_lim : Tendsto a atTop (nhds 0)) :
-    ∃ (φ : ℕ → ℕ) (μ : Measure (Configuration (ContinuumTestFunction d))),
-      StrictMono φ ∧
-      IsProbabilityMeasure μ ∧
-      -- Weak convergence of the subsequence
-      ∀ (f : Configuration (ContinuumTestFunction d) → ℝ),
-        Continuous f → (∃ C, ∀ x, |f x| ≤ C) →
-        Tendsto (fun n => ∫ ω, f ω ∂(continuumMeasure d N P (a (φ n)) mass
-          (ha_pos (φ n)) hmass))
-          atTop (nhds (∫ ω, f ω ∂μ)) := by
-  -- Define the sequence of measures indexed by ℕ
-  let ν : ℕ → Measure (Configuration (ContinuumTestFunction d)) :=
-    fun n => continuumMeasure d N P (a n) mass (ha_pos n) hmass
-  -- Apply configuration-space sequential Prokhorov extraction
-  obtain ⟨φ, μ, hφ, hμ_prob, hconv⟩ :=
-    prokhorov_configuration_sequential (d := d) ν
-    (fun n => continuumMeasure_isProbability d N P (a n) mass (ha_pos n) hmass)
-    (fun ε hε => by
-      obtain ⟨K, hK_compact, hK_bound⟩ := continuumMeasures_tight d N P mass hmass ε hε
-      exact ⟨K, hK_compact, fun n => hK_bound (a n) (ha_pos n) (ha_le n)⟩)
-  exact ⟨φ, μ, hφ, hμ_prob, hconv⟩
+`continuumLimit` (Prokhorov extraction along `a_n → 0` at fixed lattice size `N`) was deleted
+on 2026-10-08 with `continuumMeasures_tight`, whose proof rested on the false axiom
+`nelson_exponential_estimate_master_bounded` (issue #63). Existence of a limit is carried by
+the axiom `pphi2_limit_exists` below and, unconditionally, by the torus routes. -/
 
 /-! ## Schwinger function convergence -/
 

@@ -25,7 +25,7 @@ rough cutoff-tail layer-cake), the LEGITIMATE Nelson argument (NOT the false `V 
 bound — that was a stale comment, now fixed). This DE-RISKS the K leaf: the deepest analytic input
 (∫e^{−2V}≤K uniform) is done. (Note: a SEPARATE `axiom nelson_exponential_estimate_master_bounded`
 for the `a≤1` interface in Hypercontractivity.lean is still axiomatic, but the fixed-volume torus
-route we use does NOT touch it.)
+route we use does NOT touch it. UPDATE 2026-10-08: that axiom was REMOVED as false, issue #63.)
 ⟹ REASSESS: much of L1/L2 covariance-summability infra likely already exists inside NelsonEstimate/
 (CovarianceBoundsGJ, CovarianceSplit) + ContinuumLimit/Hypercontractivity.lean. Survey before rebuilding.
 - [x] L1. uniform `⟨V²⟩₀ ≤ C(m,L)`. status: ✅ DONE — `interaction_variance_le`
@@ -54,7 +54,9 @@ route we use does NOT touch it.)
       `gaussian_hypercontractivity_continuum` (:112); `pairing_memLp_lattice` (MomentIntegrability:30)
       `(ωf)∈Lᵖ ∀p`. CAVEAT: Hypercontractivity.lean route uses `exponential_moment_bound` (:923)
       which depends on the `a≤1` AXIOM nelson_exponential_estimate_master_bounded — for axiom-clean
-      K leaf prefer the fixed-volume `expMoment_two_le_uniform` (L4t). Need: uniform Lᵖ of `V` itself.
+      K leaf prefer the fixed-volume `expMoment_two_le_uniform` (L4t). UPDATE 2026-10-08: that axiom and
+      `exponential_moment_bound` were REMOVED as false (issue #63); `interacting_moment_bound` now takes
+      `a` and the exp-moment bound `K` as hypotheses — feed it the fixed-volume bound. Need: uniform Lᵖ of `V` itself.
 - [~] L3. moment-product integrability. status: FOUND (integrability). `integrable_powMul_interaction`
       (MomentIntegrability:141) `(ωf)ⁿ·V` integrable; `integrable_powMul_wickPolynomial` (:117);
       `wickMonomial_latticeGaussian` (Hypercontractivity:864) ⟨:wickₙ:⟩₀=0. Remaining: the uniform

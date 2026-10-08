@@ -197,6 +197,12 @@ theorem packages `Integrable (fun ω => (ω f)²) ν` alongside the
 additive bound `∫(ωf)² ≤ C₁·q(f)² + C₂`, derived from the same
 exp-moment input (no circularity).
 
+**2026-10-08 (issue #63):** axiom `nelson_exponential_estimate_master_bounded` removed as false
+as stated (pphi2 27 → 26 axioms), with `exponential_moment_bound`, `continuum_second_moment_uniform`,
+`continuumMeasures_tight`, `continuumLimit`; `interacting_moment_bound` restated pointwise in `a`
+with the exp-moment bound as a hypothesis. See AXIOM_AUDIT.md. Mentions of these names below
+are historical.
+
 Recent reductions (2026-04-19):
 - `continuumMeasures_tight` (Tightness.lean) — **PROVED** (axiom → theorem). Port of the
   torus tightness pipeline to ℝ^d: `continuum_second_moment_uniform` derived from
@@ -308,9 +314,9 @@ itself is a theorem via `embeddedTwoPoint_eq_latticeGreenBilinear`.
 | 3 | `OSProofs/OS4_MassGap.lean` | 2 axioms, 0 sorries |
 | 3 | `OSProofs/OS4_Ergodicity.lean` | 0 axioms, 0 sorries |
 | 4 | `ContinuumLimit/Embedding.lean` | 0 axioms (`IsPphi2Limit` is a def; strengthened 2026-07-13 with the coupled-lattice conjunct — δ₀ excluded) |
-| 4 | `ContinuumLimit/Hypercontractivity.lean` | 1 axiom, 0 sorries (Stage 1: `exponential_moment_bound` axiomatised — uniform-in-`a≤1` claim no longer holds via the easy pointwise lower bound under GJ-aligned wickConstant; Phase 2). `wickConstant_eq_variance` updated to use `latticeCovarianceGJ` via the bridge `latticeCovariance_GJ_eq_inv_smul_bare`. |
-| 4 | `ContinuumLimit/Tightness.lean` | **0 axioms, 0 sorries** (`continuumMeasures_tight` proved from Mitoma-Chebyshev + `interacting_moment_bound`) |
-| 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 0 sorries (`continuumLimit` proved; `pphi2_limit_exists` is the vetted OPEN existence axiom since 2026-07-13; `continuumLimit_nonGaussian` regime-restricted) |
+| 4 | `ContinuumLimit/Hypercontractivity.lean` | **0 axioms**, 0 sorries (`exponential_moment_bound` removed 2026-10-08 as false, issue #63; `interacting_moment_bound` now pointwise in `a` with the exp-moment bound as hypothesis). `wickConstant_eq_variance` uses `latticeCovarianceGJ` via the bridge `latticeCovariance_GJ_eq_inv_smul_bare`. |
+| 4 | `ContinuumLimit/Tightness.lean` | **0 axioms, 0 sorries** (`continuumMeasure_sq_integrable` only; `continuumMeasures_tight` removed 2026-10-08, issue #63) |
+| 4 | `ContinuumLimit/Convergence.lean` | 2 axioms, 0 sorries (`continuumLimit` removed 2026-10-08, issue #63; `pphi2_limit_exists` is the vetted OPEN existence axiom since 2026-07-13; `continuumLimit_nonGaussian` regime-restricted) |
 | 4 | `ContinuumLimit/AxiomInheritance.lean` | **3 axioms, 0 sorries** (`continuum_exponential_moment_bound`, `canonical_continuumMeasure_cf_tendsto`, `continuum_exponential_clustering`; derived OS0/OS1/OS4 inheritance wrappers live here) |
 | 4 | `ContinuumLimit/CharacteristicFunctional.lean` | 0 axioms, 0 sorries (complex analyticity, complex-from-real invariance, Z₂/reality, translation continuity, ergodicity support) |
 | 4 | `ContinuumLimit/TimeReflection.lean` | 0 axioms, 0 sorries (continuum time reflection on Schwartz space and distributions) |
@@ -579,14 +585,14 @@ refactoring (functionality consolidated into L2Operator axioms).
 | ~~`latticeEmbedLift_measurable`~~ | Embedding | ✅ Proved | `configuration_measurable_of_eval_measurable` + `configuration_eval_measurable`. |
 | `second_moment_uniform` | Tightness | Hard | ∫|Φ_a(f)|² dν_a ≤ C(f) uniformly in a. Key input: Nelson's hypercontractive estimate + convergence of lattice propagator. |
 | `moment_equicontinuity` | Tightness | Hard | Equicontinuity of moments in f. Needs Schwartz seminorm control. |
-| ~~`continuumMeasures_tight`~~ | Tightness | **PROVED** | Mitoma-Chebyshev + uniform second moments. `continuum_second_moment_uniform` derives the uniform bound from `interacting_moment_bound` (at `n=1, p=2`) + `gaussian_second_moment_uniform`. |
+| ~~`continuumMeasures_tight`~~ | Tightness | **PROVED** | Mitoma-Chebyshev + uniform second moments. `continuum_second_moment_uniform` derives the uniform bound from `interacting_moment_bound` (at `n=1, p=2`) + `gaussian_second_moment_uniform`. | **REMOVED 2026-10-08 — false as stated (issue #63)** |
 | ~~`gaussian_hypercontractivity_continuum`~~ | Hypercontractivity | **Proved** | Gaussian hypercontractivity in continuum-embedded form. Proved from `gaussian_hypercontractive` (gaussian-field) via pushforward + `latticeEmbedLift_eval_eq`. |
 | ~~`wickMonomial_latticeGaussian`~~ | Hypercontractivity | **Theorem** | Proved from `wickConstant_eq_variance` + marginal Gaussian + `gaussian_hermite_zero_mean`. |
 | ~~`wickConstant_eq_variance`~~ | Hypercontractivity | **Theorem** | Proved generically from `GeneralResults/LatticeProductDFT.lean`: product-DFT Parseval plus the abstract spectral covariance formula identify the site variance with the Wick constant in arbitrary dimension. |
 | ~~`gaussian_hermite_zero_mean`~~ | Hypercontractivity | **Proved** | 1D: ∫ He_n dN(0,σ²) = 0 for n ≥ 1; polynomial integrability under `gaussianReal`. |
 | ~~`wickPolynomial_uniform_bounded_below`~~ | WickPolynomial | **Proved** | Wick polynomial P(c,x) ≥ -A uniformly for c ∈ [0,C]. Coefficient continuity + compactness + leading term dominance. |
-| ~~`exponential_moment_bound`~~ | Hypercontractivity | **Proved** | ∫ exp(-2V_a) dμ_{GFF} ≤ K. Proved from `wickPolynomial_uniform_bounded_below` + pointwise exp bound + probability measure. |
-| ~~`interacting_moment_bound`~~ | Hypercontractivity | **Proved** | Bounds interacting L^{pn} moments in terms of FREE Gaussian L^{2n} moments via Cauchy-Schwarz density transfer. Proved from `exponential_moment_bound`, `partitionFunction_ge_one`, `pairing_memLp`, and Hölder/Cauchy-Schwarz. |
+| ~~`exponential_moment_bound`~~ | Hypercontractivity | **Proved** | ∫ exp(-2V_a) dμ_{GFF} ≤ K. Proved from `wickPolynomial_uniform_bounded_below` + pointwise exp bound + probability measure. | **REMOVED 2026-10-08 — false as stated (issue #63)** |
+| ~~`interacting_moment_bound`~~ | Hypercontractivity | **Proved** | Bounds interacting L^{pn} moments in terms of FREE Gaussian L^{2n} moments via Cauchy-Schwarz density transfer. Proved from `exponential_moment_bound`, `partitionFunction_ge_one`, `pairing_memLp`, and Hölder/Cauchy-Schwarz. | **Restated 2026-10-08** pointwise in `a`, exp-moment bound as hypothesis (issue #63). |
 | ~~`partitionFunction_ge_one`~~ | Hypercontractivity | **Proved** | Z_a ≥ 1 by Jensen's inequality (`ConvexOn.map_integral_le`) + `interactionFunctional_mean_nonpos`. |
 | ~~`interactionFunctional_mean_nonpos`~~ | Hypercontractivity | **Proved** | ∫ V dμ_GFF ≤ 0. Proved from `wickMonomial_latticeGaussian` (Hermite orthogonality) + linearity + `P.coeff_zero_nonpos`. |
 | `prokhorov_configuration_sequential` | Convergence | Infrastructure | Sequential extraction axiom directly on `Configuration (ContinuumTestFunction d)`; avoids global Polish/Borel assumptions on full weak-* dual. |
@@ -779,7 +785,7 @@ Note: `os1_inheritance` is a theorem (not axiom) — OS1 transfers trivially sin
 | ~~`energyLevel_gap`~~ | Positivity | **Proved** — E₁ > E₀ from transfer eigenvalue gap. |
 | ~~`rp_closed_under_weak_limit`~~ | OS3_RP_Inheritance | **Proved** — RP closed under weak limits. |
 | ~~`reflection_positivity_lattice`~~ | OS3_RP_Lattice | **Converted** to `lattice_rp` axiom. |
-| ~~`continuumLimit`~~ | Convergence | **Proved** — Apply configuration-space sequential Prokhorov axiom to the tight family (`prokhorov_configuration_sequential` + `continuumMeasures_tight`). |
+| ~~`continuumLimit`~~ | Convergence | **Proved** — Apply configuration-space sequential Prokhorov axiom to the tight family (`prokhorov_configuration_sequential` + `continuumMeasures_tight`). | **REMOVED 2026-10-08 — false as stated (issue #63)** |
 | ~~`continuumTimeReflection`~~ | TimeReflection | **Proved** — defined via `compCLMOfContinuousLinearEquiv`. |
 | ~~`so2Generator`~~ | OS2_WardIdentity | **Proved** — SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ via `smulLeftCLM` + `lineDerivOpCLM`. |
 | ~~`pphi2_exists`~~ | OS2_WardIdentity | **Proved** — Main existence theorem. Uses `continuumLimit_satisfies_fullOS`. |
@@ -866,7 +872,7 @@ The following theorems have complete proofs (no sorry):
 | `compTimeReflection2` | OSAxioms | Time reflection on Schwartz space — `compCLMOfContinuousLinearEquiv` with time reflection CLE |
 | `SchwartzMap.translate` | OSAxioms | Translation on Schwartz space — `compCLMOfAntilipschitz` with translation |
 | `so2Generator` | OS2_WardIdentity | SO(2) generator J f = x₁·∂f/∂x₂ - x₂·∂f/∂x₁ — `smulLeftCLM` + `lineDerivOpCLM` |
-| `continuumLimit` | Convergence | Continuum limit via configuration extraction axiom — `prokhorov_configuration_sequential` + `continuumMeasures_tight` |
+| `continuumLimit` | Convergence | Continuum limit via configuration extraction axiom — `prokhorov_configuration_sequential` + `continuumMeasures_tight` | **REMOVED 2026-10-08 — false as stated (issue #63)** |
 | `latticeEmbed` | Embedding | Lattice→S'(ℝ^d) embedding — `SchwartzMap.mkCLMtoNormedSpace` with `|ι(φ)(f)| ≤ (a^d·Σ|φ(x)|)·seminorm(0,0)(f)` |
 | `latticeEmbed_eval` | Embedding | Evaluation formula — `rfl` from construction |
 | `transferOperator_spectral` | L2Operator | Spectral decomposition — `compact_selfAdjoint_spectral` from gaussian-field |
@@ -971,7 +977,7 @@ infrastructure. Assessment date: 2026-03-04.
 | `general_clustering_from_spectral_gap` | OS4_MassGap | Bounded observables; `G` on `latticeConfigEuclideanTimeShift`, decay measured in `latticeEuclideanTimeSeparation`. |
 | `second_moment_uniform` | Tightness | Uniform second moments for interacting measure. |
 | `moment_equicontinuity` | Tightness | Equicontinuity of moments in f. |
-| ~~`continuumMeasures_tight`~~ | Tightness | **PROVED** via `configuration_tight_of_uniform_second_moments` + `continuum_second_moment_uniform` (ported from torus tightness pipeline). |
+| ~~`continuumMeasures_tight`~~ | Tightness | **PROVED** via `configuration_tight_of_uniform_second_moments` + `continuum_second_moment_uniform` (ported from torus tightness pipeline). | **REMOVED 2026-10-08 — false as stated (issue #63)** |
 | ~~`gaussianContinuumMeasures_tight`~~ | GaussianTightness | **PROVED for `d > 0`** — Tightness via `configuration_tight_of_uniform_second_moments`; the remaining `d = 0` case is a separate Dynin-Mityagin / Schwartz-space infrastructure issue. |
 | `gaussianLimit_isGaussian` | GaussianLimit | Weak limits of Gaussians are Gaussian (S'(ℝ²) version). |
 
