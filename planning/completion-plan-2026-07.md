@@ -164,7 +164,7 @@ deliberately retained as vetted GJ inputs — decide at 2.4).
   axiom for M-cyl-1** (per the master plan's decided path) and discharge as its own campaign.
   If retained: keep the axiom, tighten its vetting record, and proceed; if attacked now, budget
   it like a fresh mid-size project (weeks, new repo).
-- [ ] **2b.3** Same decision for `nelson_exponential_estimate_master_bounded`
+- [x] **2b.3** (RESOLVED 2026-10-08: removed as false as stated, issue #63.) Same decision for `nelson_exponential_estimate_master_bounded`
   (`PolynomialChaosBridge.lean:1321`) — note Phase 1 success shrinks its upstream debt.
 
 ### 2c. Layer C assembly

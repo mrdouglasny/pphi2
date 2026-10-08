@@ -8,7 +8,7 @@
 Applies Prokhorov's theorem to extract a weakly convergent subsequence from the tight family of continuum-embedded measures. Contains a fully proved sequential Prokhorov theorem for Polish spaces (using Mathlib's `isCompact_closure_of_isTightMeasureSet` and Levy-Prokhorov metrization), two topological axioms for $\mathcal{S}'(\mathbb{R}^d)$, the continuum limit existence theorem, and a proved witness for `IsPphi2Limit`.
 
 ## Status
-**Main result**: `continuumLimit` proved; 3 axioms total
+**Main result**: `prokhorov_configuration_sequential` (`continuumLimit` removed 2026-10-08, issue #63); 3 axioms total
 **Length**: 349 lines, 0 definitions + 5 theorems + 3 axioms
 
 ---
@@ -24,9 +24,6 @@ $\mathcal{S}'(\mathbb{R}^d)$ has a Borel $\sigma$-algebra compatible with the we
 
 ### `prokhorov_configuration_sequential` (theorem, proved)
 Sequential Prokhorov extraction on configuration space, derived from `prokhorov_sequential` using the two topological axioms.
-
-### `continuumLimit` (theorem, proved)
-For any sequence of lattice spacings $a_n \to 0$, there exists a subsequence $a_{n_k}$ and a probability measure $\mu$ on $\mathcal{S}'(\mathbb{R}^d)$ such that $\nu_{a_{n_k}} \rightharpoonup \mu$ weakly.
 
 ### `continuumLimit_nonGaussian` (axiom)
 The continuum limit is non-Gaussian for nontrivial $P$: there exists $f$ with $S_4(f,f,f,f) - 3 S_2(f,f)^2 \ne 0$ (nonzero connected four-point function).

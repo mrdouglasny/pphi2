@@ -55,7 +55,8 @@ clustering, gating OS4). Master campaign doc: [`docs/cylinder-master-plan.md`].
 ## Dependency DAG (clusters)
 
 ```
-                                 nelson_exponential_estimate_master_bounded (12) ★★★
+                                 [12: nelson_…_master_bounded — REMOVED 2026-10-08 as false;
+                                  fixed-volume `nelson_exponential_estimate_master` is a theorem]
                                               │
    [gap 17a/17b — OPEN target;  ──┐          ▼
     former axioms 16/17 REMOVED    │    asymInteracting_mgf_gaussianDominated (2)  [Layer A]
@@ -229,11 +230,13 @@ interacting content (`u₄≠0`, ★★★, needs `λ>0`).
 
 ## Cluster 0 — foundational (feeds Layer A)
 
-- [ ] **12. `nelson_exponential_estimate_master_bounded`** `NelsonEstimate/PolynomialChaosBridge.lean:1321`
-  status: scoped   deps: []   diff: ★★★
-  note: the Nelson hypercontractivity / polynomial-chaos exponential estimate — the analytic engine
-  under Layer A. Plans: [`docs/nelson-bridge-generalization-plan.md`],
-  [`docs/degree-piecewise-tail-discharge-plan.md`], [`docs/polynomial-chaos-exp-moment-bridge-proof-plan.md`].
+- [x] **12. ~~`nelson_exponential_estimate_master_bounded`~~** — **REMOVED 2026-10-08 as false as
+  stated** (issue #63): no `K` uniform over unconstrained volume `L = N a` exists (diverges as
+  `L → 0` via the zero mode — rigorous; expected to as `L → ∞` — heuristic). The fixed-volume estimate
+  `nelson_exponential_estimate_master` is already a theorem; the fixed-`N` consumers
+  (`exponential_moment_bound` — also false; `continuumMeasures_tight`, `continuumLimit` — proofs
+  withdrawn, not refuted) were deleted with it.
+  See AXIOM_AUDIT.md 2026-10-08.
 
 ---
 

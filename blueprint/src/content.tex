@@ -6565,11 +6565,6 @@ available (otherwise the node shows its Lean name). Declarations flagged
   \texttt{Pphi2.roughWickConstant}
 \end{definition}
 \section{\texttt{Pphi2.NelsonEstimate.PolynomialChaosBridge}}
-\begin{theorem}[\texttt{nelson\_exponential\_estimate\_master\_bounded} (axiom)]\label{Pphi2-nelson-exponential-estimate-master-bounded}
-  \lean{Pphi2.nelson_exponential_estimate_master_bounded}\leanok
-  \uses{GaussianField-FinLatticeSites, GaussianField-latticeGaussianMeasure, GaussianField-Configuration, GaussianField-instMeasurableSpaceConfiguration, GaussianField-FinLatticeField, Pphi2-interactionFunctional}
-  \texttt{Pphi2.nelson\_exponential\_estimate\_master\_bounded}
-\end{theorem}
 \begin{theorem}[\texttt{canonicalRoughError\_cutoff\_tail\_quartic\_uniform}]\label{Pphi2-canonicalRoughError-cutoff-tail-quartic-uniform}
   \lean{Pphi2.canonicalRoughError_cutoff_tail_quartic_uniform}\leanok
   \uses{Pphi2-canonicalJointMeasure, Pphi2-DynamicalCutoff-dynamicalCutoffScale-pos, Pphi2-canonicalRoughError-neg-tail-uniform-in-aN, Pphi2-DynamicalCutoff-dynamicalCutoffScale, Pphi2-ChaosTailBridge-chaosTailConstant, Pphi2-canonicalRoughError, Pphi2-CanonicalJoint}
@@ -8014,11 +8009,6 @@ available (otherwise the node shows its Lean name). Declarations flagged
   \texttt{Pphi2.interactionFunctional}
 \end{definition}
 \section{\texttt{Pphi2.ContinuumLimit.Convergence}}
-\begin{theorem}[\texttt{continuumLimit}]\label{Pphi2-continuumLimit}
-  \lean{Pphi2.continuumLimit}\leanok
-  \uses{Pphi2-EuclideanPlaneBackground-SpaceTime, Pphi2-planeBackground, Pphi2-continuumMeasures-tight, Pphi2-continuumMeasure-isProbability, Pphi2-EuclideanPlaneBackground-dim, Pphi2-prokhorov-configuration-sequential, Pphi2-continuumMeasure, GaussianField-Configuration, GaussianField-instMeasurableSpaceConfiguration, Pphi2-ContinuumTestFunction}
-  For any sequence of lattice spacings $a_n \to 0$, there exists a subsequence $a_{n_k}$ and a probability measure $\mu$ on $\mathcal{S}'(\mathbb{R}^d)$ such that $\nu_{a_{n_k}} \rightharpoonup \mu$ weakly.
-\end{theorem}
 \begin{theorem}[\texttt{prokhorov\_sequential}]\label{Pphi2-prokhorov-sequential}
   \lean{Pphi2.prokhorov_sequential}\leanok
   On a Polish space $X$, if a sequence of probability measures $\{\mu_n\}$ is tight, then it has a weakly convergent subsequence. Fully proved from Mathlib.
@@ -12215,14 +12205,9 @@ available (otherwise the node shows its Lean name). Declarations flagged
   \uses{GaussianField-finLatticeDelta, GaussianField-FinLatticeSites, GaussianField-latticeGaussianMeasure, GaussianField-Configuration, Pphi2-wickConstant, GaussianField-instMeasurableSpaceConfiguration, GaussianField-FinLatticeField, Pphi2-interactionFunctional, Pphi2-wickPolynomial-integral-eq-coeff-zero, Pphi2-wickPolynomial}
   $\int V_a\, d\mu_{\text{GFF}} \le 0$. Proved from Hermite orthogonality and $P.\text{coeff}_0 \le 0$.
 \end{theorem}
-\begin{theorem}[\texttt{exponential\_moment\_bound}]\label{Pphi2-exponential-moment-bound}
-  \lean{Pphi2.exponential_moment_bound}\leanok
-  \uses{GaussianField-FinLatticeSites, GaussianField-latticeGaussianMeasure, Pphi2-nelson-exponential-estimate-master-bounded, GaussianField-Configuration, GaussianField-instMeasurableSpaceConfiguration, GaussianField-FinLatticeField, Pphi2-interactionFunctional}
-  $\int e^{-2V_a(\varphi)}\, d\mu_{\text{GFF}} \le K$ uniformly in $a \in (0,1]$. Proved via \texttt{wickPolynomial\_uniform\_bounded\_below} and pointwise exponentiation.
-\end{theorem}
 \begin{theorem}[\texttt{interacting\_moment\_bound}]\label{Pphi2-interacting-moment-bound}
   \lean{Pphi2.interacting_moment_bound}\leanok
-  \uses{Pphi2-EuclideanPlaneBackground-SpaceTime, Pphi2-partitionFunction-ge-one, GaussianField-finLatticeField-dyninMityaginSpace, GaussianField-measure, GaussianField-ell2-separableSpace, Pphi2-latticeTestField, Pphi2-planeBackground, GaussianField-FinLatticeSites, Pphi2-latticeEmbedLift-measurable, Pphi2-partitionFunction, Pphi2-gaussian-hypercontractivity-continuum, GaussianField-latticeCovarianceGJ, Pphi2-EuclideanPlaneBackground-dim, GaussianField-pairing-memLp, Pphi2-interactingLatticeMeasure, Pphi2-exponential-moment-bound, Pphi2-latticeEmbedLift-eval-eq, Pphi2-continuumMeasure, GaussianField-latticeGaussianMeasure, GaussianField-configuration-eval-measurable, GaussianField-Configuration, Pphi2-density-transfer-bound, GaussianField-instMeasurableSpaceConfiguration, Pphi2-latticeEmbedLift, Pphi2-boltzmannWeight, Pphi2-ContinuumTestFunction, GaussianField-ell2-, GaussianField-FinLatticeField, GaussianField-measure-isProbability, Pphi2-interactionFunctional, Pphi2-partitionFunction-pos, Lattice-toSemilatticeInf}
+  \uses{Pphi2-EuclideanPlaneBackground-SpaceTime, Pphi2-partitionFunction-ge-one, GaussianField-finLatticeField-dyninMityaginSpace, GaussianField-measure, GaussianField-ell2-separableSpace, Pphi2-latticeTestField, Pphi2-planeBackground, GaussianField-FinLatticeSites, Pphi2-latticeEmbedLift-measurable, Pphi2-partitionFunction, Pphi2-gaussian-hypercontractivity-continuum, GaussianField-latticeCovarianceGJ, Pphi2-EuclideanPlaneBackground-dim, GaussianField-pairing-memLp, Pphi2-interactingLatticeMeasure, Pphi2-latticeEmbedLift-eval-eq, Pphi2-continuumMeasure, GaussianField-latticeGaussianMeasure, GaussianField-configuration-eval-measurable, GaussianField-Configuration, Pphi2-density-transfer-bound, GaussianField-instMeasurableSpaceConfiguration, Pphi2-latticeEmbedLift, Pphi2-boltzmannWeight, Pphi2-ContinuumTestFunction, GaussianField-ell2-, GaussianField-FinLatticeField, GaussianField-measure-isProbability, Pphi2-interactionFunctional, Pphi2-partitionFunction-pos, Lattice-toSemilatticeInf}
   $\int |\omega(f)|^{pn}\, d\mu_a \le C (2p-1)^{pn/2} (\int |\omega(f)|^{2n}\, d\mu_{\text{GFF}})^{p/2}$ with $C = K^{1/2}$ uniform in $a$. Proved by chaining density transfer + hypercontractivity.
 \end{theorem}
 \begin{theorem}[\texttt{wickPolynomial\_integral\_eq\_coeff\_zero}]\label{Pphi2-wickPolynomial-integral-eq-coeff-zero}
@@ -13103,20 +13088,10 @@ available (otherwise the node shows its Lean name). Declarations flagged
   \texttt{Pphi2.cylinderIR\_uniform\_second\_moment}
 \end{theorem}
 \section{\texttt{Pphi2.ContinuumLimit.Tightness}}
-\begin{theorem}[\texttt{continuum\_second\_moment\_uniform}]\label{Pphi2-continuum-second-moment-uniform}
-  \lean{Pphi2.continuum_second_moment_uniform}\leanok
-  \uses{Pphi2-EuclideanPlaneBackground-SpaceTime, Pphi2-gaussianContinuumMeasure, Pphi2-gaussian-second-moment-uniform, Pphi2-planeBackground, GaussianField-FinLatticeSites, Pphi2-EuclideanPlaneBackground-dim, Pphi2-continuumMeasure, GaussianField-latticeGaussianMeasure, GaussianField-Configuration, Pphi2-interacting-moment-bound, GaussianField-instMeasurableSpaceConfiguration, Pphi2-latticeEmbedLift, Pphi2-ContinuumTestFunction, GaussianField-FinLatticeField}
-  \texttt{Pphi2.continuum\_second\_moment\_uniform}
-\end{theorem}
 \begin{theorem}[\texttt{congr\_simp}]\label{Pphi2-continuumMeasure-congr-simp}
   \lean{Pphi2.continuumMeasure.congr_simp}\leanok
   \uses{Pphi2-EuclideanPlaneBackground-SpaceTime, Pphi2-planeBackground, Pphi2-EuclideanPlaneBackground-dim, Pphi2-continuumMeasure, GaussianField-Configuration, GaussianField-instMeasurableSpaceConfiguration, Pphi2-ContinuumTestFunction}
   \texttt{Pphi2.continuumMeasure.congr\_simp}
-\end{theorem}
-\begin{theorem}[\texttt{continuumMeasures\_tight} (axiom)]\label{Pphi2-continuumMeasures-tight}
-  \lean{Pphi2.continuumMeasures_tight}\leanok
-  \uses{Pphi2-EuclideanPlaneBackground-SpaceTime, GaussianField-schwartz-dyninMityaginSpace, Pphi2-planeBackground, Pphi2-continuumMeasure-isProbability, Pphi2-EuclideanPlaneBackground-dim, Pphi2-continuum-second-moment-uniform, Pphi2-continuumMeasure, GaussianField-Configuration, GaussianField-instMeasurableSpaceConfiguration, Pphi2-ContinuumTestFunction, GaussianField-configuration-tight-of-uniform-second-moments}
-  For every $\varepsilon > 0$, there exists a compact set $K \subset \mathcal{S}'(\mathbb{R}^d)$ such that $\nu_a(K) \ge 1 - \varepsilon$ for all $a \in (0, 1]$.  Proof outline: 1. By Mitoma's criterion, tightness of measures on $\mathcal{S}'$ reduces to tightness of 1D projections. 2. Chebyshev's inequality reduces 1D tightness to uniform second moment bounds $\sup_a \int |\Phi_a(f)|^2 \, d\nu_a < \infty$. 3. The uniform bound is provided by the hypercontractive estimate (from \texttt{Hypercontractivity.lean}).  Dependencies: \texttt{Hypercontractivity.lean}, Mitoma (1983).
 \end{theorem}
 \section{\texttt{Pphi2.AsymTorus.AsymVarianceDischarge}}
 \begin{theorem}[\texttt{slicePairing\_measurable}]\label{Pphi2-slicePairing-measurable}

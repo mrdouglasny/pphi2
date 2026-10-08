@@ -16,7 +16,7 @@ V_a ~ φ⁴ grows faster than the Gaussian e^{-φ²} suppression.
 
 Two proof paths are provided, both decomposed into textbook axioms.
 
-## Option A: Cauchy-Schwarz Density Transfer (3 axioms → interacting_moment_bound)
+## Option A: Cauchy-Schwarz Density Transfer (→ interacting_moment_bound)
 
 The interacting measure dμ_a = (1/Z_a) exp(-V_a) dμ_{GFF,a} is absolutely
 continuous w.r.t. the Gaussian free field. The proof:
@@ -25,8 +25,10 @@ continuous w.r.t. the Gaussian free field. The proof:
    the abstract Gaussian measure. Here we state the consequence for the
    lattice GFF in the continuum-embedded form.
 
-2. **Exponential moment bound** — ∫ exp(-2V_a) dμ_{GFF} ≤ K uniformly
-   in a. This is the key analytic input (Nelson's estimate / Simon §V).
+2. **Exponential moment bound** — ∫ exp(-2V_a) dμ_{GFF} ≤ K. This is the key
+   analytic input (Nelson's estimate / Simon §V), and it is uniform only at fixed
+   physical volume `N a = L`; here it enters as a hypothesis at the given `a`
+   (the fixed-`N`, all-`a ≤ 1` form is false, issue #63).
    Note: only the NEGATIVE exponential exp(-sV_a) is bounded; the positive
    exponential exp(+V_a) diverges because V_a ~ φ⁴.
 
@@ -904,32 +906,16 @@ theorem wickMonomial_latticeGaussian (d N : ℕ) [NeZero N]
 
 -- `wickPolynomial_uniform_bounded_below` is proved in WickPolynomial.lean
 
-/-! ## Step A2: Exponential moment bound for the interaction -/
+/-! ## Step A2: Exponential moment bound for the interaction (REMOVED)
 
-/-- **Exponential moment bound for the interaction**, derived from
-`nelson_exponential_estimate_master_bounded` in
-`Pphi2/NelsonEstimate/PolynomialChaosBridge.lean`.
-
-This is the Phase 2 master statement: for the lattice GFF on
-`(ℤ/Nℤ)^d` with spacing `a` and mass `m > 0`,
-$$
-  \int \exp(-2 V_a(\omega))^2 \, d\mu_{\rm GFF} \le K
-$$
-uniformly in `0 < a ≤ 1` and `N`. The bridge axiom in
-`PolynomialChaosBridge.lean` carries the substantive content
-(Glimm-Jaffe Ch. 8 dynamical-cutoff via polynomial-chaos
-concentration); this theorem just exposes it under the original axiom
-shape so that downstream consumers don't need to be re-wired. -/
-theorem exponential_moment_bound (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) :
-    ∃ (K : ℝ), 0 < K ∧
-    ∀ (a : ℝ) (ha : 0 < a), a ≤ 1 →
-    ∫ ω : Configuration (FinLatticeField d N),
-        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
-        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K := by
-  obtain ⟨K, hK_pos, hbound⟩ :=
-    nelson_exponential_estimate_master_bounded d P mass hmass
-  exact ⟨K, hK_pos, fun a ha ha_le => hbound a ha ha_le N⟩
+The former `exponential_moment_bound` asserted `∫ exp(-V_a)² dμ_GFF ≤ K` uniformly in
+`0 < a ≤ 1` at fixed lattice size `N`. That is **false** (issue #63): with `L = N a`, the
+zero mode has variance `1/(L^d m²)`, and conditional Jensen gives, for `P(x) = x⁴/4`,
+`∫ exp(-2 V_a) dμ_GFF ≥ E[exp(-2 λ H₄(Z))]` with `λ = 1/(4 L^d m⁴)`, `Z ∼ N(0,1)`, which
+diverges as `a → 0` (see `scripts/verify_issue63_fixed_N_small_a.py`). It was derived from the
+equally false axiom `nelson_exponential_estimate_master_bounded`; both are deleted. The honest
+uniform statement fixes the physical volume: `nelson_exponential_estimate_master` in
+`Pphi2/NelsonEstimate/PolynomialChaosBridge.lean`. -/
 
 /-! ## Step A3: Cauchy-Schwarz density transfer -/
 
@@ -1199,14 +1185,17 @@ FREE Gaussian measure μ_{GFF}:
 
   ∫ |ω(f)|^{pn} dμ_a ≤ C · (2p-1)^{pn/2} · (∫ |ω(f)|^{2n} dμ_{GFF})^{p/2}
 
-where C = K^{1/2} is uniform in a, n, m, f and `p = 2m`.
+where `C = K^{1/2}` for any `K` bounding `∫ e^{-2V_a} dμ_{GFF}` at the given `a`, and
+`p = 2m`. The constant is uniform in `n, m, f` but **not** in `a` at fixed `N`: no
+`a`-uniform `K` exists there (issue #63; see the Step A2 note above). For a uniform
+constant use the fixed-volume estimate `nelson_exponential_estimate_master`.
 
 Proof:
   ∫ |ω(f)|^{pn} dμ_a = (1/Z_a) ∫ |ω(f)|^{pn} · e^{-V_a} dμ_{GFF}
     ≤ (1/Z_a) · (∫ |ω(f)|^{2pn} dμ_{GFF})^{1/2} · (∫ e^{-2V_a} dμ_{GFF})^{1/2}
                                                                 [Cauchy-Schwarz]
     ≤ (1/Z_a) · K^{1/2} · (∫ |ω(f)|^{2pn} dμ_{GFF})^{1/2}
-                                                    [exponential_moment_bound]
+                                                    [hypothesis `hK`]
     ≤ K^{1/2} · (2p-1)^{pn/2} · (∫ |ω(f)|^{2n} dμ_{GFF})^{p/2}
                                     [Z ≥ 1 + gaussian_hypercontractivity_continuum]
 
@@ -1217,22 +1206,20 @@ V_a ~ φ⁴ grows faster than the Gaussian suppression e^{-φ²}.
 Reference: Simon (1974), §V.1; Glimm-Jaffe (1987), §19.4. -/
 theorem interacting_moment_bound
     (P : InteractionPolynomial)
-    (mass : ℝ) (hmass : 0 < mass) :
-    ∃ (C : ℝ), 0 < C ∧
-    ∀ (n : ℕ) (p : ℝ) (m : ℕ), 1 ≤ m → p = 2 * ↑m →
-    ∀ (f : ContinuumTestFunction d) (a : ℝ) (ha : 0 < a), a ≤ 1 →
+    (mass : ℝ) (hmass : 0 < mass) (a : ℝ) (ha : 0 < a) (ha1 : a ≤ 1)
+    (K : ℝ) (hK_pos : 0 < K)
+    (hK : ∫ ω : Configuration (FinLatticeField d N),
+        (Real.exp (-interactionFunctional d N P a mass ω)) ^ 2
+        ∂(latticeGaussianMeasure d N a mass ha hmass) ≤ K)
+    (n : ℕ) (p : ℝ) (m : ℕ) (hm : 1 ≤ m) (hp : p = 2 * ↑m)
+    (f : ContinuumTestFunction d) :
     ∫ ω : Configuration (ContinuumTestFunction d),
         |ω f| ^ (p * ↑n) ∂(continuumMeasure d N P a mass ha hmass) ≤
-      C * (2 * p - 1) ^ (p * ↑n / 2) *
+      K ^ (1 / 2 : ℝ) * (2 * p - 1) ^ (p * ↑n / 2) *
       (∫ ω : Configuration (ContinuumTestFunction d),
         |ω f| ^ (2 * ↑n) ∂(Measure.map (latticeEmbedLift d N a ha)
           (latticeGaussianMeasure d N a mass ha hmass))) ^
       (p / 2) := by
-  -- Step A2: Get K from exponential_moment_bound
-  obtain ⟨K, hK_pos, hK⟩ := exponential_moment_bound d N P mass hmass
-  -- C = K^(1/2) works because Z ≥ 1 gives 1/Z ≤ 1
-  refine ⟨K ^ (1 / 2 : ℝ), Real.rpow_pos_of_pos hK_pos _, ?_⟩
-  intro n p m hm hp f a ha ha1
   -- Setup
   set μ_GFF := latticeGaussianMeasure d N a mass ha hmass
   set μ_int := interactingLatticeMeasure d N P a mass ha hmass
@@ -1281,7 +1268,7 @@ theorem interacting_moment_bound
       rw [Real.norm_eq_abs, ← Real.rpow_natCast (|ω g_f| ^ (p * ↑n)) 2,
           ← Real.rpow_mul (abs_nonneg _)]; congr 1; ring)
   have h_dt := density_transfer_bound d N P a mass ha hmass K hK_pos
-    (hK a ha ha1) hZ_ge_one (fun ω => |ω g_f| ^ (p * ↑n))
+    hK hZ_ge_one (fun ω => |ω g_f| ^ (p * ↑n))
     (fun ω => Real.rpow_nonneg (abs_nonneg _) _) hF_meas_gauss hF_sq_int
   -- h_dt: ∫ |ω g_f|^{pn} dμ_int ≤ K^{1/2} * (∫ (|ω g_f|^{pn})^2 dμ_GFF)^{1/2}
   -- Step 3: Bound (∫ (|ω g_f|^{pn})^2 dμ_GFF)^{1/2} using hypercontractivity

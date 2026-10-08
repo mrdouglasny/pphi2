@@ -285,18 +285,23 @@ The current `polynomial_chaos_exp_moment_bridge` axiom signature
 `∀ a > 0, ∀ N` is **mathematically false** without a volume
 constraint:
 
-- The Wick polynomial `:φ⁴:_{c_a} = φ⁴ - 6c_a φ² + 3c_a²` has
-  pointwise minimum `-6 c_a²`.
-- Hence `V_min = a^d · |Λ| · (-6 c_a²) = -L^d · 6 c_a²`. As
-  `c_a → ∞` (which happens at small `a` due to logarithmic
-  divergence in 2D, or at any `a` if `L → ∞`), `V_min → -∞`.
-- Then `∫ exp(-2V) dμ ≥ exp(-2 V_min) → ∞`. No uniform `K` exists.
+- **Correction 2026-10-08 (issue #63).** The argument originally recorded here used the
+  pointwise minimum `V ≥ V_min = -6 c_a² L^d` to conclude `∫ exp(-2V) dμ ≥ exp(-2 V_min)`.
+  That inequality is reversed: `V ≥ V_min` gives the *upper* bound
+  `∫ exp(-2V) dμ ≤ exp(-2 V_min)`. The conclusion is still true, by the zero mode:
+- With `L = N a` and the admissible quartic `P(x) = x⁴/4`, the zero mode `φ̄` has variance
+  `1/(L^d m²)`, and `E[V | φ̄] = λ H₄(Z)` with `λ = 1/(4 L^d m⁴)`, `Z ∼ N(0,1)`,
+  `H₄ = (z²-3)² - 6`.
+- Conditional Jensen: `∫ exp(-2V) dμ ≥ E[exp(-2λ H₄(Z))] ≥ P(|Z²-3| ≤ ½)·exp(11.5 λ)`,
+  which diverges as `L → 0`. So a positive lower bound on the volume is necessary, and the
+  one-sided constraint `a * N ≤ L` in the signature sketched below is **not** sufficient.
+  Growth as `L → ∞` is expected (extensivity) but is supported here only heuristically.
 
-The Nelson exp-moment bound is an **extensive** quantity:
+The Nelson exp-moment bound is expected to be an **extensive** quantity:
 `E[exp(-V_a)] ≤ exp(K · L^d)` where `L^d` is the physical volume.
-A bound uniform in volume cannot exist.
 
-**Required signature change**:
+**Signature change as originally proposed** (superseded: the landed theorem pins
+`N * a = L` exactly, see `polynomial_chaos_exp_moment_bridge`):
 ```lean
 theorem polynomial_chaos_exp_moment_bridge
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)
