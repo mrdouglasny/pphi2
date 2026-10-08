@@ -289,18 +289,19 @@ constraint:
   pointwise minimum `V ≥ V_min = -6 c_a² L^d` to conclude `∫ exp(-2V) dμ ≥ exp(-2 V_min)`.
   That inequality is reversed: `V ≥ V_min` gives the *upper* bound
   `∫ exp(-2V) dμ ≤ exp(-2 V_min)`. The conclusion is still true, by the zero mode:
-- With `L = N a`, the zero mode `φ̄` has variance `1/(L^d m²)`, and
-  `E[V | φ̄] = λ H₄(Z)` with `λ = 1/(L^d m⁴)`, `Z ∼ N(0,1)`, `H₄ = (z²-3)² - 6`.
+- With `L = N a` and the admissible quartic `P(x) = x⁴/4`, the zero mode `φ̄` has variance
+  `1/(L^d m²)`, and `E[V | φ̄] = λ H₄(Z)` with `λ = 1/(4 L^d m⁴)`, `Z ∼ N(0,1)`,
+  `H₄ = (z²-3)² - 6`.
 - Conditional Jensen: `∫ exp(-2V) dμ ≥ E[exp(-2λ H₄(Z))] ≥ P(|Z²-3| ≤ ½)·exp(11.5 λ)`,
-  which diverges as `L → 0`. As `L → ∞` the integral grows extensively. No uniform `K` exists,
-  and a one-sided constraint `a * N ≤ L` (as in the signature sketched below) is **not**
-  sufficient: the landed theorem pins `N * a = L`.
+  which diverges as `L → 0`. So a positive lower bound on the volume is necessary, and the
+  one-sided constraint `a * N ≤ L` in the signature sketched below is **not** sufficient.
+  Growth as `L → ∞` is expected (extensivity) but is supported here only heuristically.
 
-The Nelson exp-moment bound is an **extensive** quantity:
+The Nelson exp-moment bound is expected to be an **extensive** quantity:
 `E[exp(-V_a)] ≤ exp(K · L^d)` where `L^d` is the physical volume.
-A bound uniform in volume cannot exist.
 
-**Required signature change**:
+**Signature change as originally proposed** (superseded: the landed theorem pins
+`N * a = L` exactly, see `polynomial_chaos_exp_moment_bridge`):
 ```lean
 theorem polynomial_chaos_exp_moment_bridge
     (P : InteractionPolynomial) (mass : ℝ) (hmass : 0 < mass)

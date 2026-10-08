@@ -4,38 +4,25 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 # Polynomial Chaos Bridge: Cluster A Master Theorem
 
-This file packages the four pphi2 Cluster A axioms (the Nelson
-exponential estimate in its various lattice flavors) into a single
-master theorem `nelson_exponential_estimate_master`, derived from a
-single bridge axiom that mirrors the polynomial-chaos concentration
-theorem upstream in `markov-semigroups`.
+This file packages the pphi2 Cluster A statements (the Nelson exponential
+estimate in its various lattice flavors) into a single fixed-volume master
+theorem `nelson_exponential_estimate_master`.
 
-## The bridge axiom
+## The bridge
 
 `polynomial_chaos_exp_moment_bridge` is the lattice-Wick-polynomial
 specialization of Janson's Theorem 5.10
-(`GaussianHilbert.PolynomialChaosConcentration`). It states
-the dynamical-cutoff conclusion: for the lattice GFF on `(ℤ/Nℤ)^d`
-with spacing `a` and mass `m > 0`, and a fixed even interaction
-polynomial `P`,
+(`GaussianHilbert.PolynomialChaosConcentration`). It was originally an
+axiom and is now a theorem. It states the dynamical-cutoff conclusion: for
+the lattice GFF on `(ℤ/Nℤ)^2` with spacing `a`, mass `m > 0`, fixed
+physical volume `N a = L`, and a fixed even interaction polynomial `P`,
 
-  ∃ K, ∀ N, ∫ exp(-2 V_a(ω))² dμ_GFF ≤ K  uniformly in N.
+  ∃ K, ∀ N a, N a = L → ∫ exp(-V_a(ω))² dμ_GFF ≤ K.
 
-The proof in `markov-semigroups` is the three-step Glimm–Jaffe Ch. 8
-chain (smooth lower bound on `V_S`; polynomial-chaos concentration
-on `E_R`; dynamical cutoff `T = T(M)` and integration). The smooth-side
-infrastructure (`SmoothLowerBound.lean`) and the rough-side scaffolding
-(`RoughErrorBound.lean`, currently `True`-stub theorems) are already
-in pphi2; once `markov-semigroups`'s `polynomial_chaos_concentration`
-becomes a theorem and the GFF↔standard-Gaussian change-of-variables
-bridge is available, this axiom becomes a derivation rather than an
-assertion.
-
-Because pphi2 cannot currently depend on `markov-semigroups` at the
-lakefile level (Mathlib pin synchronization across the project family
-is a separate maintenance task), we state this bridge as a pphi2-internal
-`axiom` with cross-references to the upstream files. When the dependency
-wires up, the bridge is replaceable by a one-line `import + apply`.
+The proof is the three-step Glimm–Jaffe Ch. 8 chain (smooth lower bound on
+`V_S`; polynomial-chaos concentration on `E_R`; dynamical cutoff `T = T(M)`
+and integration). The volume constraint is essential: no `K` uniform over
+unconstrained `N a` exists (issue #63).
 
 ## What this collapses
 

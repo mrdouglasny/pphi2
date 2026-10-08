@@ -20,7 +20,7 @@ superseded_by: null
 ```
 
 **REFUTED AND REMOVED 2026-10-08.** The axiom is false as stated: at fixed `N` and `a → 0` the
-zero mode gives `∫ e^{-2V} dμ_GFF ≥ E[exp(-2λH₄(Z))] → ∞`, `λ = 1/((Na)^d m⁴)` (pure quartic).
+zero mode gives `∫ e^{-2V} dμ_GFF ≥ E[exp(-2λH₄(Z))] → ∞`, `λ = 1/(4 (Na)^d m⁴)` (admissible pure quartic `x⁴/4`).
 The 2026-05-10 DT verdict below missed this. Details: `AXIOM_AUDIT.md` entry 2026-10-08;
 numerics `scripts/verify_issue63_fixed_N_small_a.py`. The record below is historical.
 

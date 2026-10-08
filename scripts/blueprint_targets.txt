@@ -25,7 +25,6 @@ Pphi2.continuum_rp_from_lattice
 Pphi2.rp_closed_under_weak_limit
 Pphi2.action_decomposition
 Pphi2.timeReflection2D_involution
-Pphi2.continuumMeasures_tight
 Pphi2.os4_lattice_from_gap
 Pphi2.massGap_pos
 Pphi2.energyLevel_gap

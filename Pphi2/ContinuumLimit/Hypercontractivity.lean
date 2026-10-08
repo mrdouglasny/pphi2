@@ -16,7 +16,7 @@ V_a ~ φ⁴ grows faster than the Gaussian e^{-φ²} suppression.
 
 Two proof paths are provided, both decomposed into textbook axioms.
 
-## Option A: Cauchy-Schwarz Density Transfer (3 axioms → interacting_moment_bound)
+## Option A: Cauchy-Schwarz Density Transfer (→ interacting_moment_bound)
 
 The interacting measure dμ_a = (1/Z_a) exp(-V_a) dμ_{GFF,a} is absolutely
 continuous w.r.t. the Gaussian free field. The proof:
@@ -25,8 +25,10 @@ continuous w.r.t. the Gaussian free field. The proof:
    the abstract Gaussian measure. Here we state the consequence for the
    lattice GFF in the continuum-embedded form.
 
-2. **Exponential moment bound** — ∫ exp(-2V_a) dμ_{GFF} ≤ K uniformly
-   in a. This is the key analytic input (Nelson's estimate / Simon §V).
+2. **Exponential moment bound** — ∫ exp(-2V_a) dμ_{GFF} ≤ K. This is the key
+   analytic input (Nelson's estimate / Simon §V), and it is uniform only at fixed
+   physical volume `N a = L`; here it enters as a hypothesis at the given `a`
+   (the fixed-`N`, all-`a ≤ 1` form is false, issue #63).
    Note: only the NEGATIVE exponential exp(-sV_a) is bounded; the positive
    exponential exp(+V_a) diverges because V_a ~ φ⁴.
 
@@ -908,8 +910,8 @@ theorem wickMonomial_latticeGaussian (d N : ℕ) [NeZero N]
 
 The former `exponential_moment_bound` asserted `∫ exp(-V_a)² dμ_GFF ≤ K` uniformly in
 `0 < a ≤ 1` at fixed lattice size `N`. That is **false** (issue #63): with `L = N a`, the
-zero mode has variance `1/(L^d m²)`, and conditional Jensen gives, for `P = :φ⁴:`,
-`∫ exp(-2 V_a) dμ_GFF ≥ E[exp(-2 λ H₄(Z))]` with `λ = 1/(L^d m⁴)`, `Z ∼ N(0,1)`, which
+zero mode has variance `1/(L^d m²)`, and conditional Jensen gives, for `P(x) = x⁴/4`,
+`∫ exp(-2 V_a) dμ_GFF ≥ E[exp(-2 λ H₄(Z))]` with `λ = 1/(4 L^d m⁴)`, `Z ∼ N(0,1)`, which
 diverges as `a → 0` (see `scripts/verify_issue63_fixed_N_small_a.py`). It was derived from the
 equally false axiom `nelson_exponential_estimate_master_bounded`; both are deleted. The honest
 uniform statement fixes the physical volume: `nelson_exponential_estimate_master` in
@@ -1193,7 +1195,7 @@ Proof:
     ≤ (1/Z_a) · (∫ |ω(f)|^{2pn} dμ_{GFF})^{1/2} · (∫ e^{-2V_a} dμ_{GFF})^{1/2}
                                                                 [Cauchy-Schwarz]
     ≤ (1/Z_a) · K^{1/2} · (∫ |ω(f)|^{2pn} dμ_{GFF})^{1/2}
-                                                    [hypothesis `hK`]         
+                                                    [hypothesis `hK`]
     ≤ K^{1/2} · (2p-1)^{pn/2} · (∫ |ω(f)|^{2n} dμ_{GFF})^{p/2}
                                     [Z ≥ 1 + gaussian_hypercontractivity_continuum]
 

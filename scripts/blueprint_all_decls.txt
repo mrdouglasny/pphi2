@@ -2,7 +2,6 @@ def GaussianField.circleRestrictionLM
 thm Pphi2.canonicalRoughFieldFunction_pointwise_measurable
 thm Pphi2.LatticeSetup.latticeRoughError_pure_quartic_summed
 thm Pphi2.smoothVariance_le_log
-axiom Pphi2.nelson_exponential_estimate_master_bounded
 def GaussianField.NuclearTensorProduct.pure
 thm Pphi2.torusInteractingMeasure_exponentialMomentBound_cutoff
 thm GaussianField.gaussianDensity_measurable
@@ -29,7 +28,6 @@ thm Pphi2.canonicalRoughFieldFunction_covariance_eq
 thm Pphi2.rp_from_transfer_positivity
 thm Pphi2.integrable_powMul_wickMonomial_mul
 def Pphi2.fieldAtSite
-thm Pphi2.continuumLimit
 def Pphi2.IsPphi2Limit
 def GaussianField.RapidDecayLattice.instAddCommGroup
 thm Pphi2.smoothBoundConstant_pos
@@ -952,7 +950,6 @@ thm GaussianField.sum_sin_mul_sin_zmod_eq_zero
 thm GaussianField.sum_cos_zmod_eq_zero_of_pos_lt
 thm GaussianField.prokhorov_sequential
 thm GaussianField.schwartzRapidDecayEquivNd_symm_apply
-thm Pphi2.continuum_second_moment_uniform
 thm GaussianField.massOperator_eigenCoeff_eq_eigenvalues_mul_eigenCoeff
 thm Pphi2.slicePairing_measurable
 thm Pphi2.torus_connectedFourPoint_tendsto
@@ -1181,7 +1178,6 @@ def Pphi2.distribPairing
 thm Pphi2.integrable_powMul_interaction
 thm GaussianField.circleRestrictionGJ_apply
 thm Pphi2.torus_interacting_second_moment_tendsto
-thm Pphi2.exponential_moment_bound
 def Pphi2.OS3_ReflectionPositivity
 thm Pphi2.interactingLatticeMeasureAsym.congr_simp
 def Pphi2.OS1_Regularity
@@ -1814,7 +1810,6 @@ thm GaussianField.heatKernelBilinear_tendsto_l2
 thm Pphi2.asymTransferOperator_ground_simple_spectral
 thm GaussianField.ell2_not_finiteDimensional
 def Pphi2.asymLatticeTestFnIso
-thm Pphi2.continuumMeasures_tight
 thm GaussianField.realFourierMultiplierCLM_translation_comm
 thm GaussianField.NuclearSpace.nuclear_dominance
 def GaussianField.latticeTranslationLM

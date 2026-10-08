@@ -86,7 +86,6 @@ status:
     - two_point_clustering_from_spectral_gap               # OSProofs/OS4_MassGap.lean:137
     - general_clustering_from_spectral_gap                 # OSProofs/OS4_MassGap.lean:160
     - gaussian_rp_cov_perfect_square                       # OSProofs/OS3_RP_Lattice.lean:648 (private)
-    - nelson_exponential_estimate_master_bounded           # NelsonEstimate/PolynomialChaosBridge.lean:1321
     - latticeGreenBilinear_basis_tendsto_continuum         # GaussianContinuumLimit/PropagatorConvergence.lean:103
   main_results:
     - declaration: "Pphi2.pphi2_existence"

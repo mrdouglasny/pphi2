@@ -14,7 +14,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 bound, hence tightness, for `{ν_a}_{a ∈ (0,1]}` at **fixed lattice size `N`**. Their proofs
 rested on `nelson_exponential_estimate_master_bounded`, which is false: at fixed `N` the
 physical volume `(N a)^d` shrinks to zero and `∫ e^{-2V_a} dμ_GFF → ∞`. Both were deleted
-with the axiom. The supported continuum limits fix the physical volume instead: see
+with the axiom: their proofs are withdrawn, though the statements themselves are not refuted
+(the partition function may cancel the blow-up). The supported continuum limits fix the physical volume instead: see
 `TorusContinuumLimit/` and `AsymTorus/`.
 
 ## References

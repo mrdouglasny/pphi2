@@ -232,9 +232,10 @@ interacting content (`u₄≠0`, ★★★, needs `λ>0`).
 
 - [x] **12. ~~`nelson_exponential_estimate_master_bounded`~~** — **REMOVED 2026-10-08 as false as
   stated** (issue #63): no `K` uniform over unconstrained volume `L = N a` exists (diverges as
-  `L → 0` via the zero mode, and as `L → ∞` extensively). The fixed-volume estimate
+  `L → 0` via the zero mode — rigorous; expected to as `L → ∞` — heuristic). The fixed-volume estimate
   `nelson_exponential_estimate_master` is already a theorem; the fixed-`N` consumers
-  (`exponential_moment_bound`, `continuumMeasures_tight`, `continuumLimit`) were deleted with it.
+  (`exponential_moment_bound` — also false; `continuumMeasures_tight`, `continuumLimit` — proofs
+  withdrawn, not refuted) were deleted with it.
   See AXIOM_AUDIT.md 2026-10-08.
 
 ---

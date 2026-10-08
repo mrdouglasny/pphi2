@@ -8,29 +8,45 @@ The compatibility-wrapper axiom (`Pphi2/NelsonEstimate/PolynomialChaosBridge.lea
 `K = K(P, mass)` with `∫ exp(-V_a)² dμ_GFF ≤ K` for **every** `0 < a ≤ 1` and **every** `N`.
 It is false in both directions of the unconstrained volume `L = N a`:
 
-* **`L → 0` (fixed `N`, `a → 0`) — elementary refutation.** The zero mode `φ̄` has variance
-  `1/(L^d m²)` and is independent of `φ_x − φ̄`, and Wick ordering commutes with conditional
-  expectation, so for `P = :φ⁴:` one has `E[V | φ̄] = λ H₄(Z)` with `λ = 1/(L^d m⁴)`,
-  `Z ∼ N(0,1)`, `H₄(z) = z⁴ − 6z² + 3 = (z²−3)² − 6`. Conditional Jensen gives, for every `N`
-  (equality at `N = 1`),
+* **`L → 0` (fixed `N`, `a → 0`) — elementary refutation (rigorous).** Take the admissible pure
+  quartic `P(x) = x⁴/4` (`InteractionPolynomial` fixes the leading coefficient to `1/n`). The
+  zero mode `φ̄` has variance `s₀ = 1/(L^d m²)` and is independent of `φ_x − φ̄`, and Wick
+  ordering commutes with conditional expectation, so `E[V | φ̄] = (L^d/4) :φ̄⁴:_{s₀} = λ H₄(Z)`
+  with `λ = 1/(4 L^d m⁴)`, `Z ∼ N(0,1)`, `H₄(z) = z⁴ − 6z² + 3 = (z²−3)² − 6`. Conditional
+  Jensen gives, for every `N` (equality at `N = 1`),
   `∫ e^{-2V} dμ_GFF ≥ E[e^{-2λH₄(Z)}] ≥ P(|Z²−3| ≤ ½) · e^{11.5 λ} → ∞`.
-  Numerics: `scripts/verify_issue63_fixed_N_small_a.{py,out}`.
-* **`L → ∞` (`a = 1`, `N → ∞`)** — volume-extensive growth; heuristic cumulant argument plus
-  Monte Carlo in issue #63 (reported by springoxn). Not reproduced here.
+  Numerics: `scripts/verify_issue63_fixed_N_small_a.{py,out}` (evaluates this one-dimensional
+  lower bound; it is the full integral only at `N = 1`).
+* **`L → ∞` (`a = 1`, `N → ∞`)** — volume-extensive growth is expected; the evidence is a
+  heuristic cumulant argument plus Monte Carlo in issue #63 (reported by springoxn). Not proved
+  and not reproduced here.
 
-So `K(L)` blows up at both ends, and a one-sided constraint `a·N ≤ L` does not repair the
-statement; the volume must be pinned or bounded on both sides. The true fixed-volume form is the
-theorem `nelson_exponential_estimate_master` (`N a = L`).
+So a positive lower bound on the volume is rigorously necessary, and an upper bound is expected
+to be; a one-sided constraint `a·N ≤ L` does not repair the statement. The only proved form is
+the fixed-volume theorem `nelson_exponential_estimate_master` (`N a = L`); uniformity over a
+two-sided volume window is plausible but does not follow from it.
 
 The 2026-05-10 DT verdict ("likely true, large-`a` regime trivial") missed the zero mode. The
 "Fix #2" paragraph of `docs/polynomial-chaos-exp-moment-bridge-proof-plan.md` reached the right
 conclusion by a reversed inequality (`V ≥ V_min` bounds `∫e^{-2V}` from *above*); corrected there.
 
 **Removed with it** (the fixed-`N`, `a → 0` chain, a shrinking-volume regime):
-`exponential_moment_bound` (itself false), `continuum_second_moment_uniform`,
-`continuumMeasures_tight`, `continuumLimit`. **Restated:** `interacting_moment_bound` now takes
-the spacing `a` and a bound `K` on `∫e^{-2V_a}` at that `a` as hypotheses (`C = K^{1/2}`),
-which is true and non-vacuous.
+
+* `exponential_moment_bound` — **false as stated** (same `N = 1` counterexample).
+* `continuum_second_moment_uniform`, `continuumMeasures_tight`, `continuumLimit` — **proofs
+  withdrawn, statements not refuted.** They rested on the false bound through Cauchy–Schwarz.
+  The blow-up of the unnormalized `E_GFF[e^{-2V}]` does not show that the *normalized*
+  interacting measures have unbounded second moments or fail to be tight (the partition function
+  can cancel the growth), so these are now simply unproved, and of doubtful interest in a
+  regime where the physical volume shrinks to zero.
+
+**Restated:** `interacting_moment_bound` now takes the spacing `a` and a bound `K` on
+`∫e^{-2V_a}` at that `a` as hypotheses (`C = K^{1/2}`). It is true and non-vacuous: at fixed
+`a, N`, `interactionFunctional_bounded_below` supplies such a `K`.
+
+Reviewed by Codex (GPT, read-only audit of the PR, 2026-10-08): confirmed the refutation from
+the definitions; its corrections (the `1/4` coefficient, "withdrawn" vs "false" for the
+tightness chain, the `L → ∞` overclaim) are incorporated above.
 
 * Headline footprint (verified `#print axioms` before removal): `pphi2_main`, `pphi2_existence`,
   `pphi2_wightman`, `torusInteracting_satisfies_OS`, `torusFamily_satisfies_OS` never depended
@@ -1366,7 +1382,7 @@ inventory above for the current active axiom list.
 | 15 | ~~`latticeEmbedLift_measurable`~~ | Embedding:212 | ✅ **PROVED** | SA 2026-02-24 | `configuration_measurable_of_eval_measurable` + `configuration_eval_measurable`. |
 | 16 | `second_moment_uniform` | Tightness:74 | ✅ Correct | Gemini 2026-03-07 | ∫ Φ_a(f)² dν_a ≤ C(f). Nelson/Froehlich Gaussian domination. |
 | 17 | `moment_equicontinuity` | Tightness:89 | ✅ Correct | Gemini 2026-03-07 | Fixed RHS. Uniform field oscillation control. |
-| 18 | ~~`continuumMeasures_tight`~~ | Tightness:110 | **REMOVED 2026-10-08 — false as stated (issue #63)** | Gemini 2026-03-07 | Fixed-`N` shrinking-volume regime; its proof rested on the false Nelson wrapper axiom. |
+| 18 | ~~`continuumMeasures_tight`~~ | Tightness:110 | **REMOVED 2026-10-08 — proof withdrawn (issue #63)** | Gemini 2026-03-07 | Fixed-`N` shrinking-volume regime; its proof rested on the false Nelson wrapper axiom. Statement itself not refuted. |
 | 19 | `prokhorov_configuration_sequential` | Convergence | ✅ Correct | Gemini 2026-03-07 | Sequential Prokhorov. S'(ℝ²) is Polish mathematically. |
 | 21 | `os0_inheritance` | AxiomInheritance:78 | ✅ Correct | Gemini 2026-03-07 | OS0 transfers via uniform hypercontractivity. |
 | 22 | `os3_inheritance` | AxiomInheritance | ✅ Standard | DT 2026-02-25 | Abstract IsRP for continuum limit: ∫ F·F(Θ*·) dμ ≥ 0. Now requires `IsPphi2Limit`. Follows from lattice_rp_matrix + rp_closed_under_weak_limit (proved). |
